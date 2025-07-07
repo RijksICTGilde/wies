@@ -15,7 +15,7 @@ source venv/bin/activate
 
 install requirements
 ```
-pip install -r requirements
+pip install -r requirements.txt
 ```
 
 inside src folder:
@@ -25,6 +25,8 @@ python manage.py migrate
 
 ## Run
 
+
+inside src:
 ```
 python manage.py runserver
 ```
