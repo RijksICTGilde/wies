@@ -1,0 +1,21 @@
+ <!DOCTYPE html>
+<html>
+<body>
+
+<h1>Colleagues</h1>
+
+<table style="width:100%">
+<tr>
+  <th>Name</th>
+  <th>Function</th>
+</tr>
+{% for colleague in object_list %}
+<tr>
+  <td> {{ colleague.name }}</td>
+  <td> {{ colleague.function }}</td>
+</tr> 
+{% endfor %}
+</table>
+
+</body>
+</html> 
