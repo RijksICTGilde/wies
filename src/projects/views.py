@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.generic.list import ListView
-from django.views.generic import DetailView, CreateView, DeleteView
+from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
 
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -30,6 +30,11 @@ class ProjectDeleteView(DeleteView):
     success_url = reverse_lazy("projects")
     template_name='project_delete.html'
 
+class ProjectUpdateView(UpdateView):
+    model = Project
+    fields = ['name', 'start_date']
+    template_name='project_update.html'
+
 class ColleagueList(ListView):
     template_name = 'colleagues.html'
     model = Colleague
@@ -47,3 +52,9 @@ class ColleagueDeleteView(DeleteView):
     model = Colleague
     success_url = reverse_lazy("colleagues")
     template_name='colleague_delete.html'
+
+class ColleagueUpdateView(UpdateView):
+    model = Colleague
+    fields = ['name', 'function']
+    template_name='colleague_update.html'
+
