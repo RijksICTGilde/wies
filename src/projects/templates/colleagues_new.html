@@ -1,0 +1,9 @@
+<form action="/colleagues/">
+    <input type="submit" value="Collega's" />
+</form>
+
+<form action="/colleagues/new" method="post">
+    {% csrf_token %}
+    {{ form }}
+    <input type="submit" value="Submit">
+</form>
