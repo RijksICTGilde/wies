@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Overzicht - RVO</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@nl-rvo/design-tokens@1.7.1" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@nl-rvo/component-library-css@4.5.2" />
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body class="rvo-theme">
+    <!-- Banner bovenaan -->
+    <div class="rvo-alert rvo-alert--warning rvo-alert--padding-sm">
+        <img src="https://cdn.jsdelivr.net/npm/@nl-rvo/assets@latest/images/icons/waarschuwing.svg"
+             alt="Waarschuwing"
+             class="rvo-icon rvo-icon-waarschuwing rvo-icon--xl rvo-status-icon-waarschuwing"
+             style="vertical-align: middle; margin-right: 1rem;" />
+        <div class="rvo-alert-text" style="display: inline-block; vertical-align: middle;">
+            <div>
+                <b>Beta Version <a class="rvo-link" href="https://github.com/MinBZK/amt">v0.1</a></b>  |  This website is under development  |  All versions are created in an open manner.
+            </div>
+        </div>
+    </div>
+    <!-- Logo header -->
+    <header class="header">
+        <div class="rvo-header__logo-wrapper">
+            <div class="rvo-logo rvo-header__logo-img" style="display: flex; align-items: center;">
+                <div class="rvo-logo__emblem">
+                    <img src="https://cdn.jsdelivr.net/npm/@nl-rvo/assets@latest/images/emblem.svg" alt="RVO Embleem">
+                </div>
+                <div class="rvo-logo__wordmark">
+                    <p class="rvo-logo__title">Algorithm Management Toolkit</p>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Slimme menubar met juiste namen en relatieve links -->
+    <div class="rvo-menubar__background rvo-menubar__background--horizontal-rule">
+      <nav class="rvo-menubar rvo-menubar--md">
+        <ul class="rvo-menubar__ul">
+          <li class="rvo-menubar__list">
+            <ul class="rvo-menubar__group--flex">
+              <li class="rvo-menubar__item">
+                <a href="project-overview.html" class="rvo-link rvo-menubar__link rvo-link--logoblauw">
+                  Home
+                </a>
+              </li>
+              <li class="rvo-menubar__item">
+                <a href="projects.html" class="rvo-link rvo-menubar__link rvo-link--logoblauw">
+                  Projecten
+                </a>
+              </li>
+              <li class="rvo-menubar__item">
+                <a href="colleagues.html" class="rvo-link rvo-menubar__link rvo-link--logoblauw">
+                  Collega's
+                </a>
+              </li>
+              <li class="rvo-menubar__item">
+                <a href="#" class="rvo-link rvo-menubar__link rvo-link--logoblauw">
+                  Rapportages
+                </a>
+              </li>
+            </ul>
+            <ul class="rvo-menubar__group--flex">
+              <li class="rvo-menubar__item" align="right">
+                <a href="#" class="rvo-link rvo-menubar__link rvo-link--logoblauw">
+                  Zoeken
+                </a>
+              </li>
+              <li class="rvo-menubar__item" align="right">
+                <a href="#" class="rvo-link rvo-menubar__link rvo-link--logoblauw">
+                  Uitloggen
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+    </div>
+
+    <main style="padding: 2rem;">
+        <h1>Test Pagina</h1>
+        <p>Dit is een test om te zien of de RVO banner, logo en menubar correct werken met de jsDelivr CDN links.</p>
+    </main>
+</body>
+</html>
+  
