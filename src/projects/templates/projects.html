@@ -12,14 +12,17 @@
     <input type="submit" value="Nieuw project" />
 </form>
 
-<table style="width:100%">
+<br>
+<br>
+
+<table>
 <tr>
   <th>Name</th>
   <th>Start date</th>
 </tr>
 {% for project in object_list %}
 <tr>
-  <td> {{ project.name }}</td>
+  <td><a href="/projects/{{ project.pk }}/">{{ project.name }}</a></td>
   <td> {{ project.start_date }}</td>
 </tr> 
 {% endfor %}

@@ -19,7 +19,7 @@ from django.urls import path
 
 from projects.views import home
 from projects.views import ProjectList
-from projects.views import ProjectCreateView, ColleagueCreateView
+from projects.views import ProjectCreateView, ColleagueCreateView, ProjectDeleteView, ColleagueDeleteView
 from projects.views import ProjectDetail, ColleagueDetail
 from projects.views import ColleagueList
 
@@ -29,7 +29,9 @@ urlpatterns = [
     path('projects/', ProjectList.as_view(), name='projects'),
     path('projects/new', ProjectCreateView.as_view()),
     path('projects/<int:pk>/', ProjectDetail.as_view(), name='project-detail'),
+    path('projects/<int:pk>/delete', ProjectDeleteView.as_view()),
     path('colleagues/', ColleagueList.as_view(), name='colleagues'),
     path('colleagues/new', ColleagueCreateView.as_view()),
     path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
+    path('colleagues/<int:pk>/delete', ColleagueDeleteView.as_view()),
 ]

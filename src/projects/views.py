@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.views.generic.list import ListView
-from django.views.generic import FormView, DetailView, CreateView
+from django.views.generic import DetailView, CreateView, DeleteView
 
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
@@ -25,6 +25,11 @@ class ProjectDetail(DetailView):
     model = Project
     template_name = 'project_detail.html'
 
+class ProjectDeleteView(DeleteView):
+    model = Project
+    success_url = reverse_lazy("projects")
+    template_name='project_delete.html'
+
 class ColleagueList(ListView):
     template_name = 'colleagues.html'
     model = Colleague
@@ -37,3 +42,8 @@ class ColleagueCreateView(CreateView):
 class ColleagueDetail(DetailView):
     model = Colleague
     template_name = 'colleague_detail.html'
+
+class ColleagueDeleteView(DeleteView):
+    model = Colleague
+    success_url = reverse_lazy("colleagues")
+    template_name='colleague_delete.html'

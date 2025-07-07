@@ -12,14 +12,17 @@
     <input type="submit" value="Nieuwe collega" />
 </form>
 
-<table style="width:100%">
+<br>
+<br>
+
+<table>
 <tr>
   <th>Names</th>
   <th>Function</th>
 </tr>
 {% for colleague in object_list %}
 <tr>
-  <td> {{ colleague.name }}</td>
+  <td><a href="/colleagues/{{ colleague.pk }}/">{{ colleague.name }}</td>
   <td> {{ colleague.function }}</td>
 </tr> 
 {% endfor %}
