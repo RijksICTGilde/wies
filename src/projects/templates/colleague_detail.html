@@ -1,8 +1,4 @@
-<form action="/colleagues/">
-    <input type="submit" value="Collega's" />
-</form>
-
-<h1>{{ object.name }}</h1>
+<h1><a href="/colleagues/">Collega's</a> / {{ object.name }}</h1>
 <p>Functie: {{ object.function }}</p>
 
 <form action="/colleagues/{{ object.pk }}/delete">
