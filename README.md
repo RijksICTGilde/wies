@@ -22,3 +22,9 @@ inside src folder:
 ```
 python manage.py migrate
 ```
+
+## Run
+
+```
+python manage.py runserver
+```
