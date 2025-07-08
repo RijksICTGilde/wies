@@ -25,6 +25,11 @@ class ProjectDetail(DetailView):
     model = Project
     template_name = 'project_detail.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["colleague_list"] = ', '.join(self.object.colleagues.values_list('name', flat=True))
+        return context
+
 class ProjectDeleteView(DeleteView):
     model = Project
     success_url = reverse_lazy("projects")
@@ -32,8 +37,10 @@ class ProjectDeleteView(DeleteView):
 
 class ProjectUpdateView(UpdateView):
     model = Project
-    fields = ['name', 'start_date']
+    fields = ['name', 'start_date', 'colleagues']
     template_name='project_update.html'
+    # template_name='project_update_minimal.html'  # use this one for minimal template which enables connecting colleague to project
+
 
 class ColleagueList(ListView):
     template_name = 'colleagues.html'
@@ -48,6 +55,11 @@ class ColleagueDetail(DetailView):
     model = Colleague
     template_name = 'colleague_detail.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["project_list"] = ', '.join(self.object.projects.values_list('name', flat=True))
+        return context
+
 class ColleagueDeleteView(DeleteView):
     model = Colleague
     success_url = reverse_lazy("colleagues")
@@ -57,4 +69,3 @@ class ColleagueUpdateView(UpdateView):
     model = Colleague
     fields = ['name', 'function']
     template_name='colleague_update.html'
-
