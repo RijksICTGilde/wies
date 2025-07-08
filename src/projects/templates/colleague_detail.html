@@ -1,14 +1,41 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>{{ object.name }}</h1>
-<p>Functie: {{ object.function }}</p>
-
-<form action="/colleagues/{{ object.pk }}/update">
-    <input type="submit" value="Edit" />
-</form>
-
-<form action="/colleagues/{{ object.pk }}/delete">
-    <input type="submit" value="Delete" />
-</form>
+<div class="rvo-layout-column rvo-layout-gap--xl">
+  <div>
+        <!-- Breadcrumbs -->
+        <ol class="rvo-breadcrumbs rvo-breadcrumbs--sm">
+          <li class="rvo-breadcrumbs-item">
+            <a href="/colleagues/" class="rvo-link rvo-link--no-underline">Collega's</a>
+          </li>
+          <li class="rvo-breadcrumbs-item">
+            <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+            <span class="rvo-breadcrumb-current-page">{{ object.name }}</span>
+          </li>
+        </ol>
+    <h1 class="utrecht-heading-1 rvo-heading--no-margins">{{ object.name }}</h1>
+  </div>
+  
+  <div class="rvo-layout-column rvo-layout-gap--lg">
+    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Collega gegevens</h2>
+    
+    <dl class="rvo-data-list">
+      <dt>Naam</dt>
+      <dd>{{ object.name }}</dd>
+      <dt>Functie</dt>
+      <dd>{{ object.function }}</dd>
+      <dt>Collega ID</dt>
+      <dd>{{ object.pk }}</dd>
+    </dl>
+    
+    <div class="rvo-layout-row rvo-layout-gap--md">
+      <a href="/colleagues/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
+        Collega bewerken
+      </a>
+      <a href="/colleagues/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md">
+        Collega verwijderen
+      </a>
+    </div>
+  </div>
+</div>
 {% endblock content %}
