@@ -1,11 +1,75 @@
 {% extends "base.html" %}
 
 {% block content %}
-<h1>Projecten - nieuw project</h1>
-
-<form action="/projects/new" method="post">
-    {% csrf_token %}
-    {{ form }}
-    <input type="submit" value="Submit">
-</form>
+<div class="rvo-form">
+  <div class="rvo-layout-column rvo-layout-gap--sm">
+    <div>
+      <a href="/projects/" class="rvo-link rvo-link--with-icon rvo-link--no-underline">
+        <span class="utrecht-icon rvo-icon rvo-icon-terug rvo-icon--md rvo-icon--hemelblauw rvo-link__icon--before" role="img" aria-label="Terug"></span>
+        Terug naar projecten
+      </a>
+      <h1 class="utrecht-heading-1">Nieuw project toevoegen</h1>
+      <p class="rvo-text--lg">
+        <span class="rvo-text--bold">Vul de gegevens in voor het nieuwe project.</span>
+        Voer de naam en startdatum van het project in.
+      </p>
+    </div>
+    <form action="/projects/new" method="post">
+      {% csrf_token %}
+      <div class="rvo-layout-column rvo-layout-gap--md">
+        <div>
+          <div class="utrecht-form-fieldset rvo-form-fieldset">
+            <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
+              <legend class="utrecht-form-fieldset__legend utrecht-form-fieldset__legend--html-legend">
+                Project gegevens
+              </legend>
+              <div role="group" aria-labelledby="name-label" class="utrecht-form-field utrecht-form-field--text rvo-form-field">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="name-label" for="name">
+                    Project naam
+                  </label>
+                  <div class="utrecht-form-field-description" id="name-helper">
+                    Voer de naam van het project in
+                  </div>
+                </div>
+                <input id="name" name="name" placeholder="Project naam" type="text" class="utrecht-textbox utrecht-textbox--html-input utrecht-textbox--lg" dir="auto" value="{{ form.name.value|default:'' }}" />
+                {% if form.name.errors %}
+                <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">
+                  <span class="utrecht-icon rvo-icon rvo-icon-foutmelding rvo-icon--md rvo-status-icon-foutmelding" role="img" aria-label="Foutmelding"></span>
+                  {{ form.name.errors.0 }}
+                </div>
+                {% endif %}
+              </div>
+              <div role="group" aria-labelledby="start_date-label" class="utrecht-form-field utrecht-form-field--text rvo-form-field">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="start_date-label" for="start_date">
+                    Startdatum
+                  </label>
+                  <div class="utrecht-form-field-description" id="start_date-helper">
+                    Voer de startdatum van het project in
+                  </div>
+                </div>
+                <input id="start_date" name="start_date" type="date" class="utrecht-textbox utrecht-textbox--html-input utrecht-textbox--lg" dir="auto" value="{{ form.start_date.value|default:'' }}" />
+                {% if form.start_date.errors %}
+                <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">
+                  <span class="utrecht-icon rvo-icon rvo-icon-foutmelding rvo-icon--md rvo-status-icon-foutmelding" role="img" aria-label="Foutmelding"></span>
+                  {{ form.start_date.errors.0 }}
+                </div>
+                {% endif %}
+              </div>
+            </fieldset>
+          </div>
+        </div>
+        <p class="utrecht-button-group">
+          <button class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md" type="submit">
+            Project toevoegen
+          </button>
+          <a href="/projects/" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md">
+            Annuleren
+          </a>
+        </p>
+      </div>
+    </form>
+  </div>
+</div>
 {% endblock content %}
