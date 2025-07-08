@@ -27,7 +27,11 @@
       <dt>Project ID</dt>
       <dd>{{ object.pk }}</dd>
       <dt>Collega's</dt>
-      <dd>{{ colleague_list }}</dd>
+      <dd>
+        {% for colleague in colleague_list %}
+          <a href="/colleagues/{{ colleague.id }}/">{{ colleague.name }}</a>,
+        {% endfor %}
+      </dd>
     </dl>
     
     <div class="rvo-layout-row rvo-layout-gap--md">

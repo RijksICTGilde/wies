@@ -27,7 +27,7 @@ class ProjectDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["colleague_list"] = ', '.join(self.object.colleagues.values_list('name', flat=True))
+        context["colleague_list"] = list(self.object.colleagues.values('name', 'id'))
         return context
 
 class ProjectDeleteView(DeleteView):
@@ -37,10 +37,10 @@ class ProjectDeleteView(DeleteView):
 
 class ProjectUpdateView(UpdateView):
     model = Project
-    fields = ['name', 'start_date']
-    template_name='project_update.html'
-    # fields = ['name', 'start_date', 'colleagues'] # these lines are necessary to enable linking of colleagues and projects 
-    # template_name='project_update_minimal.html'  
+    # fields = ['name', 'start_date']
+    # template_name='project_update.html'
+    fields = ['name', 'start_date', 'colleagues'] # these lines are necessary to enable linking of colleagues and projects 
+    template_name='project_update_minimal.html'  
 
 
 class ColleagueList(ListView):
@@ -58,7 +58,7 @@ class ColleagueDetail(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["project_list"] = ', '.join(self.object.projects.values_list('name', flat=True))
+        context["project_list"] = list(self.object.projects.values('name', 'id'))
         return context
 
 class ColleagueDeleteView(DeleteView):
