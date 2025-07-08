@@ -1,9 +1,12 @@
-<form action="/colleagues/">
-    <input type="submit" value="Collega's" />
-</form>
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Collega's - nieuwe collega</h1>
 
 <form action="/colleagues/new" method="post">
     {% csrf_token %}
     {{ form }}
     <input type="submit" value="Submit">
 </form>
+{% endblock content %}

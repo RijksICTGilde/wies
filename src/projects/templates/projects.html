@@ -1,8 +1,8 @@
-<h1>Projecten</h1>
+{% extends "base.html" %}
 
-<form action="/colleagues/">
-    <input type="submit" value="Collega's" />
-</form>
+{% block content %}
+
+<h1>Projecten</h1>
 
 <form action="/projects/new">
     <input type="submit" value="Nieuw project" />
@@ -23,3 +23,4 @@
 </tr> 
 {% endfor %}
 </table>
+{% endblock content %}
