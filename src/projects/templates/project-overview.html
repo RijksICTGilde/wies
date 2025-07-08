@@ -5,7 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Overzicht - RVO</title>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@nl-rvo/design-tokens@1.7.1" />
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@nl-rvo/component-library-css@4.5.2" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@nl-rvo/component-library-css@4.9.0" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nl-rvo/css-breadcrumbs@1.2.1/dist/index.css" />
+    <link rel="stylesheet" href="../static/index.css">
+    <link rel="stylesheet" href="../static/fonts/index.css">
+    <link rel="stylesheet" href="../static/icons/index.css">
+    <link rel="stylesheet" href="../static/images/index.css">
+    <link rel="stylesheet" href="../static/design-tokens/index.css">
+    <link rel="stylesheet" href="../static/component-library-css/index.css">
     <style>
         body {
             margin: 0;
@@ -17,7 +24,7 @@
 <body class="rvo-theme">
     <!-- Banner bovenaan -->
     <div class="rvo-alert rvo-alert--warning rvo-alert--padding-sm">
-        <img src="https://cdn.jsdelivr.net/npm/@nl-rvo/assets@latest/images/icons/waarschuwing.svg"
+        <img src="https://cdn.jsdelivr.net/npm/@nl-rvo/assets@1.0.0-alpha.360/icons/functioneel/let-op.svg"
              alt="Waarschuwing"
              class="rvo-icon rvo-icon-waarschuwing rvo-icon--xl rvo-status-icon-waarschuwing"
              style="vertical-align: middle; margin-right: 1rem;" />
@@ -35,7 +42,7 @@
                     <img src="https://cdn.jsdelivr.net/npm/@nl-rvo/assets@latest/images/emblem.svg" alt="RVO Embleem">
                 </div>
                 <div class="rvo-logo__wordmark">
-                    <p class="rvo-logo__title">Algorithm Management Toolkit</p>
+                    <p class="rvo-logo__title">Organisatie voor Ontwikkeling, <br> Digitalisering en Innovatie</p>
                 </div>
             </div>
         </div>
@@ -85,10 +92,28 @@
       </nav>
     </div>
 
-    <main style="padding: 2rem;">
-        <h1>Test Pagina</h1>
-        <p>Dit is een test om te zien of de RVO banner, logo en menubar correct werken met de jsDelivr CDN links.</p>
-    </main>
+    <!-- Breadcrumbs volgens RVO voorbeeld -->
+    <div class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--none rvo-layout-column rvo-layout-gap--sm rvo-layout-margin-vertical--lg">
+      <ol class="rvo-breadcrumbs rvo-breadcrumbs--sm">
+        <li class="rvo-breadcrumbs-item">
+          <a href="project-overview.html" class="rvo-link rvo-link--no-underline">Home</a>
+        </li>
+        <li class="rvo-breadcrumbs-item">
+          <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+          <a href="projects.html" class="rvo-link rvo-link--no-underline">Projecten</a>
+        </li>
+        <li class="rvo-breadcrumbs-item">
+          <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+          <a href="colleagues.html" class="rvo-link rvo-link--no-underline">Collega's</a>
+        </li>
+        <li class="rvo-breadcrumbs-item">
+          <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+          <span class="rvo-breadcrumb-current-page">Overzicht</span>
+        </li>
+      </ol>
+      <h1 class="utrecht-heading-1">Test Pagina</h1>
+      <p>Dit is een test om te zien of de RVO banner, logo, menubar en breadcrumbs correct werken met de jsDelivr CDN links.</p>
+    </div>
 </body>
 </html>
   

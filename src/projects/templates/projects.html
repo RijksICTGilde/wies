@@ -1,22 +1,116 @@
- <!DOCTYPE html>
-<html>
-<body>
-
-<h1>Projects</h1>
-
-<table style="width:100%">
-<tr>
-  <th>Name</th>
-  <th>Start date</th>
-</tr>
-{% for project in object_list %}
-<tr>
-  <td> {{ project.name }}</td>
-  <td> {{ project.start_date }}</td>
-</tr> 
-{% endfor %}
-</table>
-
-
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Overzicht - RVO</title>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@nl-rvo/design-tokens@1.7.1" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@nl-rvo/component-library-css@4.9.0" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nl-rvo/css-breadcrumbs@1.2.1/dist/index.css" />
+    <link rel="stylesheet" href="../static/index.css">
+    <link rel="stylesheet" href="../static/fonts/index.css">
+    <link rel="stylesheet" href="../static/icons/index.css">
+    <link rel="stylesheet" href="../static/images/index.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+        }
+    </style>
+</head>
+<body class="rvo-theme">
+<div class="rvo-demo-page">
+  <!-- Banner bovenaan -->
+  <div class="rvo-alert rvo-alert--info rvo-alert--padding-sm">
+    <div class="rvo-alert__container">
+    <span class="utrecht-icon rvo-icon rvo-icon-info rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Info"></span>
+    <div class="rvo-alert-text">
+      <div>
+        <b>Alpha versie <a class="rvo-link" href="https://github.com/RIG/wies">v0.1</a></b>  |  Deze pagina is in ontwikkeling  |  All versions are created in an open manner.
+      </div>
+    </div>
+    </div>
+  </div>
+  <header class="rvo-header">
+    <div class="rvo-header__logo-wrapper">
+      <div class="rvo-logo rvo-header__logo-img">
+        <div class="rvo-logo__emblem">
+          <img src="https://cdn.jsdelivr.net/npm/@nl-rvo/assets@latest/images/emblem.svg" alt="RVO Embleem">
+        </div>
+        <div class="rvo-logo__wordmark">
+          <p class="rvo-logo__title">Organisatie voor Ontwikkeling, <br> Digitalisering en Innovatie</p>
+        </div>
+      </div>
+    </div>
+  </header>
+  <div class="rvo-menubar__background">
+    <div class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--none">
+      <nav class="rvo-menubar rvo-menubar--md">
+        <ul class="rvo-menubar__ul">
+          <li class="rvo-menubar__list">
+            <ul class="rvo-menubar__group--flex">
+              <li class="rvo-menubar__item">
+                <a href="#" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Projecten</a>
+              </li>
+              <li class="rvo-menubar__item">
+                <a href="../colleagues/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Collega's</a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+  <div class="rvo-layout-column rvo-layout-gap--3xl">
+    <div class="rvo-layout-column rvo-layout-gap--xl">
+      <main class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--md">
+        <!-- Breadcrumbs -->
+        <ol class="rvo-breadcrumbs rvo-breadcrumbs--sm">
+          <li class="rvo-breadcrumbs-item">
+            <a href="project-overview.html" class="rvo-link rvo-link--no-underline">Home</a>
+          </li>
+          <li class="rvo-breadcrumbs-item">
+            <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+            <span class="rvo-breadcrumb-current-page">Projecten</span>
+          </li>
+        </ol>
+        <h1 class="utrecht-heading-1">Projecten</h1>
+        <div class="rvo-table--responsive">
+          <table class="rvo-table">
+ 
+            <thead class="rvo-table-head">
+              <tr class="rvo-table-row">
+                <th scope="col" class="rvo-table-header">
+                  <div class="rvo-table-header__sortable-container">
+                    Naam
+                  </div>
+                </th>
+                <th scope="col" class="rvo-table-header rvo-table-header--sortable rvo-table-header--active-sort">
+                  <div class="rvo-table-header__sortable-container">
+                    Startdatum
+                    <svg width="39" height="48" viewBox="0 0 39 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="rvo--table-header__sorting-icon">
+                      <path d="M9.24057 12.6281C8.97942 12.2439 8.57505 12.0129 8.14198 12.0005C7.70909 11.9881 7.29461 12.1957 7.0161 12.5643L0.745638 20.8504C0.297743 21.4411 0.298239 22.3052 0.746692 22.8959C1.19502 23.4848 1.95962 23.6318 2.55799 23.238L5.76102 21.1364L5.77596 46.4092C5.77596 47.7274 6.7353 48 7.91939 48C9.10349 48 10.0629 47.7274 10.0629 46.4092L10.0581 21.2311L13.2 23.5426C13.7804 23.969 14.5498 23.866 15.0248 23.3046C15.4998 22.7403 15.5402 21.8776 15.1201 21.2619L9.24057 12.6281Z" fill="var(--rvo-color-grijs-800)"></path>
+                      <path d="M26.0473 47.1625C26.4129 47.6748 26.979 47.9828 27.5853 47.9993C28.1914 48.0159 28.7716 47.739 29.1615 47.2476L37.9402 36.1995C38.5672 35.4118 38.5665 34.2597 37.9387 33.4721C37.3111 32.687 36.2406 32.4909 35.4029 33.016L30.9187 35.8181L30.8977 2.12105C30.8977 0.363522 29.5547 0 27.8969 0C26.2392 0 24.896 0.363522 24.896 2.12105L24.9028 35.6919L20.5041 32.6099C19.6915 32.0413 18.6144 32.1787 17.9494 32.9272C17.2843 33.6795 17.2278 34.8299 17.8159 35.6508L26.0473 47.1625Z" fill="var(--rvo-color-hemelblauw)"></path>
+                    </svg>
+                  </div>
+                </th>
+              </tr>
+            </thead>
+            <tbody class="rvo-table-body">
+              {% for project in object_list %}
+              <tr class="rvo-table-row">
+                <td class="rvo-table-cell">{{ project.name }}</td>
+                <td class="rvo-table-cell">{{ project.start_date }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+    
+  </div>
+</div>
 </body>
-</html> 
+</html>
