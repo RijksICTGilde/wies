@@ -37,9 +37,10 @@ class ProjectDeleteView(DeleteView):
 
 class ProjectUpdateView(UpdateView):
     model = Project
-    fields = ['name', 'start_date', 'colleagues']
+    fields = ['name', 'start_date']
     template_name='project_update.html'
-    # template_name='project_update_minimal.html'  # use this one for minimal template which enables connecting colleague to project
+    # fields = ['name', 'start_date', 'colleagues'] # these lines are necessary to enable linking of colleagues and projects 
+    # template_name='project_update_minimal.html'  
 
 
 class ColleagueList(ListView):
