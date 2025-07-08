@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ object.name }}</h1>
+<p>Start date: {{ object.start_date }}</p>
+
+<form action="/projects/{{ object.pk }}/update">
+    <input type="submit" value="Edit" />
+</form>
+
+<form action="/projects/{{ object.pk }}/delete">
+    <input type="submit" value="Delete" />
+</form>
+{% endblock content %}
