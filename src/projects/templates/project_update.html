@@ -49,7 +49,7 @@
                     Voer de startdatum van het project in
                   </div>
                 </div>
-                <input id="start_date" name="start_date" type="date" class="utrecht-textbox utrecht-textbox--html-input utrecht-textbox--lg" dir="auto" value="{{ form.start_date.value|default:'' }}" />
+                <input id="start_date" name="start_date" type="date" class="utrecht-textbox utrecht-textbox--html-input utrecht-textbox--lg" dir="auto" value="{{ form.start_date.value|date:'Y-m-d' }}" />
                 {% if form.start_date.errors %}
                 <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">
                   <span class="utrecht-icon rvo-icon rvo-icon-foutmelding rvo-icon--md rvo-status-icon-foutmelding" role="img" aria-label="Foutmelding"></span>
