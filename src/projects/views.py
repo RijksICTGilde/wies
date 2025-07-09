@@ -16,6 +16,25 @@ class ProjectList(ListView):
     template_name = 'projects.html'
     model = Project
 
+    def get_queryset(self):
+        qs = Project.objects.order_by('-start_date')
+
+        status_filter = dict(self.request.GET).get('status')  # without dict casting you get single items per get call
+        order = self.request.GET.get('order')
+
+        if status_filter:
+            qs = qs.filter(status__in=status_filter)
+        if order:
+            qs = qs.order_by(order)
+
+        return qs
+    
+    def get_template_names(self):
+        if 'HX-Request' in self.request.headers:
+            return ['project_table.html']
+        else:
+            return ['projects.html']
+
 class ProjectCreateView(CreateView):
     model = Project
     fields = ['name', 'start_date']
