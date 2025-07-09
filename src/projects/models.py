@@ -25,9 +25,12 @@ class Colleague(models.Model):
 # Create your models here.
 class Project(models.Model):
     name = models.CharField(max_length=200)
-    start_date = models.DateField()  #TODO: timezone aware
+    start_date = models.DateField()  #TODO: timezone aware?
+    end_date = models.DateField(null=True, default=None)  #TODO: timezone aware?
     colleagues = models.ManyToManyField(Colleague, through='Assignment', related_name='projects')
     status = models.CharField(max_length=20, choices=PROJECT_STATUS, default='LEAD')  # TODO: it seems possible to have empty value here?
+    organization = models.CharField(default='', )
+    extra_info = models.TextField(default='')
 
     def get_absolute_url(self):
         return reverse("project-detail", kwargs={"pk": self.pk})

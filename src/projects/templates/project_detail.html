@@ -22,10 +22,14 @@
     <dl class="rvo-data-list">
       <dt>Project naam</dt>
       <dd>{{ object.name }}</dd>
+      <dt>Organisatie</dt>
+      <dd>{{ object.organization }}</dd>
       <dt>Status</dt>
       <dd>{{ object.status }}</dd>
       <dt>Startdatum</dt>
       <dd>{{ object.start_date }}</dd>
+      <dt>Einddatum</dt>
+      <dd>{{ object.end_date }}</dd>
       <dt>Project ID</dt>
       <dd>{{ object.pk }}</dd>
       <dt>Collega's</dt>
@@ -34,6 +38,8 @@
           <a href="/colleagues/{{ colleague.id }}/">{{ colleague.name }}</a>,
         {% endfor %}
       </dd>
+      <dt>Extra info</dt>
+      <dd>{{ object.extra_info }}</dd>
     </dl>
     
     <div class="rvo-layout-row rvo-layout-gap--md">
