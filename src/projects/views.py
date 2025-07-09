@@ -39,7 +39,7 @@ class ProjectUpdateView(UpdateView):
     model = Project
     # fields = ['name', 'start_date']
     # template_name='project_update.html'
-    fields = ['name', 'start_date', 'colleagues'] # these lines are necessary to enable linking of colleagues and projects 
+    fields = ['name', 'start_date', 'colleagues', 'status'] # these lines are necessary to enable linking of colleagues and projects 
     template_name='project_update_minimal.html'  
 
 

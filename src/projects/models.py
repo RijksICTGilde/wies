@@ -2,6 +2,15 @@ from django.db import models
 from django.urls import reverse
 
 
+PROJECT_STATUS = {
+    'LEAD': "LEAD",
+    'OPEN': "OPEN",
+    'LOPEND': "LOPEND",
+    'AFGEWEZEN': "AFGEWEZEN",
+    'HISTORISCH': "HISTORISCH",
+}
+
+
 class Colleague(models.Model):
     name = models.CharField(max_length=200)
     function = models.CharField(max_length=200)
@@ -18,6 +27,7 @@ class Project(models.Model):
     name = models.CharField(max_length=200)
     start_date = models.DateField()  #TODO: timezone aware
     colleagues = models.ManyToManyField(Colleague, through='Assignment', related_name='projects')
+    status = models.CharField(max_length=20, choices=PROJECT_STATUS, default='LEAD')  # TODO: it seems possible to have empty value here?
 
     def get_absolute_url(self):
         return reverse("project-detail", kwargs={"pk": self.pk})

@@ -30,6 +30,11 @@
             Naam
           </div>
         </th>
+         <th scope="col" class="rvo-table-header">
+          <div class="rvo-table-header__sortable-container">
+            Status
+          </div>
+        </th>
         <th scope="col" class="rvo-table-header rvo-table-header--sortable rvo-table-header--active-sort">
           <div class="rvo-table-header__sortable-container">
             Startdatum
@@ -45,6 +50,7 @@
       {% for project in object_list %}
       <tr class="rvo-table-row">
         <td class="rvo-table-cell"><a href="/projects/{{ project.pk }}/">{{ project.name }}</a></td>
+        <td class="rvo-table-cell">{{ project.status }}</td>
         <td class="rvo-table-cell">{{ project.start_date }}</td>
       </tr>
       {% endfor %}
