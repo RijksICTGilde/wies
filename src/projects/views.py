@@ -64,7 +64,7 @@ class ProjectList(ListView):
 
 class ProjectCreateView(CreateView):
     model = Project
-    fields = ['name', 'start_date']
+    form_class = ProjectForm
     template_name = 'projects_new.html'
 
 class ProjectDetail(DetailView):

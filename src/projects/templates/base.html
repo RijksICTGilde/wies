@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="{% static 'icons/index.css' %}">
     <link rel="stylesheet" href="{% static 'images/index.css' %}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="{% static 'custom.css' %}">
     {% block extra_head %}{% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js" integrity="sha384-Akqfrbj/HpNVo8k11SXBb6TlBWmXXlYQrCSqEWmyKJe+hDm3Z/B2WVG4smwBkRVm" crossorigin="anonymous"></script>
 </head>
@@ -37,6 +38,27 @@
           placeholder: "Zoek en voeg collega's toe",
           width: '100%',
           allowClear: true
+        });
+        $('.js-status-select').select2({
+          placeholder: "Filter op status",
+          width: 'resolve',
+          allowClear: true
+        });
+        // Forceer native change event voor HTMX, maar voorkom oneindige lus
+        $('.js-status-select').on('select2:select select2:unselect', function(e) {
+          this.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+      // (her)initialiseer na HTMX swap:
+      document.body.addEventListener('htmx:afterSwap', function(evt) {
+        $('.js-status-select').select2({
+          placeholder: "Filter op status",
+          width: 'resolve',
+          allowClear: true
+        });
+        // Forceer native change event voor HTMX na swap, maar voorkom oneindige lus
+        $('.js-status-select').on('select2:select select2:unselect', function(e) {
+          this.dispatchEvent(new Event('change', { bubbles: true }));
         });
       });
     </script>
