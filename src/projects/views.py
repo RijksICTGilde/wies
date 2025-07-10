@@ -8,6 +8,33 @@ from django.urls import reverse_lazy
 from .models import Project
 from .models import Colleague
 
+from django import forms
+
+class RVOFormMixin:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for name, field in self.fields.items():
+            widget = field.widget
+            if name == "colleagues":
+                # Forceer de juiste class voor Select2
+                widget.attrs['class'] = "js-colleague-select utrecht-select utrecht-select--html-select"
+            elif isinstance(widget, forms.DateInput):
+                widget.input_type = 'date'
+                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input utrecht-textbox--sm'
+            elif isinstance(widget, forms.TextInput):
+                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input'
+            elif isinstance(widget, forms.Textarea):
+                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textarea utrecht-textarea--html-textarea'
+            elif isinstance(widget, forms.Select):
+                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-select utrecht-select--html-select'
+            elif isinstance(widget, forms.SelectMultiple):
+                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-select utrecht-select--html-select utrecht-select--multiple'
+
+class ProjectForm(RVOFormMixin, forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = '__all__'
+
 def home(request):
     return redirect('/projects/')
 
@@ -37,7 +64,7 @@ class ProjectList(ListView):
 
 class ProjectCreateView(CreateView):
     model = Project
-    fields = ['name', 'start_date']
+    form_class = ProjectForm
     template_name = 'projects_new.html'
 
 class ProjectDetail(DetailView):
@@ -56,10 +83,8 @@ class ProjectDeleteView(DeleteView):
 
 class ProjectUpdateView(UpdateView):
     model = Project
-    # fields = ['name', 'start_date']
-    # template_name='project_update.html'
-    fields = ['name', 'start_date', 'end_date', 'colleagues', 'status', 'organization', 'extra_info'] # these lines are necessary to enable linking of colleagues and projects 
-    template_name='project_update_minimal.html'  
+    form_class = ProjectForm
+    template_name = 'project_update_minimal.html'
 
 
 class ColleagueList(ListView):
@@ -85,7 +110,14 @@ class ColleagueDeleteView(DeleteView):
     success_url = reverse_lazy("colleagues")
     template_name='colleague_delete.html'
 
+class ColleagueForm(RVOFormMixin, forms.ModelForm):
+    class Meta:
+        model = Colleague
+        fields = '__all__'
+
 class ColleagueUpdateView(UpdateView):
     model = Colleague
-    fields = ['name', 'function']
-    template_name='colleague_update.html'
+    form_class = ColleagueForm
+    template_name = 'colleague_update.html'
+
+# Gebruik ProjectForm in je views waar Project-formulieren worden gebruikt.

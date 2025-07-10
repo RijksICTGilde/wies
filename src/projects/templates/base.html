@@ -5,72 +5,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Wies{% endblock %}</title>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@nl-rvo/design-tokens@1.7.1" />
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@nl-rvo/component-library-css@4.9.0" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nl-rvo/css-breadcrumbs@1.2.1/dist/index.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nl-rvo/design-tokens@1.7.1" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nl-rvo/component-library-css@4.9.0" />
     <link rel="stylesheet" href="{% static 'index.css' %}">
     <link rel="stylesheet" href="{% static 'fonts/index.css' %}">
     <link rel="stylesheet" href="{% static 'icons/index.css' %}">
     <link rel="stylesheet" href="{% static 'images/index.css' %}">
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-        }
-    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="{% static 'custom.css' %}">
+    {% block extra_head %}{% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js" integrity="sha384-Akqfrbj/HpNVo8k11SXBb6TlBWmXXlYQrCSqEWmyKJe+hDm3Z/B2WVG4smwBkRVm" crossorigin="anonymous"></script>
 </head>
 <body class="rvo-theme">
-<div class="rvo-demo-page">
-  <!-- Banner bovenaan -->
-  <div class="rvo-alert rvo-alert--info rvo-alert--padding-sm">
-    <div class="rvo-alert__container">
-      <!-- <span class="utrecht-icon rvo-icon rvo-icon-info rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Info"></span>-->
-      <div class="rvo-alert-text">
-        <div>
-          <b>Alpha versie <a class="rvo-link" href="https://github.com/RijksICTGilde/wies">v0.1</a></b>  |  Deze pagina is in ontwikkeling  |  All versions are created in an open manner.
-        </div>
+    {% block header %}
+        {% include "parts/header.html" %}
+    {% endblock %}
+    <div class="rvo-layout-column rvo-layout-gap--3xl">
+      <div class="rvo-layout-column rvo-layout-gap--xl">
+        <main class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--md">
+            {% block content %}{% endblock %}
+        </main>
       </div>
     </div>
-  </div>
-  <header class="rvo-header">
-    <div class="rvo-header__logo-wrapper">
-      <div class="rvo-logo rvo-header__logo-img">
-        <div class="rvo-logo__emblem">
-          <img src="https://cdn.jsdelivr.net/npm/@nl-rvo/assets@latest/images/emblem.svg" alt="RVO Embleem">
-        </div>
-        <div class="rvo-logo__wordmark">
-          <p class="rvo-logo__title">Organisatie voor Ontwikkeling, <br> Digitalisering en Innovatie</p>
-        </div>
-      </div>
-    </div>
-  </header>
-  <div class="rvo-menubar__background">
-    <div class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--none">
-      <nav class="rvo-menubar rvo-menubar--md">
-        <ul class="rvo-menubar__ul">
-          <li class="rvo-menubar__list">
-            <ul class="rvo-menubar__group--flex">
-              <li class="rvo-menubar__item">
-                <a href="/projects/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Projecten</a>
-              </li>
-              <li class="rvo-menubar__item">
-                <a href="/colleagues/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Collega's</a>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </nav>
-    </div>
-  </div>
-  <div class="rvo-layout-column rvo-layout-gap--3xl">
-    <div class="rvo-layout-column rvo-layout-gap--xl">
-      <main class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--md">
-        {% block content %}{% endblock %}
-      </main>
-    </div>
-  </div>
-</div>
+    {% block footer %}
+        <!-- evt. include van je footer -->
+    {% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        $('.js-colleague-select').select2({
+          placeholder: "Zoek en voeg collega's toe",
+          width: '100%',
+          allowClear: true
+        });
+        $('.js-status-select').select2({
+          placeholder: "Filter op status",
+          width: 'resolve',
+          allowClear: true
+        });
+        // Forceer native change event voor HTMX, maar voorkom oneindige lus
+        $('.js-status-select').on('select2:select select2:unselect', function(e) {
+          this.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+      // (her)initialiseer na HTMX swap:
+      document.body.addEventListener('htmx:afterSwap', function(evt) {
+        $('.js-status-select').select2({
+          placeholder: "Filter op status",
+          width: 'resolve',
+          allowClear: true
+        });
+        // Forceer native change event voor HTMX na swap, maar voorkom oneindige lus
+        $('.js-status-select').on('select2:select select2:unselect', function(e) {
+          this.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+      });
+    </script>
 </body>
 </html> 

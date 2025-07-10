@@ -1,8 +1,11 @@
 {% extends "base.html" %}
 
 {% block content %}
-<form method="post">{% csrf_token %}
-    {{ form.as_p }}
-    <input type="submit" value="Update">
-</form>
+<div>
+  <a href="/projects/" class="rvo-link rvo-link--with-icon rvo-link--no-underline">
+    <span class="utrecht-icon rvo-icon rvo-icon-terug rvo-icon--md rvo-icon--hemelblauw rvo-link__icon--before" role="img" aria-label="Terug"></span>
+    Terug naar projecten
+  </a>
+</div>
+{% include "rvo_form_layout.html" with form=form heading="Project bewerken" form_intro="<span class='rvo-text--bold'>Pas de gegevens van het project aan.</span> Wijzig de naam en startdatum van het project." legend="Project gegevens" submit_text="Update" cancel_url="/projects/" %}
 {% endblock content %}

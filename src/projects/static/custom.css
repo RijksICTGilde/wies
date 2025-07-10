@@ -1,0 +1,108 @@
+/* RVO/Utrecht-styling voor Select2 multi-select met design tokens */
+
+.select2-container--default .select2-selection--multiple,
+.select2-container--default .select2-selection--single {
+  border: var(--utrecht-form-control-border-width, 1px) solid var(--utrecht-form-control-border-color, #003366);
+  border-radius: var(--utrecht-form-control-border-radius, 8px);
+  min-height: 44px;
+  padding: 6px 8px;
+  background: var(--utrecht-form-control-background-color, #fff);
+  transition: border-color 0.2s;
+  font-family: var(--utrecht-document-font-family, "Noto Sans", Arial, sans-serif);
+  font-size: var(--utrecht-form-control-font-size, 1.1em);
+  color: var(--utrecht-form-control-color, #003366);
+}
+
+.select2-container--default .select2-selection--multiple:focus,
+.select2-container--default .select2-selection--multiple:active,
+.select2-container--default .select2-selection--single:focus,
+.select2-container--default .select2-selection--single:active {
+  border-color: var(--utrecht-form-control-focus-border-color, #009fe3);
+  box-shadow: 0 0 0 2px var(--utrecht-focus-outline-color, #b3e6ff);
+  outline: none;
+}
+
+.select2-selection__choice {
+  background: var(--rvo-color-grijs-200, #E2E8F0);
+  color: var(--rvo-color-logoblauw, #154273);
+  border-radius: var(--rvo-tag-border-radius, 3px);
+  padding: var(--rvo-tag-padding-block-start, 4px) var(--rvo-tag-padding-inline-end, 12px)
+           var(--rvo-tag-padding-block-end, 4px) var(--rvo-tag-padding-inline-start, 12px);
+  margin: 2px 6px 2px 0;
+  font-size: 1em;
+  border: none;
+  font-weight: var(--rvo-font-weight-bold, 700);
+  box-shadow: none;
+  display: flex;
+  align-items: center;
+  text-transform: none;
+  letter-spacing: 0.01em;
+}
+
+.select2-selection__choice__remove {
+  color: var(--rvo-color-logoblauw, #154273);
+  margin-right: 6px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.select2-container--default .select2-search--inline .select2-search__field {
+  color: var(--utrecht-form-control-placeholder-color, #6c757d);
+  font-style: normal;
+  font-size: var(--utrecht-form-control-font-size, 1.1em);
+  font-family: var(--utrecht-document-font-family, "Noto Sans", Arial, sans-serif);
+  opacity: 1;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+  background-color: var(--utrecht-form-control-focus-border-color, #009fe3);
+  color: var(--rvo-color-wit, #fff);
+}
+.select2-container--default .select2-results__option[aria-selected=true] {
+  background-color: var(--rvo-color-lichtblauw-150, #e6f2ff);
+  color: var(--utrecht-form-control-color, #003366);
+}
+
+.select2-container--default .select2-selection--single .select2-selection__arrow b {
+  border-color: var(--utrecht-form-control-border-color, #003366) transparent transparent transparent;
+  border-width: 6px 6px 0 6px;
+}
+
+/* Zorg dat Select2 multi-select exact even hoog is als Utrecht-select */
+.select2-container--default .select2-selection--multiple {
+  min-height: 44px;
+  height: 44px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+}
+
+/* Zorg dat de single select (sortering) ook altijd 44px is */
+.utrecht-select.utrecht-select--html-select {
+  min-height: 44px;
+  height: 44px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  box-sizing: border-box;
+  font-size: var(--utrecht-form-control-font-size, 1.1em);
+  font-family: var(--utrecht-document-font-family, "Noto Sans", Arial, sans-serif);
+} 
+
+/* Tekstkleur in Select2 multi-select (geselecteerde waarden en placeholder) */
+.select2-container--default .select2-selection--multiple,
+.select2-container--default .select2-selection--single {
+  color: var(--utrecht-form-control-color, #003366) !important;
+}
+
+/* Placeholderkleur in Select2 multi-select */
+.select2-container--default .select2-search--inline .select2-search__field::placeholder {
+  color: var(--utrecht-form-control-color, #003366) !important;
+  opacity: 1;
+} 

@@ -4,41 +4,54 @@
 
 <h1>Projecten</h1>
 
-<form action="/projects/new">
-    <button
-      class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before"
-      type="submit"
-    >
-      <span
-        class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit"
-        role="img"
-        aria-label="Plus"
-      ></span>
-      Nieuw project toevoegen
-    </button>
+<form id="project-filter-form"
+      hx-get="/projects/"
+      hx-target="#project_table"
+      hx-trigger="change"
+      hx-include="this"
+      hx-swap="outerHTML"
+      class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three"
+      style="margin-bottom: 2em;">
+    <div class="rvo-layout-column rvo-layout-gap--sm">
+        <label for="status-filter" class="rvo-label">Status</label>
+        <select id="status-filter"
+                name="status"
+                class="js-status-select utrecht-select utrecht-select--html-select"
+                multiple>
+            <option value="LEAD">LEAD</option>
+            <option value="OPEN">OPEN</option>
+            <option value="LOPEND">LOPEND</option>
+            <option value="AFGEWEZEN">AFGEWEZEN</option>
+            <option value="HISTORISCH">HISTORISCH</option>
+        </select>
+    </div>
+    <div class="rvo-layout-column rvo-layout-gap--sm">
+        <label for="sort-filter" class="rvo-label">Sortering</label>
+        <select id="sort-filter"
+                name="order"
+                class="utrecht-select utrecht-select--html-select">
+            <option value="-start_date">Startdatum ↓</option>
+            <option value="start_date">Startdatum ↑</option>
+        </select>
+    </div>
+    <div class="rvo-layout-column rvo-layout-gap--sm" style="align-self: end; text-align: right;">
+        <a href="/projects/new">
+          <button
+            class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before"
+            type="button"
+          >
+            <span
+              class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit"
+              role="img"
+              aria-label="Plus"
+            ></span>
+            Nieuw project toevoegen
+          </button>
+        </a>
+    </div>
 </form>
 
-<br>
-Filter on status:
 
-<select name="status" multiple hx-get="/projects/", hx-target="#project_table", hx-swap="outerHTML", hx-include="[name='sort']">
-    <option value="LEAD">LEAD</option>
-    <option value="OPEN">OPEN</option>
-    <option value="LOPEND">LOPEND</option>
-    <option value="AFGEWEZEN">AFGEWEZEN</option>
-    <option value="HISTORISCH">HISTORISCH</option>
-</select>
-
-<br>
-<br>
-
-Sorting on start date:
-<select name="order", hx-get="/projects/", hx-include="[name='status']", hx-target="#project_table">
-  <option value="start_date">Asc</option>
-  <option value="-start_date", selected="selected">Desc</option>
-</select>
-
-<br>
 <br>
 <br>
 
