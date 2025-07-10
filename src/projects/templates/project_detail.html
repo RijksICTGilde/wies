@@ -38,6 +38,12 @@
           <a href="/colleagues/{{ colleague.id }}/">{{ colleague.name }}</a>,
         {% endfor %}
       </dd>
+      <dt>Skills</dt>
+      <dd>
+        {% for skill in skill_list %}
+          {{ skill.label }},
+        {% endfor %}
+      </dd>
       <dt>Extra info</dt>
       <dd>{{ object.extra_info }}</dd>
     </dl>
