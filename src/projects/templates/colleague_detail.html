@@ -22,8 +22,12 @@
     <dl class="rvo-data-list">
       <dt>Naam</dt>
       <dd>{{ object.name }}</dd>
-      <dt>Functie</dt>
-      <dd>{{ object.function }}</dd>
+      <dt>Skills</dt>
+      <dd>
+        {% for skill in skill_list %}
+          {{ skill.label }},
+        {% endfor %}
+      </dd>
       <dt>Collega ID</dt>
       <dd>{{ object.pk }}</dd>
       <dt>Projecten</dt>

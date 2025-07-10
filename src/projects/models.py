@@ -1,6 +1,6 @@
 from django.db import models
 from django.urls import reverse
-
+from multiselectfield import MultiSelectField
 
 PROJECT_STATUS = {
     'LEAD': "LEAD",
@@ -11,10 +11,21 @@ PROJECT_STATUS = {
 }
 
 
+class Skills(models.TextChoices):
+    BACKEND_DEVELOPMENT = "BE_DEV", "Backend development",
+    FRONTEND_DEVELOPMENT = "FE_DEV", "Frontend development",
+    PRODUCT_OWNER = "PO", "Product owner",
+    UX_DESIGNER = "UX_DES", "UX designer",
+    AI_CONSULTANT = "AI_CONS", "AI Consultant",
+    AI_JURIST = "AI_JUR", "AI Jurist",
+    RESEARCHER = "RES", "Researcher",
+    DATA_ENGINEER = "DAT_ENG", "Data engineer",
+    PROJECT_LEADER = "PROJ_LEAD", "Project leader",
+
 class Colleague(models.Model):
     name = models.CharField(max_length=200)
-    function = models.CharField(max_length=200)
-    # projects through m2m relation
+    skills = MultiSelectField(blank=True, choices=Skills.choices)
+    # projects (through m2m relation on Assignment)
 
     def get_absolute_url(self):
         return reverse("colleague-detail", kwargs={"pk": self.pk})
@@ -31,6 +42,7 @@ class Project(models.Model):
     status = models.CharField(max_length=20, choices=PROJECT_STATUS, default='LEAD')
     organization = models.CharField(blank=True)
     extra_info = models.TextField(blank=True)
+    skills = MultiSelectField(blank=True, choices=Skills.choices)
 
     def get_absolute_url(self):
         return reverse("project-detail", kwargs={"pk": self.pk})
