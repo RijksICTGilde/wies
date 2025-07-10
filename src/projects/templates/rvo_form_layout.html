@@ -18,18 +18,31 @@
           </legend>
           <div class="rvo-layout-column rvo-layout-gap--md">
             {% for field in form %}
-              <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0">
-                <div class="rvo-form-field__label">
-                  <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {% if field.name == "colleagues" %}
+                <div class="rvo-layout-column rvo-layout-gap--xs">
+                  <label for="{{ field.id_for_label }}" class="rvo-label">{{ field.label }}</label>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
                 </div>
-                {{ field }}
-                {% if field.help_text %}
-                  <div class="utrecht-form-field-description">{{ field.help_text }}</div>
-                {% endif %}
-                {% for error in field.errors %}
-                  <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
-                {% endfor %}
-              </div>
+              {% else %}
+                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  </div>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
             {% endfor %}
           </div>
         </fieldset>

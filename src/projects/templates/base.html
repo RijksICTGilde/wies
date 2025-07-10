@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="{% static 'fonts/index.css' %}">
     <link rel="stylesheet" href="{% static 'icons/index.css' %}">
     <link rel="stylesheet" href="{% static 'images/index.css' %}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
     {% block extra_head %}{% endblock %}
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js" integrity="sha384-Akqfrbj/HpNVo8k11SXBb6TlBWmXXlYQrCSqEWmyKJe+hDm3Z/B2WVG4smwBkRVm" crossorigin="anonymous"></script>
 </head>
@@ -28,5 +29,16 @@
     {% block footer %}
         <!-- evt. include van je footer -->
     {% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+      $(document).ready(function() {
+        $('.js-colleague-select').select2({
+          placeholder: "Zoek en voeg collega's toe",
+          width: '100%',
+          allowClear: true
+        });
+      });
+    </script>
 </body>
 </html> 
