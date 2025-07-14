@@ -30,12 +30,6 @@ class RVOFormMixin:
             elif isinstance(widget, forms.SelectMultiple):
                 widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-select utrecht-select--html-select utrecht-select--multiple'
 
-class ProjectForm(RVOFormMixin, forms.ModelForm):
-    class Meta:
-        model = Project
-        fields = '__all__'
-
-from django import forms
 
 class RVOFormMixin:
     def __init__(self, *args, **kwargs):
@@ -60,6 +54,11 @@ class RVOFormMixin:
 class ProjectForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Project
+        fields = '__all__'
+
+class ColleagueForm(RVOFormMixin, forms.ModelForm):
+    class Meta:
+        model = Colleague
         fields = '__all__'
 
 def home(request):
@@ -126,7 +125,6 @@ class ProjectUpdateView(UpdateView):
     form_class = ProjectForm
     template_name = 'project_update_minimal.html'
 
-
 class ColleagueList(ListView):
     template_name = 'colleagues.html'
     model = Colleague
@@ -151,7 +149,7 @@ class ColleagueList(ListView):
 
 class ColleagueCreateView(CreateView):
     model = Colleague
-    fields = ['name', 'function']
+    form_class = ColleagueForm
     template_name = 'colleagues_new.html'
 
 class ColleagueDetail(DetailView):
@@ -177,14 +175,7 @@ class ColleagueDeleteView(DeleteView):
     success_url = reverse_lazy("colleagues")
     template_name='colleague_delete.html'
 
-class ColleagueForm(RVOFormMixin, forms.ModelForm):
-    class Meta:
-        model = Colleague
-        fields = '__all__'
-
 class ColleagueUpdateView(UpdateView):
     model = Colleague
     form_class = ColleagueForm
     template_name = 'colleague_update.html'
-
-# Gebruik ProjectForm in je views waar Project-formulieren worden gebruikt.
