@@ -36,14 +36,14 @@ class RVOFormMixin:
                 widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-select utrecht-select--html-select utrecht-select--multiple'
 
 class ProjectForm(RVOFormMixin, forms.ModelForm):
-    skills = MultiSelectFormField(choices=Skills.choices, widget=forms.SelectMultiple)  # overwrite default widget
+    skills = MultiSelectFormField(required=False, choices=Skills.choices, widget=forms.SelectMultiple)  # overwrite default widget
 
     class Meta:
         model = Project
         fields = '__all__'
 
 class ColleagueForm(RVOFormMixin, forms.ModelForm):
-    skills = MultiSelectFormField(choices=Skills.choices, widget=forms.SelectMultiple)  # overwrite default widget
+    skills = MultiSelectFormField(required=False, choices=Skills.choices, widget=forms.SelectMultiple)  # overwrite default widget
 
     class Meta:
         model = Colleague
