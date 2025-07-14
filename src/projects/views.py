@@ -4,50 +4,8 @@ from django.template.defaulttags import register
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 
-from .models import Project
-from .models import Colleague
-from .models import Skills
-
-from django import forms
-
-from multiselectfield import MultiSelectFormField
-
-class RVOFormMixin:
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        for name, field in self.fields.items():
-            widget = field.widget
-            if name == "colleagues":
-                # Forceer de juiste class voor Select2
-                widget.attrs['class'] = "js-colleague-select utrecht-select utrecht-select--html-select"
-            elif name == "skills":
-                # Forceer de juiste class voor Select2
-                widget.attrs['class'] = "js-skills-select utrecht-select utrecht-select--html-select"
-            elif isinstance(widget, forms.DateInput):
-                widget.input_type = 'date'
-                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input utrecht-textbox--sm'
-            elif isinstance(widget, forms.TextInput):
-                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input'
-            elif isinstance(widget, forms.Textarea):
-                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textarea utrecht-textarea--html-textarea'
-            elif isinstance(widget, forms.Select):
-                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-select utrecht-select--html-select'
-            elif isinstance(widget, forms.SelectMultiple):
-                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-select utrecht-select--html-select utrecht-select--multiple'
-
-class ProjectForm(RVOFormMixin, forms.ModelForm):
-    skills = MultiSelectFormField(required=False, choices=Skills.choices, widget=forms.SelectMultiple)  # overwrite default widget
-
-    class Meta:
-        model = Project
-        fields = '__all__'
-
-class ColleagueForm(RVOFormMixin, forms.ModelForm):
-    skills = MultiSelectFormField(required=False, choices=Skills.choices, widget=forms.SelectMultiple)  # overwrite default widget
-
-    class Meta:
-        model = Colleague
-        fields = '__all__'
+from .models import Project, Colleague, Skills
+from .forms import ProjectForm, ColleagueForm
 
 def home(request):
     return redirect('/projects/')
@@ -58,7 +16,7 @@ def get_item(dictionary, key):
 
 # Create your views here.
 class ProjectList(ListView):
-    template_name = 'projects.html'
+    template_name = 'project_list.html'
     model = Project
 
     def get_queryset(self):
@@ -76,14 +34,14 @@ class ProjectList(ListView):
     
     def get_template_names(self):
         if 'HX-Request' in self.request.headers:
-            return ['project_table.html']
+            return ['parts/project_table.html']
         else:
-            return ['projects.html']
+            return ['project_list.html']
 
 class ProjectCreateView(CreateView):
     model = Project
     form_class = ProjectForm
-    template_name = 'projects_new.html'
+    template_name = 'project_new.html'
 
 class ProjectDetail(DetailView):
     model = Project
@@ -111,10 +69,10 @@ class ProjectDeleteView(DeleteView):
 class ProjectUpdateView(UpdateView):
     model = Project
     form_class = ProjectForm
-    template_name = 'project_update_minimal.html'
+    template_name = 'project_update.html'
 
 class ColleagueList(ListView):
-    template_name = 'colleagues.html'
+    template_name = 'colleague_list.html'
     model = Colleague
 
     def get_context_data(self, **kwargs):
@@ -138,7 +96,7 @@ class ColleagueList(ListView):
 class ColleagueCreateView(CreateView):
     model = Colleague
     form_class = ColleagueForm
-    template_name = 'colleagues_new.html'
+    template_name = 'colleague_new.html'
 
 class ColleagueDetail(DetailView):
     model = Colleague
