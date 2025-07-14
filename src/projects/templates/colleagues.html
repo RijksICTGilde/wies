@@ -32,7 +32,7 @@
         </th>
         <th scope="col" class="rvo-table-header">
           <div class="rvo-table-header__sortable-container">
-            Functie
+            Skills
           </div>
         </th>
       </tr>
@@ -41,7 +41,11 @@
       {% for colleague in object_list %}
       <tr class="rvo-table-row">
         <td class="rvo-table-cell"><a href="/colleagues/{{ colleague.pk }}/">{{ colleague.name }}</a></td>
-        <td class="rvo-table-cell">{{ colleague.function }}</td>
+        <td class="rvo-table-cell">
+          {% for skill in skills|get_item:colleague.id %}
+            {{ skill.label }},
+          {% endfor %}
+        </td>
       </tr>
       {% endfor %}
     </tbody>
