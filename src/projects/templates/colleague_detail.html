@@ -23,17 +23,15 @@
       <dt>Naam</dt>
       <dd>{{ object.name }}</dd>
       <dt>Skills</dt>
-      <dd>
-        {% for skill in skill_list %}
-          {{ skill.label }},
-        {% endfor %}
-      </dd>
-      <dt>Collega ID</dt>
-      <dd>{{ object.pk }}</dd>
+      <dd>{{ object.skills|get_skill_labels|join:", " }}</dd>
       <dt>Projecten</dt>
       <dd>
         {% for project in project_list %}
-          <a href="/projects/{{ project.id }}/">{{ project.name }}</a>,
+          {% if project.project_type == 'INDIVIDUAL' %}
+            <a href="/jobs/{{ project.id }}/">{{ project.name }}</a>,
+          {% else %}
+            <a href="/projects/{{ project.id }}/">{{ project.name }}</a>,
+          {% endif %}
         {% endfor %}
 
       </dd>

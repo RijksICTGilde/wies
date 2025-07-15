@@ -10,6 +10,11 @@ PROJECT_STATUS = {
     'HISTORISCH': "HISTORISCH",
 }
 
+PROJECT_TYPE = {
+    'GROUP': "GROUP",
+    'INDIVIDUAL': "INDIVIDUAL",
+}
+
 
 class Skills(models.TextChoices):
     BACKEND_DEVELOPMENT = "BE_DEV", "Backend development",
@@ -25,7 +30,6 @@ class Skills(models.TextChoices):
 class Colleague(models.Model):
     name = models.CharField(max_length=200)
     skills = MultiSelectField(blank=True, choices=Skills.choices)
-    # projects (through m2m relation on Assignment)
 
     def get_absolute_url(self):
         return reverse("colleague-detail", kwargs={"pk": self.pk})
@@ -34,15 +38,15 @@ class Colleague(models.Model):
         return self.name
 
 # Create your models here.
-class Project(models.Model):
+class ProjectBase(models.Model):
     name = models.CharField(max_length=200)
     start_date = models.DateField(blank=True, null=True)  #TODO: timezone aware?
     end_date = models.DateField(null=True, blank=True)  #TODO: timezone aware?
-    colleagues = models.ManyToManyField(Colleague, through='Assignment', related_name='projects', blank=True)
+    # assignments through foreignkey on Assignment
     status = models.CharField(max_length=20, choices=PROJECT_STATUS, default='LEAD')
     organization = models.CharField(blank=True)
     extra_info = models.TextField(blank=True)
-    skills = MultiSelectField(blank=True, choices=Skills.choices)
+    project_type = models.CharField(max_length=20, choices=PROJECT_TYPE, default='GROUP')
 
     def get_absolute_url(self):
         return reverse("project-detail", kwargs={"pk": self.pk})
@@ -51,5 +55,47 @@ class Project(models.Model):
         return self.name
 
 class Assignment(models.Model):
-    colleague = models.ForeignKey('Colleague', models.CASCADE) # TODO: removal of colleague triggers removal of assigment, probably undesirable
-    project = models.ForeignKey('Project', models.CASCADE)
+    colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='assignments', null=True, blank=True) # TODO: removal of colleague triggers removal of assigment, probably undesirable
+    project = models.ForeignKey('ProjectBase', models.CASCADE, related_name='assignments')
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
+    hours_per_week = models.IntegerField(null=True, blank=True)
+    skills = MultiSelectField(blank=True, choices=Skills.choices)
+
+    def get_absolute_url(self):
+        return reverse("assignment-detail", kwargs={"pk": self.pk})
+
+class ProjectManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(project_type='GROUP')
+
+class Project(ProjectBase):
+    objects = ProjectManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = "Project"
+        verbose_name_plural = "Projects"
+
+    def save(self, *args, **kwargs):
+        self.project_type = 'GROUP'
+        super().save(*args, **kwargs)
+
+class JobManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(project_type='INDIVIDUAL')
+
+class Job(ProjectBase):
+    objects = JobManager()
+
+    class Meta:
+        proxy = True
+        verbose_name = "Job"
+        verbose_name_plural = "Jobs"
+
+    def save(self, *args, **kwargs):
+        self.project_type = 'INDIVIDUAL'
+        super().save(*args, **kwargs)
+
+    def get_absolute_url(self):
+        return reverse("job-detail", kwargs={"pk": self.pk})

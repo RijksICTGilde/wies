@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="rvo-layout-column rvo-layout-gap--xl">
+  
+  <div class="rvo-layout-column rvo-layout-gap--lg">
+    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Opdracht gegevens</h2>
+    
+    <dl class="rvo-data-list">
+      <dt>Project</dt>
+      <dd><a href="{% url 'project-detail' object.project.pk %}">{{ object.project }}</a></dd>
+      <dt>Collega</dt>
+      <dd>{{ object.colleague }}</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="rvo-layout-row rvo-layout-gap--md">
+      <a href="/assignments/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
+        Opdracht bewerken
+      </a>
+      <a href="/assignments/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md">
+        Opdracht verwijderen
+      </a>
+    </div>
+
+{% endblock content %}

@@ -2,7 +2,7 @@ from django import forms
 
 from multiselectfield import MultiSelectFormField
 
-from .models import Project, Colleague, Skills
+from .models import Project, Colleague, Skills, Assignment, Job
 
 class RVOFormMixin:
     def __init__(self, *args, **kwargs):
@@ -28,11 +28,10 @@ class RVOFormMixin:
                 widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-select utrecht-select--html-select utrecht-select--multiple'
 
 class ProjectForm(RVOFormMixin, forms.ModelForm):
-    skills = MultiSelectFormField(required=False, choices=Skills.choices, widget=forms.SelectMultiple)  # overwrite default widget
-
     class Meta:
         model = Project
         fields = '__all__'
+        exclude = ['project_type',]
 
 class ColleagueForm(RVOFormMixin, forms.ModelForm):
     skills = MultiSelectFormField(required=False, choices=Skills.choices, widget=forms.SelectMultiple)  # overwrite default widget
@@ -40,3 +39,22 @@ class ColleagueForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Colleague
         fields = '__all__'
+
+class AssignmentForm(RVOFormMixin, forms.ModelForm):
+    skills = MultiSelectFormField(required=False, choices=Skills.choices, widget=forms.SelectMultiple)  # overwrite default widget
+    
+    class Meta:
+        model = Assignment
+        fields = '__all__'
+
+class JobForm(RVOFormMixin, forms.ModelForm):
+
+    # todo: can this use the existing AssigmentForm?
+    skills = MultiSelectFormField(required=False, choices=Skills.choices, widget=forms.SelectMultiple)
+    colleague = forms.ModelChoiceField(queryset=Colleague.objects.all(), required=False)
+    hours_per_week = forms.IntegerField(required=False)
+
+    class Meta:
+        model = Job
+        fields = '__all__'
+        exclude = ['project_type',]

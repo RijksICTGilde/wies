@@ -42,9 +42,7 @@
       <tr class="rvo-table-row">
         <td class="rvo-table-cell"><a href="/colleagues/{{ colleague.pk }}/">{{ colleague.name }}</a></td>
         <td class="rvo-table-cell">
-          {% for skill in skills|get_item:colleague.id %}
-            {{ skill.label }},
-          {% endfor %}
+          {{ colleague.skills|get_skill_labels|join:", " }}
         </td>
       </tr>
       {% endfor %}

@@ -17,11 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from projects.views import home
+from projects.views import home, client
 from projects.views import ProjectList
 from projects.views import ProjectCreateView, ColleagueCreateView, ProjectDeleteView, ColleagueDeleteView
 from projects.views import ProjectDetail, ColleagueDetail, ProjectUpdateView, ColleagueUpdateView
-from projects.views import ColleagueList
+from projects.views import ColleagueList, AssignmentDetailView, AssignmentUpdateView, AssignmentCreateView, AssignmentDeleteView
+from projects.views import JobList, JobCreateView, JobDetail, JobUpdateView, JobDeleteView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -36,4 +37,14 @@ urlpatterns = [
     path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
     path('colleagues/<int:pk>/delete', ColleagueDeleteView.as_view()),
     path('colleagues/<int:pk>/update', ColleagueUpdateView.as_view()),
+    path('assignments/<int:pk>/', AssignmentDetailView.as_view(), name='assignment-detail'),
+    path('assignments/<int:pk>/update', AssignmentUpdateView.as_view()),
+    path('assignments/<int:pk>/delete', AssignmentDeleteView.as_view()),
+    path('assignments/new', AssignmentCreateView.as_view()),
+    path('clients/<str:name>', client),
+    path('jobs/', JobList.as_view(), name='jobs'),
+    path('jobs/new', JobCreateView.as_view()),
+    path('jobs/<int:pk>/', JobDetail.as_view(), name='job-detail'),
+    path('jobs/<int:pk>/update', JobUpdateView.as_view()),
+    path('jobs/<int:pk>/delete', JobDeleteView.as_view())
 ]

@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "parts/rvo_form_layout.html" with form=form heading="Opdracht bewerken" form_intro="<span class='rvo-text--bold'>Pas de gegevens van de opdracht aan.</span> Wijzig de opdracht." legend="Opdracht gegevens" submit_text="Opdracht bijwerken" cancel_url="/jobs/" %}
+{% endblock %}

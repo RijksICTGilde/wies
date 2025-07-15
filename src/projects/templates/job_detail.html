@@ -6,7 +6,7 @@
         <!-- Breadcrumbs -->
         <ol class="rvo-breadcrumbs rvo-breadcrumbs--sm">
           <li class="rvo-breadcrumbs-item">
-            <a href="/projects/" class="rvo-link rvo-link--no-underline">Projecten</a>
+            <a href="/jobs/" class="rvo-link rvo-link--no-underline">Opdrachten</a>
           </li>
           <li class="rvo-breadcrumbs-item">
             <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
@@ -17,10 +17,10 @@
   </div>
   
   <div class="rvo-layout-column rvo-layout-gap--lg">
-    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Project gegevens</h2>
+    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Opdracht gegevens</h2>
     
     <dl class="rvo-data-list">
-      <dt>Project naam</dt>
+      <dt>Opdracht naam</dt>
       <dd>{{ object.name }}</dd>
       <dt>Organisatie</dt>
       <dd><a href="/clients/{{ object.organization }}">{{ object.organization }}</a></dd>
@@ -33,8 +33,8 @@
       <dt>Extra info</dt>
       <dd>{{ object.extra_info }}</dd>
     </dl>
-    
-    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Opdrachten</h2>
+
+    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Inzet</h2>
 
     <table class="rvo-table" style="border-collapse: collapse; border: 1px solid #ccc;">
       <style>
@@ -57,7 +57,13 @@
         <tr>
           <td><a href="/assignments/{{ assignment.id }}">{{ assignment.id }}</a></td>
           <td>{{ assignment.skills|get_skill_labels|join:", " }}</td>
-          <td><a href="{% url 'colleague-detail' assignment.colleague.pk %}">{{ assignment.colleague.name }}</a></td>
+          <td>
+            {% if assignment.colleague %}
+              <a href="{% url 'colleague-detail' assignment.colleague.pk %}">{{ assignment.colleague.name }}</a>
+            {% else %}
+              -
+            {% endif %}
+          </td>
           <td>{{ assignment.start_date }} - {{ assignment.end_date }}</td>
           <td>{{ assignment.hours_per_week }}</td>
         </tr>
@@ -65,16 +71,12 @@
       </tbody>
     </table>
 
-<a href="/assignments/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
-        Opdracht toevoegen
-      </a>
-
     <div class="rvo-layout-row rvo-layout-gap--md">
-      <a href="/projects/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
-        Project bewerken
+      <a href="/jobs/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
+        Opdracht bewerken
       </a>
-      <a href="/projects/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md">
-        Project verwijderen
+      <a href="/jobs/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md">
+        Opdracht verwijderen
       </a>
     </div>
   </div>
