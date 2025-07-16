@@ -7,7 +7,7 @@
   </div>
   
   <div class="rvo-layout-column rvo-layout-gap--lg">
-    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Projecten</h2>
+    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Opdrachten</h2>
     
     <table class="rvo-table" style="border-collapse: collapse; border: 1px solid #ccc;">
       <style>
@@ -18,23 +18,23 @@
       </style>
       <thead>
         <tr>
-          <th>Project naam</th>
+          <th>Opdracht naam</th>
           <th>Collega's</th>
           <th>Start datum</th>
           <th>Eind datum</th>
         </tr>
       </thead>
       <tbody>
-        {% for project in projects %}
+        {% for assignment in assignments %}
         <tr>
-          <td><a href="{% url 'project-detail' project.id %}">{{ project.name }}</a></td>
+          <td><a href="{% url 'assignment-detail' assignment.id %}">{{ assignment.name }}</a></td>
           <td>
-            {% for colleague in project.colleagues %}
+            {% for colleague in assignment.colleagues %}
               <a href="{% url 'colleague-detail' colleague.id %}">{{ colleague.name }}</a>{% if not forloop.last %}, {% endif %}
             {% endfor %}
           </td>
-          <td>{{ project.start_date }}</td>
-          <td>{{ project.end_date }}</td>
+          <td>{{ assignment.start_date }}</td>
+          <td>{{ assignment.end_date }}</td>
         </tr>
         {% endfor %}
       </tbody>

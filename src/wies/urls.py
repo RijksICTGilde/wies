@@ -18,33 +18,27 @@ from django.contrib import admin
 from django.urls import path
 
 from projects.views import home, client
-from projects.views import ProjectList
-from projects.views import ProjectCreateView, ColleagueCreateView, ProjectDeleteView, ColleagueDeleteView
-from projects.views import ProjectDetail, ColleagueDetail, ProjectUpdateView, ColleagueUpdateView
-from projects.views import ColleagueList, AssignmentDetailView, AssignmentUpdateView, AssignmentCreateView, AssignmentDeleteView
-from projects.views import JobList, JobCreateView, JobDetail, JobUpdateView, JobDeleteView
+from projects.views import AssignmentList
+from projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
+from projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
+from projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home),
-    path('projects/', ProjectList.as_view(), name='projects'),
-    path('projects/new', ProjectCreateView.as_view()),
-    path('projects/<int:pk>/', ProjectDetail.as_view(), name='project-detail'),
-    path('projects/<int:pk>/delete', ProjectDeleteView.as_view()),
-    path('projects/<int:pk>/update', ProjectUpdateView.as_view()),
+    path('assignments/', AssignmentList.as_view(), name='assignments'),
+    path('assignments/new', AssignmentCreateView.as_view()),
+    path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
+    path('assignments/<int:pk>/delete', AssignmentDeleteView.as_view()),
+    path('assignments/<int:pk>/update', AssignmentUpdateView.as_view()),
     path('colleagues/', ColleagueList.as_view(), name='colleagues'),
     path('colleagues/new', ColleagueCreateView.as_view()),
     path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
     path('colleagues/<int:pk>/delete', ColleagueDeleteView.as_view()),
     path('colleagues/<int:pk>/update', ColleagueUpdateView.as_view()),
-    path('assignments/<int:pk>/', AssignmentDetailView.as_view(), name='assignment-detail'),
-    path('assignments/<int:pk>/update', AssignmentUpdateView.as_view()),
-    path('assignments/<int:pk>/delete', AssignmentDeleteView.as_view()),
-    path('assignments/new', AssignmentCreateView.as_view()),
+    path('placements/<int:pk>/', PlacementDetailView.as_view(), name='placement-detail'),
+    path('placements/<int:pk>/update', PlacementUpdateView.as_view()),
+    path('placements/<int:pk>/delete', PlacementDeleteView.as_view()),
+    path('placements/new', PlacementCreateView.as_view()),
     path('clients/<str:name>', client),
-    path('jobs/', JobList.as_view(), name='jobs'),
-    path('jobs/new', JobCreateView.as_view()),
-    path('jobs/<int:pk>/', JobDetail.as_view(), name='job-detail'),
-    path('jobs/<int:pk>/update', JobUpdateView.as_view()),
-    path('jobs/<int:pk>/delete', JobDeleteView.as_view())
 ]
