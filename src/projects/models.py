@@ -2,12 +2,17 @@ from django.db import models
 from django.urls import reverse
 from multiselectfield import MultiSelectField
 
-PROJECT_STATUS = {
+ASSIGNMENT_STATUS = {
     'LEAD': "LEAD",
     'OPEN': "OPEN",
     'LOPEND': "LOPEND",
     'AFGEWEZEN': "AFGEWEZEN",
     'HISTORISCH': "HISTORISCH",
+}
+
+ASSIGNMENT_TYPE = {
+    'GROUP': "GROUP",
+    'INDIVIDUAL': "INDIVIDUAL",
 }
 
 
@@ -20,12 +25,11 @@ class Skills(models.TextChoices):
     AI_JURIST = "AI_JUR", "AI Jurist",
     RESEARCHER = "RES", "Researcher",
     DATA_ENGINEER = "DAT_ENG", "Data engineer",
-    PROJECT_LEADER = "PROJ_LEAD", "Project leader",
+    ASSIGNMENT_LEADER = "PROJ_LEAD", "Project leader",
 
 class Colleague(models.Model):
     name = models.CharField(max_length=200)
     skills = MultiSelectField(blank=True, choices=Skills.choices)
-    # projects (through m2m relation on Assignment)
 
     def get_absolute_url(self):
         return reverse("colleague-detail", kwargs={"pk": self.pk})
@@ -34,22 +38,32 @@ class Colleague(models.Model):
         return self.name
 
 # Create your models here.
-class Project(models.Model):
+class Assignment(models.Model):
     name = models.CharField(max_length=200)
     start_date = models.DateField(blank=True, null=True)  #TODO: timezone aware?
     end_date = models.DateField(null=True, blank=True)  #TODO: timezone aware?
-    colleagues = models.ManyToManyField(Colleague, through='Assignment', related_name='projects', blank=True)
-    status = models.CharField(max_length=20, choices=PROJECT_STATUS, default='LEAD')
+    # placements through foreignkey on Placement
+    status = models.CharField(max_length=20, choices=ASSIGNMENT_STATUS, default='LEAD')
     organization = models.CharField(blank=True)
     extra_info = models.TextField(blank=True)
-    skills = MultiSelectField(blank=True, choices=Skills.choices)
+    assignment_type = models.CharField(max_length=20, choices=ASSIGNMENT_TYPE, default='GROUP')
 
     def get_absolute_url(self):
-        return reverse("project-detail", kwargs={"pk": self.pk})
+        return reverse("assignment-detail", kwargs={"pk": self.pk})
 
     def __str__(self):
         return self.name
 
-class Assignment(models.Model):
-    colleague = models.ForeignKey('Colleague', models.CASCADE) # TODO: removal of colleague triggers removal of assigment, probably undesirable
-    project = models.ForeignKey('Project', models.CASCADE)
+class Placement(models.Model):
+    colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='placements', null=True, blank=True) # TODO: removal of colleague triggers removal of placement, probably undesirable
+    assignment = models.ForeignKey('Assignment', models.CASCADE, related_name='placements')
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(blank=True, null=True)
+    hours_per_week = models.IntegerField(null=True, blank=True)
+    skills = MultiSelectField(blank=True, choices=Skills.choices)
+
+    def get_absolute_url(self):
+        return reverse("placement-detail", kwargs={"pk": self.pk})
+
+
+

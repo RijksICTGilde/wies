@@ -2,11 +2,11 @@
 
 {% block content %}
 
-<h1>Projecten</h1>
+<h1>Opdrachten</h1>
 
-<form id="project-filter-form"
-      hx-get="/projects/"
-      hx-target="#project_table"
+<form id="assignment-filter-form"
+      hx-get="/assignments/"
+      hx-target="#assignment_table"
       hx-trigger="change"
       hx-include="this"
       hx-swap="outerHTML"
@@ -35,7 +35,7 @@
         </select>
     </div>
     <div class="rvo-layout-column rvo-layout-gap--sm" style="align-self: end; text-align: right;">
-        <a href="/projects/new">
+        <a href="/assignments/new">
           <button
             class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before"
             type="button"
@@ -45,7 +45,7 @@
               role="img"
               aria-label="Plus"
             ></span>
-            Nieuw project toevoegen
+            Nieuwe opdracht toevoegen
           </button>
         </a>
     </div>
@@ -55,6 +55,6 @@
 <br>
 
 <div class="rvo-table--responsive">
-  {% include 'parts/project_table.html' %}
+  {% include 'parts/assignment_table.html' %}
 </div>
 {% endblock content %}

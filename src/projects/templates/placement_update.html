@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "parts/rvo_form_layout.html" with form=form heading="Inzet bewerken" form_intro="<span class='rvo-text--bold'>Pas de gegevens van de inzet aan.</span> Wijzig de inzet." legend="Inzet gegevens" submit_text="Inzet bijwerken" cancel_url="/placement/" %}
+{% endblock %}

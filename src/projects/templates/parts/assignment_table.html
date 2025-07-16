@@ -1,4 +1,4 @@
-<table class="rvo-table" id="project_table">
+<table class="rvo-table" id="assignment_table">
     <thead class="rvo-table-head">
       <tr class="rvo-table-row">
         <th scope="col" class="rvo-table-header">
@@ -8,7 +8,7 @@
         </th>
         <th scope="col" class="rvo-table-header">
           <div class="rvo-table-header__sortable-container">
-            Organisatie
+            Opdrachtgever
           </div>
         </th>
          <th scope="col" class="rvo-table-header">
@@ -37,13 +37,13 @@
       </tr>
     </thead>
     <tbody class="rvo-table-body">
-      {% for project in object_list %}
+      {% for assignment in object_list %}
       <tr class="rvo-table-row">
-        <td class="rvo-table-cell"><a href="/projects/{{ project.pk }}/">{{ project.name }}</a></td>
-        <td class="rvo-table-cell">{{ project.organization }}</td>
-        <td class="rvo-table-cell">{{ project.status }}</td>
-        <td class="rvo-table-cell">{{ project.start_date }}</td>
-        <td class="rvo-table-cell">{{ project.end_date }}</td>
+        <td class="rvo-table-cell"><a href="/assignments/{{ assignment.pk }}/">{{ assignment.name }}</a></td>
+        <td class="rvo-table-cell">{{ assignment.organization }}</td>
+        <td class="rvo-table-cell">{{ assignment.status }}</td>
+        <td class="rvo-table-cell">{{ assignment.start_date }}</td>
+        <td class="rvo-table-cell">{{ assignment.end_date }}</td>
       </tr>
       {% endfor %}
     </tbody>

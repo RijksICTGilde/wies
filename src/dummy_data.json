@@ -1,0 +1,842 @@
+[
+  {
+    "model": "projects.colleague",
+    "pk": 1,
+    "fields": {
+      "name": "Jan van der Berg",
+      "skills": ["BE_DEV", "PROJ_LEAD"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 2,
+    "fields": {
+      "name": "Lisa Jansen",
+      "skills": ["FE_DEV", "UX_DES"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 3,
+    "fields": {
+      "name": "Mohammed Ali",
+      "skills": ["AI_CONS", "DAT_ENG"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 4,
+    "fields": {
+      "name": "Sarah de Vries",
+      "skills": ["PO", "AI_JUR"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 5,
+    "fields": {
+      "name": "Thomas Bakker",
+      "skills": ["RES", "BE_DEV"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 6,
+    "fields": {
+      "name": "Emma Visser",
+      "skills": ["FE_DEV", "AI_CONS"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 7,
+    "fields": {
+      "name": "Pieter Smit",
+      "skills": ["DAT_ENG", "PROJ_LEAD"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 8,
+    "fields": {
+      "name": "Fatima Hassan",
+      "skills": ["UX_DES", "PO"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 9,
+    "fields": {
+      "name": "Ruben de Jong",
+      "skills": ["AI_JUR", "RES"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 10,
+    "fields": {
+      "name": "Anna Mulder",
+      "skills": ["BE_DEV", "DAT_ENG"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 11,
+    "fields": {
+      "name": "Kevin van Dijk",
+      "skills": ["FE_DEV", "PROJ_LEAD"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 12,
+    "fields": {
+      "name": "Marloes Hendriks",
+      "skills": ["AI_CONS", "UX_DES"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 13,
+    "fields": {
+      "name": "Ahmed Osman",
+      "skills": ["DAT_ENG", "AI_JUR"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 14,
+    "fields": {
+      "name": "Sophie Brouwer",
+      "skills": ["PO", "RES"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 15,
+    "fields": {
+      "name": "Marco van Leeuwen",
+      "skills": ["BE_DEV", "AI_CONS"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 16,
+    "fields": {
+      "name": "Nadia Kowalski",
+      "skills": ["FE_DEV", "UX_DES"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 17,
+    "fields": {
+      "name": "Jeroen Peters",
+      "skills": ["PROJ_LEAD", "DAT_ENG"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 18,
+    "fields": {
+      "name": "Yasmin El Hadj",
+      "skills": ["AI_JUR", "PO"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 19,
+    "fields": {
+      "name": "Daan Schouten",
+      "skills": ["RES", "BE_DEV"]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 20,
+    "fields": {
+      "name": "Inge Vos",
+      "skills": ["AI_CONS", "FE_DEV"]
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 1,
+    "fields": {
+      "name": "AI Chatbot voor Gemeente Amsterdam",
+      "start_date": "2024-01-15",
+      "end_date": "2024-06-30",
+      "status": "LOPEND",
+      "organization": "Gemeente Amsterdam",
+      "extra_info": "Ontwikkeling van een AI-chatbot voor het beantwoorden van veelgestelde vragen van inwoners",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 2,
+    "fields": {
+      "name": "Data Platform voor Zorgverzekeraars",
+      "start_date": "2024-03-01",
+      "end_date": "2024-12-31",
+      "status": "OPEN",
+      "organization": "Ministerie van Volksgezondheid, Welzijn en Sport (VWS)",
+      "extra_info": "Opzetten van een centraal data platform voor het analyseren van zorgdata",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 3,
+    "fields": {
+      "name": "Juridische AI Assistent",
+      "start_date": "2024-05-01",
+      "end_date": null,
+      "status": "LEAD",
+      "organization": "Ministerie van Justitie en Veiligheid (JenV)",
+      "extra_info": "AI-tool voor het ondersteunen van juristen bij contractanalyse",
+      "assignment_type": "INDIVIDUAL"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 4,
+    "fields": {
+      "name": "E-commerce Platform Redesign",
+      "start_date": "2023-10-01",
+      "end_date": "2024-02-28",
+      "status": "HISTORISCH",
+      "organization": "Ministerie van Economische Zaken en Klimaat (EZK)",
+      "extra_info": "Complete redesign van het e-commerce platform met focus op mobile-first",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 5,
+    "fields": {
+      "name": "Blockchain Onderzoek",
+      "start_date": "2024-02-01",
+      "end_date": "2024-03-31",
+      "status": "AFGEWEZEN",
+      "organization": "De Nederlandsche Bank (DNB)",
+      "extra_info": "Haalbaarheidsstudie voor blockchain implementatie in betalingsverkeer",
+      "assignment_type": "INDIVIDUAL"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 6,
+    "fields": {
+      "name": "Machine Learning Platform",
+      "start_date": "2024-04-01",
+      "end_date": "2024-11-30",
+      "status": "LOPEND",
+      "organization": "Ministerie van Volksgezondheid, Welzijn en Sport (VWS)",
+      "extra_info": "Ontwikkeling van een ML platform voor medische beeldanalyse",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 7,
+    "fields": {
+      "name": "Smart City Dashboard",
+      "start_date": "2024-06-01",
+      "end_date": "2024-12-31",
+      "status": "OPEN",
+      "organization": "Gemeente Rotterdam",
+      "extra_info": "Real-time dashboard voor monitoring van stad infrastructuur",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 8,
+    "fields": {
+      "name": "Cybersecurity Audit Tool",
+      "start_date": "2024-01-01",
+      "end_date": "2024-08-31",
+      "status": "LOPEND",
+      "organization": "Ministerie van Economische Zaken en Klimaat (EZK)",
+      "extra_info": "Geautomatiseerde tool voor cybersecurity audits",
+      "assignment_type": "INDIVIDUAL"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 9,
+    "fields": {
+      "name": "Logistiek Optimalisatie Systeem",
+      "start_date": "2023-09-01",
+      "end_date": "2024-01-31",
+      "status": "HISTORISCH",
+      "organization": "Ministerie van Infrastructuur en Waterstaat (IenW)",
+      "extra_info": "AI-gedreven optimalisatie van logistieke routes",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 10,
+    "fields": {
+      "name": "Fintech Mobile App",
+      "start_date": "2024-02-15",
+      "end_date": "2024-09-30",
+      "status": "LOPEND",
+      "organization": "Ministerie van Financiën (MinFin)",
+      "extra_info": "Nieuwe features voor mobile banking applicatie",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 11,
+    "fields": {
+      "name": "Healthcare Data Analysis",
+      "start_date": "2024-03-01",
+      "end_date": null,
+      "status": "LEAD",
+      "organization": "Ministerie van Volksgezondheid, Welzijn en Sport (VWS)",
+      "extra_info": "Analyse van patiëntdata voor verbeterde zorguitkomsten",
+      "assignment_type": "INDIVIDUAL"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 12,
+    "fields": {
+      "name": "Energy Management System",
+      "start_date": "2024-05-15",
+      "end_date": "2025-02-28",
+      "status": "OPEN",
+      "organization": "Ministerie van Economische Zaken en Klimaat (EZK)",
+      "extra_info": "Smart grid management en energie voorspelling",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 13,
+    "fields": {
+      "name": "E-learning Platform",
+      "start_date": "2023-11-01",
+      "end_date": "2024-04-30",
+      "status": "HISTORISCH",
+      "organization": "Ministerie van Onderwijs, Cultuur en Wetenschap (OCW)",
+      "extra_info": "Interactief leerplatform voor online onderwijs",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 14,
+    "fields": {
+      "name": "IoT Monitoring Systeem",
+      "start_date": "2024-01-20",
+      "end_date": "2024-07-31",
+      "status": "LOPEND",
+      "organization": "Ministerie van Infrastructuur en Waterstaat (IenW)",
+      "extra_info": "Real-time monitoring van luchthaven infrastructuur",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 15,
+    "fields": {
+      "name": "Digital Twin Manufacturing",
+      "start_date": "2024-04-01",
+      "end_date": null,
+      "status": "LEAD",
+      "organization": "Ministerie van Economische Zaken en Klimaat (EZK)",
+      "extra_info": "Digitale tweeling voor productie-optimalisatie",
+      "assignment_type": "INDIVIDUAL"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 16,
+    "fields": {
+      "name": "Social Media Analytics",
+      "start_date": "2024-06-01",
+      "end_date": "2024-10-31",
+      "status": "OPEN",
+      "organization": "Ministerie van Economische Zaken en Klimaat (EZK)",
+      "extra_info": "Sentimentanalyse van sociale media voor content strategie",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 17,
+    "fields": {
+      "name": "Agricultural AI Assistant",
+      "start_date": "2023-08-01",
+      "end_date": "2024-03-31",
+      "status": "HISTORISCH",
+      "organization": "Ministerie van Landbouw, Natuur en Voedselkwaliteit (LNV)",
+      "extra_info": "AI-tool voor gewasvoorspelling en bodem analyse",
+      "assignment_type": "INDIVIDUAL"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 18,
+    "fields": {
+      "name": "Supply Chain Transparency",
+      "start_date": "2024-02-01",
+      "end_date": "2024-11-30",
+      "status": "LOPEND",
+      "organization": "Ministerie van Economische Zaken en Klimaat (EZK)",
+      "extra_info": "Blockchain-gebaseerde supply chain tracking",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 19,
+    "fields": {
+      "name": "Fraud Detection System",
+      "start_date": "2024-05-01",
+      "end_date": "2024-12-31",
+      "status": "OPEN",
+      "organization": "Ministerie van Financiën (MinFin)",
+      "extra_info": "Machine learning voor fraudedetectie in transacties",
+      "assignment_type": "INDIVIDUAL"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 20,
+    "fields": {
+      "name": "Climate Data Portal",
+      "start_date": "2024-01-01",
+      "end_date": "2024-08-31",
+      "status": "LOPEND",
+      "organization": "KNMI",
+      "extra_info": "Publieke portal voor toegang tot klimaatdata",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 1,
+    "fields": {
+      "colleague": 1,
+      "assignment": 1,
+      "start_date": "2024-01-15",
+      "end_date": "2024-06-30",
+      "hours_per_week": 32,
+      "skills": ["BE_DEV", "PROJ_LEAD"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 2,
+    "fields": {
+      "colleague": 2,
+      "assignment": 1,
+      "start_date": "2024-02-01",
+      "end_date": "2024-06-30",
+      "hours_per_week": 24,
+      "skills": ["FE_DEV", "UX_DES"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 3,
+    "fields": {
+      "colleague": 3,
+      "assignment": 1,
+      "start_date": "2024-01-20",
+      "end_date": "2024-04-30",
+      "hours_per_week": 16,
+      "skills": ["AI_CONS"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 4,
+    "fields": {
+      "colleague": 7,
+      "assignment": 2,
+      "start_date": "2024-03-01",
+      "end_date": "2024-12-31",
+      "hours_per_week": 40,
+      "skills": ["DAT_ENG", "PROJ_LEAD"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 5,
+    "fields": {
+      "colleague": 4,
+      "assignment": 2,
+      "start_date": "2024-03-15",
+      "end_date": "2024-12-31",
+      "hours_per_week": 32,
+      "skills": ["PO"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 6,
+    "fields": {
+      "colleague": 9,
+      "assignment": 3,
+      "start_date": "2024-05-01",
+      "end_date": null,
+      "hours_per_week": 40,
+      "skills": ["AI_JUR"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 7,
+    "fields": {
+      "colleague": 11,
+      "assignment": 4,
+      "start_date": "2023-10-01",
+      "end_date": "2024-02-28",
+      "hours_per_week": 32,
+      "skills": ["FE_DEV", "PROJ_LEAD"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 8,
+    "fields": {
+      "colleague": 2,
+      "assignment": 4,
+      "start_date": "2023-10-01",
+      "end_date": "2024-02-28",
+      "hours_per_week": 40,
+      "skills": ["UX_DES"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 9,
+    "fields": {
+      "colleague": 5,
+      "assignment": 5,
+      "start_date": "2024-02-01",
+      "end_date": "2024-03-31",
+      "hours_per_week": 40,
+      "skills": ["RES"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 10,
+    "fields": {
+      "colleague": 15,
+      "assignment": 6,
+      "start_date": "2024-04-01",
+      "end_date": "2024-11-30",
+      "hours_per_week": 32,
+      "skills": ["BE_DEV", "AI_CONS"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 11,
+    "fields": {
+      "colleague": 12,
+      "assignment": 6,
+      "start_date": "2024-04-15",
+      "end_date": "2024-11-30",
+      "hours_per_week": 24,
+      "skills": ["AI_CONS", "UX_DES"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 12,
+    "fields": {
+      "colleague": 16,
+      "assignment": 7,
+      "start_date": "2024-06-01",
+      "end_date": "2024-12-31",
+      "hours_per_week": 32,
+      "skills": ["FE_DEV", "UX_DES"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 13,
+    "fields": {
+      "colleague": 17,
+      "assignment": 7,
+      "start_date": "2024-06-01",
+      "end_date": "2024-12-31",
+      "hours_per_week": 40,
+      "skills": ["PROJ_LEAD", "DAT_ENG"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 14,
+    "fields": {
+      "colleague": 19,
+      "assignment": 8,
+      "start_date": "2024-01-01",
+      "end_date": "2024-08-31",
+      "hours_per_week": 40,
+      "skills": ["RES", "BE_DEV"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 15,
+    "fields": {
+      "colleague": 1,
+      "assignment": 9,
+      "start_date": "2023-09-01",
+      "end_date": "2024-01-31",
+      "hours_per_week": 32,
+      "skills": ["PROJ_LEAD"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 16,
+    "fields": {
+      "colleague": 10,
+      "assignment": 9,
+      "start_date": "2023-09-01",
+      "end_date": "2024-01-31",
+      "hours_per_week": 40,
+      "skills": ["BE_DEV", "DAT_ENG"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 17,
+    "fields": {
+      "colleague": 6,
+      "assignment": 10,
+      "start_date": "2024-02-15",
+      "end_date": "2024-09-30",
+      "hours_per_week": 32,
+      "skills": ["FE_DEV"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 18,
+    "fields": {
+      "colleague": 15,
+      "assignment": 10,
+      "start_date": "2024-02-15",
+      "end_date": "2024-09-30",
+      "hours_per_week": 24,
+      "skills": ["BE_DEV"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 19,
+    "fields": {
+      "colleague": 13,
+      "assignment": 11,
+      "start_date": "2024-03-01",
+      "end_date": null,
+      "hours_per_week": 40,
+      "skills": ["DAT_ENG"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 20,
+    "fields": {
+      "colleague": 3,
+      "assignment": 12,
+      "start_date": "2024-05-15",
+      "end_date": "2025-02-28",
+      "hours_per_week": 32,
+      "skills": ["DAT_ENG"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 21,
+    "fields": {
+      "colleague": 20,
+      "assignment": 12,
+      "start_date": "2024-05-15",
+      "end_date": "2025-02-28",
+      "hours_per_week": 24,
+      "skills": ["AI_CONS"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 22,
+    "fields": {
+      "colleague": 14,
+      "assignment": 13,
+      "start_date": "2023-11-01",
+      "end_date": "2024-04-30",
+      "hours_per_week": 32,
+      "skills": ["PO"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 23,
+    "fields": {
+      "colleague": 16,
+      "assignment": 13,
+      "start_date": "2023-11-01",
+      "end_date": "2024-04-30",
+      "hours_per_week": 40,
+      "skills": ["UX_DES"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 24,
+    "fields": {
+      "colleague": 8,
+      "assignment": 14,
+      "start_date": "2024-01-20",
+      "end_date": "2024-07-31",
+      "hours_per_week": 32,
+      "skills": ["UX_DES", "PO"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 25,
+    "fields": {
+      "colleague": 10,
+      "assignment": 14,
+      "start_date": "2024-01-20",
+      "end_date": "2024-07-31",
+      "hours_per_week": 32,
+      "skills": ["BE_DEV"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 26,
+    "fields": {
+      "colleague": 12,
+      "assignment": 15,
+      "start_date": "2024-04-01",
+      "end_date": null,
+      "hours_per_week": 40,
+      "skills": ["AI_CONS"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 27,
+    "fields": {
+      "colleague": 5,
+      "assignment": 16,
+      "start_date": "2024-06-01",
+      "end_date": "2024-10-31",
+      "hours_per_week": 32,
+      "skills": ["RES"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 28,
+    "fields": {
+      "colleague": 19,
+      "assignment": 16,
+      "start_date": "2024-06-01",
+      "end_date": "2024-10-31",
+      "hours_per_week": 24,
+      "skills": ["BE_DEV"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 29,
+    "fields": {
+      "colleague": 9,
+      "assignment": 17,
+      "start_date": "2023-08-01",
+      "end_date": "2024-03-31",
+      "hours_per_week": 40,
+      "skills": ["RES"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 30,
+    "fields": {
+      "colleague": 7,
+      "assignment": 18,
+      "start_date": "2024-02-01",
+      "end_date": "2024-11-30",
+      "hours_per_week": 32,
+      "skills": ["PROJ_LEAD"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 31,
+    "fields": {
+      "colleague": 1,
+      "assignment": 18,
+      "start_date": "2024-02-01",
+      "end_date": "2024-11-30",
+      "hours_per_week": 24,
+      "skills": ["BE_DEV"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 32,
+    "fields": {
+      "colleague": 13,
+      "assignment": 19,
+      "start_date": "2024-05-01",
+      "end_date": "2024-12-31",
+      "hours_per_week": 40,
+      "skills": ["DAT_ENG"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 33,
+    "fields": {
+      "colleague": 17,
+      "assignment": 20,
+      "start_date": "2024-01-01",
+      "end_date": "2024-08-31",
+      "hours_per_week": 32,
+      "skills": ["PROJ_LEAD", "DAT_ENG"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 34,
+    "fields": {
+      "colleague": 6,
+      "assignment": 20,
+      "start_date": "2024-01-01",
+      "end_date": "2024-08-31",
+      "hours_per_week": 24,
+      "skills": ["FE_DEV"]
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 35,
+    "fields": {
+      "colleague": 18,
+      "assignment": 20,
+      "start_date": "2024-01-01",
+      "end_date": "2024-08-31",
+      "hours_per_week": 16,
+      "skills": ["PO"]
+    }
+  }
+]
