@@ -1,37 +1,34 @@
 # wies (prototype)
 Interne tool voor overzicht wie, waar, wat, wanneer
 
-## Installation
+## Prerequisites
+- docker
+- docker-compose
+- just
 
-setup venv
-```
-python3.13 -m venv venv
-```
+## Setup
 
-activate venv
-```
-source venv/bin/activate
-```
+Setting up the system. Can also be used to clean up current state.
+- installs dependencies
+- sets up database from scratch, including source data
 
-install requirements
 ```
-pip install -r requirements.txt
+just setup
 ```
 
-inside src folder:
-```
-python manage.py migrate
-```
+## Start
 
-## Run
+Starts up current system
+- Applies hanging data migration if available
 
-
-inside src:
 ```
-python manage.py runserver
+just up
 ```
 
-available routes
-- http://127.0.0.1:8000/projects/
-- http://127.0.0.1:8000/colleagues/
-- http://127.0.0.1:8000/admin/ (need to create superuser first)
+### Other commands
+
+django manage.py command
+
+```
+just manage [...]
+```
