@@ -3,19 +3,9 @@ Interne tool voor overzicht wie, waar, wat, wanneer
 
 ## Installation
 
-setup venv
+setup python and dependencies
 ```
-python3.13 -m venv venv
-```
-
-activate venv
-```
-source venv/bin/activate
-```
-
-install requirements
-```
-pip install -r requirements.txt
+uv sync --active
 ```
 
 migrate db
@@ -25,7 +15,7 @@ python manage.py migrate
 
 ## Run
 
-
+run
 ```
 python manage.py runserver
 ```
