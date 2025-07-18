@@ -1,0 +1,23 @@
+services:
+  django:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: wies-django
+    ports:
+      - 8000:8000
+    command: bash -c "
+      python manage.py migrate
+      && python manage.py loaddata dummy_data.json
+      && python manage.py runserver 0.0.0.0:8000
+      "
+    volumes:
+      - .:/app:z
+    develop:
+      watch:
+        - action: rebuild
+          path: ./Dockerfile
+        - action: rebuild
+          path: ./pyproject.toml
+        - action: rebuild
+          path: ./uv.lock

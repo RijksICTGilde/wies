@@ -1,29 +1,34 @@
 # wies (prototype)
 Interne tool voor overzicht wie, waar, wat, wanneer
 
+## Prerequisites
+- docker
+- docker-compose
+
 ## Installation
+(the commands below assume zsh short notation. if not present, replace `dco` with `docker-compose`)
 
-setup python and dependencies
 
-```
-uv sync --active
-```
-
-activate virtual environment
+setup (fresh db)
 
 ```
-source .venv/bin/activate
+rm db.sqlite3 && dco build
 ```
 
-migrate db
-```
-python manage.py migrate
-```
+needed when
+- new in repo
+- change in dependencies
+- backwards incompatible change in database structure
 
-## Run
-
-run
+run (keeps db)
 
 ```
-python manage.py runserver
+dco up --watch --remove-orphans
 ```
+
+manage.py
+
+```
+dco run django python manage.py
+```
+
