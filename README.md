@@ -18,7 +18,7 @@ install requirements
 pip install -r requirements.txt
 ```
 
-inside src folder:
+migrate db
 ```
 python manage.py migrate
 ```
@@ -26,12 +26,6 @@ python manage.py migrate
 ## Run
 
 
-inside src:
 ```
 python manage.py runserver
 ```
-
-available routes
-- http://127.0.0.1:8000/projects/
-- http://127.0.0.1:8000/colleagues/
-- http://127.0.0.1:8000/admin/ (need to create superuser first)
