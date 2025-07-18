@@ -4,31 +4,31 @@ Interne tool voor overzicht wie, waar, wat, wanneer
 ## Prerequisites
 - docker
 - docker-compose
+- just
 
-## Installation
-(the commands below assume zsh short notation. if not present, replace `dco` with `docker-compose`)
+## Setup
 
-
-setup (fresh db)
-
-```
-rm db.sqlite3 && dco build
-```
-
-needed when
-- new in repo
-- change in dependencies
-- backwards incompatible change in database structure
-
-run (keeps db)
+Setting up the system. Can also be used to clean up current state.
+- installs dependencies
+- sets up database from scratch, including source data
 
 ```
-dco up --watch --remove-orphans
+just setup
 ```
 
-manage.py
+## Start
+
+Starts up current system
+- Applies hanging data migration if available
 
 ```
-dco run django python manage.py
+just up
 ```
 
+### Other commands
+
+django manage.py command
+
+```
+just manage [...]
+```
