@@ -7,7 +7,7 @@ default:
 # Setup container with fresh state
 setup:
   echo "Setup application: drop db, install dependencies"
-  rm db.sqlite3
+  rm -f db.sqlite3
   docker-compose build
   docker compose run --rm django python manage.py migrate
   docker compose run --rm django python manage.py loaddata dummy_data.json
