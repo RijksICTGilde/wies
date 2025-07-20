@@ -24,15 +24,37 @@
       <dd>{{ object.name }}</dd>
       <dt>Rollen</dt>
       <dd>{{ object.skills|get_skill_labels|join:", " }}</dd>
-      <dt>Opdrachten</dt>
-      <dd>
-        {% for assignment in assignment_list %}
-          <a href="/assignments/{{ assignment.id }}/">{{ assignment.name }}</a>,
-        {% endfor %}
-
-      </dd>
     </dl>
     
+    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Opdrachten</h2>
+
+    <table class="rvo-table" style="border-collapse: collapse; border: 1px solid #ccc;">
+      <style>
+        .rvo-table th, .rvo-table td {
+          border: 1px solid #ccc;
+          padding: 8px;
+        }
+      </style>
+      <thead>
+        <tr>
+          <th>Opdracht</th>
+          <th>Rollen</th>
+          <th>Periode</th>
+          <th>Uren per week</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for placement in object.placements.all %}
+        <tr>
+          <td><a href="/assignments/{{ placement.assignment.id }}/">{{ placement.assignment.name }}</a></td>
+          <td>{{ placement.skills|get_skill_labels|join:", " }}</td>
+          <td>{{ placement.start_date }} - {{ placement.end_date }}</td>
+          <td>{{ placement.hours_per_week }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
     <div class="rvo-layout-row rvo-layout-gap--md">
       <a href="/colleagues/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
         Consultant bewerken

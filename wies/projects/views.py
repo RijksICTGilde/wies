@@ -54,6 +54,12 @@ class AssignmentCreateView(CreateView):
     form_class = AssignmentForm
     template_name = 'assignment_new.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["placement_form"] = PlacementForm()
+        context["range"] = range(2)
+        return context
+
 class AssignmentDetail(DetailView):
     model = Assignment
     template_name = 'assignment_detail.html'
@@ -71,6 +77,19 @@ class AssignmentUpdateView(UpdateView):
 class ColleagueList(ListView):
     template_name = 'colleague_list.html'
     model = Colleague
+
+    def get_queryset(self):
+        qs = Colleague.objects.all()
+        skills_filter = dict(self.request.GET).get('skill')  # without dict casting you get single items per get call
+        if skills_filter:
+            qs = qs.filter(skills__icontains=skills_filter[0])
+        return qs
+    
+    def get_template_names(self):
+        if 'HX-Request' in self.request.headers:
+            return ['parts/colleague_table.html']
+        else:
+            return ['colleague_list.html']
 
 class ColleagueCreateView(CreateView):
     model = Colleague
@@ -113,17 +132,41 @@ class PlacementUpdateView(UpdateView):
     model = Placement
     form_class = PlacementForm
     template_name = 'placement_update.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/assignments/{context['object'].assignment.id}/'
+        return context
+
+    def form_valid(self, form):
+        # todo: not super happy about this work around, but good enough for now
+        placement_id = self.kwargs['pk']
+        assignment_id = Placement.objects.get(id=placement_id).assignment.id
+        super().form_valid(form)
+        return redirect(Assignment.objects.get(id=assignment_id))
 
 class PlacementCreateView(CreateView):
     model = Placement
     form_class = PlacementForm
     template_name = 'placement_new.html'
-
+    
+    def form_valid(self, form):
+        # todo: not super happy about this work around, but good enough for now
+        assignment_id = self.kwargs['pk']
+        form.assignment_id = self.kwargs['pk']
+        super().form_valid(form)
+        return redirect(Assignment.objects.get(id=assignment_id))
+    
 class PlacementDeleteView(DeleteView):
     model = Placement
     success_url = reverse_lazy("assignments")
     template_name='placement_delete.html'
     
+    def post(self, request, *args, **kwargs):
+        placement_id = self.kwargs['pk']
+        assignment_id = Placement.objects.get(id=placement_id).assignment.id
+        super().post(request, *args, **kwargs)
+        return redirect(Assignment.objects.get(id=assignment_id))
 
 def client(request, name):
 

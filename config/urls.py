@@ -31,6 +31,7 @@ urlpatterns = [
     path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
     path('assignments/<int:pk>/delete', AssignmentDeleteView.as_view()),
     path('assignments/<int:pk>/update', AssignmentUpdateView.as_view()),
+    path('assignments/<int:pk>/placements/new', PlacementCreateView.as_view()),
     path('colleagues/', ColleagueList.as_view(), name='colleagues'),
     path('colleagues/new', ColleagueCreateView.as_view()),
     path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
@@ -39,6 +40,5 @@ urlpatterns = [
     path('placements/<int:pk>/', PlacementDetailView.as_view(), name='placement-detail'),
     path('placements/<int:pk>/update', PlacementUpdateView.as_view()),
     path('placements/<int:pk>/delete', PlacementDeleteView.as_view()),
-    path('placements/new', PlacementCreateView.as_view()),
     path('clients/<str:name>', client),
 ]
