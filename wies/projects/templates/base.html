@@ -58,6 +58,9 @@
         $('.js-status-select').on('select2:select select2:unselect', function(e) {
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
+        $('.js-skills-filter').on('select2:select select2:unselect', function(e) {
+          this.dispatchEvent(new Event('change', { bubbles: true }));
+        });
       });
       // (her)initialiseer na HTMX swap:
       document.body.addEventListener('htmx:afterSwap', function(evt) {
