@@ -50,22 +50,28 @@
           <th>Consultant</th>
           <th>Periode</th>
           <th>Uren per week</th>
+          <th>Verwijder</th>
         </tr>
       </thead>
       <tbody>
         {% for placement in object.placements.all %}
         <tr>
-          <td><a href="/placements/{{ placement.id }}">{{ placement.id }}</a></td>
+          <td><a href="/placements/{{ placement.id }}/update">{{ placement.id }}</a></td>
           <td>{{ placement.skills|get_skill_labels|join:", " }}</td>
-          <td><a href="{% url 'colleague-detail' placement.colleague.pk %}">{{ placement.colleague.name }}</a></td>
+          {% if placement.colleague %}
+            <td><a href="{% url 'colleague-detail' placement.colleague.pk %}">{{ placement.colleague.name }}</a></td>
+          {% else %}
+            <td></td>
+          {% endif %}
           <td>{{ placement.start_date }} - {{ placement.end_date }}</td>
           <td>{{ placement.hours_per_week }}</td>
+          <td><a href="/placements/{{ placement.id }}/delete">x</a></td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
 
-<a href="/placements/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
+<a href="/assignments/{{ object.pk }}/placements/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
         Inzet toevoegen
       </a>
 

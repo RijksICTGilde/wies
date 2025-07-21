@@ -8,7 +8,6 @@
       hx-get="/assignments/"
       hx-target="#assignment_table"
       hx-trigger="change"
-      hx-include="this"
       hx-swap="outerHTML"
       class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three"
       style="margin-bottom: 2em;">
@@ -18,6 +17,7 @@
                 name="status"
                 class="js-status-select utrecht-select utrecht-select--html-select"
                 multiple>
+                <!-- TODO: should not be hardcoded here -->
             <option value="LEAD">LEAD</option>
             <option value="OPEN">OPEN</option>
             <option value="LOPEND">LOPEND</option>

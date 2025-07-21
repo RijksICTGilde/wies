@@ -4,49 +4,49 @@
 
 <h1>Consultants</h1>
 
-<form action="/colleagues/new">
-    <button
-      class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before"
-      type="submit"
-    >
-      <span
-        class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit"
-        role="img"
-        aria-label="Plus"
-      ></span>
-      Nieuwe consultant toevoegen
-    </button>
+<form id="assignment-filter-form"
+      hx-get="/colleagues/"
+      hx-target="#colleague_table"
+      hx-trigger="change"
+      hx-swap="outerHTML"
+      class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three"
+      style="margin-bottom: 2em;">
+    <div class="rvo-layout-column rvo-layout-gap--sm">
+        <label for="skill-filter" class="rvo-label">Rol</label>
+        <select id="skill-filter"
+                name="skill"
+                class="js-status-select utrecht-select utrecht-select--html-select">
+                <!-- TODO: this list should not be hardcoded -->
+            <option value="BE_DEV">Backend development</option>
+            <option value="FE_DEV">Frontend development</option>
+            <option value="PO">Product owner</option>
+            <option value="UX_DES">UX designer</option>
+            <option value="AI_CONS">AI Consultant</option>
+            <option value="AI_JUR">AI Jurist</option>
+            <option value="RES">Researcher</option>
+            <option value="DAT_ENG">Data engineer</option>
+            <option value="PROJ_LEAD">Project leader</option>
+        </select>
+    </div>
+    <div class="rvo-layout-column rvo-layout-gap--sm" style="align-self: end; text-align: right;">
+        <a href="/colleagues/new">
+          <button
+            class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before"
+            type="button"
+          >
+            <span
+              class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit"
+              role="img"
+              aria-label="Plus"
+            ></span>
+            Nieuwe consultant toevoegen
+          </button>
+        </a>
+    </div>
 </form>
 
-<br>
-<br>
-
 <div class="rvo-table--responsive">
-  <table class="rvo-table">
-    <thead class="rvo-table-head">
-      <tr class="rvo-table-row">
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header__sortable-container">
-            Naam
-          </div>
-        </th>
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header__sortable-container">
-            Rollen
-          </div>
-        </th>
-      </tr>
-    </thead>
-    <tbody class="rvo-table-body">
-      {% for colleague in object_list %}
-      <tr class="rvo-table-row">
-        <td class="rvo-table-cell"><a href="/colleagues/{{ colleague.pk }}/">{{ colleague.name }}</a></td>
-        <td class="rvo-table-cell">
-          {{ colleague.skills|get_skill_labels|join:", " }}
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+{% include 'parts/colleague_table.html' %}
 </div>
+
 {% endblock content %}

@@ -41,8 +41,17 @@ class ColleagueForm(RVOFormMixin, forms.ModelForm):
         fields = '__all__'
 
 class PlacementForm(RVOFormMixin, forms.ModelForm):
+    # nested inside assignment, so assignment is dropped in form
     skills = MultiSelectFormField(required=False, choices=Skills.choices, widget=forms.SelectMultiple)  # overwrite default widget
     
     class Meta:
         model = Placement
-        fields = '__all__'
+        fields = ['skills', 'colleague', 'start_date', 'end_date', 'hours_per_week']
+
+    def save(self, commit = ...):
+        instance = super().save(commit=False)
+        if hasattr(self, 'assignment_id'):  # to distinguish update from create
+            instance.assignment_id = self.assignment_id
+        if commit:
+            instance.save()
+        return instance
