@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Klant & relaties</h1>
+
+<div class="rvo-table--responsive">
+  <table class="rvo-table">
+    <thead class="rvo-table-head">
+      <tr class="rvo-table-row">
+        <th scope="col" class="rvo-table-header">
+          <div class="rvo-table-header__sortable-container">
+            Naam
+          </div>
+        </th>
+      </tr>
+    </thead>
+    <tbody class="rvo-table-body">
+      {% for client in clients %}
+      <tr class="rvo-table-row">
+        <td class="rvo-table-cell"><a href="/clients/{{ client }}">{{ client }}</a></td>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock content %}

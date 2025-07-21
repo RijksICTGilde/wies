@@ -168,6 +168,13 @@ class PlacementDeleteView(DeleteView):
         super().post(request, *args, **kwargs)
         return redirect(Assignment.objects.get(id=assignment_id))
 
+def clients(request):
+    clients = Assignment.objects.values_list('organization', flat=True).distinct()
+    print(clients)
+    return render(request, template_name='client_list.html', context={
+        'clients': clients,
+    })
+
 def client(request, name):
 
     assignments = Assignment.objects.filter(organization=name)
