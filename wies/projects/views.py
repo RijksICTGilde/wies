@@ -187,11 +187,9 @@ class ServiceCreateView(CreateView):
     template_name = 'service_new.html'
     
     def form_valid(self, form):
-        print('here')
         assignment_id = self.kwargs['pk']
         form.assignment_id = self.kwargs['pk']
         super().form_valid(form)
-        print('just before redirect')
         return redirect(Assignment.objects.get(id=assignment_id))
 
 
