@@ -425,8 +425,8 @@
     "fields": {
       "colleague": 1,
       "assignment": 1,
-      "start_date": "2024-01-15",
-      "end_date": "2024-06-30",
+      "start_date": "2024-06-01",
+      "end_date": "2025-06-30",
       "hours_per_week": 32,
       "skills": ["BE_DEV", "PROJ_LEAD"]
     }
@@ -437,8 +437,8 @@
     "fields": {
       "colleague": 2,
       "assignment": 1,
-      "start_date": "2024-02-01",
-      "end_date": "2024-06-30",
+      "start_date": "2024-07-01",
+      "end_date": "2025-08-31",
       "hours_per_week": 24,
       "skills": ["FE_DEV", "UX_DES"]
     }
@@ -449,8 +449,8 @@
     "fields": {
       "colleague": 3,
       "assignment": 1,
-      "start_date": "2024-01-20",
-      "end_date": "2024-04-30",
+      "start_date": "2024-06-01",
+      "end_date": "2024-12-31",
       "hours_per_week": 16,
       "skills": ["AI_CONS"]
     }
@@ -461,8 +461,8 @@
     "fields": {
       "colleague": 7,
       "assignment": 2,
-      "start_date": "2024-03-01",
-      "end_date": "2024-12-31",
+      "start_date": "2025-08-01",
+      "end_date": "2026-03-31",
       "hours_per_week": 40,
       "skills": ["DAT_ENG", "PROJ_LEAD"]
     }
@@ -473,8 +473,8 @@
     "fields": {
       "colleague": 4,
       "assignment": 2,
-      "start_date": "2024-03-15",
-      "end_date": "2024-12-31",
+      "start_date": "2025-08-15",
+      "end_date": "2026-03-31",
       "hours_per_week": 32,
       "skills": ["PO"]
     }
@@ -485,7 +485,7 @@
     "fields": {
       "colleague": 9,
       "assignment": 3,
-      "start_date": "2024-05-01",
+      "start_date": "2025-09-01",
       "end_date": null,
       "hours_per_week": 40,
       "skills": ["AI_JUR"]
@@ -533,8 +533,8 @@
     "fields": {
       "colleague": 15,
       "assignment": 6,
-      "start_date": "2024-04-01",
-      "end_date": "2024-11-30",
+      "start_date": "2024-06-01",
+      "end_date": "2025-11-30",
       "hours_per_week": 32,
       "skills": ["BE_DEV", "AI_CONS"]
     }
@@ -545,8 +545,8 @@
     "fields": {
       "colleague": 12,
       "assignment": 6,
-      "start_date": "2024-04-15",
-      "end_date": "2024-11-30",
+      "start_date": "2024-07-15",
+      "end_date": "2025-11-30",
       "hours_per_week": 24,
       "skills": ["AI_CONS", "UX_DES"]
     }
@@ -557,8 +557,8 @@
     "fields": {
       "colleague": 16,
       "assignment": 7,
-      "start_date": "2024-06-01",
-      "end_date": "2024-12-31",
+      "start_date": "2025-08-01",
+      "end_date": "2026-01-31",
       "hours_per_week": 32,
       "skills": ["FE_DEV", "UX_DES"]
     }
@@ -569,8 +569,8 @@
     "fields": {
       "colleague": 17,
       "assignment": 7,
-      "start_date": "2024-06-01",
-      "end_date": "2024-12-31",
+      "start_date": "2025-08-01",
+      "end_date": "2026-01-31",
       "hours_per_week": 40,
       "skills": ["PROJ_LEAD", "DAT_ENG"]
     }
@@ -581,8 +581,8 @@
     "fields": {
       "colleague": 19,
       "assignment": 8,
-      "start_date": "2024-01-01",
-      "end_date": "2024-08-31",
+      "start_date": "2024-03-01",
+      "end_date": "2025-08-31",
       "hours_per_week": 40,
       "skills": ["RES", "BE_DEV"]
     }
@@ -617,8 +617,8 @@
     "fields": {
       "colleague": 6,
       "assignment": 10,
-      "start_date": "2024-02-15",
-      "end_date": "2024-09-30",
+      "start_date": "2024-05-15",
+      "end_date": "2025-09-30",
       "hours_per_week": 32,
       "skills": ["FE_DEV"]
     }
@@ -629,8 +629,8 @@
     "fields": {
       "colleague": 15,
       "assignment": 10,
-      "start_date": "2024-02-15",
-      "end_date": "2024-09-30",
+      "start_date": "2024-05-15",
+      "end_date": "2025-09-30",
       "hours_per_week": 24,
       "skills": ["BE_DEV"]
     }
@@ -641,7 +641,7 @@
     "fields": {
       "colleague": 13,
       "assignment": 11,
-      "start_date": "2024-03-01",
+      "start_date": "2025-08-15",
       "end_date": null,
       "hours_per_week": 40,
       "skills": ["DAT_ENG"]
@@ -653,8 +653,8 @@
     "fields": {
       "colleague": 3,
       "assignment": 12,
-      "start_date": "2024-05-15",
-      "end_date": "2025-02-28",
+      "start_date": "2025-09-15",
+      "end_date": "2026-08-28",
       "hours_per_week": 32,
       "skills": ["DAT_ENG"]
     }
@@ -665,8 +665,8 @@
     "fields": {
       "colleague": 20,
       "assignment": 12,
-      "start_date": "2024-05-15",
-      "end_date": "2025-02-28",
+      "start_date": "2025-09-15",
+      "end_date": "2026-08-28",
       "hours_per_week": 24,
       "skills": ["AI_CONS"]
     }
@@ -701,8 +701,8 @@
     "fields": {
       "colleague": 8,
       "assignment": 14,
-      "start_date": "2024-01-20",
-      "end_date": "2024-07-31",
+      "start_date": "2024-05-20",
+      "end_date": "2025-07-31",
       "hours_per_week": 32,
       "skills": ["UX_DES", "PO"]
     }
@@ -713,8 +713,8 @@
     "fields": {
       "colleague": 10,
       "assignment": 14,
-      "start_date": "2024-01-20",
-      "end_date": "2024-07-31",
+      "start_date": "2024-05-20",
+      "end_date": "2025-07-31",
       "hours_per_week": 32,
       "skills": ["BE_DEV"]
     }
@@ -725,7 +725,7 @@
     "fields": {
       "colleague": 12,
       "assignment": 15,
-      "start_date": "2024-04-01",
+      "start_date": "2025-08-01",
       "end_date": null,
       "hours_per_week": 40,
       "skills": ["AI_CONS"]
@@ -737,8 +737,8 @@
     "fields": {
       "colleague": 5,
       "assignment": 16,
-      "start_date": "2024-06-01",
-      "end_date": "2024-10-31",
+      "start_date": "2025-09-01",
+      "end_date": "2026-02-28",
       "hours_per_week": 32,
       "skills": ["RES"]
     }
@@ -749,8 +749,8 @@
     "fields": {
       "colleague": 19,
       "assignment": 16,
-      "start_date": "2024-06-01",
-      "end_date": "2024-10-31",
+      "start_date": "2025-09-01",
+      "end_date": "2026-02-28",
       "hours_per_week": 24,
       "skills": ["BE_DEV"]
     }
@@ -774,7 +774,7 @@
       "colleague": 7,
       "assignment": 18,
       "start_date": "2024-02-01",
-      "end_date": "2024-11-30",
+      "end_date": "2025-11-30",
       "hours_per_week": 32,
       "skills": ["PROJ_LEAD"]
     }
@@ -786,7 +786,7 @@
       "colleague": 1,
       "assignment": 18,
       "start_date": "2024-02-01",
-      "end_date": "2024-11-30",
+      "end_date": "2025-11-30",
       "hours_per_week": 24,
       "skills": ["BE_DEV"]
     }
@@ -797,8 +797,8 @@
     "fields": {
       "colleague": 13,
       "assignment": 19,
-      "start_date": "2024-05-01",
-      "end_date": "2024-12-31",
+      "start_date": "2025-08-01",
+      "end_date": "2026-04-30",
       "hours_per_week": 40,
       "skills": ["DAT_ENG"]
     }
@@ -810,7 +810,7 @@
       "colleague": 17,
       "assignment": 20,
       "start_date": "2024-01-01",
-      "end_date": "2024-08-31",
+      "end_date": "2025-08-31",
       "hours_per_week": 32,
       "skills": ["PROJ_LEAD", "DAT_ENG"]
     }
@@ -822,7 +822,7 @@
       "colleague": 6,
       "assignment": 20,
       "start_date": "2024-01-01",
-      "end_date": "2024-08-31",
+      "end_date": "2025-08-31",
       "hours_per_week": 24,
       "skills": ["FE_DEV"]
     }
@@ -834,7 +834,7 @@
       "colleague": 18,
       "assignment": 20,
       "start_date": "2024-01-01",
-      "end_date": "2024-08-31",
+      "end_date": "2025-08-31",
       "hours_per_week": 16,
       "skills": ["PO"]
     }
