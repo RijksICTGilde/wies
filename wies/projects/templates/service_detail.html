@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="rvo-layout-column rvo-layout-gap--xl">
+  
+  <div class="rvo-layout-column rvo-layout-gap--lg">
+    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Service gegevens</h2>
+    
+    <dl class="rvo-data-list">
+      <dt>Beschrijving</dt>
+      <dd>{{ object.description }}</dd>
+      <dt>Kosten</dt>
+      <dd>{{ object.cost }}</dd>
+    </dl>
+  </div>
+</div>
+
+<div class="rvo-layout-row rvo-layout-gap--md">
+      <a href="/services/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
+        Dienst bewerken
+      </a>
+      <a href="/services/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md">
+        Dienst verwijderen
+      </a>
+    </div>
+
+{% endblock content %}

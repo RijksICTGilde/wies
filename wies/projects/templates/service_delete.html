@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="rvo-max-width-layout rvo-max-width-layout--sm rvo-max-width-layout-inline-padding--none">
+  <div class="rvo-layout-column rvo-layout-gap--xl">
+    <h1 class="utrecht-heading-1">Offerte item verwijderen</h1>
+    <p>Weet je zeker dat de dient "{{ object.description }}" wilt verwijderen?</p>
+    <form method="post" class="rvo-layout-column rvo-layout-gap--md">
+      {% csrf_token %}
+      {{ form }}
+      <p class="utrecht-button-group">
+        <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">Verwijderen</button>
+        <a href="/assignments/" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md">Annuleren</a>
+      </p>
+    </form>
+  </div>
+</div>
+{% endblock %}

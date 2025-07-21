@@ -2,7 +2,7 @@ from django import forms
 
 from multiselectfield import MultiSelectFormField
 
-from .models import Assignment, Colleague, Skills, Placement
+from .models import Assignment, Colleague, Skills, Placement, Service
 
 class RVOFormMixin:
     def __init__(self, *args, **kwargs):
@@ -51,6 +51,20 @@ class PlacementForm(RVOFormMixin, forms.ModelForm):
     def save(self, commit = ...):
         instance = super().save(commit=False)
         if hasattr(self, 'assignment_id'):  # to distinguish update from create
+            instance.assignment_id = self.assignment_id
+        if commit:
+            instance.save()
+        return instance
+
+
+class ServiceForm(RVOFormMixin, forms.ModelForm):
+    class Meta:
+        model = Service
+        fields = ['description', 'cost']
+
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if hasattr(self, 'assignment_id'):
             instance.assignment_id = self.assignment_id
         if commit:
             instance.save()

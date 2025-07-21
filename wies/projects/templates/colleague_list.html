@@ -7,10 +7,19 @@
 <form id="assignment-filter-form"
       hx-get="/colleagues/"
       hx-target="#colleague_table"
-      hx-trigger="change"
+      hx-trigger="change, keyup delay:300ms from:#name-search"
       hx-swap="outerHTML"
       class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three"
       style="margin-bottom: 2em;">
+    <div class="rvo-layout-column rvo-layout-gap--sm">
+        <label for="name-search" class="rvo-label">Naam</label>
+        <input type="text" 
+               id="name-search" 
+               name="name" 
+               value="{{ request.GET.name|default:'' }}"
+               placeholder="Zoek op naam..."
+               class="utrecht-textbox utrecht-textbox--html-input">
+    </div>
     <div class="rvo-layout-column rvo-layout-gap--sm">
         <label for="skill-filter" class="rvo-label">Rol</label>
         <select id="skill-filter"
