@@ -5,8 +5,8 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.db import models
 
-from .models import Assignment, Colleague, Skills, Placement
-from .forms import AssignmentForm, ColleagueForm, PlacementForm
+from .models import Assignment, Colleague, Skills, Placement, Service
+from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 
 def home(request):
     return redirect('/assignments/')
@@ -36,9 +36,12 @@ class AssignmentList(ListView):
 
         status_filter = dict(self.request.GET).get('status')  # without dict casting you get single items per get call
         order = self.request.GET.get('order')
+        name_filter = self.request.GET.get('name')
 
         if status_filter:
             qs = qs.filter(status__in=status_filter)
+        if name_filter:
+            qs = qs.filter(models.Q(name__icontains=name_filter) | models.Q(organization__icontains=name_filter))
         if order:
             qs = qs.order_by(order)
 
@@ -81,9 +84,17 @@ class ColleagueList(ListView):
 
     def get_queryset(self):
         qs = Colleague.objects.all()
+        
+        # Filter by skill
         skills_filter = dict(self.request.GET).get('skill')  # without dict casting you get single items per get call
         if skills_filter:
             qs = qs.filter(skills__icontains=skills_filter[0])
+        
+        # Filter by name
+        name_filter = self.request.GET.get('name')
+        if name_filter:
+            qs = qs.filter(name__icontains=name_filter)
+            
         return qs.annotate(max_end_date=models.Max('placements__end_date')).order_by('max_end_date')
     
     def get_template_names(self):
@@ -168,6 +179,53 @@ class PlacementDeleteView(DeleteView):
         assignment_id = Placement.objects.get(id=placement_id).assignment.id
         super().post(request, *args, **kwargs)
         return redirect(Assignment.objects.get(id=assignment_id))
+
+
+class ServiceCreateView(CreateView):
+    model = Service
+    form_class = ServiceForm
+    template_name = 'service_new.html'
+    
+    def form_valid(self, form):
+        assignment_id = self.kwargs['pk']
+        form.assignment_id = self.kwargs['pk']
+        super().form_valid(form)
+        return redirect(Assignment.objects.get(id=assignment_id))
+
+
+class ServiceUpdateView(UpdateView):
+    model = Service
+    form_class = ServiceForm
+    template_name = 'service_update.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/assignments/{context['object'].assignment.id}/'
+        return context
+
+    def form_valid(self, form):
+        # todo: not super happy about this work around, but good enough for now
+        service_id = self.kwargs['pk']
+        assignment_id = Service.objects.get(id=service_id).assignment.id
+        super().form_valid(form)
+        return redirect(Assignment.objects.get(id=assignment_id))
+
+class ServiceDeleteView(DeleteView):
+    model = Service
+    success_url = reverse_lazy("assignments")
+    template_name='service_delete.html'
+    
+    def post(self, request, *args, **kwargs):
+        service_id = self.kwargs['pk']
+        assignment_id = Service.objects.get(id=service_id).assignment.id
+        super().post(request, *args, **kwargs)
+        return redirect(Assignment.objects.get(id=assignment_id))
+
+
+class ServiceDetailView(DetailView):
+    model = Service
+    template_name = 'service_detail.html'
+
 
 def clients(request):
     clients = Assignment.objects.values_list('organization', flat=True).distinct()

@@ -1,0 +1,5 @@
+{% extends "base.html" %}
+
+{% block content %}
+  {% include "parts/rvo_form_layout.html" with form=form heading="Dienst bewerken" form_intro="<span class='rvo-text--bold'>Pas de gegevens van de dienst aan.</span> Wijzig de dienst." legend="Dienst gegevens" submit_text="Dienst bijwerken" cancel_url=cancel_url %}
+{% endblock %}

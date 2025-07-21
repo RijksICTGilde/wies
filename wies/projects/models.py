@@ -50,6 +50,7 @@ class Assignment(models.Model):
     start_date = models.DateField(blank=True, null=True)  #TODO: timezone aware?
     end_date = models.DateField(null=True, blank=True)  #TODO: timezone aware?
     # placements through foreignkey on Placement
+    # services through foreignkey on Service
     status = models.CharField(max_length=20, choices=ASSIGNMENT_STATUS, default='LEAD')
     organization = models.CharField(blank=True)
     extra_info = models.TextField(blank=True)
@@ -73,4 +74,13 @@ class Placement(models.Model):
         return reverse("placement-detail", kwargs={"pk": self.pk})
 
 
+class Service(models.Model):
+    assignment = models.ForeignKey('Assignment', models.CASCADE, related_name='services')
+    description = models.CharField(max_length=500)
+    cost = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def __str__(self):
+        return f"{self.description} - €{self.cost}"
 
+    def get_absolute_url(self):
+        return reverse("service-detail", kwargs={"pk": self.pk})
