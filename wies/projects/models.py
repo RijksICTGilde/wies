@@ -1,5 +1,7 @@
 from django.db import models
 from django.urls import reverse
+from django.db.models import Max
+
 from multiselectfield import MultiSelectField
 
 ASSIGNMENT_STATUS = {
@@ -30,6 +32,11 @@ class Skills(models.TextChoices):
 class Colleague(models.Model):
     name = models.CharField(max_length=200)
     skills = MultiSelectField(blank=True, choices=Skills.choices)
+    # placements via reversed relation
+
+    @property
+    def end_date(self):
+        return self.placements.aggregate(Max('end_date'))['end_date__max']
 
     def get_absolute_url(self):
         return reverse("colleague-detail", kwargs={"pk": self.pk})
