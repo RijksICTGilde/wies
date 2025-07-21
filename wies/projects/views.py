@@ -3,6 +3,7 @@ from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
 from django.template.defaulttags import register
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
+from django.db import models
 
 from .models import Assignment, Colleague, Skills, Placement
 from .forms import AssignmentForm, ColleagueForm, PlacementForm
@@ -83,7 +84,7 @@ class ColleagueList(ListView):
         skills_filter = dict(self.request.GET).get('skill')  # without dict casting you get single items per get call
         if skills_filter:
             qs = qs.filter(skills__icontains=skills_filter[0])
-        return qs
+        return qs.annotate(max_end_date=models.Max('placements__end_date')).order_by('max_end_date')
     
     def get_template_names(self):
         if 'HX-Request' in self.request.headers:
