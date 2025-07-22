@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="rvo-max-width-layout rvo-max-width-layout--md">
+  <div class="rvo-max-width-layout-inline-padding--md">
+    <main>
+      <div class="rvo-heading--h1 rvo-link--no-underline">
+        <h1 class="rvo-heading__content">Inzetten</h1>
+      </div>
+
+      <form hx-get="{% url 'placements' %}" hx-target="#placement_table">
+        
+        <!-- Eerste rij: Consultant en Skills -->
+        <div class="rvo-layout-grid rvo-layout-gap--sm rvo-layout-grid-columns--two" style="margin-bottom: 1rem;">
+          <div class="rvo-layout-column">
+            <label for="consultant" class="rvo-label">Consultant:</label>
+            <input type="text" id="consultant" name="consultant" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op consultant naam" value="{{ request.GET.consultant }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
+          </div>
+          <div class="rvo-layout-column">
+            <label for="skills" class="rvo-label">Skills:</label>
+            <select name="skills" id="skills" class="js-skills-filter utrecht-select utrecht-select--html-select" multiple hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
+              <option value="BE_DEV" {% if 'BE_DEV' in request.GET.skills %}selected{% endif %}>Backend development</option>
+              <option value="FE_DEV" {% if 'FE_DEV' in request.GET.skills %}selected{% endif %}>Frontend development</option>
+              <option value="PO" {% if 'PO' in request.GET.skills %}selected{% endif %}>Product owner</option>
+              <option value="UX_DES" {% if 'UX_DES' in request.GET.skills %}selected{% endif %}>UX designer</option>
+              <option value="AI_CONS" {% if 'AI_CONS' in request.GET.skills %}selected{% endif %}>AI Consultant</option>
+              <option value="AI_JUR" {% if 'AI_JUR' in request.GET.skills %}selected{% endif %}>AI Jurist</option>
+              <option value="RES" {% if 'RES' in request.GET.skills %}selected{% endif %}>Researcher</option>
+              <option value="DAT_ENG" {% if 'DAT_ENG' in request.GET.skills %}selected{% endif %}>Data engineer</option>
+              <option value="PROJ_LEAD" {% if 'PROJ_LEAD' in request.GET.skills %}selected{% endif %}>Project leader</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Tweede rij: Opdracht en Opdrachtgever -->
+        <div class="rvo-layout-grid rvo-layout-gap--sm rvo-layout-grid-columns--two" style="margin-bottom: 1rem;">
+          <div class="rvo-layout-column">
+            <label for="assignment" class="rvo-label">Opdracht:</label>
+            <input type="text" id="assignment" name="assignment" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op opdracht naam" value="{{ request.GET.assignment }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
+          </div>
+          <div class="rvo-layout-column">
+            <label for="client" class="rvo-label">Opdrachtgever:</label>
+            <input type="text" id="client" name="client" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op opdrachtgever" value="{{ request.GET.client }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
+          </div>
+        </div>
+
+        <!-- Derde rij: Alle datumfilters -->
+        <div class="rvo-layout-grid rvo-layout-gap--sm rvo-layout-grid-columns--four" style="margin-bottom: 1rem;">
+          <div class="rvo-layout-column">
+            <label for="start_date_from" class="rvo-label">Startdatum vanaf:</label>
+            <input type="date" id="start_date_from" name="start_date_from" class="utrecht-textbox utrecht-textbox--html-input" value="{{ request.GET.start_date_from }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
+          </div>
+          <div class="rvo-layout-column">
+            <label for="start_date_to" class="rvo-label">Startdatum tot:</label>
+            <input type="date" id="start_date_to" name="start_date_to" class="utrecht-textbox utrecht-textbox--html-input" value="{{ request.GET.start_date_to }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
+          </div>
+          <div class="rvo-layout-column">
+            <label for="end_date_from" class="rvo-label">Einddatum vanaf:</label>
+            <input type="date" id="end_date_from" name="end_date_from" class="utrecht-textbox utrecht-textbox--html-input" value="{{ request.GET.end_date_from }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
+          </div>
+          <div class="rvo-layout-column">
+            <label for="end_date_to" class="rvo-label">Einddatum tot:</label>
+            <input type="date" id="end_date_to" name="end_date_to" class="utrecht-textbox utrecht-textbox--html-input" value="{{ request.GET.end_date_to }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
+          </div>
+        </div>
+
+      </form>
+
+      <div id="placement_table">
+        {% include 'parts/placement_table.html' %}
+      </div>
+
+    </main>
+  </div>
+</div>
+{% endblock %}

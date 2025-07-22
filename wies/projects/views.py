@@ -201,6 +201,104 @@ class PlacementDeleteView(DeleteView):
         return redirect(Assignment.objects.get(id=assignment_id))
 
 
+class PlacementList(ListView):
+    template_name = 'placement_list.html'
+    model = Placement
+
+    def get_queryset(self):
+        qs = Placement.objects.order_by('-service__assignment__start_date')
+
+        # TODO: should certain relations be prefetched? the following were suggested:
+        # 'colleague'
+        # 'service__assignment__client'
+        # 'service__assignment'
+
+        
+        # Filter by consultant name
+        consultant_filter = self.request.GET.get('consultant')
+        if consultant_filter:
+            qs = qs.filter(colleague__name__icontains=consultant_filter)
+        
+        # Filter by assignment name  
+        assignment_filter = self.request.GET.get('assignment')
+        if assignment_filter:
+            qs = qs.filter(service__assignment__name__icontains=assignment_filter)
+        
+        
+        # Filter by skills
+        skills_filter = dict(self.request.GET).get('skills')
+        if skills_filter:
+            for skill in skills_filter:
+                qs = qs.filter(skills__icontains=skill)
+        
+        # Filter by client/organization
+        client_filter = self.request.GET.get('client')
+        if client_filter:
+            qs = qs.filter(service__assignment__organization__icontains=client_filter)
+
+        # Date filters
+        start_date_from = self.request.GET.get('start_date_from')
+        if start_date_from:
+            qs = qs.filter(
+                models.Q(
+                    models.Q(period_source='SERVICE') & 
+                    models.Q(
+                        models.Q(service__period_source='ASSIGNMENT', service__assignment__start_date__gte=start_date_from) |
+                        models.Q(service__period_source='SERVICE', service__specific_start_date__gte=start_date_from)
+                    )
+                ) |
+                models.Q(period_source='PLACEMENT', specific_start_date__gte=start_date_from)
+            )
+        
+        start_date_to = self.request.GET.get('start_date_to')
+        if start_date_to:
+            qs = qs.filter(
+                models.Q(
+                    models.Q(period_source='SERVICE') & 
+                    models.Q(
+                        models.Q(service__period_source='ASSIGNMENT', service__assignment__start_date__lte=start_date_to) |
+                        models.Q(service__period_source='SERVICE', service__specific_start_date__lte=start_date_to)
+                    )
+                ) |
+                models.Q(period_source='PLACEMENT', specific_start_date__lte=start_date_to)
+            )
+        
+        end_date_from = self.request.GET.get('end_date_from')
+        if end_date_from:
+            qs = qs.filter(
+                models.Q(
+                    models.Q(period_source='SERVICE') & 
+                    models.Q(
+                        models.Q(service__period_source='ASSIGNMENT', service__assignment__end_date__gte=end_date_from) |
+                        models.Q(service__period_source='SERVICE', service__specific_end_date__gte=end_date_from)
+                    )
+                ) |
+                models.Q(period_source='PLACEMENT', specific_end_date__gte=end_date_from)
+            )
+        
+        end_date_to = self.request.GET.get('end_date_to')
+        if end_date_to:
+            qs = qs.filter(
+                models.Q(
+                    models.Q(period_source='SERVICE') & 
+                    models.Q(
+                        models.Q(service__period_source='ASSIGNMENT', service__assignment__end_date__lte=end_date_to) |
+                        models.Q(service__period_source='SERVICE', service__specific_end_date__lte=end_date_to)
+                    )
+                ) |
+                models.Q(period_source='PLACEMENT', specific_end_date__lte=end_date_to)
+            )
+        
+
+        return qs
+    
+    def get_template_names(self):
+        if 'HX-Request' in self.request.headers:
+            return ['parts/placement_table.html']
+        else:
+            return ['placement_list.html']
+
+
 class ServiceCreateView(CreateView):
     model = Service
     form_class = ServiceForm

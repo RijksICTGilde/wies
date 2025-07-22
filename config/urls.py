@@ -21,7 +21,7 @@ from wies.projects.views import home, client, clients
 from wies.projects.views import AssignmentList
 from wies.projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
 from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
-from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView
+from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementList
 from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
 
 urlpatterns = [
@@ -39,6 +39,7 @@ urlpatterns = [
     path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
     path('colleagues/<int:pk>/delete', ColleagueDeleteView.as_view()),
     path('colleagues/<int:pk>/update', ColleagueUpdateView.as_view()),
+    path('placements/', PlacementList.as_view(), name='placements'),
     path('placements/<int:pk>/', PlacementDetailView.as_view(), name='placement-detail'),
     path('placements/<int:pk>/update', PlacementUpdateView.as_view()),
     path('placements/<int:pk>/delete', PlacementDeleteView.as_view()),

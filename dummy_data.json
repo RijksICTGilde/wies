@@ -845,45 +845,6 @@
   },
   {
     "model": "projects.placement",
-    "pk": 4,
-    "fields": {
-      "colleague": 7,
-      "service": 4,
-      "period_source": "SERVICE",
-      "specific_start_date": null,
-      "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": ["DAT_ENG", "PROJ_LEAD"]
-    }
-  },
-  {
-    "model": "projects.placement",
-    "pk": 5,
-    "fields": {
-      "colleague": 4,
-      "service": 5,
-      "period_source": "PLACEMENT",
-      "specific_start_date": "2025-08-15",
-      "specific_end_date": "2026-03-31",
-      "hours_per_week": 32,
-      "skills": ["PO"]
-    }
-  },
-  {
-    "model": "projects.placement",
-    "pk": 6,
-    "fields": {
-      "colleague": 9,
-      "service": 6,
-      "period_source": "SERVICE",
-      "specific_start_date": null,
-      "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": ["AI_JUR"]
-    }
-  },
-  {
-    "model": "projects.placement",
     "pk": 7,
     "fields": {
       "colleague": 11,
@@ -910,19 +871,6 @@
   },
   {
     "model": "projects.placement",
-    "pk": 9,
-    "fields": {
-      "colleague": 5,
-      "service": 9,
-      "period_source": "SERVICE",
-      "specific_start_date": null,
-      "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": ["RES"]
-    }
-  },
-  {
-    "model": "projects.placement",
     "pk": 10,
     "fields": {
       "colleague": 15,
@@ -945,32 +893,6 @@
       "specific_end_date": "2025-11-30",
       "hours_per_week": 24,
       "skills": ["AI_CONS", "UX_DES"]
-    }
-  },
-  {
-    "model": "projects.placement",
-    "pk": 12,
-    "fields": {
-      "colleague": 16,
-      "service": 12,
-      "period_source": "SERVICE",
-      "specific_start_date": null,
-      "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": ["FE_DEV", "UX_DES"]
-    }
-  },
-  {
-    "model": "projects.placement",
-    "pk": 13,
-    "fields": {
-      "colleague": 17,
-      "service": 13,
-      "period_source": "SERVICE",
-      "specific_start_date": null,
-      "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": ["PROJ_LEAD", "DAT_ENG"]
     }
   },
   {
@@ -1040,45 +962,6 @@
   },
   {
     "model": "projects.placement",
-    "pk": 19,
-    "fields": {
-      "colleague": 13,
-      "service": 19,
-      "period_source": "SERVICE",
-      "specific_start_date": null,
-      "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": ["DAT_ENG"]
-    }
-  },
-  {
-    "model": "projects.placement",
-    "pk": 20,
-    "fields": {
-      "colleague": 3,
-      "service": 20,
-      "period_source": "SERVICE",
-      "specific_start_date": null,
-      "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": ["DAT_ENG"]
-    }
-  },
-  {
-    "model": "projects.placement",
-    "pk": 21,
-    "fields": {
-      "colleague": 20,
-      "service": 21,
-      "period_source": "PLACEMENT",
-      "specific_start_date": "2025-09-15",
-      "specific_end_date": "2026-08-28",
-      "hours_per_week": 24,
-      "skills": ["AI_CONS"]
-    }
-  },
-  {
-    "model": "projects.placement",
     "pk": 22,
     "fields": {
       "colleague": 14,
@@ -1131,45 +1014,6 @@
   },
   {
     "model": "projects.placement",
-    "pk": 26,
-    "fields": {
-      "colleague": 12,
-      "service": 26,
-      "period_source": "SERVICE",
-      "specific_start_date": null,
-      "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": ["AI_CONS"]
-    }
-  },
-  {
-    "model": "projects.placement",
-    "pk": 27,
-    "fields": {
-      "colleague": 5,
-      "service": 27,
-      "period_source": "SERVICE",
-      "specific_start_date": null,
-      "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": ["RES"]
-    }
-  },
-  {
-    "model": "projects.placement",
-    "pk": 28,
-    "fields": {
-      "colleague": 19,
-      "service": 28,
-      "period_source": "PLACEMENT",
-      "specific_start_date": "2025-09-01",
-      "specific_end_date": "2026-02-28",
-      "hours_per_week": 24,
-      "skills": ["BE_DEV"]
-    }
-  },
-  {
-    "model": "projects.placement",
     "pk": 29,
     "fields": {
       "colleague": 9,
@@ -1205,19 +1049,6 @@
       "specific_end_date": "2025-11-30",
       "hours_per_week": 24,
       "skills": ["BE_DEV"]
-    }
-  },
-  {
-    "model": "projects.placement",
-    "pk": 32,
-    "fields": {
-      "colleague": 13,
-      "service": 32,
-      "period_source": "SERVICE",
-      "specific_start_date": null,
-      "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": ["DAT_ENG"]
     }
   },
   {

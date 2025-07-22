@@ -7,7 +7,6 @@
 <form id="assignment-filter-form"
       hx-get="/assignments/"
       hx-target="#assignment_table"
-      hx-trigger="change, keyup delay:300ms from:#name-search"
       hx-swap="outerHTML"
       class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four"
       style="margin-bottom: 2em;">
@@ -18,14 +17,20 @@
                name="name" 
                value="{{ request.GET.name|default:'' }}"
                placeholder="Zoek op naam of opdrachtgever..."
-               class="utrecht-textbox utrecht-textbox--html-input">
+               class="utrecht-textbox utrecht-textbox--html-input"
+               hx-get="/assignments/" 
+               hx-target="#assignment_table" 
+               hx-trigger="keyup delay:300ms">
     </div>
     <div class="rvo-layout-column rvo-layout-gap--sm">
         <label for="status-filter" class="rvo-label">Status</label>
         <select id="status-filter"
                 name="status"
                 class="js-status-select utrecht-select utrecht-select--html-select"
-                multiple>
+                multiple
+                hx-get="/assignments/" 
+                hx-target="#assignment_table" 
+                hx-trigger="change">
                 <!-- TODO: should not be hardcoded here -->
             <option value="LEAD">LEAD</option>
             <option value="OPEN">OPEN</option>
@@ -38,7 +43,10 @@
         <label for="sort-filter" class="rvo-label">Sortering</label>
         <select id="sort-filter"
                 name="order"
-                class="utrecht-select utrecht-select--html-select">
+                class="utrecht-select utrecht-select--html-select"
+                hx-get="/assignments/" 
+                hx-target="#assignment_table" 
+                hx-trigger="change">
             <option value="-start_date">Startdatum ↓</option>
             <option value="start_date">Startdatum ↑</option>
         </select>

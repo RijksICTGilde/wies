@@ -69,8 +69,16 @@
           width: 'resolve',
           allowClear: true
         });
+        $('.js-skills-filter').select2({
+          placeholder: "Filter op rol",
+          width: '100%',
+          allowClear: true
+        });
         // Forceer native change event voor HTMX na swap, maar voorkom oneindige lus
         $('.js-status-select').on('select2:select select2:unselect', function(e) {
+          this.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        $('.js-skills-filter').on('select2:select select2:unselect', function(e) {
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
       });
