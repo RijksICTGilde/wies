@@ -47,8 +47,8 @@
       <tbody>
         {% for placement in object.placements.all %}
         <tr>
-          <td><a href="/assignments/{{ placement.assignment.id }}/">{{ placement.assignment.name }}</a></td>
-          <td>{{ placement.assignment.status }}</td>
+          <td><a href="/assignments/{{ placement.service.assignment.id }}/">{{ placement.service.assignment.name }}</a></td>
+          <td>{{ placement.service.assignment.status }}</td>
           <td>{{ placement.skills|get_skill_labels|join:", " }}</td>
           <td>{{ placement.start_date }} - {{ placement.end_date }}</td>
           <td>{{ placement.hours_per_week }}</td>

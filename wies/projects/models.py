@@ -63,24 +63,80 @@ class Assignment(models.Model):
         return self.name
 
 class Placement(models.Model):
+    SERVICE = "SERVICE"
+    PLACEMENT = "PLACEMENT"
+    PERIOD_SOURCE_CHOICES = {
+        SERVICE: "Neem over van dienst",
+        PLACEMENT: "Specifiek voor inzet"
+    }
+    
     colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='placements', null=True, blank=True) # TODO: removal of colleague triggers removal of placement, probably undesirable
-    assignment = models.ForeignKey('Assignment', models.CASCADE, related_name='placements')
-    start_date = models.DateField(blank=True, null=True)
-    end_date = models.DateField(blank=True, null=True)
+    service = models.ForeignKey('Service', models.CASCADE, related_name='placements')
     hours_per_week = models.IntegerField(null=True, blank=True)
     skills = MultiSelectField(blank=True, choices=Skills.choices)
+    period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=SERVICE)
+    specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
+    specific_end_date = models.DateField(null=True, blank=True) # do not use, use properties below
+
+    @property
+    def start_date(self):
+        if self.period_source == 'SERVICE':
+            return self.service.start_date
+        else:
+            return self.specific_start_date
+        
+    @property
+    def end_date(self):
+        if self.period_source == 'SERVICE':
+            return self.service.end_date
+        else:
+            return self.specific_end_date
 
     def get_absolute_url(self):
         return reverse("placement-detail", kwargs={"pk": self.pk})
 
 
 class Service(models.Model):
+    FIXED_PRICE = "FIXED_PRICE"
+    PER_HOUR = "PER_HOUR"
+    COST_TYPE_CHOICES = {
+        FIXED_PRICE: "Vaste prijs",
+        PER_HOUR: "Per uur",
+    }
+
+    ASSIGNMENT = "ASSIGNMENT"
+    SERVICE = "SERVICE"
+    PERIOD_SOURCE_CHOICES = {
+        ASSIGNMENT: "Neem over van opdracht",
+        SERVICE: "Specifiek voor dienst"
+    }
+
     assignment = models.ForeignKey('Assignment', models.CASCADE, related_name='services')
     description = models.CharField(max_length=500)
-    cost = models.DecimalField(max_digits=10, decimal_places=2)
-    
+    cost_type = models.CharField(max_length=20, choices=COST_TYPE_CHOICES, default=PER_HOUR)
+    fixed_cost = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
+    hours_per_week = models.IntegerField(null=True, blank=True)
+    period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=ASSIGNMENT)
+    specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
+    specific_end_date = models.DateField(null=True, blank=True) # do not use, use properties below
+    # placements via reverse relation
+
+    @property
+    def start_date(self):
+        if self.period_source == 'ASSIGNMENT':
+            return self.assignment.start_date
+        else:
+            return self.specific_start_date
+        
+    @property
+    def end_date(self):
+        if self.period_source == 'ASSIGNMENT':
+            return self.assignment.end_date
+        else:
+            return self.specific_end_date
+
     def __str__(self):
-        return f"{self.description} - €{self.cost}"
+        return f"{self.description} "
 
     def get_absolute_url(self):
         return reverse("service-detail", kwargs={"pk": self.pk})

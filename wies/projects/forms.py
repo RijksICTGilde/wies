@@ -17,6 +17,7 @@ class RVOFormMixin:
                 widget.attrs['class'] = "js-skills-select utrecht-select utrecht-select--html-select"
             elif isinstance(widget, forms.DateInput):
                 widget.input_type = 'date'
+                widget.format = '%Y-%m-%d'
                 widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input utrecht-textbox--sm'
             elif isinstance(widget, forms.TextInput):
                 widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input'
@@ -41,26 +42,47 @@ class ColleagueForm(RVOFormMixin, forms.ModelForm):
         fields = '__all__'
 
 class PlacementForm(RVOFormMixin, forms.ModelForm):
-    # nested inside assignment, so assignment is dropped in form
     skills = MultiSelectFormField(required=False, choices=Skills.choices, widget=forms.SelectMultiple)  # overwrite default widget
     
     class Meta:
         model = Placement
-        fields = ['skills', 'colleague', 'start_date', 'end_date', 'hours_per_week']
+        fields = ['service', 'skills', 'colleague', 'period_source', 'specific_start_date', 'specific_end_date', 'hours_per_week']
+        labels = {
+            'service': 'Dienst',
+            'skills': 'Rollen',
+            'colleague': 'Consultant',
+            'period_source': 'Periode',
+            'specific_start_date': 'Start datum',
+            'specific_end_date': 'Eind datum',
+            'hours_per_week': 'Uren per week',
+        }
 
-    def save(self, commit = ...):
-        instance = super().save(commit=False)
-        if hasattr(self, 'assignment_id'):  # to distinguish update from create
-            instance.assignment_id = self.assignment_id
-        if commit:
-            instance.save()
-        return instance
+    def __init__(self, *args, **kwargs):
+        assignment_id = kwargs.pop('assignment_id', None)
+        super().__init__(*args, **kwargs)
+        
+        # Filter services to only show services from the same assignment
+        if self.instance and self.instance.pk and self.instance.service:
+            assignment = self.instance.service.assignment
+            self.fields['service'].queryset = Service.objects.filter(assignment=assignment)
+        elif assignment_id:
+            # For create forms where assignment_id is passed
+            self.fields['service'].queryset = Service.objects.filter(assignment_id=assignment_id)
 
 
 class ServiceForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['description', 'cost']
+        fields = ['description', 'cost_type', 'fixed_cost', 'hours_per_week', 'period_source', 'specific_start_date', 'specific_end_date']
+        labels = {
+            'description': 'Omschrijving',
+            'cost_type': 'Kosten type',
+            'fixed_cost': 'Vaste kosten',
+            'hours_per_week': 'Uren per week',
+            'period_source': 'Periode',
+            'specific_start_date': 'Start datum',
+            'specific_end_date': 'Eind datum',
+        }
 
     def save(self, commit=True):
         instance = super().save(commit=False)
