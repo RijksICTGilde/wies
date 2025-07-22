@@ -420,11 +420,396 @@
     }
   },
   {
+    "model": "projects.service",
+    "pk": 1,
+    "fields": {
+      "assignment": 1,
+      "description": "Backend ontwikkeling en projectleiding",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 2,
+    "fields": {
+      "assignment": 1,
+      "description": "Frontend ontwikkeling en UX design",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 24,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 3,
+    "fields": {
+      "assignment": 1,
+      "description": "AI consultancy voor chatbot",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 16,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 4,
+    "fields": {
+      "assignment": 2,
+      "description": "Data engineering en projectleiding",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 40,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 5,
+    "fields": {
+      "assignment": 2,
+      "description": "Product owner rol",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 6,
+    "fields": {
+      "assignment": 3,
+      "description": "Juridische AI expertise",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 40,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 7,
+    "fields": {
+      "assignment": 4,
+      "description": "Frontend ontwikkeling en projectleiding",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 8,
+    "fields": {
+      "assignment": 4,
+      "description": "UX design voor e-commerce",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 40,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 9,
+    "fields": {
+      "assignment": 5,
+      "description": "Blockchain onderzoek",
+      "cost_type": "FIXED_PRICE",
+      "fixed_cost": 15000.00,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 10,
+    "fields": {
+      "assignment": 6,
+      "description": "Backend en AI ontwikkeling",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 11,
+    "fields": {
+      "assignment": 6,
+      "description": "AI consultancy en UX design",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 24,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 12,
+    "fields": {
+      "assignment": 7,
+      "description": "Frontend en UX voor dashboard",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 13,
+    "fields": {
+      "assignment": 7,
+      "description": "Projectleiding en data engineering",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 40,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 14,
+    "fields": {
+      "assignment": 8,
+      "description": "Onderzoek en backend ontwikkeling",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 40,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 15,
+    "fields": {
+      "assignment": 9,
+      "description": "Projectleiding logistiek",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 16,
+    "fields": {
+      "assignment": 9,
+      "description": "Backend en data engineering",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 40,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 17,
+    "fields": {
+      "assignment": 10,
+      "description": "Frontend ontwikkeling mobile",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 18,
+    "fields": {
+      "assignment": 10,
+      "description": "Backend ontwikkeling mobile",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 24,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 19,
+    "fields": {
+      "assignment": 11,
+      "description": "Data engineering voor zorgdata",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 40,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 20,
+    "fields": {
+      "assignment": 12,
+      "description": "Data engineering voor energie",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 21,
+    "fields": {
+      "assignment": 12,
+      "description": "AI consultancy energie",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 24,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 22,
+    "fields": {
+      "assignment": 13,
+      "description": "Product owner e-learning",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 23,
+    "fields": {
+      "assignment": 13,
+      "description": "UX design e-learning",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 40,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 24,
+    "fields": {
+      "assignment": 14,
+      "description": "UX design en product owner IoT",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 25,
+    "fields": {
+      "assignment": 14,
+      "description": "Backend ontwikkeling IoT",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 26,
+    "fields": {
+      "assignment": 15,
+      "description": "AI consultancy digital twin",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 40,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 27,
+    "fields": {
+      "assignment": 16,
+      "description": "Onderzoek sociale media",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 28,
+    "fields": {
+      "assignment": 16,
+      "description": "Backend ontwikkeling analytics",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 24,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 29,
+    "fields": {
+      "assignment": 17,
+      "description": "Onderzoek landbouw AI",
+      "cost_type": "FIXED_PRICE",
+      "fixed_cost": 25000.00,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 30,
+    "fields": {
+      "assignment": 18,
+      "description": "Projectleiding supply chain",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 31,
+    "fields": {
+      "assignment": 18,
+      "description": "Backend ontwikkeling blockchain",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 24,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 32,
+    "fields": {
+      "assignment": 19,
+      "description": "Data engineering fraudedetectie",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 40,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 33,
+    "fields": {
+      "assignment": 20,
+      "description": "Projectleiding en data engineering",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 34,
+    "fields": {
+      "assignment": 20,
+      "description": "Frontend ontwikkeling portal",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 24,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 35,
+    "fields": {
+      "assignment": 20,
+      "description": "Product owner klimaatdata",
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 16,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
     "model": "projects.placement",
     "pk": 1,
     "fields": {
       "colleague": 1,
-      "assignment": 1,
+      "service": 1,
       "start_date": "2024-06-01",
       "end_date": "2025-06-30",
       "hours_per_week": 32,
@@ -436,7 +821,7 @@
     "pk": 2,
     "fields": {
       "colleague": 2,
-      "assignment": 1,
+      "service": 2,
       "start_date": "2024-07-01",
       "end_date": "2025-08-31",
       "hours_per_week": 24,
@@ -448,7 +833,7 @@
     "pk": 3,
     "fields": {
       "colleague": 3,
-      "assignment": 1,
+      "service": 3,
       "start_date": "2024-06-01",
       "end_date": "2024-12-31",
       "hours_per_week": 16,
@@ -460,7 +845,7 @@
     "pk": 4,
     "fields": {
       "colleague": 7,
-      "assignment": 2,
+      "service": 4,
       "start_date": "2025-08-01",
       "end_date": "2026-03-31",
       "hours_per_week": 40,
@@ -472,7 +857,7 @@
     "pk": 5,
     "fields": {
       "colleague": 4,
-      "assignment": 2,
+      "service": 5,
       "start_date": "2025-08-15",
       "end_date": "2026-03-31",
       "hours_per_week": 32,
@@ -484,7 +869,7 @@
     "pk": 6,
     "fields": {
       "colleague": 9,
-      "assignment": 3,
+      "service": 6,
       "start_date": "2025-09-01",
       "end_date": null,
       "hours_per_week": 40,
@@ -496,7 +881,7 @@
     "pk": 7,
     "fields": {
       "colleague": 11,
-      "assignment": 4,
+      "service": 7,
       "start_date": "2023-10-01",
       "end_date": "2024-02-28",
       "hours_per_week": 32,
@@ -508,7 +893,7 @@
     "pk": 8,
     "fields": {
       "colleague": 2,
-      "assignment": 4,
+      "service": 8,
       "start_date": "2023-10-01",
       "end_date": "2024-02-28",
       "hours_per_week": 40,
@@ -520,7 +905,7 @@
     "pk": 9,
     "fields": {
       "colleague": 5,
-      "assignment": 5,
+      "service": 9,
       "start_date": "2024-02-01",
       "end_date": "2024-03-31",
       "hours_per_week": 40,
@@ -532,7 +917,7 @@
     "pk": 10,
     "fields": {
       "colleague": 15,
-      "assignment": 6,
+      "service": 10,
       "start_date": "2024-06-01",
       "end_date": "2025-11-30",
       "hours_per_week": 32,
@@ -544,7 +929,7 @@
     "pk": 11,
     "fields": {
       "colleague": 12,
-      "assignment": 6,
+      "service": 11,
       "start_date": "2024-07-15",
       "end_date": "2025-11-30",
       "hours_per_week": 24,
@@ -556,7 +941,7 @@
     "pk": 12,
     "fields": {
       "colleague": 16,
-      "assignment": 7,
+      "service": 12,
       "start_date": "2025-08-01",
       "end_date": "2026-01-31",
       "hours_per_week": 32,
@@ -568,7 +953,7 @@
     "pk": 13,
     "fields": {
       "colleague": 17,
-      "assignment": 7,
+      "service": 13,
       "start_date": "2025-08-01",
       "end_date": "2026-01-31",
       "hours_per_week": 40,
@@ -580,7 +965,7 @@
     "pk": 14,
     "fields": {
       "colleague": 19,
-      "assignment": 8,
+      "service": 14,
       "start_date": "2024-03-01",
       "end_date": "2025-08-31",
       "hours_per_week": 40,
@@ -592,7 +977,7 @@
     "pk": 15,
     "fields": {
       "colleague": 1,
-      "assignment": 9,
+      "service": 15,
       "start_date": "2023-09-01",
       "end_date": "2024-01-31",
       "hours_per_week": 32,
@@ -604,7 +989,7 @@
     "pk": 16,
     "fields": {
       "colleague": 10,
-      "assignment": 9,
+      "service": 16,
       "start_date": "2023-09-01",
       "end_date": "2024-01-31",
       "hours_per_week": 40,
@@ -616,7 +1001,7 @@
     "pk": 17,
     "fields": {
       "colleague": 6,
-      "assignment": 10,
+      "service": 17,
       "start_date": "2024-05-15",
       "end_date": "2025-09-30",
       "hours_per_week": 32,
@@ -628,7 +1013,7 @@
     "pk": 18,
     "fields": {
       "colleague": 15,
-      "assignment": 10,
+      "service": 18,
       "start_date": "2024-05-15",
       "end_date": "2025-09-30",
       "hours_per_week": 24,
@@ -640,7 +1025,7 @@
     "pk": 19,
     "fields": {
       "colleague": 13,
-      "assignment": 11,
+      "service": 19,
       "start_date": "2025-08-15",
       "end_date": null,
       "hours_per_week": 40,
@@ -652,7 +1037,7 @@
     "pk": 20,
     "fields": {
       "colleague": 3,
-      "assignment": 12,
+      "service": 20,
       "start_date": "2025-09-15",
       "end_date": "2026-08-28",
       "hours_per_week": 32,
@@ -664,7 +1049,7 @@
     "pk": 21,
     "fields": {
       "colleague": 20,
-      "assignment": 12,
+      "service": 21,
       "start_date": "2025-09-15",
       "end_date": "2026-08-28",
       "hours_per_week": 24,
@@ -676,7 +1061,7 @@
     "pk": 22,
     "fields": {
       "colleague": 14,
-      "assignment": 13,
+      "service": 22,
       "start_date": "2023-11-01",
       "end_date": "2024-04-30",
       "hours_per_week": 32,
@@ -688,7 +1073,7 @@
     "pk": 23,
     "fields": {
       "colleague": 16,
-      "assignment": 13,
+      "service": 23,
       "start_date": "2023-11-01",
       "end_date": "2024-04-30",
       "hours_per_week": 40,
@@ -700,7 +1085,7 @@
     "pk": 24,
     "fields": {
       "colleague": 8,
-      "assignment": 14,
+      "service": 24,
       "start_date": "2024-05-20",
       "end_date": "2025-07-31",
       "hours_per_week": 32,
@@ -712,7 +1097,7 @@
     "pk": 25,
     "fields": {
       "colleague": 10,
-      "assignment": 14,
+      "service": 25,
       "start_date": "2024-05-20",
       "end_date": "2025-07-31",
       "hours_per_week": 32,
@@ -724,7 +1109,7 @@
     "pk": 26,
     "fields": {
       "colleague": 12,
-      "assignment": 15,
+      "service": 26,
       "start_date": "2025-08-01",
       "end_date": null,
       "hours_per_week": 40,
@@ -736,7 +1121,7 @@
     "pk": 27,
     "fields": {
       "colleague": 5,
-      "assignment": 16,
+      "service": 27,
       "start_date": "2025-09-01",
       "end_date": "2026-02-28",
       "hours_per_week": 32,
@@ -748,7 +1133,7 @@
     "pk": 28,
     "fields": {
       "colleague": 19,
-      "assignment": 16,
+      "service": 28,
       "start_date": "2025-09-01",
       "end_date": "2026-02-28",
       "hours_per_week": 24,
@@ -760,7 +1145,7 @@
     "pk": 29,
     "fields": {
       "colleague": 9,
-      "assignment": 17,
+      "service": 29,
       "start_date": "2023-08-01",
       "end_date": "2024-03-31",
       "hours_per_week": 40,
@@ -772,7 +1157,7 @@
     "pk": 30,
     "fields": {
       "colleague": 7,
-      "assignment": 18,
+      "service": 30,
       "start_date": "2024-02-01",
       "end_date": "2025-11-30",
       "hours_per_week": 32,
@@ -784,7 +1169,7 @@
     "pk": 31,
     "fields": {
       "colleague": 1,
-      "assignment": 18,
+      "service": 31,
       "start_date": "2024-02-01",
       "end_date": "2025-11-30",
       "hours_per_week": 24,
@@ -796,7 +1181,7 @@
     "pk": 32,
     "fields": {
       "colleague": 13,
-      "assignment": 19,
+      "service": 32,
       "start_date": "2025-08-01",
       "end_date": "2026-04-30",
       "hours_per_week": 40,
@@ -808,7 +1193,7 @@
     "pk": 33,
     "fields": {
       "colleague": 17,
-      "assignment": 20,
+      "service": 33,
       "start_date": "2024-01-01",
       "end_date": "2025-08-31",
       "hours_per_week": 32,
@@ -820,7 +1205,7 @@
     "pk": 34,
     "fields": {
       "colleague": 6,
-      "assignment": 20,
+      "service": 34,
       "start_date": "2024-01-01",
       "end_date": "2025-08-31",
       "hours_per_week": 24,
@@ -832,7 +1217,7 @@
     "pk": 35,
     "fields": {
       "colleague": 18,
-      "assignment": 20,
+      "service": 35,
       "start_date": "2024-01-01",
       "end_date": "2025-08-31",
       "hours_per_week": 16,

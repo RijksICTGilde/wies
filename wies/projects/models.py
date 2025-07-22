@@ -64,7 +64,7 @@ class Assignment(models.Model):
 
 class Placement(models.Model):
     colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='placements', null=True, blank=True) # TODO: removal of colleague triggers removal of placement, probably undesirable
-    assignment = models.ForeignKey('Assignment', models.CASCADE, related_name='placements')
+    service = models.ForeignKey('Service', models.CASCADE, related_name='placements')
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
     hours_per_week = models.IntegerField(null=True, blank=True)
@@ -97,6 +97,7 @@ class Service(models.Model):
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=ASSIGNMENT)
     specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
     specific_end_date = models.DateField(null=True, blank=True) # do not use, use properties below
+    # placements via reverse relation
 
     @property
     def start_date(self):

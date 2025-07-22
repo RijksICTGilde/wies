@@ -118,9 +118,9 @@ class ColleagueDetail(DetailView):
         assignment_list = []
         for placement in self.object.placements.all():
             assignment_list.append({
-                'name': placement.assignment.name,
-                'id': placement.assignment.id,
-                'assignment_type': placement.assignment.assignment_type,
+                'name': placement.service.assignment.name,
+                'id': placement.service.assignment.id,
+                'assignment_type': placement.service.assignment.assignment_type,
             })
 
         context["assignment_list"] = assignment_list
@@ -147,13 +147,13 @@ class PlacementUpdateView(UpdateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/assignments/{context['object'].assignment.id}/'
+        context['cancel_url'] = f'/assignments/{context['object'].service.assignment.id}/'
         return context
 
     def form_valid(self, form):
         # todo: not super happy about this work around, but good enough for now
         placement_id = self.kwargs['pk']
-        assignment_id = Placement.objects.get(id=placement_id).assignment.id
+        assignment_id = Placement.objects.get(id=placement_id).service.assignment.id
         super().form_valid(form)
         return redirect(Assignment.objects.get(id=assignment_id))
 
@@ -162,10 +162,14 @@ class PlacementCreateView(CreateView):
     form_class = PlacementForm
     template_name = 'placement_new.html'
     
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['assignment_id'] = self.kwargs['pk']
+        return kwargs
+    
     def form_valid(self, form):
         # todo: not super happy about this work around, but good enough for now
         assignment_id = self.kwargs['pk']
-        form.assignment_id = self.kwargs['pk']
         super().form_valid(form)
         return redirect(Assignment.objects.get(id=assignment_id))
     
@@ -176,7 +180,7 @@ class PlacementDeleteView(DeleteView):
     
     def post(self, request, *args, **kwargs):
         placement_id = self.kwargs['pk']
-        assignment_id = Placement.objects.get(id=placement_id).assignment.id
+        assignment_id = Placement.objects.get(id=placement_id).service.assignment.id
         super().post(request, *args, **kwargs)
         return redirect(Assignment.objects.get(id=assignment_id))
 
@@ -242,12 +246,13 @@ def client(request, name):
     assignments_data = []
     for assignment in assignments:
         colleagues = []
-        for placement in assignment.placements.all():
-            if placement.colleague:  # Only add if colleague exists
-                colleagues.append({
-                    'id': placement.colleague.pk,
-                    'name': placement.colleague.name
-                })
+        for service in assignment.services.all():
+            for placement in service.placements.all():
+                if placement.colleague:  # Only add if colleague exists
+                    colleagues.append({
+                        'id': placement.colleague.pk,
+                        'name': placement.colleague.name
+                    })
         
         assignments_data.append({
             'id': assignment.pk,

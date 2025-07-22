@@ -8,7 +8,7 @@
     
     <dl class="rvo-data-list">
       <dt>Opdracht</dt>
-      <dd><a href="{% url 'assignment-detail' object.assignment.pk %}">{{ object.assignment }}</a></dd>
+      <dd><a href="{% url 'assignment-detail' object.service.assignment.pk %}">{{ object.service.assignment }}</a></dd>
       <dt>Collega</dt>
       <dd>{{ object.colleague }}</dd>
     </dl>
