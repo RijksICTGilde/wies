@@ -17,6 +17,7 @@ class RVOFormMixin:
                 widget.attrs['class'] = "js-skills-select utrecht-select utrecht-select--html-select"
             elif isinstance(widget, forms.DateInput):
                 widget.input_type = 'date'
+                widget.format = '%Y-%m-%d'
                 widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input utrecht-textbox--sm'
             elif isinstance(widget, forms.TextInput):
                 widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input'
@@ -60,7 +61,7 @@ class PlacementForm(RVOFormMixin, forms.ModelForm):
 class ServiceForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['description', 'cost']
+        fields = ['description', 'cost_type', 'fixed_cost', 'hours_per_week', 'period_source', 'specific_start_date', 'specific_end_date']
 
     def save(self, commit=True):
         instance = super().save(commit=False)
