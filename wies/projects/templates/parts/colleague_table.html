@@ -23,7 +23,7 @@
       {% for colleague in object_list %}
       <tr class="rvo-table-row">
         <td class="rvo-table-cell"><a href="/colleagues/{{ colleague.pk }}/">{{ colleague.name }}</a></td>
-        <td class="rvo-table-cell">{{ colleague.end_date }}</td>
+        <td class="rvo-table-cell">{{ colleague.max_end_date }}</td>
         <td class="rvo-table-cell">
           {{ colleague.skills|get_skill_labels|join:", " }}
         </td>

@@ -4,6 +4,7 @@ from django.template.defaulttags import register
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.db import models
+from django.db.models import Case, When, Max
 
 from .models import Assignment, Colleague, Skills, Placement, Service
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
@@ -95,7 +96,22 @@ class ColleagueList(ListView):
         if name_filter:
             qs = qs.filter(name__icontains=name_filter)
             
-        return qs.annotate(max_end_date=models.Max('placements__end_date')).order_by('max_end_date')
+        # Calculate max end date considering both placement and service period_source properties
+        max_end_date_annotation = Max(
+            Case(
+                When(
+                    placements__period_source='SERVICE',
+                    then=Case(
+                        When(placements__service__period_source='ASSIGNMENT', then='placements__service__assignment__end_date'),
+                        default='placements__service__specific_end_date',
+                        output_field=models.DateField()
+                    )
+                ),
+                default='placements__specific_end_date',
+                output_field=models.DateField()
+            )
+        )
+        return qs.annotate(max_end_date=max_end_date_annotation).order_by('max_end_date')
     
     def get_template_names(self):
         if 'HX-Request' in self.request.headers:

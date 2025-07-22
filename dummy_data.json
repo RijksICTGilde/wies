@@ -810,8 +810,9 @@
     "fields": {
       "colleague": 1,
       "service": 1,
-      "start_date": "2024-06-01",
-      "end_date": "2025-06-30",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 32,
       "skills": ["BE_DEV", "PROJ_LEAD"]
     }
@@ -822,8 +823,9 @@
     "fields": {
       "colleague": 2,
       "service": 2,
-      "start_date": "2024-07-01",
-      "end_date": "2025-08-31",
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2024-07-01",
+      "specific_end_date": "2025-08-31",
       "hours_per_week": 24,
       "skills": ["FE_DEV", "UX_DES"]
     }
@@ -834,8 +836,9 @@
     "fields": {
       "colleague": 3,
       "service": 3,
-      "start_date": "2024-06-01",
-      "end_date": "2024-12-31",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 16,
       "skills": ["AI_CONS"]
     }
@@ -846,8 +849,9 @@
     "fields": {
       "colleague": 7,
       "service": 4,
-      "start_date": "2025-08-01",
-      "end_date": "2026-03-31",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 40,
       "skills": ["DAT_ENG", "PROJ_LEAD"]
     }
@@ -858,8 +862,9 @@
     "fields": {
       "colleague": 4,
       "service": 5,
-      "start_date": "2025-08-15",
-      "end_date": "2026-03-31",
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2025-08-15",
+      "specific_end_date": "2026-03-31",
       "hours_per_week": 32,
       "skills": ["PO"]
     }
@@ -870,8 +875,9 @@
     "fields": {
       "colleague": 9,
       "service": 6,
-      "start_date": "2025-09-01",
-      "end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 40,
       "skills": ["AI_JUR"]
     }
@@ -882,8 +888,9 @@
     "fields": {
       "colleague": 11,
       "service": 7,
-      "start_date": "2023-10-01",
-      "end_date": "2024-02-28",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 32,
       "skills": ["FE_DEV", "PROJ_LEAD"]
     }
@@ -894,8 +901,9 @@
     "fields": {
       "colleague": 2,
       "service": 8,
-      "start_date": "2023-10-01",
-      "end_date": "2024-02-28",
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2023-10-01",
+      "specific_end_date": "2024-02-28",
       "hours_per_week": 40,
       "skills": ["UX_DES"]
     }
@@ -906,8 +914,9 @@
     "fields": {
       "colleague": 5,
       "service": 9,
-      "start_date": "2024-02-01",
-      "end_date": "2024-03-31",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 40,
       "skills": ["RES"]
     }
@@ -918,8 +927,9 @@
     "fields": {
       "colleague": 15,
       "service": 10,
-      "start_date": "2024-06-01",
-      "end_date": "2025-11-30",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 32,
       "skills": ["BE_DEV", "AI_CONS"]
     }
@@ -930,8 +940,9 @@
     "fields": {
       "colleague": 12,
       "service": 11,
-      "start_date": "2024-07-15",
-      "end_date": "2025-11-30",
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2024-07-15",
+      "specific_end_date": "2025-11-30",
       "hours_per_week": 24,
       "skills": ["AI_CONS", "UX_DES"]
     }
@@ -942,8 +953,9 @@
     "fields": {
       "colleague": 16,
       "service": 12,
-      "start_date": "2025-08-01",
-      "end_date": "2026-01-31",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 32,
       "skills": ["FE_DEV", "UX_DES"]
     }
@@ -954,8 +966,9 @@
     "fields": {
       "colleague": 17,
       "service": 13,
-      "start_date": "2025-08-01",
-      "end_date": "2026-01-31",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 40,
       "skills": ["PROJ_LEAD", "DAT_ENG"]
     }
@@ -966,8 +979,9 @@
     "fields": {
       "colleague": 19,
       "service": 14,
-      "start_date": "2024-03-01",
-      "end_date": "2025-08-31",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 40,
       "skills": ["RES", "BE_DEV"]
     }
@@ -978,8 +992,9 @@
     "fields": {
       "colleague": 1,
       "service": 15,
-      "start_date": "2023-09-01",
-      "end_date": "2024-01-31",
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2023-09-01",
+      "specific_end_date": "2024-01-31",
       "hours_per_week": 32,
       "skills": ["PROJ_LEAD"]
     }
@@ -990,8 +1005,9 @@
     "fields": {
       "colleague": 10,
       "service": 16,
-      "start_date": "2023-09-01",
-      "end_date": "2024-01-31",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 40,
       "skills": ["BE_DEV", "DAT_ENG"]
     }
@@ -1002,8 +1018,9 @@
     "fields": {
       "colleague": 6,
       "service": 17,
-      "start_date": "2024-05-15",
-      "end_date": "2025-09-30",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 32,
       "skills": ["FE_DEV"]
     }
@@ -1014,8 +1031,9 @@
     "fields": {
       "colleague": 15,
       "service": 18,
-      "start_date": "2024-05-15",
-      "end_date": "2025-09-30",
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2024-05-15",
+      "specific_end_date": "2025-09-30",
       "hours_per_week": 24,
       "skills": ["BE_DEV"]
     }
@@ -1026,8 +1044,9 @@
     "fields": {
       "colleague": 13,
       "service": 19,
-      "start_date": "2025-08-15",
-      "end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 40,
       "skills": ["DAT_ENG"]
     }
@@ -1038,8 +1057,9 @@
     "fields": {
       "colleague": 3,
       "service": 20,
-      "start_date": "2025-09-15",
-      "end_date": "2026-08-28",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 32,
       "skills": ["DAT_ENG"]
     }
@@ -1050,8 +1070,9 @@
     "fields": {
       "colleague": 20,
       "service": 21,
-      "start_date": "2025-09-15",
-      "end_date": "2026-08-28",
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2025-09-15",
+      "specific_end_date": "2026-08-28",
       "hours_per_week": 24,
       "skills": ["AI_CONS"]
     }
@@ -1062,8 +1083,9 @@
     "fields": {
       "colleague": 14,
       "service": 22,
-      "start_date": "2023-11-01",
-      "end_date": "2024-04-30",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 32,
       "skills": ["PO"]
     }
@@ -1074,8 +1096,9 @@
     "fields": {
       "colleague": 16,
       "service": 23,
-      "start_date": "2023-11-01",
-      "end_date": "2024-04-30",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 40,
       "skills": ["UX_DES"]
     }
@@ -1086,8 +1109,9 @@
     "fields": {
       "colleague": 8,
       "service": 24,
-      "start_date": "2024-05-20",
-      "end_date": "2025-07-31",
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2024-05-20",
+      "specific_end_date": "2025-07-31",
       "hours_per_week": 32,
       "skills": ["UX_DES", "PO"]
     }
@@ -1098,8 +1122,9 @@
     "fields": {
       "colleague": 10,
       "service": 25,
-      "start_date": "2024-05-20",
-      "end_date": "2025-07-31",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 32,
       "skills": ["BE_DEV"]
     }
@@ -1110,8 +1135,9 @@
     "fields": {
       "colleague": 12,
       "service": 26,
-      "start_date": "2025-08-01",
-      "end_date": null,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 40,
       "skills": ["AI_CONS"]
     }
@@ -1122,8 +1148,9 @@
     "fields": {
       "colleague": 5,
       "service": 27,
-      "start_date": "2025-09-01",
-      "end_date": "2026-02-28",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 32,
       "skills": ["RES"]
     }
@@ -1134,8 +1161,9 @@
     "fields": {
       "colleague": 19,
       "service": 28,
-      "start_date": "2025-09-01",
-      "end_date": "2026-02-28",
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2025-09-01",
+      "specific_end_date": "2026-02-28",
       "hours_per_week": 24,
       "skills": ["BE_DEV"]
     }
@@ -1146,8 +1174,9 @@
     "fields": {
       "colleague": 9,
       "service": 29,
-      "start_date": "2023-08-01",
-      "end_date": "2024-03-31",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 40,
       "skills": ["RES"]
     }
@@ -1158,8 +1187,9 @@
     "fields": {
       "colleague": 7,
       "service": 30,
-      "start_date": "2024-02-01",
-      "end_date": "2025-11-30",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 32,
       "skills": ["PROJ_LEAD"]
     }
@@ -1170,8 +1200,9 @@
     "fields": {
       "colleague": 1,
       "service": 31,
-      "start_date": "2024-02-01",
-      "end_date": "2025-11-30",
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2024-02-01",
+      "specific_end_date": "2025-11-30",
       "hours_per_week": 24,
       "skills": ["BE_DEV"]
     }
@@ -1182,8 +1213,9 @@
     "fields": {
       "colleague": 13,
       "service": 32,
-      "start_date": "2025-08-01",
-      "end_date": "2026-04-30",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 40,
       "skills": ["DAT_ENG"]
     }
@@ -1194,8 +1226,9 @@
     "fields": {
       "colleague": 17,
       "service": 33,
-      "start_date": "2024-01-01",
-      "end_date": "2025-08-31",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 32,
       "skills": ["PROJ_LEAD", "DAT_ENG"]
     }
@@ -1206,8 +1239,9 @@
     "fields": {
       "colleague": 6,
       "service": 34,
-      "start_date": "2024-01-01",
-      "end_date": "2025-08-31",
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2024-01-01",
+      "specific_end_date": "2025-08-31",
       "hours_per_week": 24,
       "skills": ["FE_DEV"]
     }
@@ -1218,8 +1252,9 @@
     "fields": {
       "colleague": 18,
       "service": 35,
-      "start_date": "2024-01-01",
-      "end_date": "2025-08-31",
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
       "hours_per_week": 16,
       "skills": ["PO"]
     }

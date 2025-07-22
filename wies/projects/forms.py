@@ -46,7 +46,7 @@ class PlacementForm(RVOFormMixin, forms.ModelForm):
     
     class Meta:
         model = Placement
-        fields = ['service', 'skills', 'colleague', 'start_date', 'end_date', 'hours_per_week']
+        fields = ['service', 'skills', 'colleague', 'period_source', 'specific_start_date', 'specific_end_date', 'hours_per_week']
 
     def __init__(self, *args, **kwargs):
         assignment_id = kwargs.pop('assignment_id', None)

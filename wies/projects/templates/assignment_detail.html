@@ -93,6 +93,9 @@
           <th>Dienst</th>
           <th>Rollen</th>
           <th>Consultant</th>
+          <th>Periode bron</th>
+          <th>Start datum specifiek</th>
+          <th>Eind datum specifiek</th>
           <th>Start datum</th>
           <th>Eind datum</th>
           <th>Uren per week</th>
@@ -110,6 +113,9 @@
             {% else %}
               <td></td>
             {% endif %}
+            <td>{{ placement.period_source }}</td>
+            <td>{{ placement.specific_start_date }}</td>
+            <td>{{ placement.specific_end_date }}</td>
             <td>{{ placement.start_date }}</td>
             <td>{{ placement.end_date }}</td>
             <td>{{ placement.hours_per_week }}</td>

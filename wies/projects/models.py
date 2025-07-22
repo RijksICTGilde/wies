@@ -63,12 +63,34 @@ class Assignment(models.Model):
         return self.name
 
 class Placement(models.Model):
+    SERVICE = "SERVICE"
+    PLACEMENT = "PLACEMENT"
+    PERIOD_SOURCE_CHOICES = {
+        SERVICE: "Neem over van dienst",
+        PLACEMENT: "Specifiek voor inzet"
+    }
+    
     colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='placements', null=True, blank=True) # TODO: removal of colleague triggers removal of placement, probably undesirable
     service = models.ForeignKey('Service', models.CASCADE, related_name='placements')
-    start_date = models.DateField(blank=True, null=True)
-    end_date = models.DateField(blank=True, null=True)
     hours_per_week = models.IntegerField(null=True, blank=True)
     skills = MultiSelectField(blank=True, choices=Skills.choices)
+    period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=SERVICE)
+    specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
+    specific_end_date = models.DateField(null=True, blank=True) # do not use, use properties below
+
+    @property
+    def start_date(self):
+        if self.period_source == 'SERVICE':
+            return self.service.start_date
+        else:
+            return self.specific_start_date
+        
+    @property
+    def end_date(self):
+        if self.period_source == 'SERVICE':
+            return self.service.end_date
+        else:
+            return self.specific_end_date
 
     def get_absolute_url(self):
         return reverse("placement-detail", kwargs={"pk": self.pk})
