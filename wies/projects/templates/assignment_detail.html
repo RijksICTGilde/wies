@@ -46,12 +46,7 @@
       <thead>
         <tr>
           <th>Omschrijving</th>
-          <th>Kosten type</th>
-          <th>Vaste kosten</th>
-          <th>Uren per week</th>
-          <th>Periode bron</th>
-          <th>Start datum specifiek</th>
-          <th>Eind datum specifiek</th>
+          <th>Kosten</th>
           <th>Start datum</th>
           <th>Eind datum</th>
           <th>Acties</th>
@@ -61,12 +56,13 @@
         {% for service in object.services.all %}
         <tr>
           <td>{{ service.description }}</td>
-          <td>{{ service.cost_type }}</td>
-          <td>{{ service.fixed_cost }}</td>
-          <td>{{ service.hours_per_week }}</td>
-          <td>{{ service.period_source }}</td>
-          <td>{{ service.specific_start_date}}</td>
-          <td>{{ service.specific_end_date}}</td>
+          <td>
+            {% if service.cost_type == "FIXED_PRICE" %}
+              {{ service.fixed_cost }}€
+            {% elif service.cost_type == "PER_HOUR" %}
+              {{ service.hours_per_week }}€/wk
+            {% endif %}
+          </td>
           <td>{{ service.start_date}}</td>
           <td>{{ service.end_date }}</td>
           <td><a href="/services/{{ service.id }}/update">edit</a> / <a href="/services/{{ service.id }}/delete">delete</a></td>
@@ -93,9 +89,6 @@
           <th>Dienst</th>
           <th>Rollen</th>
           <th>Consultant</th>
-          <th>Periode bron</th>
-          <th>Start datum specifiek</th>
-          <th>Eind datum specifiek</th>
           <th>Start datum</th>
           <th>Eind datum</th>
           <th>Uren per week</th>
@@ -113,9 +106,6 @@
             {% else %}
               <td></td>
             {% endif %}
-            <td>{{ placement.period_source }}</td>
-            <td>{{ placement.specific_start_date }}</td>
-            <td>{{ placement.specific_end_date }}</td>
             <td>{{ placement.start_date }}</td>
             <td>{{ placement.end_date }}</td>
             <td>{{ placement.hours_per_week }}</td>

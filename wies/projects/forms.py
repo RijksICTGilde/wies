@@ -47,6 +47,15 @@ class PlacementForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Placement
         fields = ['service', 'skills', 'colleague', 'period_source', 'specific_start_date', 'specific_end_date', 'hours_per_week']
+        labels = {
+            'service': 'Dienst',
+            'skills': 'Rollen',
+            'colleague': 'Consultant',
+            'period_source': 'Periode',
+            'specific_start_date': 'Start datum',
+            'specific_end_date': 'Eind datum',
+            'hours_per_week': 'Uren per week',
+        }
 
     def __init__(self, *args, **kwargs):
         assignment_id = kwargs.pop('assignment_id', None)
@@ -65,6 +74,15 @@ class ServiceForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Service
         fields = ['description', 'cost_type', 'fixed_cost', 'hours_per_week', 'period_source', 'specific_start_date', 'specific_end_date']
+        labels = {
+            'description': 'Omschrijving',
+            'cost_type': 'Kosten type',
+            'fixed_cost': 'Vaste kosten',
+            'hours_per_week': 'Uren per week',
+            'period_source': 'Periode',
+            'specific_start_date': 'Start datum',
+            'specific_end_date': 'Eind datum',
+        }
 
     def save(self, commit=True):
         instance = super().save(commit=False)
