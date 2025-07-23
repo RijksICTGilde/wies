@@ -217,4 +217,9 @@
 
 .assignment-skills-section {
   min-width: 150px;
+}
+
+/* Assignment Card Padding */
+.rvo-card-content {
+  padding: var(--rvo-space-lg, 1.5rem) !important;
 } 

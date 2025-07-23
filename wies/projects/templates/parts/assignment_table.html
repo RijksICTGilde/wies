@@ -19,20 +19,33 @@
         
         <!-- Skills -->
         <div class="rvo-layout-column rvo-layout-gap--xs assignment-skills-section">
-          <div class="rvo-layout-row rvo-layout-gap--xs">
-            <!-- Deze skills komen uit de services/placements - voor nu placeholders -->
-            <span class="rvo-tag rvo-tag--sm">AI</span>
-            <span class="rvo-tag rvo-tag--sm">Prototyping</span>
-            <span class="rvo-tag rvo-tag--sm">Scrum</span>
+          <div class="rvo-layout-row rvo-layout-gap--xs" style="flex-wrap: wrap;">
+            <!-- Keywords/Skills tags -->
+            <span class="rvo-tag rvo-tag--sm rvo-tag--info">AI</span>
+            <span class="rvo-tag rvo-tag--sm rvo-tag--info">Prototyping</span>
+            <span class="rvo-tag rvo-tag--sm rvo-tag--info">Scrum</span>
           </div>
-          <span class="rvo-text--sm">Senior</span>
+          <span class="rvo-tag rvo-tag--sm rvo-tag--secondary">Senior</span>
         </div>
         
         <!-- Status en acties -->
-        <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align-items--center">
-          <span class="rvo-tag rvo-tag--sm rvo-tag--{{ assignment.status|lower }}">{{ assignment.status }}</span>
+        <div class="rvo-layout-column rvo-layout-gap--xs rvo-layout-align-items--center">
+          <!-- Status tag -->
+          {% if assignment.status == 'LOPEND' %}
+            <span class="rvo-tag rvo-tag--sm rvo-tag--success">{{ assignment.status }}</span>
+          {% elif assignment.status == 'LEAD' %}
+            <span class="rvo-tag rvo-tag--sm rvo-tag--warning">{{ assignment.status }}</span>
+          {% elif assignment.status == 'OPEN' %}
+            <span class="rvo-tag rvo-tag--sm rvo-tag--info">{{ assignment.status }}</span>
+          {% elif assignment.status == 'AFGEWEZEN' %}
+            <span class="rvo-tag rvo-tag--sm rvo-tag--error">{{ assignment.status }}</span>
+          {% elif assignment.status == 'HISTORISCH' %}
+            <span class="rvo-tag rvo-tag--sm rvo-tag--neutral">{{ assignment.status }}</span>
+          {% else %}
+            <span class="rvo-tag rvo-tag--sm">{{ assignment.status }}</span>
+          {% endif %}
           
-          <!-- Profile icons - placeholder -->
+          <!-- Profile icons -->
           <div class="rvo-layout-row rvo-layout-gap--xs">
             <div class="profile-avatar" style="background: var(--rvo-color-hemelblauw);">R</div>
             <div class="profile-avatar" style="background: var(--rvo-color-groen-600);">A</div>
