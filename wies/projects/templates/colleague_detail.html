@@ -28,34 +28,32 @@
     
     <h2 class="utrecht-heading-2 rvo-heading--no-margins">Opdrachten</h2>
 
-    <table class="rvo-table" style="border-collapse: collapse; border: 1px solid #ccc;">
-      <style>
-        .rvo-table th, .rvo-table td {
-          border: 1px solid #ccc;
-          padding: 8px;
-        }
-      </style>
-      <thead>
-        <tr>
-          <th>Naam</th>
-          <th>Status</th>
-          <th>Rollen</th>
-          <th>Periode</th>
-          <th>Uren per week</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for placement in object.placements.all %}
-        <tr>
-          <td><a href="/assignments/{{ placement.service.assignment.id }}/">{{ placement.service.assignment.name }}</a></td>
-          <td>{{ placement.service.assignment.status }}</td>
-          <td>{{ placement.skills|get_skill_labels|join:", " }}</td>
-          <td>{{ placement.start_date }} - {{ placement.end_date }}</td>
-          <td>{{ placement.hours_per_week }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="rvo-table--responsive">
+      <table class="rvo-table">
+        <thead class="rvo-table-head">
+          <tr class="rvo-table-row">
+            <th class="rvo-table-header">Naam</th>
+            <th class="rvo-table-header">Status</th>
+            <th class="rvo-table-header">Rollen</th>
+            <th class="rvo-table-header">Periode</th>
+            <th class="rvo-table-header">Uren per week</th>
+          </tr>
+        </thead>
+        <tbody class="rvo-table-body">
+          {% for placement in object.placements.all %}
+          <tr class="rvo-table-row">
+            <td class="rvo-table-cell">
+              <a href="/assignments/{{ placement.service.assignment.id }}/" class="rvo-link">{{ placement.service.assignment.name }}</a>
+            </td>
+            <td class="rvo-table-cell">{{ placement.service.assignment.status }}</td>
+            <td class="rvo-table-cell">{{ placement.skills|get_skill_labels|join:", " }}</td>
+            <td class="rvo-table-cell">{{ placement.start_date }} - {{ placement.end_date }}</td>
+            <td class="rvo-table-cell">{{ placement.hours_per_week }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
     <div class="rvo-layout-row rvo-layout-gap--md">
       <a href="/colleagues/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">

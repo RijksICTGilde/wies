@@ -36,40 +36,39 @@
 
 <h2 class="utrecht-heading-2 rvo-heading--no-margins">Diensten</h2>
 
-    <table class="rvo-table" style="border-collapse: collapse; border: 1px solid #ccc;">
-      <style>
-        .rvo-table th, .rvo-table td {
-          border: 1px solid #ccc;
-          padding: 8px;
-        }
-      </style>
-      <thead>
-        <tr>
-          <th>Omschrijving</th>
-          <th>Kosten</th>
-          <th>Start datum</th>
-          <th>Eind datum</th>
-          <th>Acties</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for service in object.services.all %}
-        <tr>
-          <td>{{ service.description }}</td>
-          <td>
-            {% if service.cost_type == "FIXED_PRICE" %}
-              {{ service.fixed_cost }}€
-            {% elif service.cost_type == "PER_HOUR" %}
-              {{ service.hours_per_week }}€/wk
-            {% endif %}
-          </td>
-          <td>{{ service.start_date}}</td>
-          <td>{{ service.end_date }}</td>
-          <td><a href="/services/{{ service.id }}/update">edit</a> / <a href="/services/{{ service.id }}/delete">delete</a></td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="rvo-table--responsive">
+      <table class="rvo-table">
+        <thead class="rvo-table-head">
+          <tr class="rvo-table-row">
+            <th class="rvo-table-header">Omschrijving</th>
+            <th class="rvo-table-header">Kosten</th>
+            <th class="rvo-table-header">Start datum</th>
+            <th class="rvo-table-header">Eind datum</th>
+            <th class="rvo-table-header">Acties</th>
+          </tr>
+        </thead>
+        <tbody class="rvo-table-body">
+          {% for service in object.services.all %}
+          <tr class="rvo-table-row">
+            <td class="rvo-table-cell">{{ service.description }}</td>
+            <td class="rvo-table-cell">
+              {% if service.cost_type == "FIXED_PRICE" %}
+                {{ service.fixed_cost }}€
+              {% elif service.cost_type == "PER_HOUR" %}
+                {{ service.hours_per_week }}€/wk
+              {% endif %}
+            </td>
+            <td class="rvo-table-cell">{{ service.start_date}}</td>
+            <td class="rvo-table-cell">{{ service.end_date }}</td>
+            <td class="rvo-table-cell">
+              <a href="/services/{{ service.id }}/update" class="rvo-link">edit</a> / 
+              <a href="/services/{{ service.id }}/delete" class="rvo-link">delete</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
 
 <a href="/assignments/{{ object.pk }}/services/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
         Dienst toevoegen
@@ -77,44 +76,43 @@
 
     <h2 class="utrecht-heading-2 rvo-heading--no-margins">Inzet</h2>
 
-    <table class="rvo-table" style="border-collapse: collapse; border: 1px solid #ccc;">
-      <style>
-        .rvo-table th, .rvo-table td {
-          border: 1px solid #ccc;
-          padding: 8px;
-        }
-      </style>
-      <thead>
-        <tr>
-          <th>Dienst</th>
-          <th>Rollen</th>
-          <th>Consultant</th>
-          <th>Start datum</th>
-          <th>Eind datum</th>
-          <th>Uren per week</th>
-          <th>Acties</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for service in object.services.all %}
-          {% for placement in service.placements.all %}
-          <tr>
-            <td>{{ service.description }}</td>
-            <td>{{ placement.skills|get_skill_labels|join:", " }}</td>
-            {% if placement.colleague %}
-              <td><a href="{% url 'colleague-detail' placement.colleague.pk %}">{{ placement.colleague.name }}</a></td>
-            {% else %}
-              <td></td>
-            {% endif %}
-            <td>{{ placement.start_date }}</td>
-            <td>{{ placement.end_date }}</td>
-            <td>{{ placement.hours_per_week }}</td>
-            <td><a href="/placements/{{ placement.id }}/update">edit</a> / <a href="/placements/{{ placement.id }}/delete">delete</a></td>
+    <div class="rvo-table--responsive">
+      <table class="rvo-table">
+        <thead class="rvo-table-head">
+          <tr class="rvo-table-row">
+            <th class="rvo-table-header">Dienst</th>
+            <th class="rvo-table-header">Rollen</th>
+            <th class="rvo-table-header">Consultant</th>
+            <th class="rvo-table-header">Start datum</th>
+            <th class="rvo-table-header">Eind datum</th>
+            <th class="rvo-table-header">Uren per week</th>
+            <th class="rvo-table-header">Acties</th>
           </tr>
+        </thead>
+        <tbody class="rvo-table-body">
+          {% for service in object.services.all %}
+            {% for placement in service.placements.all %}
+            <tr class="rvo-table-row">
+              <td class="rvo-table-cell">{{ service.description }}</td>
+              <td class="rvo-table-cell">{{ placement.skills|get_skill_labels|join:", " }}</td>
+              {% if placement.colleague %}
+                <td class="rvo-table-cell"><a href="{% url 'colleague-detail' placement.colleague.pk %}" class="rvo-link">{{ placement.colleague.name }}</a></td>
+              {% else %}
+                <td class="rvo-table-cell"></td>
+              {% endif %}
+              <td class="rvo-table-cell">{{ placement.start_date }}</td>
+              <td class="rvo-table-cell">{{ placement.end_date }}</td>
+              <td class="rvo-table-cell">{{ placement.hours_per_week }}</td>
+              <td class="rvo-table-cell">
+                <a href="/placements/{{ placement.id }}/update" class="rvo-link">edit</a> / 
+                <a href="/placements/{{ placement.id }}/delete" class="rvo-link">delete</a>
+              </td>
+            </tr>
+            {% endfor %}
           {% endfor %}
-        {% endfor %}
-      </tbody>
-    </table>
+        </tbody>
+      </table>
+    </div>
 
 <a href="/assignments/{{ object.pk }}/placements/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
         Inzet toevoegen
