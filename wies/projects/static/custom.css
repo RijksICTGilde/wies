@@ -107,119 +107,36 @@
   opacity: 1;
 }
 
-/* Enhanced Select2 RVO Integration */
-
-/* Dropdown container styling */
-.select2-dropdown {
-  border: var(--utrecht-form-control-border-width, 1px) solid var(--utrecht-form-control-border-color, #003366);
-  border-radius: var(--utrecht-form-control-border-radius, 8px);
-  background: var(--utrecht-form-control-background-color, #fff);
-  box-shadow: var(--rvo-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06));
+/* Status badges voor assignment statussen */
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
-/* Search input in dropdown */
-.select2-search--dropdown .select2-search__field {
-  border: var(--utrecht-form-control-border-width, 1px) solid var(--utrecht-form-control-border-color, #003366);
-  border-radius: var(--utrecht-form-control-border-radius, 8px);
-  padding: var(--rvo-space-sm, 0.5rem);
-  font-family: var(--utrecht-document-font-family, "Noto Sans", Arial, sans-serif);
-  font-size: var(--utrecht-form-control-font-size, 1.1em);
-  color: var(--utrecht-form-control-color, #003366);
+.status-lead {
+  background-color: var(--rvo-color-geel-200, #fef3c7);
+  color: var(--rvo-color-geel-800, #92400e);
 }
 
-.select2-search--dropdown .select2-search__field:focus {
-  border-color: var(--utrecht-form-control-focus-border-color, #009fe3);
-  box-shadow: 0 0 0 2px var(--utrecht-focus-outline-color, #b3e6ff);
-  outline: none;
+.status-open {
+  background-color: var(--rvo-color-blauw-200, #dbeafe);
+  color: var(--rvo-color-blauw-800, #1e40af);
 }
 
-/* Results container */
-.select2-results {
-  font-family: var(--utrecht-document-font-family, "Noto Sans", Arial, sans-serif);
-  color: var(--utrecht-form-control-color, #003366);
+.status-lopend {
+  background-color: var(--rvo-color-groen-200, #dcfce7);
+  color: var(--rvo-color-groen-800, #166534);
 }
 
-/* No results message */
-.select2-results__message {
-  color: var(--rvo-color-grijs-500, #6b7280);
-  font-style: italic;
-  padding: var(--rvo-space-md, 1rem);
+.status-afgewezen {
+  background-color: var(--rvo-color-rood-200, #fecaca);
+  color: var(--rvo-color-rood-800, #991b1b);
 }
 
-/* Loading message */
-.select2-results__option--loading-more,
-.select2-results__option--loading {
-  color: var(--rvo-color-grijs-500, #6b7280);
-  padding: var(--rvo-space-md, 1rem);
+.status-historisch {
+  background-color: var(--rvo-color-grijs-200, #e5e7eb);
+  color: var(--rvo-color-grijs-800, #1f2937);
 }
-
-/* Clear button styling */
-.select2-selection__clear {
-  color: var(--rvo-color-grijs-600, #6b7280);
-  font-size: var(--rvo-font-size-lg, 1.125rem);
-  font-weight: var(--rvo-font-weight-bold, 700);
-  margin-right: var(--rvo-space-xs, 0.25rem);
-}
-
-.select2-selection__clear:hover {
-  color: var(--rvo-color-rood-600, #dc2626);
-}
-
-/* Disabled state */
-.select2-container--default.select2-container--disabled .select2-selection--multiple,
-.select2-container--default.select2-container--disabled .select2-selection--single {
-  background-color: var(--rvo-color-grijs-100, #f5f5f5);
-  color: var(--rvo-color-grijs-500, #6b7280);
-  cursor: not-allowed;
-}
-
-/* Error state integration */
-.select2-container--default.select2-container--error .select2-selection--multiple,
-.select2-container--default.select2-container--error .select2-selection--single {
-  border-color: var(--rvo-color-rood-600, #dc2626);
-}
-
-/* Success state integration */
-.select2-container--default.select2-container--success .select2-selection--multiple,
-.select2-container--default.select2-container--success .select2-selection--single {
-  border-color: var(--rvo-color-groen-600, #16a34a);
-}
-
-/* Profile Avatar Styling */
-.profile-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--rvo-font-size-sm, 0.875rem);
-  font-weight: var(--rvo-font-weight-bold, 700);
-  color: var(--rvo-color-wit, #ffffff);
-  border: 2px solid var(--rvo-color-wit, #ffffff);
-  box-shadow: var(--rvo-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.profile-avatar:hover {
-  transform: scale(1.1);
-  box-shadow: var(--rvo-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06));
-}
-
-/* Assignment Card Layout Sections */
-.assignment-title-section {
-  flex: 1;
-}
-
-.assignment-hours-section {
-  min-width: 120px;
-}
-
-.assignment-skills-section {
-  min-width: 150px;
-}
-
-/* Assignment Card Padding */
-.rvo-card-content {
-  padding: var(--rvo-space-lg, 1.5rem) !important;
-} 

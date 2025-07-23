@@ -4,27 +4,21 @@
 <div class="rvo-max-width-layout rvo-max-width-layout--md">
   <div class="rvo-max-width-layout-inline-padding--md">
     <main>
-      <div class="rvo-heading--h1 rvo-link--no-underline">
-        <h1 class="rvo-heading__content">Inzetten - Tijdlijn</h1>
-      </div>
-
-      <!-- View navigation -->
-      <div class="view-navigation" style="margin-bottom: 2rem;">
-        <div class="rvo-layout-grid rvo-layout-gap--sm rvo-layout-grid-columns--two">
-          <div class="rvo-layout-column">
-            <a href="{% url 'placements' %}">
-              <button class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md" type="button">
-                <span class="utrecht-icon rvo-icon rvo-icon-list rvo-icon--sm" role="img" aria-label="List"></span>
-                Lijst weergave
-              </button>
-            </a>
-          </div>
-          <div class="rvo-layout-column">
-            <button class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md" disabled>
-              <span class="utrecht-icon rvo-icon rvo-icon-calendar rvo-icon--sm rvo-icon--wit" role="img" aria-label="Calendar"></span>
-              Tijdlijn weergave
-            </button>
-          </div>
+      <!-- Header with title and view switcher -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; margin-top: 1rem;">
+        <h1 style="margin: 0;">Inzetten</h1>
+        
+        <!-- Subtle view switcher -->
+        <div class="view-switcher">
+          <a href="{% url 'placements' %}" class="view-switcher-link">
+            <span class="utrecht-icon rvo-icon rvo-icon-list rvo-icon--sm" role="img" aria-label="List"></span>
+            Lijst
+          </a>
+          <span class="view-switcher-separator">|</span>
+          <span class="view-switcher-link view-switcher-link--active">
+            <span class="utrecht-icon rvo-icon rvo-icon-calendar rvo-icon--sm" role="img" aria-label="Calendar"></span>
+            Tijdlijn
+          </span>
         </div>
       </div>
 
@@ -35,4 +29,42 @@
     </main>
   </div>
 </div>
+
+<style>
+.view-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+}
+
+.view-switcher-link {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.view-switcher-link:hover {
+  color: var(--rvo-color-logoblauw, #003366);
+  background-color: var(--rvo-color-grijs-100, #f5f5f5);
+  text-decoration: none;
+}
+
+.view-switcher-link--active {
+  color: var(--rvo-color-logoblauw, #003366);
+  font-weight: 500;
+}
+
+.view-switcher-separator {
+  color: var(--rvo-color-grijs-400, #9ca3af);
+  font-weight: 300;
+}
+</style>
+
 {% endblock %}

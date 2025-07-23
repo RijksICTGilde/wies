@@ -3,29 +3,35 @@
 {% block content %}
 
 <!-- Header with title and view switcher -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; margin-bottom: 1rem;">
-  <h1 class="utrecht-heading-1" style="margin: 0;">Opdrachten</h1>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; margin-top: 1rem;">
+  <h1 style="margin: 0;">Opdrachten</h1>
   
   <!-- Subtle view switcher -->
   <div class="view-switcher">
-    <span class="view-switcher-link view-switcher-link--active">
+    <a href="{% url 'assignments' %}" class="view-switcher-link">
       <span class="utrecht-icon rvo-icon rvo-icon-list rvo-icon--sm" role="img" aria-label="List"></span>
       Lijst
-    </span>
+    </a>
     <span class="view-switcher-separator">|</span>
-    <a href="{% url 'assignments-tabs' %}" class="view-switcher-link">
+    <span class="view-switcher-link view-switcher-link--active">
       <span class="utrecht-icon rvo-icon rvo-icon-folder rvo-icon--sm" role="img" aria-label="Tabs"></span>
       Tabs
-    </a>
+    </span>
   </div>
 </div>
 
-<form id="assignment-filter-form"
-      hx-get="/assignments/"
-      hx-target="#assignment_table"
+<!-- Filter Form -->
+<form id="assignment-tab-filter-form"
+      hx-get="{% url 'assignments-tabs' %}"
+      hx-target="#assignment-tabs-section"
       hx-swap="outerHTML"
+      hx-include="[name='tab']"
       class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four"
       style="margin-bottom: 2em;">
+    
+    <!-- Hidden field to maintain active tab -->
+    <input type="hidden" name="tab" value="{{ active_tab }}">
+    
     <div class="rvo-layout-column rvo-layout-gap--sm">
         <label for="name-search" class="rvo-label">Naam</label>
         <input type="text" 
@@ -34,39 +40,28 @@
                value="{{ request.GET.name|default:'' }}"
                placeholder="Zoek op naam of opdrachtgever..."
                class="utrecht-textbox utrecht-textbox--html-input"
-               hx-get="/assignments/" 
-               hx-target="#assignment_table" 
-               hx-trigger="keyup delay:300ms">
+               hx-get="{% url 'assignments-tabs' %}" 
+               hx-target="#assignment-tabs-section" 
+               hx-trigger="keyup delay:300ms"
+               hx-include="[name='tab'], [name='order']">
     </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="status-filter" class="rvo-label">Status</label>
-        <select id="status-filter"
-                name="status"
-                class="js-status-select utrecht-select utrecht-select--html-select"
-                multiple
-                hx-get="/assignments/" 
-                hx-target="#assignment_table" 
-                hx-trigger="change">
-                <!-- TODO: should not be hardcoded here -->
-            <option value="LEAD">LEAD</option>
-            <option value="OPEN">OPEN</option>
-            <option value="LOPEND">LOPEND</option>
-            <option value="AFGEWEZEN">AFGEWEZEN</option>
-            <option value="HISTORISCH">HISTORISCH</option>
-        </select>
-    </div>
+    
     <div class="rvo-layout-column rvo-layout-gap--sm">
         <label for="sort-filter" class="rvo-label">Sortering</label>
         <select id="sort-filter"
                 name="order"
                 class="utrecht-select utrecht-select--html-select"
-                hx-get="/assignments/" 
-                hx-target="#assignment_table" 
-                hx-trigger="change">
-            <option value="-start_date">Startdatum ↓</option>
-            <option value="start_date">Startdatum ↑</option>
+                hx-get="{% url 'assignments-tabs' %}" 
+                hx-target="#assignment-tabs-section" 
+                hx-trigger="change"
+                hx-include="[name='tab'], [name='name']">
+            <option value="-start_date" {% if request.GET.order == '-start_date' %}selected{% endif %}>Startdatum ↓</option>
+            <option value="start_date" {% if request.GET.order == 'start_date' %}selected{% endif %}>Startdatum ↑</option>
         </select>
     </div>
+    
+    <div class="rvo-layout-column"></div>
+    
     <div class="rvo-layout-column rvo-layout-gap--sm" style="align-self: end; text-align: right;">
         <a href="/assignments/new">
           <button
@@ -84,12 +79,17 @@
     </div>
 </form>
 
-<br>
-<br>
-
-{% include 'parts/assignment_table.html' %}
+<!-- Tab Navigation and Content -->
+{% include 'parts/assignment_tabs_section.html' %}
 
 <style>
+.assignment-tabs-navigation .tab-count {
+  margin-left: 0.5rem;
+  opacity: 0.8;
+  font-weight: normal;
+  font-size: 0.875rem;
+}
+
 .view-switcher {
   display: flex;
   align-items: center;
@@ -125,4 +125,5 @@
   font-weight: 300;
 }
 </style>
+
 {% endblock content %}

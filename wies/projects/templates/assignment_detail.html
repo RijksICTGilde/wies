@@ -25,7 +25,9 @@
       <dt>Opdrachtgever</dt>
       <dd><a href="/clients/{{ object.organization }}">{{ object.organization }}</a></dd>
       <dt>Status</dt>
-      <dd>{{ object.status }}</dd>
+      <dd>
+        <span class="status-badge status-{{ object.status|lower }}">{{ object.status }}</span>
+      </dd>
       <dt>Startdatum</dt>
       <dd>{{ object.start_date }}</dd>
       <dt>Einddatum</dt>

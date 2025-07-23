@@ -83,7 +83,7 @@
             {{ placement.end_date|date:"d-m-Y" }}
           </td>
           <td class="rvo-table-cell">
-            <span class="rvo-tag rvo-tag--sm rvo-tag--{{ placement.service.assignment.status|lower }}">
+            <span class="status-badge status-{{ placement.service.assignment.status|lower }}">
               {{ placement.service.assignment.status }}
             </span>
           </td>

@@ -56,6 +56,83 @@ class AssignmentList(ListView):
         else:
             return ['assignment_list.html']
 
+
+class AssignmentTabsView(ListView):
+    template_name = 'assignment_tabs.html'
+    model = Assignment
+
+    def get_base_queryset(self):
+        """Get base queryset without status filtering"""
+        qs = Assignment.objects.order_by('-start_date')
+        
+        # Apply name filter if provided
+        name_filter = self.request.GET.get('name')
+        if name_filter:
+            qs = qs.filter(models.Q(name__icontains=name_filter) | models.Q(organization__icontains=name_filter))
+        
+        # Apply order if provided
+        order = self.request.GET.get('order')
+        if order:
+            qs = qs.order_by(order)
+            
+        return qs
+    
+    def get_queryset(self):
+        """Get queryset for the active tab only"""
+        active_tab = self.request.GET.get('tab', 'leads')
+        base_qs = self.get_base_queryset()
+        
+        # Define status mapping for tabs
+        tab_statuses = {
+            'leads': ['LEAD', 'OPEN'],
+            'current': ['LOPEND'],
+            'historical': ['AFGEWEZEN', 'HISTORISCH']
+        }
+        
+        # Filter by active tab statuses
+        return base_qs.filter(status__in=tab_statuses[active_tab])
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get the active tab from request, default to 'leads'
+        active_tab = self.request.GET.get('tab', 'leads')
+        context['active_tab'] = active_tab
+        
+        # Get base queryset with common filters applied (but no status filter yet)
+        base_qs = self.get_base_queryset()
+        
+        # Define tab groups with correct counts
+        tab_groups = {
+            'leads': {
+                'title': 'Leads & open',
+                'statuses': ['LEAD', 'OPEN'],
+                'queryset': base_qs.filter(status__in=['LEAD', 'OPEN'])
+            },
+            'current': {
+                'title': 'Huidig', 
+                'statuses': ['LOPEND'],
+                'queryset': base_qs.filter(status__in=['LOPEND'])
+            },
+            'historical': {
+                'title': 'Historisch & afgewezen',
+                'statuses': ['AFGEWEZEN', 'HISTORISCH'], 
+                'queryset': base_qs.filter(status__in=['AFGEWEZEN', 'HISTORISCH'])
+            }
+        }
+        
+        context['tab_groups'] = tab_groups
+        context['active_assignments'] = tab_groups[active_tab]['queryset']
+        
+        return context
+    
+    def get_template_names(self):
+        if 'HX-Request' in self.request.headers:
+            # Always return full tab section for HTMX requests to update counts
+            return ['parts/assignment_tabs_section.html']
+        else:
+            return ['assignment_tabs.html']
+
 class AssignmentCreateView(CreateView):
     model = Assignment
     form_class = AssignmentForm
