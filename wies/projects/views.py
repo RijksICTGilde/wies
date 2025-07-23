@@ -56,6 +56,73 @@ class AssignmentList(ListView):
         else:
             return ['assignment_list.html']
 
+
+class AssignmentTabsView(ListView):
+    template_name = 'assignment_tabs.html'
+    model = Assignment
+
+    def get_queryset(self):
+        # Base queryset with common filters
+        qs = Assignment.objects.order_by('-start_date')
+        
+        # Apply name filter if provided
+        name_filter = self.request.GET.get('name')
+        if name_filter:
+            qs = qs.filter(models.Q(name__icontains=name_filter) | models.Q(organization__icontains=name_filter))
+        
+        # Apply order if provided
+        order = self.request.GET.get('order')
+        if order:
+            qs = qs.order_by(order)
+            
+        return qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get the active tab from request, default to 'leads'
+        active_tab = self.request.GET.get('tab', 'leads')
+        context['active_tab'] = active_tab
+        
+        # Get base queryset with common filters applied
+        base_qs = self.get_queryset()
+        
+        # Define tab groups
+        tab_groups = {
+            'leads': {
+                'title': 'Leads & open',
+                'statuses': ['LEAD', 'OPEN'],
+                'queryset': base_qs.filter(status__in=['LEAD', 'OPEN'])
+            },
+            'current': {
+                'title': 'Huidig', 
+                'statuses': ['LOPEND'],
+                'queryset': base_qs.filter(status__in=['LOPEND'])
+            },
+            'historical': {
+                'title': 'Historisch & afgewezen',
+                'statuses': ['AFGEWEZEN', 'HISTORISCH'], 
+                'queryset': base_qs.filter(status__in=['AFGEWEZEN', 'HISTORISCH'])
+            }
+        }
+        
+        context['tab_groups'] = tab_groups
+        context['active_assignments'] = tab_groups[active_tab]['queryset']
+        
+        return context
+    
+    def get_template_names(self):
+        if 'HX-Request' in self.request.headers:
+            # Check if this is a tab switch or filter action
+            if 'tab' in self.request.GET and len(self.request.GET) == 1:
+                # Tab switch - return full tab section
+                return ['parts/assignment_tabs_section.html']
+            else:
+                # Filter action - return only content
+                return ['parts/assignment_tab_content.html']
+        else:
+            return ['assignment_tabs.html']
+
 class AssignmentCreateView(CreateView):
     model = Assignment
     form_class = AssignmentForm

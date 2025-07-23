@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 
 from wies.projects.views import home, client, clients
-from wies.projects.views import AssignmentList
+from wies.projects.views import AssignmentList, AssignmentTabsView
 from wies.projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
 from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
 from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementList, PlacementTimelineView
@@ -28,6 +28,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home),
     path('assignments/', AssignmentList.as_view(), name='assignments'),
+    path('assignments/tabs/', AssignmentTabsView.as_view(), name='assignments-tabs'),
     path('assignments/new', AssignmentCreateView.as_view()),
     path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
     path('assignments/<int:pk>/delete', AssignmentDeleteView.as_view()),
