@@ -5,8 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Wies{% endblock %}</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nl-rvo/design-tokens@1.7.1" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nl-rvo/component-library-css@4.9.0" />
+    <link rel="stylesheet" href="/static/design-tokens/dist/index.css" />
+    <link rel="stylesheet" href="/static/component-library-css/dist/index.css" />
     <link rel="stylesheet" href="{% static 'index.css' %}">
     <link rel="stylesheet" href="{% static 'fonts/index.css' %}">
     <link rel="stylesheet" href="{% static 'icons/index.css' %}">
@@ -19,6 +19,7 @@
 <body class="rvo-theme">
     {% block header %}
         {% include "parts/header.html" %}
+        {% include "parts/subnavigation.html" %}
     {% endblock %}
     <div class="rvo-layout-column rvo-layout-gap--3xl">
       <div class="rvo-layout-column rvo-layout-gap--xl">
