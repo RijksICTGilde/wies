@@ -8,6 +8,26 @@
         <h1 class="rvo-heading__content">Inzetten</h1>
       </div>
 
+      <!-- View navigation -->
+      <div class="view-navigation" style="margin-bottom: 2rem;">
+        <div class="rvo-layout-grid rvo-layout-gap--sm rvo-layout-grid-columns--two">
+          <div class="rvo-layout-column">
+            <button class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md" disabled>
+              <span class="utrecht-icon rvo-icon rvo-icon-list rvo-icon--sm rvo-icon--wit" role="img" aria-label="List"></span>
+              Lijst weergave
+            </button>
+          </div>
+          <div class="rvo-layout-column">
+            <a href="{% url 'placements-timeline' %}">
+              <button class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md" type="button">
+                <span class="utrecht-icon rvo-icon rvo-icon-calendar rvo-icon--sm" role="img" aria-label="Calendar"></span>
+                Tijdlijn weergave
+              </button>
+            </a>
+          </div>
+        </div>
+      </div>
+
       <form hx-get="{% url 'placements' %}" hx-target="#placement_table">
         
         <!-- Eerste rij: Consultant en Skills -->

@@ -1,0 +1,262 @@
+<div class="timeline-container">
+  <!-- Timeline Header -->
+  <div class="timeline-header">
+    <div class="consultant-column-header">
+      <h3>Consultant</h3>
+    </div>
+    <div class="timeline-months">
+      {% for month in months %}
+        <div class="month-header">{{ month.name }}</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Timeline Body -->
+  <div class="timeline-body">
+    {% for consultant_data in consultant_data %}
+    <div class="consultant-row">
+      <div class="consultant-info">
+        <div class="consultant-name">
+          <a href="{% url 'colleague-detail' consultant_data.consultant.id %}" class="rvo-link">
+            {{ consultant_data.consultant.name }}
+          </a>
+        </div>
+        <div class="consultant-hours">
+          {% if consultant_data.total_current_hours > 0 %}
+          {% else %}
+            <span class="available">Beschikbaar</span>
+          {% endif %}
+        </div>
+      </div>
+      
+      <div class="timeline-track">
+        <!-- Placement bars -->
+        {% for placement_data in consultant_data.placements %}
+        <div class="placement-bar"
+             style="left: {{ placement_data.start_offset_percent }}%; width: {{ placement_data.width_percent }}%;"
+             title="{{ placement_data.project_name }} ({{ placement_data.hours_per_week }}u/week)">
+          <span class="placement-label">
+            {% if placement_data.width_percent > 15 %}
+              {{ placement_data.project_name|truncatechars:20 }}
+            {% endif %}
+          </span>
+        </div>
+        {% endfor %}
+        
+        <!-- Today line -->
+        <div class="today-line" style="left: {{ today_position_percent }}%;"></div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="no-consultants">
+      <span class="rvo-text--italic">Geen consultants gevonden.</span>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<style>
+/* Timeline Container */
+.timeline-container {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+/* Timeline Header */
+.timeline-header {
+  display: flex;
+  background: var(--rvo-color-grijs-100, #f5f5f5);
+  border-bottom: 2px solid var(--rvo-color-grijs-300, #d1d5db);
+}
+
+.consultant-column-header {
+  width: 200px;
+  min-width: 200px;
+  padding: 1rem;
+  border-right: 1px solid var(--rvo-color-grijs-300, #d1d5db);
+  background: var(--rvo-color-grijs-200, #e5e7eb);
+}
+
+.consultant-column-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--rvo-color-logoblauw, #003366);
+}
+
+.timeline-months {
+  flex: 1;
+  display: flex;
+  min-width: 0;
+}
+
+.month-header {
+  flex: 1;
+  padding: 1rem 0.5rem;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: var(--rvo-color-logoblauw, #003366);
+  border-right: 1px solid var(--rvo-color-grijs-300, #d1d5db);
+}
+
+.month-header:last-child {
+  border-right: none;
+}
+
+/* Timeline Body */
+.timeline-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.consultant-row {
+  display: flex;
+  border-bottom: 1px solid var(--rvo-color-grijs-200, #e5e7eb);
+  min-height: 60px;
+}
+
+.consultant-row:hover {
+  background: var(--rvo-color-grijs-50, #f9fafb);
+}
+
+.consultant-info {
+  width: 200px;
+  min-width: 200px;
+  padding: 0.5rem;
+  border-right: 1px solid var(--rvo-color-grijs-200, #e5e7eb);
+  background: white;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.consultant-name {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.consultant-hours {
+  font-size: 0.875rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+}
+
+.consultant-hours .available {
+  color: var(--rvo-color-groen-600, #16a34a);
+  font-weight: 500;
+}
+
+.timeline-track {
+  flex: 1;
+  position: relative;
+  min-height: 60px;
+  background: white;
+}
+
+/* Placement Bars */
+.placement-bar {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 24px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+.placement-bar:hover {
+  transform: translateY(-50%) scale(1.02);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.placement-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Today Line */
+.today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #dc2626;
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* No consultants message */
+.no-consultants {
+  padding: 2rem;
+  text-align: center;
+  color: var(--rvo-color-grijs-500, #6b7280);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .consultant-column-header,
+  .consultant-info {
+    width: 150px;
+    min-width: 150px;
+  }
+  
+  .month-header {
+    font-size: 0.75rem;
+    padding: 1rem 0.25rem;
+  }
+  
+  .placement-bar {
+    height: 20px;
+  }
+  
+  .placement-label {
+    font-size: 0.6875rem;
+  }
+}
+
+/* Timeline layout */
+.timeline-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.timeline-months {
+  min-width: 600px; /* Ensure months have enough space */
+}
+
+.timeline-track {
+  min-width: 600px; /* Match timeline-months width */
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .timeline-months,
+  .timeline-track {
+    min-width: 700px;
+  }
+}
+
+@media (max-width: 768px) {
+  .timeline-months,
+  .timeline-track {
+    min-width: 600px;
+  }
+  
+  .month-header {
+    padding: 1rem 0.25rem;
+    font-size: 0.75rem;
+  }
+}
+</style>
