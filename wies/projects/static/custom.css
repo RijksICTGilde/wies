@@ -183,4 +183,38 @@
 .select2-container--default.select2-container--success .select2-selection--multiple,
 .select2-container--default.select2-container--success .select2-selection--single {
   border-color: var(--rvo-color-groen-600, #16a34a);
+}
+
+/* Profile Avatar Styling */
+.profile-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--rvo-font-size-sm, 0.875rem);
+  font-weight: var(--rvo-font-weight-bold, 700);
+  color: var(--rvo-color-wit, #ffffff);
+  border: 2px solid var(--rvo-color-wit, #ffffff);
+  box-shadow: var(--rvo-shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-avatar:hover {
+  transform: scale(1.1);
+  box-shadow: var(--rvo-shadow-md, 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06));
+}
+
+/* Assignment Card Layout Sections */
+.assignment-title-section {
+  flex: 1;
+}
+
+.assignment-hours-section {
+  min-width: 120px;
+}
+
+.assignment-skills-section {
+  min-width: 150px;
 } 
