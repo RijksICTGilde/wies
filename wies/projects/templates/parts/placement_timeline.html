@@ -14,7 +14,7 @@
   <!-- Timeline Body -->
   <div class="timeline-body">
     {% for consultant_data in consultant_data %}
-    <div class="consultant-row">
+    <div class="consultant-row" style="min-height: {{ consultant_data.total_tracks_height }}px;">
       <div class="consultant-info">
         <div class="consultant-name">
           <a href="{% url 'colleague-detail' consultant_data.consultant.id %}" class="rvo-link">
@@ -29,11 +29,11 @@
         </div>
       </div>
       
-      <div class="timeline-track">
+      <div class="timeline-track" style="min-height: {{ consultant_data.total_tracks_height }}px;">
         <!-- Placement bars -->
         {% for placement_data in consultant_data.placements %}
         <div class="placement-bar"
-             style="left: {{ placement_data.start_offset_percent }}%; width: {{ placement_data.width_percent }}%;"
+             style="left: {{ placement_data.start_offset_percent }}%; width: {{ placement_data.width_percent }}%; top: {{ placement_data.top_px }}px;"
              title="{{ placement_data.project_name }} ({{ placement_data.hours_per_week }}u/week)">
           <span class="placement-label">
             {% if placement_data.width_percent > 15 %}
@@ -151,15 +151,12 @@
 .timeline-track {
   flex: 1;
   position: relative;
-  min-height: 60px;
   background: white;
 }
 
 /* Placement Bars */
 .placement-bar {
   position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
   height: 24px;
   border-radius: 4px;
   display: flex;
@@ -171,7 +168,7 @@
 }
 
 .placement-bar:hover {
-  transform: translateY(-50%) scale(1.02);
+  transform: scale(1.02);
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
   z-index: 10;
 }

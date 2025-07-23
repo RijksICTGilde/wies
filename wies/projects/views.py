@@ -382,6 +382,7 @@ class PlacementTimelineView(ListView):
         # Bereid consultant data voor
         consultant_data = []
         for consultant in context['object_list']:
+
             placements = consultant.placements.select_related(
                 'service__assignment'
             ).all()
@@ -390,6 +391,8 @@ class PlacementTimelineView(ListView):
             placement_bars = []
             total_hours = 0
             
+            top_placement = 8
+            nr_placements = 0
             for placement in placements:
 
                 # Bereken werkelijke start/end datums
@@ -432,18 +435,28 @@ class PlacementTimelineView(ListView):
                     'width_percent': int(width_percent),
                     'start_date': start_date,
                     'end_date': end_date,
+                    'clipped_start': clipped_start,
+                    'clipped_end': clipped_end,
+                    'top_px': top_placement
                 })
                 
                 # Tel uren op (alleen voor actieve placements)
                 if start_date <= today <= end_date:
                     total_hours += placement.hours_per_week or 0
+
+                top_placement += 30
+                nr_placements += 1
             
             consultant_data.append({
                 'consultant': consultant,
                 'placements': placement_bars,
-                'total_current_hours': total_hours
+                'total_current_hours': total_hours,
+                'total_tracks': nr_placements,
+                'total_tracks_height': nr_placements*30,
             })
         
+        print('nr_placements', nr_placements)
+
         # Bereken vandaag positie
         today_offset_days = (today - timeline_start).days
         total_timeline_days = (timeline_end - timeline_start).days
