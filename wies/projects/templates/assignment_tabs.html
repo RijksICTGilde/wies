@@ -23,7 +23,7 @@
 <!-- Filter Form -->
 <form id="assignment-tab-filter-form"
       hx-get="{% url 'assignments-tabs' %}"
-      hx-target="#assignment-tab-content"
+      hx-target="#assignment-tabs-section"
       hx-swap="outerHTML"
       hx-include="[name='tab']"
       class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four"
@@ -41,7 +41,7 @@
                placeholder="Zoek op naam of opdrachtgever..."
                class="utrecht-textbox utrecht-textbox--html-input"
                hx-get="{% url 'assignments-tabs' %}" 
-               hx-target="#assignment-tab-content" 
+               hx-target="#assignment-tabs-section" 
                hx-trigger="keyup delay:300ms"
                hx-include="[name='tab'], [name='order']">
     </div>
@@ -52,7 +52,7 @@
                 name="order"
                 class="utrecht-select utrecht-select--html-select"
                 hx-get="{% url 'assignments-tabs' %}" 
-                hx-target="#assignment-tab-content" 
+                hx-target="#assignment-tabs-section" 
                 hx-trigger="change"
                 hx-include="[name='tab'], [name='name']">
             <option value="-start_date" {% if request.GET.order == '-start_date' %}selected{% endif %}>Startdatum ↓</option>

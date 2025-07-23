@@ -41,7 +41,9 @@
       <tr class="rvo-table-row">
         <td class="rvo-table-cell"><a href="/assignments/{{ assignment.pk }}/">{{ assignment.name }}</a></td>
         <td class="rvo-table-cell">{{ assignment.organization }}</td>
-        <td class="rvo-table-cell">{{ assignment.status }}</td>
+        <td class="rvo-table-cell">
+          <span class="status-badge status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
+        </td>
         <td class="rvo-table-cell">{{ assignment.start_date }}</td>
         <td class="rvo-table-cell">{{ assignment.end_date }}</td>
       </tr>

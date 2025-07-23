@@ -105,4 +105,38 @@
 .select2-container--default .select2-search--inline .select2-search__field::placeholder {
   color: var(--utrecht-form-control-color, #003366) !important;
   opacity: 1;
-} 
+}
+
+/* Status badges voor assignment statussen */
+.status-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.status-lead {
+  background-color: var(--rvo-color-geel-200, #fef3c7);
+  color: var(--rvo-color-geel-800, #92400e);
+}
+
+.status-open {
+  background-color: var(--rvo-color-blauw-200, #dbeafe);
+  color: var(--rvo-color-blauw-800, #1e40af);
+}
+
+.status-lopend {
+  background-color: var(--rvo-color-groen-200, #dcfce7);
+  color: var(--rvo-color-groen-800, #166534);
+}
+
+.status-afgewezen {
+  background-color: var(--rvo-color-rood-200, #fecaca);
+  color: var(--rvo-color-rood-800, #991b1b);
+}
+
+.status-historisch {
+  background-color: var(--rvo-color-grijs-200, #e5e7eb);
+  color: var(--rvo-color-grijs-800, #1f2937);
+}
