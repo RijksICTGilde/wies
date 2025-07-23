@@ -27,8 +27,8 @@ from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpd
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home),
-    path('assignments/', AssignmentList.as_view(), name='assignments'),
-    path('assignments/tabs/', AssignmentTabsView.as_view(), name='assignments-tabs'),
+    path('assignments/list/', AssignmentList.as_view(), name='assignments'),
+    path('assignments/', AssignmentTabsView.as_view(), name='assignments-tabs'),
     path('assignments/new', AssignmentCreateView.as_view()),
     path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
     path('assignments/<int:pk>/delete', AssignmentDeleteView.as_view()),
