@@ -9,23 +9,23 @@
   <!-- Subtle view switcher -->
   <div class="view-switcher">
     <span class="view-switcher-link view-switcher-link--active">
-      <span class="utrecht-icon rvo-icon rvo-icon-list rvo-icon--sm" role="img" aria-label="List"></span>
+      <span class="utrecht-icon rvo-icon rvo-icon-menu rvo-icon--sm" role="img" aria-label="List"></span>
       Lijst
     </span>
     <span class="view-switcher-separator">|</span>
     <a href="{% url 'assignments-tabs' %}" class="view-switcher-link">
-      <span class="utrecht-icon rvo-icon rvo-icon-folder rvo-icon--sm" role="img" aria-label="Tabs"></span>
+      <span class="utrecht-icon rvo-icon rvo-icon-map rvo-icon--sm" role="img" aria-label="Tabs"></span>
       Tabs
     </a>
   </div>
 </div>
 
 <form id="assignment-filter-form"
-      hx-get="/assignments/"
+      hx-get="{{ request.path }}"
       hx-target="#assignment_table"
       hx-swap="outerHTML"
-      class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four"
-      style="margin-bottom: 2em;">
+      class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two"
+      style="margin-bottom: 1rem;">
     <div class="rvo-layout-column rvo-layout-gap--sm">
         <label for="name-search" class="rvo-label">Naam</label>
         <input type="text" 
@@ -34,38 +34,9 @@
                value="{{ request.GET.name|default:'' }}"
                placeholder="Zoek op naam of opdrachtgever..."
                class="utrecht-textbox utrecht-textbox--html-input"
-               hx-get="/assignments/" 
+               hx-get="{{ request.path }}" 
                hx-target="#assignment_table" 
                hx-trigger="keyup delay:300ms">
-    </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="status-filter" class="rvo-label">Status</label>
-        <select id="status-filter"
-                name="status"
-                class="js-status-select utrecht-select utrecht-select--html-select"
-                multiple
-                hx-get="/assignments/" 
-                hx-target="#assignment_table" 
-                hx-trigger="change">
-                <!-- TODO: should not be hardcoded here -->
-            <option value="LEAD">LEAD</option>
-            <option value="OPEN">OPEN</option>
-            <option value="LOPEND">LOPEND</option>
-            <option value="AFGEWEZEN">AFGEWEZEN</option>
-            <option value="HISTORISCH">HISTORISCH</option>
-        </select>
-    </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="sort-filter" class="rvo-label">Sortering</label>
-        <select id="sort-filter"
-                name="order"
-                class="utrecht-select utrecht-select--html-select"
-                hx-get="/assignments/" 
-                hx-target="#assignment_table" 
-                hx-trigger="change">
-            <option value="-start_date">Startdatum ↓</option>
-            <option value="start_date">Startdatum ↑</option>
-        </select>
     </div>
     <div class="rvo-layout-column rvo-layout-gap--sm" style="align-self: end; text-align: right;">
         <a href="/assignments/new">
@@ -84,8 +55,6 @@
     </div>
 </form>
 
-<br>
-<br>
 
 {% include 'parts/assignment_table.html' %}
 
@@ -125,4 +94,5 @@
   font-weight: 300;
 }
 </style>
+
 {% endblock content %}

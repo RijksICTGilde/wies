@@ -6,7 +6,7 @@ from django.template.defaulttags import register
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.db import models
-from django.db.models import Case, When, Max
+from django.db.models import Case, When, Max, F
 
 from .models import Assignment, Colleague, Skills, Placement, Service
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
@@ -190,7 +190,17 @@ class ColleagueList(ListView):
                 output_field=models.DateField()
             )
         )
-        return qs.annotate(max_end_date=max_end_date_annotation).order_by('max_end_date')
+        qs = qs.annotate(max_end_date=max_end_date_annotation)
+        
+        # Handle ordering
+        order = self.request.GET.get('order')
+        if order:
+            qs = qs.order_by(order)
+        else:
+            # Default ordering by max_end_date
+            qs = qs.order_by('max_end_date')
+            
+        return qs
     
     def get_template_names(self):
         if 'HX-Request' in self.request.headers:
@@ -382,6 +392,35 @@ class PlacementList(ListView):
                 models.Q(period_source='PLACEMENT', specific_end_date__lte=end_date_to)
             )
         
+        # Order by parameter
+        order = self.request.GET.get('order')
+        if order:
+            # Handle complex sorting for date fields that use properties
+            if order in ['start_date', '-start_date']:
+                # Complex sorting for start_date - use Case/When to handle period_source logic
+                qs = qs.annotate(
+                    computed_start_date=Case(
+                        When(period_source='SERVICE', then=Case(
+                            When(service__period_source='ASSIGNMENT', then=F('service__assignment__start_date')),
+                            default=F('service__specific_start_date')
+                        )),
+                        default=F('specific_start_date')
+                    )
+                ).order_by('computed_start_date' if order == 'start_date' else '-computed_start_date')
+            elif order in ['end_date', '-end_date']:
+                # Complex sorting for end_date - use Case/When to handle period_source logic
+                qs = qs.annotate(
+                    computed_end_date=Case(
+                        When(period_source='SERVICE', then=Case(
+                            When(service__period_source='ASSIGNMENT', then=F('service__assignment__end_date')),
+                            default=F('service__specific_end_date')
+                        )),
+                        default=F('specific_end_date')
+                    )
+                ).order_by('computed_end_date' if order == 'end_date' else '-computed_end_date')
+            else:
+                # Standard sorting for other fields
+                qs = qs.order_by(order)
 
         return qs
     

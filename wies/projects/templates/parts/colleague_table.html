@@ -2,16 +2,8 @@
   <table class="rvo-table">
     <thead class="rvo-table-head">
       <tr class="rvo-table-row">
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header__sortable-container">
-            Naam
-          </div>
-        </th>
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header__sortable-container">
-            Einde opdracht
-          </div>
-        </th>
+        {% include 'includes/sortable_header.html' with field='name' label='Naam' %}
+        {% include 'includes/sortable_header.html' with field='max_end_date' label='Einde opdracht' %}
         <th scope="col" class="rvo-table-header">
           <div class="rvo-table-header__sortable-container">
             Rollen
