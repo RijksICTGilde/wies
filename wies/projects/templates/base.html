@@ -33,34 +33,147 @@
     <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
-      $(document).ready(function() {
-        $('.js-colleague-select').select2({
-          placeholder: "Zoek en voeg consultants toe",
-          width: '100%',
-          allowClear: true
-        });
-        $('.js-skills-select').select2({
+
+      var skills_filter_select2_def = {
+          allowClear: true,
+          placeholder: 'Zoek skills...',
+          templateResult: function(skill) {
+            if (skill.loading) return skill.text;
+            return $('<div>' + skill.text + '</div>');
+          },
+          ajax: {
+            url: '/api/skills/',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+              return {
+                search: params.term,
+              };
+            },
+            processResults: function (data) {
+              return {
+                results: data.map(function(skill) {
+                  return {
+                    id: skill.id,
+                    text: skill.name,
+                  };
+                })
+              };
+            },
+            cache: true
+          }
+        }
+
+      var skills_select_select2_def = {
           placeholder: "Zoek en voeg skills toe",
           width: '100%',
-          allowClear: true
-        });
-        $('.js-skills-filter').select2({
-          placeholder: "Filter op rol",
-          width: '100%',
-          allowClear: true
-        });
-        $('.js-status-select').select2({
-          placeholder: "Filter op status",
-          width: 'resolve',
-          allowClear: true
-        });
-        $('.js-consultant-filter').select2({
+          allowClear: true,
+          multiple: true,
+          tags: true,
+          ajax: {
+            url: '/api/skills/',
+            dataType: 'json',
+            delay: 250,
+            data: function (params) {
+              return {
+                search: params.term || ''
+              };
+            },
+            processResults: function (data) {
+              return {
+                results: data.map(function(skill) {
+                  return {
+                    id: skill.id,
+                    text: skill.name
+                  };
+                })
+              };
+            },
+            cache: true
+          },
+          createTag: function (params) {
+            var term = $.trim(params.term);
+            if (term === '') {
+              return null;
+            }
+            return {
+              id: term,
+              text: term,
+              newTag: true
+            };
+          },
+          insertTag: function (data, tag) {
+            data.push(tag);
+          }
+        }
+
+      var consultant_select_select2_def = {
           placeholder: "Selecteer consultants",
           width: '100%',
           allowClear: true
+        }
+      
+      var status_select_select2_def = {
+          placeholder: "Filter op status",
+          width: 'resolve',
+          allowClear: true
+        }
+
+      $(document).ready(function() {
+
+        $('.js-skills-filter').select2(skills_filter_select2_def);
+        $('.js-skills-select').select2(skills_select_select2_def);
+        $('.js-status-select').select2(status_select_select2_def);
+        $('.js-consultant-filter').select2(consultant_select_select2_def);
+        
+        $('.js-skills-select').on('select2:select', function (e) {
+          var data = e.params.data;
+          if (data.newTag) {
+            // Create new skill via API
+            $.ajax({
+              url: '/api/skills/',
+              method: 'POST',
+              contentType: 'application/json',
+              headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+              },
+              data: JSON.stringify({name: data.text}),
+              success: function(response) {
+                // Replace the temporary option with the real one
+                var $option = $('.js-skills-select option[value="' + data.text + '"]');
+                $option.val(response.skill.id).text(response.skill.name);
+              }
+            });
+          }
         });
+
+        // Set selected value after initialization for skills filter
+        $('.js-skills-filter').each(function() {
+          var $select = $(this);
+          var selectedValue = $select.data('selected-value');
+          if (selectedValue) {
+            // For AJAX Select2, we need to add the option first
+            $.ajax({
+              url: '/api/skills/',
+              dataType: 'json',
+              success: function(data) {
+                var selectedSkill = data.skills.find(function(skill) {
+                  return skill.id.toString() === selectedValue.toString();
+                });
+                if (selectedSkill) {
+                  var option = new Option(selectedSkill.name, selectedSkill.id, true, true);
+                  $select.append(option).trigger('change');
+                }
+              }
+            });
+          }
+        });
+        
         // Forceer native change event voor HTMX, maar voorkom oneindige lus
         $('.js-status-select').on('select2:select select2:unselect', function(e) {
+          this.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        $('.js-skills-select').on('select2:select select2:unselect', function(e) {
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
         $('.js-skills-filter').on('select2:select select2:unselect', function(e) {
@@ -72,21 +185,11 @@
       });
       // (her)initialiseer na HTMX swap:
       document.body.addEventListener('htmx:afterSwap', function(evt) {
-        $('.js-status-select').select2({
-          placeholder: "Filter op status",
-          width: 'resolve',
-          allowClear: true
-        });
-        $('.js-skills-filter').select2({
-          placeholder: "Filter op rol",
-          width: '100%',
-          allowClear: true
-        });
-        $('.js-consultant-filter').select2({
-          placeholder: "Selecteer consultants",
-          width: '100%',
-          allowClear: true
-        });
+        $('.js-status-select').select2(status_select_select2_def);
+        $('.js-skills-filter').select2(skills_filter_select2_def);
+        $('.js-consultant-filter').select2(consultant_select_select2_def);
+        $('.js-skills-select').select2(skills_select_select2_def);
+
         // Forceer native change event voor HTMX na swap, maar voorkom oneindige lus
         $('.js-status-select').on('select2:select select2:unselect', function(e) {
           this.dispatchEvent(new Event('change', { bubbles: true }));
@@ -95,6 +198,9 @@
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
         $('.js-consultant-filter').on('select2:select select2:unselect', function(e) {
+          this.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        $('.js-skills-select').on('select2:select select2:unselect', function(e) {
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
       });

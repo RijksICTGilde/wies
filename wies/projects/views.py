@@ -1,14 +1,14 @@
 import datetime
 
 from django.views.generic.list import ListView
-from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
+from django.views.generic import DetailView, CreateView, DeleteView, UpdateView, TemplateView
 from django.template.defaulttags import register
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.db import models
 from django.db.models import Case, When, Max
 
-from .models import Assignment, Colleague, Skills, Placement, Service
+from .models import Assignment, Colleague, Skill, Placement, Service
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 
 def home(request):
@@ -19,15 +19,9 @@ def get_item(dictionary, key):
     return dictionary.get(key)
 
 @register.filter
-def get_skill_labels(skill_values):
-    """Convert skill values to labels"""
-    labels = []
-    for skill_val in skill_values:
-        try:
-            labels.append(Skills(skill_val).label)
-        except ValueError:
-            labels.append(skill_val)  # fallback to value if label not found
-    return labels
+def get_skill_labels(skills):
+    """Get skill names from skill objects"""
+    return [skill.name for skill in skills.all()]
 
 # Create your views here.
 class AssignmentList(ListView):
@@ -166,9 +160,9 @@ class ColleagueList(ListView):
         qs = Colleague.objects.all()
         
         # Filter by skill
-        skills_filter = dict(self.request.GET).get('skill')  # without dict casting you get single items per get call
-        if skills_filter:
-            qs = qs.filter(skills__icontains=skills_filter[0])
+        skill_filter = self.request.GET.get('skill')
+        if skill_filter:
+            qs = qs.filter(skills__id=skill_filter)
         
         # Filter by name
         name_filter = self.request.GET.get('name')
@@ -202,6 +196,11 @@ class ColleagueCreateView(CreateView):
     model = Colleague
     form_class = ColleagueForm
     template_name = 'colleague_new.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['skills'] = Skill.objects.all()
+        return context
 
 class ColleagueDetail(DetailView):
     model = Colleague
@@ -239,11 +238,6 @@ class PlacementUpdateView(UpdateView):
     model = Placement
     form_class = PlacementForm
     template_name = 'placement_update.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/assignments/{context['object'].service.assignment.id}/'
-        return context
 
     def form_valid(self, form):
         # todo: not super happy about this work around, but good enough for now
@@ -317,12 +311,10 @@ class PlacementList(ListView):
         if assignment_filter:
             qs = qs.filter(service__assignment__name__icontains=assignment_filter)
         
-        
         # Filter by skills
-        skills_filter = dict(self.request.GET).get('skills')
-        if skills_filter:
-            for skill in skills_filter:
-                qs = qs.filter(skills__icontains=skill)
+        skill_filter = self.request.GET.get('skill')
+        if skill_filter:
+            qs = qs.filter(skills__id=skill_filter)
         
         # Filter by client/organization
         client_filter = self.request.GET.get('client')
@@ -637,4 +629,8 @@ def client(request, name):
         'client_name': name,
         'assignments': assignments_data
     })
+
+
+class SkillsView(TemplateView):
+    template_name = 'skills.html'
 

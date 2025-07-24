@@ -22,7 +22,8 @@ from wies.projects.views import AssignmentList, AssignmentTabsView
 from wies.projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
 from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
 from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementList, PlacementTimelineView
-from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
+from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView, SkillsView
+from wies.projects.api import SkillsAPIView, SkillDetailAPIView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -50,4 +51,7 @@ urlpatterns = [
     path('services/<int:pk>/delete', ServiceDeleteView.as_view()),
     path('clients/', clients),
     path('clients/<str:name>', client),
+    path('skills/', SkillsView.as_view(), name='skills'),
+    path('api/skills/', SkillsAPIView.as_view(), name='api-skills'),
+    path('api/skills/<int:skill_id>/', SkillDetailAPIView.as_view(), name='api-skill-detail'),
 ]
