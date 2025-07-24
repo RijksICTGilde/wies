@@ -1,10 +1,73 @@
 [
   {
+    "model": "projects.skill",
+    "pk": 1,
+    "fields": {
+      "name": "Backend development"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 2,
+    "fields": {
+      "name": "Frontend development"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 3,
+    "fields": {
+      "name": "Product owner"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 4,
+    "fields": {
+      "name": "UX designer"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 5,
+    "fields": {
+      "name": "AI Consultant"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 6,
+    "fields": {
+      "name": "AI Jurist"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 7,
+    "fields": {
+      "name": "Researcher"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 8,
+    "fields": {
+      "name": "Data engineer"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 9,
+    "fields": {
+      "name": "Project leader"
+    }
+  },
+  {
     "model": "projects.colleague",
     "pk": 1,
     "fields": {
       "name": "Jan van der Berg",
-      "skills": ["BE_DEV", "PROJ_LEAD"]
+      "skills": [1, 9]
     }
   },
   {
@@ -12,7 +75,7 @@
     "pk": 2,
     "fields": {
       "name": "Lisa Jansen",
-      "skills": ["FE_DEV", "UX_DES"]
+      "skills": [2, 4]
     }
   },
   {
@@ -20,7 +83,7 @@
     "pk": 3,
     "fields": {
       "name": "Mohammed Ali",
-      "skills": ["AI_CONS", "DAT_ENG"]
+      "skills": [5, 8]
     }
   },
   {
@@ -28,7 +91,7 @@
     "pk": 4,
     "fields": {
       "name": "Sarah de Vries",
-      "skills": ["PO", "AI_JUR"]
+      "skills": [3, 6]
     }
   },
   {
@@ -36,7 +99,7 @@
     "pk": 5,
     "fields": {
       "name": "Thomas Bakker",
-      "skills": ["RES", "BE_DEV"]
+      "skills": [7, 1]
     }
   },
   {
@@ -44,7 +107,7 @@
     "pk": 6,
     "fields": {
       "name": "Emma Visser",
-      "skills": ["FE_DEV", "AI_CONS"]
+      "skills": [2, 5]
     }
   },
   {
@@ -52,7 +115,7 @@
     "pk": 7,
     "fields": {
       "name": "Pieter Smit",
-      "skills": ["DAT_ENG", "PROJ_LEAD"]
+      "skills": [8, 9]
     }
   },
   {
@@ -60,7 +123,7 @@
     "pk": 8,
     "fields": {
       "name": "Fatima Hassan",
-      "skills": ["UX_DES", "PO"]
+      "skills": [4, 3]
     }
   },
   {
@@ -68,7 +131,7 @@
     "pk": 9,
     "fields": {
       "name": "Ruben de Jong",
-      "skills": ["AI_JUR", "RES"]
+      "skills": [6, 7]
     }
   },
   {
@@ -76,7 +139,7 @@
     "pk": 10,
     "fields": {
       "name": "Anna Mulder",
-      "skills": ["BE_DEV", "DAT_ENG"]
+      "skills": [1, 8]
     }
   },
   {
@@ -84,7 +147,7 @@
     "pk": 11,
     "fields": {
       "name": "Kevin van Dijk",
-      "skills": ["FE_DEV", "PROJ_LEAD"]
+      "skills": [2, 9]
     }
   },
   {
@@ -92,7 +155,7 @@
     "pk": 12,
     "fields": {
       "name": "Marloes Hendriks",
-      "skills": ["AI_CONS", "UX_DES"]
+      "skills": [5, 4]
     }
   },
   {
@@ -100,7 +163,7 @@
     "pk": 13,
     "fields": {
       "name": "Ahmed Osman",
-      "skills": ["DAT_ENG", "AI_JUR"]
+      "skills": [8, 6]
     }
   },
   {
@@ -108,7 +171,7 @@
     "pk": 14,
     "fields": {
       "name": "Sophie Brouwer",
-      "skills": ["PO", "RES"]
+      "skills": [3, 7]
     }
   },
   {
@@ -116,7 +179,7 @@
     "pk": 15,
     "fields": {
       "name": "Marco van Leeuwen",
-      "skills": ["BE_DEV", "AI_CONS"]
+      "skills": [1, 5]
     }
   },
   {
@@ -124,7 +187,7 @@
     "pk": 16,
     "fields": {
       "name": "Nadia Kowalski",
-      "skills": ["FE_DEV", "UX_DES"]
+      "skills": [2, 4]
     }
   },
   {
@@ -132,7 +195,7 @@
     "pk": 17,
     "fields": {
       "name": "Jeroen Peters",
-      "skills": ["PROJ_LEAD", "DAT_ENG"]
+      "skills": [9, 8]
     }
   },
   {
@@ -140,7 +203,7 @@
     "pk": 18,
     "fields": {
       "name": "Yasmin El Hadj",
-      "skills": ["AI_JUR", "PO"]
+      "skills": [6, 3]
     }
   },
   {
@@ -148,7 +211,7 @@
     "pk": 19,
     "fields": {
       "name": "Daan Schouten",
-      "skills": ["RES", "BE_DEV"]
+      "skills": [7, 1]
     }
   },
   {
@@ -156,7 +219,7 @@
     "pk": 20,
     "fields": {
       "name": "Inge Vos",
-      "skills": ["AI_CONS", "FE_DEV"]
+      "skills": [5, 2]
     }
   },
   {
@@ -814,7 +877,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 32,
-      "skills": ["BE_DEV", "PROJ_LEAD"]
+      "skills": [1, 9]
     }
   },
   {
@@ -827,7 +890,7 @@
       "specific_start_date": "2024-07-01",
       "specific_end_date": "2025-08-31",
       "hours_per_week": 24,
-      "skills": ["FE_DEV", "UX_DES"]
+      "skills": [2, 4]
     }
   },
   {
@@ -840,7 +903,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 16,
-      "skills": ["AI_CONS"]
+      "skills": [5]
     }
   },
   {
@@ -853,7 +916,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 32,
-      "skills": ["FE_DEV", "PROJ_LEAD"]
+      "skills": [2, 9]
     }
   },
   {
@@ -866,7 +929,7 @@
       "specific_start_date": "2023-10-01",
       "specific_end_date": "2024-02-28",
       "hours_per_week": 40,
-      "skills": ["UX_DES"]
+      "skills": [4]
     }
   },
   {
@@ -879,7 +942,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 32,
-      "skills": ["BE_DEV", "AI_CONS"]
+      "skills": [1, 5]
     }
   },
   {
@@ -892,7 +955,7 @@
       "specific_start_date": "2024-07-15",
       "specific_end_date": "2025-11-30",
       "hours_per_week": 24,
-      "skills": ["AI_CONS", "UX_DES"]
+      "skills": [5, 4]
     }
   },
   {
@@ -905,7 +968,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 40,
-      "skills": ["RES", "BE_DEV"]
+      "skills": [7, 1]
     }
   },
   {
@@ -918,7 +981,7 @@
       "specific_start_date": "2023-09-01",
       "specific_end_date": "2024-01-31",
       "hours_per_week": 32,
-      "skills": ["PROJ_LEAD"]
+      "skills": [9]
     }
   },
   {
@@ -931,7 +994,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 40,
-      "skills": ["BE_DEV", "DAT_ENG"]
+      "skills": [1, 8]
     }
   },
   {
@@ -944,7 +1007,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 32,
-      "skills": ["FE_DEV"]
+      "skills": [2]
     }
   },
   {
@@ -957,7 +1020,7 @@
       "specific_start_date": "2024-05-15",
       "specific_end_date": "2025-09-30",
       "hours_per_week": 24,
-      "skills": ["BE_DEV"]
+      "skills": [1]
     }
   },
   {
@@ -970,7 +1033,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 32,
-      "skills": ["PO"]
+      "skills": [3]
     }
   },
   {
@@ -983,7 +1046,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 40,
-      "skills": ["UX_DES"]
+      "skills": [4]
     }
   },
   {
@@ -996,7 +1059,7 @@
       "specific_start_date": "2024-05-20",
       "specific_end_date": "2025-07-31",
       "hours_per_week": 32,
-      "skills": ["UX_DES", "PO"]
+      "skills": [4, 3]
     }
   },
   {
@@ -1009,7 +1072,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 32,
-      "skills": ["BE_DEV"]
+      "skills": [1]
     }
   },
   {
@@ -1022,7 +1085,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 40,
-      "skills": ["RES"]
+      "skills": [7]
     }
   },
   {
@@ -1035,7 +1098,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 32,
-      "skills": ["PROJ_LEAD"]
+      "skills": [9]
     }
   },
   {
@@ -1048,7 +1111,7 @@
       "specific_start_date": "2024-02-01",
       "specific_end_date": "2025-11-30",
       "hours_per_week": 24,
-      "skills": ["BE_DEV"]
+      "skills": [1]
     }
   },
   {
@@ -1061,7 +1124,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 32,
-      "skills": ["PROJ_LEAD", "DAT_ENG"]
+      "skills": [9, 8]
     }
   },
   {
@@ -1074,7 +1137,7 @@
       "specific_start_date": "2024-01-01",
       "specific_end_date": "2025-08-31",
       "hours_per_week": 24,
-      "skills": ["FE_DEV"]
+      "skills": [2]
     }
   },
   {
@@ -1087,7 +1150,7 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 16,
-      "skills": ["PO"]
+      "skills": [3]
     }
   }
 ]

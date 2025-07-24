@@ -2,7 +2,6 @@ from django.db import models
 from django.urls import reverse
 from django.db.models import Max
 
-from multiselectfield import MultiSelectField
 
 ASSIGNMENT_STATUS = {
     'LEAD': "LEAD",
@@ -18,20 +17,18 @@ ASSIGNMENT_TYPE = {
 }
 
 
-class Skills(models.TextChoices):
-    BACKEND_DEVELOPMENT = "BE_DEV", "Backend development",
-    FRONTEND_DEVELOPMENT = "FE_DEV", "Frontend development",
-    PRODUCT_OWNER = "PO", "Product owner",
-    UX_DESIGNER = "UX_DES", "UX designer",
-    AI_CONSULTANT = "AI_CONS", "AI Consultant",
-    AI_JURIST = "AI_JUR", "AI Jurist",
-    RESEARCHER = "RES", "Researcher",
-    DATA_ENGINEER = "DAT_ENG", "Data engineer",
-    ASSIGNMENT_LEADER = "PROJ_LEAD", "Project leader",
+class Skill(models.Model):
+    name = models.CharField(max_length=30, unique=True)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
 
 class Colleague(models.Model):
     name = models.CharField(max_length=200)
-    skills = MultiSelectField(blank=True, choices=Skills.choices)
+    skills = models.ManyToManyField('Skill', blank=True)
     # placements via reversed relation
 
     @property
@@ -73,7 +70,7 @@ class Placement(models.Model):
     colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='placements', null=True, blank=True) # TODO: removal of colleague triggers removal of placement, probably undesirable
     service = models.ForeignKey('Service', models.CASCADE, related_name='placements')
     hours_per_week = models.IntegerField(null=True, blank=True)
-    skills = MultiSelectField(blank=True, choices=Skills.choices)
+    skills = models.ManyToManyField('Skill', blank=True)
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=SERVICE)
     specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
     specific_end_date = models.DateField(null=True, blank=True) # do not use, use properties below

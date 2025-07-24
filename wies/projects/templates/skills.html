@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Skills{% endblock %}
+
+{% block content %}
+<div class="rvo-layout-column rvo-layout-gap--md">
+    <h1 class="rvo-heading rvo-heading--h1">Skills</h1>
+    
+
+    <div class="rvo-table-container" id="skills-table-container">
+        <table class="rvo-table" id="skills-table">
+            <thead class="rvo-table-head">
+                <tr class="rvo-table-row">
+                    <th class="rvo-table-header">Naam</th>
+                    <th class="rvo-table-header">Acties</th>
+                </tr>
+            </thead>
+            <tbody class="rvo-table-body" id="skills-table-body">
+                <!-- Skills will be loaded here via JavaScript -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let skills = [];
+
+    function loadSkills() {
+        fetch('/api/skills/')
+            .then(response => response.json())
+            .then(data => {
+                skills = data;
+                renderSkillsTable();
+            })
+            .catch(error => {
+                console.error('Error loading skills:', error);
+            });
+    }
+
+    function renderSkillsTable() {
+        const tbody = document.getElementById('skills-table-body');
+        tbody.innerHTML = '';
+
+        skills.forEach(skill => {
+            const row = document.createElement('tr');
+            row.className = 'rvo-table-row';
+            row.innerHTML = `
+                <td class="rvo-table-cell">${skill.name}</td>
+                <td class="rvo-table-cell">
+                    <button type="button" class="rvo-button rvo-button--danger rvo-button--sm" onclick="deleteSkill(${skill.id})">
+                        Verwijderen
+                    </button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+
+    function deleteSkill(skillId) {
+        const skill = skills.find(s => s.id === skillId);
+        const skillName = skill ? skill.name : 'deze skill';
+        
+        if (!confirm(`Weet je zeker dat je "${skillName}" wilt verwijderen?`)) {
+            return;
+        }
+
+        fetch(`/api/skills/${skillId}/`, {
+            method: 'DELETE',
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Fout: ' + data.error);
+            } else {
+                loadSkills(); // Reload the table
+                console.log('Skill verwijderd');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting skill:', error);
+            alert('Er is een fout opgetreden bij het verwijderen van de skill');
+        });
+    }
+
+
+    // Load skills on page load
+    document.addEventListener('DOMContentLoaded', loadSkills);
+</script>
+
+{% endblock %}
