@@ -67,6 +67,9 @@
 
         fetch(`/api/skills/${skillId}/`, {
             method: 'DELETE',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
         })
         .then(response => response.json())
         .then(data => {

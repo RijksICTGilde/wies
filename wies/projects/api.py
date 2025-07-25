@@ -1,7 +1,4 @@
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_http_methods
-from django.utils.decorators import method_decorator
 from django.views import View
 import json
 
@@ -20,7 +17,6 @@ class SkillsAPIView(View):
             
         return JsonResponse(skills, safe=False)
     
-    @method_decorator(csrf_exempt)
     def post(self, request):
         """Create a new skill"""
         try:
@@ -49,7 +45,6 @@ class SkillsAPIView(View):
             return JsonResponse({'error': str(e)}, status=500)
 
 
-@method_decorator(csrf_exempt, name='dispatch')
 class SkillDetailAPIView(View):
     def delete(self, request, skill_id):
         """Hard delete a skill"""
