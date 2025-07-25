@@ -33,6 +33,10 @@ class ColleagueForm(RVOFormMixin, forms.ModelForm):
         widgets = {
             'skills': forms.SelectMultiple(attrs={'class': 'js-skills-select'})
         }
+        labels = {
+            'name': 'Naam',
+            'skills': 'Rollen',
+        }
 
 class PlacementForm(RVOFormMixin, forms.ModelForm):
     class Meta:
