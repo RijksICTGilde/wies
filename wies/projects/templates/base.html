@@ -107,8 +107,8 @@
           }
         }
 
-      var consultant_select_select2_def = {
-          placeholder: "Selecteer consultants",
+      var colleague_select_select2_def = {
+          placeholder: "Selecteer consultant",
           width: '100%',
           allowClear: true
         }
@@ -124,7 +124,7 @@
         $('.js-skills-filter').select2(skills_filter_select2_def);
         $('.js-skills-select').select2(skills_select_select2_def);
         $('.js-status-select').select2(status_select_select2_def);
-        $('.js-consultant-filter').select2(consultant_select_select2_def);
+        $('.js-colleague-select').select2(colleague_select_select2_def);
         
         $('.js-skills-select').on('select2:select', function (e) {
           var data = e.params.data;
@@ -179,7 +179,7 @@
         $('.js-skills-filter').on('select2:select select2:unselect', function(e) {
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
-        $('.js-consultant-filter').on('select2:select select2:unselect', function(e) {
+        $('.js-colleague-select').on('select2:select select2:unselect', function(e) {
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
       });
@@ -187,7 +187,7 @@
       document.body.addEventListener('htmx:afterSwap', function(evt) {
         $('.js-status-select').select2(status_select_select2_def);
         $('.js-skills-filter').select2(skills_filter_select2_def);
-        $('.js-consultant-filter').select2(consultant_select_select2_def);
+        $('.js-colleague-select').select2(consultant_select_select2_def);
         $('.js-skills-select').select2(skills_select_select2_def);
 
         // Forceer native change event voor HTMX na swap, maar voorkom oneindige lus

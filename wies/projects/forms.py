@@ -5,15 +5,9 @@ from .models import Assignment, Colleague, Skill, Placement, Service
 class RVOFormMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for name, field in self.fields.items():
+        for _, field in self.fields.items():
             widget = field.widget
-            if name == "colleagues":
-                # Forceer de juiste class voor Select2
-                widget.attrs['class'] = "js-consultant-select utrecht-select utrecht-select--html-select"
-            elif name == "skills":
-                # Forceer de juiste class voor Select2
-                widget.attrs['class'] = "js-skills-select utrecht-select utrecht-select--html-select"
-            elif isinstance(widget, forms.DateInput):
+            if isinstance(widget, forms.DateInput):
                 widget.input_type = 'date'
                 widget.format = '%Y-%m-%d'
                 widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input utrecht-textbox--sm'
@@ -45,7 +39,8 @@ class PlacementForm(RVOFormMixin, forms.ModelForm):
         model = Placement
         fields = ['service', 'skills', 'colleague', 'period_source', 'specific_start_date', 'specific_end_date', 'hours_per_week']
         widgets = {
-            'skills': forms.SelectMultiple(attrs={'class': 'js-skills-select'})
+            'skills': forms.SelectMultiple(attrs={'class': 'js-skills-select'}),
+            'colleague': forms.Select(attrs={'class': 'js-colleague-select'}),
         }
         labels = {
             'service': 'Dienst',
