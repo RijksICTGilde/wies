@@ -24,7 +24,7 @@
         </th>
         <th scope="col" class="rvo-table-header">
           <div class="rvo-table-header-sortable-container">
-            Skills
+            Rol
           </div>
         </th>
         <th scope="col" class="rvo-table-header">
@@ -68,12 +68,10 @@
             {% endif %}
           </td>
           <td class="rvo-table-cell">
-            {% if placement.skills %}
-              {% for skill_label in placement.skills|get_skill_labels %}
-                <span class="rvo-tag rvo-tag--sm">{{ skill_label }}</span>
-              {% endfor %}
+            {% if placement.service.skill %}
+              <span class="rvo-tag rvo-tag--sm">{{ placement.service.skill.name }}</span>
             {% else %}
-              <span class="rvo-text--italic">Geen skills opgegeven</span>
+              <span class="rvo-text--italic">Geen rol opgegeven</span>
             {% endif %}
           </td>
           <td class="rvo-table-cell">

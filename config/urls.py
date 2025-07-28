@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from wies.projects.views import home, client, clients
+from wies.projects.views import home, client, clients, get_service_details
 from wies.projects.views import AssignmentList, AssignmentTabsView
 from wies.projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
 from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
@@ -54,4 +54,5 @@ urlpatterns = [
     path('skills/', SkillsView.as_view(), name='skills'),
     path('api/skills/', SkillsAPIView.as_view(), name='api-skills'),
     path('api/skills/<int:skill_id>/', SkillDetailAPIView.as_view(), name='api-skill-detail'),
+    path('api/services/<int:service_id>/', get_service_details, name='api-service-details'),
 ]

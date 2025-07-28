@@ -82,7 +82,6 @@ class Placement(models.Model):
     colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='placements', null=True, blank=True) # TODO: removal of colleague triggers removal of placement, probably undesirable
     service = models.ForeignKey('Service', models.CASCADE, related_name='placements')
     hours_per_week = models.IntegerField(null=True, blank=True)
-    skills = models.ManyToManyField('Skill', blank=True)
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=SERVICE)
     specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
     specific_end_date = models.DateField(null=True, blank=True) # do not use, use properties below
@@ -122,6 +121,7 @@ class Service(models.Model):
 
     assignment = models.ForeignKey('Assignment', models.CASCADE, related_name='services')
     description = models.CharField(max_length=500)
+    skill = models.ForeignKey('Skill', models.SET_NULL, related_name='services', null=True, blank=True)
     cost_type = models.CharField(max_length=20, choices=COST_TYPE_CHOICES, default=PER_HOUR)
     fixed_cost = models.IntegerField(null=True, blank=True)
     hours_per_week = models.IntegerField(null=True, blank=True)
@@ -144,14 +144,20 @@ class Service(models.Model):
         else:
             return self.specific_end_date
 
+    def get_weeks(self):
+        """Calculate number of weeks between start and end date"""
+        if not self.start_date or not self.end_date:
+            return None
+        delta = self.end_date - self.start_date
+        return round(delta.days / 7, 1)
+
     def get_total_cost(self):
         """Calculate total cost: aantal weken * uren per week * 100 euro/uur"""
         if not self.start_date or not self.end_date or not self.hours_per_week:
             return None
         
         # Calculate number of weeks
-        delta = self.end_date - self.start_date
-        weeks = delta.days / 7
+        weeks = self.get_weeks()
         
         # Calculate total cost
         total_cost = weeks * self.hours_per_week * 100

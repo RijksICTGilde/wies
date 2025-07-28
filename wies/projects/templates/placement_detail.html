@@ -13,8 +13,14 @@
       <dd>{{ object.service.description }}</dd>
       <dt>Collega</dt>
       <dd>{{ object.colleague }}</dd>
-      <dt>Skills</dt>
-      <dd>{{ object.skills|get_skill_labels|join:", " }}</dd>
+      <dt>Rol</dt>
+      <dd>
+        {% if object.service.skill %}
+          {{ object.service.skill.name }}
+        {% else %}
+          <span class="rvo-text--italic">Geen rol opgegeven</span>
+        {% endif %}
+      </dd>
       <dt>Periode bron</dt>
       <dd>{{ object.get_period_source_display }}</dd>
       <dt>Start datum specifiek</dt>
