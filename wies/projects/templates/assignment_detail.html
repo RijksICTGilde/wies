@@ -43,9 +43,10 @@
         <thead class="rvo-table-head">
           <tr class="rvo-table-row">
             <th class="rvo-table-header">Omschrijving</th>
-            <th class="rvo-table-header">Kosten</th>
+            <th class="rvo-table-header">Rol</th>
             <th class="rvo-table-header">Start datum</th>
             <th class="rvo-table-header">Eind datum</th>
+            <th class="rvo-table-header">Kosten</th>
             <th class="rvo-table-header">Acties</th>
           </tr>
         </thead>
@@ -53,15 +54,32 @@
           {% for service in object.services.all %}
           <tr class="rvo-table-row">
             <td class="rvo-table-cell">{{ service.description }}</td>
-            <td class="rvo-table-cell">
-              {% if service.cost_type == "FIXED_PRICE" %}
-                {{ service.fixed_cost }}€
-              {% elif service.cost_type == "PER_HOUR" %}
-                {{ service.hours_per_week }}€/wk
-              {% endif %}
-            </td>
             <td class="rvo-table-cell">{{ service.start_date}}</td>
             <td class="rvo-table-cell">{{ service.end_date }}</td>
+            <td class="rvo-table-cell">
+              {% if service.skill %}
+                {{ service.skill.name }}
+              {% else %}
+                <span class="rvo-text--italic">Geen rol opgegeven</span>
+              {% endif %}
+            </td>
+            <td class="rvo-table-cell">
+              {% if service.cost_type == "FIXED_PRICE" %}
+                €{{ service.fixed_cost|format_currency }}
+              {% elif service.cost_type == "PER_HOUR" %}
+                {% with total_cost=service.get_total_cost weeks=service.get_weeks %}
+                  {% if total_cost %}
+                    €{{ total_cost|format_currency }}
+                    <br>
+                    <small style="color: #666; font-size: 0.8em;">
+                      {{ weeks }} weken × {{ service.hours_per_week }} uur × €100
+                    </small>
+                  {% else %}
+                    <span class="rvo-text--italic">Niet beschikbaar</span>
+                  {% endif %}
+                {% endwith %}
+              {% endif %}
+            </td>
             <td class="rvo-table-cell">
               <a href="/services/{{ service.id }}/update" class="rvo-link">edit</a> / 
               <a href="/services/{{ service.id }}/delete" class="rvo-link">delete</a>
@@ -83,7 +101,7 @@
         <thead class="rvo-table-head">
           <tr class="rvo-table-row">
             <th class="rvo-table-header">Dienst</th>
-            <th class="rvo-table-header">Rollen</th>
+            <th class="rvo-table-header">Rol</th>
             <th class="rvo-table-header">Consultant</th>
             <th class="rvo-table-header">Start datum</th>
             <th class="rvo-table-header">Eind datum</th>
@@ -96,7 +114,13 @@
             {% for placement in service.placements.all %}
             <tr class="rvo-table-row">
               <td class="rvo-table-cell">{{ service.description }}</td>
-              <td class="rvo-table-cell">{{ placement.skills|get_skill_labels|join:", " }}</td>
+              <td class="rvo-table-cell">
+                {% if service.skill %}
+                  {{ service.skill.name }}
+                {% else %}
+                  <span class="rvo-text--italic">Geen rol opgegeven</span>
+                {% endif %}
+              </td>
               {% if placement.colleague %}
                 <td class="rvo-table-cell"><a href="{% url 'colleague-detail' placement.colleague.pk %}" class="rvo-link">{{ placement.colleague.name }}</a></td>
               {% else %}

@@ -1,21 +1,13 @@
 from django import forms
 
-from multiselectfield import MultiSelectFormField
-
-from .models import Assignment, Colleague, Skills, Placement, Service
+from .models import Assignment, Colleague, Skill, Placement, Service
 
 class RVOFormMixin:
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        for name, field in self.fields.items():
+        for _, field in self.fields.items():
             widget = field.widget
-            if name == "colleagues":
-                # Forceer de juiste class voor Select2
-                widget.attrs['class'] = "js-colleague-select utrecht-select utrecht-select--html-select"
-            elif name == "skills":
-                # Forceer de juiste class voor Select2
-                widget.attrs['class'] = "js-skills-select utrecht-select utrecht-select--html-select"
-            elif isinstance(widget, forms.DateInput):
+            if isinstance(widget, forms.DateInput):
                 widget.input_type = 'date'
                 widget.format = '%Y-%m-%d'
                 widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input utrecht-textbox--sm'
@@ -35,21 +27,26 @@ class AssignmentForm(RVOFormMixin, forms.ModelForm):
         exclude = ['assignment_type',]
 
 class ColleagueForm(RVOFormMixin, forms.ModelForm):
-    skills = MultiSelectFormField(required=False, choices=Skills.choices, widget=forms.SelectMultiple)  # overwrite default widget
-
     class Meta:
         model = Colleague
         fields = '__all__'
+        widgets = {
+            'skills': forms.SelectMultiple(attrs={'class': 'js-skills-select'})
+        }
+        labels = {
+            'name': 'Naam',
+            'skills': 'Rollen',
+        }
 
 class PlacementForm(RVOFormMixin, forms.ModelForm):
-    skills = MultiSelectFormField(required=False, choices=Skills.choices, widget=forms.SelectMultiple)  # overwrite default widget
-    
     class Meta:
         model = Placement
-        fields = ['service', 'skills', 'colleague', 'period_source', 'specific_start_date', 'specific_end_date', 'hours_per_week']
+        fields = ['service', 'colleague', 'period_source', 'specific_start_date', 'specific_end_date', 'hours_per_week']
+        widgets = {
+            'colleague': forms.Select(attrs={'class': 'js-colleague-select'}),
+        }
         labels = {
             'service': 'Dienst',
-            'skills': 'Rollen',
             'colleague': 'Consultant',
             'period_source': 'Periode',
             'specific_start_date': 'Start datum',
@@ -73,9 +70,13 @@ class PlacementForm(RVOFormMixin, forms.ModelForm):
 class ServiceForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['description', 'cost_type', 'fixed_cost', 'hours_per_week', 'period_source', 'specific_start_date', 'specific_end_date']
+        fields = ['description', 'skill', 'cost_type', 'fixed_cost', 'hours_per_week', 'period_source', 'specific_start_date', 'specific_end_date']
+        widgets = {
+            'skill': forms.Select(attrs={'class': 'js-skills-filter'}),
+        }
         labels = {
             'description': 'Omschrijving',
+            'skill': 'Rol',
             'cost_type': 'Kosten type',
             'fixed_cost': 'Vaste kosten',
             'hours_per_week': 'Uren per week',

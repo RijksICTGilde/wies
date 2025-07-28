@@ -1,33 +1,67 @@
 import datetime
+import json
 
 from django.views.generic.list import ListView
-from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
+from django.views.generic import DetailView, CreateView, DeleteView, UpdateView, TemplateView
 from django.template.defaulttags import register
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.db import models
 from django.db.models import Case, When, Max, F
+from django.http import JsonResponse
 
-from .models import Assignment, Colleague, Skills, Placement, Service
+from .models import Assignment, Colleague, Skill, Placement, Service
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 
 def home(request):
     return redirect('/assignments/')
+
+def get_service_details(request, service_id):
+    """AJAX endpoint to get service details for placement form"""
+    try:
+        service = Service.objects.get(id=service_id)
+        
+        # Calculate total cost
+        total_cost = service.get_total_cost()
+        weeks = service.get_weeks()
+        
+        if service.cost_type == "FIXED_PRICE" and service.fixed_cost:
+            cost_display = f"€{service.fixed_cost:,.2f}".replace(',', '.')
+            cost_calculation = None
+        elif total_cost and weeks and service.hours_per_week:
+            cost_display = f"€{total_cost:,.2f}".replace(',', '.')
+            cost_calculation = f"{weeks} weken × {service.hours_per_week} uur × €100"
+        else:
+            cost_display = "Niet beschikbaar"
+            cost_calculation = None
+        
+        data = {
+            'description': service.description,
+            'start_date': service.start_date.strftime('%d-%m-%Y') if service.start_date else '',
+            'end_date': service.end_date.strftime('%d-%m-%Y') if service.end_date else '',
+            'cost': cost_display,
+            'cost_calculation': cost_calculation,
+            'skill': service.skill.name if service.skill else 'Geen rol opgegeven'
+        }
+        return JsonResponse(data)
+    except Service.DoesNotExist:
+        return JsonResponse({'error': 'Service not found'}, status=404)
 
 @register.filter
 def get_item(dictionary, key):
     return dictionary.get(key)
 
 @register.filter
-def get_skill_labels(skill_values):
-    """Convert skill values to labels"""
-    labels = []
-    for skill_val in skill_values:
-        try:
-            labels.append(Skills(skill_val).label)
-        except ValueError:
-            labels.append(skill_val)  # fallback to value if label not found
-    return labels
+def get_skill_labels(skills):
+    """Get skill names from skill objects"""
+    return [skill.name for skill in skills.all()]
+
+@register.filter
+def format_currency(value):
+    """Format number as currency with thousand separators"""
+    if value is None:
+        return None
+    return f"{value:,.2f}".replace(',', '.')
 
 # Create your views here.
 class AssignmentList(ListView):
@@ -166,9 +200,9 @@ class ColleagueList(ListView):
         qs = Colleague.objects.all()
         
         # Filter by skill
-        skills_filter = dict(self.request.GET).get('skill')  # without dict casting you get single items per get call
-        if skills_filter:
-            qs = qs.filter(skills__icontains=skills_filter[0])
+        skill_filter = self.request.GET.get('skill')
+        if skill_filter:
+            qs = qs.filter(skills__id=skill_filter)
         
         # Filter by name
         name_filter = self.request.GET.get('name')
@@ -213,6 +247,11 @@ class ColleagueCreateView(CreateView):
     form_class = ColleagueForm
     template_name = 'colleague_new.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['skills'] = Skill.objects.all()
+        return context
+
 class ColleagueDetail(DetailView):
     model = Colleague
     template_name = 'colleague_detail.html'
@@ -249,11 +288,6 @@ class PlacementUpdateView(UpdateView):
     model = Placement
     form_class = PlacementForm
     template_name = 'placement_update.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/assignments/{context['object'].service.assignment.id}/'
-        return context
 
     def form_valid(self, form):
         # todo: not super happy about this work around, but good enough for now
@@ -327,12 +361,10 @@ class PlacementList(ListView):
         if assignment_filter:
             qs = qs.filter(service__assignment__name__icontains=assignment_filter)
         
-        
         # Filter by skills
-        skills_filter = dict(self.request.GET).get('skills')
-        if skills_filter:
-            for skill in skills_filter:
-                qs = qs.filter(skills__icontains=skill)
+        skill_filter = self.request.GET.get('skill')
+        if skill_filter:
+            qs = qs.filter(service__skill__id=skill_filter)
         
         # Filter by client/organization
         client_filter = self.request.GET.get('client')
@@ -669,11 +701,16 @@ def client(request, name):
             'name': assignment.name,
             'start_date': assignment.start_date,
             'end_date': assignment.end_date,
-            'colleagues': colleagues
+            'colleagues': colleagues,
+            'status': assignment.status,
         })
 
     return render(request, template_name='client_detail.html', context={
         'client_name': name,
         'assignments': assignments_data
     })
+
+
+class SkillsView(TemplateView):
+    template_name = 'skills.html'
 

@@ -32,17 +32,7 @@
           </div>
           <div class="rvo-layout-column">
             <label for="skills" class="rvo-label">Skills:</label>
-            <select name="skills" id="skills" class="js-skills-filter utrecht-select utrecht-select--html-select" multiple hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
-              <option value="BE_DEV" {% if 'BE_DEV' in request.GET.skills %}selected{% endif %}>Backend development</option>
-              <option value="FE_DEV" {% if 'FE_DEV' in request.GET.skills %}selected{% endif %}>Frontend development</option>
-              <option value="PO" {% if 'PO' in request.GET.skills %}selected{% endif %}>Product owner</option>
-              <option value="UX_DES" {% if 'UX_DES' in request.GET.skills %}selected{% endif %}>UX designer</option>
-              <option value="AI_CONS" {% if 'AI_CONS' in request.GET.skills %}selected{% endif %}>AI Consultant</option>
-              <option value="AI_JUR" {% if 'AI_JUR' in request.GET.skills %}selected{% endif %}>AI Jurist</option>
-              <option value="RES" {% if 'RES' in request.GET.skills %}selected{% endif %}>Researcher</option>
-              <option value="DAT_ENG" {% if 'DAT_ENG' in request.GET.skills %}selected{% endif %}>Data engineer</option>
-              <option value="PROJ_LEAD" {% if 'PROJ_LEAD' in request.GET.skills %}selected{% endif %}>Project leader</option>
-            </select>
+            <select name="skill" id="skills" class="js-skills-filter utrecht-select utrecht-select--html-select" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change"></select>
           </div>
         </div>
 

@@ -15,6 +15,7 @@
           <tr class="rvo-table-row">
             <th class="rvo-table-header">Opdracht naam</th>
             <th class="rvo-table-header">Consultants</th>
+            <th class="rvo-table-header">Status</th>
             <th class="rvo-table-header">Start datum</th>
             <th class="rvo-table-header">Eind datum</th>
           </tr>
@@ -29,6 +30,9 @@
               {% for colleague in assignment.colleagues %}
                 <a href="{% url 'colleague-detail' colleague.id %}" class="rvo-link">{{ colleague.name }}</a>{% if not forloop.last %}, {% endif %}
               {% endfor %}
+            </td>
+            <td>
+              <span class="status-badge status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
             </td>
             <td class="rvo-table-cell">{{ assignment.start_date }}</td>
             <td class="rvo-table-cell">{{ assignment.end_date }}</td>

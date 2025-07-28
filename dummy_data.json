@@ -1,10 +1,73 @@
 [
   {
+    "model": "projects.skill",
+    "pk": 1,
+    "fields": {
+      "name": "Backend development"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 2,
+    "fields": {
+      "name": "Frontend development"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 3,
+    "fields": {
+      "name": "Product owner"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 4,
+    "fields": {
+      "name": "UX designer"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 5,
+    "fields": {
+      "name": "AI Consultant"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 6,
+    "fields": {
+      "name": "AI Jurist"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 7,
+    "fields": {
+      "name": "Researcher"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 8,
+    "fields": {
+      "name": "Data engineer"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 9,
+    "fields": {
+      "name": "Project leader"
+    }
+  },
+  {
     "model": "projects.colleague",
     "pk": 1,
     "fields": {
       "name": "Jan van der Berg",
-      "skills": ["BE_DEV", "PROJ_LEAD"]
+      "skills": [1, 9]
     }
   },
   {
@@ -12,7 +75,7 @@
     "pk": 2,
     "fields": {
       "name": "Lisa Jansen",
-      "skills": ["FE_DEV", "UX_DES"]
+      "skills": [2, 4]
     }
   },
   {
@@ -20,7 +83,7 @@
     "pk": 3,
     "fields": {
       "name": "Mohammed Ali",
-      "skills": ["AI_CONS", "DAT_ENG"]
+      "skills": [5, 8]
     }
   },
   {
@@ -28,7 +91,7 @@
     "pk": 4,
     "fields": {
       "name": "Sarah de Vries",
-      "skills": ["PO", "AI_JUR"]
+      "skills": [3, 6]
     }
   },
   {
@@ -36,7 +99,7 @@
     "pk": 5,
     "fields": {
       "name": "Thomas Bakker",
-      "skills": ["RES", "BE_DEV"]
+      "skills": [7, 1]
     }
   },
   {
@@ -44,7 +107,7 @@
     "pk": 6,
     "fields": {
       "name": "Emma Visser",
-      "skills": ["FE_DEV", "AI_CONS"]
+      "skills": [2, 5]
     }
   },
   {
@@ -52,7 +115,7 @@
     "pk": 7,
     "fields": {
       "name": "Pieter Smit",
-      "skills": ["DAT_ENG", "PROJ_LEAD"]
+      "skills": [8, 9]
     }
   },
   {
@@ -60,7 +123,7 @@
     "pk": 8,
     "fields": {
       "name": "Fatima Hassan",
-      "skills": ["UX_DES", "PO"]
+      "skills": [4, 3]
     }
   },
   {
@@ -68,7 +131,7 @@
     "pk": 9,
     "fields": {
       "name": "Ruben de Jong",
-      "skills": ["AI_JUR", "RES"]
+      "skills": [6, 7]
     }
   },
   {
@@ -76,7 +139,7 @@
     "pk": 10,
     "fields": {
       "name": "Anna Mulder",
-      "skills": ["BE_DEV", "DAT_ENG"]
+      "skills": [1, 8]
     }
   },
   {
@@ -84,7 +147,7 @@
     "pk": 11,
     "fields": {
       "name": "Kevin van Dijk",
-      "skills": ["FE_DEV", "PROJ_LEAD"]
+      "skills": [2, 9]
     }
   },
   {
@@ -92,7 +155,7 @@
     "pk": 12,
     "fields": {
       "name": "Marloes Hendriks",
-      "skills": ["AI_CONS", "UX_DES"]
+      "skills": [5, 4]
     }
   },
   {
@@ -100,7 +163,7 @@
     "pk": 13,
     "fields": {
       "name": "Ahmed Osman",
-      "skills": ["DAT_ENG", "AI_JUR"]
+      "skills": [8, 6]
     }
   },
   {
@@ -108,7 +171,7 @@
     "pk": 14,
     "fields": {
       "name": "Sophie Brouwer",
-      "skills": ["PO", "RES"]
+      "skills": [3, 7]
     }
   },
   {
@@ -116,7 +179,7 @@
     "pk": 15,
     "fields": {
       "name": "Marco van Leeuwen",
-      "skills": ["BE_DEV", "AI_CONS"]
+      "skills": [1, 5]
     }
   },
   {
@@ -124,7 +187,7 @@
     "pk": 16,
     "fields": {
       "name": "Nadia Kowalski",
-      "skills": ["FE_DEV", "UX_DES"]
+      "skills": [2, 4]
     }
   },
   {
@@ -132,7 +195,7 @@
     "pk": 17,
     "fields": {
       "name": "Jeroen Peters",
-      "skills": ["PROJ_LEAD", "DAT_ENG"]
+      "skills": [9, 8]
     }
   },
   {
@@ -140,7 +203,7 @@
     "pk": 18,
     "fields": {
       "name": "Yasmin El Hadj",
-      "skills": ["AI_JUR", "PO"]
+      "skills": [6, 3]
     }
   },
   {
@@ -148,7 +211,7 @@
     "pk": 19,
     "fields": {
       "name": "Daan Schouten",
-      "skills": ["RES", "BE_DEV"]
+      "skills": [7, 1]
     }
   },
   {
@@ -156,7 +219,7 @@
     "pk": 20,
     "fields": {
       "name": "Inge Vos",
-      "skills": ["AI_CONS", "FE_DEV"]
+      "skills": [5, 2]
     }
   },
   {
@@ -425,6 +488,7 @@
     "fields": {
       "assignment": 1,
       "description": "Backend ontwikkeling en projectleiding",
+      "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -436,6 +500,7 @@
     "fields": {
       "assignment": 1,
       "description": "Frontend ontwikkeling en UX design",
+      "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
@@ -447,6 +512,7 @@
     "fields": {
       "assignment": 1,
       "description": "AI consultancy voor chatbot",
+      "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT"
@@ -458,6 +524,7 @@
     "fields": {
       "assignment": 2,
       "description": "Data engineering en projectleiding",
+      "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
@@ -469,6 +536,7 @@
     "fields": {
       "assignment": 2,
       "description": "Product owner rol",
+      "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -480,6 +548,7 @@
     "fields": {
       "assignment": 3,
       "description": "Juridische AI expertise",
+      "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
@@ -491,6 +560,7 @@
     "fields": {
       "assignment": 4,
       "description": "Frontend ontwikkeling en projectleiding",
+      "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -502,6 +572,7 @@
     "fields": {
       "assignment": 4,
       "description": "UX design voor e-commerce",
+      "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
@@ -513,6 +584,7 @@
     "fields": {
       "assignment": 5,
       "description": "Blockchain onderzoek",
+      "skill": 7,
       "cost_type": "FIXED_PRICE",
       "fixed_cost": 15000.00,
       "period_source": "ASSIGNMENT"
@@ -524,6 +596,7 @@
     "fields": {
       "assignment": 6,
       "description": "Backend en AI ontwikkeling",
+      "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -535,6 +608,7 @@
     "fields": {
       "assignment": 6,
       "description": "AI consultancy en UX design",
+      "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
@@ -546,6 +620,7 @@
     "fields": {
       "assignment": 7,
       "description": "Frontend en UX voor dashboard",
+      "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -557,6 +632,7 @@
     "fields": {
       "assignment": 7,
       "description": "Projectleiding en data engineering",
+      "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
@@ -568,6 +644,7 @@
     "fields": {
       "assignment": 8,
       "description": "Onderzoek en backend ontwikkeling",
+      "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
@@ -579,6 +656,7 @@
     "fields": {
       "assignment": 9,
       "description": "Projectleiding logistiek",
+      "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -590,6 +668,7 @@
     "fields": {
       "assignment": 9,
       "description": "Backend en data engineering",
+      "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
@@ -601,6 +680,7 @@
     "fields": {
       "assignment": 10,
       "description": "Frontend ontwikkeling mobile",
+      "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -612,6 +692,7 @@
     "fields": {
       "assignment": 10,
       "description": "Backend ontwikkeling mobile",
+      "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
@@ -623,6 +704,7 @@
     "fields": {
       "assignment": 11,
       "description": "Data engineering voor zorgdata",
+      "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
@@ -634,6 +716,7 @@
     "fields": {
       "assignment": 12,
       "description": "Data engineering voor energie",
+      "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -645,6 +728,7 @@
     "fields": {
       "assignment": 12,
       "description": "AI consultancy energie",
+      "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
@@ -656,6 +740,7 @@
     "fields": {
       "assignment": 13,
       "description": "Product owner e-learning",
+      "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -667,6 +752,7 @@
     "fields": {
       "assignment": 13,
       "description": "UX design e-learning",
+      "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
@@ -678,6 +764,7 @@
     "fields": {
       "assignment": 14,
       "description": "UX design en product owner IoT",
+      "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -689,6 +776,7 @@
     "fields": {
       "assignment": 14,
       "description": "Backend ontwikkeling IoT",
+      "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -700,6 +788,7 @@
     "fields": {
       "assignment": 15,
       "description": "AI consultancy digital twin",
+      "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
@@ -711,6 +800,7 @@
     "fields": {
       "assignment": 16,
       "description": "Onderzoek sociale media",
+      "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -722,6 +812,7 @@
     "fields": {
       "assignment": 16,
       "description": "Backend ontwikkeling analytics",
+      "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
@@ -733,6 +824,7 @@
     "fields": {
       "assignment": 17,
       "description": "Onderzoek landbouw AI",
+      "skill": 7,
       "cost_type": "FIXED_PRICE",
       "fixed_cost": 25000.00,
       "period_source": "ASSIGNMENT"
@@ -744,6 +836,7 @@
     "fields": {
       "assignment": 18,
       "description": "Projectleiding supply chain",
+      "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -755,6 +848,7 @@
     "fields": {
       "assignment": 18,
       "description": "Backend ontwikkeling blockchain",
+      "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
@@ -766,6 +860,7 @@
     "fields": {
       "assignment": 19,
       "description": "Data engineering fraudedetectie",
+      "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
@@ -777,6 +872,7 @@
     "fields": {
       "assignment": 20,
       "description": "Projectleiding en data engineering",
+      "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
@@ -788,6 +884,7 @@
     "fields": {
       "assignment": 20,
       "description": "Frontend ontwikkeling portal",
+      "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
@@ -799,6 +896,7 @@
     "fields": {
       "assignment": 20,
       "description": "Product owner klimaatdata",
+      "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT"
@@ -813,8 +911,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": ["BE_DEV", "PROJ_LEAD"]
+      "hours_per_week": 32
     }
   },
   {
@@ -826,8 +923,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2024-07-01",
       "specific_end_date": "2025-08-31",
-      "hours_per_week": 24,
-      "skills": ["FE_DEV", "UX_DES"]
+      "hours_per_week": 24
     }
   },
   {
@@ -839,8 +935,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 16,
-      "skills": ["AI_CONS"]
+      "hours_per_week": 16
     }
   },
   {
@@ -852,8 +947,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": ["FE_DEV", "PROJ_LEAD"]
+      "hours_per_week": 32
     }
   },
   {
@@ -865,8 +959,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2023-10-01",
       "specific_end_date": "2024-02-28",
-      "hours_per_week": 40,
-      "skills": ["UX_DES"]
+      "hours_per_week": 40
     }
   },
   {
@@ -878,8 +971,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": ["BE_DEV", "AI_CONS"]
+      "hours_per_week": 32
     }
   },
   {
@@ -891,8 +983,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2024-07-15",
       "specific_end_date": "2025-11-30",
-      "hours_per_week": 24,
-      "skills": ["AI_CONS", "UX_DES"]
+      "hours_per_week": 24
     }
   },
   {
@@ -904,8 +995,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": ["RES", "BE_DEV"]
+      "hours_per_week": 40
     }
   },
   {
@@ -917,8 +1007,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2023-09-01",
       "specific_end_date": "2024-01-31",
-      "hours_per_week": 32,
-      "skills": ["PROJ_LEAD"]
+      "hours_per_week": 32
     }
   },
   {
@@ -930,8 +1019,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": ["BE_DEV", "DAT_ENG"]
+      "hours_per_week": 40
     }
   },
   {
@@ -943,8 +1031,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": ["FE_DEV"]
+      "hours_per_week": 32
     }
   },
   {
@@ -956,8 +1043,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2024-05-15",
       "specific_end_date": "2025-09-30",
-      "hours_per_week": 24,
-      "skills": ["BE_DEV"]
+      "hours_per_week": 24
     }
   },
   {
@@ -969,8 +1055,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": ["PO"]
+      "hours_per_week": 32
     }
   },
   {
@@ -982,8 +1067,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": ["UX_DES"]
+      "hours_per_week": 40
     }
   },
   {
@@ -995,8 +1079,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2024-05-20",
       "specific_end_date": "2025-07-31",
-      "hours_per_week": 32,
-      "skills": ["UX_DES", "PO"]
+      "hours_per_week": 32
     }
   },
   {
@@ -1008,8 +1091,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": ["BE_DEV"]
+      "hours_per_week": 32
     }
   },
   {
@@ -1021,8 +1103,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": ["RES"]
+      "hours_per_week": 40
     }
   },
   {
@@ -1034,8 +1115,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": ["PROJ_LEAD"]
+      "hours_per_week": 32
     }
   },
   {
@@ -1047,8 +1127,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2024-02-01",
       "specific_end_date": "2025-11-30",
-      "hours_per_week": 24,
-      "skills": ["BE_DEV"]
+      "hours_per_week": 24
     }
   },
   {
@@ -1060,8 +1139,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": ["PROJ_LEAD", "DAT_ENG"]
+      "hours_per_week": 32
     }
   },
   {
@@ -1073,8 +1151,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2024-01-01",
       "specific_end_date": "2025-08-31",
-      "hours_per_week": 24,
-      "skills": ["FE_DEV"]
+      "hours_per_week": 24
     }
   },
   {
@@ -1086,8 +1163,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 16,
-      "skills": ["PO"]
+      "hours_per_week": 16
     }
   }
 ]
