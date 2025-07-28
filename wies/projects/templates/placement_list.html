@@ -31,7 +31,7 @@
             <input type="text" id="consultant" name="consultant" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op collega naam" value="{{ request.GET.consultant }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
           </div>
           <div class="rvo-layout-column">
-            <label for="skills" class="rvo-label">Skills:</label>
+            <label for="skills" class="rvo-label">Rollen:</label>
             <select name="skill" id="skills" class="js-skills-filter utrecht-select utrecht-select--html-select" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change"></select>
           </div>
         </div>
