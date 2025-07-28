@@ -31,7 +31,7 @@
                 <a href="{% url 'colleague-detail' colleague.id %}" class="rvo-link">{{ colleague.name }}</a>{% if not forloop.last %}, {% endif %}
               {% endfor %}
             </td>
-            <td>
+            <td class="rvo-table-cell">
               <span class="status-badge status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
             </td>
             <td class="rvo-table-cell">{{ assignment.start_date }}</td>
