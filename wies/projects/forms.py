@@ -31,7 +31,7 @@ class ColleagueForm(RVOFormMixin, forms.ModelForm):
         model = Colleague
         fields = '__all__'
         widgets = {
-            'skills': forms.SelectMultiple(attrs={'class': 'js-skills-select'})
+            'skills': forms.SelectMultiple(attrs={'class': 'js-skills-select-create-multiple'})
         }
         labels = {
             'name': 'Naam',
@@ -72,7 +72,7 @@ class ServiceForm(RVOFormMixin, forms.ModelForm):
         model = Service
         fields = ['description', 'skill', 'cost_type', 'fixed_cost', 'hours_per_week', 'period_source', 'specific_start_date', 'specific_end_date']
         widgets = {
-            'skill': forms.Select(attrs={'class': 'js-skills-filter'}),
+            'skill': forms.Select(attrs={'class': 'js-skills-select-single'}),
         }
         labels = {
             'description': 'Omschrijving',
