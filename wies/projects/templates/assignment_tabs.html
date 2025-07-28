@@ -30,7 +30,17 @@
                hx-get="{% url 'assignments' %}" 
                hx-target="#assignment-tabs-section" 
                hx-trigger="keyup delay:300ms"
-               hx-include="[name='tab'], [name='order']">
+               hx-include="[name='tab'], [name='order'], [name='skill']">
+    </div>
+    <div class="rvo-layout-column rvo-layout-gap--sm">
+        <label for="skills" class="rvo-label">Skills</label>
+        <select name="skill" 
+                id="skills" 
+                class="js-skills-filter utrecht-select utrecht-select--html-select" 
+                hx-get="{% url 'assignments' %}" 
+                hx-target="#assignment-tabs-section" 
+                hx-trigger="change"
+                hx-include="[name='tab'], [name='name'], [name='order']"></select>
     </div>
     <div class="rvo-layout-column rvo-layout-gap--sm" style="align-self: end; text-align: right;">
         <a href="/assignments/new">

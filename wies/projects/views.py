@@ -1,5 +1,6 @@
 import datetime
 import json
+from urllib.parse import urlencode
 
 from django.views.generic.list import ListView
 from django.views.generic import DetailView, CreateView, DeleteView, UpdateView, TemplateView
@@ -63,6 +64,22 @@ def format_currency(value):
         return None
     return f"{value:,.2f}".replace(',', '.')
 
+@register.simple_tag(takes_context=True)
+def assignments_url_with_tab(context, tab_key):
+    """Build assignments URL with tab and preserved query parameters"""
+    from django.urls import reverse
+    
+    request = context['request']
+    params = {'tab': tab_key}
+    
+    # Preserve existing query parameters
+    for param in ['name', 'order', 'skill']:
+        value = request.GET.get(param)
+        if value:
+            params[param] = value
+    
+    return f"{reverse('assignments')}?{urlencode(params)}"
+
 
 class AssignmentTabsView(ListView):
     template_name = 'assignment_tabs.html'
@@ -76,6 +93,11 @@ class AssignmentTabsView(ListView):
         name_filter = self.request.GET.get('name')
         if name_filter:
             qs = qs.filter(models.Q(name__icontains=name_filter) | models.Q(organization__icontains=name_filter))
+        
+        # Apply skill filter if provided
+        skill_filter = self.request.GET.get('skill')
+        if skill_filter:
+            qs = qs.filter(services__skill__id=skill_filter).distinct()
         
         # Apply order if provided
         order = self.request.GET.get('order')
