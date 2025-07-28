@@ -54,8 +54,6 @@
           {% for service in object.services.all %}
           <tr class="rvo-table-row">
             <td class="rvo-table-cell">{{ service.description }}</td>
-            <td class="rvo-table-cell">{{ service.start_date}}</td>
-            <td class="rvo-table-cell">{{ service.end_date }}</td>
             <td class="rvo-table-cell">
               {% if service.skill %}
                 {{ service.skill.name }}
@@ -63,6 +61,8 @@
                 <span class="rvo-text--italic">Geen rol opgegeven</span>
               {% endif %}
             </td>
+            <td class="rvo-table-cell">{{ service.start_date}}</td>
+            <td class="rvo-table-cell">{{ service.end_date }}</td>
             <td class="rvo-table-cell">
               {% if service.cost_type == "FIXED_PRICE" %}
                 €{{ service.fixed_cost|format_currency }}
