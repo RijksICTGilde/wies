@@ -354,7 +354,7 @@ class PlacementList(ListView):
         # Filter by skills
         skill_filter = self.request.GET.get('skill')
         if skill_filter:
-            qs = qs.filter(skills__id=skill_filter)
+            qs = qs.filter(service__skill__id=skill_filter)
         
         # Filter by client/organization
         client_filter = self.request.GET.get('client')
