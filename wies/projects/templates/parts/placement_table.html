@@ -2,46 +2,14 @@
   <table class="rvo-table" id="placement_table">
     <thead class="rvo-table-head">
       <tr class="rvo-table-row">
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header-sortable-container">
-            Consultant
-          </div>
-        </th>
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header-sortable-container">
-            Opdracht
-          </div>
-        </th>
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header-sortable-container">
-            Opdrachtgever
-          </div>
-        </th>
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header-sortable-container">
-            Uren/week
-          </div>
-        </th>
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header-sortable-container">
-            Rol
-          </div>
-        </th>
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header-sortable-container">
-            Startdatum
-          </div>
-        </th>
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header-sortable-container">
-            Einddatum
-          </div>
-        </th>
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header-sortable-container">
-            Status
-          </div>
-        </th>
+        {% include 'parts/sortable_header.html' with field='colleague__name' label='Consultant' %}
+        {% include 'parts/sortable_header.html' with field='service__assignment__name' label='Opdracht' %}
+        {% include 'parts/sortable_header.html' with field='service__assignment__organization' label='Opdrachtgever' %}
+        {% include 'parts/sortable_header.html' with field='hours_per_week' label='Uren/week' %}
+        {% include 'parts/sortable_header.html' with field='service__skill' label='Rol' %}
+        {% include 'parts/sortable_header.html' with field='start_date' label='Startdatum' %}
+        {% include 'parts/sortable_header.html' with field='end_date' label='Einddatum' %}
+        {% include 'parts/sortable_header.html' with field='service__assignment__status' label='Status' %}
       </tr>
     </thead>
     <tbody>

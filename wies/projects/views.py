@@ -7,7 +7,7 @@ from django.template.defaulttags import register
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.db import models
-from django.db.models import Case, When, Max
+from django.db.models import Case, When, Max, F
 from django.http import JsonResponse
 
 from .models import Assignment, Colleague, Skill, Placement, Service
@@ -62,33 +62,6 @@ def format_currency(value):
     if value is None:
         return None
     return f"{value:,.2f}".replace(',', '.')
-
-# Create your views here.
-class AssignmentList(ListView):
-    template_name = 'assignment_list.html'
-    model = Assignment
-
-    def get_queryset(self):
-        qs = Assignment.objects.order_by('-start_date')
-
-        status_filter = dict(self.request.GET).get('status')  # without dict casting you get single items per get call
-        order = self.request.GET.get('order')
-        name_filter = self.request.GET.get('name')
-
-        if status_filter:
-            qs = qs.filter(status__in=status_filter)
-        if name_filter:
-            qs = qs.filter(models.Q(name__icontains=name_filter) | models.Q(organization__icontains=name_filter))
-        if order:
-            qs = qs.order_by(order)
-
-        return qs
-    
-    def get_template_names(self):
-        if 'HX-Request' in self.request.headers:
-            return ['parts/assignment_table.html']
-        else:
-            return ['assignment_list.html']
 
 
 class AssignmentTabsView(ListView):
@@ -224,7 +197,17 @@ class ColleagueList(ListView):
                 output_field=models.DateField()
             )
         )
-        return qs.annotate(max_end_date=max_end_date_annotation).order_by('max_end_date')
+        qs = qs.annotate(max_end_date=max_end_date_annotation)
+        
+        # Handle ordering
+        order = self.request.GET.get('order')
+        if order:
+            qs = qs.order_by(order)
+        else:
+            # Default ordering by max_end_date
+            qs = qs.order_by('max_end_date')
+            
+        return qs
     
     def get_template_names(self):
         if 'HX-Request' in self.request.headers:
@@ -414,6 +397,35 @@ class PlacementList(ListView):
                 models.Q(period_source='PLACEMENT', specific_end_date__lte=end_date_to)
             )
         
+        # Order by parameter
+        order = self.request.GET.get('order')
+        if order:
+            # Handle complex sorting for date fields that use properties
+            if order in ['start_date', '-start_date']:
+                # Complex sorting for start_date - use Case/When to handle period_source logic
+                qs = qs.annotate(
+                    computed_start_date=Case(
+                        When(period_source='SERVICE', then=Case(
+                            When(service__period_source='ASSIGNMENT', then=F('service__assignment__start_date')),
+                            default=F('service__specific_start_date')
+                        )),
+                        default=F('specific_start_date')
+                    )
+                ).order_by('computed_start_date' if order == 'start_date' else '-computed_start_date')
+            elif order in ['end_date', '-end_date']:
+                # Complex sorting for end_date - use Case/When to handle period_source logic
+                qs = qs.annotate(
+                    computed_end_date=Case(
+                        When(period_source='SERVICE', then=Case(
+                            When(service__period_source='ASSIGNMENT', then=F('service__assignment__end_date')),
+                            default=F('service__specific_end_date')
+                        )),
+                        default=F('specific_end_date')
+                    )
+                ).order_by('computed_end_date' if order == 'end_date' else '-computed_end_date')
+            else:
+                # Standard sorting for other fields
+                qs = qs.order_by(order)
 
         return qs
     

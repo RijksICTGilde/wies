@@ -3,39 +3,11 @@
   <table class="rvo-table">
         <thead class="rvo-table-head">
           <tr class="rvo-table-row">
-            <th scope="col" class="rvo-table-header">
-              <div class="rvo-table-header__sortable-container">
-                Naam
-              </div>
-            </th>
-            <th scope="col" class="rvo-table-header">
-              <div class="rvo-table-header__sortable-container">
-                Opdrachtgever
-              </div>
-            </th>
-             <th scope="col" class="rvo-table-header">
-              <div class="rvo-table-header__sortable-container">
-                Status
-              </div>
-            </th>
-            <th scope="col" class="rvo-table-header rvo-table-header--sortable rvo-table-header--active-sort">
-              <div class="rvo-table-header__sortable-container">
-                Startdatum
-                <svg width="39" height="48" viewBox="0 0 39 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="rvo--table-header__sorting-icon">
-                  <path d="M9.24057 12.6281C8.97942 12.2439 8.57505 12.0129 8.14198 12.0005C7.70909 11.9881 7.29461 12.1957 7.0161 12.5643L0.745638 20.8504C0.297743 21.4411 0.298239 22.3052 0.746692 22.8959C1.19502 23.4848 1.95962 23.6318 2.55799 23.238L5.76102 21.1364L5.77596 46.4092C5.77596 47.7274 6.7353 48 7.91939 48C9.10349 48 10.0629 47.7274 10.0629 46.4092L10.0581 21.2311L13.2 23.5426C13.7804 23.969 14.5498 23.866 15.0248 23.3046C15.4998 22.7403 15.5402 21.8776 15.1201 21.2619L9.24057 12.6281Z" fill="var(--rvo-color-grijs-800)"></path>
-                  <path d="M26.0473 47.1625C26.4129 47.6748 26.979 47.9828 27.5853 47.9993C28.1914 48.0159 28.7716 47.739 29.1615 47.2476L37.9402 36.1995C38.5672 35.4118 38.5665 34.2597 37.9387 33.4721C37.3111 32.687 36.2406 32.4909 35.4029 33.016L30.9187 35.8181L30.8977 2.12105C30.8977 0.363522 29.5547 0 27.8969 0C26.2392 0 24.896 0.363522 24.896 2.12105L24.9028 35.6919L20.5041 32.6099C19.6915 32.0413 18.6144 32.1787 17.9494 32.9272C17.2843 33.6795 17.2278 34.8299 17.8159 35.6508L26.0473 47.1625Z" fill="var(--rvo-color-hemelblauw)"></path>
-                </svg>
-              </div>
-            </th>
-            <th scope="col" class="rvo-table-header rvo-table-header--sortable rvo-table-header--active-sort">
-              <div class="rvo-table-header__sortable-container">
-                Einddatum
-                <svg width="39" height="48" viewBox="0 0 39 48" fill="none" xmlns="http://www.w3.org/2000/svg" class="rvo--table-header__sorting-icon">
-                  <path d="M9.24057 12.6281C8.97942 12.2439 8.57505 12.0129 8.14198 12.0005C7.70909 11.9881 7.29461 12.1957 7.0161 12.5643L0.745638 20.8504C0.297743 21.4411 0.298239 22.3052 0.746692 22.8959C1.19502 23.4848 1.95962 23.6318 2.55799 23.238L5.76102 21.1364L5.77596 46.4092C5.77596 47.7274 6.7353 48 7.91939 48C9.10349 48 10.0629 47.7274 10.0629 46.4092L10.0581 21.2311L13.2 23.5426C13.7804 23.969 14.5498 23.866 15.0248 23.3046C15.4998 22.7403 15.5402 21.8776 15.1201 21.2619L9.24057 12.6281Z" fill="var(--rvo-color-grijs-800)"></path>
-                  <path d="M26.0473 47.1625C26.4129 47.6748 26.979 47.9828 27.5853 47.9993C28.1914 48.0159 28.7716 47.739 29.1615 47.2476L37.9402 36.1995C38.5672 35.4118 38.5665 34.2597 37.9387 33.4721C37.3111 32.687 36.2406 32.4909 35.4029 33.016L30.9187 35.8181L30.8977 2.12105C30.8977 0.363522 29.5547 0 27.8969 0C26.2392 0 24.896 0.363522 24.896 2.12105L24.9028 35.6919L20.5041 32.6099C19.6915 32.0413 18.6144 32.1787 17.9494 32.9272C17.2843 33.6795 17.2278 34.8299 17.8159 35.6508L26.0473 47.1625Z" fill="var(--rvo-color-hemelblauw)"></path>
-                </svg>
-              </div>
-            </th>
+            {% include 'parts/sortable_header.html' with field='name' label='Naam' %}
+            {% include 'parts/sortable_header.html' with field='organization' label='Opdrachtgever' %}
+            {% include 'parts/sortable_header.html' with field='status' label='Status' %}
+            {% include 'parts/sortable_header.html' with field='start_date' label='Startdatum' %}
+            {% include 'parts/sortable_header.html' with field='end_date' label='Einddatum' %}
           </tr>
         </thead>
         <tbody class="rvo-table-body">

@@ -28,32 +28,26 @@
     
     <h2 class="utrecht-heading-2 rvo-heading--no-margins">Inzetten</h2>
 
-    <table class="rvo-table" style="border-collapse: collapse; border: 1px solid #ccc;">
-      <style>
-        .rvo-table th, .rvo-table td {
-          border: 1px solid #ccc;
-          padding: 8px;
-        }
-      </style>
-      <thead>
-        <tr>
-          <th>Opdracht</th>
-          <th>Status</th>
-          <th>Rol</th>
-          <th>Periode</th>
-          <th>Uren per week</th>
+    <table class="rvo-table">
+      <thead class="rvo-table-head">
+        <tr class="rvo-table-row">
+          <th class="rvo-table-header">Opdracht</th>
+          <th class="rvo-table-header">Status</th>
+          <th class="rvo-table-header">Rol</th>
+          <th class="rvo-table-header">Periode</th>
+          <th class="rvo-table-header">Uren per week</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody class="rvo-table-body">
         {% for placement in object.placements.all %}
-        <tr>
-          <td><a href="/assignments/{{ placement.service.assignment.id }}/">{{ placement.service.assignment.name }}</a></td>
-          <td>
+        <tr class="rvo-table-row">
+          <td class="rvo-table-cell"><a href="/assignments/{{ placement.service.assignment.id }}/">{{ placement.service.assignment.name }}</a></td>
+          <td class="rvo-table-cell">
             <span class="status-badge status-{{ placement.service.assignment.status|lower }}">{{ placement.service.assignment.status }}</span>
           </td>
-          <td>{{ placement.service.skill.name }}</td>
-          <td>{{ placement.start_date }} - {{ placement.end_date }}</td>
-          <td>{{ placement.hours_per_week }}</td>
+          <td class="rvo-table-cell">{{ placement.service.skill.name }}</td>
+          <td class="rvo-table-cell">{{ placement.start_date }} - {{ placement.end_date }}</td>
+          <td class="rvo-table-cell">{{ placement.hours_per_week }}</td>
         </tr>
         {% endfor %}
       </tbody>

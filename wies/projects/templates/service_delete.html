@@ -4,7 +4,7 @@
 <div class="rvo-max-width-layout rvo-max-width-layout--sm rvo-max-width-layout-inline-padding--none">
   <div class="rvo-layout-column rvo-layout-gap--xl">
     <h1 class="utrecht-heading-1">Offerte item verwijderen</h1>
-    <p>Weet je zeker dat de dient "{{ object.description }}" wilt verwijderen?</p>
+    <p class="rvo-text--lg">Weet je zeker dat de dient "{{ object.description }}" wilt verwijderen?</p>
     <form method="post" class="rvo-layout-column rvo-layout-gap--md">
       {% csrf_token %}
       {{ form }}

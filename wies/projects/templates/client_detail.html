@@ -9,40 +9,38 @@
   <div class="rvo-layout-column rvo-layout-gap--lg">
     <h2 class="utrecht-heading-2 rvo-heading--no-margins">Opdrachten</h2>
     
-    <table class="rvo-table" style="border-collapse: collapse; border: 1px solid #ccc;">
-      <style>
-        .rvo-table th, .rvo-table td {
-          border: 1px solid #ccc;
-          padding: 8px;
-        }
-      </style>
-      <thead>
-        <tr>
-          <th>Opdracht</th>
-          <th>Status</th>
-          <th>Consultants</th>
-          <th>Start datum</th>
-          <th>Eind datum</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for assignment in assignments %}
-        <tr>
-          <td><a href="{% url 'assignment-detail' assignment.id %}">{{ assignment.name }}</a></td>
-          <td>
-            <span class="status-badge status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
-          </td>
-          <td>
-            {% for colleague in assignment.colleagues %}
-              <a href="{% url 'colleague-detail' colleague.id %}">{{ colleague.name }}</a>{% if not forloop.last %}, {% endif %}
-            {% endfor %}
-          </td>
-          <td>{{ assignment.start_date }}</td>
-          <td>{{ assignment.end_date }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+    <div class="rvo-table--responsive">
+      <table class="rvo-table">
+        <thead class="rvo-table-head">
+          <tr class="rvo-table-row">
+            <th class="rvo-table-header">Opdracht naam</th>
+            <th class="rvo-table-header">Consultants</th>
+            <th class="rvo-table-header">Status</th>
+            <th class="rvo-table-header">Start datum</th>
+            <th class="rvo-table-header">Eind datum</th>
+          </tr>
+        </thead>
+        <tbody class="rvo-table-body">
+          {% for assignment in assignments %}
+          <tr class="rvo-table-row">
+            <td class="rvo-table-cell">
+              <a href="{% url 'assignment-detail' assignment.id %}" class="rvo-link">{{ assignment.name }}</a>
+            </td>
+            <td class="rvo-table-cell">
+              {% for colleague in assignment.colleagues %}
+                <a href="{% url 'colleague-detail' colleague.id %}" class="rvo-link">{{ colleague.name }}</a>{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+            </td>
+            <td class="rvo-table-cell">
+              <span class="status-badge status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
+            </td>
+            <td class="rvo-table-cell">{{ assignment.start_date }}</td>
+            <td class="rvo-table-cell">{{ assignment.end_date }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>
 {% endblock content %}
