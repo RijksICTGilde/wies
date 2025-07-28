@@ -63,33 +63,6 @@ def format_currency(value):
         return None
     return f"{value:,.2f}".replace(',', '.')
 
-# Create your views here.
-class AssignmentList(ListView):
-    template_name = 'assignment_list.html'
-    model = Assignment
-
-    def get_queryset(self):
-        qs = Assignment.objects.order_by('-start_date')
-
-        status_filter = dict(self.request.GET).get('status')  # without dict casting you get single items per get call
-        order = self.request.GET.get('order')
-        name_filter = self.request.GET.get('name')
-
-        if status_filter:
-            qs = qs.filter(status__in=status_filter)
-        if name_filter:
-            qs = qs.filter(models.Q(name__icontains=name_filter) | models.Q(organization__icontains=name_filter))
-        if order:
-            qs = qs.order_by(order)
-
-        return qs
-    
-    def get_template_names(self):
-        if 'HX-Request' in self.request.headers:
-            return ['parts/assignment_table.html']
-        else:
-            return ['assignment_list.html']
-
 
 class AssignmentTabsView(ListView):
     template_name = 'assignment_tabs.html'
