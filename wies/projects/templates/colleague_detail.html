@@ -39,7 +39,7 @@
         <tr>
           <th>Naam</th>
           <th>Status</th>
-          <th>Rollen</th>
+          <th>Rol</th>
           <th>Periode</th>
           <th>Uren per week</th>
         </tr>
@@ -51,7 +51,7 @@
           <td>
             <span class="status-badge status-{{ placement.service.assignment.status|lower }}">{{ placement.service.assignment.status }}</span>
           </td>
-          <td>{{ placement.skills|get_skill_labels|join:", " }}</td>
+          <td>{{ placement.service.skill.name }}</td>
           <td>{{ placement.start_date }} - {{ placement.end_date }}</td>
           <td>{{ placement.hours_per_week }}</td>
         </tr>
