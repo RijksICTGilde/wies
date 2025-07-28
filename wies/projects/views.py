@@ -1,4 +1,5 @@
 import datetime
+import json
 
 from django.views.generic.list import ListView
 from django.views.generic import DetailView, CreateView, DeleteView, UpdateView, TemplateView
@@ -7,12 +8,44 @@ from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.db import models
 from django.db.models import Case, When, Max
+from django.http import JsonResponse
 
 from .models import Assignment, Colleague, Skill, Placement, Service
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 
 def home(request):
     return redirect('/assignments/')
+
+def get_service_details(request, service_id):
+    """AJAX endpoint to get service details for placement form"""
+    try:
+        service = Service.objects.get(id=service_id)
+        
+        # Calculate total cost
+        total_cost = service.get_total_cost()
+        weeks = service.get_weeks()
+        
+        if service.cost_type == "FIXED_PRICE" and service.fixed_cost:
+            cost_display = f"€{service.fixed_cost:,.2f}".replace(',', '.')
+            cost_calculation = None
+        elif total_cost and weeks and service.hours_per_week:
+            cost_display = f"€{total_cost:,.2f}".replace(',', '.')
+            cost_calculation = f"{weeks} weken × {service.hours_per_week} uur × €100"
+        else:
+            cost_display = "Niet beschikbaar"
+            cost_calculation = None
+        
+        data = {
+            'description': service.description,
+            'start_date': service.start_date.strftime('%d-%m-%Y') if service.start_date else '',
+            'end_date': service.end_date.strftime('%d-%m-%Y') if service.end_date else '',
+            'cost': cost_display,
+            'cost_calculation': cost_calculation,
+            'skill': service.skill.name if service.skill else 'Geen rol opgegeven'
+        }
+        return JsonResponse(data)
+    except Service.DoesNotExist:
+        return JsonResponse({'error': 'Service not found'}, status=404)
 
 @register.filter
 def get_item(dictionary, key):
@@ -22,6 +55,13 @@ def get_item(dictionary, key):
 def get_skill_labels(skills):
     """Get skill names from skill objects"""
     return [skill.name for skill in skills.all()]
+
+@register.filter
+def format_currency(value):
+    """Format number as currency with thousand separators"""
+    if value is None:
+        return None
+    return f"{value:,.2f}".replace(',', '.')
 
 # Create your views here.
 class AssignmentList(ListView):

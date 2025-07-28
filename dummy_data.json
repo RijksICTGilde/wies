@@ -876,8 +876,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": [1, 9]
+      "hours_per_week": 32
     }
   },
   {
@@ -889,8 +888,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2024-07-01",
       "specific_end_date": "2025-08-31",
-      "hours_per_week": 24,
-      "skills": [2, 4]
+      "hours_per_week": 24
     }
   },
   {
@@ -902,8 +900,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 16,
-      "skills": [5]
+      "hours_per_week": 16
     }
   },
   {
@@ -915,8 +912,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": [2, 9]
+      "hours_per_week": 32
     }
   },
   {
@@ -928,8 +924,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2023-10-01",
       "specific_end_date": "2024-02-28",
-      "hours_per_week": 40,
-      "skills": [4]
+      "hours_per_week": 40
     }
   },
   {
@@ -941,8 +936,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": [1, 5]
+      "hours_per_week": 32
     }
   },
   {
@@ -954,8 +948,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2024-07-15",
       "specific_end_date": "2025-11-30",
-      "hours_per_week": 24,
-      "skills": [5, 4]
+      "hours_per_week": 24
     }
   },
   {
@@ -967,8 +960,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": [7, 1]
+      "hours_per_week": 40
     }
   },
   {
@@ -980,8 +972,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2023-09-01",
       "specific_end_date": "2024-01-31",
-      "hours_per_week": 32,
-      "skills": [9]
+      "hours_per_week": 32
     }
   },
   {
@@ -993,8 +984,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": [1, 8]
+      "hours_per_week": 40
     }
   },
   {
@@ -1006,8 +996,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": [2]
+      "hours_per_week": 32
     }
   },
   {
@@ -1019,8 +1008,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2024-05-15",
       "specific_end_date": "2025-09-30",
-      "hours_per_week": 24,
-      "skills": [1]
+      "hours_per_week": 24
     }
   },
   {
@@ -1032,8 +1020,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": [3]
+      "hours_per_week": 32
     }
   },
   {
@@ -1045,8 +1032,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": [4]
+      "hours_per_week": 40
     }
   },
   {
@@ -1058,8 +1044,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2024-05-20",
       "specific_end_date": "2025-07-31",
-      "hours_per_week": 32,
-      "skills": [4, 3]
+      "hours_per_week": 32
     }
   },
   {
@@ -1071,8 +1056,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": [1]
+      "hours_per_week": 32
     }
   },
   {
@@ -1084,8 +1068,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40,
-      "skills": [7]
+      "hours_per_week": 40
     }
   },
   {
@@ -1097,8 +1080,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": [9]
+      "hours_per_week": 32
     }
   },
   {
@@ -1110,8 +1092,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2024-02-01",
       "specific_end_date": "2025-11-30",
-      "hours_per_week": 24,
-      "skills": [1]
+      "hours_per_week": 24
     }
   },
   {
@@ -1123,8 +1104,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32,
-      "skills": [9, 8]
+      "hours_per_week": 32
     }
   },
   {
@@ -1136,8 +1116,7 @@
       "period_source": "PLACEMENT",
       "specific_start_date": "2024-01-01",
       "specific_end_date": "2025-08-31",
-      "hours_per_week": 24,
-      "skills": [2]
+      "hours_per_week": 24
     }
   },
   {
@@ -1149,8 +1128,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 16,
-      "skills": [3]
+      "hours_per_week": 16
     }
   }
 ]

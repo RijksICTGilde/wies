@@ -53,6 +53,18 @@ class Assignment(models.Model):
     extra_info = models.TextField(blank=True)
     assignment_type = models.CharField(max_length=20, choices=ASSIGNMENT_TYPE, default='GROUP')
 
+    def get_total_services_cost(self):
+        """Calculate total cost of all services in this assignment"""
+        total = 0
+        for service in self.services.all():
+            if service.cost_type == "FIXED_PRICE" and service.fixed_cost:
+                total += service.fixed_cost
+            elif service.cost_type == "PER_HOUR":
+                service_cost = service.get_total_cost()
+                if service_cost:
+                    total += service_cost
+        return total
+
     def get_absolute_url(self):
         return reverse("assignment-detail", kwargs={"pk": self.pk})
 
@@ -70,7 +82,6 @@ class Placement(models.Model):
     colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='placements', null=True, blank=True) # TODO: removal of colleague triggers removal of placement, probably undesirable
     service = models.ForeignKey('Service', models.CASCADE, related_name='placements')
     hours_per_week = models.IntegerField(null=True, blank=True)
-    skills = models.ManyToManyField('Skill', blank=True)
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=SERVICE)
     specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
     specific_end_date = models.DateField(null=True, blank=True) # do not use, use properties below
@@ -110,8 +121,9 @@ class Service(models.Model):
 
     assignment = models.ForeignKey('Assignment', models.CASCADE, related_name='services')
     description = models.CharField(max_length=500)
+    skill = models.ForeignKey('Skill', models.SET_NULL, related_name='services', null=True, blank=True)
     cost_type = models.CharField(max_length=20, choices=COST_TYPE_CHOICES, default=PER_HOUR)
-    fixed_cost = models.DecimalField(max_digits=20, decimal_places=2, null=True, blank=True)
+    fixed_cost = models.IntegerField(null=True, blank=True)
     hours_per_week = models.IntegerField(null=True, blank=True)
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=ASSIGNMENT)
     specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
@@ -131,6 +143,25 @@ class Service(models.Model):
             return self.assignment.end_date
         else:
             return self.specific_end_date
+
+    def get_weeks(self):
+        """Calculate number of weeks between start and end date"""
+        if not self.start_date or not self.end_date:
+            return None
+        delta = self.end_date - self.start_date
+        return round(delta.days / 7, 1)
+
+    def get_total_cost(self):
+        """Calculate total cost: aantal weken * uren per week * 100 euro/uur"""
+        if not self.start_date or not self.end_date or not self.hours_per_week:
+            return None
+        
+        # Calculate number of weeks
+        weeks = self.get_weeks()
+        
+        # Calculate total cost
+        total_cost = weeks * self.hours_per_week * 100
+        return round(total_cost, 2)
 
     def __str__(self):
         return f"{self.description} "

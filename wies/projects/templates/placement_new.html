@@ -17,7 +17,45 @@
           </legend>
           <div class="rvo-layout-column rvo-layout-gap--md">
             {% for field in form %}
-              {% if field.name == "specific_start_date" %}
+              {% if field.name == "service" %}
+                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  </div>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
+                </div>
+                
+                <!-- Service Preview Table -->
+                <div id="service-preview" style="display: none; margin-top: 1rem;">
+                  <h3 class="utrecht-heading-3">Geselecteerde dienst</h3>
+                  <table class="rvo-table" style="border-collapse: collapse; border: 1px solid #ccc;">
+                    <style>
+                      .rvo-table th, .rvo-table td {
+                        border: 1px solid #ccc;
+                        padding: 8px;
+                      }
+                    </style>
+                    <thead>
+                      <tr>
+                        <th>Omschrijving</th>
+                        <th>Rol</th>
+                        <th>Start datum</th>
+                        <th>Eind datum</th>
+                        <th>Kosten</th>
+                      </tr>
+                    </thead>
+                    <tbody id="service-preview-body">
+                      <!-- Will be populated by JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+              {% elif field.name == "specific_start_date" %}
                 <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0" id="specific_start_date_field" style="display: none;">
                   <div class="rvo-form-field__label">
                     <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
@@ -75,6 +113,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const periodSourceField = document.getElementById('id_period_source');
     const specificStartDateField = document.getElementById('specific_start_date_field');
     const specificEndDateField = document.getElementById('specific_end_date_field');
+    const serviceField = document.getElementById('id_service');
+    const servicePreview = document.getElementById('service-preview');
+    const servicePreviewBody = document.getElementById('service-preview-body');
     
     function togglePeriodSourceFields() {
         if (periodSourceField.value === 'PLACEMENT') {
@@ -86,11 +127,51 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    function loadServiceDetails() {
+        const serviceId = serviceField.value;
+        if (!serviceId) {
+            servicePreview.style.display = 'none';
+            return;
+        }
+        
+        fetch(`/api/services/${serviceId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    servicePreview.style.display = 'none';
+                    return;
+                }
+                
+                const costCell = data.cost_calculation 
+                    ? `${data.cost}<br><small style="color: #666; font-size: 0.8em;">${data.cost_calculation}</small>`
+                    : data.cost;
+                
+                servicePreviewBody.innerHTML = `
+                    <tr>
+                        <td>${data.description}</td>
+                        <td>${data.skill}</td>
+                        <td>${data.start_date}</td>
+                        <td>${data.end_date}</td>
+                        <td>${costCell}</td>
+                    </tr>
+                `;
+                servicePreview.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error loading service details:', error);
+                servicePreview.style.display = 'none';
+            });
+    }
+    
     // Initial toggle on page load
     togglePeriodSourceFields();
+    loadServiceDetails();
     
     // Toggle when period source changes
     periodSourceField.addEventListener('change', togglePeriodSourceFields);
+    
+    // Load service details when service changes
+    serviceField.addEventListener('change', loadServiceDetails);
 });
 </script>
 
