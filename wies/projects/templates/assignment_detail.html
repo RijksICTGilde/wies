@@ -48,9 +48,9 @@
       <thead>
         <tr>
           <th>Omschrijving</th>
-          <th>Kosten</th>
           <th>Start datum</th>
           <th>Eind datum</th>
+          <th>Kosten</th>
           <th>Acties</th>
         </tr>
       </thead>
@@ -58,18 +58,41 @@
         {% for service in object.services.all %}
         <tr>
           <td>{{ service.description }}</td>
-          <td>
-            {% if service.cost_type == "FIXED_PRICE" %}
-              {{ service.fixed_cost }}€
-            {% elif service.cost_type == "PER_HOUR" %}
-              {{ service.hours_per_week }}€/wk
-            {% endif %}
-          </td>
           <td>{{ service.start_date}}</td>
           <td>{{ service.end_date }}</td>
+          <td>
+            {% if service.cost_type == "FIXED_PRICE" %}
+              €{{ service.fixed_cost|format_currency }}
+            {% elif service.cost_type == "PER_HOUR" %}
+              {% with total_cost=service.get_total_cost %}
+                {% if total_cost %}
+                  €{{ total_cost|format_currency }}
+                {% else %}
+                  <span class="rvo-text--italic">Niet beschikbaar</span>
+                {% endif %}
+              {% endwith %}
+            {% endif %}
+          </td>
           <td><a href="/services/{{ service.id }}/update">edit</a> / <a href="/services/{{ service.id }}/delete">delete</a></td>
         </tr>
         {% endfor %}
+        {% if object.services.all %}
+        <tr style="border-top: 2px solid #333; font-weight: bold;">
+          <td>Totaal</td>
+          <td></td>
+          <td></td>
+          <td>
+            {% with total_cost=object.get_total_services_cost %}
+              {% if total_cost %}
+                €{{ total_cost|format_currency }}
+              {% else %}
+                <span class="rvo-text--italic">Niet beschikbaar</span>
+              {% endif %}
+            {% endwith %}
+          </td>
+          <td></td>
+        </tr>
+        {% endif %}
       </tbody>
     </table>
 

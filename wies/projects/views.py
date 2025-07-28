@@ -23,6 +23,13 @@ def get_skill_labels(skills):
     """Get skill names from skill objects"""
     return [skill.name for skill in skills.all()]
 
+@register.filter
+def format_currency(value):
+    """Format number as currency with thousand separators"""
+    if value is None:
+        return None
+    return f"{value:,.2f}".replace(',', '.')
+
 # Create your views here.
 class AssignmentList(ListView):
     template_name = 'assignment_list.html'
