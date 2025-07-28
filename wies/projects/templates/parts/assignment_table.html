@@ -2,11 +2,11 @@
   <table class="rvo-table" id="assignment_table">
     <thead class="rvo-table-head">
       <tr class="rvo-table-row">
-        {% include 'includes/sortable_header.html' with field='name' label='Naam' %}
-        {% include 'includes/sortable_header.html' with field='organization' label='Opdrachtgever' %}
-        {% include 'includes/sortable_header.html' with field='status' label='Status' %}
-        {% include 'includes/sortable_header.html' with field='start_date' label='Startdatum' %}
-        {% include 'includes/sortable_header.html' with field='end_date' label='Einddatum' %}
+        {% include 'parts/sortable_header.html' with field='name' label='Naam' %}
+        {% include 'parts/sortable_header.html' with field='organization' label='Opdrachtgever' %}
+        {% include 'parts/sortable_header.html' with field='status' label='Status' %}
+        {% include 'parts/sortable_header.html' with field='start_date' label='Startdatum' %}
+        {% include 'parts/sortable_header.html' with field='end_date' label='Einddatum' %}
       </tr>
     </thead>
     <tbody class="rvo-table-body">

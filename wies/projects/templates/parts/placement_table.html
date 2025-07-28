@@ -2,14 +2,14 @@
   <table class="rvo-table" id="placement_table">
     <thead class="rvo-table-head">
       <tr class="rvo-table-row">
-        {% include 'includes/sortable_header.html' with field='colleague__name' label='Consultant' %}
-        {% include 'includes/sortable_header.html' with field='service__assignment__name' label='Opdracht' %}
-        {% include 'includes/sortable_header.html' with field='service__assignment__organization' label='Opdrachtgever' %}
-        {% include 'includes/sortable_header.html' with field='hours_per_week' label='Uren/week' %}
-        {% include 'includes/sortable_header.html' with field='service__skill' label='Rol' %}
-        {% include 'includes/sortable_header.html' with field='start_date' label='Startdatum' %}
-        {% include 'includes/sortable_header.html' with field='end_date' label='Einddatum' %}
-        {% include 'includes/sortable_header.html' with field='service__assignment__status' label='Status' %}
+        {% include 'parts/sortable_header.html' with field='colleague__name' label='Consultant' %}
+        {% include 'parts/sortable_header.html' with field='service__assignment__name' label='Opdracht' %}
+        {% include 'parts/sortable_header.html' with field='service__assignment__organization' label='Opdrachtgever' %}
+        {% include 'parts/sortable_header.html' with field='hours_per_week' label='Uren/week' %}
+        {% include 'parts/sortable_header.html' with field='service__skill' label='Rol' %}
+        {% include 'parts/sortable_header.html' with field='start_date' label='Startdatum' %}
+        {% include 'parts/sortable_header.html' with field='end_date' label='Einddatum' %}
+        {% include 'parts/sortable_header.html' with field='service__assignment__status' label='Status' %}
       </tr>
     </thead>
     <tbody>

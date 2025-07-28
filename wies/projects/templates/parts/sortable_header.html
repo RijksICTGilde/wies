@@ -1,6 +1,6 @@
 {% comment %}
 Herbruikbare sortable table header
-Gebruik: {% include 'includes/sortable_header.html' with field='name' label='Naam' %}
+Gebruik: {% include 'parts/sortable_header.html' with field='name' label='Naam' %}
 {% endcomment %}
 
 <th scope="col" class="rvo-table-header rvo-table-header--sortable{% if request.GET.order == field or request.GET.order == '-'|add:field %} rvo-table-header--active-sort{% endif %}" 
