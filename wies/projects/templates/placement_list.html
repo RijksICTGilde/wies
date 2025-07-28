@@ -24,11 +24,11 @@
 
       <form hx-get="{% url 'placements' %}" hx-target="#placement_table">
         
-        <!-- Eerste rij: Consultant en Skills -->
+        <!-- Eerste rij: Collega en Skills -->
         <div class="rvo-layout-grid rvo-layout-gap--sm rvo-layout-grid-columns--two" style="margin-bottom: 1rem;">
           <div class="rvo-layout-column">
-            <label for="consultant" class="rvo-label">Consultant:</label>
-            <input type="text" id="consultant" name="consultant" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op consultant naam" value="{{ request.GET.consultant }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
+            <label for="consultant" class="rvo-label">Collega:</label>
+            <input type="text" id="consultant" name="consultant" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op collega naam" value="{{ request.GET.consultant }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
           </div>
           <div class="rvo-layout-column">
             <label for="skills" class="rvo-label">Skills:</label>

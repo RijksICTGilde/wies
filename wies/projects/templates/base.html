@@ -109,7 +109,7 @@
         }
 
       var colleague_select_select2_def = {
-          placeholder: "Selecteer consultant",
+          placeholder: "Selecteer collega",
           width: '100%',
           allowClear: true
         }
@@ -188,7 +188,7 @@
       document.body.addEventListener('htmx:afterSwap', function(evt) {
         $('.js-status-select').select2(status_select_select2_def);
         $('.js-skills-filter').select2(skills_select_single_def);
-        $('.js-colleague-select').select2(consultant_select_select2_def);
+        $('.js-colleague-select').select2(colleague_select_select2_def);
         $('.js-skills-select').select2(skills_select_create_multiple_def);
 
         // Forceer native change event voor HTMX na swap, maar voorkom oneindige lus
@@ -198,7 +198,7 @@
         $('.js-skills-filter').on('select2:select select2:unselect', function(e) {
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
-        $('.js-consultant-filter').on('select2:select select2:unselect', function(e) {
+        $('.js-colleague-filter').on('select2:select select2:unselect', function(e) {
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
         $('.js-skills-select').on('select2:select select2:unselect', function(e) {
