@@ -18,7 +18,8 @@
       </style>
       <thead>
         <tr>
-          <th>Opdracht naam</th>
+          <th>Opdracht</th>
+          <th>Status</th>
           <th>Consultants</th>
           <th>Start datum</th>
           <th>Eind datum</th>
@@ -28,6 +29,9 @@
         {% for assignment in assignments %}
         <tr>
           <td><a href="{% url 'assignment-detail' assignment.id %}">{{ assignment.name }}</a></td>
+          <td>
+            <span class="status-badge status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
+          </td>
           <td>
             {% for colleague in assignment.colleagues %}
               <a href="{% url 'colleague-detail' colleague.id %}">{{ colleague.name }}</a>{% if not forloop.last %}, {% endif %}

@@ -662,7 +662,8 @@ def client(request, name):
             'name': assignment.name,
             'start_date': assignment.start_date,
             'end_date': assignment.end_date,
-            'colleagues': colleagues
+            'colleagues': colleagues,
+            'status': assignment.status,
         })
 
     return render(request, template_name='client_detail.html', context={
