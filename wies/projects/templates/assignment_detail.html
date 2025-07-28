@@ -56,7 +56,7 @@
             <td class="rvo-table-cell">{{ service.description }}</td>
             <td class="rvo-table-cell">
               {% if service.skill %}
-                {{ service.skill.name }}
+                 <span class="skill-badge">{{ service.skill.name }}</span>
               {% else %}
                 <span class="rvo-text--italic">Geen rol opgegeven</span>
               {% endif %}
@@ -116,7 +116,7 @@
               <td class="rvo-table-cell">{{ service.description }}</td>
               <td class="rvo-table-cell">
                 {% if service.skill %}
-                  {{ service.skill.name }}
+                  <span class="skill-badge">{{ service.skill.name }}</span>
                 {% else %}
                   <span class="rvo-text--italic">Geen rol opgegeven</span>
                 {% endif %}

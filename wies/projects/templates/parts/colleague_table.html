@@ -17,7 +17,9 @@
         <td class="rvo-table-cell"><a href="/colleagues/{{ colleague.pk }}/">{{ colleague.name }}</a></td>
         <td class="rvo-table-cell">{{ colleague.max_end_date }}</td>
         <td class="rvo-table-cell">
-          {{ colleague.skills|get_skill_labels|join:", " }}
+          {% for skill in colleague.skills.all %}
+            <span class="skill-badge">{{ skill.name }}</span>
+          {% endfor %}
         </td>
       </tr>
       {% endfor %}

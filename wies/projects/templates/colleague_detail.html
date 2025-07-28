@@ -23,7 +23,11 @@
       <dt>Naam</dt>
       <dd>{{ object.name }}</dd>
       <dt>Rollen</dt>
-      <dd>{{ object.skills|get_skill_labels|join:", " }}</dd>
+      <dd>
+        {% for skill in object.skills.all %}
+        <span class="skill-badge">{{ skill.name }}</span>
+        {% endfor %}
+      </dd>
     </dl>
     
     <h2 class="utrecht-heading-2 rvo-heading--no-margins">Inzetten</h2>
@@ -45,7 +49,9 @@
           <td class="rvo-table-cell">
             <span class="status-badge status-{{ placement.service.assignment.status|lower }}">{{ placement.service.assignment.status }}</span>
           </td>
-          <td class="rvo-table-cell">{{ placement.service.skill.name }}</td>
+          <td class="rvo-table-cell">
+            <span class="skill-badge">{{ placement.service.skill.name }}</span>
+          </td>
           <td class="rvo-table-cell">{{ placement.start_date }} - {{ placement.end_date }}</td>
           <td class="rvo-table-cell">{{ placement.hours_per_week }}</td>
         </tr>
