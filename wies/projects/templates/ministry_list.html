@@ -24,26 +24,26 @@
 
 <div class="rvo-table--responsive">
     <table class="rvo-table">
-        <thead class="rvo-table__head">
-            <tr class="rvo-table__row">
-                <th scope="col" class="rvo-table__header">Naam</th>
-                <th scope="col" class="rvo-table__header">Afkorting</th>
-                <th scope="col" class="rvo-table__header">Acties</th>
+        <thead class="rvo-table-head">
+            <tr class="rvo-table-row">
+                <th scope="col" class="rvo-table-header">Naam</th>
+                <th scope="col" class="rvo-table-header">Acties</th>
             </tr>
         </thead>
-        <tbody class="rvo-table__body">
+        <tbody class="rvo-table-body">
             {% for ministry in ministries %}
-            <tr class="rvo-table__row">
-                <td class="rvo-table__cell">{{ ministry.name }}</td>
-                <td class="rvo-table__cell">{{ ministry.abbreviation }}</td>
-                <td class="rvo-table__cell">
-                    <a href="{% url 'ministry-update' ministry.pk %}" class="utrecht-link">Bewerken</a>
-                    <a href="{% url 'ministry-delete' ministry.pk %}" class="utrecht-link" style="margin-left: 1em;">Verwijderen</a>
+            <tr class="rvo-table-row">
+                <td class="rvo-table-cell">
+                    <a href="{% url 'ministry-detail' ministry.pk %}" class="rvo-link">{{ ministry.name }} ({{ ministry.abbreviation }})</a>
+                </td>
+                <td class="rvo-table-cell">
+                    <a href="{% url 'ministry-update' ministry.pk %}" class="rvo-link">Bewerken</a>
+                    <a href="{% url 'ministry-delete' ministry.pk %}" class="rvo-link" style="margin-left: 1em;">Verwijderen</a>
                 </td>
             </tr>
             {% empty %}
-            <tr class="rvo-table__row">
-                <td class="rvo-table__cell" colspan="3">Geen ministeries gevonden.</td>
+            <tr class="rvo-table-row">
+                <td class="rvo-table-cell" colspan="3">Geen ministeries gevonden.</td>
             </tr>
             {% endfor %}
         </tbody>

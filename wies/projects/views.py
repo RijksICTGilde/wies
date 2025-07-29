@@ -748,3 +748,38 @@ class MinistryDeleteView(DeleteView):
     template_name = 'ministry_confirm_delete.html'
     success_url = reverse_lazy('ministries')
 
+
+class MinistryDetailView(DetailView):
+    model = Ministry
+    template_name = 'ministry_detail.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        assignments = Assignment.objects.filter(ministry=self.object)
+        
+        # Build context with assignment data including colleagues
+        assignments_data = []
+        for assignment in assignments:
+            colleagues = []
+            for service in assignment.services.all():
+                for placement in service.placements.all():
+                    if placement.colleague:  # Only add if colleague exists
+                        colleagues.append({
+                            'id': placement.colleague.pk,
+                            'name': placement.colleague.name
+                        })
+            
+            assignments_data.append({
+                'id': assignment.pk,
+                'name': assignment.name,
+                'start_date': assignment.start_date,
+                'end_date': assignment.end_date,
+                'organization': assignment.organization,
+                'colleagues': colleagues,
+                'status': assignment.status,
+            })
+        
+        context['assignments'] = assignments_data
+        return context
+
