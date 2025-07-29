@@ -43,8 +43,8 @@
             <input type="text" id="assignment" name="assignment" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op opdracht naam" value="{{ request.GET.assignment }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
           </div>
           <div class="rvo-layout-column">
-            <label for="client" class="rvo-label">Opdrachtgever:</label>
-            <input type="text" id="client" name="client" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op opdrachtgever" value="{{ request.GET.client }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
+            <label for="client" class="rvo-label">Ministerie / Opdrachtgever:</label>
+            <input type="text" id="client" name="client" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op ministerie of opdrachtgever" value="{{ request.GET.client }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
           </div>
         </div>
 

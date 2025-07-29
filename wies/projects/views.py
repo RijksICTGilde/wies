@@ -92,7 +92,12 @@ class AssignmentTabsView(ListView):
         # Apply name filter if provided
         name_filter = self.request.GET.get('name')
         if name_filter:
-            qs = qs.filter(models.Q(name__icontains=name_filter) | models.Q(organization__icontains=name_filter))
+            qs = qs.filter(
+                models.Q(name__icontains=name_filter) | 
+                models.Q(organization__icontains=name_filter) |
+                models.Q(ministry__name__icontains=name_filter) |
+                models.Q(ministry__abbreviation__icontains=name_filter)
+            )
         
         # Apply skill filter if provided
         skill_filter = self.request.GET.get('skill')
@@ -362,10 +367,14 @@ class PlacementList(ListView):
         if skill_filter:
             qs = qs.filter(service__skill__id=skill_filter)
         
-        # Filter by client/organization
+        # Filter by client/organization or ministry
         client_filter = self.request.GET.get('client')
         if client_filter:
-            qs = qs.filter(service__assignment__organization__icontains=client_filter)
+            qs = qs.filter(
+                models.Q(service__assignment__organization__icontains=client_filter) |
+                models.Q(service__assignment__ministry__name__icontains=client_filter) |
+                models.Q(service__assignment__ministry__abbreviation__icontains=client_filter)
+            )
 
         # Date filters
         start_date_from = self.request.GET.get('start_date_from')

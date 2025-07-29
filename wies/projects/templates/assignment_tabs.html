@@ -20,12 +20,12 @@
     <input type="hidden" name="tab" value="{{ active_tab }}">
     
     <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="name-search" class="rvo-label">Naam</label>
+        <label for="name-search" class="rvo-label">Zoeken</label>
         <input type="text" 
                id="name-search" 
                name="name" 
                value="{{ request.GET.name|default:'' }}"
-               placeholder="Zoek op naam of opdrachtgever..."
+               placeholder="Zoek op naam, opdrachtgever of ministerie..."
                class="utrecht-textbox utrecht-textbox--html-input"
                hx-get="{% url 'assignments' %}" 
                hx-target="#assignment-tabs-section" 
