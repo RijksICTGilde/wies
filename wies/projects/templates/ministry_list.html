@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class="utrecht-heading-1">Ministeries</h1>
+
+<div class="rvo-layout-grid rvo-layout-gap--md" style="margin-bottom: 2em;">
+    <div class="rvo-layout-column" style="text-align: right;">
+        <a href="{% url 'ministry-create' %}">
+          <button
+            class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before"
+            type="button"
+          >
+            <span
+              class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit"
+              role="img"
+              aria-label="Plus"
+            ></span>
+            Nieuw ministerie toevoegen
+          </button>
+        </a>
+    </div>
+</div>
+
+<div class="rvo-table--responsive">
+    <table class="rvo-table">
+        <thead class="rvo-table__head">
+            <tr class="rvo-table__row">
+                <th scope="col" class="rvo-table__header">Naam</th>
+                <th scope="col" class="rvo-table__header">Afkorting</th>
+                <th scope="col" class="rvo-table__header">Acties</th>
+            </tr>
+        </thead>
+        <tbody class="rvo-table__body">
+            {% for ministry in ministries %}
+            <tr class="rvo-table__row">
+                <td class="rvo-table__cell">{{ ministry.name }}</td>
+                <td class="rvo-table__cell">{{ ministry.abbreviation }}</td>
+                <td class="rvo-table__cell">
+                    <a href="{% url 'ministry-update' ministry.pk %}" class="utrecht-link">Bewerken</a>
+                    <a href="{% url 'ministry-delete' ministry.pk %}" class="utrecht-link" style="margin-left: 1em;">Verwijderen</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr class="rvo-table__row">
+                <td class="rvo-table__cell" colspan="3">Geen ministeries gevonden.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock content %}

@@ -11,7 +11,7 @@ from django.db import models
 from django.db.models import Case, When, Max, F
 from django.http import JsonResponse
 
-from .models import Assignment, Colleague, Skill, Placement, Service
+from .models import Assignment, Colleague, Skill, Placement, Service, Ministry
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 
 def home(request):
@@ -709,4 +709,33 @@ def client(request, name):
 
 class SkillsView(TemplateView):
     template_name = 'skills.html'
+
+
+class MinistryListView(ListView):
+    model = Ministry
+    template_name = 'ministry_list.html'
+    context_object_name = 'ministries'
+    
+    def get_queryset(self):
+        return Ministry.objects.all().order_by('name')
+
+
+class MinistryCreateView(CreateView):
+    model = Ministry
+    template_name = 'ministry_form.html'
+    fields = ['name', 'abbreviation']
+    success_url = reverse_lazy('ministries')
+
+
+class MinistryUpdateView(UpdateView):
+    model = Ministry
+    template_name = 'ministry_form.html'
+    fields = ['name', 'abbreviation']
+    success_url = reverse_lazy('ministries')
+
+
+class MinistryDeleteView(DeleteView):
+    model = Ministry
+    template_name = 'ministry_confirm_delete.html'
+    success_url = reverse_lazy('ministries')
 

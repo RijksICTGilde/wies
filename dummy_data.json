@@ -63,6 +63,150 @@
     }
   },
   {
+    "model": "projects.ministry",
+    "pk": 1,
+    "fields": {
+      "name": "Ministerie van Algemene Zaken",
+      "abbreviation": "AZ"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 2,
+    "fields": {
+      "name": "Ministerie van Asiel en Migratie",
+      "abbreviation": "A&M"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 3,
+    "fields": {
+      "name": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
+      "abbreviation": "BZK"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 4,
+    "fields": {
+      "name": "Ministerie van Buitenlandse Zaken",
+      "abbreviation": "BZ"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 5,
+    "fields": {
+      "name": "Ministerie van Defensie",
+      "abbreviation": "DEF"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 6,
+    "fields": {
+      "name": "Ministerie van Economische Zaken",
+      "abbreviation": "EZ"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 7,
+    "fields": {
+      "name": "Ministerie van Financiën",
+      "abbreviation": "FIN"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 8,
+    "fields": {
+      "name": "Ministerie van Volksgezondheid, Welzijn en Sport",
+      "abbreviation": "VWS"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 9,
+    "fields": {
+      "name": "Ministerie van Infrastructuur en Waterstaat",
+      "abbreviation": "I&W"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 10,
+    "fields": {
+      "name": "Ministerie van Justitie en Veiligheid",
+      "abbreviation": "J&V"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 11,
+    "fields": {
+      "name": "Ministerie van Onderwijs, Cultuur en Wetenschap",
+      "abbreviation": "OCW"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 12,
+    "fields": {
+      "name": "Ministerie van Sociale Zaken en Werkgelegenheid",
+      "abbreviation": "SZW"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 13,
+    "fields": {
+      "name": "Ministerie van Landbouw, Visserij, Voedselzekerheid en Natuur",
+      "abbreviation": "LVVN"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 14,
+    "fields": {
+      "name": "Ministerie van Volkshuisvesting en Ruimtelijke Ordening",
+      "abbreviation": "VRO"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 15,
+    "fields": {
+      "name": "Ministerie van Klimaat en Groene Groei",
+      "abbreviation": "KGG"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 16,
+    "fields": {
+      "name": "Hoge Colleges van Staat",
+      "abbreviation": "HoCoSta"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 17,
+    "fields": {
+      "name": "Eerste Kamer",
+      "abbreviation": "EK"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 18,
+    "fields": {
+      "name": "Tweede Kamer",
+      "abbreviation": "TK"
+    }
+  },
+  {
     "model": "projects.colleague",
     "pk": 1,
     "fields": {
