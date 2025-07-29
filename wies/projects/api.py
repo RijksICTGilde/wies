@@ -1,8 +1,11 @@
 from django.http import JsonResponse
 from django.views import View
 import json
+import logging
 
 from .models import Skill, Expertise
+
+logger = logging.getLogger(__name__)
 
 
 class SkillsAPIView(View):
@@ -42,7 +45,8 @@ class SkillsAPIView(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            logger.exception(e)
+            return JsonResponse({'error': 'An internal error has occurred.'}, status=500)
 
 
 class SkillDetailAPIView(View):
@@ -55,7 +59,8 @@ class SkillDetailAPIView(View):
         except Skill.DoesNotExist:
             return JsonResponse({'error': 'Skill not found'}, status=404)
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            logger.exception(e)
+            return JsonResponse({'error': 'An internal error has occurred.'}, status=500)
 
 
 class ExpertisesAPIView(View):
@@ -95,7 +100,8 @@ class ExpertisesAPIView(View):
         except json.JSONDecodeError:
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            logger.exception(e)
+            return JsonResponse({'error': 'An internal error has occurred.'}, status=500)
 
 
 class ExpertiseDetailAPIView(View):
@@ -108,4 +114,5 @@ class ExpertiseDetailAPIView(View):
         except Expertise.DoesNotExist:
             return JsonResponse({'error': 'Expertise not found'}, status=404)
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            logger.exception(e)
+            return JsonResponse({'error': 'An internal error has occurred.'}, status=500)

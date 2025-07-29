@@ -11,6 +11,7 @@ setup:
   docker compose build
   docker compose run --rm django python manage.py migrate
   docker compose run --rm django python manage.py loaddata dummy_data.json
+  docker-compose run --rm django python manage.py createsuperuser --noinput
 
 # Start up containers with current state.
 up:

@@ -51,7 +51,6 @@ urlpatterns = [
     path('services/<int:pk>/delete', ServiceDeleteView.as_view()),
     path('clients/', clients),
     path('clients/<str:name>', client),
-    path('skills/', SkillsView.as_view(), name='skills'),
     path('ministries/', MinistryListView.as_view(), name='ministries'),
     path('ministries/new/', MinistryCreateView.as_view(), name='ministry-create'),
     path('ministries/<int:pk>/', MinistryDetailView.as_view(), name='ministry-detail'),
