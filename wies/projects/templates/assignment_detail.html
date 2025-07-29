@@ -27,7 +27,7 @@
       <dt>Ministerie</dt>
       <dd>
         {% if object.ministry %}
-          {{ object.ministry.name }} ({{ object.ministry.abbreviation }})
+          <a href="{% url 'ministry-detail' object.ministry.pk %}" class="rvo-link">{{ object.ministry.name }} ({{ object.ministry.abbreviation }})</a>
         {% else %}
           <span class="rvo-text--italic">Geen ministerie opgegeven</span>
         {% endif %}

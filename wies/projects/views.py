@@ -726,7 +726,9 @@ class MinistryListView(ListView):
     context_object_name = 'ministries'
     
     def get_queryset(self):
-        return Ministry.objects.all().order_by('name')
+        return Ministry.objects.annotate(
+            assignment_count=models.Count('assignment')
+        ).order_by('name')
 
 
 class MinistryCreateView(CreateView):
