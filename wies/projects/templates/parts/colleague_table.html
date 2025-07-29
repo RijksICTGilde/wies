@@ -3,6 +3,7 @@
     <thead class="rvo-table-head">
       <tr class="rvo-table-row">
         {% include 'parts/sortable_header.html' with field='name' label='Naam' %}
+        {% include 'parts/sortable_header.html' with field='brand__name' label='Merk' %}
         {% include 'parts/sortable_header.html' with field='max_end_date' label='Einde opdracht' %}
         <th scope="col" class="rvo-table-header">
           <div class="rvo-table-header__sortable-container">
@@ -15,6 +16,13 @@
       {% for colleague in object_list %}
       <tr class="rvo-table-row">
         <td class="rvo-table-cell"><a href="/colleagues/{{ colleague.pk }}/">{{ colleague.name }}</a></td>
+        <td class="rvo-table-cell">
+          {% if colleague.brand %}
+            {{ colleague.brand.name }}
+          {% else %}
+            <span class="rvo-text--italic">-</span>
+          {% endif %}
+        </td>
         <td class="rvo-table-cell">{{ colleague.max_end_date }}</td>
         <td class="rvo-table-cell">
           {% for skill in colleague.skills.all %}

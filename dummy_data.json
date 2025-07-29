@@ -207,10 +207,131 @@
     }
   },
   {
+    "model": "projects.expertise",
+    "pk": 1,
+    "fields": {
+      "name": "Strategie, beleid, governance en compliance"
+    }
+  },
+  {
+    "model": "projects.expertise",
+    "pk": 2,
+    "fields": {
+      "name": "Architectuur en technologie"
+    }
+  },
+  {
+    "model": "projects.expertise",
+    "pk": 3,
+    "fields": {
+      "name": "Agile, project- programma- en portfoliomanagement"
+    }
+  },
+  {
+    "model": "projects.expertise",
+    "pk": 4,
+    "fields": {
+      "name": "Proces- en ketenmanagement"
+    }
+  },
+  {
+    "model": "projects.expertise",
+    "pk": 5,
+    "fields": {
+      "name": "Verander- en transformatiemanagement"
+    }
+  },
+  {
+    "model": "projects.expertise",
+    "pk": 6,
+    "fields": {
+      "name": "Interimmanagement en advies"
+    }
+  },
+  {
+    "model": "projects.expertise",
+    "pk": 7,
+    "fields": {
+      "name": "AI"
+    }
+  },
+  {
+    "model": "projects.expertise",
+    "pk": 8,
+    "fields": {
+      "name": "ICT"
+    }
+  },
+  {
+    "model": "projects.expertise",
+    "pk": 9,
+    "fields": {
+      "name": "Software en data engineering"
+    }
+  },
+  {
+    "model": "projects.expertise",
+    "pk": 10,
+    "fields": {
+      "name": "Cloud en platform technologie"
+    }
+  },
+  {
+    "model": "projects.expertise",
+    "pk": 11,
+    "fields": {
+      "name": "Security en privacy"
+    }
+  },
+  {
+    "model": "projects.expertise",
+    "pk": 12,
+    "fields": {
+      "name": "Opleiding, training en ontwikkeling"
+    }
+  },
+  {
+    "model": "projects.expertise",
+    "pk": 13,
+    "fields": {
+      "name": "Kennis- en innovatiemanagement"
+    }
+  },
+  {
+    "model": "projects.brand",
+    "pk": 1,
+    "fields": {
+      "name": "Rijks ICT Gilde"
+    }
+  },
+  {
+    "model": "projects.brand",
+    "pk": 2,
+    "fields": {
+      "name": "Rijks I-Traineeship"
+    }
+  },
+  {
+    "model": "projects.brand",
+    "pk": 3,
+    "fields": {
+      "name": "Rijksconsultants"
+    }
+  },
+  {
+    "model": "projects.brand",
+    "pk": 4,
+    "fields": {
+      "name": "I-Interim Rijk"
+    }
+  },
+  {
     "model": "projects.colleague",
     "pk": 1,
     "fields": {
       "name": "Jan van der Berg",
+      "brand": 1,
+      "expertises": [8, 2],
       "skills": [1, 9]
     }
   },
@@ -219,6 +340,8 @@
     "pk": 2,
     "fields": {
       "name": "Lisa Jansen",
+      "brand": 2,
+      "expertises": [9, 10],
       "skills": [2, 4]
     }
   },
@@ -227,6 +350,8 @@
     "pk": 3,
     "fields": {
       "name": "Mohammed Ali",
+      "brand": 1,
+      "expertises": [7, 8],
       "skills": [5, 8]
     }
   },
@@ -235,6 +360,8 @@
     "pk": 4,
     "fields": {
       "name": "Sarah de Vries",
+      "brand": 3,
+      "expertises": [3, 1],
       "skills": [3, 6]
     }
   },
@@ -243,6 +370,8 @@
     "pk": 5,
     "fields": {
       "name": "Thomas Bakker",
+      "brand": 4,
+      "expertises": [6],
       "skills": [7, 1]
     }
   },
@@ -251,6 +380,8 @@
     "pk": 6,
     "fields": {
       "name": "Emma Visser",
+      "brand": 1,
+      "expertises": [11, 10],
       "skills": [2, 5]
     }
   },
@@ -259,6 +390,8 @@
     "pk": 7,
     "fields": {
       "name": "Pieter Smit",
+      "brand": 2,
+      "expertises": [10, 9],
       "skills": [8, 9]
     }
   },
@@ -267,6 +400,8 @@
     "pk": 8,
     "fields": {
       "name": "Fatima Hassan",
+      "brand": 3,
+      "expertises": [1, 4],
       "skills": [4, 3]
     }
   },
@@ -275,6 +410,8 @@
     "pk": 9,
     "fields": {
       "name": "Ruben de Jong",
+      "brand": 4,
+      "expertises": [5, 6],
       "skills": [6, 7]
     }
   },
@@ -283,6 +420,8 @@
     "pk": 10,
     "fields": {
       "name": "Anna Mulder",
+      "brand": 1,
+      "expertises": [2, 8],
       "skills": [1, 8]
     }
   },
@@ -291,6 +430,8 @@
     "pk": 11,
     "fields": {
       "name": "Kevin van Dijk",
+      "brand": 2,
+      "expertises": [13, 12],
       "skills": [2, 9]
     }
   },
@@ -299,6 +440,8 @@
     "pk": 12,
     "fields": {
       "name": "Marloes Hendriks",
+      "brand": 3,
+      "expertises": [4, 5],
       "skills": [5, 4]
     }
   },
@@ -307,6 +450,8 @@
     "pk": 13,
     "fields": {
       "name": "Ahmed Osman",
+      "brand": 4,
+      "expertises": [12, 13],
       "skills": [8, 6]
     }
   },
@@ -315,6 +460,8 @@
     "pk": 14,
     "fields": {
       "name": "Sophie Brouwer",
+      "brand": 1,
+      "expertises": [8, 7],
       "skills": [3, 7]
     }
   },
@@ -323,6 +470,8 @@
     "pk": 15,
     "fields": {
       "name": "Marco van Leeuwen",
+      "brand": 2,
+      "expertises": [3, 1],
       "skills": [1, 5]
     }
   },
@@ -331,6 +480,8 @@
     "pk": 16,
     "fields": {
       "name": "Nadia Kowalski",
+      "brand": 3,
+      "expertises": [1, 3],
       "skills": [2, 4]
     }
   },
@@ -339,6 +490,8 @@
     "pk": 17,
     "fields": {
       "name": "Jeroen Peters",
+      "brand": 4,
+      "expertises": [9, 10],
       "skills": [9, 8]
     }
   },
@@ -347,6 +500,8 @@
     "pk": 18,
     "fields": {
       "name": "Yasmin El Hadj",
+      "brand": 1,
+      "expertises": [11, 8],
       "skills": [6, 3]
     }
   },
@@ -355,6 +510,8 @@
     "pk": 19,
     "fields": {
       "name": "Daan Schouten",
+      "brand": 2,
+      "expertises": [10, 11],
       "skills": [7, 1]
     }
   },
@@ -363,6 +520,8 @@
     "pk": 20,
     "fields": {
       "name": "Inge Vos",
+      "brand": 3,
+      "expertises": [2, 9],
       "skills": [5, 2]
     }
   },

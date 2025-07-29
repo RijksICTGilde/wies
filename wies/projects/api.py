@@ -2,7 +2,7 @@ from django.http import JsonResponse
 from django.views import View
 import json
 
-from .models import Skill
+from .models import Skill, Expertise
 
 
 class SkillsAPIView(View):
@@ -54,5 +54,58 @@ class SkillDetailAPIView(View):
             return JsonResponse({'success': True}, status=200)
         except Skill.DoesNotExist:
             return JsonResponse({'error': 'Skill not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+
+class ExpertisesAPIView(View):
+    def get(self, request):
+        """List all expertises with optional search filtering"""
+        search_term = request.GET.get('search', '').strip()
+        
+        if search_term:
+            expertises = list(Expertise.objects.filter(name__icontains=search_term).values('id', 'name'))
+        else:
+            expertises = list(Expertise.objects.values('id', 'name'))
+            
+        return JsonResponse(expertises, safe=False)
+    
+    def post(self, request):
+        """Create a new expertise"""
+        try:
+            data = json.loads(request.body)
+            name = data.get('name', '').strip()
+            
+            if not name:
+                return JsonResponse({'error': 'Name is required'}, status=400)
+            
+            expertise, created = Expertise.objects.get_or_create(name=name)
+            
+            if created:
+                return JsonResponse({
+                    'expertise': {'id': expertise.id, 'name': expertise.name},
+                    'created': True
+                }, status=201)
+            else:
+                return JsonResponse({
+                    'expertise': {'id': expertise.id, 'name': expertise.name},
+                    'created': False
+                }, status=200)
+                
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+
+class ExpertiseDetailAPIView(View):
+    def delete(self, request, expertise_id):
+        """Hard delete an expertise"""
+        try:
+            expertise = Expertise.objects.get(id=expertise_id)
+            expertise.delete()
+            return JsonResponse({'success': True}, status=200)
+        except Expertise.DoesNotExist:
+            return JsonResponse({'error': 'Expertise not found'}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
