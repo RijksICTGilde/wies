@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Assignment, Colleague, Skill, Placement, Service, Ministry
+from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
 
 class RVOFormMixin:
     def __init__(self, *args, **kwargs):
@@ -40,10 +40,13 @@ class ColleagueForm(RVOFormMixin, forms.ModelForm):
         model = Colleague
         fields = '__all__'
         widgets = {
+            'expertises': forms.SelectMultiple(attrs={'class': 'js-expertises-select-multiple'}),
             'skills': forms.SelectMultiple(attrs={'class': 'js-skills-select-create-multiple'})
         }
         labels = {
             'name': 'Naam',
+            'brand': 'Merk',
+            'expertises': 'ODI-expertise',
             'skills': 'Rollen',
         }
 

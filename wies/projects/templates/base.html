@@ -108,6 +108,49 @@
           }
         }
 
+      var expertises_select_multiple_def = {
+        placeholder: "Zoek en voeg rollen toe",
+        width: '100%',
+        allowClear: true,
+        multiple: true,
+        tags: true,
+        ajax: {
+          url: '/api/expertises/',
+          dataType: 'json',
+          delay: 250,
+          data: function (params) {
+            return {
+              search: params.term || ''
+            };
+          },
+          processResults: function (data) {
+            return {
+              results: data.map(function(expertise) {
+                return {
+                  id: expertise.id,
+                  text: expertise.name
+                };
+              })
+            };
+          },
+          cache: true
+        },
+        createTag: function (params) {
+          var term = $.trim(params.term);
+          if (term === '') {
+            return null;
+          }
+          return {
+            id: term,
+            text: term,
+            newTag: true
+          };
+        },
+        insertTag: function (data, tag) {
+          data.push(tag);
+        }
+      }
+
       var colleague_select_select2_def = {
           placeholder: "Selecteer collega",
           width: '100%',
@@ -126,7 +169,8 @@
         $('.js-skills-select-single').select2(skills_select_single_def);
         $('.js-skills-select-create-multiple').select2(skills_select_create_multiple_def);
         $('.js-colleague-select').select2(colleague_select_select2_def);
-        
+        $('.js-expertises-select-multiple').select2(expertises_select_multiple_def);
+
         $('.js-skills-select-create-multiple').on('select2:select', function (e) {
           var data = e.params.data;
           if (data.newTag) {
@@ -142,6 +186,27 @@
               success: function(response) {
                 // Replace the temporary option with the real one
                 var $option = $('.js-skills-select-create-multiple option[value="' + data.text + '"]');
+                $option.val(response.skill.id).text(response.skill.name);
+              }
+            });
+          }
+        });
+
+        $('.js-expertises-select-multiple').on('select2:select', function (e) {
+          var data = e.params.data;
+          if (data.newTag) {
+            // Create new skill via API
+            $.ajax({
+              url: '/api/skills/',
+              method: 'POST',
+              contentType: 'application/json',
+              headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+              },
+              data: JSON.stringify({name: data.text}),
+              success: function(response) {
+                // Replace the temporary option with the real one
+                var $option = $('.js-expertises-select-multiple option[value="' + data.text + '"]');
                 $option.val(response.skill.id).text(response.skill.name);
               }
             });
@@ -183,6 +248,9 @@
         $('.js-colleague-select').on('select2:select select2:unselect', function(e) {
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
+        $('.js-expertises-select-multiple').on('select2:select select2:unselect', function(e) {
+          this.dispatchEvent(new Event('change', { bubbles: true }));
+        });
       });
       // (her)initialiseer na HTMX swap:
       document.body.addEventListener('htmx:afterSwap', function(evt) {
@@ -190,6 +258,7 @@
         $('.js-skills-select-single').select2(skills_select_single_def);
         $('.js-skills-select-create-multiple').select2(skills_select_create_multiple_def);
         $('.js-colleague-select').select2(colleague_select_select2_def);
+        $('.js-expertises-select-multiple').select2(expertises_select_multiple_def);
 
         // Forceer native change event voor HTMX na swap, maar voorkom oneindige lus
         $('.js-status-select').on('select2:select select2:unselect', function(e) {
@@ -202,6 +271,9 @@
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
         $('.js-colleague-filter').on('select2:select select2:unselect', function(e) {
+          this.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+        $('.js-expertises-select-multiple').on('select2:select select2:unselect', function(e) {
           this.dispatchEvent(new Event('change', { bubbles: true }));
         });
       });

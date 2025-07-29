@@ -22,6 +22,24 @@
     <dl class="rvo-data-list">
       <dt>Naam</dt>
       <dd>{{ object.name }}</dd>
+      <dt>Merk</dt>
+      <dd>
+        {% if object.brand %}
+          {{ object.brand.name }}
+        {% else %}
+          <span class="rvo-text--italic">Geen merk opgegeven</span>
+        {% endif %}
+      </dd>
+      <dt>ODI-expertise</dt>
+      <dd>
+        {% if object.expertises.all %}
+          {% for expertise in object.expertises.all %}
+            <span class="skill-badge">{{ expertise.name }}</span>
+          {% endfor %}
+        {% else %}
+          <span class="rvo-text--italic">Geen expertise opgegeven</span>
+        {% endif %}
+      </dd>
       <dt>Rollen</dt>
       <dd>
         {% for skill in object.skills.all %}

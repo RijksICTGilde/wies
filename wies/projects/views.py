@@ -11,7 +11,7 @@ from django.db import models
 from django.db.models import Case, When, Max, F
 from django.http import JsonResponse
 
-from .models import Assignment, Colleague, Skill, Placement, Service, Ministry
+from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 
 def home(request):

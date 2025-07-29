@@ -17,6 +17,25 @@ ASSIGNMENT_TYPE = {
 }
 
 
+class Brand(models.Model):
+    name = models.CharField(max_length=50)
+    
+    class Meta:
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+class Expertise(models.Model):
+    name = models.CharField(max_length=100)
+    
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = 'expertises'
+    
+    def __str__(self):
+        return self.name
+
 class Ministry(models.Model):
     name = models.CharField(max_length=98)
     abbreviation = models.CharField(max_length=10)
@@ -39,6 +58,8 @@ class Skill(models.Model):
 
 class Colleague(models.Model):
     name = models.CharField(max_length=200)
+    brand = models.ForeignKey('Brand', models.SET_NULL, null=True, blank=False)
+    expertises = models.ManyToManyField('Expertise', blank=True)
     skills = models.ManyToManyField('Skill', blank=True)
     # placements via reversed relation
 
