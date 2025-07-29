@@ -17,6 +17,17 @@ ASSIGNMENT_TYPE = {
 }
 
 
+class Ministry(models.Model):
+    name = models.CharField(max_length=98)
+    abbreviation = models.CharField(max_length=10)
+    
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = 'ministries'
+    
+    def __str__(self):
+        return f"{self.name} ({self.abbreviation})"
+
 class Skill(models.Model):
     name = models.CharField(max_length=30, unique=True)
     
@@ -50,6 +61,7 @@ class Assignment(models.Model):
     # services through foreignkey on Service
     status = models.CharField(max_length=20, choices=ASSIGNMENT_STATUS, default='LEAD')
     organization = models.CharField(blank=True)
+    ministry = models.ForeignKey('Ministry', models.SET_NULL, null=True, blank=False)
     extra_info = models.TextField(blank=True)
     assignment_type = models.CharField(max_length=20, choices=ASSIGNMENT_TYPE, default='GROUP')
 

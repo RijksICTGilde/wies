@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1 class="utrecht-heading-1">Ministeries</h1>
+
+<div class="rvo-layout-grid rvo-layout-gap--md" style="margin-bottom: 2em;">
+    <div class="rvo-layout-column" style="text-align: right;">
+        <a href="{% url 'ministry-create' %}">
+          <button
+            class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before"
+            type="button"
+          >
+            <span
+              class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit"
+              role="img"
+              aria-label="Plus"
+            ></span>
+            Nieuw ministerie toevoegen
+          </button>
+        </a>
+    </div>
+</div>
+
+<div class="rvo-table--responsive">
+    <table class="rvo-table">
+        <thead class="rvo-table-head">
+            <tr class="rvo-table-row">
+                <th scope="col" class="rvo-table-header">Naam</th>
+                <th scope="col" class="rvo-table-header">Aantal opdrachten</th>
+                <th scope="col" class="rvo-table-header">Acties</th>
+            </tr>
+        </thead>
+        <tbody class="rvo-table-body">
+            {% for ministry in ministries %}
+            <tr class="rvo-table-row">
+                <td class="rvo-table-cell">
+                    <a href="{% url 'ministry-detail' ministry.pk %}" class="rvo-link">{{ ministry.name }} ({{ ministry.abbreviation }})</a>
+                </td>
+                <td class="rvo-table-cell">{{ ministry.assignment_count }}</td>
+                <td class="rvo-table-cell">
+                    <a href="{% url 'ministry-update' ministry.pk %}" class="rvo-link">edit</a> /
+                    
+                    <a href="{% url 'ministry-delete' ministry.pk %}" class="rvo-link">delete</a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr class="rvo-table-row">
+                <td class="rvo-table-cell" colspan="3">Geen ministeries gevonden.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock content %}

@@ -11,11 +11,11 @@ from django.db import models
 from django.db.models import Case, When, Max, F
 from django.http import JsonResponse
 
-from .models import Assignment, Colleague, Skill, Placement, Service
+from .models import Assignment, Colleague, Skill, Placement, Service, Ministry
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 
 def home(request):
-    return redirect('/assignments/')
+    return redirect('/placements/')
 
 def get_service_details(request, service_id):
     """AJAX endpoint to get service details for placement form"""
@@ -92,7 +92,12 @@ class AssignmentTabsView(ListView):
         # Apply name filter if provided
         name_filter = self.request.GET.get('name')
         if name_filter:
-            qs = qs.filter(models.Q(name__icontains=name_filter) | models.Q(organization__icontains=name_filter))
+            qs = qs.filter(
+                models.Q(name__icontains=name_filter) | 
+                models.Q(organization__icontains=name_filter) |
+                models.Q(ministry__name__icontains=name_filter) |
+                models.Q(ministry__abbreviation__icontains=name_filter)
+            )
         
         # Apply skill filter if provided
         skill_filter = self.request.GET.get('skill')
@@ -362,10 +367,14 @@ class PlacementList(ListView):
         if skill_filter:
             qs = qs.filter(service__skill__id=skill_filter)
         
-        # Filter by client/organization
+        # Filter by client/organization or ministry
         client_filter = self.request.GET.get('client')
         if client_filter:
-            qs = qs.filter(service__assignment__organization__icontains=client_filter)
+            qs = qs.filter(
+                models.Q(service__assignment__organization__icontains=client_filter) |
+                models.Q(service__assignment__ministry__name__icontains=client_filter) |
+                models.Q(service__assignment__ministry__abbreviation__icontains=client_filter)
+            )
 
         # Date filters
         start_date_from = self.request.GET.get('start_date_from')
@@ -709,4 +718,70 @@ def client(request, name):
 
 class SkillsView(TemplateView):
     template_name = 'skills.html'
+
+
+class MinistryListView(ListView):
+    model = Ministry
+    template_name = 'ministry_list.html'
+    context_object_name = 'ministries'
+    
+    def get_queryset(self):
+        return Ministry.objects.annotate(
+            assignment_count=models.Count('assignment')
+        ).order_by('name')
+
+
+class MinistryCreateView(CreateView):
+    model = Ministry
+    template_name = 'ministry_form.html'
+    fields = ['name', 'abbreviation']
+    success_url = reverse_lazy('ministries')
+
+
+class MinistryUpdateView(UpdateView):
+    model = Ministry
+    template_name = 'ministry_form.html'
+    fields = ['name', 'abbreviation']
+    success_url = reverse_lazy('ministries')
+
+
+class MinistryDeleteView(DeleteView):
+    model = Ministry
+    template_name = 'ministry_confirm_delete.html'
+    success_url = reverse_lazy('ministries')
+
+
+class MinistryDetailView(DetailView):
+    model = Ministry
+    template_name = 'ministry_detail.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        assignments = Assignment.objects.filter(ministry=self.object)
+        
+        # Build context with assignment data including colleagues
+        assignments_data = []
+        for assignment in assignments:
+            colleagues = []
+            for service in assignment.services.all():
+                for placement in service.placements.all():
+                    if placement.colleague:  # Only add if colleague exists
+                        colleagues.append({
+                            'id': placement.colleague.pk,
+                            'name': placement.colleague.name
+                        })
+            
+            assignments_data.append({
+                'id': assignment.pk,
+                'name': assignment.name,
+                'start_date': assignment.start_date,
+                'end_date': assignment.end_date,
+                'organization': assignment.organization,
+                'colleagues': colleagues,
+                'status': assignment.status,
+            })
+        
+        context['assignments'] = assignments_data
+        return context
 

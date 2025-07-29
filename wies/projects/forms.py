@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Assignment, Colleague, Skill, Placement, Service
+from .models import Assignment, Colleague, Skill, Placement, Service, Ministry
 
 class RVOFormMixin:
     def __init__(self, *args, **kwargs):
@@ -25,6 +25,15 @@ class AssignmentForm(RVOFormMixin, forms.ModelForm):
         model = Assignment
         fields = '__all__'
         exclude = ['assignment_type',]
+        labels = {
+            'name': 'Naam',
+            'start_date': 'Start datum',
+            'end_date': 'Eind datum',
+            'status': 'Status',
+            'organization': 'Opdrachtgever',
+            'ministry': 'Ministerie',
+            'extra_info': 'Extra informatie',
+        }
 
 class ColleagueForm(RVOFormMixin, forms.ModelForm):
     class Meta:

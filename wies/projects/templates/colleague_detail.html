@@ -37,9 +37,10 @@
         <tr class="rvo-table-row">
           <th class="rvo-table-header">Opdracht</th>
           <th class="rvo-table-header">Status</th>
+          <th class="rvo-table-header">Opdrachtgever</th>
+          <th class="rvo-table-header">Ministerie</th>
           <th class="rvo-table-header">Rol</th>
           <th class="rvo-table-header">Periode</th>
-          <th class="rvo-table-header">Uren per week</th>
         </tr>
       </thead>
       <tbody class="rvo-table-body">
@@ -49,11 +50,18 @@
           <td class="rvo-table-cell">
             <span class="status-badge status-{{ placement.service.assignment.status|lower }}">{{ placement.service.assignment.status }}</span>
           </td>
+          <td class="rvo-table-cell">{{ placement.service.assignment.organization }}</td>
+          <td class="rvo-table-cell">
+            {% if placement.service.assignment.ministry %}
+              {{ placement.service.assignment.ministry.abbreviation }}
+            {% else %}
+              <span class="rvo-text--italic">-</span>
+            {% endif %}
+          </td>
           <td class="rvo-table-cell">
             <span class="skill-badge">{{ placement.service.skill.name }}</span>
           </td>
           <td class="rvo-table-cell">{{ placement.start_date }} - {{ placement.end_date }}</td>
-          <td class="rvo-table-cell">{{ placement.hours_per_week }}</td>
         </tr>
         {% endfor %}
       </tbody>
