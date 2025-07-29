@@ -15,7 +15,7 @@ from .models import Assignment, Colleague, Skill, Placement, Service, Ministry
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 
 def home(request):
-    return redirect('/assignments/')
+    return redirect('/placements/')
 
 def get_service_details(request, service_id):
     """AJAX endpoint to get service details for placement form"""

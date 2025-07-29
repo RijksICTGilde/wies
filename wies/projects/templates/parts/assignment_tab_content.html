@@ -5,6 +5,7 @@
           <tr class="rvo-table-row">
             {% include 'parts/sortable_header.html' with field='name' label='Naam' %}
             {% include 'parts/sortable_header.html' with field='organization' label='Opdrachtgever' %}
+            {% include 'parts/sortable_header.html' with field='ministry__abbreviation' label='Ministerie' %}
             {% include 'parts/sortable_header.html' with field='status' label='Status' %}
             {% include 'parts/sortable_header.html' with field='start_date' label='Startdatum' %}
             {% include 'parts/sortable_header.html' with field='end_date' label='Einddatum' %}
@@ -16,6 +17,13 @@
             <td class="rvo-table-cell"><a href="/assignments/{{ assignment.pk }}/" class="rvo-link">{{ assignment.name }}</a></td>
             <td class="rvo-table-cell">{{ assignment.organization }}</td>
             <td class="rvo-table-cell">
+              {% if assignment.ministry %}
+                {{ assignment.ministry.abbreviation }}
+              {% else %}
+                <span class="rvo-text--italic">-</span>
+              {% endif %}
+            </td>
+            <td class="rvo-table-cell">
               <span class="status-badge status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
             </td>
             <td class="rvo-table-cell">{{ assignment.start_date|date:"d-m-Y"|default:"-" }}</td>
@@ -23,7 +31,7 @@
           </tr>
           {% empty %}
           <tr class="rvo-table-row">
-            <td class="rvo-table-cell" colspan="5" style="text-align: center; padding: 2rem; color: var(--rvo-color-grijs-600);">
+            <td class="rvo-table-cell" colspan="6" style="text-align: center; padding: 2rem; color: var(--rvo-color-grijs-600);">
               <span class="rvo-text--italic">Geen opdrachten gevonden voor deze categorie.</span>
             </td>
           </tr>

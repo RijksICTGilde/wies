@@ -61,6 +61,7 @@ class Assignment(models.Model):
     # services through foreignkey on Service
     status = models.CharField(max_length=20, choices=ASSIGNMENT_STATUS, default='LEAD')
     organization = models.CharField(blank=True)
+    ministry = models.ForeignKey('Ministry', models.SET_NULL, null=True, blank=False)
     extra_info = models.TextField(blank=True)
     assignment_type = models.CharField(max_length=20, choices=ASSIGNMENT_TYPE, default='GROUP')
 

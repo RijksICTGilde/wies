@@ -24,6 +24,14 @@
       <dd>{{ object.name }}</dd>
       <dt>Opdrachtgever</dt>
       <dd><a href="/clients/{{ object.organization }}">{{ object.organization }}</a></dd>
+      <dt>Ministerie</dt>
+      <dd>
+        {% if object.ministry %}
+          {{ object.ministry.name }} ({{ object.ministry.abbreviation }})
+        {% else %}
+          <span class="rvo-text--italic">Geen ministerie opgegeven</span>
+        {% endif %}
+      </dd>
       <dt>Status</dt>
       <dd>
         <span class="status-badge status-{{ object.status|lower }}">{{ object.status }}</span>

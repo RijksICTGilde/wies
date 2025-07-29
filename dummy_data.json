@@ -374,7 +374,8 @@
       "start_date": "2024-06-01",
       "end_date": "2025-08-31",
       "status": "LOPEND",
-      "organization": "Gemeente Amsterdam",
+      "organization": "Directie Digitale Stad Amsterdam",
+      "ministry": 3,
       "extra_info": "Ontwikkeling van een AI-chatbot voor het beantwoorden van veelgestelde vragen van inwoners",
       "assignment_type": "GROUP"
     }
@@ -387,7 +388,8 @@
       "start_date": "2025-08-01",
       "end_date": "2026-03-31",
       "status": "OPEN",
-      "organization": "Ministerie van Volksgezondheid, Welzijn en Sport (VWS)",
+      "organization": "Zorginstituut Nederland",
+      "ministry": 8,
       "extra_info": "Opzetten van een centraal data platform voor het analyseren van zorgdata",
       "assignment_type": "GROUP"
     }
@@ -400,7 +402,8 @@
       "start_date": "2025-09-01",
       "end_date": null,
       "status": "LEAD",
-      "organization": "Ministerie van Justitie en Veiligheid (JenV)",
+      "organization": "Directie Wetgeving en Juridische Zaken",
+      "ministry": 10,
       "extra_info": "AI-tool voor het ondersteunen van juristen bij contractanalyse",
       "assignment_type": "INDIVIDUAL"
     }
@@ -413,8 +416,9 @@
       "start_date": "2023-10-01",
       "end_date": "2024-02-28",
       "status": "HISTORISCH",
-      "organization": "Ministerie van Economische Zaken en Klimaat (EZK)",
-      "extra_info": "Complete redesign van het e-commerce platform met focus op mobile-first",
+      "organization": "Rijksdienst voor Ondernemend Nederland (RVO)",
+      "ministry": 6,
+      "extra_info": "Complete redesign van het e-commerce platform met focus on mobile-first",
       "assignment_type": "GROUP"
     }
   },
@@ -427,6 +431,7 @@
       "end_date": "2024-03-31",
       "status": "AFGEWEZEN",
       "organization": "De Nederlandsche Bank (DNB)",
+      "ministry": 7,
       "extra_info": "Haalbaarheidsstudie voor blockchain implementatie in betalingsverkeer",
       "assignment_type": "INDIVIDUAL"
     }
@@ -439,7 +444,8 @@
       "start_date": "2024-06-01",
       "end_date": "2025-11-30",
       "status": "LOPEND",
-      "organization": "Ministerie van Volksgezondheid, Welzijn en Sport (VWS)",
+      "organization": "RIVM - Centrum Infectieziektebestrijding",
+      "ministry": 8,
       "extra_info": "Ontwikkeling van een ML platform voor medische beeldanalyse",
       "assignment_type": "GROUP"
     }
@@ -452,7 +458,8 @@
       "start_date": "2025-08-01",
       "end_date": "2026-01-31",
       "status": "OPEN",
-      "organization": "Gemeente Rotterdam",
+      "organization": "Programma Rotterdam Digitaal",
+      "ministry": 3,
       "extra_info": "Real-time dashboard voor monitoring van stad infrastructuur",
       "assignment_type": "GROUP"
     }
@@ -465,7 +472,8 @@
       "start_date": "2024-03-01",
       "end_date": "2025-08-31",
       "status": "LOPEND",
-      "organization": "Ministerie van Economische Zaken en Klimaat (EZK)",
+      "organization": "Agentschap Telecom",
+      "ministry": 6,
       "extra_info": "Geautomatiseerde tool voor cybersecurity audits",
       "assignment_type": "INDIVIDUAL"
     }
@@ -478,7 +486,8 @@
       "start_date": "2023-09-01",
       "end_date": "2024-01-31",
       "status": "HISTORISCH",
-      "organization": "Ministerie van Infrastructuur en Waterstaat (IenW)",
+      "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
+      "ministry": 9,
       "extra_info": "AI-gedreven optimalisatie van logistieke routes",
       "assignment_type": "GROUP"
     }
@@ -491,7 +500,8 @@
       "start_date": "2024-05-15",
       "end_date": "2025-09-30",
       "status": "LOPEND",
-      "organization": "Ministerie van Financiën (MinFin)",
+      "organization": "Belastingdienst - Directie ICT",
+      "ministry": 7,
       "extra_info": "Nieuwe features voor mobile banking applicatie",
       "assignment_type": "GROUP"
     }
@@ -504,7 +514,8 @@
       "start_date": "2025-08-15",
       "end_date": null,
       "status": "LEAD",
-      "organization": "Ministerie van Volksgezondheid, Welzijn en Sport (VWS)",
+      "organization": "Nederlandse Zorgautoriteit (NZa)",
+      "ministry": 8,
       "extra_info": "Analyse van patiëntdata voor verbeterde zorguitkomsten",
       "assignment_type": "INDIVIDUAL"
     }
@@ -517,7 +528,8 @@
       "start_date": "2025-09-15",
       "end_date": "2026-08-28",
       "status": "OPEN",
-      "organization": "Ministerie van Economische Zaken en Klimaat (EZK)",
+      "organization": "Netbeheer Nederland",
+      "ministry": 6,
       "extra_info": "Smart grid management en energie voorspelling",
       "assignment_type": "GROUP"
     }
@@ -530,7 +542,8 @@
       "start_date": "2023-11-01",
       "end_date": "2024-04-30",
       "status": "HISTORISCH",
-      "organization": "Ministerie van Onderwijs, Cultuur en Wetenschap (OCW)",
+      "organization": "DUO - Dienst Uitvoering Onderwijs",
+      "ministry": 11,
       "extra_info": "Interactief leerplatform voor online onderwijs",
       "assignment_type": "GROUP"
     }
@@ -543,7 +556,8 @@
       "start_date": "2024-05-20",
       "end_date": "2025-07-31",
       "status": "LOPEND",
-      "organization": "Ministerie van Infrastructuur en Waterstaat (IenW)",
+      "organization": "Royal Schiphol Group",
+      "ministry": 9,
       "extra_info": "Real-time monitoring van luchthaven infrastructuur",
       "assignment_type": "GROUP"
     }
@@ -556,7 +570,8 @@
       "start_date": "2025-08-01",
       "end_date": null,
       "status": "LEAD",
-      "organization": "Ministerie van Economische Zaken en Klimaat (EZK)",
+      "organization": "TNO - Nederlandse Organisatie voor Toegepast Natuurwetenschappelijk Onderzoek",
+      "ministry": 6,
       "extra_info": "Digitale tweeling voor productie-optimalisatie",
       "assignment_type": "INDIVIDUAL"
     }
@@ -569,7 +584,8 @@
       "start_date": "2025-09-01",
       "end_date": "2026-02-28",
       "status": "OPEN",
-      "organization": "Ministerie van Economische Zaken en Klimaat (EZK)",
+      "organization": "Centraal Bureau voor de Statistiek (CBS)",
+      "ministry": 6,
       "extra_info": "Sentimentanalyse van sociale media voor content strategie",
       "assignment_type": "GROUP"
     }
@@ -582,7 +598,8 @@
       "start_date": "2023-08-01",
       "end_date": "2024-03-31",
       "status": "HISTORISCH",
-      "organization": "Ministerie van Landbouw, Natuur en Voedselkwaliteit (LNV)",
+      "organization": "Wageningen University & Research",
+      "ministry": 13,
       "extra_info": "AI-tool voor gewasvoorspelling en bodem analyse",
       "assignment_type": "INDIVIDUAL"
     }
@@ -595,7 +612,8 @@
       "start_date": "2024-02-01",
       "end_date": "2025-11-30",
       "status": "LOPEND",
-      "organization": "Ministerie van Economische Zaken en Klimaat (EZK)",
+      "organization": "Kamer van Koophandel (KvK)",
+      "ministry": 6,
       "extra_info": "Blockchain-gebaseerde supply chain tracking",
       "assignment_type": "GROUP"
     }
@@ -608,7 +626,8 @@
       "start_date": "2025-08-01",
       "end_date": "2026-04-30",
       "status": "OPEN",
-      "organization": "Ministerie van Financiën (MinFin)",
+      "organization": "Fiscale Inlichtingen- en Opsporingsdienst (FIOD)",
+      "ministry": 7,
       "extra_info": "Machine learning voor fraudedetectie in transacties",
       "assignment_type": "INDIVIDUAL"
     }
@@ -621,7 +640,8 @@
       "start_date": "2024-01-01",
       "end_date": "2025-08-31",
       "status": "LOPEND",
-      "organization": "KNMI",
+      "organization": "Koninklijk Nederlands Meteorologisch Instituut (KNMI)",
+      "ministry": 15,
       "extra_info": "Publieke portal voor toegang tot klimaatdata",
       "assignment_type": "GROUP"
     }
