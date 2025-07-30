@@ -1,0 +1,402 @@
+<!-- 
+Herbruikbaar filter systeem gebaseerd op Komoot interface
+Usage:
+{% include 'parts/filter_system.html' with primary_filters=primary_config secondary_filters=secondary_config target_url=url_name target_element='#table_id' %}
+-->
+
+<div class="komoot-filter-system">
+  <form hx-get="{% url target_url %}" hx-target="{{ target_element }}" class="filter-form">
+    
+    <!-- Primaire filters - altijd zichtbaar (zoals Komoot) -->
+    <div class="primary-filters">
+      {% for filter in primary_filters %}
+        <div class="filter-item">
+          {% if filter.type == 'text' %}
+            <div class="search-input-wrapper">
+              <span class="utrecht-icon rvo-icon rvo-icon-zoeken rvo-icon--sm search-icon" role="img" aria-label="Zoeken"></span>
+              <input 
+                type="text" 
+                id="{{ filter.name }}" 
+                name="{{ filter.name }}" 
+                class="{{ filter.css_class|default:'utrecht-textbox utrecht-textbox--html-input' }} search-input" 
+                placeholder="{{ filter.placeholder|default:'' }}" 
+                value="{{ filter.value|default:'' }}" 
+                hx-get="{% url target_url %}" 
+                hx-target="{{ target_element }}" 
+                hx-trigger="input delay:500ms">
+            </div>
+          {% elif filter.type == 'select' %}
+            <div class="select-wrapper">
+              <select 
+                name="{{ filter.name }}" 
+                id="{{ filter.name }}" 
+                class="{{ filter.css_class|default:'utrecht-select utrecht-select--html-select' }} primary-select" 
+                hx-get="{% url target_url %}" 
+                hx-target="{{ target_element }}" 
+                hx-trigger="change"
+                {% if filter.data_selected_value %}data-selected-value="{{ filter.data_selected_value }}"{% endif %}>
+                {% if filter.empty_label %}
+                  <option value="">{{ filter.empty_label }}</option>
+                {% endif %}
+                {% for option in filter.options %}
+                  <option value="{{ option.value }}" {% if option.value|stringformat:"s" == filter.value|stringformat:"s" %}selected{% endif %}>
+                    {{ option.label }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          {% endif %}
+        </div>
+      {% endfor %}
+      
+      <!-- Filters knop (zoals Komoot) -->
+      <div class="filter-button-wrapper">
+        <input type="checkbox" id="filter-toggle" class="filter-toggle" style="display: none;">
+        <label for="filter-toggle" class="filter-button">
+          <span class="utrecht-icon rvo-icon rvo-icon-filter rvo-icon--sm" role="img" aria-label="Filters"></span>
+          Filters
+        </label>
+      </div>
+    </div>
+  </form>
+  
+  <!-- Filter modal/panel (zoals Komoot) - aparte form -->
+  <div class="filter-modal">
+    <form hx-get="{% url target_url %}" hx-target="{{ target_element }}" class="filter-modal-form">
+      <div class="filter-modal-content">
+        <div class="filter-modal-header">
+          <h3>Filters</h3>
+          <label for="filter-toggle" class="close-button">
+            <span class="utrecht-icon rvo-icon rvo-icon-kruis rvo-icon--sm" role="img" aria-label="Sluiten"></span>
+          </label>
+        </div>
+        
+        <!-- Behoudt primaire filter waarden -->
+        {% for filter in primary_filters %}
+          <input type="hidden" name="{{ filter.name }}" value="{{ filter.value|default:'' }}">
+        {% endfor %}
+        
+        <!-- Secundaire filters in secties -->
+        <div class="filter-modal-body">
+          {% for filter_section in secondary_filters %}
+            <div class="filter-section">
+              {% if filter_section.section_title %}
+                <h4 class="section-title">{{ filter_section.section_title }}</h4>
+              {% endif %}
+              
+              <div class="filter-grid">
+                {% for filter in filter_section.filters %}
+                  <div class="filter-field">
+                    <label for="secondary_{{ filter.name }}" class="filter-label">{{ filter.label }}</label>
+                    
+                    {% if filter.type == 'text' %}
+                      <input 
+                        type="text" 
+                        id="secondary_{{ filter.name }}" 
+                        name="{{ filter.name }}" 
+                        class="utrecht-textbox utrecht-textbox--html-input filter-input" 
+                        placeholder="{{ filter.placeholder|default:'' }}" 
+                        value="{{ filter.value|default:'' }}" 
+                        hx-get="{% url target_url %}" 
+                        hx-target="{{ target_element }}" 
+                        hx-trigger="input delay:500ms">
+                    {% elif filter.type == 'date' %}
+                      <input 
+                        type="date" 
+                        id="secondary_{{ filter.name }}" 
+                        name="{{ filter.name }}" 
+                        class="utrecht-textbox utrecht-textbox--html-input filter-input" 
+                        value="{{ filter.value|default:'' }}" 
+                        hx-get="{% url target_url %}" 
+                        hx-target="{{ target_element }}" 
+                        hx-trigger="change">
+                    {% elif filter.type == 'select' %}
+                      <select 
+                        name="{{ filter.name }}" 
+                        id="secondary_{{ filter.name }}" 
+                        class="{{ filter.css_class|default:'utrecht-select utrecht-select--html-select' }} filter-select" 
+                        hx-get="{% url target_url %}" 
+                        hx-target="{{ target_element }}" 
+                        hx-trigger="change">
+                        {% if filter.empty_label %}
+                          <option value="">{{ filter.empty_label }}</option>
+                        {% endif %}
+                        {% for option in filter.options %}
+                          <option value="{{ option.value }}" {% if option.value|stringformat:"s" == filter.value|stringformat:"s" %}selected{% endif %}>
+                            {{ option.label }}
+                          </option>
+                        {% endfor %}
+                      </select>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+        
+        <div class="filter-modal-footer">
+          <button type="button" class="clear-filters-btn">
+            Filters wissen
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<style>
+/* Komoot-inspired filter system styling */
+.komoot-filter-system {
+  position: relative;
+  margin-bottom: 1.5rem;
+}
+
+.primary-filters {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  padding: 1rem;
+  background: white;
+  border: 1px solid var(--rvo-color-grijs-200, #e5e7eb);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.filter-item {
+  min-width: 200px;
+  flex: 1;
+}
+
+.search-input-wrapper {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--rvo-color-grijs-500, #6b7280);
+  pointer-events: none;
+}
+
+.search-input {
+  padding-left: 2.5rem !important;
+  font-size: 1rem;
+  border: 1px solid var(--rvo-color-grijs-300, #d1d5db);
+  border-radius: 6px;
+  width: 100%;
+  min-width: 250px;
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.primary-select {
+  font-size: 1rem;
+  border: 1px solid var(--rvo-color-grijs-300, #d1d5db);
+  border-radius: 6px;
+  width: 100%;
+  min-width: 150px;
+}
+
+.filter-button-wrapper {
+  margin-left: auto;
+}
+
+.filter-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: white;
+  border: 1px solid var(--rvo-color-grijs-300, #d1d5db);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--rvo-color-grijs-700, #374151);
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.filter-button:hover {
+  background: var(--rvo-color-grijs-50, #f9fafb);
+  border-color: var(--rvo-color-grijs-400, #9ca3af);
+}
+
+/* Filter modal (zoals Komoot) */
+.filter-modal {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1000;
+  margin-top: 0.5rem;
+}
+
+.filter-toggle:checked ~ .filter-modal {
+  display: block;
+}
+
+.filter-modal-content {
+  background: white;
+  border: 1px solid var(--rvo-color-grijs-200, #e5e7eb);
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  min-width: 500px;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.filter-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-200, #e5e7eb);
+}
+
+.filter-modal-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--rvo-color-grijs-900, #111827);
+}
+
+.close-button {
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-button:hover {
+  background-color: var(--rvo-color-grijs-100, #f3f4f6);
+}
+
+.filter-modal-body {
+  padding: 1.5rem;
+}
+
+.filter-section {
+  margin-bottom: 2rem;
+}
+
+.filter-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-title {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--rvo-color-grijs-900, #111827);
+}
+
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--rvo-color-grijs-700, #374151);
+}
+
+.filter-input,
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--rvo-color-grijs-300, #d1d5db);
+  border-radius: 6px;
+  font-size: 0.875rem;
+  width: 100%;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: var(--rvo-color-logoblauw, #003366);
+  box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+}
+
+.filter-modal-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--rvo-color-grijs-200, #e5e7eb);
+  text-align: left;
+}
+
+.clear-filters-btn {
+  padding: 0.5rem 1rem;
+  background: transparent;
+  border: 1px solid var(--rvo-color-grijs-300, #d1d5db);
+  border-radius: 6px;
+  color: var(--rvo-color-grijs-600, #4b5563);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-filters-btn:hover {
+  background: var(--rvo-color-grijs-50, #f9fafb);
+  border-color: var(--rvo-color-grijs-400, #9ca3af);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .primary-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .filter-item {
+    min-width: auto;
+  }
+  
+  .search-input,
+  .primary-select {
+    min-width: auto;
+  }
+  
+  .filter-button-wrapper {
+    margin-left: 0;
+  }
+  
+  .filter-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin-top: 0;
+    z-index: 2000;
+  }
+  
+  .filter-modal-content {
+    min-width: auto;
+    max-width: none;
+    max-height: none;
+    height: 100%;
+    border-radius: 0;
+  }
+  
+  .filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+</style>

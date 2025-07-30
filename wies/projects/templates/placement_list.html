@@ -1,119 +1,620 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="rvo-max-width-layout rvo-max-width-layout--md">
-  <div class="rvo-max-width-layout-inline-padding--md">
-    <main>
-      <!-- Header with title and view switcher -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; margin-top: 1rem;">
-        <h1 style="margin: 0;">Inzetten</h1>
-        
-        <!-- Subtle view switcher -->
-        <div class="view-switcher">
-          <span class="view-switcher-link view-switcher-link--active">
-            <span class="utrecht-icon rvo-icon rvo-icon-menu rvo-icon--sm" role="img" aria-label="List"></span>
-            Lijst
-          </span>
-          <span class="view-switcher-separator">|</span>
-          <a href="{% url 'placements-timeline' %}" class="view-switcher-link">
-            <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm" role="img" aria-label="Calendar"></span>
-            Tijdlijn
-          </a>
+<body class="rvo-theme rvo-filter-body">
+  <div class="rvo-layout-column rvo-layout-gap--xl">
+    <div class="rvo-layout-column rvo-layout-gap--xl">
+      <div class="rvo-filter-wrapper rvo-max-width-layout rvo-max-width-layout--md">
+        <div class="rvo-layout-grid-container" style="width: 100%;">
+          <div class="rvo-layout-column rvo-layout-gap--xl" style="width: 100%;">
+            
+
+
+            <!-- Results Section - Bottom -->
+            <div class="rvo-results">
+              <!-- Header with title -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h1 class="utrecht-heading-1 rvo-heading--no-margins rvo-heading--mixed">
+                  <strong>Inzetten</strong>
+                </h1>
+              </div>
+
+              <!-- Filters Section -->
+              <div class="rvo-filter-section">
+                <div class="utrecht-form-fieldset rvo-form-fieldset">
+                  <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
+                    <details class="rvo-collapsible-filter">
+                                              <summary class="rvo-collapsible-filter-label rvo-collapsible-filter-header">
+                          <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four" style="align-items: end;">
+                            <!-- Combined Search (spans 2 columns) -->
+                            <div role="group" aria-labelledby="search-label" class="utrecht-form-field utrecht-form-field--text" style="grid-column: span 2;">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="search-label" for="search">Zoeken</label>
+                              </div>
+                              <input 
+                                id="search" 
+                                name="search" 
+                                placeholder="Zoek op collega, opdracht of opdrachtgever..." 
+                                type="text" 
+                                class="utrecht-textbox utrecht-textbox--html-input" 
+                                value="{{ request.GET.search }}" 
+                                hx-get="{% url 'placements' %}" 
+                                hx-target="#placement_table" 
+                                hx-trigger="input delay:500ms"
+                                hx-include="[name='order']"
+                              />
+                            </div>
+
+                            <!-- Search Client (select dropdown) -->
+                            <div role="group" aria-labelledby="client-label" class="utrecht-form-field utrecht-form-field--text">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="client-label" for="client">Opdrachtgever</label>
+                              </div>
+                              <div class="rvo-select-wrapper">
+                                <select
+                                  name="client"
+                                  id="client"
+                                  class="utrecht-select utrecht-select--html-select"
+                                  hx-get="{% url 'placements' %}"
+                                  hx-target="#placement_table"
+                                  hx-trigger="change"
+                                  hx-include="[name='order']"
+                                >
+                                  <option value="">Zoek op ministerie of opdrachtgever...</option>
+                                  {% if clients %}
+                                    {% for client in clients %}
+                                      <option value="{{ client.id }}" {% if request.GET.client == client.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ client.name }}
+                                      </option>
+                                    {% endfor %}
+                                  {% else %}
+                                    <option value="">Geen opdrachtgevers beschikbaar</option>
+                                  {% endif %}
+                                </select>
+                              </div>
+                            </div>
+                            
+                            <!-- Collapse/expand button (4th column) -->
+                            <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                              <button type="button" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--icon-after" onclick="this.closest('details').toggleAttribute('open')">
+                                Alle filters
+                                <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--sm" role="img" aria-label="Delta naar rechts"></span>
+                              </button>
+                            </div>
+                          </div>
+                        </summary>
+                                              <form class="rvo-form" hx-get="{% url 'placements' %}" hx-target="#placement_table">
+
+                        <!-- Filters Grid -->
+                        <div class="rvo-layout-column rvo-layout-gap--lg">
+                          <!-- First Row: Rollen, Merken and Start Dates -->
+                          <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+                            <!-- Skills/Rollen Filter -->
+                            <div role="group" aria-labelledby="skills-label" class="utrecht-form-field utrecht-form-field--text">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="skills-label" for="skills">Rollen</label>
+                              </div>
+                              <div class="rvo-select-wrapper">
+                                <select 
+                                  name="skill" 
+                                  id="skills" 
+                                  class="utrecht-select utrecht-select--html-select" 
+                                  hx-get="{% url 'placements' %}" 
+                                  hx-target="#placement_table" 
+                                  hx-trigger="change"
+                                  hx-include="[name='order']"
+                                >
+                                  <option value="">Zoek op rol...</option>
+                                  {% if skills %}
+                                    {% for skill in skills %}
+                                      <option value="{{ skill.id }}" {% if request.GET.skill == skill.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ skill.name }}
+                                      </option>
+                                    {% endfor %}
+                                  {% else %}
+                                    <option value="">Geen skills beschikbaar</option>
+                                  {% endif %}
+                                </select>
+                              </div>
+                            </div>
+
+                            <!-- Brands/Merken Filter -->
+                            <div role="group" aria-labelledby="brands-label" class="utrecht-form-field utrecht-form-field--text">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="brands-label" for="brands">Merken</label>
+                              </div>
+                              <div class="rvo-select-wrapper">
+                                <select 
+                                  name="brand" 
+                                  id="brands" 
+                                  class="utrecht-select utrecht-select--html-select" 
+                                  hx-get="{% url 'placements' %}" 
+                                  hx-target="#placement_table" 
+                                  hx-trigger="change"
+                                  hx-include="[name='order']"
+                                >
+                                  <option value="">Zoek op merk...</option>
+                                  {% if brands %}
+                                    {% for brand in brands %}
+                                      <option value="{{ brand.id }}" {% if request.GET.brand == brand.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ brand.name }}
+                                      </option>
+                                    {% endfor %}
+                                  {% else %}
+                                    <option value="">Geen merken beschikbaar</option>
+                                  {% endif %}
+                                </select>
+                              </div>
+                            </div>
+
+                            <!-- Start vanaf -->
+                            <div role="group" aria-labelledby="start_date_from-label" class="utrecht-form-field utrecht-form-field--text">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="start_date_from-label" for="start_date_from">Start vanaf</label>
+                              </div>
+                              <input 
+                                type="date" 
+                                id="start_date_from" 
+                                name="start_date_from" 
+                                class="utrecht-textbox utrecht-textbox--html-input" 
+                                value="{{ request.GET.start_date_from }}" 
+                                hx-get="{% url 'placements' %}" 
+                                hx-target="#placement_table" 
+                                hx-trigger="change"
+                                hx-include="[name='order']"
+                              />
+                            </div>
+
+                            <!-- Start tot -->
+                            <div role="group" aria-labelledby="start_date_to-label" class="utrecht-form-field utrecht-form-field--text">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="start_date_to-label" for="start_date_to">Start tot</label>
+                              </div>
+                              <input 
+                                type="date" 
+                                id="start_date_to" 
+                                name="start_date_to" 
+                                class="utrecht-textbox utrecht-textbox--html-input" 
+                                value="{{ request.GET.start_date_to }}" 
+                                hx-get="{% url 'placements' %}" 
+                                hx-target="#placement_table" 
+                                hx-trigger="change"
+                                hx-include="[name='order']"
+                              />
+                            </div>
+                          </div>
+
+                          <!-- Second Row: End Dates and Reset Button -->
+                          <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+                            <!-- Eind vanaf -->
+                            <div role="group" aria-labelledby="end_date_from-label" class="utrecht-form-field utrecht-form-field--text">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="end_date_from-label" for="end_date_from">Eind vanaf</label>
+                              </div>
+                              <input 
+                                type="date" 
+                                id="end_date_from" 
+                                name="end_date_from" 
+                                class="utrecht-textbox utrecht-textbox--html-input" 
+                                value="{{ request.GET.end_date_from }}" 
+                                hx-get="{% url 'placements' %}" 
+                                hx-target="#placement_table" 
+                                hx-trigger="change"
+                                hx-include="[name='order']"
+                              />
+                            </div>
+
+                            <!-- Eind tot -->
+                            <div role="group" aria-labelledby="end_date_to-label" class="utrecht-form-field utrecht-form-field--text">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="end_date_to-label" for="end_date_to">Eind tot</label>
+                              </div>
+                              <input 
+                                type="date" 
+                                id="end_date_to" 
+                                name="end_date_to" 
+                                class="utrecht-textbox utrecht-textbox--html-input" 
+                                value="{{ request.GET.end_date_to }}" 
+                                hx-get="{% url 'placements' %}" 
+                                hx-target="#placement_table" 
+                                hx-trigger="change"
+                                hx-include="[name='order']"
+                              />
+                            </div>
+
+                            <!-- Reset Filters Button -->
+                            <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                              <a href="{% url 'placements' %}" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-sm utrecht-button--icon-before">
+                                <span class="utrecht-icon rvo-icon rvo-icon-foutmelding rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Foutmelding"></span>
+                                Reset alle filters
+                              </a>
+                            </div>
+
+                            <!-- Empty column for balance -->
+                            <div></div>
+                          </div>
+                        </div>
+
+                      </form>
+                    </details>
+                  </fieldset>
+                </div>
+              </div>
+
+              <!-- Tabs between filter and table -->
+              <div style="margin: 2rem 0 1rem 0;">
+                <ul
+                  class="rvo-tabs rvo-ul rvo-ul--no-margin rvo-ul--no-padding rvo-ul--icon rvo-ul--icon-option-2"
+                  role="tablist"
+                  aria-label="Tabs"
+                >
+                  <li role="presentation" class="rvo-tabs__item">
+                    <a
+                      href="#panel-inzet"
+                      class="rvo-link rvo-tabs__item-link rvo-tabs__item-link--active rvo-link--active rvo-link--no-underline"
+                      role="tab"
+                      aria-selected="true"
+                    >
+                      Inzet
+                    </a>
+                  </li>
+                  <li role="presentation" class="rvo-tabs__item">
+                    <a
+                      href="#panel-beschikbaarheid"
+                      class="rvo-link rvo-tabs__item-link rvo-link--no-underline rvo-link--normal"
+                      role="tab"
+                      aria-selected="false"
+                    >
+                      Beschikbaarheid
+                    </a>
+                  </li>
+                </ul>
+                
+                <div class="rvo-tabs__panel rvo-tabs__panel--active" role="tabpanel" id="panel-inzet" aria-labelledby="tab-inzet">
+                  <!-- Results Table -->
+                  <div id="placement_table" class="rvo-table-container">
+                    {% include 'parts/placement_table.html' %}
+                  </div>
+                </div>
+                
+                <div class="rvo-tabs__panel" role="tabpanel" id="panel-beschikbaarheid" aria-labelledby="tab-beschikbaarheid" style="display: none;">
+                  <!-- Beschikbaarheid content -->
+                  <div id="timeline-container">
+                    {% include 'parts/placement_timeline.html' %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      <form hx-get="{% url 'placements' %}" hx-target="#placement_table">
-        
-        <!-- Eerste rij: Collega en Skills -->
-        <div class="rvo-layout-grid rvo-layout-gap--sm rvo-layout-grid-columns--two" style="margin-bottom: 1rem;">
-          <div class="rvo-layout-column">
-            <label for="consultant" class="rvo-label">Collega:</label>
-            <input type="text" id="consultant" name="consultant" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op collega naam" value="{{ request.GET.consultant }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
-          </div>
-          <div class="rvo-layout-column">
-            <label for="skills" class="rvo-label">Rollen:</label>
-            <select name="skill" id="skills" class="js-skills-select-single utrecht-select utrecht-select--html-select" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change"></select>
-          </div>
-        </div>
-
-        <!-- Tweede rij: Opdracht en Opdrachtgever -->
-        <div class="rvo-layout-grid rvo-layout-gap--sm rvo-layout-grid-columns--two" style="margin-bottom: 1rem;">
-          <div class="rvo-layout-column">
-            <label for="assignment" class="rvo-label">Opdracht:</label>
-            <input type="text" id="assignment" name="assignment" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op opdracht naam" value="{{ request.GET.assignment }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
-          </div>
-          <div class="rvo-layout-column">
-            <label for="client" class="rvo-label">Ministerie / Opdrachtgever:</label>
-            <input type="text" id="client" name="client" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op ministerie of opdrachtgever" value="{{ request.GET.client }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
-          </div>
-        </div>
-
-        <!-- Derde rij: Alle datumfilters -->
-        <div class="rvo-layout-grid rvo-layout-gap--sm rvo-layout-grid-columns--four" style="margin-bottom: 1rem;">
-          <div class="rvo-layout-column">
-            <label for="start_date_from" class="rvo-label">Startdatum vanaf:</label>
-            <input type="date" id="start_date_from" name="start_date_from" class="utrecht-textbox utrecht-textbox--html-input" value="{{ request.GET.start_date_from }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
-          </div>
-          <div class="rvo-layout-column">
-            <label for="start_date_to" class="rvo-label">Startdatum tot:</label>
-            <input type="date" id="start_date_to" name="start_date_to" class="utrecht-textbox utrecht-textbox--html-input" value="{{ request.GET.start_date_to }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
-          </div>
-          <div class="rvo-layout-column">
-            <label for="end_date_from" class="rvo-label">Einddatum vanaf:</label>
-            <input type="date" id="end_date_from" name="end_date_from" class="utrecht-textbox utrecht-textbox--html-input" value="{{ request.GET.end_date_from }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
-          </div>
-          <div class="rvo-layout-column">
-            <label for="end_date_to" class="rvo-label">Einddatum tot:</label>
-            <input type="date" id="end_date_to" name="end_date_to" class="utrecht-textbox utrecht-textbox--html-input" value="{{ request.GET.end_date_to }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
-          </div>
-        </div>
-
-      </form>
-
-      <div id="placement_table">
-        {% include 'parts/placement_table.html' %}
-      </div>
-
-    </main>
+    </div>
   </div>
-</div>
+</body>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const tabs = document.querySelectorAll('.rvo-tabs__item-link');
+  const panels = document.querySelectorAll('.rvo-tabs__panel');
+  
+  tabs.forEach(tab => {
+    tab.addEventListener('click', function(e) {
+      e.preventDefault();
+      
+      // Remove active class from all tabs and panels
+      tabs.forEach(t => {
+        t.classList.remove('rvo-tabs__item-link--active', 'rvo-link--active');
+        t.classList.add('rvo-link--normal');
+        t.setAttribute('aria-selected', 'false');
+      });
+      
+      panels.forEach(p => {
+        p.classList.remove('rvo-tabs__panel--active');
+        p.style.display = 'none';
+      });
+      
+      // Add active class to clicked tab
+      this.classList.add('rvo-tabs__item-link--active', 'rvo-link--active');
+      this.classList.remove('rvo-link--normal');
+      this.setAttribute('aria-selected', 'true');
+      
+      // Show corresponding panel
+      const targetId = this.getAttribute('href').substring(1);
+      const targetPanel = document.getElementById(targetId);
+      if (targetPanel) {
+        targetPanel.classList.add('rvo-tabs__panel--active');
+        targetPanel.style.display = 'block';
+      }
+    });
+  });
+});
+</script>
+
 
 <style>
-.view-switcher {
+
+/* Compact filter styling */
+.rvo-filter .utrecht-form-field {
+  margin-bottom: 0.75rem;
+}
+
+.rvo-filter .rvo-form-field__label {
+  margin-bottom: 0.25rem;
+}
+
+.rvo-filter .utrecht-textbox,
+.rvo-filter .utrecht-select {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.rvo-filter .rvo-layout-row {
+  margin-bottom: 0.5rem;
+}
+
+.rvo-filter .rvo-layout-gap--xs {
+  gap: 0.5rem;
+}
+
+/* Vertical layout styling */
+.rvo-filter-section {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.rvo-results {
+  width: 100%;
+  max-width: none;
+}
+
+/* Filter grid styling */
+.rvo-layout-grid-columns--three > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.rvo-layout-grid-columns--four > div {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Compact table styling */
+.rvo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.rvo-table-head .rvo-table-cell {
+  background-color: var(--rvo-color-grijs-50, #f9fafb);
+  font-weight: 600;
+  color: var(--rvo-color-grijs-700, #374151);
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-200, #e5e7eb);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+/* RVO Table Header styling */
+.rvo-table-header {
+  background-color: var(--rvo-color-grijs-50, #f9fafb);
+  font-weight: 600;
+  color: var(--rvo-color-grijs-700, #374151);
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-200, #e5e7eb);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.rvo-table-header:hover {
+  background-color: var(--rvo-color-grijs-100, #f3f4f6);
+}
+
+.rvo-table-header--sortable:hover {
+  background-color: var(--rvo-color-grijs-100, #f3f4f6);
+}
+
+.rvo-table-header--active-sort {
+  background-color: var(--rvo-color-hemelblauw-50, #eff6ff);
+  color: var(--rvo-color-hemelblauw-700, #1e40af);
+}
+
+.rvo-table-header__sortable-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.rvo--table-header__sorting-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.rvo-table-body .rvo-table-cell {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-100, #f3f4f6);
+  vertical-align: top;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.rvo-table-row:hover {
+  background-color: var(--rvo-color-grijs-50, #f9fafb);
+}
+
+.clickable-row:hover {
+  background-color: var(--rvo-color-hemelblauw-50, #eff6ff) !important;
+  transition: background-color 0.2s ease;
+}
+
+.clickable-row {
+  transition: background-color 0.2s ease;
+}
+
+/* RVO Tag styling */
+.rvo-tag {
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+/* Ensure all text uses RVO font */
+.rvo-text--italic {
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+/* Placement table styling */
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.placement-avatar-container {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--rvo-color-grijs-600, #6b7280);
 }
 
-.view-switcher-link {
+.placement-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--rvo-color-hemelblauw-200, #bfdbfe);
   display: flex;
   align-items: center;
-  gap: 0.25rem;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--rvo-color-hemelblauw-700, #1e40af);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.placement-name {
+  font-weight: 600;
+  color: var(--rvo-color-grijs-900, #111827);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-ministry {
+  font-size: 0.75rem;
   color: var(--rvo-color-grijs-600, #6b7280);
-  text-decoration: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: all 0.2s ease;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
 }
 
-.view-switcher-link:hover {
+.placement-assignment {
+  display: flex;
+  flex-direction: column;
+}
+
+.placement-assignment-name {
   color: var(--rvo-color-logoblauw, #003366);
-  background-color: var(--rvo-color-grijs-100, #f5f5f5);
-  text-decoration: none;
+  text-decoration: underline;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
 }
 
-.view-switcher-link--active {
-  color: var(--rvo-color-logoblauw, #003366);
-  font-weight: 500;
+.placement-assignment-org {
+  font-size: 0.75rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
 }
 
-.view-switcher-separator {
+.placement-no-role {
   color: var(--rvo-color-grijs-400, #9ca3af);
-  font-weight: 300;
+  font-style: italic;
+  font-size: 0.75rem;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-period {
+  color: var(--rvo-color-grijs-700, #374151);
+  font-weight: 500;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+/* Ensure the results container takes full width */
+.rvo-results {
+  width: 100%;
+  max-width: none;
+}
+
+/* Make sure the table container uses full width */
+#placement_table {
+  width: 100%;
+  max-width: none;
+}
+
+/* Active filters styling */
+.rvo-results-active-filters {
+  color: var(--rvo-color-grijs-700, #374151);
+  font-size: 0.875rem;
+}
+
+.rvo-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--rvo-color-hemelblauw-100, #e6f3ff);
+  color: var(--rvo-color-hemelblauw-700, #1e40af);
+  border-radius: 4px;
+}
+
+/* Column width optimization for placement table */
+.rvo-table th:nth-child(1), .rvo-table td:nth-child(1) {
+  width: 28%; /* Naam column - more space */
+}
+
+.rvo-table th:nth-child(2), .rvo-table td:nth-child(2) {
+  width: 37%; /* Opdracht column - slightly smaller */
+}
+
+.rvo-table th:nth-child(3), .rvo-table td:nth-child(3) {
+  width: 20%; /* Rol column - same */
+  white-space: nowrap; /* Prevent wrapping */
+}
+
+.rvo-table th:nth-child(4), .rvo-table td:nth-child(4) {
+  width: 15%; /* Periode column - same */
+  white-space: nowrap; /* Prevent wrapping */
+}
+
+.rvo-tag a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.rvo-tag a:hover {
+  opacity: 0.8;
+}
+
+
+
+
+
+/* Hide default details arrow */
+.rvo-collapsible-filter > summary {
+  list-style: none;
+}
+
+.rvo-collapsible-filter > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Rotate chevron when expanded */
+details[open] .rvo-collapsible-filter-header .rvo-icon-delta-naar-rechts {
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+/* Fix RVO select chevron */
+.rvo-select-wrapper::after {
+  background-color: white !important;
+  -webkit-mask-image: url("/static/icons/functioneel/delta-omlaag.svg");
+  mask-image: url("/static/icons/functioneel/delta-omlaag.svg");
 }
 </style>
-
 
 {% endblock %}

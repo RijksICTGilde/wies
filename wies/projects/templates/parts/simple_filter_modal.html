@@ -1,0 +1,199 @@
+<!-- Simpele filter modal -->
+<div class="filter-system">
+  <!-- Primaire filters -->
+  <form hx-get="{% url target_url %}" hx-target="{{ target_element }}" class="primary-form">
+    <div class="primary-filters">
+      <input 
+        type="text" 
+        name="search" 
+        class="utrecht-textbox utrecht-textbox--html-input"
+        placeholder="Zoek op collega of opdracht..." 
+        value="{{ request.GET.search|default:'' }}" 
+        hx-get="{% url target_url %}" 
+        hx-target="{{ target_element }}" 
+        hx-trigger="input delay:500ms"
+        style="width: 450px;">
+      
+      <div class="rvo-select-wrapper">
+        <select 
+          name="client" 
+          class="utrecht-select utrecht-select--html-select"
+          multiple
+          hx-get="{% url target_url %}" 
+          hx-target="{{ target_element }}" 
+          hx-trigger="change"
+          style="width: 300px; height: 120px;"
+          id="client-multiselect">
+          {% load projects_tags %}
+          {% get_clients as clients %}
+          {% for client in clients %}
+            <option value="{{ client.id }}" {% if client.id in request.GET.getlist:'client' %}selected{% endif %}>{{ client.text }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      
+      <button type="button" onclick="openModal()" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md">
+        <span class="utrecht-icon rvo-icon rvo-icon-filter rvo-icon--sm" role="img" aria-label="Filters"></span>
+        Filters
+      </button>
+    </div>
+  </form>
+  
+  <!-- Modal -->
+  <div id="filter-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; width: 500px; max-height: 80vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h3 style="margin: 0;">Extra filters</h3>
+        <button onclick="closeModal()" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+      </div>
+      
+      <form hx-get="{% url target_url %}" hx-target="{{ target_element }}">
+        <!-- Behoud primaire filter waarden -->
+        <input type="hidden" name="search" value="{{ request.GET.search|default:'' }}">
+        {% for client in request.GET.getlist:'client' %}
+          <input type="hidden" name="client" value="{{ client }}">
+        {% endfor %}
+        
+        <div style="margin-bottom: 20px;">
+          <h4>Periode</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+            <div>
+              <label>Startdatum vanaf:</label>
+              <input type="date" name="start_date_from" value="{{ request.GET.start_date_from|default:'' }}" 
+                     hx-get="{% url target_url %}" hx-target="{{ target_element }}" hx-trigger="change"
+                     style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+            <div>
+              <label>Startdatum tot:</label>
+              <input type="date" name="start_date_to" value="{{ request.GET.start_date_to|default:'' }}"
+                     hx-get="{% url target_url %}" hx-target="{{ target_element }}" hx-trigger="change"
+                     style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+            <div>
+              <label>Einddatum vanaf:</label>
+              <input type="date" name="end_date_from" value="{{ request.GET.end_date_from|default:'' }}"
+                     hx-get="{% url target_url %}" hx-target="{{ target_element }}" hx-trigger="change"
+                     style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+            <div>
+              <label>Einddatum tot:</label>
+              <input type="date" name="end_date_to" value="{{ request.GET.end_date_to|default:'' }}"
+                     hx-get="{% url target_url %}" hx-target="{{ target_element }}" hx-trigger="change"
+                     style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <h4>Rollen</h4>
+          <div style="margin-top: 10px;">
+            <div class="rvo-select-wrapper">
+              <select 
+                name="skill" 
+                class="js-skills-select-single utrecht-select utrecht-select--html-select"
+                hx-get="{% url target_url %}" 
+                hx-target="{{ target_element }}" 
+                hx-trigger="change"
+                data-selected-value="{{ request.GET.skill|default:'' }}">
+                <option value="">Alle rollen</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+          <h4>Specifieke filters</h4>
+          <div style="display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px;">
+            <div>
+              <label>Collega:</label>
+              <div class="rvo-autocomplete--lg rvo-autocomplete__container">
+                <input type="text" name="consultant" placeholder="Zoek op collega naam..." 
+                       value="{{ request.GET.consultant|default:'' }}"
+                       hx-get="{% url target_url %}" hx-target="{{ target_element }}" hx-trigger="input delay:500ms"
+                       class="utrecht-textbox utrecht-textbox--html-input rvo-autocomplete__textinput utrecht-textbox--lg"
+                       dir="auto">
+              </div>
+            </div>
+            <div>
+              <label>Opdracht:</label>
+              <div class="rvo-autocomplete--lg rvo-autocomplete__container">
+                <input type="text" name="assignment" placeholder="Zoek op opdracht naam..."
+                       value="{{ request.GET.assignment|default:'' }}"
+                       hx-get="{% url target_url %}" hx-target="{{ target_element }}" hx-trigger="input delay:500ms"
+                       class="utrecht-textbox utrecht-textbox--html-input rvo-autocomplete__textinput utrecht-textbox--lg"
+                       dir="auto">
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div style="text-align: right;">
+          <button type="button" onclick="clearFilters()" style="padding: 8px 16px; background: #f3f4f6; border: 1px solid #ccc; border-radius: 4px; cursor: pointer; margin-right: 10px;">
+            Filters wissen
+          </button>
+          <button type="button" onclick="closeModal()" style="padding: 8px 16px; background: #003366; color: white; border: none; border-radius: 4px; cursor: pointer;">
+            Sluiten
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<style>
+.primary-filters {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+/* Native HTML multiselect with RVO styling */
+.primary-filters .rvo-select-wrapper {
+  position: relative;
+}
+
+/* Native multiselect selected options styling */
+.primary-filters select[multiple] option:checked {
+  background: linear-gradient(0deg, #01689b 0%, #01689b 100%);
+  color: white;
+}
+
+.primary-filters select[multiple] option {
+  padding: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .primary-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .primary-filters input,
+  .primary-filters select {
+    min-width: auto !important;
+  }
+}
+</style>
+
+<script>
+function openModal() {
+  document.getElementById('filter-modal').style.display = 'block';
+}
+
+function closeModal() {
+  document.getElementById('filter-modal').style.display = 'none';
+}
+
+function clearFilters() {
+  window.location.href = '{% url target_url %}';
+}
+
+// Sluit modal bij klik buiten modal
+document.addEventListener('click', function(event) {
+  const modal = document.getElementById('filter-modal');
+  if (event.target === modal) {
+    closeModal();
+  }
+});
+</script>

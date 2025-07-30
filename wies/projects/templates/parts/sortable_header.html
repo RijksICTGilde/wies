@@ -4,7 +4,10 @@ Gebruik: {% include 'parts/sortable_header.html' with field='name' label='Naam' 
 {% endcomment %}
 
 <th scope="col" class="rvo-table-header rvo-table-header--sortable{% if request.GET.order == field or request.GET.order == '-'|add:field %} rvo-table-header--active-sort{% endif %}" 
-    onclick="window.location.href='{{ request.path }}?order={% if request.GET.order == field %}-{{ field }}{% else %}{{ field }}{% endif %}{% for key, value in request.GET.items %}{% if key != 'order' %}&{{ key }}={{ value|urlencode }}{% endif %}{% endfor %}'" 
+    hx-get="{{ request.path }}?order={% if request.GET.order == field %}-{{ field }}{% else %}{{ field }}{% endif %}{% for key, value in request.GET.items %}{% if key != 'order' %}&{{ key }}={{ value|urlencode }}{% endif %}{% endfor %}" 
+    hx-target="#placement_table"
+    hx-swap="outerHTML"
+    hx-push-url="true"
     style="cursor: pointer;">
   <div class="rvo-table-header__sortable-container">
     {{ label }}

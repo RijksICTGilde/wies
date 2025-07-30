@@ -352,29 +352,31 @@ class PlacementList(ListView):
         # 'service__assignment'
 
         
-        # Filter by consultant name
-        consultant_filter = self.request.GET.get('consultant')
-        if consultant_filter:
-            qs = qs.filter(colleague__name__icontains=consultant_filter)
-        
-        # Filter by assignment name  
-        assignment_filter = self.request.GET.get('assignment')
-        if assignment_filter:
-            qs = qs.filter(service__assignment__name__icontains=assignment_filter)
+        # Filter by search (combined colleague, assignment and client search)
+        search_filter = self.request.GET.get('search')
+        if search_filter:
+            qs = qs.filter(
+                models.Q(colleague__name__icontains=search_filter) |
+                models.Q(service__assignment__name__icontains=search_filter) |
+                models.Q(service__assignment__organization__icontains=search_filter) |
+                models.Q(service__assignment__ministry__name__icontains=search_filter) |
+                models.Q(service__assignment__ministry__abbreviation__icontains=search_filter)
+            )
         
         # Filter by skills
         skill_filter = self.request.GET.get('skill')
         if skill_filter:
             qs = qs.filter(service__skill__id=skill_filter)
         
-        # Filter by client/organization or ministry
+        # Filter by brands
+        brand_filter = self.request.GET.get('brand')
+        if brand_filter:
+            qs = qs.filter(colleague__brand__id=brand_filter)
+        
+        # Filter by client/ministry (single select)
         client_filter = self.request.GET.get('client')
         if client_filter:
-            qs = qs.filter(
-                models.Q(service__assignment__organization__icontains=client_filter) |
-                models.Q(service__assignment__ministry__name__icontains=client_filter) |
-                models.Q(service__assignment__ministry__abbreviation__icontains=client_filter)
-            )
+            qs = qs.filter(service__assignment__ministry__id=client_filter)
 
         # Date filters
         start_date_from = self.request.GET.get('start_date_from')
@@ -460,6 +462,155 @@ class PlacementList(ListView):
                 qs = qs.order_by(order)
 
         return qs
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['skills'] = Skill.objects.all().order_by('name')
+        context['brands'] = Brand.objects.all().order_by('name')
+        context['clients'] = Ministry.objects.all().order_by('name')
+        
+        # Add timeline data for the beschikbaarheid tab
+        # Timeline bereik: 3 maanden geleden tot 9 maanden in de toekomst (12 maanden totaal)
+        today = datetime.date.today()
+        timeline_start = add_timedelta(today, datetime.timedelta(weeks=-3*4)).replace(day=1) # approximately 3 months back (3 x 4weeks, taking first day of that month)
+        timeline_end = add_timedelta(
+            add_timedelta(today, 
+                          datetime.timedelta(weeks=10*4)).replace(day=1),  # approximately 9 months forwards ((9+1) x 4weeks, taking first day of that month and subtracting 1 day)
+            datetime.timedelta(days=-1)) 
+        
+        # Genereer maand headers
+        months = []
+        current_month = timeline_start.replace(day=1)
+        while current_month <= timeline_end:
+            months.append({
+                'date': current_month,
+                'name': current_month.strftime('%b %Y')
+            })
+            current_month = add_months(current_month, 1)
+        
+        # Start met alle consultants die placements hebben
+        consultants = Colleague.objects.filter(placements__isnull=False).distinct()
+        
+        # Sorteer op beschikbaarheid - wie het eerst beschikbaar is komt bovenaan
+        today = datetime.date.today()
+        consultant_availability = []
+        
+        for consultant in consultants:
+            # Vind laatste einddatum van actieve placements
+            latest_end_date = None
+            for placement in consultant.placements.all():
+                # Bereken werkelijke end datum
+                if placement.period_source == 'SERVICE':
+                    if placement.service.period_source == 'ASSIGNMENT':
+                        end_date = placement.service.assignment.end_date
+                    else:
+                        end_date = placement.service.specific_end_date
+                else:
+                    end_date = placement.specific_end_date
+                
+                if end_date and end_date >= today:
+                    if latest_end_date is None or end_date > latest_end_date:
+                        latest_end_date = end_date
+            
+            # Als geen actieve placements, dan nu beschikbaar
+            availability_date = latest_end_date or today
+            consultant_availability.append((consultant, availability_date))
+        
+        # Sorteer op beschikbaarheidsdatum
+        consultant_availability.sort(key=lambda x: x[1])
+        sorted_consultants = [item[0] for item in consultant_availability]
+        
+        # Bereid consultant data voor
+        consultant_data = []
+        for consultant in sorted_consultants:
+
+            placements = consultant.placements.select_related(
+                'service__assignment'
+            ).all()
+            
+            # Bereken placement bars
+            placement_bars = []
+            total_hours = 0
+            
+            top_placement = 8
+            nr_placements = 0
+            for placement in placements:
+
+                # Bereken werkelijke start/end datums
+                if placement.period_source == 'SERVICE':
+                    if placement.service.period_source == 'ASSIGNMENT':
+                        start_date = placement.service.assignment.start_date
+                        end_date = placement.service.assignment.end_date
+                    else:
+                        start_date = placement.service.specific_start_date
+                        end_date = placement.service.specific_end_date
+                else:
+                    start_date = placement.specific_start_date
+                    end_date = placement.specific_end_date
+                
+                # Skip placements zonder datums
+                if not start_date or not end_date:
+                    continue
+                
+                # Skip placements buiten timeline bereik
+                if end_date < timeline_start or start_date > timeline_end:
+                    continue
+                
+                # Clip datums aan timeline bereik
+                clipped_start = max(start_date, timeline_start)
+                clipped_end = min(end_date, timeline_end)
+                
+                # Bereken posities
+                total_days = (timeline_end - timeline_start).days
+                start_offset_days = (clipped_start - timeline_start).days
+                duration_days = (clipped_end - clipped_start).days
+
+                start_offset_percent = (start_offset_days / total_days) * 100
+                width_percent = (duration_days / total_days) * 100
+                
+                placement_bars.append({
+                    'placement': placement,
+                    'project_name': placement.service.assignment.name,
+                    'hours_per_week': placement.hours_per_week or 0,
+                    'start_offset_percent': int(start_offset_percent),
+                    'width_percent': int(width_percent),
+                    'start_date': start_date,
+                    'end_date': end_date,
+                    'clipped_start': clipped_start,
+                    'clipped_end': clipped_end,
+                    'top_px': top_placement
+                })
+                
+                # Tel uren op (alleen voor actieve placements)
+                if start_date <= today <= end_date:
+                    total_hours += placement.hours_per_week or 0
+
+                top_placement += 30
+                nr_placements += 1
+            
+            consultant_data.append({
+                'consultant': consultant,
+                'placements': placement_bars,
+                'total_current_hours': total_hours,
+                'total_tracks': nr_placements,
+                'total_tracks_height': nr_placements*30,
+            })
+
+        # Bereken vandaag positie
+        today_offset_days = (today - timeline_start).days
+        total_timeline_days = (timeline_end - timeline_start).days
+        today_position_percent = (today_offset_days / total_timeline_days) * 100
+        
+        context.update({
+            'consultant_data': consultant_data,
+            'timeline_start': timeline_start,
+            'timeline_end': timeline_end,
+            'months': months,
+            'today_position_percent': int(today_position_percent),
+            'all_consultants': Colleague.objects.filter(placements__isnull=False).distinct().order_by('name'),
+        })
+        
+        return context
     
     def get_template_names(self):
         if 'HX-Request' in self.request.headers:
