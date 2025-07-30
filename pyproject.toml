@@ -6,4 +6,5 @@ dependencies = [
   "django==5.2.4",
   "django_extensions==4.1",
   "django-multiselectfield==1.0.1",
+  "whitenoise==6.9.0",
 ]
