@@ -56,3 +56,5 @@ RUN rm -rf /app/docker && \
 RUN mkdir -p /data/db_data && chown -R app:app /data
 
 USER app
+
+CMD ["./docker-entrypoint.sh"]

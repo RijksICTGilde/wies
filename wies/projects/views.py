@@ -1,4 +1,6 @@
 import datetime
+import json
+import os
 from urllib.parse import urlencode
 
 from django.views.generic.list import ListView
@@ -9,8 +11,14 @@ from django.urls import reverse_lazy
 from django.db import models
 from django.db.models import Q, Count
 from django.http import JsonResponse
+from django.apps import apps
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib.auth.decorators import user_passes_test
+from django.core import management
 
-from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand
+from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 
 
@@ -54,6 +62,30 @@ def get_service_details(request, service_id):
         return JsonResponse(data)
     except Service.DoesNotExist:
         return JsonResponse({'error': 'Service not found'}, status=404)
+
+@user_passes_test(lambda u: u.is_superuser and u.is_authenticated, login_url='/admin/login/')
+def admin_db(request):
+    context = {
+        'assignment_count': Assignment.objects.count()
+    }
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'clear_data':
+            # not using flush, since that would clear users
+            Assignment.objects.all().delete()
+            Colleague.objects.all().delete()
+            Skill.objects.all().delete()
+            Placement.objects.all().delete()
+            Service.objects.all().delete()
+            Ministry.objects.all().delete()
+            Brand.objects.all().delete()
+            Expertise.objects.all().delete()
+        elif action == 'load_data':
+            management.call_command('loaddata', 'dummy_data.json')
+            messages.success(request, 'Data loaded successfully from dummy_data.json')
+        return redirect('admin-db')
+    
+    return render(request, 'admin_db.html', context)
 
 
 # Template filters and tags

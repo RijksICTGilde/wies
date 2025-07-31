@@ -3,8 +3,8 @@ Interne tool voor overzicht wie, waar, wat, wanneer
 
 ## Prerequisites
 - docker
-- docker-compose
 - just
+- uv
 
 ## Setup
 
@@ -32,3 +32,8 @@ django manage.py command
 ```
 just manage [...]
 ```
+
+### Special URLs
+The following URLs are not linked through the UI
+- /admin/
+- /admin/db/: for dropping db and loading dummy data

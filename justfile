@@ -4,21 +4,36 @@ export COMPOSE_FILE := "docker-compose.yml"
 default:
   @just --list
 
-# Setup container with fresh state
+# Setup image with fresh state
 setup:
+  echo "Setup application for local development: install dependencies, setup fresh db"
   docker compose build
-  echo "Setup application: drop db, install dependencies"
+  uv sync  # for enabling exploration in dependencies
   docker compose run --rm django python manage.py dropdb --noinput
   docker compose run --rm django python manage.py migrate
   docker compose run --rm django python manage.py loaddata dummy_data.json
   docker compose run --rm django python manage.py loaddata exact_dummy_data.json  
   docker-compose run --rm django python manage.py createsuperuser --noinput
+  docker compose run --rm django python manage.py loaddata dummy_data.json
 
-# Start up containers with current state.
+# Start up container
 up:
-  echo "Starting up container..."
-  docker compose run --rm django python manage.py migrate
-  docker compose up --remove-orphans
+  docker compose up
+
+# setup-production:
+#   docker build . -t wies
+#   # optionally: remove db-sqlite file
+
+# up-production:
+#   echo "Starting up container..."
+#   docker run --rm \
+#   --env WRITABLE_FOLDER=/app/db \
+#   --env DJANGO_SUPERUSER_USERNAME=admin \
+#   --env DJANGO_SUPERUSER_PASSWORD=admin \
+#   --env DJANGO_SUPERUSER_EMAIL="" \
+#   -p 8000:8000 \
+#   -v ./db:/app/db \
+#   wies
 
 # Rebuild db
 rebuild-db:
