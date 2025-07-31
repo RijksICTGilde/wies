@@ -24,9 +24,11 @@ from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpd
 from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementList, PlacementTimelineView
 from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView, SkillsView
 from wies.projects.views import MinistryListView, MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
+from wies.projects.views import admin_db
 from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIView, ExpertiseDetailAPIView
 
 urlpatterns = [
+    path('admin/db/', admin_db, name='admin-db'),
     path('admin/', admin.site.urls),
     path('', home),
     path('assignments/', AssignmentTabsView.as_view(), name='assignments'),
