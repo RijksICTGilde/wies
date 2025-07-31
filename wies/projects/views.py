@@ -201,7 +201,6 @@ class ColleagueList(ListView):
         
         # Filter by skill
         skill_filter = dict(self.request.GET).get('skill', [])
-        print('skill_filter', skill_filter)
         for skill in skill_filter:
             qs = qs.filter(skills__id=skill)
         
