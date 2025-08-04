@@ -63,6 +63,76 @@
     }
   },
   {
+    "model": "projects.skill",
+    "pk": 10,
+    "fields": {
+      "name": "(Interim) Manager"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 11,
+    "fields": {
+      "name": "Procesbegeleider"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 12,
+    "fields": {
+      "name": "Organisatieadviseur"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 13,
+    "fields": {
+      "name": "Programmamanager"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 14,
+    "fields": {
+      "name": "Beleidsadviseur"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 15,
+    "fields": {
+      "name": "Kwartiermaker"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 16,
+    "fields": {
+      "name": "Verandermanager"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 17,
+    "fields": {
+      "name": "I-Adviseur"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 18,
+    "fields": {
+      "name": "CIO"
+    }
+  },
+  {
+    "model": "projects.skill",
+    "pk": 19,
+    "fields": {
+      "name": "Solution Architect"
+    }
+  },
+  {
     "model": "projects.ministry",
     "pk": 1,
     "fields": {
@@ -526,16 +596,116 @@
     }
   },
   {
+    "model": "projects.colleague",
+    "pk": 21,
+    "fields": {
+      "name": "Willem van der Berg",
+      "brand": 4,
+      "expertises": [6, 1],
+      "skills": [10, 13]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 22,
+    "fields": {
+      "name": "Marieke Janssen",
+      "brand": 1,
+      "expertises": [4, 5], 
+      "skills": [11, 16]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 23,
+    "fields": {
+      "name": "Hassan Ahmed",
+      "brand": 2,
+      "expertises": [1, 3],
+      "skills": [14, 12]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 24,
+    "fields": {
+      "name": "Laura van Dijk",
+      "brand": 3,
+      "expertises": [2, 8],
+      "skills": [17, 19]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 25,
+    "fields": {
+      "name": "Michiel Bakker",
+      "brand": 4,
+      "expertises": [6, 5],
+      "skills": [18, 15]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 26,
+    "fields": {
+      "name": "Aisha El Mansouri",
+      "brand": 1,
+      "expertises": [3, 4],
+      "skills": [13, 11]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 27,
+    "fields": {
+      "name": "Rob Hendricks",
+      "brand": 2,
+      "expertises": [5, 1],
+      "skills": [16, 10]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 28,
+    "fields": {
+      "name": "Priya Sharma",
+      "brand": 3,
+      "expertises": [1, 6],
+      "skills": [14, 18]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 29,
+    "fields": {
+      "name": "Joris Mulder",
+      "brand": 4,
+      "expertises": [2, 8],
+      "skills": [19, 17]
+    }
+  },
+  {
+    "model": "projects.colleague",
+    "pk": 30,
+    "fields": {
+      "name": "Samira Hassan",
+      "brand": 1,
+      "expertises": [4, 3],
+      "skills": [12, 15]
+    }
+  },
+  {
     "model": "projects.assignment",
     "pk": 1,
     "fields": {
-      "name": "AI Chatbot voor Gemeente Amsterdam",
+      "name": "Digitale Identiteit Platform",
       "start_date": "2024-06-01",
       "end_date": "2025-08-31",
       "status": "LOPEND",
-      "organization": "Directie Digitale Stad Amsterdam",
+      "organization": "Logius",
       "ministry": 3,
-      "extra_info": "Ontwikkeling van een AI-chatbot voor het beantwoorden van veelgestelde vragen van inwoners",
+      "extra_info": "Ontwikkeling van een veilig digitaal identiteitsplatform voor overheidsservices",
       "assignment_type": "GROUP"
     }
   },
@@ -613,13 +783,13 @@
     "model": "projects.assignment",
     "pk": 7,
     "fields": {
-      "name": "Smart City Dashboard",
+      "name": "Digitaal Loket Modernisering",
       "start_date": "2025-08-01",
       "end_date": "2026-01-31",
       "status": "OPEN",
-      "organization": "Programma Rotterdam Digitaal",
+      "organization": "Directie Digitalisering BZK",
       "ministry": 3,
-      "extra_info": "Real-time dashboard voor monitoring van stad infrastructuur",
+      "extra_info": "Modernisering van digitale overheidsloketten voor betere gebruikerservaring",
       "assignment_type": "GROUP"
     }
   },
@@ -802,6 +972,104 @@
       "organization": "Koninklijk Nederlands Meteorologisch Instituut (KNMI)",
       "ministry": 15,
       "extra_info": "Publieke portal voor toegang tot klimaatdata",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 21,
+    "fields": {
+      "name": "Modernisering Sociale Zekerheid Systeem",
+      "start_date": "2025-09-01",
+      "end_date": "2027-03-31",
+      "status": "OPEN",
+      "organization": "UWV",
+      "ministry": 12,
+      "extra_info": "Vernieuwing van IT-systemen voor uitkeringen en sociale zekerheid",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 22,
+    "fields": {
+      "name": "Defensie AI Strategie Implementatie",
+      "start_date": "2024-10-01",
+      "end_date": "2026-12-31",
+      "status": "LOPEND",
+      "organization": "Defensie Materieel Organisatie",
+      "ministry": 5,
+      "extra_info": "Strategische implementatie van AI-toepassingen binnen Defensie",
+      "assignment_type": "INDIVIDUAL"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 23,
+    "fields": {
+      "name": "Migratie Data Platform",
+      "start_date": "2025-08-15",
+      "end_date": "2026-06-30",
+      "status": "OPEN",
+      "organization": "Immigratie- en Naturalisatiedienst (IND)",
+      "ministry": 2,
+      "extra_info": "Centraal platform voor migratie en asielprocedure data-analyse",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 24,
+    "fields": {
+      "name": "Digitale Diplomatie Platform",
+      "start_date": "2024-11-01",
+      "end_date": "2025-10-31",
+      "status": "LOPEND",
+      "organization": "Directie Digitale Diplomatie",
+      "ministry": 4,
+      "extra_info": "Platform voor digitale diplomatieke communicatie en samenwerking",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 25,
+    "fields": {
+      "name": "Woningbouw Monitoring Dashboard",
+      "start_date": "2025-08-01",
+      "end_date": null,
+      "status": "LEAD",
+      "organization": "Rijksdienst voor Ondernemend Nederland (RVO)",
+      "ministry": 14,
+      "extra_info": "Real-time monitoring en analyse van woningbouwprojecten",
+      "assignment_type": "INDIVIDUAL"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 26,
+    "fields": {
+      "name": "Onderwijsdata Analytics Platform",
+      "start_date": "2024-09-01",
+      "end_date": "2025-12-31",
+      "status": "LOPEND",
+      "organization": "Inspectie van het Onderwijs",
+      "ministry": 11,
+      "extra_info": "Data-analyse voor onderwijskwaliteit en prestatiemonitoring",
+      "assignment_type": "GROUP"
+    }
+  },
+  {
+    "model": "projects.assignment",
+    "pk": 27,
+    "fields": {
+      "name": "Kabinet Communicatie Modernisering",
+      "start_date": "2025-09-15",
+      "end_date": "2026-08-31",
+      "status": "OPEN",
+      "organization": "Rijksvoorlichtingsdienst (RVD)",
+      "ministry": 1,
+      "extra_info": "Modernisering van digitale communicatiekanalen van het Kabinet",
       "assignment_type": "GROUP"
     }
   },
@@ -1226,6 +1494,150 @@
     }
   },
   {
+    "model": "projects.service",
+    "pk": 36,
+    "fields": {
+      "assignment": 21,
+      "description": "Programmamanager sociale zekerheid",
+      "skill": 13,
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 37,
+    "fields": {
+      "assignment": 21,
+      "description": "Organisatieadviseur modernisering",
+      "skill": 12,
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 24,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 38,
+    "fields": {
+      "assignment": 22,
+      "description": "Beleidsadviseur AI strategie",
+      "skill": 14,
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 40,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 39,
+    "fields": {
+      "assignment": 23,
+      "description": "Procesbegeleider migratie",
+      "skill": 11,
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 40,
+    "fields": {
+      "assignment": 23,
+      "description": "Data engineering migratie",
+      "skill": 8,
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 41,
+    "fields": {
+      "assignment": 24,
+      "description": "Solution Architect diplomatie",
+      "skill": 19,
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 42,
+    "fields": {
+      "assignment": 24,
+      "description": "I-Adviseur digitale diplomatie",
+      "skill": 17,
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 24,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 43,
+    "fields": {
+      "assignment": 25,
+      "description": "Kwartiermaker woningbouw",
+      "skill": 15,
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 40,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 44,
+    "fields": {
+      "assignment": 26,
+      "description": "Verandermanager onderwijs",
+      "skill": 16,
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 45,
+    "fields": {
+      "assignment": 26,
+      "description": "Data engineering onderwijsdata",
+      "skill": 8,
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 24,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 46,
+    "fields": {
+      "assignment": 27,
+      "description": "(Interim) Manager communicatie",
+      "skill": 10,
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 32,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
+    "model": "projects.service",
+    "pk": 47,
+    "fields": {
+      "assignment": 27,
+      "description": "CIO kabinet modernisering",
+      "skill": 18,
+      "cost_type": "PER_HOUR",
+      "hours_per_week": 24,
+      "period_source": "ASSIGNMENT"
+    }
+  },
+  {
     "model": "projects.placement",
     "pk": 1,
     "fields": {
@@ -1487,6 +1899,150 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "hours_per_week": 16
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 36,
+    "fields": {
+      "colleague": 21,
+      "service": 36,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "hours_per_week": 32
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 37,
+    "fields": {
+      "colleague": 22,
+      "service": 37,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "hours_per_week": 24
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 38,
+    "fields": {
+      "colleague": 23,
+      "service": 38,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "hours_per_week": 40
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 39,
+    "fields": {
+      "colleague": 22,
+      "service": 39,
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2025-08-15",
+      "specific_end_date": "2026-06-30",
+      "hours_per_week": 32
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 40,
+    "fields": {
+      "colleague": 7,
+      "service": 40,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "hours_per_week": 32
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 41,
+    "fields": {
+      "colleague": 24,
+      "service": 41,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "hours_per_week": 32
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 42,
+    "fields": {
+      "colleague": 24,
+      "service": 42,
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2024-11-01",
+      "specific_end_date": "2025-10-31",
+      "hours_per_week": 24
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 43,
+    "fields": {
+      "colleague": 25,
+      "service": 43,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "hours_per_week": 40
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 44,
+    "fields": {
+      "colleague": 27,
+      "service": 44,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "hours_per_week": 32
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 45,
+    "fields": {
+      "colleague": 17,
+      "service": 45,
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2024-09-01",
+      "specific_end_date": "2025-12-31",
+      "hours_per_week": 24
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 46,
+    "fields": {
+      "colleague": 21,
+      "service": 46,
+      "period_source": "PLACEMENT",
+      "specific_start_date": "2025-09-15",
+      "specific_end_date": "2026-08-31",
+      "hours_per_week": 32
+    }
+  },
+  {
+    "model": "projects.placement",
+    "pk": 47,
+    "fields": {
+      "colleague": 25,
+      "service": 47,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "hours_per_week": 24
     }
   }
 ]
