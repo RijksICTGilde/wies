@@ -881,6 +881,7 @@ class ServiceUpdateView(UpdateView):
         return context
 
     def form_valid(self, form):
+        # TODO: not super happy about this work around, but good enough for now
         service_id = self.kwargs['pk']
         assignment_id = Service.objects.get(id=service_id).assignment.id
         super().form_valid(form)

@@ -29,11 +29,12 @@ WSGI_APPLICATION = "config.wsgi.application"
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-47e97t(4n12m4*_n&1!g$9zqg88h=(q0ccrsi*ybo!qv*7pa4p'
+SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ['DJANGO_DEBUG'] == 'true'  # false by default
 
+# TODO: what to do in dev? what in prod?
 ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]
 
 # Application definition
@@ -130,7 +131,8 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-#todo: collecstatic should still be added in step. in `just setup`?
+# TODO: collecstatic should still be added in step. in `just setup`?
+# before build such that it lands in image?
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
