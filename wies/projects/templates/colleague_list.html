@@ -2,49 +2,184 @@
 
 {% block content %}
 
-<h1 class="utrecht-heading-1">Collega's</h1>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; margin-top: 1rem;">
+  <h1 style="margin: 0;">Collega's</h1>
+</div>
 
-<form id="assignment-filter-form"
-      hx-get="/colleagues/"
-      hx-target="#colleague_table"
-      hx-trigger="change, keyup delay:300ms from:#name-search"
-      hx-swap="outerHTML"
-      class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three"
-      style="margin-bottom: 2em;">
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="name-search" class="rvo-label">Naam</label>
-        <input type="text" 
-               id="name-search" 
-               name="name" 
-               value="{{ request.GET.name|default:'' }}"
-               placeholder="Zoek op naam..."
-               class="utrecht-textbox utrecht-textbox--html-input">
-    </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="skill-filter" class="rvo-label">Rollen:</label>
-        <select id="skill-filter" name="skill"
-                class="js-skills-select-single utrecht-select utrecht-select--html-select">
-        </select>
-    </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm" style="align-self: end; text-align: right;">
-        <a href="/colleagues/new">
-          <button
-            class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before"
-            type="button"
-          >
-            <span
-              class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit"
-              role="img"
-              aria-label="Plus"
-            ></span>
-            Nieuwe collega toevoegen
-          </button>
-        </a>
-    </div>
-</form>
+<!-- Filters Section -->
+<div class="rvo-filter-section" style="margin-bottom: 2rem;">
+  <div class="utrecht-form-fieldset rvo-form-fieldset">
+    <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
+      <details class="rvo-collapsible-filter">
+        <summary class="rvo-collapsible-filter-label rvo-collapsible-filter-header">
+          <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four" style="align-items: end;">
+            <!-- Name Search (spans 2 columns) -->
+            <div role="group" aria-labelledby="name-label" class="utrecht-form-field utrecht-form-field--text" style="grid-column: span 2;">
+              <div class="rvo-form-field__label">
+                <label class="rvo-label" id="name-label" for="name">Naam</label>
+              </div>
+              <input 
+                id="name" 
+                name="name" 
+                placeholder="Zoek op naam..." 
+                type="text" 
+                class="utrecht-textbox utrecht-textbox--html-input" 
+                value="{{ request.GET.name|default:'' }}" 
+                hx-get="/colleagues/" 
+                hx-target="#colleague_table" 
+                hx-trigger="input delay:500ms"
+              />
+            </div>
+
+            <!-- Skills dropdown -->
+            <div role="group" aria-labelledby="skill-label" class="utrecht-form-field utrecht-form-field--text">
+              <div class="rvo-form-field__label">
+                <label class="rvo-label" id="skill-label" for="skill">Rollen</label>
+              </div>
+              <div class="rvo-select-wrapper">
+                <select
+                  name="skill"
+                  id="skill"
+                  class="utrecht-select utrecht-select--html-select"
+                  hx-get="/colleagues/"
+                  hx-target="#colleague_table"
+                  hx-trigger="change"
+                >
+                  <option value="">Zoek op rol...</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Collapse/expand button (4th column) -->
+            <div class="utrecht-form-field" style="display: flex; align-items: end;">
+              <button type="button" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--icon-after" onclick="this.closest('details').toggleAttribute('open')">
+                Alle filters
+                <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--sm" role="img" aria-label="Delta naar rechts"></span>
+              </button>
+            </div>
+          </div>
+        </summary>
+        <form class="rvo-form" hx-get="/colleagues/" hx-target="#colleague_table">
+
+          <!-- Filters Grid -->
+          <div class="rvo-layout-column rvo-layout-gap--lg">
+            <!-- First Row: Brand, Status, Email -->
+            <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+              <!-- Brand Filter -->
+              <div role="group" aria-labelledby="brand-label" class="utrecht-form-field utrecht-form-field--text">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="brand-label" for="brand">Merk</label>
+                </div>
+                <div class="rvo-select-wrapper">
+                  <select 
+                    name="brand" 
+                    id="brand" 
+                    class="utrecht-select utrecht-select--html-select" 
+                    hx-get="/colleagues/" 
+                    hx-target="#colleague_table" 
+                    hx-trigger="change"
+                  >
+                    <option value="">Alle merken</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Status Filter -->
+              <div role="group" aria-labelledby="status-label" class="utrecht-form-field utrecht-form-field--text">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="status-label" for="status">Status</label>
+                </div>
+                <div class="rvo-select-wrapper">
+                  <select 
+                    name="status" 
+                    id="status" 
+                    class="utrecht-select utrecht-select--html-select" 
+                    hx-get="/colleagues/" 
+                    hx-target="#colleague_table" 
+                    hx-trigger="change"
+                  >
+                    <option value="">Alle statussen</option>
+                    <option value="active" {% if request.GET.status == "active" %}selected{% endif %}>Actief</option>
+                    <option value="inactive" {% if request.GET.status == "inactive" %}selected{% endif %}>Inactief</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Email Filter -->
+              <div role="group" aria-labelledby="email-label" class="utrecht-form-field utrecht-form-field--text">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="email-label" for="email">E-mail</label>
+                </div>
+                <input 
+                  type="text" 
+                  id="email" 
+                  name="email" 
+                  class="utrecht-textbox utrecht-textbox--html-input" 
+                  placeholder="Zoek op e-mail..." 
+                  value="{{ request.GET.email|default:'' }}" 
+                  hx-get="/colleagues/" 
+                  hx-target="#colleague_table" 
+                  hx-trigger="input delay:500ms"
+                />
+              </div>
+
+              <!-- Reset Filters Button -->
+              <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                <a href="/colleagues/" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-sm utrecht-button--icon-before">
+                  <span class="utrecht-icon rvo-icon rvo-icon-foutmelding rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Foutmelding"></span>
+                  Reset alle filters
+                </a>
+              </div>
+            </div>
+
+            <!-- Second Row: Add New Button -->
+            <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+              <!-- Add New Colleague Button -->
+              <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                <a href="/colleagues/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before">
+                  <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit" role="img" aria-label="Plus"></span>
+                  Nieuwe collega toevoegen
+                </a>
+              </div>
+
+              <!-- Empty columns for balance -->
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+        </form>
+      </details>
+    </fieldset>
+  </div>
+</div>
 
 <div class="rvo-table--responsive">
 {% include 'parts/colleague_table.html' %}
 </div>
+
+<style>
+/* Hide default details arrow */
+.rvo-collapsible-filter > summary {
+  list-style: none;
+}
+
+.rvo-collapsible-filter > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Rotate chevron when expanded */
+details[open] .rvo-collapsible-filter-header .rvo-icon-delta-naar-rechts {
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+/* Fix RVO select chevron */
+.rvo-select-wrapper::after {
+  background-color: white !important;
+  -webkit-mask-image: url("/static/icons/functioneel/delta-omlaag.svg");
+  mask-image: url("/static/icons/functioneel/delta-omlaag.svg");
+}
+</style>
 
 {% endblock content %}

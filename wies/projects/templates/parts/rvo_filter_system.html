@@ -1,0 +1,228 @@
+<!-- 
+RVO Filter System Component
+Usage:
+{% include 'parts/rvo_filter_system.html' with primary_filters=primary_config secondary_filters=secondary_config target_url=url_name target_element='#table_id' %}
+
+Primary filters structure:
+primary_filters = [
+  {
+    'type': 'text',
+    'name': 'search',
+    'label': 'Zoeken',
+    'placeholder': 'Zoek op naam...',
+    'span': 2  # Optional: spans 2 columns
+  },
+  {
+    'type': 'select',
+    'name': 'skill',
+    'label': 'Rollen',
+    'empty_label': 'Zoek op rol...',
+    'options': []  # Will be populated dynamically
+  }
+]
+
+Secondary filters structure:
+secondary_filters = [
+  {
+    'section_title': 'Details',
+    'filters': [
+      {
+        'type': 'select',
+        'name': 'status',
+        'label': 'Status',
+        'empty_label': 'Alle statussen',
+        'options': [{'value': 'active', 'label': 'Actief'}]
+      }
+    ]
+  }
+]
+-->
+
+<!-- Filters Section -->
+<div class="rvo-filter-section" style="margin-bottom: 2rem;">
+  <div class="utrecht-form-fieldset rvo-form-fieldset">
+    <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
+      <details class="rvo-collapsible-filter">
+        <summary class="rvo-collapsible-filter-label rvo-collapsible-filter-header">
+          <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four" style="align-items: end;">
+            
+            <!-- Primary Filters -->
+            {% for filter in primary_filters %}
+              <div role="group" aria-labelledby="{{ filter.name }}-label" class="utrecht-form-field utrecht-form-field--text"{% if filter.span %} style="grid-column: span {{ filter.span }};"{% endif %}>
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="{{ filter.name }}-label" for="{{ filter.name }}">{{ filter.label }}</label>
+                </div>
+                
+                {% if filter.type == 'text' %}
+                  <input 
+                    id="{{ filter.name }}" 
+                    name="{{ filter.name }}" 
+                    placeholder="{{ filter.placeholder|default:'' }}" 
+                    type="text" 
+                    class="utrecht-textbox utrecht-textbox--html-input" 
+                    value="{{ request.GET|lookup:filter.name|default:'' }}" 
+                    hx-get="{% url target_url %}" 
+                    hx-target="{{ target_element }}" 
+                    hx-trigger="input delay:500ms"
+                    {% if filter.hx_include %}hx-include="{{ filter.hx_include }}"{% endif %}
+                  />
+                {% elif filter.type == 'select' %}
+                  <div class="rvo-select-wrapper">
+                    <select
+                      name="{{ filter.name }}"
+                      id="{{ filter.name }}"
+                      class="utrecht-select utrecht-select--html-select"
+                      hx-get="{% url target_url %}"
+                      hx-target="{{ target_element }}"
+                      hx-trigger="change"
+                      {% if filter.hx_include %}hx-include="{{ filter.hx_include }}"{% endif %}
+                    >
+                      {% if filter.empty_label %}
+                        <option value="">{{ filter.empty_label }}</option>
+                      {% endif %}
+                      {% for option in filter.options %}
+                        <option value="{{ option.value }}" {% if option.value|stringformat:"s" == request.GET|lookup:filter.name|stringformat:"s" %}selected{% endif %}>
+                          {{ option.label }}
+                        </option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                {% endif %}
+              </div>
+            {% endfor %}
+            
+            <!-- Collapse/expand button -->
+            <div class="utrecht-form-field" style="display: flex; align-items: end;">
+              <button type="button" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--icon-after" onclick="this.closest('details').toggleAttribute('open')">
+                Alle filters
+                <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--sm" role="img" aria-label="Delta naar rechts"></span>
+              </button>
+            </div>
+          </div>
+        </summary>
+        
+        <form class="rvo-form" hx-get="{% url target_url %}" hx-target="{{ target_element }}">
+          {% if form_includes %}
+            {% for include in form_includes %}
+              {{ include|safe }}
+            {% endfor %}
+          {% endif %}
+
+          <!-- Secondary Filters Grid -->
+          <div class="rvo-layout-column rvo-layout-gap--lg">
+            {% for section in secondary_filters %}
+              <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+                {% for filter in section.filters %}
+                  <div role="group" aria-labelledby="{{ filter.name }}-label" class="utrecht-form-field utrecht-form-field--text">
+                    <div class="rvo-form-field__label">
+                      <label class="rvo-label" id="{{ filter.name }}-label" for="{{ filter.name }}">{{ filter.label }}</label>
+                    </div>
+                    
+                    {% if filter.type == 'text' %}
+                      <input 
+                        type="text" 
+                        id="{{ filter.name }}" 
+                        name="{{ filter.name }}" 
+                        class="utrecht-textbox utrecht-textbox--html-input" 
+                        placeholder="{{ filter.placeholder|default:'' }}" 
+                        value="{{ request.GET|lookup:filter.name|default:'' }}" 
+                        hx-get="{% url target_url %}" 
+                        hx-target="{{ target_element }}" 
+                        hx-trigger="input delay:500ms"
+                        {% if filter.hx_include %}hx-include="{{ filter.hx_include }}"{% endif %}
+                      />
+                    {% elif filter.type == 'date' %}
+                      <input 
+                        type="date" 
+                        id="{{ filter.name }}" 
+                        name="{{ filter.name }}" 
+                        class="utrecht-textbox utrecht-textbox--html-input" 
+                        value="{{ request.GET|lookup:filter.name|default:'' }}" 
+                        hx-get="{% url target_url %}" 
+                        hx-target="{{ target_element }}" 
+                        hx-trigger="change"
+                        {% if filter.hx_include %}hx-include="{{ filter.hx_include }}"{% endif %}
+                      />
+                    {% elif filter.type == 'select' %}
+                      <div class="rvo-select-wrapper">
+                        <select 
+                          name="{{ filter.name }}" 
+                          id="{{ filter.name }}" 
+                          class="utrecht-select utrecht-select--html-select" 
+                          hx-get="{% url target_url %}" 
+                          hx-target="{{ target_element }}" 
+                          hx-trigger="change"
+                          {% if filter.hx_include %}hx-include="{{ filter.hx_include }}"{% endif %}
+                        >
+                          {% if filter.empty_label %}
+                            <option value="">{{ filter.empty_label }}</option>
+                          {% endif %}
+                          {% for option in filter.options %}
+                            <option value="{{ option.value }}" {% if option.value|stringformat:"s" == request.GET|lookup:filter.name|stringformat:"s" %}selected{% endif %}>
+                              {{ option.label }}
+                            </option>
+                          {% endfor %}
+                        </select>
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endfor %}
+                
+                <!-- Action buttons in first section -->
+                {% if forloop.first %}
+                  <!-- Reset Filters Button -->
+                  <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                    <a href="{% url target_url %}" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-sm utrecht-button--icon-before">
+                      <span class="utrecht-icon rvo-icon rvo-icon-foutmelding rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Foutmelding"></span>
+                      Reset alle filters
+                    </a>
+                  </div>
+                {% endif %}
+              </div>
+              
+              <!-- Add New Button in second section -->
+              {% if forloop.first and add_new_url %}
+                <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+                  <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                    <a href="{{ add_new_url }}" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before">
+                      <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit" role="img" aria-label="Plus"></span>
+                      {{ add_new_label|default:"Nieuw item toevoegen" }}
+                    </a>
+                  </div>
+                  <!-- Empty columns for balance -->
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </form>
+      </details>
+    </fieldset>
+  </div>
+</div>
+
+<style>
+/* Hide default details arrow */
+.rvo-collapsible-filter > summary {
+  list-style: none;
+}
+
+.rvo-collapsible-filter > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Rotate chevron when expanded */
+details[open] .rvo-collapsible-filter-header .rvo-icon-delta-naar-rechts {
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+/* Fix RVO select chevron */
+.rvo-select-wrapper::after {
+  background-color: white !important;
+  -webkit-mask-image: url("/static/icons/functioneel/delta-omlaag.svg");
+  mask-image: url("/static/icons/functioneel/delta-omlaag.svg");
+}
+</style>

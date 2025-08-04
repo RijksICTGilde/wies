@@ -1,59 +1,37 @@
-<!-- Eenvoudige filter systeem -->
-<div class="filter-system">
+<!-- Eenvoudige filter systeem met RVO design system -->
+<div class="rvo-layout-column rvo-layout-gap--md">
   <form hx-get="{% url target_url %}" hx-target="{{ target_element }}">
     
     <!-- Primaire filters -->
-    <div class="primary-filters">
-      <input 
-        type="text" 
-        name="search" 
-        placeholder="Zoek op collega of opdracht..." 
-        value="{{ request.GET.search|default:'' }}" 
-        hx-get="{% url target_url %}" 
-        hx-target="{{ target_element }}" 
-        hx-trigger="input delay:500ms">
+    <div class="rvo-layout-row rvo-layout-gap--md rvo-p--md rvo-bg--white rvo-border-radius--md rvo-border--sm">
+      <div class="rvo-form-field">
+        <input 
+          type="text" 
+          name="search" 
+          class="utrecht-textbox utrecht-textbox--html-input"
+          placeholder="Zoek op collega of opdracht..." 
+          value="{{ request.GET.search|default:'' }}" 
+          hx-get="{% url target_url %}" 
+          hx-target="{{ target_element }}" 
+          hx-trigger="input delay:500ms">
+      </div>
       
-      <select 
-        name="skill" 
-        hx-get="{% url target_url %}" 
-        hx-target="{{ target_element }}" 
-        hx-trigger="change">
-        <option value="">Alle rollen</option>
-      </select>
+      <div class="rvo-form-field">
+        <select 
+          name="skill" 
+          class="utrecht-select utrecht-select--html-select"
+          hx-get="{% url target_url %}" 
+          hx-target="{{ target_element }}" 
+          hx-trigger="change">
+          <option value="">Alle rollen</option>
+        </select>
+      </div>
       
-      <button type="button">Filters</button>
+      <button type="button" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md">
+        <span class="utrecht-icon rvo-icon rvo-icon-filter rvo-icon--sm" role="img" aria-label="Filters"></span>
+        Filters
+      </button>
     </div>
     
   </form>
 </div>
-
-<style>
-.filter-system {
-  margin-bottom: 1rem;
-}
-
-.primary-filters {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-  padding: 1rem;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-}
-
-.primary-filters input,
-.primary-filters select {
-  padding: 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-}
-
-.primary-filters button {
-  padding: 0.5rem 1rem;
-  background: white;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  cursor: pointer;
-}
-</style>

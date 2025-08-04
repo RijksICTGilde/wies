@@ -7,57 +7,162 @@
   <h1 style="margin: 0;">Opdrachten</h1>
 </div>
 
-<!-- Filter Form -->
-<form id="assignment-tab-filter-form"
-      hx-get="{% url 'assignments' %}"
-      hx-target="#assignment-tabs-section"
-      hx-swap="outerHTML"
-      hx-include="[name='tab']"
-      class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four"
-      style="margin-bottom: 2em;">
-    
-    <!-- Hidden field to maintain active tab -->
-    <input type="hidden" name="tab" value="{{ active_tab }}">
-    
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="name-search" class="rvo-label">Zoeken</label>
-        <input type="text" 
-               id="name-search" 
-               name="name" 
-               value="{{ request.GET.name|default:'' }}"
-               placeholder="Zoek op naam, opdrachtgever of ministerie..."
-               class="utrecht-textbox utrecht-textbox--html-input"
-               hx-get="{% url 'assignments' %}" 
-               hx-target="#assignment-tabs-section" 
-               hx-trigger="keyup delay:300ms"
-               hx-include="[name='tab'], [name='order'], [name='skill']">
-    </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="skills" class="rvo-label">Rollen:</label>
-        <select name="skill" 
-                id="skills" 
-                class="js-skills-select-single utrecht-select utrecht-select--html-select" 
+<!-- Filters Section -->
+<div class="rvo-filter-section" style="margin-bottom: 2rem;">
+  <div class="utrecht-form-fieldset rvo-form-fieldset">
+    <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
+      <details class="rvo-collapsible-filter">
+        <summary class="rvo-collapsible-filter-label rvo-collapsible-filter-header">
+          <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four" style="align-items: end;">
+            <!-- Search (spans 2 columns) -->
+            <div role="group" aria-labelledby="search-label" class="utrecht-form-field utrecht-form-field--text" style="grid-column: span 2;">
+              <div class="rvo-form-field__label">
+                <label class="rvo-label" id="search-label" for="search">Zoeken</label>
+              </div>
+              <input 
+                id="search" 
+                name="name" 
+                placeholder="Zoek op naam, opdrachtgever of ministerie..." 
+                type="text" 
+                class="utrecht-textbox utrecht-textbox--html-input" 
+                value="{{ request.GET.name|default:'' }}" 
                 hx-get="{% url 'assignments' %}" 
                 hx-target="#assignment-tabs-section" 
-                hx-trigger="change"
-                hx-include="[name='tab'], [name='name'], [name='order']"></select>
-    </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm" style="align-self: end; text-align: right;">
-        <a href="/assignments/new">
-          <button
-            class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before"
-            type="button"
-          >
-            <span
-              class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit"
-              role="img"
-              aria-label="Plus"
-            ></span>
-            Nieuwe opdracht toevoegen
-          </button>
-        </a>
-    </div>
-</form>
+                hx-trigger="input delay:500ms"
+                hx-include="[name='tab'], [name='order'], [name='skill']"
+              />
+            </div>
+
+            <!-- Skills dropdown -->
+            <div role="group" aria-labelledby="skill-label" class="utrecht-form-field utrecht-form-field--text">
+              <div class="rvo-form-field__label">
+                <label class="rvo-label" id="skill-label" for="skill">Rollen</label>
+              </div>
+              <div class="rvo-select-wrapper">
+                <select
+                  name="skill"
+                  id="skill"
+                  class="utrecht-select utrecht-select--html-select"
+                  hx-get="{% url 'assignments' %}"
+                  hx-target="#assignment-tabs-section"
+                  hx-trigger="change"
+                  hx-include="[name='tab'], [name='name'], [name='order']"
+                >
+                  <option value="">Zoek op rol...</option>
+                </select>
+              </div>
+            </div>
+            
+            <!-- Collapse/expand button (4th column) -->
+            <div class="utrecht-form-field" style="display: flex; align-items: end;">
+              <button type="button" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--icon-after" onclick="this.closest('details').toggleAttribute('open')">
+                Alle filters
+                <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--sm" role="img" aria-label="Delta naar rechts"></span>
+              </button>
+            </div>
+          </div>
+        </summary>
+        <form class="rvo-form" hx-get="{% url 'assignments' %}" hx-target="#assignment-tabs-section">
+          <!-- Hidden field to maintain active tab -->
+          <input type="hidden" name="tab" value="{{ active_tab }}">
+
+          <!-- Filters Grid -->
+          <div class="rvo-layout-column rvo-layout-gap--lg">
+            <!-- First Row: Status, Client, Ministry -->
+            <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+              <!-- Status Filter -->
+              <div role="group" aria-labelledby="status-label" class="utrecht-form-field utrecht-form-field--text">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="status-label" for="status">Status</label>
+                </div>
+                <div class="rvo-select-wrapper">
+                  <select 
+                    name="status" 
+                    id="status" 
+                    class="utrecht-select utrecht-select--html-select" 
+                    hx-get="{% url 'assignments' %}" 
+                    hx-target="#assignment-tabs-section" 
+                    hx-trigger="change"
+                    hx-include="[name='tab'], [name='name'], [name='skill']"
+                  >
+                    <option value="">Alle statussen</option>
+                    <option value="active" {% if request.GET.status == "active" %}selected{% endif %}>Actief</option>
+                    <option value="completed" {% if request.GET.status == "completed" %}selected{% endif %}>Afgerond</option>
+                    <option value="on_hold" {% if request.GET.status == "on_hold" %}selected{% endif %}>On hold</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Client Filter -->
+              <div role="group" aria-labelledby="client-label" class="utrecht-form-field utrecht-form-field--text">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="client-label" for="client">Opdrachtgever</label>
+                </div>
+                <div class="rvo-select-wrapper">
+                  <select 
+                    name="client" 
+                    id="client" 
+                    class="utrecht-select utrecht-select--html-select" 
+                    hx-get="{% url 'assignments' %}" 
+                    hx-target="#assignment-tabs-section" 
+                    hx-trigger="change"
+                    hx-include="[name='tab'], [name='name'], [name='skill']"
+                  >
+                    <option value="">Alle opdrachtgevers</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Ministry Filter -->
+              <div role="group" aria-labelledby="ministry-label" class="utrecht-form-field utrecht-form-field--text">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="ministry-label" for="ministry">Ministerie</label>
+                </div>
+                <div class="rvo-select-wrapper">
+                  <select 
+                    name="ministry" 
+                    id="ministry" 
+                    class="utrecht-select utrecht-select--html-select" 
+                    hx-get="{% url 'assignments' %}" 
+                    hx-target="#assignment-tabs-section" 
+                    hx-trigger="change"
+                    hx-include="[name='tab'], [name='name'], [name='skill']"
+                  >
+                    <option value="">Alle ministeries</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Reset Filters Button -->
+              <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                <a href="{% url 'assignments' %}" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-sm utrecht-button--icon-before">
+                  <span class="utrecht-icon rvo-icon rvo-icon-foutmelding rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Foutmelding"></span>
+                  Reset alle filters
+                </a>
+              </div>
+            </div>
+
+            <!-- Second Row: Add New Button -->
+            <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+              <!-- Add New Assignment Button -->
+              <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                <a href="/assignments/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before">
+                  <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit" role="img" aria-label="Plus"></span>
+                  Nieuwe opdracht toevoegen
+                </a>
+              </div>
+
+              <!-- Empty columns for balance -->
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+        </form>
+      </details>
+    </fieldset>
+  </div>
+</div>
 
 <!-- Tab Navigation and Content -->
 {% include 'parts/assignment_tabs_section.html' %}
@@ -103,6 +208,28 @@
 .view-switcher-separator {
   color: var(--rvo-color-grijs-400, #9ca3af);
   font-weight: 300;
+}
+
+/* Hide default details arrow */
+.rvo-collapsible-filter > summary {
+  list-style: none;
+}
+
+.rvo-collapsible-filter > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Rotate chevron when expanded */
+details[open] .rvo-collapsible-filter-header .rvo-icon-delta-naar-rechts {
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+/* Fix RVO select chevron */
+.rvo-select-wrapper::after {
+  background-color: white !important;
+  -webkit-mask-image: url("/static/icons/functioneel/delta-omlaag.svg");
+  mask-image: url("/static/icons/functioneel/delta-omlaag.svg");
 }
 </style>
 

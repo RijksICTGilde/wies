@@ -10,7 +10,7 @@
     </thead>
     <tbody>
       {% for placement in object_list %}
-        <tr class="rvo-table-row clickable-row" onclick="window.location.href='{% url 'assignment-detail' placement.service.assignment.id %}'">
+        <tr class="rvo-table-row clickable-row" onclick="{% if placement.colleague %}window.location.href='{% url 'colleague-detail' placement.colleague.id %}'{% endif %}">
           <td class="rvo-table-cell">
             <div class="placement-avatar-container">
               <div class="placement-avatar">
@@ -40,9 +40,11 @@
           </td>
           <td class="rvo-table-cell">
             <div class="placement-assignment">
-              <span class="placement-assignment-name">
+              <a href="{% url 'assignment-detail' placement.service.assignment.id %}" 
+                 class="placement-assignment-name"
+                 onclick="event.stopPropagation()">
                 {{ placement.service.assignment.name }}
-              </span>
+              </a>
               <div class="placement-assignment-org">
                 {{ placement.service.assignment.organization }}
               </div>
