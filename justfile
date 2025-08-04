@@ -7,8 +7,8 @@ default:
 # Setup image with fresh state
 setup:
   echo "Setup application for local development: install dependencies, setup fresh db"
+  uv sync  # to enable exploration in dependencies
   docker compose build
-  uv sync  # for enabling exploration in dependencies
   docker compose run --rm django python manage.py dropdb --noinput
   docker compose run --rm django python manage.py migrate
   docker compose run --rm django python manage.py loaddata dummy_data.json
@@ -21,20 +21,22 @@ up:
   docker compose up
 
 # setup-production:
-#   docker build . -t wies
+#  docker build . -t wies
 #   # optionally: remove db-sqlite file
 
 # up-production:
 #   echo "Starting up container..."
-#   docker run --rm \
-#   --env DJANGO_SUPERUSER_USERNAME=admin \
-#   --env DJANGO_SUPERUSER_PASSWORD=admin \
-#   --env DJANGO_SUPERUSER_EMAIL="" \
-#   --env DJANGO_SECRET_KEY=django-insecure-47e97t(4n12m4*_n&1!g$9zqg88h=(q0ccrsi*ybo!qv*7pa4p \
-#   --env WRITABLE_FOLDER=/app/db \
-#   -p 8000:8000 \
-#   -v ./db:/app/db \
-#   wies
+#     docker run --rm \
+#     --env DJANGO_ENV=production \
+#     --env DJANGO_DEBUG=false \
+#     --env DJANGO_SUPERUSER_USERNAME=admin \
+#     --env DJANGO_SUPERUSER_PASSWORD=admin \
+#     --env DJANGO_SUPERUSER_EMAIL="" \
+#     --env DJANGO_SECRET_KEY=xxxxxxx \
+#     --env WRITABLE_FOLDER=/app/db \
+#     -p 8000:8000 \
+#     -v ./db:/app/db \
+#     wies
 
 # Rebuild db
 rebuild-db:
