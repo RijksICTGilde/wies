@@ -1,119 +1,236 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+<link rel="stylesheet" href="{% static 'timeline.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/custom.js' %}"></script>
+{% endblock %}
 
 {% block content %}
-<div class="rvo-max-width-layout rvo-max-width-layout--md">
-  <div class="rvo-max-width-layout-inline-padding--md">
-    <main>
-      <!-- Header with title and view switcher -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; margin-top: 1rem;">
-        <h1 style="margin: 0;">Inzetten</h1>
-        
-        <!-- Subtle view switcher -->
-        <div class="view-switcher">
-          <span class="view-switcher-link view-switcher-link--active">
-            <span class="utrecht-icon rvo-icon rvo-icon-menu rvo-icon--sm" role="img" aria-label="List"></span>
-            Lijst
-          </span>
-          <span class="view-switcher-separator">|</span>
-          <a href="{% url 'placements-timeline' %}" class="view-switcher-link">
-            <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm" role="img" aria-label="Calendar"></span>
-            Tijdlijn
-          </a>
+<body class="rvo-theme rvo-filter-body">
+  <div class="rvo-layout-column rvo-layout-gap--xl">
+    <div class="rvo-layout-column rvo-layout-gap--xl">
+      <div class="rvo-filter-wrapper rvo-max-width-layout rvo-max-width-layout--md">
+        <div class="rvo-layout-grid-container" style="width: 100%;">
+          <div class="rvo-layout-column rvo-layout-gap--xl" style="width: 100%;">
+            
+
+
+            <!-- Results Section - Bottom -->
+            <div class="rvo-results">
+              <!-- Header with title -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h1 class="utrecht-heading-1 rvo-heading--no-margins rvo-heading--mixed">
+                  <strong>Inzetten</strong>
+                </h1>
+              </div>
+
+              <!-- Filters Section -->
+              <div class="rvo-filter-section">
+                <form class="rvo-form" hx-get="{% url 'placements' %}" hx-target="#placement-content" hx-trigger="change,input delay:500ms from:input">
+                  <input type="hidden" name="tab" value="{{ request.GET.tab|default:'inzet' }}">
+                  <div class="utrecht-form-fieldset rvo-form-fieldset">
+                    <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
+                      <!-- Primary filters always visible -->
+                      <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four" style="align-items: end; margin-bottom: 1rem;">
+                        <!-- Combined Search (spans 2 columns) -->
+                        <div role="group" aria-labelledby="search-label" class="utrecht-form-field utrecht-form-field--text" style="grid-column: span 2;">
+                          <div class="rvo-form-field__label">
+                            <label class="rvo-label" id="search-label" for="search">Zoeken</label>
+                          </div>
+                          <input 
+                            id="search" 
+                            name="search" 
+                            placeholder="Zoek op collega, opdracht of opdrachtgever..." 
+                            type="text" 
+                            class="utrecht-textbox utrecht-textbox--html-input" 
+                            value="{{ request.GET.search }}" 
+                          />
+                        </div>
+
+                        <!-- Search Client (select dropdown) -->
+                        <div role="group" aria-labelledby="client-label" class="utrecht-form-field utrecht-form-field--text">
+                          <div class="rvo-form-field__label">
+                            <label class="rvo-label" id="client-label" for="client">Opdrachtgever</label>
+                          </div>
+                          <div class="rvo-select-wrapper">
+                            <select
+                              name="client"
+                              id="client"
+                              class="utrecht-select utrecht-select--html-select"
+                            >
+                              <option value="">Zoek op ministerie of opdrachtgever...</option>
+                              {% if clients %}
+                                {% for client in clients %}
+                                  <option value="{{ client.id }}" {% if request.GET.client == client.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ client.name }}
+                                  </option>
+                                {% endfor %}
+                              {% else %}
+                                <option value="">Geen opdrachtgevers beschikbaar</option>
+                              {% endif %}
+                            </select>
+                          </div>
+                        </div>
+                        
+                        <!-- Collapse/expand button (4th column) -->
+                        <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                          <button type="button" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--icon-after" onclick="toggleFilters(this)">
+                            Alle filters
+                            <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--sm" role="img" aria-label="Delta naar rechts"></span>
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <!-- Collapsible additional filters -->
+                      <details class="rvo-collapsible-filter">
+                        <summary style="display: none;"></summary>
+                        <!-- Additional Filters Grid -->
+                        <div class="rvo-layout-column rvo-layout-gap--lg">
+                          <!-- First Row: Rollen, Merken and Start Dates -->
+                          <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+                            <!-- Skills/Rollen Filter -->
+                            <div role="group" aria-labelledby="skills-label" class="utrecht-form-field utrecht-form-field--text">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="skills-label" for="skills">Rollen</label>
+                              </div>
+                              <div class="rvo-select-wrapper">
+                                <select 
+                                  name="skill" 
+                                  id="skills" 
+                                  class="utrecht-select utrecht-select--html-select" 
+                                >
+                                  <option value="">Zoek op rol...</option>
+                                  {% if skills %}
+                                    {% for skill in skills %}
+                                      <option value="{{ skill.id }}" {% if request.GET.skill == skill.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ skill.name }}
+                                      </option>
+                                    {% endfor %}
+                                  {% else %}
+                                    <option value="">Geen skills beschikbaar</option>
+                                  {% endif %}
+                                </select>
+                              </div>
+                            </div>
+
+                            <!-- Brands/Merken Filter -->
+                            <div role="group" aria-labelledby="brands-label" class="utrecht-form-field utrecht-form-field--text">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="brands-label" for="brands">Merken</label>
+                              </div>
+                              <div class="rvo-select-wrapper">
+                                <select 
+                                  name="brand" 
+                                  id="brands" 
+                                  class="utrecht-select utrecht-select--html-select" 
+                                >
+                                  <option value="">Zoek op merk...</option>
+                                  {% if brands %}
+                                    {% for brand in brands %}
+                                      <option value="{{ brand.id }}" {% if request.GET.brand == brand.id|stringformat:"s" %}selected{% endif %}>
+                                        {{ brand.name }}
+                                      </option>
+                                    {% endfor %}
+                                  {% else %}
+                                    <option value="">Geen merken beschikbaar</option>
+                                  {% endif %}
+                                </select>
+                              </div>
+                            </div>
+
+                            <!-- Start vanaf -->
+                            <div role="group" aria-labelledby="start_date_from-label" class="utrecht-form-field utrecht-form-field--text">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="start_date_from-label" for="start_date_from">Start vanaf</label>
+                              </div>
+                              <input 
+                                type="date" 
+                                id="start_date_from" 
+                                name="start_date_from" 
+                                class="utrecht-textbox utrecht-textbox--html-input" 
+                                value="{{ request.GET.start_date_from }}" 
+                              />
+                            </div>
+
+                            <!-- Start tot -->
+                            <div role="group" aria-labelledby="start_date_to-label" class="utrecht-form-field utrecht-form-field--text">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="start_date_to-label" for="start_date_to">Start tot</label>
+                              </div>
+                              <input 
+                                type="date" 
+                                id="start_date_to" 
+                                name="start_date_to" 
+                                class="utrecht-textbox utrecht-textbox--html-input" 
+                                value="{{ request.GET.start_date_to }}" 
+                              />
+                            </div>
+                          </div>
+
+                          <!-- Second Row: End Dates and Reset Button -->
+                          <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+                            <!-- Eind vanaf -->
+                            <div role="group" aria-labelledby="end_date_from-label" class="utrecht-form-field utrecht-form-field--text">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="end_date_from-label" for="end_date_from">Eind vanaf</label>
+                              </div>
+                              <input 
+                                type="date" 
+                                id="end_date_from" 
+                                name="end_date_from" 
+                                class="utrecht-textbox utrecht-textbox--html-input" 
+                                value="{{ request.GET.end_date_from }}" 
+                              />
+                            </div>
+
+                            <!-- Eind tot -->
+                            <div role="group" aria-labelledby="end_date_to-label" class="utrecht-form-field utrecht-form-field--text">
+                              <div class="rvo-form-field__label">
+                                <label class="rvo-label" id="end_date_to-label" for="end_date_to">Eind tot</label>
+                              </div>
+                              <input 
+                                type="date" 
+                                id="end_date_to" 
+                                name="end_date_to" 
+                                class="utrecht-textbox utrecht-textbox--html-input" 
+                                value="{{ request.GET.end_date_to }}" 
+                              />
+                            </div>
+
+                            <!-- Reset Filters Button -->
+                            <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                              <a href="{% url 'placements' %}" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-sm utrecht-button--icon-before">
+                                <span class="utrecht-icon rvo-icon rvo-icon-foutmelding rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Foutmelding"></span>
+                                Reset alle filters
+                              </a>
+                            </div>
+
+                            <!-- Empty column for balance -->
+                            <div></div>
+                          </div>
+                        </div>
+                      </details>
+                    </fieldset>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Tabs and Content -->
+              <div id="placement-content" style="margin: 2rem 0 1rem 0;">
+                {% include 'parts/placement_content.html' %}
+              </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      <form hx-get="{% url 'placements' %}" hx-target="#placement_table">
-        
-        <!-- Eerste rij: Collega en Skills -->
-        <div class="rvo-layout-grid rvo-layout-gap--sm rvo-layout-grid-columns--two" style="margin-bottom: 1rem;">
-          <div class="rvo-layout-column">
-            <label for="consultant" class="rvo-label">Collega:</label>
-            <input type="text" id="consultant" name="consultant" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op collega naam" value="{{ request.GET.consultant }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
-          </div>
-          <div class="rvo-layout-column">
-            <label for="skills" class="rvo-label">Rollen:</label>
-            <select name="skill" id="skills" class="js-skills-select-single utrecht-select utrecht-select--html-select" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change"></select>
-          </div>
-        </div>
-
-        <!-- Tweede rij: Opdracht en Opdrachtgever -->
-        <div class="rvo-layout-grid rvo-layout-gap--sm rvo-layout-grid-columns--two" style="margin-bottom: 1rem;">
-          <div class="rvo-layout-column">
-            <label for="assignment" class="rvo-label">Opdracht:</label>
-            <input type="text" id="assignment" name="assignment" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op opdracht naam" value="{{ request.GET.assignment }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
-          </div>
-          <div class="rvo-layout-column">
-            <label for="client" class="rvo-label">Ministerie / Opdrachtgever:</label>
-            <input type="text" id="client" name="client" class="utrecht-textbox utrecht-textbox--html-input" placeholder="Zoek op ministerie of opdrachtgever" value="{{ request.GET.client }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="input delay:500ms">
-          </div>
-        </div>
-
-        <!-- Derde rij: Alle datumfilters -->
-        <div class="rvo-layout-grid rvo-layout-gap--sm rvo-layout-grid-columns--four" style="margin-bottom: 1rem;">
-          <div class="rvo-layout-column">
-            <label for="start_date_from" class="rvo-label">Startdatum vanaf:</label>
-            <input type="date" id="start_date_from" name="start_date_from" class="utrecht-textbox utrecht-textbox--html-input" value="{{ request.GET.start_date_from }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
-          </div>
-          <div class="rvo-layout-column">
-            <label for="start_date_to" class="rvo-label">Startdatum tot:</label>
-            <input type="date" id="start_date_to" name="start_date_to" class="utrecht-textbox utrecht-textbox--html-input" value="{{ request.GET.start_date_to }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
-          </div>
-          <div class="rvo-layout-column">
-            <label for="end_date_from" class="rvo-label">Einddatum vanaf:</label>
-            <input type="date" id="end_date_from" name="end_date_from" class="utrecht-textbox utrecht-textbox--html-input" value="{{ request.GET.end_date_from }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
-          </div>
-          <div class="rvo-layout-column">
-            <label for="end_date_to" class="rvo-label">Einddatum tot:</label>
-            <input type="date" id="end_date_to" name="end_date_to" class="utrecht-textbox utrecht-textbox--html-input" value="{{ request.GET.end_date_to }}" hx-get="{% url 'placements' %}" hx-target="#placement_table" hx-trigger="change">
-          </div>
-        </div>
-
-      </form>
-
-      <div id="placement_table">
-        {% include 'parts/placement_table.html' %}
-      </div>
-
-    </main>
+    </div>
   </div>
-</div>
-
-<style>
-.view-switcher {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--rvo-color-grijs-600, #6b7280);
-}
-
-.view-switcher-link {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: var(--rvo-color-grijs-600, #6b7280);
-  text-decoration: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.view-switcher-link:hover {
-  color: var(--rvo-color-logoblauw, #003366);
-  background-color: var(--rvo-color-grijs-100, #f5f5f5);
-  text-decoration: none;
-}
-
-.view-switcher-link--active {
-  color: var(--rvo-color-logoblauw, #003366);
-  font-weight: 500;
-}
-
-.view-switcher-separator {
-  color: var(--rvo-color-grijs-400, #9ca3af);
-  font-weight: 300;
-}
-</style>
-
+</body>
 
 {% endblock %}

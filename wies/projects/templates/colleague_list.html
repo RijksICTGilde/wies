@@ -1,47 +1,145 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/custom.js' %}"></script>
+{% endblock %}
 
 {% block content %}
 
-<h1 class="utrecht-heading-1">Collega's</h1>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; margin-top: 1rem;">
+  <h1 style="margin: 0;">Collega's</h1>
+</div>
 
-<form id="assignment-filter-form"
-      hx-get="/colleagues/"
-      hx-target="#colleague_table"
-      hx-trigger="change, keyup delay:300ms from:#name-search"
-      hx-swap="outerHTML"
-      class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three"
-      style="margin-bottom: 2em;">
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="name-search" class="rvo-label">Naam</label>
-        <input type="text" 
-               id="name-search" 
-               name="name" 
-               value="{{ request.GET.name|default:'' }}"
-               placeholder="Zoek op naam..."
-               class="utrecht-textbox utrecht-textbox--html-input">
+<!-- Filters Section -->
+<div class="rvo-filter-section" style="margin-bottom: 2rem;">
+  <form class="rvo-form" hx-get="{% url 'colleagues' %}" hx-target="#colleague_table" hx-trigger="change,input delay:500ms from:input">
+    <div class="utrecht-form-fieldset rvo-form-fieldset">
+      <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
+        <!-- Primary filters always visible -->
+        <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four" style="align-items: end; margin-bottom: 1rem;">
+          <!-- Name Search (spans 2 columns) -->
+          <div role="group" aria-labelledby="name-label" class="utrecht-form-field utrecht-form-field--text" style="grid-column: span 2;">
+            <div class="rvo-form-field__label">
+              <label class="rvo-label" id="name-label" for="name">Naam</label>
+            </div>
+            <input 
+              id="name" 
+              name="name" 
+              placeholder="Zoek op naam..." 
+              type="text" 
+              class="utrecht-textbox utrecht-textbox--html-input" 
+              value="{{ request.GET.name|default:'' }}" 
+            />
+          </div>
+
+          <!-- Skills dropdown -->
+          <div role="group" aria-labelledby="skill-label" class="utrecht-form-field utrecht-form-field--text">
+            <div class="rvo-form-field__label">
+              <label class="rvo-label" id="skill-label" for="skill">Rollen</label>
+            </div>
+            <div class="rvo-select-wrapper">
+              <select
+                name="skill"
+                id="skill"
+                class="utrecht-select utrecht-select--html-select"
+              >
+                <option value="">Zoek op rol...</option>
+                {% if skills %}
+                  {% for skill in skills %}
+                    <option value="{{ skill.id }}" {% if request.GET.skill == skill.id|stringformat:"s" %}selected{% endif %}>
+                      {{ skill.name }}
+                    </option>
+                  {% endfor %}
+                {% else %}
+                  <option value="">Geen rollen beschikbaar</option>
+                {% endif %}
+              </select>
+            </div>
+          </div>
+        
+          <!-- Collapse/expand button (4th column) -->
+          <div class="utrecht-form-field" style="display: flex; align-items: end;">
+            <button type="button" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--icon-after" onclick="toggleFilters(this)">
+              Alle filters
+              <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--sm" role="img" aria-label="Delta naar rechts"></span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Collapsible additional filters -->
+        <details class="rvo-collapsible-filter">
+          <summary style="display: none;"></summary>
+
+          <!-- Filters Grid -->
+          <div class="rvo-layout-column rvo-layout-gap--lg">
+            <!-- First Row: Brand, Status, Email -->
+            <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+              <!-- Brand Filter -->
+              <div role="group" aria-labelledby="brand-label" class="utrecht-form-field utrecht-form-field--text">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="brand-label" for="brand">Merk</label>
+                </div>
+                <div class="rvo-select-wrapper">
+                  <select 
+                    name="brand" 
+                    id="brand" 
+                    class="utrecht-select utrecht-select--html-select" 
+                  >
+                    <option value="">Alle merken</option>
+                    {% if brands %}
+                      {% for brand in brands %}
+                        <option value="{{ brand.id }}" {% if request.GET.brand == brand.id|stringformat:"s" %}selected{% endif %}>
+                          {{ brand.name }}
+                        </option>
+                      {% endfor %}
+                    {% else %}
+                      <option value="">Geen merken beschikbaar</option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+
+              <!-- Empty column for grid balance -->
+              <div></div>
+              
+              <!-- Empty column for grid balance -->
+              <div></div>
+
+              <!-- Reset Filters Button -->
+              <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                <a href="{% url 'colleagues' %}" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-sm utrecht-button--icon-before">
+                  <span class="utrecht-icon rvo-icon rvo-icon-foutmelding rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Foutmelding"></span>
+                  Reset alle filters
+                </a>
+              </div>
+            </div>
+
+            <!-- Second Row: Add New Button -->
+            <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+              <!-- Add New Colleague Button -->
+              <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                <a href="{% url 'colleagues' %}new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before">
+                  <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit" role="img" aria-label="Plus"></span>
+                  Nieuwe collega toevoegen
+                </a>
+              </div>
+
+              <!-- Empty columns for balance -->
+              <div></div>
+              <div></div>
+              <div></div>
+            </div>
+          </div>
+        </details>
+      </fieldset>
     </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="skill-filter" class="rvo-label">Rollen:</label>
-        <select id="skill-filter" name="skill"
-                class="js-skills-select-single utrecht-select utrecht-select--html-select">
-        </select>
-    </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm" style="align-self: end; text-align: right;">
-        <a href="/colleagues/new">
-          <button
-            class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before"
-            type="button"
-          >
-            <span
-              class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit"
-              role="img"
-              aria-label="Plus"
-            ></span>
-            Nieuwe collega toevoegen
-          </button>
-        </a>
-    </div>
-</form>
+  </form>
+</div>
 
 <div class="rvo-table--responsive">
 {% include 'parts/colleague_table.html' %}

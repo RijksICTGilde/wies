@@ -1,4 +1,13 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/custom.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/custom.js' %}"></script>
+{% endblock %}
 
 {% block content %}
 
@@ -7,103 +16,181 @@
   <h1 style="margin: 0;">Opdrachten</h1>
 </div>
 
-<!-- Filter Form -->
-<form id="assignment-tab-filter-form"
-      hx-get="{% url 'assignments' %}"
-      hx-target="#assignment-tabs-section"
-      hx-swap="outerHTML"
-      hx-include="[name='tab']"
-      class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four"
-      style="margin-bottom: 2em;">
-    
-    <!-- Hidden field to maintain active tab -->
+<!-- Filters Section -->
+<div class="rvo-filter-section" style="margin-bottom: 2rem;">
+  <form class="rvo-form" hx-get="{% url 'assignments' %}" hx-target="#assignment-tabs-section" hx-trigger="change,input delay:500ms from:input">
     <input type="hidden" name="tab" value="{{ active_tab }}">
-    
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="name-search" class="rvo-label">Zoeken</label>
-        <input type="text" 
-               id="name-search" 
-               name="name" 
-               value="{{ request.GET.name|default:'' }}"
-               placeholder="Zoek op naam, opdrachtgever of ministerie..."
-               class="utrecht-textbox utrecht-textbox--html-input"
-               hx-get="{% url 'assignments' %}" 
-               hx-target="#assignment-tabs-section" 
-               hx-trigger="keyup delay:300ms"
-               hx-include="[name='tab'], [name='order'], [name='skill']">
+    <div class="utrecht-form-fieldset rvo-form-fieldset">
+      <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
+        <!-- Primary filters always visible -->
+        <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four" style="align-items: end; margin-bottom: 1rem;">
+          <!-- Search (spans 2 columns) -->
+          <div role="group" aria-labelledby="search-label" class="utrecht-form-field utrecht-form-field--text" style="grid-column: span 2;">
+            <div class="rvo-form-field__label">
+              <label class="rvo-label" id="search-label" for="search">Zoeken</label>
+            </div>
+            <input 
+              id="search" 
+              name="name" 
+              placeholder="Zoek op naam, opdrachtgever of ministerie..." 
+              type="text" 
+              class="utrecht-textbox utrecht-textbox--html-input" 
+              value="{{ request.GET.name|default:'' }}" 
+            />
+          </div>
+
+          <!-- Client Filter -->
+          <div role="group" aria-labelledby="client-primary-label" class="utrecht-form-field utrecht-form-field--text">
+            <div class="rvo-form-field__label">
+              <label class="rvo-label" id="client-primary-label" for="client_primary">Opdrachtgever</label>
+            </div>
+            <div class="rvo-select-wrapper">
+              <select
+                name="organization"
+                id="organization_primary"
+                class="utrecht-select utrecht-select--html-select"
+              >
+                <option value="">Alle opdrachtgevers</option>
+                {% if organizations %}
+                  {% for org in organizations %}
+                    <option value="{{ org.organization }}" {% if request.GET.organization == org.organization %}selected{% endif %}>
+                      {{ org.organization }}
+                    </option>
+                  {% endfor %}
+                {% else %}
+                  <option value="">Geen opdrachtgevers beschikbaar</option>
+                {% endif %}
+              </select>
+            </div>
+          </div>
+          
+          <!-- Collapse/expand button (4th column) -->
+          <div class="utrecht-form-field" style="display: flex; align-items: end;">
+            <button type="button" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--icon-after" onclick="toggleFilters(this)">
+              Alle filters
+              <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--sm" role="img" aria-label="Delta naar rechts"></span>
+            </button>
+          </div>
+        </div>
+        
+        <!-- Collapsible additional filters -->
+        <details class="rvo-collapsible-filter">
+          <summary style="display: none;"></summary>
+          <!-- Additional Filters Grid -->
+          <div class="rvo-layout-column rvo-layout-gap--lg">
+            <!-- First Row: Ministry, Start Date From, Start Date To, Empty -->
+            <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+              <!-- Ministry Filter -->
+              <div role="group" aria-labelledby="ministry-label" class="utrecht-form-field utrecht-form-field--text">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="ministry-label" for="ministry">Ministerie</label>
+                </div>
+                <div class="rvo-select-wrapper">
+                  <select 
+                    name="ministry" 
+                    id="ministry" 
+                    class="utrecht-select utrecht-select--html-select" 
+                  >
+                    <option value="">Alle ministeries</option>
+                    {% if clients %}
+                      {% for client in clients %}
+                        <option value="{{ client.id }}" {% if request.GET.ministry == client.id|stringformat:"s" %}selected{% endif %}>
+                          {{ client.name }}
+                        </option>
+                      {% endfor %}
+                    {% else %}
+                      <option value="">Geen ministeries beschikbaar</option>
+                    {% endif %}
+                  </select>
+                </div>
+              </div>
+
+              <!-- Start Date From -->
+              <div role="group" aria-labelledby="start-date-from-label" class="utrecht-form-field utrecht-form-field--text">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="start-date-from-label" for="start_date_from">Start vanaf</label>
+                </div>
+                <input 
+                  type="date" 
+                  id="start_date_from" 
+                  name="start_date_from" 
+                  class="utrecht-textbox utrecht-textbox--html-input" 
+                  value="{{ request.GET.start_date_from|default:'' }}" 
+                />
+              </div>
+
+              <!-- Start Date To -->
+              <div role="group" aria-labelledby="start-date-to-label" class="utrecht-form-field utrecht-form-field--text">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="start-date-to-label" for="start_date_to">Start tot</label>
+                </div>
+                <input 
+                  type="date" 
+                  id="start_date_to" 
+                  name="start_date_to" 
+                  class="utrecht-textbox utrecht-textbox--html-input" 
+                  value="{{ request.GET.start_date_to|default:'' }}" 
+                />
+              </div>
+
+              <!-- Empty column for grid balance -->
+              <div></div>
+            </div>
+
+            <!-- Second Row: End Date From, End Date To, Reset Button, Add New Button -->
+            <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+              <!-- End Date From -->
+              <div role="group" aria-labelledby="end-date-from-label" class="utrecht-form-field utrecht-form-field--text">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="end-date-from-label" for="end_date_from">Eind vanaf</label>
+                </div>
+                <input 
+                  type="date" 
+                  id="end_date_from" 
+                  name="end_date_from" 
+                  class="utrecht-textbox utrecht-textbox--html-input" 
+                  value="{{ request.GET.end_date_from|default:'' }}" 
+                />
+              </div>
+
+              <!-- End Date To -->
+              <div role="group" aria-labelledby="end-date-to-label" class="utrecht-form-field utrecht-form-field--text">
+                <div class="rvo-form-field__label">
+                  <label class="rvo-label" id="end-date-to-label" for="end_date_to">Eind tot</label>
+                </div>
+                <input 
+                  type="date" 
+                  id="end_date_to" 
+                  name="end_date_to" 
+                  class="utrecht-textbox utrecht-textbox--html-input" 
+                  value="{{ request.GET.end_date_to|default:'' }}" 
+                />
+              </div>
+
+              <!-- Reset Filters Button -->
+              <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                <a href="{% url 'assignments' %}" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-sm utrecht-button--icon-before">
+                  <span class="utrecht-icon rvo-icon rvo-icon-foutmelding rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Foutmelding"></span>
+                  Reset alle filters
+                </a>
+              </div>
+
+              <!-- Add New Assignment Button -->
+              <div class="utrecht-form-field" style="display: flex; align-items: end;">
+                <a href="/assignments/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before">
+                  <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit" role="img" aria-label="Plus"></span>
+                  Nieuwe opdracht toevoegen
+                </a>
+              </div>
+            </div>
+          </div>
+        </details>
+      </fieldset>
     </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="skills" class="rvo-label">Rollen:</label>
-        <select name="skill" 
-                id="skills" 
-                class="js-skills-select-single utrecht-select utrecht-select--html-select" 
-                hx-get="{% url 'assignments' %}" 
-                hx-target="#assignment-tabs-section" 
-                hx-trigger="change"
-                hx-include="[name='tab'], [name='name'], [name='order']"></select>
-    </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm" style="align-self: end; text-align: right;">
-        <a href="/assignments/new">
-          <button
-            class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before"
-            type="button"
-          >
-            <span
-              class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit"
-              role="img"
-              aria-label="Plus"
-            ></span>
-            Nieuwe opdracht toevoegen
-          </button>
-        </a>
-    </div>
-</form>
+  </form>
+</div>
 
 <!-- Tab Navigation and Content -->
 {% include 'parts/assignment_tabs_section.html' %}
-
-<style>
-.assignment-tabs-navigation .tab-count {
-  margin-left: 0.5rem;
-  opacity: 0.8;
-  font-weight: normal;
-  font-size: 0.875rem;
-}
-
-.view-switcher {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--rvo-color-grijs-600, #6b7280);
-}
-
-.view-switcher-link {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: var(--rvo-color-grijs-600, #6b7280);
-  text-decoration: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.view-switcher-link:hover {
-  color: var(--rvo-color-logoblauw, #003366);
-  background-color: var(--rvo-color-grijs-100, #f5f5f5);
-  text-decoration: none;
-}
-
-.view-switcher-link--active {
-  color: var(--rvo-color-logoblauw, #003366);
-  font-weight: 500;
-}
-
-.view-switcher-separator {
-  color: var(--rvo-color-grijs-400, #9ca3af);
-  font-weight: 300;
-}
-</style>
 
 {% endblock content %}

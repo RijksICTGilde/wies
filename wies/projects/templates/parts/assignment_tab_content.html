@@ -3,12 +3,12 @@
   <table class="rvo-table">
         <thead class="rvo-table-head">
           <tr class="rvo-table-row">
-            {% include 'parts/sortable_header.html' with field='name' label='Naam' %}
-            {% include 'parts/sortable_header.html' with field='organization' label='Opdrachtgever' %}
-            {% include 'parts/sortable_header.html' with field='ministry__abbreviation' label='Ministerie' %}
-            {% include 'parts/sortable_header.html' with field='status' label='Status' %}
-            {% include 'parts/sortable_header.html' with field='start_date' label='Startdatum' %}
-            {% include 'parts/sortable_header.html' with field='end_date' label='Einddatum' %}
+            {% include 'parts/sortable_header.html' with field='name' label='Naam' target='#assignment-tabs-section' %}
+            {% include 'parts/sortable_header.html' with field='organization' label='Opdrachtgever' target='#assignment-tabs-section' %}
+            {% include 'parts/sortable_header.html' with field='ministry__abbreviation' label='Ministerie' target='#assignment-tabs-section' %}
+            {% include 'parts/sortable_header.html' with field='status' label='Status' target='#assignment-tabs-section' %}
+            {% include 'parts/sortable_header.html' with field='start_date' label='Startdatum' target='#assignment-tabs-section' %}
+            {% include 'parts/sortable_header.html' with field='end_date' label='Einddatum' target='#assignment-tabs-section' %}
           </tr>
         </thead>
         <tbody class="rvo-table-body">

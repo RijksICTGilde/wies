@@ -1,0 +1,40 @@
+<!-- Tab Navigation -->
+<div class="placement-tabs-navigation" style="margin-bottom: 1rem;">
+  <ul
+    class="rvo-tabs rvo-ul rvo-ul--no-margin rvo-ul--no-padding rvo-ul--icon rvo-ul--icon-option-2"
+    role="tablist"
+    aria-label="Placement Tabs"
+  >
+    <li role="presentation" class="rvo-tabs__item">
+      <a
+        href="{% url 'placements' %}?tab=inzet"
+        class="rvo-link rvo-tabs__item-link {% if active_tab != 'timeline' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline"
+        role="tab"
+        aria-selected="{% if active_tab != 'timeline' %}true{% else %}false{% endif %}"
+      >
+        Inzet
+      </a>
+    </li>
+    <li role="presentation" class="rvo-tabs__item">
+      <a
+        href="{% url 'placements' %}?tab=timeline"
+        class="rvo-link rvo-tabs__item-link {% if active_tab == 'timeline' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline"
+        role="tab"
+        aria-selected="{% if active_tab == 'timeline' %}true{% else %}false{% endif %}"
+      >
+        Beschikbaarheid
+      </a>
+    </li>
+  </ul>
+</div>
+
+<!-- Tab Content -->
+{% if active_tab == 'timeline' %}
+  <div id="timeline_container">
+    {% include 'parts/placement_timeline.html' %}
+  </div>
+{% else %}
+  <div id="placement_table" class="rvo-table-container">
+    {% include 'parts/placement_table.html' %}
+  </div>
+{% endif %} 

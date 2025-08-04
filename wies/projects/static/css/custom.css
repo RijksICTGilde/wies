@@ -1,0 +1,205 @@
+/* Compact filter styling */
+.rvo-filter .utrecht-form-field {
+  margin-bottom: 0.75rem;
+}
+
+.rvo-filter .rvo-form-field__label {
+  margin-bottom: 0.25rem;
+}
+
+.rvo-filter .utrecht-textbox,
+.rvo-filter .utrecht-select {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.rvo-filter .rvo-layout-row {
+  margin-bottom: 0.5rem;
+}
+
+.rvo-filter .rvo-layout-gap--xs {
+  gap: 0.5rem;
+}
+
+/* Vertical layout styling */
+.rvo-filter-section {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.rvo-results {
+  width: 100%;
+  max-width: none;
+}
+
+/* Filter grid styling */
+.rvo-layout-grid-columns--three > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.rvo-layout-grid-columns--four > div {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Table styling - only custom hover effects */
+.clickable-row:hover {
+  background-color: var(--rvo-color-hemelblauw-50, #eff6ff) !important;
+  transition: background-color 0.2s ease;
+}
+
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* Placement avatar styling */
+.placement-avatar-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.placement-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--rvo-color-hemelblauw-200, #bfdbfe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--rvo-color-hemelblauw-700, #1e40af);
+}
+
+.placement-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.placement-name {
+  font-weight: 600;
+  color: var(--rvo-color-grijs-900, #111827);
+}
+
+.placement-ministry {
+  font-size: 0.75rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+}
+
+.placement-assignment {
+  display: flex;
+  flex-direction: column;
+}
+
+.placement-assignment-name {
+  color: var(--rvo-color-logoblauw, #003366);
+  text-decoration: underline;
+}
+
+.placement-assignment-org {
+  font-size: 0.75rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+}
+
+.placement-no-role {
+  color: var(--rvo-color-grijs-400, #9ca3af);
+  font-style: italic;
+  font-size: 0.75rem;
+}
+
+.placement-period {
+  color: var(--rvo-color-grijs-700, #374151);
+  font-weight: 500;
+}
+
+/* Active filters styling */
+.rvo-results-active-filters {
+  color: var(--rvo-color-grijs-700, #374151);
+  font-size: 0.875rem;
+}
+
+/* Custom tag styling */
+.rvo-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--rvo-color-hemelblauw-100, #e6f3ff);
+  color: var(--rvo-color-hemelblauw-700, #1e40af);
+  border-radius: 4px;
+}
+
+.rvo-tag a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.rvo-tag a:hover {
+  opacity: 0.8;
+}
+
+/* Hide default details arrow */
+.rvo-collapsible-filter > summary {
+  list-style: none;
+}
+
+.rvo-collapsible-filter > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Chevron rotation for filter buttons */
+.rvo-icon-delta-naar-rechts {
+  transition: transform 0.2s ease;
+}
+
+.rvo-icon-delta-naar-rechts.rotated {
+  transform: rotate(90deg);
+}
+
+/* Assignment tabs styling */
+.assignment-tabs-navigation .tab-count {
+  margin-left: 0.5rem;
+  opacity: 0.8;
+  font-weight: normal;
+  font-size: 0.875rem;
+}
+
+/* View switcher styling */
+.view-switcher {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+}
+
+.view-switcher-link {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+  text-decoration: none;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.view-switcher-link:hover {
+  color: var(--rvo-color-logoblauw, #003366);
+  background-color: var(--rvo-color-grijs-100, #f5f5f5);
+  text-decoration: none;
+}
+
+.view-switcher-link--active {
+  color: var(--rvo-color-logoblauw, #003366);
+  font-weight: 500;
+}
+
+.view-switcher-separator {
+  color: var(--rvo-color-grijs-400, #9ca3af);
+  font-weight: 300;
+}
+
+ 
