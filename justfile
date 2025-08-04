@@ -27,10 +27,11 @@ up:
 # up-production:
 #   echo "Starting up container..."
 #   docker run --rm \
-#   --env WRITABLE_FOLDER=/app/db \
 #   --env DJANGO_SUPERUSER_USERNAME=admin \
 #   --env DJANGO_SUPERUSER_PASSWORD=admin \
 #   --env DJANGO_SUPERUSER_EMAIL="" \
+#   --env DJANGO_SECRET_KEY=django-insecure-47e97t(4n12m4*_n&1!g$9zqg88h=(q0ccrsi*ybo!qv*7pa4p \
+#   --env WRITABLE_FOLDER=/app/db \
 #   -p 8000:8000 \
 #   -v ./db:/app/db \
 #   wies
