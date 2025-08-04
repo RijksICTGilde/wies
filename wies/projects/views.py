@@ -321,7 +321,7 @@ class PlacementUpdateView(UpdateView):
     template_name = 'placement_update.html'
 
     def form_valid(self, form):
-        # todo: not super happy about this work around, but good enough for now
+        # TODO: not super happy about this work around, but good enough for now
         placement_id = self.kwargs['pk']
         assignment_id = Placement.objects.get(id=placement_id).service.assignment.id
         super().form_valid(form)
@@ -338,7 +338,7 @@ class PlacementCreateView(CreateView):
         return kwargs
     
     def form_valid(self, form):
-        # todo: not super happy about this work around, but good enough for now
+        # TODO: not super happy about this work around, but good enough for now
         assignment_id = self.kwargs['pk']
         super().form_valid(form)
         return redirect(Assignment.objects.get(id=assignment_id))
@@ -686,7 +686,7 @@ class ServiceUpdateView(UpdateView):
         return context
 
     def form_valid(self, form):
-        # todo: not super happy about this work around, but good enough for now
+        # TODO: not super happy about this work around, but good enough for now
         service_id = self.kwargs['pk']
         assignment_id = Service.objects.get(id=service_id).assignment.id
         super().form_valid(form)
