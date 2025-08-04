@@ -16,7 +16,8 @@ import os
 from django.utils.translation import gettext_lazy
 
 # env vars
-WRITABLE_FOLDER = Path(os.environ['WRITABLE_FOLDER'])  # in deployment these should be explicitly mountable
+DJANGO_ENV = os.environ.get('DJANGO_ENV', 'local')
+WRITABLE_FOLDER = Path(os.environ.get('WRITABLE_FOLDER', ''))  # in deployment these should be explicitly mountable
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -28,11 +29,14 @@ WSGI_APPLICATION = "config.wsgi.application"
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.environ['DJANGO_SECRET_KEY']
+if DJANGO_ENV == 'production' and 'DJANGO_SECRET_KEY' not in os.environ:
+    raise EnvironmentError('DJANGO_SECRET_KEY should be set' )
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'mysecret')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ['DJANGO_DEBUG'] == 'true'  # false by default
+if DJANGO_ENV == 'production' and 'DJANGO_DEBUG' == 'true':
+    raise EnvironmentError('DJANGO_DEBUG should not be true in production' )
+DEBUG = os.environ.get('DJANGO_DEBUG', 'false') == 'true'  # false by default
 
 # TODO: what to do in dev? what in prod?
 ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]
@@ -146,3 +150,25 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
+# helpful when understanding internal errors with debug=False
+# LOGGING = {
+#       'version': 1,
+#       'disable_existing_loggers': False,
+#       'handlers': {
+#           'console': {
+#               'class': 'logging.StreamHandler',
+#           },
+#       },
+#       'root': {
+#           'handlers': ['console'],
+#           'level': 'INFO',
+#       },
+#       'loggers': {
+#           'django': {
+#               'handlers': ['console'],
+#               'level': 'INFO',
+#               'propagate': False,
+#           },
+#       },
+#   }
