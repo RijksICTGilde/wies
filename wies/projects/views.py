@@ -85,7 +85,7 @@ def assignments_url_with_tab(context, tab_key):
     
     Args:
         context: Template context containing request
-        tab_key: Tab identifier (e.g., 'active', 'completed')
+        tab_key: Tab identifier (e.g., 'leads', 'current', 'historical')
     
     Returns:
         URL with tab parameter and preserved filters
@@ -96,7 +96,7 @@ def assignments_url_with_tab(context, tab_key):
     params = {'tab': tab_key}
     
     # Preserve existing query parameters
-    for param in ['name', 'order', 'skill']:
+    for param in ['name', 'order', 'skill', 'organization', 'ministry', 'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to']:
         value = request.GET.get(param)
         if value:
             params[param] = value
@@ -222,38 +222,27 @@ class DynamicFilterMixin:
 
 
 class AssignmentTabsView(DynamicFilterMixin, ListView):
-    """
-    View for assignments with tabbed interface (Active/Completed)
-    
-    Features:
-    - Dynamic filtering with preserved state
-    - HTMX support for smooth interactions
-    - Tab-based content switching
-    """
     template_name = 'assignment_tabs.html'
     model = Assignment
-    
+
     def get_base_queryset(self):
-        """Get base queryset with all necessary related fields"""
-        return Assignment.objects.select_related(
-            'ministry'
-        ).prefetch_related(
-            'services__skill'
-        ).order_by('-start_date')
-    
-    def get_queryset(self):
-        """Apply filters to base queryset"""
-        qs = self.get_base_queryset()
+        """Get base queryset without status filtering"""
+        qs = Assignment.objects.select_related('ministry').prefetch_related('services__skill').order_by('-start_date')
         
-        # Apply search filter
-        search_filter = self.request.GET.get('name')
-        if search_filter:
+        # Apply name filter if provided
+        name_filter = self.request.GET.get('name')
+        if name_filter:
             qs = qs.filter(
-                Q(name__icontains=search_filter) |
-                Q(organization__icontains=search_filter) |
-                Q(ministry__name__icontains=search_filter) |
-                Q(ministry__abbreviation__icontains=search_filter)
+                models.Q(name__icontains=name_filter) | 
+                models.Q(organization__icontains=name_filter) |
+                models.Q(ministry__name__icontains=name_filter) |
+                models.Q(ministry__abbreviation__icontains=name_filter)
             )
+        
+        # Apply skill filter if provided
+        skill_filter = self.request.GET.get('skill')
+        if skill_filter:
+            qs = qs.filter(services__skill__id=skill_filter).distinct()
         
         # Apply specific filters
         filters = {
@@ -273,37 +262,39 @@ class AssignmentTabsView(DynamicFilterMixin, ListView):
         }
         qs = self.apply_date_filters(qs, date_field_mapping)
         
-        # Apply sorting
-        order_by = self.request.GET.get('order', '-start_date')
-        qs = qs.order_by(order_by)
-        
-        return qs.distinct()
+        # Apply order if provided
+        order = self.request.GET.get('order')
+        if order:
+            qs = qs.order_by(order)
+            
+        return qs
     
-    def get_context_data(self, **kwargs):
-        """Add dynamic filter options and tab context"""
-        context = super().get_context_data(**kwargs)
-        
-        # Get base queryset for dynamic filtering
+    def get_queryset(self):
+        """Get queryset for the active tab only"""
+        active_tab = self.request.GET.get('tab', 'leads')
         base_qs = self.get_base_queryset()
         
-        # Apply non-dropdown filters
-        search_filter = self.request.GET.get('name')
-        if search_filter:
-            base_qs = base_qs.filter(
-                Q(name__icontains=search_filter) |
-                Q(organization__icontains=search_filter) |
-                Q(ministry__name__icontains=search_filter) |
-                Q(ministry__abbreviation__icontains=search_filter)
-            )
-        
-        # Apply date filters to base queryset
-        date_field_mapping = {
-            'start_date': 'start_date',
-            'end_date': 'end_date'
+        # Define status mapping for tabs
+        tab_statuses = {
+            'leads': ['LEAD', 'OPEN'],
+            'current': ['LOPEND'],
+            'historical': ['AFGEWEZEN', 'HISTORISCH']
         }
-        base_qs = self.apply_date_filters(base_qs, date_field_mapping)
         
-        # Get dynamic filter options
+        # Filter by active tab statuses
+        return base_qs.filter(status__in=tab_statuses[active_tab])
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get the active tab from request, default to 'leads'
+        active_tab = self.request.GET.get('tab', 'leads')
+        context['active_tab'] = active_tab
+        
+        # Get base queryset with common filters applied (but no status filter yet)
+        base_qs = self.get_base_queryset()
+        
+        # Get dynamic filter options using the same base queryset
         filter_configs = [
             {
                 'name': 'organizations',
@@ -320,25 +311,36 @@ class AssignmentTabsView(DynamicFilterMixin, ListView):
             }
         ]
         
+        # Use the same base queryset for dynamic filter options
         context.update(self.get_dynamic_filter_options(base_qs, filter_configs))
         
-        # Add assignments to context for template
-        context['active_assignments'] = context['object_list']
-        
-        # Add tab groups for template compatibility
-        context['tab_groups'] = {
-            'active': {
-                'title': 'Actieve opdrachten',
-                'queryset': context['object_list']
+        # Define tab groups with correct counts using the same base queryset
+        tab_groups = {
+            'leads': {
+                'title': 'Leads & open',
+                'statuses': ['LEAD', 'OPEN'],
+                'queryset': base_qs.filter(status__in=['LEAD', 'OPEN'])
+            },
+            'current': {
+                'title': 'Huidig', 
+                'statuses': ['LOPEND'],
+                'queryset': base_qs.filter(status__in=['LOPEND'])
+            },
+            'historical': {
+                'title': 'Historisch & afgewezen',
+                'statuses': ['AFGEWEZEN', 'HISTORISCH'], 
+                'queryset': base_qs.filter(status__in=['AFGEWEZEN', 'HISTORISCH'])
             }
         }
-        context['active_tab'] = 'active'
+        
+        context['tab_groups'] = tab_groups
+        context['active_assignments'] = tab_groups[active_tab]['queryset']
         
         return context
     
     def get_template_names(self):
-        """Return appropriate template based on request type"""
         if 'HX-Request' in self.request.headers:
+            # Always return full tab section for HTMX requests to update counts
             return ['parts/assignment_tabs_section.html']
         else:
             return ['assignment_tabs.html']
