@@ -18,9 +18,10 @@ SESSION_COOKIE_NAME = "__Secure-sessionid"
 CSRF_COOKIE_SECURE = True
 CSRF_COOKIE_NAME = "__Secure-csrftoken"
 # TODO: set this to 60 seconds first and then to 518400 once you prove the former works
+# also: change preload to True? https://github.com/cookiecutter/cookiecutter-django/discussions/5959
 SECURE_HSTS_SECONDS = 60
+SECURE_HSTS_PRELOAD = False
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
 # helpful when understanding internal errors with debug=False
