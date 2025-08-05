@@ -26,6 +26,7 @@ up:
 #   echo "Starting up container..."
 # docker run --rm \
 # --env DJANGO_SETTINGS_MODULE=config.settings.production \
+# --env DJANGO_SECURE_SSL_REDIRECT=false \
 # --env DJANGO_SUPERUSER_USERNAME=admin \
 # --env DJANGO_SUPERUSER_PASSWORD=admin \
 # --env DJANGO_SUPERUSER_EMAIL="" \
