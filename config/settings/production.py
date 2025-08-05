@@ -24,7 +24,6 @@ SECURE_HSTS_PRELOAD = False
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 
-# helpful when understanding internal errors with debug=False
 LOGGING = {
       'version': 1,
       'disable_existing_loggers': False,
