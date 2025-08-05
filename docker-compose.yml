@@ -10,7 +10,6 @@ services:
       - .:/app:z
     command: python manage.py runserver 0.0.0.0:8000
     environment:
-      DJANGO_ENV: "local"
       DJANGO_DEBUG: "true"
       DJANGO_SUPERUSER_USERNAME: "admin"  # TODO production: these need to be sourced from env vars
       DJANGO_SUPERUSER_PASSWORD: "admin"
