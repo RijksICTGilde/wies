@@ -1,0 +1,59 @@
+<!-- Generic Compact Filters Section -->
+<div class="rvo-filter-section">
+  <form class="rvo-form" hx-get="{% url url_name %}" hx-target="{{ target_selector|default:'#content' }}" hx-trigger="change,input delay:500ms from:input">
+    {% if tab_param %}
+      <input type="hidden" name="tab" value="{{ tab_param }}">
+    {% endif %}
+    
+    <!-- Compact filter bar -->
+    <div class="rvo-compact-filter-bar">
+      
+      {% if primary_filter %}
+      <!-- Primary Filter (first) -->
+      <div role="group" aria-labelledby="{{ primary_filter.id }}-label" class="utrecht-form-field utrecht-form-field--text">
+        <div class="rvo-select-wrapper">
+          <select 
+            name="{{ primary_filter.name }}" 
+            id="{{ primary_filter.id }}" 
+            class="utrecht-select utrecht-select--html-select rvo-select" 
+            aria-label="{{ primary_filter.placeholder }}"
+          >
+            <option value="">{{ primary_filter.placeholder }}</option>
+            {% for option in primary_filter.options %}
+              <option value="{{ option.value }}" {% if request.GET|lookup:primary_filter.name == option.value|stringformat:"s" %}selected{% endif %}>
+                {{ option.label }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Search Field -->
+      <div role="group" aria-labelledby="search-field-label" class="utrecht-form-field utrecht-form-field--text">
+        <span class="utrecht-icon rvo-icon rvo-icon-zoek rvo-icon--lg rvo-search-icon" 
+              role="img" aria-label="Zoeken"></span>
+        <input 
+          id="search" 
+          name="{{ search_field|default:'search' }}" 
+          placeholder="{{ search_placeholder|default:'Zoeken...' }}" 
+          type="text" 
+          class="utrecht-textbox utrecht-textbox--html-input rvo-input" 
+          value="{% if search_field and request.GET|lookup:search_field %}{{ request.GET|lookup:search_field }}{% else %}{% endif %}" 
+          aria-label="{{ search_placeholder|default:'Zoeken' }}"
+        />
+      </div>
+
+      <!-- Filters Button with indicator -->
+      <div class="filter-button-container">
+        <button type="button" 
+                class="utrecht-button utrecht-button--secondary-action{% if active_filter_count > 0 %} utrecht-button--active{% endif %} utrecht-button--rvo-md utrecht-button--icon-before rvo-button" 
+                onclick="openFilterModal()">
+          <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before" role="img" aria-label="Trechter"></span>
+          Filters{% if active_filter_count > 0 %} ({{ active_filter_count }}){% endif %}
+        </button>
+      </div>
+      
+    </div>
+  </form>
+</div>

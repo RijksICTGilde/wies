@@ -149,3 +149,455 @@
   background-color: var(--rvo-color-grijs-200, #e5e7eb);
   color: var(--rvo-color-logoblauw, #154273);
 }
+
+
+/* Compact filter styling */
+.rvo-filter .utrecht-form-field {
+  margin-bottom: 0.75rem;
+}
+
+.rvo-filter .rvo-form-field__label {
+  margin-bottom: 0.25rem;
+}
+
+.rvo-filter .utrecht-textbox,
+.rvo-filter .utrecht-select {
+  padding: 0.375rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.rvo-filter .rvo-layout-row {
+  margin-bottom: 0.5rem;
+}
+
+.rvo-filter .rvo-layout-gap--xs {
+  gap: 0.5rem;
+}
+
+/* Vertical layout styling */
+.rvo-filter-section {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.rvo-results {
+  width: 100%;
+  max-width: none;
+}
+
+/* Filter grid styling */
+.rvo-layout-grid-columns--three > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.rvo-layout-grid-columns--four > div {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Compact table styling */
+.rvo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.rvo-table-head .rvo-table-cell {
+  background-color: var(--rvo-color-grijs-50, #f9fafb);
+  font-weight: 600;
+  color: var(--rvo-color-grijs-700, #374151);
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-200, #e5e7eb);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+/* RVO Table Header styling */
+.rvo-table-header {
+  background-color: var(--rvo-color-grijs-50, #f9fafb);
+  font-weight: 600;
+  color: var(--rvo-color-grijs-700, #374151);
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-200, #e5e7eb);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.rvo-table-header:hover {
+  background-color: var(--rvo-color-grijs-100, #f3f4f6);
+}
+
+.rvo-table-header--sortable:hover {
+  background-color: var(--rvo-color-grijs-100, #f3f4f6);
+}
+
+.rvo-table-header--active-sort {
+  background-color: var(--rvo-color-hemelblauw-50, #eff6ff);
+  color: var(--rvo-color-hemelblauw-700, #1e40af);
+}
+
+.rvo-table-header__sortable-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.rvo--table-header__sorting-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.rvo-table-body .rvo-table-cell {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-100, #f3f4f6);
+  vertical-align: top;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.rvo-table-row:hover {
+  background-color: var(--rvo-color-grijs-50, #f9fafb);
+}
+
+.clickable-row:hover {
+  background-color: var(--rvo-color-hemelblauw-50, #eff6ff) !important;
+  transition: background-color 0.2s ease;
+}
+
+.clickable-row {
+  transition: background-color 0.2s ease;
+}
+
+/* RVO Tag styling */
+.rvo-tag {
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+/* Ensure all text uses RVO font */
+.rvo-text--italic {
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+/* Placement table styling */
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.placement-avatar-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.placement-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--rvo-color-hemelblauw-200, #bfdbfe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--rvo-color-hemelblauw-700, #1e40af);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.placement-name {
+  font-weight: 600;
+  color: var(--rvo-color-grijs-900, #111827);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-ministry {
+  font-size: 0.75rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-assignment {
+  display: flex;
+  flex-direction: column;
+}
+
+.placement-assignment-name {
+  color: var(--rvo-color-logoblauw, #003366);
+  text-decoration: underline;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-assignment-org {
+  font-size: 0.75rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-no-role {
+  color: var(--rvo-color-grijs-400, #9ca3af);
+  font-style: italic;
+  font-size: 0.75rem;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-period {
+  color: var(--rvo-color-grijs-700, #374151);
+  font-weight: 500;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+/* Ensure the results container takes full width */
+.rvo-results {
+  width: 100%;
+  max-width: none;
+}
+
+/* Make sure the table container uses full width */
+#placement_table {
+  width: 100%;
+  max-width: none;
+}
+
+/* Active filters styling */
+.rvo-results-active-filters {
+  color: var(--rvo-color-grijs-700, #374151);
+  font-size: 0.875rem;
+}
+
+.rvo-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  background-color: var(--rvo-color-hemelblauw-100, #e6f3ff);
+  color: var(--rvo-color-hemelblauw-700, #1e40af);
+  border-radius: 4px;
+}
+
+/* Column width optimization for placement table */
+.rvo-table th:nth-child(1), .rvo-table td:nth-child(1) {
+  width: 28%; /* Naam column - more space */
+}
+
+.rvo-table th:nth-child(2), .rvo-table td:nth-child(2) {
+  width: 37%; /* Opdracht column - slightly smaller */
+}
+
+.rvo-table th:nth-child(3), .rvo-table td:nth-child(3) {
+  width: 20%; /* Rol column - same */
+  white-space: nowrap; /* Prevent wrapping */
+}
+
+.rvo-table th:nth-child(4), .rvo-table td:nth-child(4) {
+  width: 15%; /* Periode column - same */
+  white-space: nowrap; /* Prevent wrapping */
+}
+
+.rvo-tag a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.rvo-tag a:hover {
+  opacity: 0.8;
+}
+
+/* Hide default details arrow */
+.rvo-collapsible-filter > summary {
+  list-style: none;
+}
+
+.rvo-collapsible-filter > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Chevron rotation */
+.rvo-icon-delta-naar-rechts {
+  transition: transform 0.2s ease;
+}
+
+.rvo-icon-delta-naar-rechts.rotated {
+  transform: rotate(90deg);
+}
+
+/* Fix RVO select chevron */
+.rvo-select-wrapper::after {
+  background-color: white !important;
+  -webkit-mask-image: url("/static/icons/functioneel/delta-omlaag.svg");
+  mask-image: url("/static/icons/functioneel/delta-omlaag.svg");
+}
+
+/* Compact filter bar styling */
+.rvo-compact-filter-bar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.rvo-compact-filter-bar .utrecht-form-field:first-child {
+  min-width: 160px;
+  max-width: 200px;
+}
+
+.rvo-compact-filter-bar .utrecht-form-field:nth-child(2) {
+  flex: 1;
+  min-width: 300px;
+  position: relative;
+}
+
+/* When there's no primary filter, the search field is first */
+.rvo-compact-filter-bar .utrecht-form-field:first-child:not(:only-child) {
+  flex: 1;
+  min-width: 300px;
+  position: relative;
+}
+
+.rvo-compact-filter-bar .utrecht-select,
+.rvo-compact-filter-bar .utrecht-textbox,
+.rvo-compact-filter-bar .utrecht-button {
+  height: 3rem;
+}
+
+.rvo-compact-filter-bar .utrecht-textbox {
+  padding-left: 2.5rem;
+}
+
+.rvo-compact-filter-bar .utrecht-button {
+  min-width: 110px;
+}
+
+/* Search icon styling */
+.rvo-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  color: #154273;
+  pointer-events: none;
+}
+
+/* Filter modal styling */
+.filter-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.filter-modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e6e6e6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filter-modal-header h2 {
+  margin: 0;
+}
+
+.filter-modal-close {
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+.filter-modal-form {
+  padding: 1.5rem;
+}
+
+.filter-modal-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e6e6e6;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.filter-modal-footer-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Sub-menu navigation styling */
+.rvo-link--active {
+  font-weight: 600;
+  text-decoration: underline !important;
+}
+
+/* Sub-menu background styling */
+.rvo-tmp-submenu-wrapper .rvo-menubar__background {
+  background-color: var(--rvo-color-grijs-200, #e5e7eb);
+}
+
+/* Layout spacing adjustments */
+.rvo-tmp-submenu-wrapper {
+  margin-bottom: var(--rvo-space-md);
+}
+
+/* Compact header styling */
+.rvo-alert--padding-sm {
+  padding: 0.25rem 1rem;
+}
+
+.rvo-alert-text {
+  font-size: 0.7rem;
+}
+
+.rvo-filter-section {
+  margin-bottom: 0;
+}
+
+#placement-content {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.rvo-form {
+  margin-bottom: 0;
+}
+
+/* Page header styling */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+/* Filter button container */
+.filter-button-container {
+  position: relative;
+}

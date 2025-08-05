@@ -10,13 +10,13 @@
 
 {% block header %}
 {{ block.super }}
-{% include 'parts/placement_navigation.html' with active_page='inzet' %}
+{% include 'parts/placement_navigation.html' with active_page='table' %}
 {% endblock %}
 
 {% block content %}
 <div class="rvo-layout-column rvo-layout-gap--md">
   
-  {% include 'parts/generic_filter_bar.html' with url_name='placements' target_selector='#placement-content' tab_param=request.GET.tab %}
+  {% include 'parts/generic_filter_bar.html' with url_name='placements-table' target_selector='#placement-content' %}
 
   <!-- Content -->
   <div id="placement-content">
