@@ -25,13 +25,12 @@ up:
 # up-production:
 #   echo "Starting up container..."
 # docker run --rm \
-# --env DJANGO_DEBUG=false \
+# --env DJANGO_SETTINGS_MODULE=config.settings.production \
 # --env DJANGO_SUPERUSER_USERNAME=admin \
 # --env DJANGO_SUPERUSER_PASSWORD=admin \
 # --env DJANGO_SUPERUSER_EMAIL="" \
 # --env DJANGO_SECRET_KEY=xxxxxxx \
 # --env WRITABLE_FOLDER=/app/db \
-# --env DJANGO_SETTINGS_MODULE=config.settings.production \
 # --env DJANGO_ALLOWED_HOSTS=localhost,0.0.0.0,127.0.0.1 \
 # -p 8000:8000 \
 # -v ./db:/app/db \
