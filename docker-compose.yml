@@ -11,8 +11,8 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     environment:
       DJANGO_DEBUG: "true"
-      DJANGO_SUPERUSER_USERNAME: "admin"  # TODO production: these need to be sourced from env vars
+      DJANGO_SUPERUSER_USERNAME: "admin"
       DJANGO_SUPERUSER_PASSWORD: "admin"
-      DJANGO_SUPERUSER_EMAIL: "admin@admin.com"
+      DJANGO_SUPERUSER_EMAIL: ""
       DJANGO_SECRET_KEY: "django-insecure-47e97t(4n12m4*_n&1!g$9zqg88h=(q0ccrsi*ybo!qv*7pa4p"
       WRITABLE_FOLDER: "/app/db/"  # path in container
