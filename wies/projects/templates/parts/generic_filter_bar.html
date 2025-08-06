@@ -53,12 +53,15 @@
 
       <!-- Filters Button with indicator -->
       <div class="filter-button-container">
+        <!-- somehow moving the iff to the div above does not work, it hides the search icon -->
+        {% if filter_groups %}  
         <button type="button" 
                 class="utrecht-button utrecht-button--secondary-action{% if active_filter_count > 0 %} utrecht-button--active{% endif %} utrecht-button--rvo-md utrecht-button--icon-before rvo-button" 
                 onclick="openFilterModal()">
           <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before" role="img" aria-label="Trechter"></span>
           <span class="filter-text">Filters{% if active_filter_count > 0 %} ({{ active_filter_count }}){% endif %}</span>
         </button>
+        {% endif %}
       </div>
       
     </div>
