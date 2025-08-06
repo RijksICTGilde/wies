@@ -1,12 +1,12 @@
 {% comment %}
 RVO Sortable Table Header
 Gebruik: 
-{% include 'parts/sortable_header.html' with field='name' label='Naam' target='#table_id' %}
+{% include 'parts/generic_sortable_header.html' with field='name' label='Naam' target='#table_id' %}
 {% endcomment %}
 
 <th scope="col" class="rvo-table-header rvo-table-header--sortable{% if request.GET.order == field or request.GET.order == '-'|add:field %} rvo-table-header--active-sort{% endif %}" 
     hx-get="{{ request.path }}?order={% if request.GET.order == field %}-{{ field }}{% else %}{{ field }}{% endif %}{% for key, value in request.GET.items %}{% if key != 'order' %}&{{ key }}={{ value|urlencode }}{% endif %}{% endfor %}" 
-    hx-target="{{ target|default:'#placement_table' }}"
+    hx-target="{{ target }}"
     hx-swap="outerHTML"
     hx-push-url="true">
   <div class="rvo-table-header__sortable-container">

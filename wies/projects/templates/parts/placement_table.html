@@ -2,10 +2,10 @@
   <table class="rvo-table">
     <thead class="rvo-table-head">
       <tr class="rvo-table-row">
-        {% include 'parts/sortable_header.html' with field='colleague__name' label='Naam' target='#placement_table' %}
-        {% include 'parts/sortable_header.html' with field='service__assignment__name' label='Opdracht' target='#placement_table' %}
-        {% include 'parts/sortable_header.html' with field='service__skill__name' label='Rol' target='#placement_table' %}
-        {% include 'parts/sortable_header.html' with field='start_date' label='Periode' target='#placement_table' %}
+        {% include 'parts/generic_sortable_header.html' with field='colleague__name' label='Naam' target='#placement_table' %}
+        {% include 'parts/generic_sortable_header.html' with field='service__assignment__name' label='Opdracht' target='#placement_table' %}
+        {% include 'parts/generic_sortable_header.html' with field='service__skill__name' label='Rol' target='#placement_table' %}
+        <th class="rvo-table-header">Periode</th>>
       </tr>
     </thead>
     <tbody>

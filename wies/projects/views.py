@@ -557,6 +557,11 @@ class BasePlacementView(DynamicFilterMixin, ListView):
                 Q(service__assignment__ministry__abbreviation__icontains=search_filter)
             )
         
+        # Apply ordering
+        ordering = self.request.GET.get('order')
+        if ordering:
+            qs = qs.order_by(ordering)
+
         # Apply specific filters
         filters = {
             'skill': 'service__skill__id',
