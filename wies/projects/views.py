@@ -488,10 +488,10 @@ class ColleagueList(DynamicFilterMixin, ListView):
         
         # Add compact filter configuration
         context['primary_filter'] = {
-           'name': 'skill',
-            'id': 'skill-filter',
-            'placeholder': 'Alle rollen',
-            'options': [{'value': skill.id, 'label': skill.name} for skill in context.get('skills', [])]
+            'name': 'brand',
+            'id': 'brand-filter',
+            'placeholder': 'Alle merken',
+            'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
         }
         
         context['search_field'] = 'name'
