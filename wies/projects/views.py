@@ -1071,6 +1071,13 @@ class MinistryListView(DynamicFilterMixin, ListView):
             'filter_groups': [],  # No additional filters for ministries
         }
 
+    def get_template_names(self):
+        """Return appropriate template based on request type"""
+        if 'HX-Request' in self.request.headers:
+            return ['parts/ministry_table.html']
+        else:
+            return ['ministry_list.html']
+
 class MinistryCreateView(CreateView):
     model = Ministry
     template_name = 'ministry_form.html'
