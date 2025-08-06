@@ -452,8 +452,8 @@
   position: relative;
 }
 
-/* When there's no primary filter, the search field is first */
-.rvo-compact-filter-bar .utrecht-form-field:first-child:not(:only-child) {
+/* When there's no primary filter, the search field is first and should expand */
+.rvo-compact-filter-bar .utrecht-form-field:first-child:not(:last-child) {
   flex: 1;
   min-width: 300px;
   position: relative;
