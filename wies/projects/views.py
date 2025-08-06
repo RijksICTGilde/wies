@@ -230,19 +230,9 @@ class DynamicFilterMixin:
             filter_name = config['name']
             model = config['model']
             field_path = config['field_path']
-            exclude_param = config.get('exclude_param')
             
             # Start with base queryset
             filtered_qs = base_qs
-            
-            # Apply other filters (exclude current filter)
-            for other_config in filter_configs:
-                if other_config['name'] != filter_name:
-                    param_name = other_config['param_name']
-                    param_value = self.request.GET.get(param_name)
-                    if param_value:
-                        other_field_path = other_config['field_path']
-                        filtered_qs = filtered_qs.filter(**{other_field_path: param_value})
             
             # Get distinct values for this filter
             distinct_values = filtered_qs.values_list(field_path, flat=True).distinct()
@@ -498,10 +488,10 @@ class ColleagueList(DynamicFilterMixin, ListView):
         
         # Add compact filter configuration
         context['primary_filter'] = {
-            'name': 'skill',
-            'id': 'skill-filter',
-            'placeholder': 'Alle rollen',
-            'options': [{'value': skill.id, 'label': skill.name} for skill in context.get('skills', [])]
+           'name': 'brand',
+            'id': 'brand-filter',
+            'placeholder': 'Alle merken',
+            'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
         }
         
         context['search_field'] = 'name'

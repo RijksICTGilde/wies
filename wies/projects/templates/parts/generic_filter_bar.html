@@ -1,9 +1,16 @@
 <!-- Generic Compact Filters Section -->
 <div class="rvo-filter-section">
-  <form class="rvo-form" hx-get="{% url url_name %}" hx-target="{{ target_selector|default:'#content' }}" hx-trigger="change,input delay:500ms from:input">
+  <form class="rvo-form" hx-get="{% url url_name %}" hx-target="{{ target_selector|default:'#content' }}" hx-push-url="true" hx-trigger="change,input delay:500ms from:input">
     {% if tab_param %}
       <input type="hidden" name="tab" value="{{ tab_param }}">
     {% endif %}
+    
+    <!-- Preserve existing filter parameters -->
+    {% for param, value in request.GET.items %}
+      {% if param != primary_filter.name and param != search_field|default:'search' and param != 'tab' %}
+        <input type="hidden" name="{{ param }}" value="{{ value }}">
+      {% endif %}
+    {% endfor %}
     
     <!-- Compact filter bar -->
     <div class="rvo-compact-filter-bar">
