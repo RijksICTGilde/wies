@@ -1132,8 +1132,3 @@ class MinistryDetailView(DetailView):
         
         context['assignments'] = assignments_data
         return context
-
-# Other views
-class SkillsView(TemplateView):
-    template_name = 'skills.html'
-
