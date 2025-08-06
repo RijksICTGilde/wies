@@ -12,7 +12,7 @@
     document.body.style.overflow = 'auto';
   }
 
-  function applyFilters() {
+  function applyFiltersInstant() {
     const form = document.getElementById('modalFilterForm');
     const mainForm = document.querySelector('.rvo-form');
     
@@ -38,9 +38,15 @@
       }
     });
     
-    // Submit form manually to update the page
-    mainForm.submit();
+    // Trigger HTMX request without closing modal
+    htmx.trigger(mainForm, 'change');
     
+    // Update filter indicator immediately
+    setTimeout(updateFilterIndicator, 100);
+  }
+
+  function applyFilters() {
+    applyFiltersInstant();
     closeFilterModal();
   }
 
@@ -74,6 +80,34 @@
     if (e.target === this) {
       closeFilterModal();
     }
+  });
+
+  // Update filter indicator
+  function updateFilterIndicator() {
+    const filterButton = document.querySelector('.filter-button-container button');
+    const filterText = document.querySelector('.filter-text');
+    const mainForm = document.querySelector('.rvo-form');
+    
+    if (filterButton && filterText && mainForm) {
+      // Count active filters from modal form inputs
+      const activeFilters = Array.from(mainForm.querySelectorAll('input[type="hidden"]'))
+        .filter(input => input.value && input.name !== 'tab' && !input.name.includes('search'))
+        .length;
+      
+      // Update only the text span, keeping the icon intact
+      if (activeFilters > 0) {
+        filterText.textContent = `Filters (${activeFilters})`;
+        filterButton.classList.add('utrecht-button--active');
+      } else {
+        filterText.textContent = 'Filters';
+        filterButton.classList.remove('utrecht-button--active');
+      }
+    }
+  }
+
+  // Global HTMX event listener to update filter indicator
+  document.body.addEventListener('htmx:afterRequest', function(event) {
+    updateFilterIndicator();
   });
 
   // Close modal with escape key

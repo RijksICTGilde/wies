@@ -19,7 +19,7 @@
             <label class="rvo-label" for="modal-{{ filter_group.name }}">{{ filter_group.label }}</label>
           </div>
           <div class="rvo-select-wrapper">
-            <select name="{{ filter_group.name }}" id="modal-{{ filter_group.name }}" class="utrecht-select utrecht-select--html-select rvo-select">
+            <select name="{{ filter_group.name }}" id="modal-{{ filter_group.name }}" class="utrecht-select utrecht-select--html-select rvo-select" onchange="applyFiltersInstant()">
               <option value="">{{ filter_group.placeholder }}</option>
               {% for option in filter_group.options %}
                 <option value="{{ option.value }}" {% if request.GET|lookup:filter_group.name == option.value|stringformat:"s" %}selected{% endif %}>
@@ -42,6 +42,7 @@
               name="{{ filter_group.name }}_from" 
               class="utrecht-textbox utrecht-textbox--html-input rvo-input" 
               value="{{ request.GET|lookup:filter_group.name_from }}" 
+              onchange="applyFiltersInstant()"
             />
           </div>
           <div class="utrecht-form-field">
@@ -54,6 +55,7 @@
               name="{{ filter_group.name }}_to" 
               class="utrecht-textbox utrecht-textbox--html-input rvo-input" 
               value="{{ request.GET|lookup:filter_group.name_to }}" 
+              onchange="applyFiltersInstant()"
             />
           </div>
         </div>
@@ -71,8 +73,8 @@
           <button type="button" onclick="closeFilterModal()" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md rvo-button">
             Annuleren
           </button>
-          <button type="button" onclick="applyFilters()" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button">
-            Toepassen
+          <button type="button" onclick="closeFilterModal()" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button">
+            Naar resultaten
           </button>
         </div>
       </div>

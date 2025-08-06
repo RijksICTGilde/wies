@@ -488,27 +488,27 @@ class ColleagueList(DynamicFilterMixin, ListView):
         
         # Add compact filter configuration
         context['primary_filter'] = {
-           'name': 'brand',
-            'id': 'brand-filter',
-            'placeholder': 'Alle merken',
-            'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
+           'name': 'skill',
+            'id': 'skill-filter',
+            'placeholder': 'Alle rollen',
+            'options': [{'value': skill.id, 'label': skill.name} for skill in context.get('skills', [])]
         }
         
         context['search_field'] = 'name'
         context['search_placeholder'] = 'Zoek op naam...'
         
         # Calculate active filter count
-        modal_filter_params = ['brand']
+        modal_filter_params = ['skill']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
         
         # Add modal filter configuration
         context['filter_groups'] = [
             {
                 'type': 'select',
-                'name': 'brand',
-                'label': 'Merk',
-                'placeholder': 'Alle merken',
-                'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
+                'name': 'skill',
+                'label': 'Rollen',
+                'placeholder': 'Alle rollen',
+                'options': [{'value': skill.id, 'label': skill.name} for skill in context.get('skills', [])]
             }
         ]
         
