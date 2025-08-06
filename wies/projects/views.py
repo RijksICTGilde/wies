@@ -686,9 +686,7 @@ class PlacementTableView(BasePlacementView):
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if 'HX-Request' in self.request.headers:
-            if 'order' in self.request.GET:
-                return ['parts/placement_table.html']
-            return ['parts/placement_content.html']
+            return ['parts/placement_table.html']
         return ['placement_table.html']
     
     def get_context_data(self, **kwargs):

@@ -13,11 +13,11 @@
 {% block content %}
 <div class="rvo-layout-column rvo-layout-gap--md">
   
-  {% include 'parts/generic_filter_bar.html' with url_name='placements-table' target_selector='#placement-content' %}
+  {% include 'parts/generic_filter_bar.html' with url_name='placements-table' target_selector='#placement_table' %}
 
   <!-- Content -->
-  <div id="placement-content">
-    {% include 'parts/placement_content.html' %}
+  <div id="placement_table" class="rvo-table-container">
+    {% include 'parts/placement_table.html' %}
   </div>
 
 </div>

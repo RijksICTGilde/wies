@@ -26,8 +26,46 @@
     </ul>
   </div>
 
-  <!-- Tab Content -->
-  <div id="assignment-tab-content">
-    {% include 'parts/assignment_tab_content.html' %}
-  </div>
+    <!-- Tab Content -->
+    <div id="assignment-tab-content">
+      <!-- Assignments Table -->
+      <table class="rvo-table">
+            <thead class="rvo-table-head">
+              <tr class="rvo-table-row">
+                {% include 'parts/sortable_header.html' with field='name' label='Naam' target='#assignment-tabs-section' %}
+                {% include 'parts/sortable_header.html' with field='organization' label='Opdrachtgever' target='#assignment-tabs-section' %}
+                {% include 'parts/sortable_header.html' with field='ministry__abbreviation' label='Ministerie' target='#assignment-tabs-section' %}
+                {% include 'parts/sortable_header.html' with field='status' label='Status' target='#assignment-tabs-section' %}
+                {% include 'parts/sortable_header.html' with field='start_date' label='Startdatum' target='#assignment-tabs-section' %}
+                {% include 'parts/sortable_header.html' with field='end_date' label='Einddatum' target='#assignment-tabs-section' %}
+              </tr>
+            </thead>
+            <tbody class="rvo-table-body">
+              {% for assignment in active_assignments %}
+              <tr class="rvo-table-row">
+                <td class="rvo-table-cell"><a href="/assignments/{{ assignment.pk }}/" class="rvo-link">{{ assignment.name }}</a></td>
+                <td class="rvo-table-cell">{{ assignment.organization }}</td>
+                <td class="rvo-table-cell">
+                  {% if assignment.ministry %}
+                    {{ assignment.ministry.abbreviation }}
+                  {% else %}
+                    <span class="rvo-text--italic">-</span>
+                  {% endif %}
+                </td>
+                <td class="rvo-table-cell">
+                  <span class="status-badge status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
+                </td>
+                <td class="rvo-table-cell">{{ assignment.start_date|date:"d-m-Y"|default:"-" }}</td>
+                <td class="rvo-table-cell">{{ assignment.end_date|date:"d-m-Y"|default:"-" }}</td>
+              </tr>
+              {% empty %}
+              <tr class="rvo-table-row">
+                <td class="rvo-table-cell" colspan="6" style="text-align: center; padding: 2rem; color: var(--rvo-color-grijs-600);">
+                  <span class="rvo-text--italic">Geen opdrachten gevonden voor deze categorie.</span>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+      </table>
+    </div>
 </div>
