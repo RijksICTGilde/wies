@@ -443,6 +443,11 @@ class ColleagueList(DynamicFilterMixin, ListView):
         if name_filter:
             qs = qs.filter(name__icontains=name_filter)
         
+        # Apply ordering
+        ordering = self.request.GET.get('order')
+        if ordering:
+            qs = qs.order_by(ordering)
+
         # Apply specific filters
         filters = {
             'skill': 'skills__id',
