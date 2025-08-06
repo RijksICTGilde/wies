@@ -15,7 +15,8 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
+from django.conf import settings
 
 from wies.projects.views import home, client, clients, get_service_details
 from wies.projects.views import AssignmentTabsView
@@ -63,4 +64,5 @@ urlpatterns = [
     path('api/expertises/', ExpertisesAPIView.as_view(), name='api-expertises'),
     path('api/expertises/<int:expertise_id>/', ExpertiseDetailAPIView.as_view(), name='api-expertise-detail'),
     path('api/services/<int:service_id>/', get_service_details, name='api-service-details'),
+    path('exact/', include('wies.exact.urls')),
 ]

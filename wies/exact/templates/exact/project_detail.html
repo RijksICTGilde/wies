@@ -1,0 +1,172 @@
+{% extends 'exact/base.html' %}
+
+{% block title %}{{ project.projectnaam }} - Exact{% endblock %}
+
+{% block breadcrumb %}
+    <div class="breadcrumb">
+        <a href="{% url 'exact:dashboard' %}">Dashboard</a> > 
+        <a href="{% url 'exact:project-list' %}">Projecten</a> > 
+        <span>{{ project.projectnaam }}</span>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h1 class="page-title">{{ project.projectnaam }}</h1>
+        <div>
+            <a href="{% url 'exact:project-update' project.pk %}" class="btn btn-secondary">Bewerken</a>
+            <a href="{% url 'exact:project-delete' project.pk %}" class="btn btn-danger">Verwijderen</a>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Project Basis</h2>
+            </div>
+            <table style="width: 100%;">
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500; width: 40%;">Projectnaam:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.projectnaam }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">ODI thema:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.odi_thema }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">Product/dienst assortiment:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.product_dienst_assortiment }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">Start datum:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.start_datum|date:"d-m-Y" }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">Eind datum:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.eind_datum|date:"d-m-Y" }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">Aantal uur:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.aantal_uur }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">Tarief:</td>
+                    <td style="padding: 0.5rem 0;">€ {{ project.tarief|floatformat:2 }}</td>
+                </tr>
+                <tr style="border-top: 2px solid #0650d0;">
+                    <td style="padding: 0.5rem 0; font-weight: 600;">Totale waarde:</td>
+                    <td style="padding: 0.5rem 0; font-weight: 600; color: #0650d0;">€ {{ project.total_value|floatformat:2 }}</td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">RC Gegevens</h2>
+            </div>
+            <table style="width: 100%;">
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500; width: 40%;">Type:</td>
+                    <td style="padding: 0.5rem 0;">
+                        <span style="padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem; 
+                            {% if project.type_project == 'INTERN' %}background-color: #d4edda; color: #155724;
+                            {% elif project.type_project == 'EXTERN' %}background-color: #d1ecf1; color: #0c5460;
+                            {% else %}background-color: #fff3cd; color: #856404;{% endif %}">
+                            {{ project.get_type_project_display }}
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">Organisatieonderdeel:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.organisatieonderdeel }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">Manager:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.manager }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">Moeder:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.moeder|default:"Niet ingevuld" }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Contract</h2>
+            </div>
+            <table style="width: 100%;">
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500; width: 40%;">Besteld door:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.contract_besteld_door }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">Contactpersoon opdrachtgever:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.contract_contactpersoon }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">Factuur voor:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.contract_factuur_voor }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">Ter attentie van:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.contract_ter_attentie_van }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">1-zijdig getekend:</td>
+                    <td style="padding: 0.5rem 0;">
+                        {% if project.contract_eenzijdig_getekend %}
+                            <span style="color: #28a745;">✓ Ja</span>
+                        {% else %}
+                            <span style="color: #dc3545;">✗ Nee</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">2-zijdig getekend:</td>
+                    <td style="padding: 0.5rem 0;">
+                        {% if project.contract_tweezijdig_getekend %}
+                            <span style="color: #28a745;">✓ Ja</span>
+                        {% else %}
+                            <span style="color: #dc3545;">✗ Nee</span>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Referenties</h2>
+            </div>
+            <table style="width: 100%;">
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500; width: 40%;">Uw referentie:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.uw_referentie }}</td>
+                </tr>
+                <tr>
+                    <td style="padding: 0.5rem 0; font-weight: 500;">Uw kenmerk:</td>
+                    <td style="padding: 0.5rem 0;">{{ project.uw_kenmerk }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">Systeem Informatie</h2>
+        </div>
+        <table style="width: 100%;">
+            <tr>
+                <td style="padding: 0.5rem 0; font-weight: 500; width: 20%;">Aangemaakt:</td>
+                <td style="padding: 0.5rem 0;">{{ project.created_at|date:"d-m-Y H:i" }}</td>
+            </tr>
+            <tr>
+                <td style="padding: 0.5rem 0; font-weight: 500;">Laatst bijgewerkt:</td>
+                <td style="padding: 0.5rem 0;">{{ project.updated_at|date:"d-m-Y H:i" }}</td>
+            </tr>
+        </table>
+    </div>
+{% endblock %}
