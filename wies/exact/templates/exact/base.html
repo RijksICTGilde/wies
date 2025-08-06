@@ -39,6 +39,7 @@
         .logo {
             display: flex;
             align-items: center;
+            gap: 1rem;
             text-decoration: none;
             color: white;
         }
@@ -49,17 +50,17 @@
             max-width: 200px;
         }
 
-        .mockup-banner {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background-color: rgba(0,0,0,0.2);
-            color: white;
-            padding: 0.25rem 0.75rem;
-            font-size: 0.7rem;
+        .mockup-badge {
+            background-color: rgba(0,0,0,0.3);
+            color: #FFD700;
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            border-bottom-left-radius: 8px;
+            letter-spacing: 1.5px;
+            border-radius: 4px;
+            border: 2px solid #FFD700;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .nav {
@@ -275,10 +276,10 @@
 </head>
 <body>
     <header class="header">
-        <div class="mockup-banner">MOCKUP</div>
         <div class="header-content">
             <a href="{% url 'exact:dashboard' %}" class="logo">
                 <img src="{% static 'exact/images/exact_logo.svg' %}" alt="Exact Logo" class="logo-img">
+                <span class="mockup-badge">MOCKUP</span>
             </a>
             <nav class="nav">
                 <a href="{% url 'exact:dashboard' %}">Dashboard</a>
