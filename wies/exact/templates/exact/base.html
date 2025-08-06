@@ -253,6 +253,25 @@
             margin-top: 0.5rem;
         }
 
+        /* App Switcher Links */
+        .app-switcher-links {
+            position: absolute;
+            top: 1rem;
+            right: 2rem;
+        }
+
+        .app-link {
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 0.8rem;
+            transition: color 0.3s;
+        }
+
+        .app-link:hover {
+            color: white;
+            text-decoration: underline;
+        }
+
         /* Responsive */
         @media (max-width: 768px) {
             .header-content {
@@ -262,6 +281,12 @@
 
             .nav {
                 justify-content: center;
+            }
+
+            .app-switcher-links {
+                position: static;
+                text-align: center;
+                margin-top: 0.5rem;
             }
 
             .container {
@@ -286,6 +311,9 @@
                 <a href="{% url 'exact:employee-list' %}">Medewerkers</a>
                 <a href="{% url 'exact:project-list' %}">Projecten</a>
             </nav>
+            <div class="app-switcher-links">
+                <a href="/" class="app-link">Wies</a>
+            </div>
         </div>
     </header>
 
@@ -293,5 +321,6 @@
         {% block breadcrumb %}{% endblock %}
         {% block content %}{% endblock %}
     </main>
+
 </body>
 </html>
