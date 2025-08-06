@@ -1,9 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block extra_css %}
-{% endblock %}
-
 {% block extra_js %}
 <script src="{% static 'js/custom.js' %}"></script>
 {% endblock %}
@@ -24,10 +21,6 @@
     {% include 'parts/assignment_tabs_section.html' %}
   </div>
 
-  {% include 'parts/generic_filter_modal.html' %}
-
 </div>
-
-{% include 'parts/generic_filter_scripts.html' %}
 
 {% endblock %}
