@@ -1,5 +1,4 @@
 import datetime
-import json
 from urllib.parse import urlencode
 
 from django.views.generic.list import ListView
@@ -178,41 +177,6 @@ class DynamicFilterMixin:
     - Dynamic filter options based on current filters
     """
     
-    def apply_date_filters(self, qs, date_field_mapping=None):
-        """
-        Apply date filters to queryset
-        
-        Args:
-            qs: Base queryset
-            date_field_mapping: Dict mapping filter params to model fields
-        
-        Returns:
-            Filtered queryset
-        """
-        if not date_field_mapping:
-            return qs
-            
-        date_filters = [
-            ('start_date_from', 'gte'), ('start_date_to', 'lte'),
-            ('end_date_from', 'gte'), ('end_date_to', 'lte')
-        ]
-        
-        for param, operator in date_filters:
-            value = self.request.GET.get(param)
-            if value:
-                date_type = 'start_date' if 'start_date' in param else 'end_date'
-                lookup = f'{date_type}__{operator}'
-                
-                # Apply filter using the field mapping
-                filter_kwargs = {}
-                for filter_param, model_field in date_field_mapping.items():
-                    filter_kwargs[f'{model_field}__{lookup}'] = value
-                
-                if filter_kwargs:
-                    qs = qs.filter(**filter_kwargs)
-        
-        return qs
-    
     def get_dynamic_filter_options(self, base_qs, filter_configs):
         """
         Get dynamic filter options based on current filters
@@ -281,14 +245,7 @@ class AssignmentTabsView(DynamicFilterMixin, ListView):
             value = self.request.GET.get(param)
             if value:
                 qs = qs.filter(**{lookup: value})
-        
-        # Apply date filters
-        date_field_mapping = {
-            'start_date': 'start_date',
-            'end_date': 'end_date'
-        }
-        qs = self.apply_date_filters(qs, date_field_mapping)
-        
+
         # Apply order if provided
         order = self.request.GET.get('order')
         if order:
@@ -394,22 +351,6 @@ class AssignmentTabsView(DynamicFilterMixin, ListView):
                 'placeholder': 'Alle ministeries',
                 'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
             },
-            {
-                'type': 'date_range',
-                'name': 'start_date',
-                'name_from': 'start_date_from',
-                'name_to': 'start_date_to',
-                'from_label': 'Start vanaf',
-                'to_label': 'Start tot'
-            },
-            {
-                'type': 'date_range',
-                'name': 'end_date',
-                'name_from': 'end_date_from',
-                'name_to': 'end_date_to',
-                'from_label': 'Eind vanaf',
-                'to_label': 'Eind tot'
-            }
         ]
         
         return context
@@ -578,14 +519,7 @@ class BasePlacementView(DynamicFilterMixin, ListView):
             value = self.request.GET.get(param)
             if value:
                 qs = qs.filter(**{lookup: value})
-                
-        # Apply date filters
-        date_field_mapping = {
-            'start_date': 'service__assignment__start_date',
-            'end_date': 'service__assignment__end_date'
-        }
-        qs = self.apply_date_filters(qs, date_field_mapping)
-        
+                        
         return qs.distinct()
     
     def get_filter_context_data(self):
@@ -605,14 +539,7 @@ class BasePlacementView(DynamicFilterMixin, ListView):
                 Q(service__assignment__ministry__name__icontains=search_filter) |
                 Q(service__assignment__ministry__abbreviation__icontains=search_filter)
             )
-        
-        # Apply date filters to base queryset
-        date_field_mapping = {
-            'start_date': 'service__assignment__start_date',
-            'end_date': 'service__assignment__end_date'
-        }
-        base_qs = self.apply_date_filters(base_qs, date_field_mapping)
-        
+                
         # Get dynamic filter options
         filter_configs = [
             {
@@ -668,22 +595,6 @@ class BasePlacementView(DynamicFilterMixin, ListView):
                 'placeholder': 'Alle opdrachtgevers',
                 'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
             },
-            {
-                'type': 'date_range',
-                'name': 'start_date',
-                'name_from': 'start_date_from',
-                'name_to': 'start_date_to',
-                'from_label': 'Start vanaf',
-                'to_label': 'Start tot'
-            },
-            {
-                'type': 'date_range',
-                'name': 'end_date',
-                'name_from': 'end_date_from',
-                'name_to': 'end_date_to',
-                'from_label': 'Eind vanaf',
-                'to_label': 'Eind tot'
-            }
         ]
         
         return context
