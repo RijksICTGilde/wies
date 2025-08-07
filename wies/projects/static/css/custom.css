@@ -151,50 +151,6 @@
 }
 
 
-/* Compact filter styling */
-.rvo-filter .utrecht-form-field {
-  margin-bottom: 0.75rem;
-}
-
-.rvo-filter .rvo-form-field__label {
-  margin-bottom: 0.25rem;
-}
-
-.rvo-filter .utrecht-textbox,
-.rvo-filter .utrecht-select {
-  padding: 0.375rem 0.5rem;
-  font-size: 0.875rem;
-}
-
-.rvo-filter .rvo-layout-row {
-  margin-bottom: 0.5rem;
-}
-
-.rvo-filter .rvo-layout-gap--xs {
-  gap: 0.5rem;
-}
-
-/* Vertical layout styling */
-.rvo-filter-section {
-  width: 100%;
-  margin-bottom: 2rem;
-}
-
-.rvo-results {
-  width: 100%;
-  max-width: none;
-}
-
-/* Filter grid styling */
-.rvo-layout-grid-columns--three > div {
-  flex: 1;
-  min-width: 0;
-}
-
-.rvo-layout-grid-columns--four > div {
-  flex: 1;
-  min-width: 0;
-}
 
 /* Compact table styling */
 .rvo-table {
@@ -288,11 +244,6 @@
 }
 
 
-/* Active filters styling */
-.rvo-results-active-filters {
-  color: var(--rvo-color-grijs-700, #374151);
-  font-size: 0.875rem;
-}
 
 .rvo-tag {
   display: inline-flex;
@@ -313,23 +264,6 @@
   opacity: 0.8;
 }
 
-/* Hide default details arrow */
-.rvo-collapsible-filter > summary {
-  list-style: none;
-}
-
-.rvo-collapsible-filter > summary::-webkit-details-marker {
-  display: none;
-}
-
-/* Chevron rotation */
-.rvo-icon-delta-naar-rechts {
-  transition: transform 0.2s ease;
-}
-
-.rvo-icon-delta-naar-rechts.rotated {
-  transform: rotate(90deg);
-}
 
 /* Fix RVO select chevron */
 .rvo-select-wrapper::after {
@@ -338,118 +272,6 @@
   mask-image: url("/static/icons/functioneel/delta-omlaag.svg");
 }
 
-/* Compact filter bar styling */
-.rvo-compact-filter-bar {
-  display: flex;
-  gap: 0.75rem;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.rvo-compact-filter-bar .utrecht-form-field:first-child {
-  min-width: 160px;
-  max-width: 200px;
-}
-
-.rvo-compact-filter-bar .utrecht-form-field:nth-child(2) {
-  flex: 1;
-  min-width: 300px;
-  position: relative;
-}
-
-/* When there's no primary filter, the search field is first and should expand */
-.rvo-compact-filter-bar .utrecht-form-field:first-child:not(:last-child) {
-  flex: 1;
-  min-width: 300px;
-  position: relative;
-}
-
-.rvo-compact-filter-bar .utrecht-select,
-.rvo-compact-filter-bar .utrecht-textbox,
-.rvo-compact-filter-bar .utrecht-button {
-  height: 3rem;
-}
-
-.rvo-compact-filter-bar .utrecht-textbox {
-  padding-left: 2.5rem;
-}
-
-.rvo-compact-filter-bar .utrecht-button {
-  min-width: 110px;
-}
-
-/* Search icon styling */
-.rvo-search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1;
-  color: #154273;
-  pointer-events: none;
-}
-
-/* Filter modal styling */
-.filter-modal {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  align-items: center;
-  justify-content: center;
-}
-
-.filter-modal-content {
-  background: white;
-  border-radius: 12px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-}
-
-.filter-modal-header {
-  padding: 1.5rem;
-  border-bottom: 1px solid #e6e6e6;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.filter-modal-header h2 {
-  margin: 0;
-}
-
-.filter-modal-close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
-}
-
-.filter-modal-form {
-  padding: 1.5rem;
-}
-
-.filter-modal-footer {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #e6e6e6;
-  display: flex;
-  gap: 1rem;
-  justify-content: space-between;
-}
-
-.filter-modal-footer-buttons {
-  display: flex;
-  gap: 0.75rem;
-}
 
 /* Sub-menu navigation styling */
 .rvo-link--active {
@@ -476,10 +298,6 @@
   font-size: 0.7rem;
 }
 
-.rvo-filter-section {
-  margin-bottom: 0;
-}
-
 
 .rvo-form {
   margin-bottom: 0;
@@ -498,7 +316,3 @@
   margin: 0;
 }
 
-/* Filter button container */
-.filter-button-container {
-  position: relative;
-}

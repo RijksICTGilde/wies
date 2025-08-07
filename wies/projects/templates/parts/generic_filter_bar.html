@@ -5,6 +5,8 @@ Usage:
 
 {% load static %}
 
+<link rel="stylesheet" href="{% static 'css/filter.css' %}">
+
 <!-- Generic Compact Filters Section -->
 <div class="rvo-filter-section">
   <form class="rvo-form" hx-get="{% url url_name %}" hx-target="{{ target_selector|default:'#content' }}" hx-push-url="true" hx-trigger="change,input delay:500ms from:input">
