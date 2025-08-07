@@ -1,0 +1,103 @@
+/* Placement-specific CSS */
+
+/* Placement table styling */
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.placement-avatar-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.placement-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--rvo-color-hemelblauw-200, #bfdbfe);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: var(--rvo-color-hemelblauw-700, #1e40af);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.placement-name {
+  font-weight: 600;
+  color: var(--rvo-color-grijs-900, #111827);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-ministry {
+  font-size: 0.75rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-assignment {
+  display: flex;
+  flex-direction: column;
+}
+
+.placement-assignment-name {
+  color: var(--rvo-color-logoblauw, #003366);
+  text-decoration: underline;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-assignment-org {
+  font-size: 0.75rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-no-role {
+  color: var(--rvo-color-grijs-400, #9ca3af);
+  font-style: italic;
+  font-size: 0.75rem;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-period {
+  color: var(--rvo-color-grijs-700, #374151);
+  font-weight: 500;
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+/* Make sure the placement table container uses full width */
+#placement_table {
+  width: 100%;
+  max-width: none;
+}
+
+#placement-content {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* Column width optimization for placement table only */
+#placement_table .rvo-table th:nth-child(1), #placement_table .rvo-table td:nth-child(1) {
+  width: 28%; /* Naam column - more space */
+}
+
+#placement_table .rvo-table th:nth-child(2), #placement_table .rvo-table td:nth-child(2) {
+  width: 37%; /* Opdracht column - slightly smaller */
+}
+
+#placement_table .rvo-table th:nth-child(3), #placement_table .rvo-table td:nth-child(3) {
+  width: 20%; /* Rol column - same */
+  white-space: nowrap; /* Prevent wrapping */
+}
+
+#placement_table .rvo-table th:nth-child(4), #placement_table .rvo-table td:nth-child(4) {
+  width: 15%; /* Periode column - same */
+  white-space: nowrap; /* Prevent wrapping */
+}

@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% load static %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/placements.css' %}">
+{% endblock %}
+
 {% block header %}
 {{ block.super }}
 {% include 'parts/placement_navigation.html' with active_page='table' %}
