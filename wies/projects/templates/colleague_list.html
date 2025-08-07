@@ -1,50 +1,21 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 
-<h1 class="utrecht-heading-1">Collega's</h1>
-
-<form id="assignment-filter-form"
-      hx-get="/colleagues/"
-      hx-target="#colleague_table"
-      hx-trigger="change, keyup delay:300ms from:#name-search"
-      hx-swap="outerHTML"
-      class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three"
-      style="margin-bottom: 2em;">
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="name-search" class="rvo-label">Naam</label>
-        <input type="text" 
-               id="name-search" 
-               name="name" 
-               value="{{ request.GET.name|default:'' }}"
-               placeholder="Zoek op naam..."
-               class="utrecht-textbox utrecht-textbox--html-input">
-    </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="skill-filter" class="rvo-label">Rollen:</label>
-        <select id="skill-filter" name="skill"
-                class="js-skills-select-single utrecht-select utrecht-select--html-select">
-        </select>
-    </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm" style="align-self: end; text-align: right;">
-        <a href="/colleagues/new">
-          <button
-            class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before"
-            type="button"
-          >
-            <span
-              class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit"
-              role="img"
-              aria-label="Plus"
-            ></span>
-            Nieuwe collega toevoegen
-          </button>
-        </a>
-    </div>
-</form>
-
-<div class="rvo-table--responsive">
-{% include 'parts/colleague_table.html' %}
+<div class="page-header">
+  <h1>Collega's</h1>
 </div>
 
-{% endblock content %}
+<div class="rvo-layout-column rvo-layout-gap--md">
+  
+  {% include 'parts/generic_filter_bar.html' with url_name='colleagues' target_selector='#colleague_table' %}
+
+  <!-- Colleagues Content -->
+  <div id="colleague_table">
+    {% include 'parts/colleague_table.html' %}
+  </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,27 @@
+<!-- Sub Navigation for Placements -->
+<div class="rvo-tmp-submenu-wrapper">
+  <div class="rvo-menubar__background rvo-menubar__background--horizontal-rule">
+    <div class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--none">
+      <nav class="rvo-menubar rvo-menubar--md">
+        <ul class="rvo-menubar__ul">
+          <li class="rvo-menubar__list">
+            <ul class="rvo-menubar__group--flex">
+              <li class="rvo-menubar__item">
+                <a href="{% placements_url_with_filters 'placements-table' %}" 
+                   class="rvo-link rvo-menubar__link rvo-link--logoblauw{% if active_page == 'table' %} rvo-link--active{% endif %}">
+                  Inzet
+                </a>
+              </li>
+              <li class="rvo-menubar__item">
+                <a href="{% placements_url_with_filters 'placements-availability' %}" 
+                   class="rvo-link rvo-menubar__link rvo-link--logoblauw{% if active_page == 'availability' %} rvo-link--active{% endif %}">
+                  Beschikbaarheid
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</div>

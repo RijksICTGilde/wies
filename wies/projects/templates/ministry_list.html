@@ -1,32 +1,21 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 
-<h1 class="utrecht-heading-1">Ministeries</h1>
-
-<div class="rvo-table--responsive">
-    <table class="rvo-table">
-        <thead class="rvo-table-head">
-            <tr class="rvo-table-row">
-                <th scope="col" class="rvo-table-header">Naam</th>
-                <th scope="col" class="rvo-table-header">Aantal opdrachten</th>
-            </tr>
-        </thead>
-        <tbody class="rvo-table-body">
-            {% for ministry in ministries %}
-            <tr class="rvo-table-row">
-                <td class="rvo-table-cell">
-                    <a href="{% url 'ministry-detail' ministry.pk %}" class="rvo-link">{{ ministry.name }} ({{ ministry.abbreviation }})</a>
-                </td>
-                <td class="rvo-table-cell">{{ ministry.assignment_count }}</td>
-            </tr>
-            {% empty %}
-            <tr class="rvo-table-row">
-                <td class="rvo-table-cell" colspan="3">Geen ministeries gevonden.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="page-header">
+  <h1>Ministeries</h1>
 </div>
 
-{% endblock content %}
+<div class="rvo-layout-column rvo-layout-gap--md">
+  
+  {% include 'parts/generic_filter_bar.html' with url_name='ministries' target_selector='#ministry_table' %}
+
+  <!-- Ministries Content -->
+  <div id="ministry_table">
+    {% include 'parts/ministry_table.html' %}
+  </div>
+
+</div>
+
+{% endblock %}

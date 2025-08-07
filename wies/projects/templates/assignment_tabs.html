@@ -1,109 +1,22 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block content %}
 
-<!-- Header with title and view switcher -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; margin-top: 1rem;">
-  <h1 style="margin: 0;">Opdrachten</h1>
+<!-- Header with title -->
+<div class="page-header">
+  <h1>Opdrachten</h1>
 </div>
 
-<!-- Filter Form -->
-<form id="assignment-tab-filter-form"
-      hx-get="{% url 'assignments' %}"
-      hx-target="#assignment-tabs-section"
-      hx-swap="outerHTML"
-      hx-include="[name='tab']"
-      class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four"
-      style="margin-bottom: 2em;">
-    
-    <!-- Hidden field to maintain active tab -->
-    <input type="hidden" name="tab" value="{{ active_tab }}">
-    
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="name-search" class="rvo-label">Zoeken</label>
-        <input type="text" 
-               id="name-search" 
-               name="name" 
-               value="{{ request.GET.name|default:'' }}"
-               placeholder="Zoek op naam, opdrachtgever of ministerie..."
-               class="utrecht-textbox utrecht-textbox--html-input"
-               hx-get="{% url 'assignments' %}" 
-               hx-target="#assignment-tabs-section" 
-               hx-trigger="keyup delay:300ms"
-               hx-include="[name='tab'], [name='order'], [name='skill']">
-    </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm">
-        <label for="skills" class="rvo-label">Rollen:</label>
-        <select name="skill" 
-                id="skills" 
-                class="js-skills-select-single utrecht-select utrecht-select--html-select" 
-                hx-get="{% url 'assignments' %}" 
-                hx-target="#assignment-tabs-section" 
-                hx-trigger="change"
-                hx-include="[name='tab'], [name='name'], [name='order']"></select>
-    </div>
-    <div class="rvo-layout-column rvo-layout-gap--sm" style="align-self: end; text-align: right;">
-        <a href="/assignments/new">
-          <button
-            class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before"
-            type="button"
-          >
-            <span
-              class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-icon--wit"
-              role="img"
-              aria-label="Plus"
-            ></span>
-            Nieuwe opdracht toevoegen
-          </button>
-        </a>
-    </div>
-</form>
+<div class="rvo-layout-column rvo-layout-gap--md">
+  
+  {% include 'parts/generic_filter_bar.html' with url_name='assignments' target_selector='#assignment-tabs-section' tab_param=active_tab %}
 
-<!-- Tab Navigation and Content -->
-{% include 'parts/assignment_tabs_section.html' %}
+  <!-- Assignment Tabs Content -->
+  <div id="assignment-tabs-section" class="rvo-table-container">
+    {% include 'parts/assignment_tabs_section.html' %}
+  </div>
 
-<style>
-.assignment-tabs-navigation .tab-count {
-  margin-left: 0.5rem;
-  opacity: 0.8;
-  font-weight: normal;
-  font-size: 0.875rem;
-}
+</div>
 
-.view-switcher {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--rvo-color-grijs-600, #6b7280);
-}
-
-.view-switcher-link {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  color: var(--rvo-color-grijs-600, #6b7280);
-  text-decoration: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  transition: all 0.2s ease;
-}
-
-.view-switcher-link:hover {
-  color: var(--rvo-color-logoblauw, #003366);
-  background-color: var(--rvo-color-grijs-100, #f5f5f5);
-  text-decoration: none;
-}
-
-.view-switcher-link--active {
-  color: var(--rvo-color-logoblauw, #003366);
-  font-weight: 500;
-}
-
-.view-switcher-separator {
-  color: var(--rvo-color-grijs-400, #9ca3af);
-  font-weight: 300;
-}
-</style>
-
-{% endblock content %}
+{% endblock %}

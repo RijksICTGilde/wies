@@ -1,10 +1,9 @@
 <div class="rvo-table--responsive" id="colleague_table">
   <table class="rvo-table">
-    <thead class="rvo-table-head">
-      <tr class="rvo-table-row">
-        {% include 'parts/sortable_header.html' with field='name' label='Naam' %}
-        {% include 'parts/sortable_header.html' with field='brand__name' label='Merk' %}
-        {% include 'parts/sortable_header.html' with field='max_end_date' label='Einde opdracht' %}
+          <thead class="rvo-table-head">
+        <tr class="rvo-table-row">
+            {% include 'parts/generic_sortable_header.html' with field='name' label='Naam' target='#colleague_table' %}
+            {% include 'parts/generic_sortable_header.html' with field='brand__name' label='Merk' target='#colleague_table' %}
         <th scope="col" class="rvo-table-header">
           <div class="rvo-table-header__sortable-container">
             Rollen
@@ -23,7 +22,6 @@
             <span class="rvo-text--italic">-</span>
           {% endif %}
         </td>
-        <td class="rvo-table-cell">{{ colleague.max_end_date }}</td>
         <td class="rvo-table-cell">
           {% for skill in colleague.skills.all %}
             <span class="skill-badge">{{ skill.name }}</span>

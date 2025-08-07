@@ -1,70 +1,74 @@
-<div class="rvo-table--responsive">
-  <table class="rvo-table" id="placement_table">
+<div class="rvo-table--responsive" id="placement_table">
+  <table class="rvo-table">
     <thead class="rvo-table-head">
       <tr class="rvo-table-row">
-        {% include 'parts/sortable_header.html' with field='colleague__name' label='Collega' %}
-        {% include 'parts/sortable_header.html' with field='service__assignment__name' label='Opdracht' %}
-        {% include 'parts/sortable_header.html' with field='service__assignment__organization' label='Opdrachtgever' %}
-        {% include 'parts/sortable_header.html' with field='service__assignment__ministry__abbreviation' label='Ministerie' %}
-        {% include 'parts/sortable_header.html' with field='hours_per_week' label='Uren/week' %}
-        {% include 'parts/sortable_header.html' with field='service__skill' label='Rol' %}
-        {% include 'parts/sortable_header.html' with field='start_date' label='Startdatum' %}
-        {% include 'parts/sortable_header.html' with field='end_date' label='Einddatum' %}
-        {% include 'parts/sortable_header.html' with field='service__assignment__status' label='Status' %}
+        {% include 'parts/generic_sortable_header.html' with field='colleague__name' label='Naam' target='#placement_table' %}
+        {% include 'parts/generic_sortable_header.html' with field='service__assignment__name' label='Opdracht' target='#placement_table' %}
+        {% include 'parts/generic_sortable_header.html' with field='service__skill__name' label='Rol' target='#placement_table' %}
+        <th class="rvo-table-header">Periode</th>
       </tr>
     </thead>
     <tbody>
       {% for placement in object_list %}
-        <tr class="rvo-table-row">
+        <tr class="rvo-table-row clickable-row" onclick="{% if placement.colleague %}window.location.href='{% url 'colleague-detail' placement.colleague.id %}'{% endif %}">
           <td class="rvo-table-cell">
-            {% if placement.colleague %}
-              <a href="{% url 'colleague-detail' placement.colleague.id %}" class="rvo-link">{{ placement.colleague.name }}</a>
-            {% else %}
-              <span class="rvo-text--italic">Niet toegewezen</span>
-            {% endif %}
+            <div class="placement-avatar-container">
+              <div class="placement-avatar">
+                {% if placement.colleague %}
+                  {{ placement.colleague.name|first|upper }}
+                {% else %}
+                  ?
+                {% endif %}
+              </div>
+              <div class="placement-info">
+                <div class="placement-name">
+                  {% if placement.colleague %}
+                    {{ placement.colleague.name }}
+                  {% else %}
+                    Niet toegewezen
+                  {% endif %}
+                </div>
+                <div class="placement-brand">
+                  {% if placement.colleague.brand %}
+                    {{ placement.colleague.brand.name }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </div>
+              </div>
+            </div>
           </td>
           <td class="rvo-table-cell">
-            <a href="{% url 'assignment-detail' placement.service.assignment.id %}" class="rvo-link">{{ placement.service.assignment.name }}</a>
-          </td>
-          <td class="rvo-table-cell">
-            {{ placement.service.assignment.organization }}
-          </td>
-          <td class="rvo-table-cell">
-            {% if placement.service.assignment.ministry %}
-              {{ placement.service.assignment.ministry.abbreviation }}
-            {% else %}
-              <span class="rvo-text--italic">-</span>
-            {% endif %}
-          </td>
-          <td class="rvo-table-cell">
-            {% if placement.hours_per_week %}
-              {{ placement.hours_per_week }} uur
-            {% else %}
-              <span class="rvo-text--italic">Niet opgegeven</span>
-            {% endif %}
+            <div class="placement-assignment">
+              <a href="{% url 'assignment-detail' placement.service.assignment.id %}" 
+                 class="placement-assignment-name"
+                 onclick="event.stopPropagation()">
+                {{ placement.service.assignment.name }}
+              </a>
+              <div class="placement-assignment-org">
+                {{ placement.service.assignment.organization }}
+              </div>
+            </div>
           </td>
           <td class="rvo-table-cell">
             {% if placement.service.skill %}
-              <span class="skill-badge">{{ placement.service.skill.name }}</span>
+              <span class="rvo-tag rvo-tag--default">{{ placement.service.skill.name }}</span>
             {% else %}
-              <span class="rvo-text--italic">Geen rol opgegeven</span>
+              <span class="placement-no-role">
+                Geen rol
+              </span>
             {% endif %}
           </td>
+
           <td class="rvo-table-cell">
-            {{ placement.start_date|date:"d-m-Y" }}
-          </td>
-          <td class="rvo-table-cell">
-            {{ placement.end_date|date:"d-m-Y" }}
-          </td>
-          <td class="rvo-table-cell">
-            <span class="status-badge status-{{ placement.service.assignment.status|lower }}">
-              {{ placement.service.assignment.status }}
+            <span class="placement-period">
+              {{ placement.start_date|date:"M y" }} - {{ placement.end_date|date:"M y" }}
             </span>
           </td>
         </tr>
       {% empty %}
         <tr class="rvo-table-row">
-          <td class="rvo-table-cell" colspan="9">
+          <td class="rvo-table-cell" colspan="4">
             <span class="rvo-text--italic">Geen inzetten gevonden.</span>
           </td>
         </tr>
