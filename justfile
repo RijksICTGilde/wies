@@ -11,6 +11,7 @@ setup:
   docker compose build
   docker compose run --rm django python manage.py migrate
   docker compose run --rm django python manage.py loaddata dummy_data.json
+  docker compose run --rm django python manage.py loaddata exact_dummy_data.json  
   docker-compose run --rm django python manage.py createsuperuser --noinput
 
 # Start up containers with current state.
@@ -24,7 +25,9 @@ rebuild-db:
   echo "removing db, migrations and building up again from scratch"
   rm -f db.sqlite3
   rm -r wies/projects/migrations/*
+  rm -r wies/exact/migrations/*
   touch wies/projects/migrations/__init__.py
+  touch wies/exact/migrations/__init__.py
   docker compose run --rm django python manage.py makemigrations
 
 # Executes `manage.py` command.
