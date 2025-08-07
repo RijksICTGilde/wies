@@ -56,7 +56,6 @@
           <th class="rvo-table-header">Opdracht</th>
           <th class="rvo-table-header">Status</th>
           <th class="rvo-table-header">Opdrachtgever</th>
-          <th class="rvo-table-header">Ministerie</th>
           <th class="rvo-table-header">Rol</th>
           <th class="rvo-table-header">Periode</th>
         </tr>
@@ -68,12 +67,10 @@
           <td class="rvo-table-cell">
             <span class="status-badge status-{{ placement.service.assignment.status|lower }}">{{ placement.service.assignment.status }}</span>
           </td>
-          <td class="rvo-table-cell">{{ placement.service.assignment.organization }}</td>
           <td class="rvo-table-cell">
+            <div>{{ placement.service.assignment.organization }}</div>
             {% if placement.service.assignment.ministry %}
-              {{ placement.service.assignment.ministry.abbreviation }}
-            {% else %}
-              <span class="rvo-text--italic">-</span>
+              <div style="font-size: 0.875em; color: var(--rvo-color-grijs-600); margin-top: 0.25rem;">{{ placement.service.assignment.ministry.abbreviation }}</div>
             {% endif %}
           </td>
           <td class="rvo-table-cell">
