@@ -16,3 +16,5 @@ CLAUDE.md
 Dockerfile
 .bash_history
 .python_history
+node_modules
+staticfiles

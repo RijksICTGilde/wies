@@ -3,20 +3,9 @@
   "version": "1.0.0",
   "description": "Frontend assets for Wies project",
   "main": "index.js",
-  "scripts": {
-    "serve-rvo": "npx serve node_modules/@nl-rvo -p 3001",
-    "check-versions": "npm list @nl-rvo/design-tokens @nl-rvo/component-library-css"
+  "dependencies": {
+    "@nl-rvo/assets": "1.0.0-alpha.360"
   },
-  "devDependencies": {
-    "@nl-rvo/design-tokens": "1.7.1",
-    "@nl-rvo/component-library-css": "4.9.0",
-    "serve": "^14.2.0"
-  },
-  "keywords": [
-    "rvo",
-    "design-system",
-    "django"
-  ],
   "author": "Ruben Rouwhof",
   "license": "MIT"
 }

@@ -5,6 +5,7 @@ Interne tool voor overzicht wie, waar, wat, wanneer
 - docker
 - just
 - uv
+- npm
 
 ## Setup
 
