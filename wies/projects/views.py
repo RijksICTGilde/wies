@@ -21,6 +21,8 @@ from django.core import management
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 
+from wies.exact.models import ExactEmployee, ExactProject
+
 
 def home(request):
     """Redirect to placements table page as default landing page"""
@@ -80,8 +82,13 @@ def admin_db(request):
             Ministry.objects.all().delete()
             Brand.objects.all().delete()
             Expertise.objects.all().delete()
+
+            ExactEmployee.objects.all().delete()
+            ExactProject.objects.all().delete()
+
         elif action == 'load_data':
             management.call_command('loaddata', 'dummy_data.json')
+            management.call_command('loaddata', 'exact_dummy_data.json')
             messages.success(request, 'Data loaded successfully from dummy_data.json')
         return redirect('admin-db')
     
