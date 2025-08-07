@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Database Admin</title>
+</head>
+<body>
+    <h1><a href="/">home</a>/Database Admin</h1>
+    
+    Nr of assignments: {{ assignment_count }}
+
+    {% if messages %}
+        {% for message in messages %}
+            <div>{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+    
+    <h2>Clear All Data</h2>
+    <form method="post" onsubmit="return confirm('Are you sure you want to clear all data?');">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="clear_data">
+        <button type="submit">Clear All Data</button>
+    </form>
+    
+    <h2>Load Dummy Data</h2>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="load_data">
+        <button type="submit">Load Dummy Data</button>
+    </form>
+</body>
+</html>
