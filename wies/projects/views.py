@@ -168,51 +168,7 @@ def placements_url_with_tab(context, tab_key):
     return f"{reverse('placements')}?{urlencode(params)}"
 
 
-class DynamicFilterMixin:
-    """
-    Mixin to provide dynamic filtering functionality for list views
-    
-    Provides methods for:
-    - Date filtering with complex field mappings
-    - Dynamic filter options based on current filters
-    """
-    
-    def get_dynamic_filter_options(self, base_qs, filter_configs):
-        """
-        Get dynamic filter options based on current filters
-        
-        Args:
-            base_qs: Base queryset to filter from
-            filter_configs: List of dicts with filter configuration
-        
-        Returns:
-            Dict with filter options for each filter type
-        """
-        context = {}
-        
-        for config in filter_configs:
-            filter_name = config['name']
-            model = config['model']
-            field_path = config['field_path']
-            
-            # Start with base queryset
-            filtered_qs = base_qs
-            
-            # Get distinct values for this filter
-            distinct_values = filtered_qs.values_list(field_path, flat=True).distinct()
-            
-            # Handle different field types
-            if field_path == 'organization':
-                # For organization field, create a list of dicts with organization values
-                context[filter_name] = [{'organization': value} for value in distinct_values if value]
-            else:
-                # For ID-based fields, get the actual model objects
-                context[filter_name] = model.objects.filter(id__in=distinct_values).order_by('name')
-        
-        return context
-
-
-class AssignmentTabsView(DynamicFilterMixin, ListView):
+class AssignmentTabsView(ListView):
     template_name = 'assignment_tabs.html'
     model = Assignment
 
@@ -278,25 +234,9 @@ class AssignmentTabsView(DynamicFilterMixin, ListView):
         # Get base queryset with common filters applied (but no status filter yet)
         base_qs = self.get_base_queryset()
         
-        # Get dynamic filter options using the same base queryset
-        filter_configs = [
-            {
-                'name': 'organizations',
-                'model': Assignment,
-                'field_path': 'organization',
-                'param_name': 'organization',
-                'distinct': True
-            },
-            {
-                'name': 'clients',
-                'model': Ministry,
-                'field_path': 'ministry__id',
-                'param_name': 'ministry'
-            }
-        ]
-        
-        # Use the same base queryset for dynamic filter options
-        context.update(self.get_dynamic_filter_options(base_qs, filter_configs))
+        # Get filter options (simplified - no longer dynamic)
+        context['organizations'] = [{'organization': org} for org in Assignment.objects.values_list('organization', flat=True).distinct().order_by('organization') if org]
+        context['clients'] = Ministry.objects.order_by('name')
         
         # Define tab groups with correct counts using the same base queryset
         tab_groups = {
@@ -363,7 +303,7 @@ class AssignmentTabsView(DynamicFilterMixin, ListView):
             return ['assignment_tabs.html']
 
 
-class ColleagueList(DynamicFilterMixin, ListView):
+class ColleagueList(ListView):
     """
     View for colleagues list with filtering capabilities
     
@@ -406,31 +346,9 @@ class ColleagueList(DynamicFilterMixin, ListView):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
         
-        # Get base queryset for dynamic filtering
-        base_qs = Colleague.objects.select_related('brand').prefetch_related('skills')
-        
-        # Apply non-dropdown filters
-        name_filter = self.request.GET.get('name')
-        if name_filter:
-            base_qs = base_qs.filter(name__icontains=name_filter)
-        
-        # Get dynamic filter options
-        filter_configs = [
-            {
-                'name': 'skills',
-                'model': Skill,
-                'field_path': 'skills__id',
-                'param_name': 'skill'
-            },
-            {
-                'name': 'brands',
-                'model': Brand,
-                'field_path': 'brand__id',
-                'param_name': 'brand'
-            }
-        ]
-        
-        context.update(self.get_dynamic_filter_options(base_qs, filter_configs))
+        # Get filter options (simplified - no longer dynamic)
+        context['skills'] = Skill.objects.order_by('name')
+        context['brands'] = Brand.objects.order_by('name')
         
         # Add compact filter configuration
         context['primary_filter'] = {
@@ -482,7 +400,7 @@ def add_timedelta(source_date, timedelta):
     return (dt + timedelta).date()
 
 
-class BasePlacementView(DynamicFilterMixin, ListView):
+class BasePlacementView(ListView):
     """Base view for placement views with shared filtering logic"""
     model = Placement
     
@@ -524,45 +442,12 @@ class BasePlacementView(DynamicFilterMixin, ListView):
     
     def get_filter_context_data(self):
         """Get context data for filters (shared between views)"""
-        # Get base queryset for dynamic filtering
-        base_qs = Placement.objects.select_related(
-            'colleague__brand', 'service__skill', 'service__assignment__ministry'
-        )
-        
-        # Apply non-dropdown filters
-        search_filter = self.request.GET.get('search')
-        if search_filter:
-            base_qs = base_qs.filter(
-                Q(colleague__name__icontains=search_filter) |
-                Q(service__assignment__name__icontains=search_filter) |
-                Q(service__assignment__organization__icontains=search_filter) |
-                Q(service__assignment__ministry__name__icontains=search_filter) |
-                Q(service__assignment__ministry__abbreviation__icontains=search_filter)
-            )
-                
-        # Get dynamic filter options
-        filter_configs = [
-            {
-                'name': 'skills',
-                'model': Skill,
-                'field_path': 'service__skill__id',
-                'param_name': 'skill'
-            },
-            {
-                'name': 'brands',
-                'model': Brand,
-                'field_path': 'colleague__brand__id',
-                'param_name': 'brand'
-            },
-            {
-                'name': 'clients',
-                'model': Ministry,
-                'field_path': 'service__assignment__ministry__id',
-                'param_name': 'client'
-            }
-        ]
-        
-        context = self.get_dynamic_filter_options(base_qs, filter_configs)
+        # Get filter options (simplified - no longer dynamic)
+        context = {
+            'skills': Skill.objects.order_by('name'),
+            'brands': Brand.objects.order_by('name'),
+            'clients': Ministry.objects.order_by('name')
+        }
         
         # Add consistent filter configuration
         context['primary_filter'] = {
@@ -954,7 +839,7 @@ def client(request, name):
     })
 
 # Ministry views
-class MinistryListView(DynamicFilterMixin, ListView):
+class MinistryListView(ListView):
     model = Ministry
     template_name = 'ministry_list.html'
     context_object_name = 'ministries'
