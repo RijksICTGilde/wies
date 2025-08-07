@@ -268,8 +268,8 @@
 /* Fix RVO select chevron */
 .rvo-select-wrapper::after {
   background-color: white !important;
-  -webkit-mask-image: url("/static/rvo-assets/icons/functioneel/delta-omlaag.svg");
-  mask-image: url("/static/rvo-assets/icons/functioneel/delta-omlaag.svg");
+  -webkit-mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
+  mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
 }
 
 

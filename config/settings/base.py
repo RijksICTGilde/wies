@@ -114,7 +114,7 @@ USE_TZ = True
 STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [
-    BASE_DIR / "node_modules" / "@nl-rvo",
+    BASE_DIR / "node_modules",
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
