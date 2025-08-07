@@ -3,12 +3,12 @@ import json
 from urllib.parse import urlencode
 
 from django.views.generic.list import ListView
-from django.views.generic import DetailView, CreateView, DeleteView, UpdateView, TemplateView
+from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
 from django.template.defaulttags import register
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
 from django.db import models
-from django.db.models import Case, When, Max, F, Q, Count
+from django.db.models import Q, Count
 from django.http import JsonResponse
 
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand
