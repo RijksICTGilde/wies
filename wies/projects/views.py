@@ -400,9 +400,10 @@ def add_timedelta(source_date, timedelta):
     return (dt + timedelta).date()
 
 
-class BasePlacementView(ListView):
-    """Base view for placement views with shared filtering logic"""
+class PlacementTableView(ListView):
+    """View for placements table view"""
     model = Placement
+    template_name = 'placement_table.html'
     
     def get_queryset(self):
         """Apply filters to placements queryset"""
@@ -439,15 +440,20 @@ class BasePlacementView(ListView):
                 qs = qs.filter(**{lookup: value})
                         
         return qs.distinct()
-    
-    def get_filter_context_data(self):
-        """Get context data for filters (shared between views)"""
-        # Get filter options (simplified - no longer dynamic)
-        context = {
-            'skills': Skill.objects.order_by('name'),
-            'brands': Brand.objects.order_by('name'),
-            'clients': Ministry.objects.order_by('name')
-        }
+
+    def get_template_names(self):
+        """Return appropriate template based on request type"""
+        if 'HX-Request' in self.request.headers:
+            return ['parts/placement_table.html']
+        return ['placement_table.html']
+
+    def get_context_data(self, **kwargs):
+        """Add dynamic filter options"""
+        context = super().get_context_data(**kwargs)
+        
+        context['skills'] = Skill.objects.order_by('name')
+        context['brands'] = Brand.objects.order_by('name')
+        context['clients'] = Ministry.objects.order_by('name')
         
         # Add consistent filter configuration
         context['primary_filter'] = {
@@ -481,41 +487,97 @@ class BasePlacementView(ListView):
                 'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
             },
         ]
-        
+
         return context
 
 
-class PlacementTableView(BasePlacementView):
-    """View for placements table view"""
-    template_name = 'placement_table.html'
-    
-    def get_template_names(self):
-        """Return appropriate template based on request type"""
-        if 'HX-Request' in self.request.headers:
-            return ['parts/placement_table.html']
-        return ['placement_table.html']
-    
-    def get_context_data(self, **kwargs):
-        """Add dynamic filter options"""
-        context = super().get_context_data(**kwargs)
-        context.update(self.get_filter_context_data())
-        return context
-
-
-class PlacementAvailabilityView(BasePlacementView):
+class PlacementAvailabilityView(ListView):
     """View for placements availability (timeline view)"""
+    model = Placement
     template_name = 'placement_availability.html'
     
+    def get_queryset(self):
+        """Apply filters to placements queryset"""
+        qs = Placement.objects.select_related(
+            'colleague', 'colleague__brand', 'service', 'service__skill', 'service__assignment__ministry'
+        ).order_by('-service__assignment__start_date')
+        
+        # Apply search filter
+        search_filter = self.request.GET.get('search')
+        if search_filter:
+            qs = qs.filter(
+                Q(colleague__name__icontains=search_filter) |
+                Q(service__assignment__name__icontains=search_filter) |
+                Q(service__assignment__organization__icontains=search_filter) |
+                Q(service__assignment__ministry__name__icontains=search_filter) |
+                Q(service__assignment__ministry__abbreviation__icontains=search_filter)
+            )
+        
+        # Apply ordering
+        ordering = self.request.GET.get('order')
+        if ordering:
+            qs = qs.order_by(ordering)
+
+        # Apply specific filters
+        filters = {
+            'skill': 'service__skill__id',
+            'brand': 'colleague__brand__id',
+            'client': 'service__assignment__ministry__id'
+        }
+        
+        for param, lookup in filters.items():
+            value = self.request.GET.get(param)
+            if value:
+                qs = qs.filter(**{lookup: value})
+                        
+        return qs.distinct()
+
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if 'HX-Request' in self.request.headers:
             return ['parts/placement_timeline.html']
         return ['placement_availability.html']
-    
+
     def get_context_data(self, **kwargs):
         """Add dynamic filter options and timeline data"""
         context = super().get_context_data(**kwargs)
-        context.update(self.get_filter_context_data())
+        
+        context['skills'] = Skill.objects.order_by('name')
+        context['brands'] = Brand.objects.order_by('name')
+        context['clients'] = Ministry.objects.order_by('name')
+        
+        context['primary_filter'] = {
+            'name': 'brand',
+            'id': 'brand-filter',
+            'placeholder': 'Alle merken',
+            'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
+        }
+        
+        context['search_field'] = 'search'
+        context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
+        
+        # Calculate active filter count
+        modal_filter_params = ['skill', 'client', 'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to']
+        context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
+        
+        # Add modal filter configuration
+        context['filter_groups'] = [
+            {
+                'type': 'select',
+                'name': 'skill',
+                'label': 'Rollen',
+                'placeholder': 'Alle rollen',
+                'options': [{'value': skill.id, 'label': skill.name} for skill in context.get('skills', [])]
+            },
+            {
+                'type': 'select',
+                'name': 'client',
+                'label': 'Opdrachtgever',
+                'placeholder': 'Alle opdrachtgevers',
+                'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
+            },
+        ]
+
         context.update(self._get_timeline_context())
         return context
     
