@@ -20,6 +20,7 @@ from django.core import management
 
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
+from .services.sync import sync_colleagues_from_exact
 
 from wies.exact.models import ExactEmployee, ExactProject
 
@@ -90,6 +91,9 @@ def admin_db(request):
             management.call_command('loaddata', 'dummy_data.json')
             management.call_command('loaddata', 'exact_dummy_data.json')
             messages.success(request, 'Data loaded successfully from dummy_data.json')
+        elif action == 'sync_colleagues':
+            sync_colleagues_from_exact()
+            messages.success(request, 'Colleagues synced successfully from Exact')
         return redirect('admin-db')
     
     return render(request, 'admin_db.html', context)
@@ -790,6 +794,10 @@ class ColleagueCreateView(CreateView):
     model = Colleague
     form_class = ColleagueForm
     template_name = 'colleague_new.html'
+
+    def form_valid(self, form):
+        form.instance.source = 'wies'
+        return super().form_valid(form)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)

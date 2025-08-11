@@ -12,6 +12,7 @@ This files lists the changes during the lifetime of this project.
 - add WRITABLE_FOLDER env var for db
 - fix static files not found
 - remove rvo assets from static files and add as dependency
+- add syncing between exact and wies colleagues
 
 ## demo-2025-08-04
 ...
