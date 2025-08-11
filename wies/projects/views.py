@@ -33,8 +33,20 @@ def dashboard(request):
     """Dashboard view - uses statistics functions for data calculations"""
     from .services.statistics import get_dashboard_data
     
+    # Get active tab from request
+    active_tab = request.GET.get('tab', 'ending_soon')
+    
     # Get all dashboard data from service
-    context = get_dashboard_data()
+    context = get_dashboard_data(active_tab=active_tab)
+    
+    # If HTMX request, return only the tab content
+    if 'HX-Request' in request.headers:
+        if active_tab == 'ending_soon':
+            return render(request, 'parts/dashboard_ending_soon.html', context)
+        elif active_tab == 'consultants_bench':
+            return render(request, 'parts/dashboard_consultants_bench.html', context)
+        elif active_tab == 'new_leads':
+            return render(request, 'parts/dashboard_new_leads.html', context)
     
     return render(request, template_name='dashboard.html', context=context)
 

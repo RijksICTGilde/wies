@@ -1,10 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block extra_head %}
-<script src="{% static 'js/tabs.js' %}"></script>
-{% endblock %}
-
 {% block content %}
 
 <!-- Page Header -->
@@ -48,137 +44,31 @@
 <div class="rvo-layout-column rvo-layout-gap--xl">
   <ul class="rvo-tabs rvo-ul rvo-ul--no-margin rvo-ul--no-padding rvo-ul--icon rvo-ul--icon-option-2" role="tablist" aria-label="Dashboard Tabs">
     <li role="presentation" class="rvo-tabs__item">
-      <a href="#" class="rvo-link rvo-tabs__item-link {% if active_tab == 'ending_soon' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline" role="tab" aria-selected="{% if active_tab == 'ending_soon' %}true{% else %}false{% endif %}" onclick="showTab('ending_soon')">
+      <a href="?tab=ending_soon" class="rvo-link rvo-tabs__item-link {% if active_tab == 'ending_soon' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline" role="tab" aria-selected="{% if active_tab == 'ending_soon' %}true{% else %}false{% endif %}" hx-get="?tab=ending_soon" hx-target="#dashboard-tab-content" hx-swap="innerHTML" hx-push-url="true">
         Opdrachten die binnenkort aflopen
       </a>
     </li>
     <li role="presentation" class="rvo-tabs__item">
-      <a href="#" class="rvo-link rvo-tabs__item-link {% if active_tab == 'consultants_bench' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline" role="tab" aria-selected="{% if active_tab == 'consultants_bench' %}true{% else %}false{% endif %}" onclick="showTab('consultants_bench')">
+      <a href="?tab=consultants_bench" class="rvo-link rvo-tabs__item-link {% if active_tab == 'consultants_bench' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline" role="tab" aria-selected="{% if active_tab == 'consultants_bench' %}true{% else %}false{% endif %}" hx-get="?tab=consultants_bench" hx-target="#dashboard-tab-content" hx-swap="innerHTML" hx-push-url="true">
         Consultants op bank
       </a>
     </li>
     <li role="presentation" class="rvo-tabs__item">
-      <a href="#" class="rvo-link rvo-tabs__item-link {% if active_tab == 'new_leads' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline" role="tab" aria-selected="{% if active_tab == 'new_leads' %}true{% else %}false{% endif %}" onclick="showTab('new_leads')">
+      <a href="?tab=new_leads" class="rvo-link rvo-tabs__item-link {% if active_tab == 'new_leads' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline" role="tab" aria-selected="{% if active_tab == 'new_leads' %}true{% else %}false{% endif %}" hx-get="?tab=new_leads" hx-target="#dashboard-tab-content" hx-swap="innerHTML" hx-push-url="true">
         Nieuwe leads
       </a>
     </li>
   </ul>
 
   <!-- Tab Content -->
-  <div id="tab-content">
-    
-    <!-- Assignments ending soon (within 3 months) -->
-    <div id="ending_soon" class="tab-content {% if active_tab != 'ending_soon' %}hidden{% endif %}">
-      <div class="rvo-table--responsive">
-        <table class="rvo-table">
-          <thead class="rvo-table-head">
-            <tr class="rvo-table-row">
-              <th scope="col" class="rvo-table-header">Opdracht</th>
-              <th scope="col" class="rvo-table-header">Opdrachtgever</th>
-              <th scope="col" class="rvo-table-header">Einddatum</th>
-              <th scope="col" class="rvo-table-header">Status</th>
-            </tr>
-          </thead>
-          <tbody class="rvo-table-body">
-            {% for assignment in assignments_ending_soon %}
-            <tr class="rvo-table-row clickable-row" style="cursor: pointer;" onclick="window.location='{% url 'assignment-detail' assignment.pk %}'">
-              <td class="rvo-table-cell">
-                <a href="{% url 'assignment-detail' assignment.pk %}" class="rvo-link rvo-link--no-underline" onclick="event.stopPropagation()">{{ assignment.name }}</a>
-              </td>
-              <td class="rvo-table-cell">{{ assignment.organization }}</td>
-              <td class="rvo-table-cell">{{ assignment.end_date|date:"d M Y" }}</td>
-              <td class="rvo-table-cell">
-                <span class="status-badge status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
-              </td>
-            </tr>
-            {% empty %}
-            <tr class="rvo-table-row">
-              <td class="rvo-table-cell" colspan="5" style="text-align: center; padding: 2rem;">
-                <span class="rvo-text--italic">Geen opdrachten die binnenkort aflopen</span>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- Consultants on bench -->
-    <div id="consultants_bench" class="tab-content {% if active_tab != 'consultants_bench' %}hidden{% endif %}">
-      <div class="rvo-table--responsive">
-        <table class="rvo-table">
-          <thead class="rvo-table-head">
-            <tr class="rvo-table-row">
-              <th scope="col" class="rvo-table-header">Naam</th>
-              <th scope="col" class="rvo-table-header">Merk</th>
-              <th scope="col" class="rvo-table-header">Rollen</th>
-              <th scope="col" class="rvo-table-header">Beschikbaar sinds</th>
-            </tr>
-          </thead>
-          <tbody class="rvo-table-body">
-            {% for colleague in consultants_bench %}
-            <tr class="rvo-table-row clickable-row" style="cursor: pointer;" onclick="window.location='{% url 'colleague-detail' colleague.pk %}'">
-              <td class="rvo-table-cell">
-                <a href="{% url 'colleague-detail' colleague.pk %}" class="rvo-link rvo-link--no-underline" onclick="event.stopPropagation()">{{ colleague.name }}</a>
-              </td>
-              <td class="rvo-table-cell">
-                {% if colleague.brand %}{{ colleague.brand.name }}{% else %}<span class="rvo-text--italic">-</span>{% endif %}
-              </td>
-              <td class="rvo-table-cell">
-                {% for skill in colleague.skills.all %}
-                  <span class="skill-badge">{{ skill.name }}</span>
-                {% endfor %}
-              </td>
-              <td class="rvo-table-cell">-</td>
-            </tr>
-            {% empty %}
-            <tr class="rvo-table-row">
-              <td class="rvo-table-cell" colspan="5" style="text-align: center; padding: 2rem;">
-                <span class="rvo-text--italic">Geen consultants op de bank</span>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- New leads -->
-    <div id="new_leads" class="tab-content {% if active_tab != 'new_leads' %}hidden{% endif %}">
-      <div class="rvo-table--responsive">
-        <table class="rvo-table">
-          <thead class="rvo-table-head">
-            <tr class="rvo-table-row">
-              <th scope="col" class="rvo-table-header">Opdracht</th>
-              <th scope="col" class="rvo-table-header">Opdrachtgever</th>
-              <th scope="col" class="rvo-table-header">Status</th>
-              <th scope="col" class="rvo-table-header">Startdatum</th>
-            </tr>
-          </thead>
-          <tbody class="rvo-table-body">
-            {% for assignment in new_leads %}
-            <tr class="rvo-table-row clickable-row" style="cursor: pointer;" onclick="window.location='{% url 'assignment-detail' assignment.pk %}'">
-              <td class="rvo-table-cell">
-                <a href="{% url 'assignment-detail' assignment.pk %}" class="rvo-link rvo-link--no-underline" onclick="event.stopPropagation()">{{ assignment.name }}</a>
-              </td>
-              <td class="rvo-table-cell">{{ assignment.organization }}</td>
-              <td class="rvo-table-cell">
-                <span class="status-badge status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
-              </td>
-              <td class="rvo-table-cell">{{ assignment.start_date|date:"d M Y"|default:"-" }}</td>
-            </tr>
-            {% empty %}
-            <tr class="rvo-table-row">
-              <td class="rvo-table-cell" colspan="5" style="text-align: center; padding: 2rem;">
-                <span class="rvo-text--italic">Geen nieuwe leads</span>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
+  <div id="dashboard-tab-content">
+    {% if active_tab == 'ending_soon' %}
+      {% include 'parts/dashboard_ending_soon.html' %}
+    {% elif active_tab == 'consultants_bench' %}
+      {% include 'parts/dashboard_consultants_bench.html' %}
+    {% elif active_tab == 'new_leads' %}
+      {% include 'parts/dashboard_new_leads.html' %}
+    {% endif %}
   </div>
 </div>
 
