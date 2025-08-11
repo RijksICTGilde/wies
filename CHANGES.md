@@ -2,6 +2,9 @@
 This files lists the changes during the lifetime of this project.
 
 ## Current version
+- ...
+
+## demo-2025-08-11
 - add gunicorn for production server
 - add whitenoise for static file serving
 - change that you only need container start for production
