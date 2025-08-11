@@ -30,11 +30,11 @@ def home(request):
     return redirect('/dashboard/')
 
 def dashboard(request):
-    """Dashboard view - uses StatisticsService for data calculations"""
-    from .services.statistics import StatisticsService
+    """Dashboard view - uses statistics functions for data calculations"""
+    from .services.statistics import get_dashboard_data
     
     # Get all dashboard data from service
-    context = StatisticsService.get_dashboard_data()
+    context = get_dashboard_data()
     
     return render(request, template_name='dashboard.html', context=context)
 
@@ -790,14 +790,14 @@ class AssignmentDetail(DetailView):
     template_name = 'assignment_detail.html'
     
     def get_context_data(self, **kwargs):
-        """Assignment detail view - uses StatisticsService for calculations"""
-        from .services.statistics import StatisticsService
+        """Assignment detail view - uses statistics functions for calculations"""
+        from .services.statistics import get_assignment_statistics
         
         context = super().get_context_data(**kwargs)
         assignment = self.get_object()
         
         # Get assignment statistics from service
-        assignment_data = StatisticsService.get_assignment_statistics(assignment)
+        assignment_data = get_assignment_statistics(assignment)
         context.update(assignment_data)
         
         return context
@@ -941,8 +941,8 @@ class ServiceDetailView(DetailView):
 
 # Client views
 def clients(request):
-    """Clients view - uses StatisticsService for statistics"""
-    from .services.statistics import StatisticsService
+    """Clients view - uses statistics functions for statistics"""
+    from .services.statistics import get_dashboard_statistics
     
     search_query = request.GET.get('search', '')
     
@@ -954,7 +954,7 @@ def clients(request):
     clients = clients.order_by('organization')
     
     # Get statistics from service
-    statistics = StatisticsService.get_dashboard_statistics()
+    statistics = get_dashboard_statistics()
     
     return render(request, template_name='client_list.html', context={
         'clients': clients,
