@@ -4,8 +4,8 @@ from django.db.models import Q
 from ..models import Assignment, Colleague, Placement
 
 
-class DashboardService:
-    """Service class for dashboard statistics and data calculations"""
+class StatisticsService:
+    """Service class for application statistics and data calculations"""
     
     @staticmethod
     def get_dashboard_statistics():
