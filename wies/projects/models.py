@@ -67,6 +67,7 @@ class Colleague(models.Model):
     expertises = models.ManyToManyField('Expertise', blank=True)
     skills = models.ManyToManyField('Skill', blank=True)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='wies')
+    source_id = models.CharField(blank=True)
     source_url = models.URLField(null=True, blank=True)  # only for non wies
     # placements via reversed relation
 
