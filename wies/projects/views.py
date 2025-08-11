@@ -790,14 +790,14 @@ class AssignmentDetail(DetailView):
     template_name = 'assignment_detail.html'
     
     def get_context_data(self, **kwargs):
-        """Assignment detail view - uses AssignmentService for calculations"""
-        from .services.assignment import AssignmentService
+        """Assignment detail view - uses DashboardService for calculations"""
+        from .services.dashboard import DashboardService
         
         context = super().get_context_data(**kwargs)
         assignment = self.get_object()
         
         # Get assignment statistics from service
-        assignment_data = AssignmentService.get_assignment_statistics(assignment)
+        assignment_data = DashboardService.get_assignment_statistics(assignment)
         context.update(assignment_data)
         
         return context
