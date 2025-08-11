@@ -27,5 +27,12 @@
         <input type="hidden" name="action" value="load_data">
         <button type="submit">Load Dummy Data</button>
     </form>
+    
+    <h2>Sync Colleagues from Exact</h2>
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="sync_colleagues">
+        <button type="submit">Sync Colleagues from Exact</button>
+    </form>
 </body>
 </html>
