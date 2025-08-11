@@ -2,15 +2,28 @@
 This files lists the changes during the lifetime of this project.
 
 ## Current version
-- combine dashboard tabs "Eindigt binnen 1 maand" and "Eindigt binnen 3 maanden" into "Opdrachten die binnenkort aflopen"
-- make dashboard the landing page instead of placements table
-- add clickable table rows with hover states to all dashboard tables
-- remove chevron columns from dashboard tables for cleaner look
-- extract dashboard statistics to service layer (StatisticsService)
-- refactor assignment statistics to use service layer
-- convert dashboard tabs from JavaScript to HTMX for better performance
-- move CSS and JavaScript from templates to separate files
-- improve code organization and maintainability
+### Dashboard Summary Cards & Service Layer Refactoring
+**Resultaat:** Verbeterde gebruikerservaring en code architectuur voor dashboard en statistieken
+
+**Gebruikerservaring verbeteringen:**
+- Dashboard is nu de landingspagina voor betere toegankelijkheid
+- Samengevoegde tabs voor opdrachten die binnenkort aflopen (binnen 3 maanden)
+- Klikbare tabel rijen met hover states voor betere interactie
+- Cleaner interface door verwijdering van overbodige chevron kolommen
+
+**Technische verbeteringen:**
+- Service layer geïntroduceerd voor alle statistieken berekeningen
+- Code duplicatie opgelost tussen dashboard en clients pagina's
+- HTMX implementatie voor moderne, snelle tab switching
+- Betere scheiding van concerns (CSS/JS uit templates)
+- Verbeterde code organisatie en maintainability
+
+**Impact:**
+- Consistentie tussen alle pagina's die statistieken tonen
+- Herbruikbare statistieken functionaliteit
+- Moderne web development best practices
+- Betere performance door server-side rendering
+- Professionelere codebase architectuur
 
 ## demo-2025-08-11
 
