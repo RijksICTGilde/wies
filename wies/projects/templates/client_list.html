@@ -1,10 +1,50 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/filter.css' %}">
+{% endblock %}
+
+{% block header %}
+{{ block.super }}
+{% include 'parts/clients_navigation.html' with active_page='clients' %}
+{% endblock %}
 
 {% block content %}
 
-<h1 class="utrecht-heading-1">Opdrachtgevers</h1>
+<!-- Statistics Cards -->
+<div class="rvo-max-width-layout rvo-max-width-layout--md" style="margin-bottom: 2rem;">
+  <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three">
+    <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+      <div class="rvo-card__content">
+        <span class="utrecht-icon rvo-icon rvo-icon-man-met-laptop rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Consultants op opdracht"></span>
+        <h4 class="utrecht-heading-4 rvo-heading--no-margins">Consultants op opdracht</h4>
+        {{ consultants_working }}
+      </div>
+    </div>
+    <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+      <div class="rvo-card__content">
+        <span class="utrecht-icon rvo-icon rvo-icon-basis-kantoorgebouw rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Aantal opdrachtgevers"></span>
+        <h4 class="utrecht-heading-4 rvo-heading--no-margins">Aantal opdrachtgevers</h4>
+        {{ total_clients_count }}
+      </div>
+    </div>
+    <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+      <div class="rvo-card__content">
+        <span class="utrecht-icon rvo-icon rvo-icon-budget rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Totale omzet"></span>
+        <h4 class="utrecht-heading-4 rvo-heading--no-margins">Totale omzet</h4>
+        € {{ formatted_budget }}
+      </div>
+    </div>
+  </div>
+</div>
 
-<div class="rvo-table--responsive">
+{% include 'parts/generic_filter_bar.html' with url_name='clients' target_selector='#client_table' %}
+
+<div class="rvo-layout-column rvo-layout-gap--md">
+  <!-- Clients Content -->
+  <div id="client_table">
+    <div class="rvo-table--responsive">
   <table class="rvo-table">
     <thead class="rvo-table-head">
       <tr class="rvo-table-row">
@@ -17,13 +57,15 @@
     </thead>
     <tbody class="rvo-table-body">
       {% for client in clients %}
-      <tr class="rvo-table-row">
-        <td class="rvo-table-cell"><a href="/clients/{{ client }}">{{ client }}</a></td>
-        </td>
+      <tr class="rvo-table-row" style="cursor: pointer;" onclick="window.location='/clients/{{ client }}'">
+        <td class="rvo-table-cell">{{ client }}</td>
       </tr>
       {% endfor %}
     </tbody>
   </table>
+    </div>
+  </div>
+
 </div>
 
 {% endblock content %}

@@ -38,8 +38,8 @@
     </thead>
     <tbody class="rvo-table-body">
       {% for assignment in active_assignments %}
-      <tr class="rvo-table-row">
-        <td class="rvo-table-cell"><a href="/assignments/{{ assignment.pk }}/" class="rvo-link">{{ assignment.name }}</a></td>
+      <tr class="rvo-table-row" style="cursor: pointer;" onclick="window.location='{{ assignment.get_absolute_url }}'">
+        <td class="rvo-table-cell">{{ assignment.name }}</td>
         <td class="rvo-table-cell">
           <div>{{ assignment.organization }}</div>
           {% if assignment.ministry %}

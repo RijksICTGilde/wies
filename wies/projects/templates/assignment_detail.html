@@ -16,6 +16,41 @@
     <h1 class="utrecht-heading-1 rvo-heading--no-margins">{{ object.name }}</h1>
   </div>
   
+  <!-- Statistics Cards -->
+  <div class="rvo-max-width-layout rvo-max-width-layout--md rvo-layout-margin-bottom--sm">
+    <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three">
+      <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+        <div class="rvo-card__content">
+          <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Weken tot eind opdracht"></span>
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Weken tot eind opdracht</h4>
+          {% if weeks_remaining is not None %}
+            {% if weeks_remaining > 0 %}
+              {{ weeks_remaining }} weken
+            {% else %}
+              Afgelopen
+            {% endif %}
+          {% else %}
+            Geen einddatum
+          {% endif %}
+        </div>
+      </div>
+      <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+        <div class="rvo-card__content">
+          <span class="utrecht-icon rvo-icon rvo-icon-map-vol-documenten rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Budget besteed"></span>
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Budget besteed</h4>
+          {{ budget_percentage }}%
+        </div>
+      </div>
+      <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+        <div class="rvo-card__content">
+          <span class="utrecht-icon rvo-icon rvo-icon-kalender-met-vinkje rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Kalender met vinkje"></span>
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Opdracht score</h4>
+          {{ project_score }}
+        </div>
+      </div>
+    </div>
+  </div>
+  
   <div class="rvo-layout-column rvo-layout-gap--lg">
     <h2 class="utrecht-heading-2 rvo-heading--no-margins">Opdracht gegevens</h2>
     

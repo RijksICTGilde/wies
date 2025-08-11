@@ -779,6 +779,41 @@ class AssignmentCreateView(CreateView):
 class AssignmentDetail(DetailView):
     model = Assignment
     template_name = 'assignment_detail.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        assignment = self.get_object()
+        
+        # Calculate weeks until end
+        weeks_remaining = None
+        if assignment.end_date:
+            from datetime import date
+            today = date.today()
+            if assignment.end_date > today:
+                delta = assignment.end_date - today
+                weeks_remaining = round(delta.days / 7)
+            else:
+                weeks_remaining = 0
+        
+        # Calculate total budget/costs for this assignment
+        total_budget = assignment.get_total_services_cost() or 0
+        formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
+        
+        # Calculate budget percentage (assuming 100% for now, could be based on planned vs actual)
+        budget_percentage = 85  # Placeholder percentage
+        
+        # Calculate project progress (placeholder - you could improve this)
+        project_score = 8.5  # This could be calculated based on deadlines, budget, etc.
+        
+        context.update({
+            'weeks_remaining': weeks_remaining,
+            'total_budget': total_budget,
+            'formatted_budget': formatted_budget,
+            'budget_percentage': budget_percentage,
+            'project_score': project_score,
+        })
+        
+        return context
 
 class AssignmentDeleteView(DeleteView):
     model = Assignment
@@ -919,8 +954,42 @@ class ServiceDetailView(DetailView):
 
 # Client views
 def clients(request):
-    clients = Assignment.objects.values_list('organization', flat=True).distinct()
-    return render(request, template_name='client_list.html', context={'clients': clients})
+    search_query = request.GET.get('search', '')
+    
+    clients = Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').exclude(organization__isnull=True)
+    
+    if search_query:
+        clients = clients.filter(organization__icontains=search_query)
+    
+    clients = clients.order_by('organization')
+    
+    # Calculate statistics
+    # Count consultants currently working (colleagues with active placements in running assignments)
+    consultants_working = Placement.objects.filter(
+        service__assignment__status='LOPEND',
+        colleague__isnull=False
+    ).values('colleague').distinct().count()
+    
+    total_clients_count = Assignment.objects.values('organization').distinct().exclude(organization='').exclude(organization__isnull=True).count()
+    
+    # Calculate total budget from all services (fixed price + calculated hourly)
+    total_budget = 0
+    for assignment in Assignment.objects.all():
+        assignment_budget = assignment.get_total_services_cost()
+        if assignment_budget:
+            total_budget += assignment_budget
+    
+    # Format budget with dots for readability
+    formatted_budget = f"{int(total_budget):,}".replace(',', '.')
+    
+    return render(request, template_name='client_list.html', context={
+        'clients': clients,
+        'search_query': search_query,
+        'consultants_working': consultants_working,
+        'total_clients_count': total_clients_count,
+        'total_budget': total_budget,
+        'formatted_budget': formatted_budget,
+    })
 
 def client(request, name):
     assignments = Assignment.objects.filter(organization=name)

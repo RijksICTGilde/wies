@@ -52,7 +52,7 @@ urlpatterns = [
     path('services/<int:pk>/', ServiceDetailView.as_view(), name='service-detail'),
     path('services/<int:pk>/update', ServiceUpdateView.as_view()),
     path('services/<int:pk>/delete', ServiceDeleteView.as_view()),
-    path('clients/', clients),
+    path('clients/', clients, name='clients'),
     path('clients/<str:name>', client),
     path('ministries/', MinistryListView.as_view(), name='ministries'),
     path('ministries/new/', MinistryCreateView.as_view(), name='ministry-create'),
