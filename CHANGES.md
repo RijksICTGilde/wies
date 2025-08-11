@@ -2,15 +2,12 @@
 This files lists the changes during the lifetime of this project.
 
 ## demo-2025-08-18
-- combine dashboard tabs "Eindigt binnen 1 maand" and "Eindigt binnen 3 maanden" into "Opdrachten die binnenkort aflopen"
-- make dashboard the landing page instead of placements table
+- add dashboard page as landing page with summary cards
+- add summary cards to dashboard, clients and assignment detail pages
 - add clickable table rows with hover states to all dashboard tables
-- remove chevron columns from dashboard tables for cleaner look
-- extract dashboard statistics to service layer (StatisticsService)
-- refactor assignment statistics to use service layer
-- convert dashboard tabs from JavaScript to HTMX for better performance
-- move CSS and JavaScript from templates to separate files
-- improve code organization and maintainability
+- add service layer for statistics calculations across all pages
+- add HTMX tab functionality to dashboard for better performance
+- improve code organization by moving CSS/JS to separate files
 
 ## Current version
 
