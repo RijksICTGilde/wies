@@ -16,15 +16,15 @@ class ExactEmployee(models.Model):
     ]
     
     naam_medewerker = models.CharField(max_length=200, verbose_name="Naam medewerker")
-    aantal_uren = models.DecimalField(max_digits=6, decimal_places=2, verbose_name="Aantal uren")
-    rin_nummer = models.CharField(max_length=20, unique=True, verbose_name="RIN nummer")
-    schaalniveau = models.CharField(max_length=10, verbose_name="Schaalniveau")
-    kostenplaats = models.CharField(max_length=50, verbose_name="Kostenplaats")
-    if_kf = models.CharField(max_length=2, choices=IF_KF_CHOICES, verbose_name="IF/KF")
+    aantal_uren = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True, verbose_name="Aantal uren")
+    rin_nummer = models.CharField(max_length=20, unique=True, blank=True, null=True, verbose_name="RIN nummer")
+    schaalniveau = models.CharField(max_length=10, blank=True, null=True, verbose_name="Schaalniveau")
+    kostenplaats = models.CharField(max_length=50, blank=True, null=True, verbose_name="Kostenplaats")
+    if_kf = models.CharField(max_length=2, choices=IF_KF_CHOICES, blank=True, null=True, verbose_name="IF/KF")
     uren_schrijven = models.BooleanField(default=True, verbose_name="Uren schrijven - nodig voor RC")
-    email = models.EmailField(verbose_name="E-mail - gebruikt door RC")
-    organisatieonderdeel = models.CharField(max_length=100, verbose_name="Organisatieonderdeel - gebruikt door RC")
-    manager = models.CharField(max_length=200, verbose_name="Manager - gebruikt door RC")
+    email = models.EmailField(blank=True, null=True, verbose_name="E-mail - gebruikt door RC")
+    organisatieonderdeel = models.CharField(max_length=100, blank=True, null=True, verbose_name="Organisatieonderdeel - gebruikt door RC")
+    manager = models.CharField(max_length=200, blank=True, null=True, verbose_name="Manager - gebruikt door RC")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='ACTIEF', verbose_name="Status - gebruikt door RC")
     
     created_at = models.DateTimeField(auto_now_add=True)
