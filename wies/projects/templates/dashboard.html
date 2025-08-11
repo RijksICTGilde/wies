@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% load static %}
 
+{% block extra_head %}
+<script src="{% static 'js/tabs.js' %}"></script>
+{% endblock %}
+
 {% block content %}
 
 <!-- Page Header -->
@@ -177,31 +181,5 @@
 
   </div>
 </div>
-
-<script>
-function showTab(tabName) {
-  // Hide all tab contents
-  document.querySelectorAll('.tab-content').forEach(tab => {
-    tab.classList.add('hidden');
-  });
-  
-  // Remove active class from all tabs
-  document.querySelectorAll('.rvo-tabs__item-link').forEach(link => {
-    link.classList.remove('rvo-tabs__item-link--active', 'rvo-link--active');
-  });
-  
-  // Show selected tab
-  document.getElementById(tabName).classList.remove('hidden');
-  
-  // Add active class to clicked tab
-  event.target.classList.add('rvo-tabs__item-link--active', 'rvo-link--active');
-}
-</script>
-
-<style>
-.hidden {
-  display: none;
-}
-</style>
 
 {% endblock content %}
