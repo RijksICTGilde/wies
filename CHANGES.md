@@ -2,7 +2,17 @@
 This files lists the changes during the lifetime of this project.
 
 ## Current version
-- ...
+- combine dashboard tabs "Eindigt binnen 1 maand" and "Eindigt binnen 3 maanden" into "Opdrachten die binnenkort aflopen"
+- make dashboard the landing page instead of placements table
+- add clickable table rows with hover states to all dashboard tables
+- remove chevron columns from dashboard tables for cleaner look
+- extract dashboard statistics to service layer (StatisticsService)
+- refactor assignment statistics to use service layer
+- convert dashboard tabs from JavaScript to HTMX for better performance
+- move CSS and JavaScript from templates to separate files
+- improve code organization and maintainability
+
+## demo-2025-08-11
 
 ## demo-2025-08-11
 - add gunicorn for production server
