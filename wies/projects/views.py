@@ -790,37 +790,15 @@ class AssignmentDetail(DetailView):
     template_name = 'assignment_detail.html'
     
     def get_context_data(self, **kwargs):
+        """Assignment detail view - uses AssignmentService for calculations"""
+        from .services.assignment import AssignmentService
+        
         context = super().get_context_data(**kwargs)
         assignment = self.get_object()
         
-        # Calculate weeks until end
-        weeks_remaining = None
-        if assignment.end_date:
-            from datetime import date
-            today = date.today()
-            if assignment.end_date > today:
-                delta = assignment.end_date - today
-                weeks_remaining = round(delta.days / 7)
-            else:
-                weeks_remaining = 0
-        
-        # Calculate total budget/costs for this assignment
-        total_budget = assignment.get_total_services_cost() or 0
-        formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
-        
-        # Calculate budget percentage (assuming 100% for now, could be based on planned vs actual)
-        budget_percentage = 85  # Placeholder percentage
-        
-        # Calculate project progress (placeholder - you could improve this)
-        project_score = 8.5  # This could be calculated based on deadlines, budget, etc.
-        
-        context.update({
-            'weeks_remaining': weeks_remaining,
-            'total_budget': total_budget,
-            'formatted_budget': formatted_budget,
-            'budget_percentage': budget_percentage,
-            'project_score': project_score,
-        })
+        # Get assignment statistics from service
+        assignment_data = AssignmentService.get_assignment_statistics(assignment)
+        context.update(assignment_data)
         
         return context
 
