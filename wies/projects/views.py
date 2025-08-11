@@ -26,8 +26,75 @@ from wies.exact.models import ExactEmployee, ExactProject
 
 
 def home(request):
-    """Redirect to placements table page as default landing page"""
-    return redirect('/placements/table/')
+    """Redirect to dashboard as default landing page"""
+    return redirect('/dashboard/')
+
+def dashboard(request):
+    from datetime import date, timedelta
+    
+    # Calculate global statistics (same as clients page)
+    consultants_working = Placement.objects.filter(
+        service__assignment__status='LOPEND',
+        colleague__isnull=False
+    ).values('colleague').distinct().count()
+    
+    total_clients_count = Assignment.objects.values('organization').distinct().exclude(organization='').exclude(organization__isnull=True).count()
+    
+    # Calculate total budget from all services
+    total_budget = 0
+    for assignment in Assignment.objects.all():
+        assignment_budget = assignment.get_total_services_cost()
+        if assignment_budget:
+            total_budget += assignment_budget
+    
+    formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
+    
+    # Get current date and calculate timeframes
+    today = date.today()
+    one_month = today + timedelta(days=30)
+    two_months = today + timedelta(days=60)
+    three_months = today + timedelta(days=90)
+    
+    # Get all assignments and filter by end_date property (since it's not a DB field)
+    all_assignments = Assignment.objects.filter(
+        status__in=['LOPEND', 'OPEN']
+    ).exclude(organization='').exclude(organization__isnull=True)
+    
+    # Combine assignments ending within 3 months into one list
+    assignments_ending_soon = []
+    
+    for assignment in all_assignments:
+        if assignment.end_date:
+            if today <= assignment.end_date <= three_months:
+                assignments_ending_soon.append(assignment)
+    
+    # Sort by end_date and limit to 15 (increased limit since we're combining)
+    assignments_ending_soon = sorted(assignments_ending_soon, key=lambda x: x.end_date or today)[:15]
+    
+    # Get consultants on bench (those without active placements)
+    active_colleague_ids = Placement.objects.filter(
+        service__assignment__status='LOPEND'
+    ).values_list('colleague_id', flat=True).distinct()
+    
+    consultants_bench = Colleague.objects.exclude(
+        id__in=active_colleague_ids
+    ).exclude(id__isnull=True)[:10]
+    
+    # Get new leads (LEAD status assignments)
+    new_leads = Assignment.objects.filter(
+        status='LEAD'
+    ).exclude(organization='').exclude(organization__isnull=True).order_by('-id')[:10]
+    
+    return render(request, template_name='dashboard.html', context={
+        'consultants_working': consultants_working,
+        'total_clients_count': total_clients_count,
+        'total_budget': total_budget,
+        'formatted_budget': formatted_budget,
+        'assignments_ending_soon': assignments_ending_soon,
+        'consultants_bench': consultants_bench,
+        'new_leads': new_leads,
+        'active_tab': 'ending_soon',  # Default active tab
+    })
 
 
 def get_service_details(request, service_id):
