@@ -1,17 +1,13 @@
 # Changes
 This files lists the changes during the lifetime of this project.
 
+## Current version
+
 ## demo-2025-08-18
 - add dashboard page as landing page with summary cards
 - add summary cards to dashboard, clients and assignment detail pages
 - add clickable table rows with hover states to all dashboard tables
 - add service layer for statistics calculations across all pages
-- add HTMX tab functionality to dashboard for better performance
-- improve code organization by moving CSS/JS to separate files
-
-## Current version
-
-## demo-2025-08-11
 
 ## demo-2025-08-11
 - add gunicorn for production server
