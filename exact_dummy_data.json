@@ -3,7 +3,7 @@
     "model": "exact.exactemployee",
     "pk": 1,
     "fields": {
-      "naam_medewerker": "Jan van der Berg",
+      "naam_medewerker": "Bart Koning",
       "aantal_uren": "36.00",
       "rin_nummer": "RIN123456",
       "schaalniveau": "Schaal 12",
@@ -22,7 +22,7 @@
     "model": "exact.exactemployee",
     "pk": 2,
     "fields": {
-      "naam_medewerker": "Sarah de Vries",
+      "naam_medewerker": "Nina Vermeulen",
       "aantal_uren": "32.00",
       "rin_nummer": "RIN789012",
       "schaalniveau": "Schaal 10",
@@ -41,7 +41,7 @@
     "model": "exact.exactemployee",
     "pk": 3,
     "fields": {
-      "naam_medewerker": "Mohammed Ali",
+      "naam_medewerker": "Omar El Fassi",
       "aantal_uren": "40.00",
       "rin_nummer": "RIN345678",
       "schaalniveau": "Schaal 14",
@@ -60,7 +60,7 @@
     "model": "exact.exactemployee",
     "pk": 4,
     "fields": {
-      "naam_medewerker": "Emma Visser",
+      "naam_medewerker": "Julia Winters",
       "aantal_uren": "28.00",
       "rin_nummer": "RIN901234",
       "schaalniveau": "Schaal 9",
@@ -79,7 +79,7 @@
     "model": "exact.exactemployee",
     "pk": 5,
     "fields": {
-      "naam_medewerker": "Pieter Smit",
+      "naam_medewerker": "Tim van Houten",
       "aantal_uren": "38.00",
       "rin_nummer": "RIN567890",
       "schaalniveau": "Schaal 13",
@@ -98,7 +98,7 @@
     "model": "exact.exactemployee",
     "pk": 6,
     "fields": {
-      "naam_medewerker": "Fatima Hassan",
+      "naam_medewerker": "Amira Bouali",
       "aantal_uren": "36.00",
       "rin_nummer": "RIN234567",
       "schaalniveau": "Schaal 11",
@@ -117,7 +117,7 @@
     "model": "exact.exactemployee",
     "pk": 7,
     "fields": {
-      "naam_medewerker": "Ruben de Jong",
+      "naam_medewerker": "Lucas Koster",
       "aantal_uren": "40.00",
       "rin_nummer": "RIN678901",
       "schaalniveau": "Schaal 15",
@@ -136,7 +136,7 @@
     "model": "exact.exactemployee",
     "pk": 8,
     "fields": {
-      "naam_medewerker": "Anna Mulder",
+      "naam_medewerker": "Mila Roos",
       "aantal_uren": "32.00",
       "rin_nummer": "RIN890123",
       "schaalniveau": "Schaal 8",

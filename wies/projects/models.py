@@ -16,6 +16,11 @@ ASSIGNMENT_TYPE = {
     'INDIVIDUAL': "INDIVIDUAL",
 }
 
+SOURCE_CHOICES = {
+    'wies': 'WIES',
+    'exact': 'Exact',
+}
+
 
 class Brand(models.Model):
     name = models.CharField(max_length=50)
@@ -61,6 +66,7 @@ class Colleague(models.Model):
     brand = models.ForeignKey('Brand', models.SET_NULL, null=True, blank=False)
     expertises = models.ManyToManyField('Expertise', blank=True)
     skills = models.ManyToManyField('Skill', blank=True)
+    source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='wies')
     # placements via reversed relation
 
     @property
