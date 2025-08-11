@@ -39,7 +39,7 @@ class ColleagueForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Colleague
         fields = '__all__'
-        exclude = ['source']
+        exclude = ['source', 'source_url']
         widgets = {
             'expertises': forms.SelectMultiple(attrs={'class': 'js-expertises-select-multiple'}),
             'skills': forms.SelectMultiple(attrs={'class': 'js-skills-select-create-multiple'})
