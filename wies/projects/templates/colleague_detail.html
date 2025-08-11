@@ -22,6 +22,16 @@
     <dl class="rvo-data-list">
       <dt>Naam</dt>
       <dd>{{ object.name }}</dd>
+      {% if object.source != 'wies' %}
+      <dt>Bron</dt>
+      <dd>
+        {% if object.source_url %}
+          <a href="{{ object.source_url }}" target="_blank" class="rvo-link">{{ object.get_source_display }} <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs" role="img" aria-label="Externe link"></span></a>
+        {% else %}
+          {{ object.get_source_display }}
+        {% endif %}
+      </dd>
+      {% endif %}
       <dt>Merk</dt>
       <dd>
         {% if object.brand %}
@@ -83,12 +93,21 @@
     </table>
 
     <div class="rvo-layout-row rvo-layout-gap--md">
+      {% if object.source == 'wies' %}
       <a href="/colleagues/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
         Collega bewerken
       </a>
       <a href="/colleagues/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md">
         Collega verwijderen
       </a>
+      {% else %}
+      <button class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display }}">
+        Collega bewerken
+      </button>
+      <button class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display }}">
+        Collega verwijderen
+      </button>
+      {% endif %}
     </div>
   </div>
 </div>
