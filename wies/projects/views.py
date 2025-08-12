@@ -821,7 +821,7 @@ class AssignmentDetail(DetailView):
         formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
 
         assignment_data = {
-            'weeks_remaining': get_weeks_remaining(),
+            'weeks_remaining': get_weeks_remaining(assignment),
             'total_budget': total_budget,
             'formatted_budget': formatted_budget,
             'budget_percentage': 85,  # Placeholder percentage,

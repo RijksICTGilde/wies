@@ -58,7 +58,7 @@
       </dd>
     </dl>
     
-    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Inzetten</h2>
+    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Opdrachten</h2>
 
     <table class="rvo-table">
       <thead class="rvo-table-head">
@@ -72,8 +72,8 @@
       </thead>
       <tbody class="rvo-table-body">
         {% for placement in object.placements.all %}
-        <tr class="rvo-table-row">
-          <td class="rvo-table-cell"><a href="/assignments/{{ placement.service.assignment.id }}/">{{ placement.service.assignment.name }}</a></td>
+        <tr class="rvo-table-row clickable-row" style="cursor: pointer;" onclick="window.location='/assignments/{{ placement.service.assignment.id }}/'">
+          <td class="rvo-table-cell">{{ placement.service.assignment.name }}</td>
           <td class="rvo-table-cell">
             <span class="status-badge status-{{ placement.service.assignment.status|lower }}">{{ placement.service.assignment.status }}</span>
           </td>

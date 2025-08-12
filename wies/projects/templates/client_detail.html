@@ -22,13 +22,13 @@
         </thead>
         <tbody class="rvo-table-body">
           {% for assignment in assignments %}
-          <tr class="rvo-table-row">
+          <tr class="rvo-table-row clickable-row" style="cursor: pointer;" onclick="window.location='{% url 'assignment-detail' assignment.id %}'">
             <td class="rvo-table-cell">
-              <a href="{% url 'assignment-detail' assignment.id %}" class="rvo-link">{{ assignment.name }}</a>
+              {{ assignment.name }}
             </td>
             <td class="rvo-table-cell">
               {% for colleague in assignment.colleagues %}
-                <a href="{% url 'colleague-detail' colleague.id %}" class="rvo-link">{{ colleague.name }}</a>{% if not forloop.last %}, {% endif %}
+                <a href="{% url 'colleague-detail' colleague.id %}" class="rvo-link" onclick="event.stopPropagation()">{{ colleague.name }}</a>{% if not forloop.last %}, {% endif %}
               {% endfor %}
             </td>
             <td class="rvo-table-cell">
