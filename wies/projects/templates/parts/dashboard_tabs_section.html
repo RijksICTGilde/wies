@@ -2,17 +2,38 @@
   <!-- Tab Navigation -->
   <ul class="rvo-tabs rvo-ul rvo-ul--no-margin rvo-ul--no-padding rvo-ul--icon rvo-ul--icon-option-2" role="tablist" aria-label="Dashboard Tabs">
     <li role="presentation" class="rvo-tabs__item">
-      <a href="?tab=ending_soon" class="rvo-link rvo-tabs__item-link {% if active_tab == 'ending_soon' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline" role="tab" aria-selected="{% if active_tab == 'ending_soon' %}true{% else %}false{% endif %}" hx-get="?tab=ending_soon" hx-target="#dashboard-tabs-section" hx-swap="outerHTML" hx-push-url="true">
+      <a href="?tab=ending_soon" 
+         class="rvo-link rvo-tabs__item-link {% if active_tab == 'ending_soon' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline" 
+         role="tab" 
+         aria-selected="{% if active_tab == 'ending_soon' %}true{% else %}false{% endif %}" 
+         hx-get="?tab=ending_soon" 
+         hx-target="#dashboard-tabs-section" 
+         hx-swap="outerHTML" 
+         hx-push-url="true">
         Opdrachten die binnenkort aflopen
       </a>
     </li>
     <li role="presentation" class="rvo-tabs__item">
-      <a href="?tab=consultants_bench" class="rvo-link rvo-tabs__item-link {% if active_tab == 'consultants_bench' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline" role="tab" aria-selected="{% if active_tab == 'consultants_bench' %}true{% else %}false{% endif %}" hx-get="?tab=consultants_bench" hx-target="#dashboard-tabs-section" hx-swap="outerHTML" hx-push-url="true">
+      <a href="?tab=consultants_bench" 
+         class="rvo-link rvo-tabs__item-link {% if active_tab == 'consultants_bench' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline" 
+         role="tab" 
+         aria-selected="{% if active_tab == 'consultants_bench' %}true{% else %}false{% endif %}" 
+         hx-get="?tab=consultants_bench" 
+         hx-target="#dashboard-tabs-section" 
+         hx-swap="outerHTML" 
+         hx-push-url="true">
         Consultants op bank
       </a>
     </li>
     <li role="presentation" class="rvo-tabs__item">
-      <a href="?tab=new_leads" class="rvo-link rvo-tabs__item-link {% if active_tab == 'new_leads' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline" role="tab" aria-selected="{% if active_tab == 'new_leads' %}true{% else %}false{% endif %}" hx-get="?tab=new_leads" hx-target="#dashboard-tabs-section" hx-swap="outerHTML" hx-push-url="true">
+      <a href="?tab=new_leads" 
+         class="rvo-link rvo-tabs__item-link {% if active_tab == 'new_leads' %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline" 
+         role="tab" 
+         aria-selected="{% if active_tab == 'new_leads' %}true{% else %}false{% endif %}" 
+         hx-get="?tab=new_leads" 
+         hx-target="#dashboard-tabs-section" 
+         hx-swap="outerHTML" 
+         hx-push-url="true">
         Nieuwe leads
       </a>
     </li>
