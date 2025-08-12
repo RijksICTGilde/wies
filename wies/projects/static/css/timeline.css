@@ -28,7 +28,8 @@
 .consultant-column-header h3 {
   margin: 0;
   font-size: var(--rvo-font-size-md, 1rem);
-  font-weight: var(--rvo-font-weight-bold, 600);
+  font-weight: var(--rvo-font-weight-bold, 700);
+  font-family: var(--rvo-font-sans-serif-font-family, 'RijksoverheidSansWebText'), var(--rvo-font-sans-serif-fallback-font-family, 'Verdana'), sans-serif;
   color: var(--rvo-color-logoblauw, #003366);
 }
 
@@ -42,8 +43,9 @@
   flex: 1;
   padding: var(--rvo-space-md, 1rem) var(--rvo-space-sm, 0.5rem);
   text-align: center;
-  font-weight: var(--rvo-font-weight-bold, 600);
+  font-weight: var(--rvo-font-weight-bold, 700);
   font-size: var(--rvo-font-size-sm, 0.875rem);
+  font-family: var(--rvo-font-sans-serif-font-family, 'RijksoverheidSansWebText'), var(--rvo-font-sans-serif-fallback-font-family, 'Verdana'), sans-serif;
   color: var(--rvo-color-logoblauw, #003366);
   border-right: var(--rvo-border-width-sm, 1px) solid var(--rvo-color-grijs-300, #d1d5db);
 }
@@ -79,19 +81,19 @@
   justify-content: center;
 }
 
+/* Use rvo-text--bold class in template instead */
 .consultant-name {
-  font-weight: var(--rvo-font-weight-bold, 600);
   margin-bottom: var(--rvo-space-xs, 0.25rem);
 }
 
+/* Use rvo-text--sm rvo-text--subtle class in template instead */
 .consultant-hours {
-  font-size: var(--rvo-font-size-sm, 0.875rem);
-  color: var(--rvo-color-grijs-600, #6b7280);
+  /* Keep only non-typography styling */
 }
 
 .consultant-hours .available {
   color: var(--rvo-color-groen-600, #16a34a);
-  font-weight: var(--rvo-font-weight-medium, 500);
+  font-weight: var(--rvo-font-weight-semibold, 550);
 }
 
 .timeline-track {
@@ -120,9 +122,8 @@
   z-index: 10;
 }
 
+/* Use rvo-text--xs rvo-text--bold class in template instead */
 .placement-label {
-  font-size: var(--rvo-font-size-xs, 0.75rem);
-  font-weight: var(--rvo-font-weight-bold, 600);
   color: var(--rvo-color-wit, #ffffff);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   white-space: nowrap;
@@ -178,6 +179,6 @@
   }
   
   .placement-label {
-    font-size: 0.6875rem;
+    font-size: var(--rvo-font-size-2xs, 0.625rem);
   }
 }

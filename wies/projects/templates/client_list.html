@@ -57,7 +57,7 @@
     </thead>
     <tbody class="rvo-table-body">
       {% for client in clients %}
-      <tr class="rvo-table-row" style="cursor: pointer;" onclick="window.location='/clients/{{ client }}'">
+      <tr class="rvo-table-row clickable-row" onclick="window.location='/clients/{{ client }}'">
         <td class="rvo-table-cell">{{ client }}</td>
       </tr>
       {% endfor %}

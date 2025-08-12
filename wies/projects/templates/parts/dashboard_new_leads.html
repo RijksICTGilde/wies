@@ -16,7 +16,7 @@
         </td>
         <td class="rvo-table-cell">{{ assignment.organization }}</td>
         <td class="rvo-table-cell">
-          <span class="status-badge status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
+          <span class="rvo-tag status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
         </td>
         <td class="rvo-table-cell">{{ assignment.start_date|date:"d M Y"|default:"-" }}</td>
       </tr>

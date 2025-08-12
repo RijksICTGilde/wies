@@ -17,10 +17,10 @@
               {{ colleague.name|first|upper }}
             </div>
             <div class="placement-info">
-              <div class="placement-name">
+              <div class="rvo-text rvo-text--bold">
                 {{ colleague.name }}
               </div>
-              <div class="placement-brand">
+              <div class="rvo-text rvo-text--sm rvo-text--subtle">
                 {% if colleague.brand %}
                   {{ colleague.brand.name }}
                 {% else %}
@@ -32,25 +32,25 @@
         </td>
         <td class="rvo-table-cell">
           {% for skill in colleague.skills.all %}
-            <span class="skill-badge">{{ skill.name }}</span>
+            <span class="rvo-tag skill-badge">{{ skill.name }}</span>
           {% endfor %}
           {% if not colleague.skills.all %}
-            <span class="placement-no-role">Geen rollen</span>
+            <span class="rvo-text--italic rvo-text--subtle">Geen rollen</span>
           {% endif %}
         </td>
         <td class="rvo-table-cell">
           {% for expertise in colleague.expertises.all %}
-            <span class="skill-badge skill-badge--expertise">{{ expertise.name }}</span>
+            <span class="rvo-tag rvo-tag--expertise skill-badge">{{ expertise.name }}</span>
           {% endfor %}
           {% if not colleague.expertises.all %}
-            <span class="placement-no-role">Geen expertise</span>
+            <span class="rvo-text--italic rvo-text--subtle">Geen expertise</span>
           {% endif %}
         </td>
         <td class="rvo-table-cell">
           {% if colleague.placements.all %}
-            <span class="status-badge status-ingezet">Ingezet</span>
+            <span class="rvo-tag status-ingezet">Ingezet</span>
           {% else %}
-            <span class="status-badge status-beschikbaar">Beschikbaar</span>
+            <span class="rvo-tag status-beschikbaar">Beschikbaar</span>
           {% endif %}
         </td>
       </tr>
