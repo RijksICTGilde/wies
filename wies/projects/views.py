@@ -5,14 +5,19 @@ from django.views.generic.list import ListView
 from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
 from django.template.defaulttags import register
 from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
+from django.urls import reverse_lazy, reverse
 from django.db import models
 from django.db.models import Q, Count
 from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth import authenticate as auth_authenticate
+from django.contrib.auth import login as auth_login
+from django.contrib.auth import logout as auth_logout
 from django.core import management
 from django.conf import settings
+from django.http import HttpResponse
 from django.urls import reverse
 
 
@@ -53,14 +58,27 @@ def login(request):
         return oauth.google.authorize_redirect(request, redirect_uri)
 
 
-def auth(request):
-    token = oauth.google.authorize_access_token(request)
-    request.session['user'] = token['userinfo']
-    return redirect('/')
+def auth(request):  # TODO: is the name 'auth' required by google somehow?
+    oidc_response = oauth.google.authorize_access_token(request)
+    username = oidc_response['userinfo']['sub']
+    first_name = oidc_response['userinfo']['given_name']
+    last_name = oidc_response['userinfo']['family_name']
+    user = auth_authenticate(request, 
+                             username=username, 
+                             extra_fields={
+                                 'first_name': first_name,
+                                 'last_name': last_name
+                             }
+    )
+    if user:
+        auth_login(request, user)
+        return redirect(request.build_absolute_uri(reverse("home")))
+    return HttpResponse(status=400)
 
 
 def logout(request):
-    request.session.pop('user', None)
+    if request.user:
+        auth_logout(request)
     return redirect('/')
 
 def dashboard(request):
@@ -404,7 +422,7 @@ class AssignmentTabsView(ListView):
             return ['assignment_tabs.html']
 
 
-class ColleagueList(ListView):
+class ColleagueList(LoginRequiredMixin, ListView):
     """
     View for colleagues list with filtering capabilities
     

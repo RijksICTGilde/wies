@@ -59,7 +59,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'wies.projects.context_processors.user_context',
             ],
         },
     },
@@ -131,3 +130,9 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
+SESSION_COOKIE_AGE = 24 * 60 * 60  # 24h in s
+
+LOGIN_URL = '/login/'
+
+AUTHENTICATION_BACKENDS = ['wies.projects.auth_backend.AuthBackend']

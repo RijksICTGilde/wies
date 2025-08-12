@@ -107,8 +107,8 @@
               <div class="user-section">
                 <img src="{% static '@nl-rvo/assets/icons/functioneel/user.svg' %}" alt="User" class="user-icon">
                 
-                {% if user %}
-                  <span class="user-info">{{ user.name }} (<a href="/logout/" class="logout-link">log uit</a>)</span>
+                {% if user.is_authenticated %}
+                  <span class="user-info"> {{ user.get_full_name }} (<a href="/logout/" class="logout-link">log uit</a>)</span>
                 {% else %}
                   <a href="/login/" class="login-link">log in</a>
                 {% endif %}
