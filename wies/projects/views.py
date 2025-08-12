@@ -46,8 +46,14 @@ def home(request):
 
 
 def login(request):
-    redirect_uri = request.build_absolute_uri(reverse_lazy('auth'))
-    return oauth.google.authorize_redirect(request, redirect_uri)
+    """Display login page or handle login action"""
+    if request.method == 'GET':
+        # Show the login page
+        return render(request, 'login.html')
+    elif request.method == 'POST':
+        # Handle login action
+        redirect_uri = request.build_absolute_uri(reverse_lazy('auth'))
+        return oauth.google.authorize_redirect(request, redirect_uri)
 
 
 def auth(request):
