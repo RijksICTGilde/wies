@@ -30,8 +30,7 @@ from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIVi
 urlpatterns = [
     path('admin/db/', admin_db, name='admin-db'),
     path('admin/', admin.site.urls),
-    path('', home),
-    path('dashboard/', dashboard, name='dashboard'),
+    path('', dashboard, name='dashboard'),
     path('assignments/', AssignmentTabsView.as_view(), name='assignments'),
     path('assignments/new', AssignmentCreateView.as_view()),
     path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
