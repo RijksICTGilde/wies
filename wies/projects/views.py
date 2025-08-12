@@ -12,6 +12,7 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.core import management
+from django.conf import settings
 from django.urls import reverse
 
 
@@ -28,17 +29,36 @@ from authlib.integrations.django_client import OAuth
 
 oauth = OAuth()
 oauth.register(
-    name='google',
-    client_id='XXXXX',
-    client_secret='XXXXXX',
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    name='google',  # TODO: change into keycloak?
+    server_metadata_url=settings.OIDC_DISCOVERY_URL,
+    client_id=settings.OIDC_CLIENT_ID,
+    client_secret=settings.OIDC_CLIENT_SECRET,
     client_kwargs={"scope": "openid profile email"},
 )
 
 
 def home(request):
-    """Redirect to dashboard as default landing page"""
-    return redirect('/dashboard/')
+    """Redirect to placements table page as default landing page"""
+    user = request.session.get('user')
+    if user:
+        user = json.dumps(user)
+    return render(request, 'home.html', {'user': user})
+
+
+def login(request):
+    redirect_uri = request.build_absolute_uri(reverse_lazy('auth'))
+    return oauth.google.authorize_redirect(request, redirect_uri)
+
+
+def auth(request):
+    token = oauth.google.authorize_access_token(request)
+    request.session['user'] = token['userinfo']
+    return redirect('/')
+
+
+def logout(request):
+    request.session.pop('user', None)
+    return redirect('/')
 
 def dashboard(request):
     """Dashboard view - uses statistics functions for data calculations"""
