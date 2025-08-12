@@ -39,10 +39,7 @@ oauth.register(
 
 def home(request):
     """Redirect to placements table page as default landing page"""
-    user = request.session.get('user')
-    if user:
-        user = json.dumps(user)
-    return render(request, 'home.html', {'user': user})
+    return redirect('/placements/table/')
 
 
 def login(request):
