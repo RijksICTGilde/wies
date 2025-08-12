@@ -52,14 +52,9 @@ def dashboard(request):
         'active_tab': active_tab,
     }
 
-    # If HTMX request, return only the tab content
+    # If HTMX request, return the dashboard tabs section
     if 'HX-Request' in request.headers:
-        if active_tab == 'ending_soon':
-            return render(request, 'parts/dashboard_ending_soon.html', context)
-        elif active_tab == 'consultants_bench':
-            return render(request, 'parts/dashboard_consultants_bench.html', context)
-        elif active_tab == 'new_leads':
-            return render(request, 'parts/dashboard_new_leads.html', context)
+        return render(request, 'parts/dashboard_tabs_section.html', context)
     
     return render(request, template_name='dashboard.html', context=context)
 
