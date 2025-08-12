@@ -1,31 +1,63 @@
 <div class="rvo-table--responsive" id="colleague_table">
   <table class="rvo-table">
-          <thead class="rvo-table-head">
-        <tr class="rvo-table-row">
-            {% include 'parts/generic_sortable_header.html' with field='name' label='Naam' target='#colleague_table' %}
-            {% include 'parts/generic_sortable_header.html' with field='brand__name' label='Merk' target='#colleague_table' %}
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header__sortable-container">
-            Rollen
-          </div>
-        </th>
+    <thead class="rvo-table-head">
+      <tr class="rvo-table-row">
+        {% include 'parts/generic_sortable_header.html' with field='name' label='Naam' target='#colleague_table' %}
+        <th class="rvo-table-header">Rollen</th>
+        <th class="rvo-table-header">ODI Expertise</th>
+        <th class="rvo-table-header">Status</th>
       </tr>
     </thead>
     <tbody class="rvo-table-body">
       {% for colleague in object_list %}
-      <tr class="rvo-table-row" style="cursor: pointer;" onclick="window.location='{{ colleague.get_absolute_url }}'">
-        <td class="rvo-table-cell">{{ colleague.name }}</td>
+      <tr class="rvo-table-row clickable-row" onclick="window.location.href='{{ colleague.get_absolute_url }}'">
         <td class="rvo-table-cell">
-          {% if colleague.brand %}
-            {{ colleague.brand.name }}
-          {% else %}
-            <span class="rvo-text--italic">-</span>
-          {% endif %}
+          <div class="placement-avatar-container">
+            <div class="placement-avatar">
+              {{ colleague.name|first|upper }}
+            </div>
+            <div class="placement-info">
+              <div class="placement-name">
+                {{ colleague.name }}
+              </div>
+              <div class="placement-brand">
+                {% if colleague.brand %}
+                  {{ colleague.brand.name }}
+                {% else %}
+                  -
+                {% endif %}
+              </div>
+            </div>
+          </div>
         </td>
         <td class="rvo-table-cell">
           {% for skill in colleague.skills.all %}
             <span class="skill-badge">{{ skill.name }}</span>
           {% endfor %}
+          {% if not colleague.skills.all %}
+            <span class="placement-no-role">Geen rollen</span>
+          {% endif %}
+        </td>
+        <td class="rvo-table-cell">
+          {% for expertise in colleague.expertises.all %}
+            <span class="skill-badge skill-badge--expertise">{{ expertise.name }}</span>
+          {% endfor %}
+          {% if not colleague.expertises.all %}
+            <span class="placement-no-role">Geen expertise</span>
+          {% endif %}
+        </td>
+        <td class="rvo-table-cell">
+          {% if colleague.placements.all %}
+            <span class="status-badge status-ingezet">Ingezet</span>
+          {% else %}
+            <span class="status-badge status-beschikbaar">Beschikbaar</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% empty %}
+      <tr class="rvo-table-row">
+        <td class="rvo-table-cell" colspan="4">
+          <span class="rvo-text--italic">Geen collega's gevonden.</span>
         </td>
       </tr>
       {% endfor %}

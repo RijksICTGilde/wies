@@ -117,37 +117,78 @@
 }
 
 .status-lead {
-  background-color: var(--rvo-color-geel-200, #fef3c7);
-  color: var(--rvo-color-geel-800, #92400e);
+  background-color: var(--rvo-color-donkergeel-150);
+  color: var(--rvo-color-logoblauw);
 }
 
 .status-open {
-  background-color: var(--rvo-color-blauw-200, #dbeafe);
-  color: var(--rvo-color-blauw-800, #1e40af);
+  background-color: var(--rvo-color-hemelblauw-150);
+  color: var(--rvo-color-logoblauw);
 }
 
 .status-lopend {
-  background-color: var(--rvo-color-groen-200, #dcfce7);
-  color: var(--rvo-color-groen-800, #166534);
+  background-color: var(--rvo-color-groen-150);
+  color: var(--rvo-color-logoblauw);
 }
 
 .status-afgewezen {
-  background-color: var(--rvo-color-rood-200, #fecaca);
-  color: var(--rvo-color-rood-800, #991b1b);
+  background-color: var(--rvo-color-rood-150);
+  color: var(--rvo-color-logoblauw);
 }
 
 .status-historisch {
-  background-color: var(--rvo-color-grijs-200, #e5e7eb);
-  color: var(--rvo-color-grijs-800, #1f2937);
+  background-color: var(--rvo-color-grijs-200);
+  color: var(--rvo-color-logoblauw);
+}
+
+.status-beschikbaar {
+  background-color: var(--rvo-color-groen-150) !important;
+  color: var(--rvo-color-logoblauw) !important;
+}
+
+.status-ingezet {
+  background-color: var(--rvo-color-oranje-150) !important;
+  color: var(--rvo-color-logoblauw) !important;
 }
 
 .skill-badge {
-  padding: 0.25rem 0.5rem;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  padding: var(--rvo-tag-padding-block-start, 4px) var(--rvo-tag-padding-inline-end, 12px) 
+           var(--rvo-tag-padding-block-end, 4px) var(--rvo-tag-padding-inline-start, 12px);
+  border-radius: var(--rvo-tag-border-radius, 3px);
+  font-size: var(--rvo-tag-font-size, 0.75rem);
+  font-weight: var(--rvo-font-weight-bold, 700);
+  background-color: var(--rvo-color-grijs-200);
+  color: var(--rvo-color-logoblauw);
+  margin-right: 0.25rem;
+  margin-bottom: 0.25rem;
+  display: inline-block;
+  font-family: var(--utrecht-document-font-family, "Noto Sans", Arial, sans-serif);
+  line-height: var(--rvo-tag-line-height, 1.2);
+}
+
+.skill-badge--expertise {
+  background-color: var(--rvo-color-hemelblauw-150) !important;
+  color: var(--rvo-color-logoblauw) !important;
+}
+
+/* Colleague avatar styling */
+.colleague-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 80px;
+  height: 80px;
+  background-color: var(--rvo-color-hemelblauw-150);
+  color: var(--rvo-color-logoblauw);
+  border-radius: 50%;
+  flex-shrink: 0;
   font-weight: 600;
-  background-color: var(--rvo-color-grijs-200, #e5e7eb);
-  color: var(--rvo-color-logoblauw, #154273);
+}
+
+.colleague-roles, .colleague-expertise {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
 }
 
 
@@ -254,10 +295,14 @@
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
-  padding: 0.25rem 0.5rem;
-  background-color: var(--rvo-color-hemelblauw-100, #e6f3ff);
-  color: var(--rvo-color-hemelblauw-700, #1e40af);
-  border-radius: 4px;
+  padding: var(--rvo-tag-padding-block-start, 4px) var(--rvo-tag-padding-inline-end, 12px) 
+           var(--rvo-tag-padding-block-end, 4px) var(--rvo-tag-padding-inline-start, 12px);
+  background-color: var(--rvo-color-grijs-200);
+  color: var(--rvo-color-logoblauw);
+  border-radius: var(--rvo-tag-border-radius, 3px);
+  font-size: var(--rvo-tag-font-size, 0.75rem);
+  font-weight: var(--rvo-font-weight-bold, 700);
+  font-family: var(--utrecht-document-font-family, "Noto Sans", Arial, sans-serif);
 }
 
 .rvo-tag a {
@@ -267,6 +312,55 @@
 
 .rvo-tag a:hover {
   opacity: 0.8;
+}
+
+.rvo-tag--default {
+  background-color: var(--rvo-color-grijs-200);
+  color: var(--rvo-color-logoblauw);
+}
+
+.rvo-tag--expertise {
+  background-color: var(--rvo-color-hemelblauw-150);
+  color: var(--rvo-color-logoblauw);
+}
+
+/* Placement avatar styling for table */
+.placement-avatar-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.placement-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background-color: var(--rvo-color-hemelblauw-150);
+  color: var(--rvo-color-logoblauw);
+  border-radius: 50%;
+  font-weight: 600;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.placement-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.placement-name {
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.placement-brand {
+  font-size: 0.875rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+  line-height: 1.2;
 }
 
 

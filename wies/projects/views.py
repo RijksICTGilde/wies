@@ -386,7 +386,7 @@ class ColleagueList(ListView):
     
     def get_queryset(self):
         """Apply filters to colleagues queryset"""
-        qs = Colleague.objects.select_related('brand').prefetch_related('skills').order_by('name')
+        qs = Colleague.objects.select_related('brand').prefetch_related('skills', 'expertises').order_by('name')
         
         # Apply search filter
         name_filter = self.request.GET.get('name')
@@ -401,13 +401,21 @@ class ColleagueList(ListView):
         # Apply specific filters
         filters = {
             'skill': 'skills__id',
-            'brand': 'brand__id'
+            'brand': 'brand__id',
+            'expertise': 'expertises__id'
         }
         
         for param, lookup in filters.items():
             value = self.request.GET.get(param)
             if value:
                 qs = qs.filter(**{lookup: value})
+        
+        # Apply status filter (custom logic)
+        status_filter = self.request.GET.get('status')
+        if status_filter == 'beschikbaar':
+            qs = qs.filter(placements__isnull=True)
+        elif status_filter == 'ingezet':
+            qs = qs.filter(placements__isnull=False)
         
         return qs.distinct()
     
@@ -418,6 +426,7 @@ class ColleagueList(ListView):
         # Get filter options (simplified - no longer dynamic)
         context['skills'] = Skill.objects.order_by('name')
         context['brands'] = Brand.objects.order_by('name')
+        context['expertises'] = Expertise.objects.order_by('name')
         
         # Add compact filter configuration
         context['primary_filter'] = {
@@ -431,7 +440,7 @@ class ColleagueList(ListView):
         context['search_placeholder'] = 'Zoek op naam...'
         
         # Calculate active filter count
-        modal_filter_params = ['skill']
+        modal_filter_params = ['skill', 'expertise', 'status']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
         
         # Add modal filter configuration
@@ -442,6 +451,23 @@ class ColleagueList(ListView):
                 'label': 'Rollen',
                 'placeholder': 'Alle rollen',
                 'options': [{'value': skill.id, 'label': skill.name} for skill in context.get('skills', [])]
+            },
+            {
+                'type': 'select',
+                'name': 'expertise',
+                'label': 'ODI Expertise',
+                'placeholder': 'Alle expertise',
+                'options': [{'value': expertise.id, 'label': expertise.name} for expertise in context.get('expertises', [])]
+            },
+            {
+                'type': 'select',
+                'name': 'status',
+                'label': 'Status',
+                'placeholder': 'Alle statussen',
+                'options': [
+                    {'value': 'beschikbaar', 'label': 'Beschikbaar'},
+                    {'value': 'ingezet', 'label': 'Ingezet'}
+                ]
             }
         ]
         

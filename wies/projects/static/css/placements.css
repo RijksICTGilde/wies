@@ -16,12 +16,12 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: var(--rvo-color-hemelblauw-200, #bfdbfe);
+  background-color: var(--rvo-color-hemelblauw-150);
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  color: var(--rvo-color-hemelblauw-700, #1e40af);
+  color: var(--rvo-color-logoblauw);
   font-family: 'RijksoverheidSansWebText', sans-serif;
 }
 
@@ -37,6 +37,12 @@
 }
 
 .placement-ministry {
+  font-size: 0.75rem;
+  color: var(--rvo-color-grijs-600, #6b7280);
+  font-family: 'RijksoverheidSansWebText', sans-serif;
+}
+
+.placement-brand {
   font-size: 0.75rem;
   color: var(--rvo-color-grijs-600, #6b7280);
   font-family: 'RijksoverheidSansWebText', sans-serif;

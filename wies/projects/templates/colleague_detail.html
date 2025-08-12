@@ -44,7 +44,7 @@
       <dd>
         {% if object.expertises.all %}
           {% for expertise in object.expertises.all %}
-            <span class="skill-badge">{{ expertise.name }}</span>
+            <span class="skill-badge skill-badge--expertise">{{ expertise.name }}</span>
           {% endfor %}
         {% else %}
           <span class="rvo-text--italic">Geen expertise opgegeven</span>
