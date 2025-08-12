@@ -8,4 +8,6 @@ dependencies = [
   "django-multiselectfield==1.0.1",
   "whitenoise==6.9.0",
   "gunicorn==23.0.0",
+  "Authlib==1.6.1",
+  "requests==2.32.4",
 ]

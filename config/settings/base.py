@@ -130,3 +130,12 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
+# AUTHLIB CLIENTS
+# TODO: determine if it should be moved into local/production
+AUTHLIB_OAUTH_CLIENTS = {
+    'google': {  # TODO: change into keycloak
+        'client_id': 'XXXXXX',
+        'client_secret': 'XXXXXX',
+    }
+}

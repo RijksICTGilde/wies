@@ -9,10 +9,7 @@ from django.urls import reverse_lazy
 from django.db import models
 from django.db.models import Q, Count
 from django.http import JsonResponse
-from django.apps import apps
-from django.conf import settings
 from django.contrib import messages
-from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import user_passes_test
 from django.core import management
 from django.urls import reverse
@@ -25,6 +22,18 @@ from .services.statistics import get_consultants_working, get_total_clients_coun
 from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining
 
 from wies.exact.models import ExactEmployee, ExactProject
+
+from authlib.integrations.django_client import OAuth
+
+
+oauth = OAuth()
+oauth.register(
+    name='google',
+    client_id='XXXXX',
+    client_secret='XXXXXX',
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={"scope": "openid profile email"},
+)
 
 
 def home(request):
