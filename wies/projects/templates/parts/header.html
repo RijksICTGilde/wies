@@ -1,20 +1,23 @@
+{% load static %}
 <div class="rvo-alert rvo-alert--warning rvo-alert--padding-sm">
     <div class="rvo-alert-text">
         <div>
-            <b><a class="rvo-link" href="https://github.com/RijksICTGilde/wies/">Prototype Version</a></b> |  This website is under development in an open manner | Data might be deleted without prior notice.
+            <b><a class="rvo-link" href="https://github.com/RijksICTGilde/wies/">Prototype</a></b> |  Deze website is voortdurend in ontwikkeling | Het kan zijn dat data wordt verwijderd of dat er tijdelijk geen data beschikbaar is. <br>
         </div>
     </div>
 </div>
 <header class="rvo-header">
   <div class="rvo-header__logo-wrapper">
-    <div class="rvo-logo rvo-header__logo-img">
-      <div class="rvo-logo__emblem">
-        <img src="https://cdn.jsdelivr.net/npm/@nl-rvo/assets@latest/images/emblem.svg" alt="RVO Embleem">
+    <a href="/" class="rvo-link rvo-link--no-underline">
+      <div class="rvo-logo rvo-header__logo-img">
+        <div class="rvo-logo__emblem">
+          <img src="{% static '@nl-rvo/assets/images/emblem.svg' %}" alt="RVO Embleem">
+        </div>
+        <div class="rvo-logo__wordmark">
+          <p class="rvo-logo__title">Rijksorganisatie voor Ontwikkeling, <br> Digitalisering en Innovatie</p>
+        </div>
       </div>
-      <div class="rvo-logo__wordmark">
-        <p class="rvo-logo__title">Organisatie voor Ontwikkeling, <br> Digitalisering en Innovatie</p>
-      </div>
-    </div>
+    </a>
   </div>
   <div class="app-switcher-links">
     <a href="/exact/" class="app-link" target="_blank" rel="noopener noreferrer">
@@ -48,7 +51,7 @@
 }
 </style>
 
-<div class="rvo-menubar__background">
+<div class="rvo-menubar__background rvo-menubar__background--horizontal-rule">
   <div class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--none">
     <nav class="rvo-menubar rvo-menubar--md">
       <ul class="rvo-menubar__ul">

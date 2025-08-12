@@ -243,6 +243,11 @@
   max-width: none;
 }
 
+/* Tab content visibility */
+.hidden {
+  display: none;
+}
+
 
 
 .rvo-tag {

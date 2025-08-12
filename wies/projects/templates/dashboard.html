@@ -1,19 +1,20 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/filter.css' %}">
-{% endblock %}
-
-{% block header %}
-{{ block.super }}
-{% include 'parts/clients_navigation.html' with active_page='clients' %}
-{% endblock %}
-
 {% block content %}
 
+<!-- Page Header -->
+<div class="rvo-layout-column rvo-layout-gap--xs rvo-layout-margin-bottom--md rvo-margin-block-end--md">
+  <h1 class="utrecht-heading-1 rvo-heading--no-margins">
+    WIES
+  </h1>
+  <span class="rvo-text--subtle">
+    Wie, wat, waar, wanneer
+  </span>
+</div>
+
 <!-- Statistics Cards -->
-<div class="rvo-max-width-layout rvo-max-width-layout--md" style="margin-bottom: 2rem;">
+<div class="rvo-max-width-layout rvo-max-width-layout--md rvo-margin-block-end--md">
   <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three">
     <div class="rvo-card rvo-card--outline rvo-card--padding-md">
       <div class="rvo-card__content">
@@ -39,33 +40,7 @@
   </div>
 </div>
 
-{% include 'parts/generic_filter_bar.html' with url_name='clients' target_selector='#client_table' %}
-
-<div class="rvo-layout-column rvo-layout-gap--md">
-  <!-- Clients Content -->
-  <div id="client_table">
-    <div class="rvo-table--responsive">
-  <table class="rvo-table">
-    <thead class="rvo-table-head">
-      <tr class="rvo-table-row">
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header__sortable-container">
-            Naam
-          </div>
-        </th>
-      </tr>
-    </thead>
-    <tbody class="rvo-table-body">
-      {% for client in clients %}
-      <tr class="rvo-table-row" style="cursor: pointer;" onclick="window.location='/clients/{{ client }}'">
-        <td class="rvo-table-cell">{{ client }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
-    </div>
-  </div>
-
-</div>
+<!-- Dashboard Tabs -->
+{% include 'parts/dashboard_tabs_section.html' %}
 
 {% endblock content %}

@@ -8,10 +8,8 @@
         </thead>
         <tbody class="rvo-table-body">
             {% for ministry in ministries %}
-            <tr class="rvo-table-row">
-                <td class="rvo-table-cell">
-                    <a href="{% url 'ministry-detail' ministry.pk %}" class="rvo-link">{{ ministry.name }} ({{ ministry.abbreviation }})</a>
-                </td>
+            <tr class="rvo-table-row" style="cursor: pointer;" onclick="window.location='{% url 'ministry-detail' ministry.pk %}'">
+                <td class="rvo-table-cell">{{ ministry.name }} ({{ ministry.abbreviation }})</td>
                 <td class="rvo-table-cell">{{ ministry.assignment_count }}</td>
             </tr>
             {% empty %}

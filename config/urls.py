@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from wies.projects.views import home, client, clients, get_service_details
+from wies.projects.views import home, client, clients, get_service_details, dashboard
 from wies.projects.views import AssignmentTabsView
 from wies.projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
 from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
@@ -30,7 +30,7 @@ from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIVi
 urlpatterns = [
     path('admin/db/', admin_db, name='admin-db'),
     path('admin/', admin.site.urls),
-    path('', home),
+    path('', dashboard, name='dashboard'),
     path('assignments/', AssignmentTabsView.as_view(), name='assignments'),
     path('assignments/new', AssignmentCreateView.as_view()),
     path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
@@ -52,7 +52,7 @@ urlpatterns = [
     path('services/<int:pk>/', ServiceDetailView.as_view(), name='service-detail'),
     path('services/<int:pk>/update', ServiceUpdateView.as_view()),
     path('services/<int:pk>/delete', ServiceDeleteView.as_view()),
-    path('clients/', clients),
+    path('clients/', clients, name='clients'),
     path('clients/<str:name>', client),
     path('ministries/', MinistryListView.as_view(), name='ministries'),
     path('ministries/new/', MinistryCreateView.as_view(), name='ministry-create'),

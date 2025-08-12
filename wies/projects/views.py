@@ -1,6 +1,4 @@
 import datetime
-import json
-import os
 from urllib.parse import urlencode
 
 from django.views.generic.list import ListView
@@ -17,17 +15,48 @@ from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import user_passes_test
 from django.core import management
+from django.urls import reverse
+
 
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 from .services.sync import sync_colleagues_from_exact
+from .services.statistics import get_consultants_working, get_total_clients_count, get_total_budget
+from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining
 
 from wies.exact.models import ExactEmployee, ExactProject
 
 
 def home(request):
-    """Redirect to placements table page as default landing page"""
-    return redirect('/placements/table/')
+    """Redirect to dashboard as default landing page"""
+    return redirect('/dashboard/')
+
+def dashboard(request):
+    """Dashboard view - uses statistics functions for data calculations"""
+    
+    # Get active tab from request
+    active_tab = request.GET.get('tab', 'ending_soon')
+    
+    total_budget = get_total_budget()
+    formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
+
+    # statistics context
+    context = {
+        'consultants_working': get_consultants_working(),
+        'total_clients_count': get_total_clients_count(),
+        'total_budget': total_budget,
+        'formatted_budget': formatted_budget,
+        'assignments_ending_soon': get_assignments_ending_soon(),
+        'consultants_bench': get_consultants_on_bench(),
+        'new_leads': get_new_leads(),
+        'active_tab': active_tab,
+    }
+
+    # If HTMX request, return the dashboard tabs section
+    if 'HX-Request' in request.headers:
+        return render(request, 'parts/dashboard_tabs_section.html', context)
+    
+    return render(request, template_name='dashboard.html', context=context)
 
 
 def get_service_details(request, service_id):
@@ -140,7 +169,6 @@ def assignments_url_with_tab(context, tab_key):
     Returns:
         URL with tab parameter and preserved filters
     """
-    from django.urls import reverse
     
     request = context['request']
     params = {'tab': tab_key}
@@ -166,7 +194,6 @@ def placements_url_with_filters(context, url_name):
     Returns:
         URL with preserved filters
     """
-    from django.urls import reverse
     
     request = context['request']
     params = {}
@@ -195,7 +222,6 @@ def placements_url_with_tab(context, tab_key):
     Returns:
         URL with tab parameter and preserved filters
     """
-    from django.urls import reverse
     
     request = context['request']
     
@@ -779,6 +805,27 @@ class AssignmentCreateView(CreateView):
 class AssignmentDetail(DetailView):
     model = Assignment
     template_name = 'assignment_detail.html'
+    
+    def get_context_data(self, **kwargs):
+        """Assignment detail view - uses statistics functions for calculations"""
+        
+        context = super().get_context_data(**kwargs)
+        assignment = self.get_object()
+        
+        total_budget = assignment.get_total_services_cost()
+        formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
+
+        assignment_data = {
+            'weeks_remaining': get_weeks_remaining(assignment),
+            'total_budget': total_budget,
+            'formatted_budget': formatted_budget,
+            'budget_percentage': 85,  # Placeholder percentage,
+            'project_score': 8.5,  # This could be calculated based on deadlines, budget, etc.,
+        } 
+
+        context.update(assignment_data)
+        
+        return context
 
 class AssignmentDeleteView(DeleteView):
     model = Assignment
@@ -919,8 +966,30 @@ class ServiceDetailView(DetailView):
 
 # Client views
 def clients(request):
-    clients = Assignment.objects.values_list('organization', flat=True).distinct()
-    return render(request, template_name='client_list.html', context={'clients': clients})
+    """Clients view - uses statistics functions for statistics"""
+    
+    search_query = request.GET.get('search', '')
+    
+    clients = Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').exclude(organization__isnull=True)
+    
+    if search_query:
+        clients = clients.filter(organization__icontains=search_query)
+    
+    clients = clients.order_by('organization')
+    
+    # get statistics for cards
+    consultants_working = get_consultants_working()
+    total_clients_count = get_total_clients_count()
+    total_budget = get_total_budget()
+    formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
+    
+    return render(request, template_name='client_list.html', context={
+        'clients': clients,
+        'consultants_working': consultants_working,
+        'total_clients_count': total_clients_count,
+        'total_budget': total_budget,
+        'formatted_budget': formatted_budget,
+    })
 
 def client(request, name):
     assignments = Assignment.objects.filter(organization=name)
