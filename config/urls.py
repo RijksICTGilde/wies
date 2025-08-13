@@ -17,20 +17,23 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
-from wies.projects.views import home, client, clients, get_service_details, dashboard
+from wies.projects.views import client, clients, get_service_details, dashboard
 from wies.projects.views import AssignmentTabsView
 from wies.projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
 from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
 from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView, PlacementAvailabilityView
 from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
 from wies.projects.views import MinistryListView, MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
-from wies.projects.views import admin_db
+from wies.projects.views import admin_db, login, logout, auth
 from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIView, ExpertiseDetailAPIView
 
 urlpatterns = [
     path('admin/db/', admin_db, name='admin-db'),
     path('admin/', admin.site.urls),
     path('', dashboard, name='dashboard'),
+    path('login/', login, name='login'),
+    path('logout/', logout, name='logout'),
+    path('auth/', auth, name='auth'),
     path('assignments/', AssignmentTabsView.as_view(), name='assignments'),
     path('assignments/new', AssignmentCreateView.as_view()),
     path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),

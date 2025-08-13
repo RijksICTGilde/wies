@@ -45,6 +45,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.auth.middleware.LoginRequiredMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -130,3 +131,12 @@ STORAGES = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
+
+SESSION_COOKIE_AGE = 24 * 60 * 60  # 24h in s
+
+LOGIN_URL = '/login/'
+
+AUTHENTICATION_BACKENDS = [
+    'wies.projects.auth_backend.AuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
