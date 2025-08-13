@@ -133,150 +133,6 @@
     }
   },
   {
-    "model": "projects.ministry",
-    "pk": 1,
-    "fields": {
-      "name": "Ministerie van Algemene Zaken",
-      "abbreviation": "AZ"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 2,
-    "fields": {
-      "name": "Ministerie van Asiel en Migratie",
-      "abbreviation": "A&M"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 3,
-    "fields": {
-      "name": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "abbreviation": "BZK"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 4,
-    "fields": {
-      "name": "Ministerie van Buitenlandse Zaken",
-      "abbreviation": "BZ"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 5,
-    "fields": {
-      "name": "Ministerie van Defensie",
-      "abbreviation": "DEF"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 6,
-    "fields": {
-      "name": "Ministerie van Economische Zaken",
-      "abbreviation": "EZ"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 7,
-    "fields": {
-      "name": "Ministerie van Financi\u00ebn",
-      "abbreviation": "FIN"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 8,
-    "fields": {
-      "name": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "abbreviation": "VWS"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 9,
-    "fields": {
-      "name": "Ministerie van Infrastructuur en Waterstaat",
-      "abbreviation": "I&W"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 10,
-    "fields": {
-      "name": "Ministerie van Justitie en Veiligheid",
-      "abbreviation": "J&V"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 11,
-    "fields": {
-      "name": "Ministerie van Onderwijs, Cultuur en Wetenschap",
-      "abbreviation": "OCW"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 12,
-    "fields": {
-      "name": "Ministerie van Sociale Zaken en Werkgelegenheid",
-      "abbreviation": "SZW"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 13,
-    "fields": {
-      "name": "Ministerie van Landbouw, Visserij, Voedselzekerheid en Natuur",
-      "abbreviation": "LVVN"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 14,
-    "fields": {
-      "name": "Ministerie van Volkshuisvesting en Ruimtelijke Ordening",
-      "abbreviation": "VRO"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 15,
-    "fields": {
-      "name": "Ministerie van Klimaat en Groene Groei",
-      "abbreviation": "KGG"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 16,
-    "fields": {
-      "name": "Hoge Colleges van Staat",
-      "abbreviation": "HoCoSta"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 17,
-    "fields": {
-      "name": "Eerste Kamer",
-      "abbreviation": "EK"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 18,
-    "fields": {
-      "name": "Tweede Kamer",
-      "abbreviation": "TK"
-    }
-  },
-  {
     "model": "projects.expertise",
     "pk": 1,
     "fields": {
@@ -913,7 +769,7 @@
       "end_date": "2025-06-30",
       "status": "HISTORISCH",
       "organization": "Logius",
-      "ministry": 3,
+      "ministry": 11,
       "extra_info": "Ontwikkeling van een veilig digitaal identiteitsplatform voor overheidsservices",
       "assignment_type": "GROUP"
     }
@@ -927,7 +783,7 @@
       "end_date": "2026-12-31",
       "status": "LEAD",
       "organization": "Zorginstituut Nederland",
-      "ministry": 8,
+      "ministry": 2,
       "extra_info": "Opzetten van een centraal data platform voor het analyseren van zorgdata",
       "assignment_type": "GROUP"
     }
@@ -941,7 +797,7 @@
       "end_date": "2026-09-30",
       "status": "LEAD",
       "organization": "Directie Wetgeving en Juridische Zaken",
-      "ministry": 10,
+      "ministry": 1,
       "extra_info": "AI-tool voor het ondersteunen van juristen bij contractanalyse",
       "assignment_type": "INDIVIDUAL"
     }
@@ -955,7 +811,7 @@
       "end_date": "2024-11-30",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor Ondernemend Nederland (RVO)",
-      "ministry": 6,
+      "ministry": 12,
       "extra_info": "Complete redesign van het e-commerce platform met focus on mobile-first",
       "assignment_type": "GROUP"
     }
@@ -969,7 +825,7 @@
       "end_date": "2025-04-30",
       "status": "AFGEWEZEN",
       "organization": "De Nederlandsche Bank (DNB)",
-      "ministry": 7,
+      "ministry": 5,
       "extra_info": "Haalbaarheidsstudie voor blockchain implementatie in betalingsverkeer",
       "assignment_type": "INDIVIDUAL"
     }
@@ -983,7 +839,7 @@
       "end_date": "2025-08-31",
       "status": "LOPEND",
       "organization": "RIVM - Centrum Infectieziektebestrijding",
-      "ministry": 8,
+      "ministry": 4,
       "extra_info": "Ontwikkeling van een ML platform voor medische beeldanalyse",
       "assignment_type": "GROUP"
     }
@@ -997,7 +853,7 @@
       "end_date": "2026-06-30",
       "status": "LOPEND",
       "organization": "Directie Digitalisering BZK",
-      "ministry": 3,
+      "ministry": 4,
       "extra_info": "Modernisering van digitale overheidsloketten voor betere gebruikerservaring",
       "assignment_type": "GROUP"
     }
@@ -1011,7 +867,7 @@
       "end_date": "2025-10-31",
       "status": "LOPEND",
       "organization": "Agentschap Telecom",
-      "ministry": 6,
+      "ministry": 3,
       "extra_info": "Geautomatiseerde tool voor cybersecurity audits",
       "assignment_type": "INDIVIDUAL"
     }
@@ -1025,7 +881,7 @@
       "end_date": "2024-10-31",
       "status": "HISTORISCH",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
-      "ministry": 9,
+      "ministry": 12,
       "extra_info": "AI-gedreven optimalisatie van logistieke routes",
       "assignment_type": "GROUP"
     }
@@ -1039,7 +895,7 @@
       "end_date": "2025-05-31",
       "status": "HISTORISCH",
       "organization": "Belastingdienst - Directie ICT",
-      "ministry": 7,
+      "ministry": 2,
       "extra_info": "Nieuwe features voor mobile banking applicatie",
       "assignment_type": "GROUP"
     }
@@ -1053,7 +909,7 @@
       "end_date": "2026-11-30",
       "status": "LEAD",
       "organization": "Nederlandse Zorgautoriteit (NZa)",
-      "ministry": 8,
+      "ministry": 11,
       "extra_info": "Analyse van pati\u00ebntdata voor verbeterde zorguitkomsten",
       "assignment_type": "INDIVIDUAL"
     }
@@ -1067,7 +923,7 @@
       "end_date": "2026-06-30",
       "status": "LOPEND",
       "organization": "Netbeheer Nederland",
-      "ministry": 6,
+      "ministry": 12,
       "extra_info": "Smart grid management en energie voorspelling",
       "assignment_type": "GROUP"
     }
@@ -1081,7 +937,7 @@
       "end_date": "2024-11-30",
       "status": "HISTORISCH",
       "organization": "DUO - Dienst Uitvoering Onderwijs",
-      "ministry": 11,
+      "ministry": 15,
       "extra_info": "Interactief leerplatform voor online onderwijs",
       "assignment_type": "GROUP"
     }
@@ -1109,7 +965,7 @@
       "end_date": "2026-11-30",
       "status": "LEAD",
       "organization": "TNO - Nederlandse Organisatie voor Toegepast Natuurwetenschappelijk Onderzoek",
-      "ministry": 6,
+      "ministry": 2,
       "extra_info": "Digitale tweeling voor productie-optimalisatie",
       "assignment_type": "INDIVIDUAL"
     }
@@ -1123,7 +979,7 @@
       "end_date": "2026-12-31",
       "status": "LEAD",
       "organization": "Centraal Bureau voor de Statistiek (CBS)",
-      "ministry": 6,
+      "ministry": 10,
       "extra_info": "Sentimentanalyse van sociale media voor content strategie",
       "assignment_type": "GROUP"
     }
@@ -1137,7 +993,7 @@
       "end_date": "2024-07-31",
       "status": "HISTORISCH",
       "organization": "Wageningen University & Research",
-      "ministry": 13,
+      "ministry": 7,
       "extra_info": "AI-tool voor gewasvoorspelling en bodem analyse",
       "assignment_type": "INDIVIDUAL"
     }
@@ -1151,7 +1007,7 @@
       "end_date": "2024-10-31",
       "status": "HISTORISCH",
       "organization": "Kamer van Koophandel (KvK)",
-      "ministry": 6,
+      "ministry": 1,
       "extra_info": "Blockchain-gebaseerde supply chain tracking",
       "assignment_type": "GROUP"
     }
@@ -1165,7 +1021,7 @@
       "end_date": "2026-03-31",
       "status": "LOPEND",
       "organization": "Fiscale Inlichtingen- en Opsporingsdienst (FIOD)",
-      "ministry": 7,
+      "ministry": 1,
       "extra_info": "Machine learning voor fraudedetectie in transacties",
       "assignment_type": "INDIVIDUAL"
     }
@@ -1179,7 +1035,7 @@
       "end_date": "2025-05-31",
       "status": "HISTORISCH",
       "organization": "Koninklijk Nederlands Meteorologisch Instituut (KNMI)",
-      "ministry": 15,
+      "ministry": 2,
       "extra_info": "Publieke portal voor toegang tot klimaatdata",
       "assignment_type": "GROUP"
     }
@@ -1193,7 +1049,7 @@
       "end_date": "2026-08-31",
       "status": "LOPEND",
       "organization": "UWV",
-      "ministry": 12,
+      "ministry": 4,
       "extra_info": "Vernieuwing van IT-systemen voor uitkeringen en sociale zekerheid",
       "assignment_type": "GROUP"
     }
@@ -1207,7 +1063,7 @@
       "end_date": "2026-04-30",
       "status": "LOPEND",
       "organization": "Defensie Materieel Organisatie",
-      "ministry": 5,
+      "ministry": 4,
       "extra_info": "Strategische implementatie van AI-toepassingen binnen Defensie",
       "assignment_type": "INDIVIDUAL"
     }
@@ -1221,7 +1077,7 @@
       "end_date": "2026-04-30",
       "status": "LEAD",
       "organization": "Immigratie- en Naturalisatiedienst (IND)",
-      "ministry": 2,
+      "ministry": 9,
       "extra_info": "Centraal platform voor migratie en asielprocedure data-analyse",
       "assignment_type": "GROUP"
     }
@@ -1235,7 +1091,7 @@
       "end_date": "2025-08-31",
       "status": "LOPEND",
       "organization": "Directie Digitale Diplomatie",
-      "ministry": 4,
+      "ministry": 10,
       "extra_info": "Platform voor digitale diplomatieke communicatie en samenwerking",
       "assignment_type": "GROUP"
     }
@@ -1249,7 +1105,7 @@
       "end_date": "2026-05-31",
       "status": "LEAD",
       "organization": "Rijksdienst voor Ondernemend Nederland (RVO)",
-      "ministry": 14,
+      "ministry": 1,
       "extra_info": "Real-time monitoring en analyse van woningbouwprojecten",
       "assignment_type": "INDIVIDUAL"
     }
@@ -1263,7 +1119,7 @@
       "end_date": "2025-12-31",
       "status": "LOPEND",
       "organization": "Inspectie van het Onderwijs",
-      "ministry": 11,
+      "ministry": 9,
       "extra_info": "Data-analyse voor onderwijskwaliteit en prestatiemonitoring",
       "assignment_type": "GROUP"
     }
@@ -1277,7 +1133,7 @@
       "end_date": "2026-11-30",
       "status": "LEAD",
       "organization": "Rijksvoorlichtingsdienst (RVD)",
-      "ministry": 1,
+      "ministry": 4,
       "extra_info": "Modernisering van digitale communicatiekanalen van het Kabinet",
       "assignment_type": "GROUP"
     }
@@ -1652,86 +1508,6 @@
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 19,
-    "fields": {
-      "name": "Logius",
-      "abbreviation": "Logius"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 20,
-    "fields": {
-      "name": "Belastingdienst",
-      "abbreviation": "BD"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 21,
-    "fields": {
-      "name": "Centraal Bureau voor de Statistiek",
-      "abbreviation": "CBS"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 22,
-    "fields": {
-      "name": "Dienst Uitvoering Onderwijs",
-      "abbreviation": "DUO"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 23,
-    "fields": {
-      "name": "Rijksdienst voor Identiteitsgegevens",
-      "abbreviation": "RvIG"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 24,
-    "fields": {
-      "name": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "abbreviation": "UWV"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 25,
-    "fields": {
-      "name": "Sociale Verzekeringsbank",
-      "abbreviation": "SVB"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 26,
-    "fields": {
-      "name": "Nationaal Archief",
-      "abbreviation": "NA"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 27,
-    "fields": {
-      "name": "Rijksdienst voor het Cultureel Erfgoed",
-      "abbreviation": "RCE"
-    }
-  },
-  {
-    "model": "projects.ministry",
-    "pk": 28,
-    "fields": {
-      "name": "Nederlandse Voedsel- en Warenautoriteit",
-      "abbreviation": "NVWA"
     }
   },
   {
@@ -11843,7 +11619,7 @@
       "end_date": "2025-01-31",
       "status": "HISTORISCH",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -11857,7 +11633,7 @@
       "end_date": "2024-01-31",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "INDIVIDUAL"
     }
@@ -11871,7 +11647,7 @@
       "end_date": "2024-02-29",
       "status": "HISTORISCH",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -11885,7 +11661,7 @@
       "end_date": "2024-10-31",
       "status": "HISTORISCH",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 9,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "GROUP"
     }
@@ -11899,7 +11675,7 @@
       "end_date": "2027-04-30",
       "status": "LEAD",
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
-      "ministry": 28,
+      "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
       "assignment_type": "INDIVIDUAL"
     }
@@ -11913,7 +11689,7 @@
       "end_date": "2025-08-31",
       "status": "LEAD",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -11927,7 +11703,7 @@
       "end_date": "2025-01-31",
       "status": "HISTORISCH",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 8,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "INDIVIDUAL"
     }
@@ -11941,7 +11717,7 @@
       "end_date": "2024-08-31",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 10,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "GROUP"
     }
@@ -11955,7 +11731,7 @@
       "end_date": "2024-12-31",
       "status": "AFGEWEZEN",
       "organization": "Nationaal Archief",
-      "ministry": 26,
+      "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
       "assignment_type": "INDIVIDUAL"
     }
@@ -11969,7 +11745,7 @@
       "end_date": "2024-01-31",
       "status": "HISTORISCH",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "INDIVIDUAL"
     }
@@ -11983,7 +11759,7 @@
       "end_date": "2026-10-31",
       "status": "LEAD",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 14,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -11997,7 +11773,7 @@
       "end_date": "2024-04-30",
       "status": "AFGEWEZEN",
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
-      "ministry": 28,
+      "ministry": 1,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
       "assignment_type": "GROUP"
     }
@@ -12011,7 +11787,7 @@
       "end_date": "2024-11-30",
       "status": "HISTORISCH",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -12025,7 +11801,7 @@
       "end_date": "2024-09-30",
       "status": "AFGEWEZEN",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12039,7 +11815,7 @@
       "end_date": "2023-09-30",
       "status": "HISTORISCH",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -12053,7 +11829,7 @@
       "end_date": "2024-06-30",
       "status": "HISTORISCH",
       "organization": "Nationaal Archief",
-      "ministry": 26,
+      "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
       "assignment_type": "GROUP"
     }
@@ -12067,7 +11843,7 @@
       "end_date": "2023-12-31",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "GROUP"
     }
@@ -12081,7 +11857,7 @@
       "end_date": "2024-11-30",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "GROUP"
     }
@@ -12095,7 +11871,7 @@
       "end_date": "2024-04-30",
       "status": "HISTORISCH",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12109,7 +11885,7 @@
       "end_date": "2026-11-30",
       "status": "LEAD",
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
-      "ministry": 28,
+      "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12123,7 +11899,7 @@
       "end_date": "2024-09-30",
       "status": "AFGEWEZEN",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12137,7 +11913,7 @@
       "end_date": "2024-02-29",
       "status": "HISTORISCH",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -12151,7 +11927,7 @@
       "end_date": "2024-01-31",
       "status": "HISTORISCH",
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
-      "ministry": 28,
+      "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
       "assignment_type": "GROUP"
     }
@@ -12165,7 +11941,7 @@
       "end_date": "2024-08-31",
       "status": "HISTORISCH",
       "organization": "Nationaal Archief",
-      "ministry": 26,
+      "ministry": 2,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
       "assignment_type": "GROUP"
     }
@@ -12179,7 +11955,7 @@
       "end_date": "2025-03-31",
       "status": "HISTORISCH",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 2,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12193,7 +11969,7 @@
       "end_date": "2025-02-28",
       "status": "HISTORISCH",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -12207,7 +11983,7 @@
       "end_date": "2024-05-31",
       "status": "HISTORISCH",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 2,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -12221,7 +11997,7 @@
       "end_date": "2026-12-31",
       "status": "LEAD",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "GROUP"
     }
@@ -12235,7 +12011,7 @@
       "end_date": "2024-10-31",
       "status": "HISTORISCH",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 14,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "GROUP"
     }
@@ -12249,7 +12025,7 @@
       "end_date": "2024-04-30",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "GROUP"
     }
@@ -12263,7 +12039,7 @@
       "end_date": "2024-07-31",
       "status": "AFGEWEZEN",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 10,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12277,7 +12053,7 @@
       "end_date": "2024-05-31",
       "status": "HISTORISCH",
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
-      "ministry": 28,
+      "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12291,7 +12067,7 @@
       "end_date": "2024-06-30",
       "status": "HISTORISCH",
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
-      "ministry": 28,
+      "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12305,7 +12081,7 @@
       "end_date": "2024-12-31",
       "status": "AFGEWEZEN",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 1,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "GROUP"
     }
@@ -12319,7 +12095,7 @@
       "end_date": "2024-09-30",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12333,7 +12109,7 @@
       "end_date": "2024-09-30",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 8,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12347,7 +12123,7 @@
       "end_date": "2024-11-30",
       "status": "HISTORISCH",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 9,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "GROUP"
     }
@@ -12361,7 +12137,7 @@
       "end_date": "2024-06-30",
       "status": "HISTORISCH",
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
-      "ministry": 28,
+      "ministry": 2,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12375,7 +12151,7 @@
       "end_date": "2024-07-31",
       "status": "HISTORISCH",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 15,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -12389,7 +12165,7 @@
       "end_date": "2024-08-31",
       "status": "HISTORISCH",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "GROUP"
     }
@@ -12403,7 +12179,7 @@
       "end_date": "2025-02-28",
       "status": "AFGEWEZEN",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 2,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -12417,7 +12193,7 @@
       "end_date": "2024-07-31",
       "status": "HISTORISCH",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 9,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -12431,7 +12207,7 @@
       "end_date": "2024-06-30",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "GROUP"
     }
@@ -12445,7 +12221,7 @@
       "end_date": "2025-02-28",
       "status": "HISTORISCH",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 14,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12459,7 +12235,7 @@
       "end_date": "2024-03-31",
       "status": "HISTORISCH",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -12473,7 +12249,7 @@
       "end_date": "2026-09-30",
       "status": "LEAD",
       "organization": "Nationaal Archief",
-      "ministry": 26,
+      "ministry": 10,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
       "assignment_type": "GROUP"
     }
@@ -12487,7 +12263,7 @@
       "end_date": "2024-02-29",
       "status": "HISTORISCH",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 15,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "GROUP"
     }
@@ -12501,7 +12277,7 @@
       "end_date": "2023-11-30",
       "status": "AFGEWEZEN",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 14,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12515,7 +12291,7 @@
       "end_date": "2024-04-30",
       "status": "HISTORISCH",
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
-      "ministry": 28,
+      "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12529,7 +12305,7 @@
       "end_date": "2027-02-28",
       "status": "LEAD",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 10,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12543,7 +12319,7 @@
       "end_date": "2024-10-31",
       "status": "HISTORISCH",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12557,7 +12333,7 @@
       "end_date": "2024-09-30",
       "status": "HISTORISCH",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "GROUP"
     }
@@ -12571,7 +12347,7 @@
       "end_date": "2026-10-31",
       "status": "LEAD",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 2,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "GROUP"
     }
@@ -12585,7 +12361,7 @@
       "end_date": "2024-05-31",
       "status": "AFGEWEZEN",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 1,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -12599,7 +12375,7 @@
       "end_date": "2025-10-31",
       "status": "LOPEND",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12613,7 +12389,7 @@
       "end_date": "2024-03-31",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "GROUP"
     }
@@ -12627,7 +12403,7 @@
       "end_date": "2024-10-31",
       "status": "AFGEWEZEN",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "GROUP"
     }
@@ -12641,7 +12417,7 @@
       "end_date": "2024-04-30",
       "status": "HISTORISCH",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "GROUP"
     }
@@ -12655,7 +12431,7 @@
       "end_date": "2024-03-31",
       "status": "HISTORISCH",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 2,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -12669,7 +12445,7 @@
       "end_date": "2024-11-30",
       "status": "HISTORISCH",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 14,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -12683,7 +12459,7 @@
       "end_date": "2026-07-31",
       "status": "LEAD",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -12697,7 +12473,7 @@
       "end_date": "2024-03-31",
       "status": "HISTORISCH",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 14,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -12711,7 +12487,7 @@
       "end_date": "2025-02-28",
       "status": "AFGEWEZEN",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 2,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "GROUP"
     }
@@ -12725,7 +12501,7 @@
       "end_date": "2025-03-31",
       "status": "AFGEWEZEN",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -12739,7 +12515,7 @@
       "end_date": "2026-12-31",
       "status": "LEAD",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "GROUP"
     }
@@ -12753,7 +12529,7 @@
       "end_date": "2024-04-30",
       "status": "HISTORISCH",
       "organization": "Nationaal Archief",
-      "ministry": 26,
+      "ministry": 8,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
       "assignment_type": "GROUP"
     }
@@ -12767,7 +12543,7 @@
       "end_date": "2024-01-31",
       "status": "HISTORISCH",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -12781,7 +12557,7 @@
       "end_date": "2024-05-31",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 14,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12795,7 +12571,7 @@
       "end_date": "2027-04-30",
       "status": "LEAD",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12809,7 +12585,7 @@
       "end_date": "2024-04-30",
       "status": "HISTORISCH",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12823,7 +12599,7 @@
       "end_date": "2024-11-30",
       "status": "HISTORISCH",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -12837,7 +12613,7 @@
       "end_date": "2023-10-31",
       "status": "HISTORISCH",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "GROUP"
     }
@@ -12851,7 +12627,7 @@
       "end_date": "2024-09-30",
       "status": "HISTORISCH",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -12865,7 +12641,7 @@
       "end_date": "2024-09-30",
       "status": "HISTORISCH",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "GROUP"
     }
@@ -12879,7 +12655,7 @@
       "end_date": "2027-01-31",
       "status": "LEAD",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "GROUP"
     }
@@ -12893,7 +12669,7 @@
       "end_date": "2027-04-30",
       "status": "LEAD",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12907,7 +12683,7 @@
       "end_date": "2025-02-28",
       "status": "HISTORISCH",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 15,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "GROUP"
     }
@@ -12921,7 +12697,7 @@
       "end_date": "2026-07-31",
       "status": "LEAD",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -12935,7 +12711,7 @@
       "end_date": "2024-07-31",
       "status": "HISTORISCH",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -12949,7 +12725,7 @@
       "end_date": "2025-03-31",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 2,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "GROUP"
     }
@@ -12963,7 +12739,7 @@
       "end_date": "2024-07-31",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 10,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "INDIVIDUAL"
     }
@@ -12977,7 +12753,7 @@
       "end_date": "2025-02-28",
       "status": "HISTORISCH",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -12991,7 +12767,7 @@
       "end_date": "2024-10-31",
       "status": "HISTORISCH",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "GROUP"
     }
@@ -13005,7 +12781,7 @@
       "end_date": "2025-09-30",
       "status": "LOPEND",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 9,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13019,7 +12795,7 @@
       "end_date": "2024-05-31",
       "status": "HISTORISCH",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "GROUP"
     }
@@ -13033,7 +12809,7 @@
       "end_date": "2024-01-31",
       "status": "AFGEWEZEN",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "GROUP"
     }
@@ -13047,7 +12823,7 @@
       "end_date": "2025-07-31",
       "status": "AFGEWEZEN",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13061,7 +12837,7 @@
       "end_date": "2025-01-31",
       "status": "HISTORISCH",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 8,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -13075,7 +12851,7 @@
       "end_date": "2024-05-31",
       "status": "HISTORISCH",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13089,7 +12865,7 @@
       "end_date": "2024-08-31",
       "status": "HISTORISCH",
       "organization": "Nationaal Archief",
-      "ministry": 26,
+      "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
       "assignment_type": "GROUP"
     }
@@ -13103,7 +12879,7 @@
       "end_date": "2025-06-30",
       "status": "HISTORISCH",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 15,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "GROUP"
     }
@@ -13117,7 +12893,7 @@
       "end_date": "2026-12-31",
       "status": "LEAD",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "GROUP"
     }
@@ -13131,7 +12907,7 @@
       "end_date": "2024-07-31",
       "status": "HISTORISCH",
       "organization": "Nationaal Archief",
-      "ministry": 26,
+      "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13145,7 +12921,7 @@
       "end_date": "2024-03-31",
       "status": "HISTORISCH",
       "organization": "Nationaal Archief",
-      "ministry": 26,
+      "ministry": 9,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
       "assignment_type": "GROUP"
     }
@@ -13159,7 +12935,7 @@
       "end_date": "2024-09-30",
       "status": "AFGEWEZEN",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -13173,7 +12949,7 @@
       "end_date": "2026-09-30",
       "status": "LEAD",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "GROUP"
     }
@@ -13187,7 +12963,7 @@
       "end_date": "2026-11-30",
       "status": "LEAD",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "GROUP"
     }
@@ -13201,7 +12977,7 @@
       "end_date": "2024-11-30",
       "status": "AFGEWEZEN",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 14,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13215,7 +12991,7 @@
       "end_date": "2024-06-30",
       "status": "HISTORISCH",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "GROUP"
     }
@@ -13229,7 +13005,7 @@
       "end_date": "2024-11-30",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "GROUP"
     }
@@ -13243,7 +13019,7 @@
       "end_date": "2024-08-31",
       "status": "HISTORISCH",
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
-      "ministry": 28,
+      "ministry": 1,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
       "assignment_type": "GROUP"
     }
@@ -13257,7 +13033,7 @@
       "end_date": "2026-09-30",
       "status": "LEAD",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "GROUP"
     }
@@ -13271,7 +13047,7 @@
       "end_date": "2026-07-31",
       "status": "LEAD",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 14,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -13285,7 +13061,7 @@
       "end_date": "2024-10-31",
       "status": "HISTORISCH",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 1,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13299,7 +13075,7 @@
       "end_date": "2026-11-30",
       "status": "LEAD",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -13313,7 +13089,7 @@
       "end_date": "2024-04-30",
       "status": "HISTORISCH",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "GROUP"
     }
@@ -13327,7 +13103,7 @@
       "end_date": "2024-10-31",
       "status": "HISTORISCH",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "GROUP"
     }
@@ -13341,7 +13117,7 @@
       "end_date": "2024-03-31",
       "status": "HISTORISCH",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "GROUP"
     }
@@ -13355,7 +13131,7 @@
       "end_date": "2024-03-31",
       "status": "HISTORISCH",
       "organization": "Nationaal Archief",
-      "ministry": 26,
+      "ministry": 2,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
       "assignment_type": "GROUP"
     }
@@ -13369,7 +13145,7 @@
       "end_date": "2024-05-31",
       "status": "HISTORISCH",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -13383,7 +13159,7 @@
       "end_date": "2025-04-30",
       "status": "HISTORISCH",
       "organization": "Nationaal Archief",
-      "ministry": 26,
+      "ministry": 15,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13397,7 +13173,7 @@
       "end_date": "2025-04-30",
       "status": "HISTORISCH",
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
-      "ministry": 28,
+      "ministry": 10,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
       "assignment_type": "GROUP"
     }
@@ -13411,7 +13187,7 @@
       "end_date": "2024-05-31",
       "status": "AFGEWEZEN",
       "organization": "Nationaal Archief",
-      "ministry": 26,
+      "ministry": 15,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
       "assignment_type": "GROUP"
     }
@@ -13425,7 +13201,7 @@
       "end_date": "2024-01-31",
       "status": "HISTORISCH",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13439,7 +13215,7 @@
       "end_date": "2023-11-30",
       "status": "HISTORISCH",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13453,7 +13229,7 @@
       "end_date": "2023-11-30",
       "status": "AFGEWEZEN",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13467,7 +13243,7 @@
       "end_date": "2026-10-31",
       "status": "LEAD",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -13481,7 +13257,7 @@
       "end_date": "2024-03-31",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 8,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13495,7 +13271,7 @@
       "end_date": "2024-07-31",
       "status": "HISTORISCH",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -13509,7 +13285,7 @@
       "end_date": "2024-03-31",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 15,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "GROUP"
     }
@@ -13523,7 +13299,7 @@
       "end_date": "2024-02-29",
       "status": "HISTORISCH",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 15,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "GROUP"
     }
@@ -13537,7 +13313,7 @@
       "end_date": "2024-05-31",
       "status": "HISTORISCH",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "GROUP"
     }
@@ -13551,7 +13327,7 @@
       "end_date": "2025-01-31",
       "status": "HISTORISCH",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 8,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "GROUP"
     }
@@ -13565,7 +13341,7 @@
       "end_date": "2025-02-28",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "GROUP"
     }
@@ -13579,7 +13355,7 @@
       "end_date": "2024-10-31",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "GROUP"
     }
@@ -13593,7 +13369,7 @@
       "end_date": "2024-05-31",
       "status": "HISTORISCH",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "GROUP"
     }
@@ -13607,7 +13383,7 @@
       "end_date": "2024-03-31",
       "status": "HISTORISCH",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "GROUP"
     }
@@ -13621,7 +13397,7 @@
       "end_date": "2024-05-31",
       "status": "AFGEWEZEN",
       "organization": "Nationaal Archief",
-      "ministry": 26,
+      "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13635,7 +13411,7 @@
       "end_date": "2026-07-31",
       "status": "LEAD",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 9,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -13649,7 +13425,7 @@
       "end_date": "2024-07-31",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
-      "ministry": 27,
+      "ministry": 9,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13663,7 +13439,7 @@
       "end_date": "2023-09-30",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "GROUP"
     }
@@ -13677,7 +13453,7 @@
       "end_date": "2024-02-29",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "GROUP"
     }
@@ -13691,7 +13467,7 @@
       "end_date": "2026-07-31",
       "status": "LEAD",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 10,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13705,7 +13481,7 @@
       "end_date": "2024-11-30",
       "status": "HISTORISCH",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "GROUP"
     }
@@ -13719,7 +13495,7 @@
       "end_date": "2024-08-31",
       "status": "HISTORISCH",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 15,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13733,7 +13509,7 @@
       "end_date": "2024-08-31",
       "status": "HISTORISCH",
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
-      "ministry": 28,
+      "ministry": 10,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
       "assignment_type": "GROUP"
     }
@@ -13747,7 +13523,7 @@
       "end_date": "2023-11-30",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13761,7 +13537,7 @@
       "end_date": "2024-12-31",
       "status": "HISTORISCH",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13775,7 +13551,7 @@
       "end_date": "2024-06-30",
       "status": "AFGEWEZEN",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -13789,7 +13565,7 @@
       "end_date": "2023-12-31",
       "status": "HISTORISCH",
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
-      "ministry": 24,
+      "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
       "assignment_type": "GROUP"
     }
@@ -13803,7 +13579,7 @@
       "end_date": "2025-01-31",
       "status": "HISTORISCH",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 9,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "GROUP"
     }
@@ -13817,7 +13593,7 @@
       "end_date": "2024-10-31",
       "status": "HISTORISCH",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 8,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -13831,7 +13607,7 @@
       "end_date": "2024-06-30",
       "status": "HISTORISCH",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 2,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -13845,7 +13621,7 @@
       "end_date": "2024-01-31",
       "status": "HISTORISCH",
       "organization": "Centraal Bureau voor de Statistiek",
-      "ministry": 22,
+      "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
       "assignment_type": "GROUP"
     }
@@ -13859,7 +13635,7 @@
       "end_date": "2024-12-31",
       "status": "HISTORISCH",
       "organization": "Sociale Verzekeringsbank",
-      "ministry": 25,
+      "ministry": 1,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13873,7 +13649,7 @@
       "end_date": "2024-04-30",
       "status": "HISTORISCH",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 14,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
       "assignment_type": "GROUP"
     }
@@ -13887,7 +13663,7 @@
       "end_date": "2024-08-31",
       "status": "HISTORISCH",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 2,
       "extra_info": "Digitalisering en modernisering project voor Logius",
       "assignment_type": "INDIVIDUAL"
     }
@@ -13901,7 +13677,7 @@
       "end_date": "2025-03-31",
       "status": "HISTORISCH",
       "organization": "Nationaal Archief",
-      "ministry": 26,
+      "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
       "assignment_type": "GROUP"
     }
@@ -13915,7 +13691,7 @@
       "end_date": "2024-08-31",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "GROUP"
     }
@@ -13929,7 +13705,7 @@
       "end_date": "2024-11-30",
       "status": "HISTORISCH",
       "organization": "Rijksdienst voor Identiteitsgegevens",
-      "ministry": 23,
+      "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
       "assignment_type": "GROUP"
     }
@@ -16463,7 +16239,7 @@
       "end_date": "2026-09-30",
       "status": "LOPEND",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 13,
       "extra_info": "Groot digitalisering project voor Belastingdienst met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16489,7 +16265,7 @@
       "end_date": "2026-02-28",
       "status": "LOPEND",
       "organization": "Ministerie van Economische Zaken en Klimaat",
-      "ministry": 7,
+      "ministry": 11,
       "extra_info": "Groot digitalisering project voor Ministerie van Economische Zaken en Klimaat met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16515,7 +16291,7 @@
       "end_date": "2026-07-31",
       "status": "LOPEND",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 7,
       "extra_info": "Groot digitalisering project voor Belastingdienst met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16541,7 +16317,7 @@
       "end_date": "2026-01-31",
       "status": "LOPEND",
       "organization": "Ministerie van Defensie",
-      "ministry": 6,
+      "ministry": 10,
       "extra_info": "Groot digitalisering project voor Ministerie van Defensie met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16567,7 +16343,7 @@
       "end_date": "2025-12-31",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 2,
       "extra_info": "Groot digitalisering project voor Ministerie van Volksgezondheid, Welzijn en Sport met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16593,7 +16369,7 @@
       "end_date": "2026-03-31",
       "status": "LOPEND",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 7,
       "extra_info": "Groot digitalisering project voor Ministerie van Financi\u00ebn met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16619,7 +16395,7 @@
       "end_date": "2026-04-30",
       "status": "LOPEND",
       "organization": "Dienst Uitvoering Onderwijs",
-      "ministry": 20,
+      "ministry": 7,
       "extra_info": "Groot digitalisering project voor Dienst Uitvoering Onderwijs met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16645,7 +16421,7 @@
       "end_date": "2027-01-31",
       "status": "LOPEND",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 10,
       "extra_info": "Groot digitalisering project voor Ministerie van Financi\u00ebn met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16671,7 +16447,7 @@
       "end_date": "2026-05-31",
       "status": "LOPEND",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 8,
       "extra_info": "Groot digitalisering project voor Logius met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16769,7 +16545,7 @@
       "end_date": "2026-06-30",
       "status": "LOPEND",
       "organization": "Ministerie van Economische Zaken en Klimaat",
-      "ministry": 7,
+      "ministry": 9,
       "extra_info": "Groot digitalisering project voor Ministerie van Economische Zaken en Klimaat met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16795,7 +16571,7 @@
       "end_date": "2026-02-28",
       "status": "LOPEND",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 5,
       "extra_info": "Groot digitalisering project voor Ministerie van Financi\u00ebn met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16821,7 +16597,7 @@
       "end_date": "2026-06-30",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 9,
       "extra_info": "Groot digitalisering project voor Ministerie van Binnenlandse Zaken en Koninkrijksrelaties met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16847,7 +16623,7 @@
       "end_date": "2025-11-30",
       "status": "LOPEND",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 14,
       "extra_info": "Groot digitalisering project voor Ministerie van Financi\u00ebn met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16873,7 +16649,7 @@
       "end_date": "2026-05-31",
       "status": "LOPEND",
       "organization": "Ministerie van Defensie",
-      "ministry": 6,
+      "ministry": 1,
       "extra_info": "Groot digitalisering project voor Ministerie van Defensie met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16971,7 +16747,7 @@
       "end_date": "2026-05-31",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 11,
       "extra_info": "Groot digitalisering project voor Ministerie van Binnenlandse Zaken en Koninkrijksrelaties met focus op moderne technologie en gebruikservaring",
       "assignment_type": "GROUP"
     }
@@ -16997,7 +16773,7 @@
       "end_date": "2026-10-31",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 12,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17023,7 +16799,7 @@
       "end_date": "2026-10-31",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 2,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17049,7 +16825,7 @@
       "end_date": "2026-07-31",
       "status": "LEAD",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 11,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17063,7 +16839,7 @@
       "end_date": "2026-01-31",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 15,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17089,7 +16865,7 @@
       "end_date": "2026-05-31",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 9,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17115,7 +16891,7 @@
       "end_date": "2026-03-31",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 13,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17141,7 +16917,7 @@
       "end_date": "2025-12-31",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 5,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17167,7 +16943,7 @@
       "end_date": "2027-02-28",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 13,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17193,7 +16969,7 @@
       "end_date": "2026-03-31",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 11,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17219,7 +16995,7 @@
       "end_date": "2025-07-31",
       "status": "HISTORISCH",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 6,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17245,7 +17021,7 @@
       "end_date": "2025-12-31",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 2,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17271,7 +17047,7 @@
       "end_date": "2025-09-30",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 5,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17297,7 +17073,7 @@
       "end_date": "2026-06-30",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17409,7 +17185,7 @@
       "end_date": "2026-06-30",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 8,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17435,7 +17211,7 @@
       "end_date": "2026-09-30",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 1,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17461,7 +17237,7 @@
       "end_date": "2026-10-31",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 12,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17487,7 +17263,7 @@
       "end_date": "2025-11-30",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 15,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17513,7 +17289,7 @@
       "end_date": "2026-03-31",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 12,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17539,7 +17315,7 @@
       "end_date": "2026-06-30",
       "status": "LOPEND",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 5,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17565,7 +17341,7 @@
       "end_date": "2027-07-31",
       "status": "LEAD",
       "organization": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "ministry": 3,
+      "ministry": 9,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "assignment_type": "GROUP"
     }
@@ -17579,7 +17355,7 @@
       "end_date": "2027-01-31",
       "status": "LEAD",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 13,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
       "assignment_type": "GROUP"
     }
@@ -17593,7 +17369,7 @@
       "end_date": "2026-04-30",
       "status": "LOPEND",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
       "assignment_type": "GROUP"
     }
@@ -17715,7 +17491,7 @@
       "end_date": "2025-09-30",
       "status": "LOPEND",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 9,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
       "assignment_type": "GROUP"
     }
@@ -17741,7 +17517,7 @@
       "end_date": "2026-05-31",
       "status": "LOPEND",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 15,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
       "assignment_type": "GROUP"
     }
@@ -17767,7 +17543,7 @@
       "end_date": "2026-04-30",
       "status": "LOPEND",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 2,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
       "assignment_type": "GROUP"
     }
@@ -17829,7 +17605,7 @@
       "end_date": "2025-09-30",
       "status": "LOPEND",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
       "assignment_type": "GROUP"
     }
@@ -17855,7 +17631,7 @@
       "end_date": "2025-07-31",
       "status": "HISTORISCH",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 11,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
       "assignment_type": "GROUP"
     }
@@ -17953,7 +17729,7 @@
       "end_date": "2025-12-31",
       "status": "LOPEND",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 5,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
       "assignment_type": "GROUP"
     }
@@ -17979,7 +17755,7 @@
       "end_date": "2026-08-31",
       "status": "LOPEND",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
       "assignment_type": "GROUP"
     }
@@ -18005,7 +17781,7 @@
       "end_date": "2026-02-28",
       "status": "LEAD",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 11,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
       "assignment_type": "GROUP"
     }
@@ -18019,7 +17795,7 @@
       "end_date": "2026-04-30",
       "status": "LEAD",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 9,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
       "assignment_type": "GROUP"
     }
@@ -18033,7 +17809,7 @@
       "end_date": "2025-12-31",
       "status": "LOPEND",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 10,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
       "assignment_type": "GROUP"
     }
@@ -18071,7 +17847,7 @@
       "end_date": "2026-08-31",
       "status": "LEAD",
       "organization": "Ministerie van Financi\u00ebn",
-      "ministry": 8,
+      "ministry": 4,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
       "assignment_type": "GROUP"
     }
@@ -18085,7 +17861,7 @@
       "end_date": "2026-08-31",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18111,7 +17887,7 @@
       "end_date": "2026-09-30",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 6,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18137,7 +17913,7 @@
       "end_date": "2025-12-31",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 13,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18163,7 +17939,7 @@
       "end_date": "2025-06-30",
       "status": "AFGEWEZEN",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18177,7 +17953,7 @@
       "end_date": "2026-03-31",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 9,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18203,7 +17979,7 @@
       "end_date": "2026-02-28",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 13,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18229,7 +18005,7 @@
       "end_date": "2026-01-31",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 15,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18255,7 +18031,7 @@
       "end_date": "2026-04-30",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 9,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18281,7 +18057,7 @@
       "end_date": "2025-12-31",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 15,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18307,7 +18083,7 @@
       "end_date": "2027-01-31",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 1,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18333,7 +18109,7 @@
       "end_date": "2026-05-31",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 10,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18371,7 +18147,7 @@
       "end_date": "2025-10-31",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 6,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18397,7 +18173,7 @@
       "end_date": "2026-02-28",
       "status": "LEAD",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 8,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18411,7 +18187,7 @@
       "end_date": "2026-04-30",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 1,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18473,7 +18249,7 @@
       "end_date": "2026-06-30",
       "status": "LOPEND",
       "organization": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "ministry": 11,
+      "ministry": 2,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
       "assignment_type": "GROUP"
     }
@@ -18499,7 +18275,7 @@
       "end_date": "2026-06-30",
       "status": "LOPEND",
       "organization": "Ministerie van Defensie",
-      "ministry": 6,
+      "ministry": 15,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Defensie",
       "assignment_type": "GROUP"
     }
@@ -18551,7 +18327,7 @@
       "end_date": "2025-12-31",
       "status": "LOPEND",
       "organization": "Ministerie van Defensie",
-      "ministry": 6,
+      "ministry": 15,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Defensie",
       "assignment_type": "GROUP"
     }
@@ -18577,7 +18353,7 @@
       "end_date": "2026-04-30",
       "status": "LEAD",
       "organization": "Ministerie van Defensie",
-      "ministry": 6,
+      "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Defensie",
       "assignment_type": "GROUP"
     }
@@ -18591,7 +18367,7 @@
       "end_date": "2026-08-31",
       "status": "LOPEND",
       "organization": "Ministerie van Defensie",
-      "ministry": 6,
+      "ministry": 13,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Defensie",
       "assignment_type": "GROUP"
     }
@@ -18617,7 +18393,7 @@
       "end_date": "2026-09-30",
       "status": "LOPEND",
       "organization": "Ministerie van Defensie",
-      "ministry": 6,
+      "ministry": 5,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Defensie",
       "assignment_type": "GROUP"
     }
@@ -18643,7 +18419,7 @@
       "end_date": "2026-10-31",
       "status": "LEAD",
       "organization": "Ministerie van Defensie",
-      "ministry": 6,
+      "ministry": 4,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Defensie",
       "assignment_type": "GROUP"
     }
@@ -18657,7 +18433,7 @@
       "end_date": "2026-08-31",
       "status": "LOPEND",
       "organization": "Ministerie van Economische Zaken en Klimaat",
-      "ministry": 7,
+      "ministry": 1,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
       "assignment_type": "GROUP"
     }
@@ -18683,7 +18459,7 @@
       "end_date": "2026-04-30",
       "status": "LOPEND",
       "organization": "Ministerie van Economische Zaken en Klimaat",
-      "ministry": 7,
+      "ministry": 4,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
       "assignment_type": "GROUP"
     }
@@ -18709,7 +18485,7 @@
       "end_date": "2026-04-30",
       "status": "LOPEND",
       "organization": "Ministerie van Economische Zaken en Klimaat",
-      "ministry": 7,
+      "ministry": 15,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
       "assignment_type": "GROUP"
     }
@@ -18735,7 +18511,7 @@
       "end_date": "2026-02-28",
       "status": "LEAD",
       "organization": "Ministerie van Economische Zaken en Klimaat",
-      "ministry": 7,
+      "ministry": 10,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
       "assignment_type": "GROUP"
     }
@@ -18749,7 +18525,7 @@
       "end_date": "2026-02-28",
       "status": "LEAD",
       "organization": "Ministerie van Economische Zaken en Klimaat",
-      "ministry": 7,
+      "ministry": 2,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
       "assignment_type": "GROUP"
     }
@@ -18763,7 +18539,7 @@
       "end_date": "2026-09-30",
       "status": "LOPEND",
       "organization": "Ministerie van Economische Zaken en Klimaat",
-      "ministry": 7,
+      "ministry": 2,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
       "assignment_type": "GROUP"
     }
@@ -18825,7 +18601,7 @@
       "end_date": "2025-12-31",
       "status": "LOPEND",
       "organization": "Ministerie van Economische Zaken en Klimaat",
-      "ministry": 7,
+      "ministry": 12,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
       "assignment_type": "GROUP"
     }
@@ -18851,7 +18627,7 @@
       "end_date": "2027-05-31",
       "status": "LOPEND",
       "organization": "Ministerie van Economische Zaken en Klimaat",
-      "ministry": 7,
+      "ministry": 8,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
       "assignment_type": "GROUP"
     }
@@ -18877,7 +18653,7 @@
       "end_date": "2026-01-31",
       "status": "LOPEND",
       "organization": "Ministerie van Economische Zaken en Klimaat",
-      "ministry": 7,
+      "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
       "assignment_type": "GROUP"
     }
@@ -18903,7 +18679,7 @@
       "end_date": "2025-10-31",
       "status": "LOPEND",
       "organization": "Ministerie van Economische Zaken en Klimaat",
-      "ministry": 7,
+      "ministry": 2,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
       "assignment_type": "GROUP"
     }
@@ -18929,7 +18705,7 @@
       "end_date": "2025-07-31",
       "status": "HISTORISCH",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 13,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -18955,7 +18731,7 @@
       "end_date": "2025-12-31",
       "status": "LOPEND",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 9,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -18981,7 +18757,7 @@
       "end_date": "2026-05-31",
       "status": "LOPEND",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 13,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -19007,7 +18783,7 @@
       "end_date": "2026-10-31",
       "status": "LEAD",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -19021,7 +18797,7 @@
       "end_date": "2025-12-31",
       "status": "LEAD",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -19035,7 +18811,7 @@
       "end_date": "2025-06-30",
       "status": "HISTORISCH",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 11,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -19061,7 +18837,7 @@
       "end_date": "2025-12-31",
       "status": "LOPEND",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 8,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -19087,7 +18863,7 @@
       "end_date": "2026-05-31",
       "status": "LEAD",
       "organization": "Belastingdienst",
-      "ministry": 21,
+      "ministry": 9,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
       "assignment_type": "GROUP"
     }
@@ -19101,7 +18877,7 @@
       "end_date": "2025-07-31",
       "status": "HISTORISCH",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
       "assignment_type": "GROUP"
     }
@@ -19127,7 +18903,7 @@
       "end_date": "2026-04-30",
       "status": "LOPEND",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 5,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
       "assignment_type": "GROUP"
     }
@@ -19153,7 +18929,7 @@
       "end_date": "2026-07-31",
       "status": "LEAD",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 9,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
       "assignment_type": "GROUP"
     }
@@ -19167,7 +18943,7 @@
       "end_date": "2026-03-31",
       "status": "LOPEND",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
       "assignment_type": "GROUP"
     }
@@ -19193,7 +18969,7 @@
       "end_date": "2025-07-31",
       "status": "AFGEWEZEN",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 10,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
       "assignment_type": "GROUP"
     }
@@ -19207,7 +18983,7 @@
       "end_date": "2026-08-31",
       "status": "LOPEND",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
       "assignment_type": "GROUP"
     }
@@ -19233,7 +19009,7 @@
       "end_date": "2026-12-31",
       "status": "LOPEND",
       "organization": "Logius",
-      "ministry": 19,
+      "ministry": 4,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
       "assignment_type": "GROUP"
     }
@@ -20490,6 +20266,126 @@
       "service": 21,
       "colleague": 9,
       "hours_per_week": 24
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 1,
+    "fields": {
+      "name": "Algemene Zaken",
+      "abbreviation": "AZ"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 2,
+    "fields": {
+      "name": "Asiel en Migratie",
+      "abbreviation": "AenM"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 3,
+    "fields": {
+      "name": "Binnenlandse Zaken en Koninkrijksrelaties",
+      "abbreviation": "BZK"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 4,
+    "fields": {
+      "name": "Buitenlandse Zaken",
+      "abbreviation": "BZ"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 5,
+    "fields": {
+      "name": "Defensie",
+      "abbreviation": "Def"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 6,
+    "fields": {
+      "name": "Economische Zaken",
+      "abbreviation": "EZ"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 7,
+    "fields": {
+      "name": "Financi\u00ebn",
+      "abbreviation": "Fin"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 8,
+    "fields": {
+      "name": "Infrastructuur en Waterstaat",
+      "abbreviation": "IenW"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 9,
+    "fields": {
+      "name": "Justitie en Veiligheid",
+      "abbreviation": "JenV"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 10,
+    "fields": {
+      "name": "Klimaat en Groene Groei",
+      "abbreviation": "KGG"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 11,
+    "fields": {
+      "name": "Landbouw, Visserij, Voedselzekerheid en Natuur",
+      "abbreviation": "LVVN"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 12,
+    "fields": {
+      "name": "Onderwijs, Cultuur en Wetenschap",
+      "abbreviation": "OCW"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 13,
+    "fields": {
+      "name": "Sociale Zaken en Werkgelegenheid",
+      "abbreviation": "SZW"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 14,
+    "fields": {
+      "name": "Volksgezondheid, Welzijn en Sport",
+      "abbreviation": "VWS"
+    }
+  },
+  {
+    "model": "projects.ministry",
+    "pk": 15,
+    "fields": {
+      "name": "Volkshuisvesting en Ruimtelijke Ordening",
+      "abbreviation": "VRO"
     }
   }
 ]
