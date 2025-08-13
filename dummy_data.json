@@ -20272,7 +20272,7 @@
     "model": "projects.ministry",
     "pk": 1,
     "fields": {
-      "name": "Algemene Zaken",
+      "name": "Ministerie van Algemene Zaken",
       "abbreviation": "AZ"
     }
   },
@@ -20280,7 +20280,7 @@
     "model": "projects.ministry",
     "pk": 2,
     "fields": {
-      "name": "Asiel en Migratie",
+      "name": "Ministerie van Asiel en Migratie",
       "abbreviation": "AenM"
     }
   },
@@ -20288,7 +20288,7 @@
     "model": "projects.ministry",
     "pk": 3,
     "fields": {
-      "name": "Binnenlandse Zaken en Koninkrijksrelaties",
+      "name": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "abbreviation": "BZK"
     }
   },
@@ -20296,7 +20296,7 @@
     "model": "projects.ministry",
     "pk": 4,
     "fields": {
-      "name": "Buitenlandse Zaken",
+      "name": "Ministerie van Buitenlandse Zaken",
       "abbreviation": "BZ"
     }
   },
@@ -20304,7 +20304,7 @@
     "model": "projects.ministry",
     "pk": 5,
     "fields": {
-      "name": "Defensie",
+      "name": "Ministerie van Defensie",
       "abbreviation": "Def"
     }
   },
@@ -20312,7 +20312,7 @@
     "model": "projects.ministry",
     "pk": 6,
     "fields": {
-      "name": "Economische Zaken",
+      "name": "Ministerie van Economische Zaken",
       "abbreviation": "EZ"
     }
   },
@@ -20320,7 +20320,7 @@
     "model": "projects.ministry",
     "pk": 7,
     "fields": {
-      "name": "Financi\u00ebn",
+      "name": "Ministerie van Financi\u00ebn",
       "abbreviation": "Fin"
     }
   },
@@ -20328,7 +20328,7 @@
     "model": "projects.ministry",
     "pk": 8,
     "fields": {
-      "name": "Infrastructuur en Waterstaat",
+      "name": "Ministerie van Infrastructuur en Waterstaat",
       "abbreviation": "IenW"
     }
   },
@@ -20336,7 +20336,7 @@
     "model": "projects.ministry",
     "pk": 9,
     "fields": {
-      "name": "Justitie en Veiligheid",
+      "name": "Ministerie van Justitie en Veiligheid",
       "abbreviation": "JenV"
     }
   },
@@ -20344,7 +20344,7 @@
     "model": "projects.ministry",
     "pk": 10,
     "fields": {
-      "name": "Klimaat en Groene Groei",
+      "name": "Ministerie van Klimaat en Groene Groei",
       "abbreviation": "KGG"
     }
   },
@@ -20352,7 +20352,7 @@
     "model": "projects.ministry",
     "pk": 11,
     "fields": {
-      "name": "Landbouw, Visserij, Voedselzekerheid en Natuur",
+      "name": "Ministerie van Landbouw, Visserij, Voedselzekerheid en Natuur",
       "abbreviation": "LVVN"
     }
   },
@@ -20360,7 +20360,7 @@
     "model": "projects.ministry",
     "pk": 12,
     "fields": {
-      "name": "Onderwijs, Cultuur en Wetenschap",
+      "name": "Ministerie van Onderwijs, Cultuur en Wetenschap",
       "abbreviation": "OCW"
     }
   },
@@ -20368,7 +20368,7 @@
     "model": "projects.ministry",
     "pk": 13,
     "fields": {
-      "name": "Sociale Zaken en Werkgelegenheid",
+      "name": "Ministerie van Sociale Zaken en Werkgelegenheid",
       "abbreviation": "SZW"
     }
   },
@@ -20376,7 +20376,7 @@
     "model": "projects.ministry",
     "pk": 14,
     "fields": {
-      "name": "Volksgezondheid, Welzijn en Sport",
+      "name": "Ministerie van Volksgezondheid, Welzijn en Sport",
       "abbreviation": "VWS"
     }
   },
@@ -20384,7 +20384,7 @@
     "model": "projects.ministry",
     "pk": 15,
     "fields": {
-      "name": "Volkshuisvesting en Ruimtelijke Ordening",
+      "name": "Ministerie van Volkshuisvesting en Ruimtelijke Ordening",
       "abbreviation": "VRO"
     }
   }
