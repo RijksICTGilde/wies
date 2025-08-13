@@ -34,7 +34,7 @@ from authlib.integrations.django_client import OAuth
 
 oauth = OAuth()
 oauth.register(
-    name='google',  # TODO: change into keycloak?
+    name='oidc',
     server_metadata_url=settings.OIDC_DISCOVERY_URL,
     client_id=settings.OIDC_CLIENT_ID,
     client_secret=settings.OIDC_CLIENT_SECRET,
@@ -50,17 +50,18 @@ def login(request):
     elif request.method == 'POST':
         # Handle login action
         redirect_uri = request.build_absolute_uri(reverse_lazy('auth'))
-        return oauth.google.authorize_redirect(request, redirect_uri)
+        return oauth.oidc.authorize_redirect(request, redirect_uri)
 
 
-def auth(request):  # TODO: is the name 'auth' required by google somehow?
-    oidc_response = oauth.google.authorize_access_token(request)
+def auth(request):
+    oidc_response = oauth.oidc.authorize_access_token(request)
     username = oidc_response['userinfo']['sub']
     first_name = oidc_response['userinfo']['given_name']
     last_name = oidc_response['userinfo']['family_name']
     email = oidc_response['userinfo']['email']
     user = auth_authenticate(request, 
-                             username=username, 
+                             username=username,
+                             email=email,
                              extra_fields={
                                  'first_name': first_name,
                                  'last_name': last_name
