@@ -12100,7 +12100,7 @@
     "model": "projects.assignment",
     "pk": 33,
     "fields": {
-      "name": "CBS Integration Platform - Uitbreiding",
+      "name": "Bolivian Data Protection Law",
       "start_date": "2024-12-01",
       "end_date": "2025-08-31",
       "status": "HISTORISCH",
@@ -12170,7 +12170,7 @@
     "model": "projects.assignment",
     "pk": 38,
     "fields": {
-      "name": "Belastingdienst Reporting Tool - Vervolg",
+      "name": "Cloud Migration Strategy Implementation",
       "start_date": "2026-02-01",
       "end_date": "2026-10-31",
       "status": "LEAD",
@@ -12380,7 +12380,7 @@
     "model": "projects.assignment",
     "pk": 53,
     "fields": {
-      "name": "Uitvoeringsinstituut Werknemersverzekeringen Portal Vernieuwing - Vervolg",
+      "name": "Knowledge Management System",
       "start_date": "2024-06-01",
       "end_date": "2025-02-28",
       "status": "HISTORISCH",
@@ -12492,7 +12492,7 @@
     "model": "projects.assignment",
     "pk": 61,
     "fields": {
-      "name": "Rijksdienst voor het Cultureel Erfgoed BI Dashboard - Vervolg",
+      "name": "Niuean Data Protection Law",
       "start_date": "2023-08-01",
       "end_date": "2024-12-31",
       "status": "OPEN",
@@ -12548,7 +12548,7 @@
     "model": "projects.assignment",
     "pk": 65,
     "fields": {
-      "name": "NVWA Proces Optimalisatie - Vervolg",
+      "name": "Performance Analytics",
       "start_date": "2023-10-01",
       "end_date": "2024-06-30",
       "status": "LOPEND",
@@ -12632,7 +12632,7 @@
     "model": "projects.assignment",
     "pk": 71,
     "fields": {
-      "name": "BD Workflow Verbetering - Vervolg",
+      "name": "Performance Optimization Project",
       "start_date": "2023-07-01",
       "end_date": "2025-02-28",
       "status": "HISTORISCH",
@@ -12660,7 +12660,7 @@
     "model": "projects.assignment",
     "pk": 73,
     "fields": {
-      "name": "Nationaal Archief Analytics Suite - Vervolg",
+      "name": "Application Performance Analytics",
       "start_date": "2025-09-01",
       "end_date": "2026-09-30",
       "status": "LEAD",
@@ -12758,7 +12758,7 @@
     "model": "projects.assignment",
     "pk": 80,
     "fields": {
-      "name": "SVB API Gateway - Plus",
+      "name": "Artificial Intelligence Integration",
       "start_date": "2025-08-01",
       "end_date": "2026-10-31",
       "status": "LEAD",
@@ -12786,7 +12786,7 @@
     "model": "projects.assignment",
     "pk": 82,
     "fields": {
-      "name": "RvIG Security Review - Vervolg",
+      "name": "Greek Data Protection Law",
       "start_date": "2024-07-01",
       "end_date": "2025-10-31",
       "status": "LOPEND",
@@ -12828,7 +12828,7 @@
     "model": "projects.assignment",
     "pk": 85,
     "fields": {
-      "name": "SVB API Gateway - Vervolg",
+      "name": "Asset Lifecycle Management",
       "start_date": "2023-05-01",
       "end_date": "2024-04-30",
       "status": "HISTORISCH",
@@ -12926,7 +12926,7 @@
     "model": "projects.assignment",
     "pk": 92,
     "fields": {
-      "name": "RvIG Integration Platform - Uitbreiding",
+      "name": "LGPD Compliance System",
       "start_date": "2025-10-01",
       "end_date": "2026-12-31",
       "status": "LEAD",
@@ -12982,7 +12982,7 @@
     "model": "projects.assignment",
     "pk": 96,
     "fields": {
-      "name": "RvIG Security Review - Plus",
+      "name": "Argentina Personal Data Law",
       "start_date": "2025-10-01",
       "end_date": "2027-04-30",
       "status": "AFGEWEZEN",
@@ -12996,7 +12996,7 @@
     "model": "projects.assignment",
     "pk": 97,
     "fields": {
-      "name": "BD Security Assessment - Vervolg",
+      "name": "Market Risk Analysis",
       "start_date": "2023-06-01",
       "end_date": "2024-04-30",
       "status": "HISTORISCH",
@@ -13038,7 +13038,7 @@
     "model": "projects.assignment",
     "pk": 100,
     "fields": {
-      "name": "CBS API Gateway - Vervolg",
+      "name": "New Caledonian Data Protection Law",
       "start_date": "2023-12-01",
       "end_date": "2024-09-30",
       "status": "LOPEND",
@@ -13066,7 +13066,7 @@
     "model": "projects.assignment",
     "pk": 102,
     "fields": {
-      "name": "Dienst Uitvoering Onderwijs Portal App - Vervolg",
+      "name": "Swiss Data Protection Law",
       "start_date": "2025-08-01",
       "end_date": "2027-01-31",
       "status": "LEAD",
@@ -13136,7 +13136,7 @@
     "model": "projects.assignment",
     "pk": 107,
     "fields": {
-      "name": "DigiD Modernisering - Vervolg",
+      "name": "South Korean Data Protection Law",
       "start_date": "2024-02-01",
       "end_date": "2025-03-31",
       "status": "LOPEND",
@@ -13192,7 +13192,7 @@
     "model": "projects.assignment",
     "pk": 111,
     "fields": {
-      "name": "RvIG Workflow Verbetering - Vervolg",
+      "name": "El Salvadoran Data Protection Law",
       "start_date": "2024-03-01",
       "end_date": "2025-09-30",
       "status": "LOPEND",
@@ -13234,7 +13234,7 @@
     "model": "projects.assignment",
     "pk": 114,
     "fields": {
-      "name": "DUO Digitalisering - Vervolg",
+      "name": "North Korean Data Protection Law",
       "start_date": "2024-10-01",
       "end_date": "2025-07-31",
       "status": "AFGEWEZEN",
@@ -13248,7 +13248,7 @@
     "model": "projects.assignment",
     "pk": 115,
     "fields": {
-      "name": "UWV Service Layer - Vervolg",
+      "name": "Belarusian Data Protection Law",
       "start_date": "2023-09-01",
       "end_date": "2025-01-31",
       "status": "LOPEND",
@@ -13416,7 +13416,7 @@
     "model": "projects.assignment",
     "pk": 127,
     "fields": {
-      "name": "Rijksdienst voor het Cultureel Erfgoed Portal Ontwikkeling - Plus",
+      "name": "Log Management System",
       "start_date": "2023-06-01",
       "end_date": "2024-11-30",
       "status": "LOPEND",
@@ -13444,7 +13444,7 @@
     "model": "projects.assignment",
     "pk": 129,
     "fields": {
-      "name": "Logius Portal Modernisering - Vervolg",
+      "name": "Privacy Impact Assessment",
       "start_date": "2026-01-01",
       "end_date": "2026-09-30",
       "status": "LEAD",
@@ -13458,7 +13458,7 @@
     "model": "projects.assignment",
     "pk": 130,
     "fields": {
-      "name": "Belastingdienst Cloud-first Transitie - Vervolg",
+      "name": "Revenue Management Platform",
       "start_date": "2025-10-01",
       "end_date": "2026-07-31",
       "status": "LEAD",
@@ -13486,7 +13486,7 @@
     "model": "projects.assignment",
     "pk": 132,
     "fields": {
-      "name": "Centraal Bureau voor de Statistiek Cloud-first Transitie - Vervolg",
+      "name": "Irish Data Protection Law",
       "start_date": "2025-11-01",
       "end_date": "2026-11-30",
       "status": "LEAD",
@@ -13514,7 +13514,7 @@
     "model": "projects.assignment",
     "pk": 134,
     "fields": {
-      "name": "Logius Portal Ontwikkeling - Plus",
+      "name": "Micronesian Data Protection Law",
       "start_date": "2023-05-01",
       "end_date": "2024-10-31",
       "status": "HISTORISCH",
@@ -13528,7 +13528,7 @@
     "model": "projects.assignment",
     "pk": 135,
     "fields": {
-      "name": "DigiD Uitbreiding",
+      "name": "Portuguese Data Protection Law",
       "start_date": "2023-02-01",
       "end_date": "2024-03-31",
       "status": "HISTORISCH",
@@ -13654,7 +13654,7 @@
     "model": "projects.assignment",
     "pk": 144,
     "fields": {
-      "name": "Uitvoeringsinstituut Werknemersverzekeringen AWS Project - Vervolg",
+      "name": "Cayman Islands Data Protection Law",
       "start_date": "2025-10-01",
       "end_date": "2026-10-31",
       "status": "LEAD",
@@ -13696,7 +13696,7 @@
     "model": "projects.assignment",
     "pk": 147,
     "fields": {
-      "name": "Rijksdienst voor het Cultureel Erfgoed Portal Ontwikkeling - Doorontwikkeling",
+      "name": "Kanban Board Development",
       "start_date": "2023-04-01",
       "end_date": "2024-03-31",
       "status": "HISTORISCH",
@@ -13710,7 +13710,7 @@
     "model": "projects.assignment",
     "pk": 148,
     "fields": {
-      "name": "Logius Portal Ontwikkeling - Doorontwikkeling",
+      "name": "Financial Analytics System",
       "start_date": "2023-04-01",
       "end_date": "2024-02-29",
       "status": "LOPEND",
@@ -13752,7 +13752,7 @@
     "model": "projects.assignment",
     "pk": 151,
     "fields": {
-      "name": "Rijksdienst voor Identiteitsgegevens Portal Vernieuwing - Vervolg",
+      "name": "Latvian Data Protection Law",
       "start_date": "2024-02-01",
       "end_date": "2025-02-28",
       "status": "LOPEND",
@@ -13878,7 +13878,7 @@
     "model": "projects.assignment",
     "pk": 160,
     "fields": {
-      "name": "BD Security Assessment - Plus",
+      "name": "Governance Risk Management",
       "start_date": "2025-01-01",
       "end_date": "2026-07-31",
       "status": "HISTORISCH",
@@ -21008,7 +21008,7 @@
     "model": "projects.assignment",
     "pk": 185,
     "fields": {
-      "name": "FIN Zero Trust Security Implementation - Vervolg",
+      "name": "Canadian Privacy Legislation",
       "start_date": "2025-09-01",
       "end_date": "2027-01-31",
       "status": "LOPEND",
@@ -21400,7 +21400,7 @@
     "model": "projects.assignment",
     "pk": 189,
     "fields": {
-      "name": "BZK Cybersecurity Infrastructure Upgrade - Vervolg",
+      "name": "Honduran Data Protection Law",
       "start_date": "2025-10-01",
       "end_date": "2026-06-30",
       "status": "LOPEND",
@@ -21842,7 +21842,7 @@
     "model": "projects.assignment",
     "pk": 194,
     "fields": {
-      "name": "BZK Open Data Platform - Uitbreiding",
+      "name": "Fraud Detection System",
       "start_date": "2025-09-01",
       "end_date": "2026-10-31",
       "status": "LOPEND",
@@ -21904,7 +21904,7 @@
     "model": "projects.assignment",
     "pk": 195,
     "fields": {
-      "name": "BZK Digital Transformation Office - Vervolg",
+      "name": "Phishing Simulation Framework",
       "start_date": "2025-10-01",
       "end_date": "2026-07-31",
       "status": "OPEN",
@@ -22892,7 +22892,7 @@
     "model": "projects.assignment",
     "pk": 209,
     "fields": {
-      "name": "BZK Smart City Infrastructure - Vervolg",
+      "name": "UK Data Protection Law",
       "start_date": "2025-11-01",
       "end_date": "2026-10-31",
       "status": "LOPEND",
@@ -23076,7 +23076,7 @@
     "model": "projects.assignment",
     "pk": 211,
     "fields": {
-      "name": "BZK AI Ethics Committee - Plus",
+      "name": "Digital Certificate Management",
       "start_date": "2025-08-01",
       "end_date": "2026-03-31",
       "status": "LOPEND",
@@ -23186,7 +23186,7 @@
     "model": "projects.assignment",
     "pk": 212,
     "fields": {
-      "name": "BZK Digital Inclusion Program - Vervolg",
+      "name": "Scalability Enhancement",
       "start_date": "2025-09-01",
       "end_date": "2026-06-30",
       "status": "LOPEND",
@@ -23272,7 +23272,7 @@
     "model": "projects.assignment",
     "pk": 213,
     "fields": {
-      "name": "BZK AI Ethics Committee - Vervolg",
+      "name": "Supply Chain Management System",
       "start_date": "2025-10-01",
       "end_date": "2027-07-31",
       "status": "OPEN",
@@ -23286,7 +23286,7 @@
     "model": "projects.assignment",
     "pk": 214,
     "fields": {
-      "name": "FIN Digital Service Standards - Vervolg",
+      "name": "Malaysian Data Protection Law",
       "start_date": "2025-08-01",
       "end_date": "2027-01-31",
       "status": "LEAD",
@@ -23422,7 +23422,7 @@
     "model": "projects.assignment",
     "pk": 216,
     "fields": {
-      "name": "FIN E-Government Modernization - Vervolg",
+      "name": "Database Security Hardening",
       "start_date": "2025-01-01",
       "end_date": "2025-09-30",
       "status": "LOPEND",
@@ -24298,7 +24298,7 @@
     "model": "projects.assignment",
     "pk": 228,
     "fields": {
-      "name": "VWS Digital Service Standards - Vervolg",
+      "name": "FERPA Compliance System",
       "start_date": "2025-10-01",
       "end_date": "2026-09-30",
       "status": "LOPEND",
@@ -24460,7 +24460,7 @@
     "model": "projects.assignment",
     "pk": 231,
     "fields": {
-      "name": "VWS Digital Privacy Center - Vervolg",
+      "name": "Supply Planning Platform",
       "start_date": "2025-02-01",
       "end_date": "2026-03-31",
       "status": "LOPEND",
@@ -24938,7 +24938,7 @@
     "model": "projects.assignment",
     "pk": 236,
     "fields": {
-      "name": "VWS Citizen Digital Services - Vervolg",
+      "name": "German Data Protection Law",
       "start_date": "2025-11-01",
       "end_date": "2027-01-31",
       "status": "LOPEND",
@@ -26000,7 +26000,7 @@
     "model": "projects.assignment",
     "pk": 251,
     "fields": {
-      "name": "EZK Innovation Lab Setup - Fase 2",
+      "name": "Indonesian Data Protection Law",
       "start_date": "2025-08-01",
       "end_date": "2026-04-30",
       "status": "LOPEND",
