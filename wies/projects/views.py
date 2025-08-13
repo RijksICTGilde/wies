@@ -42,11 +42,6 @@ oauth.register(
 )
 
 
-def home(request):
-    """Redirect to placements table page as default landing page"""
-    return redirect('/placements/table/')
-
-
 def login(request):
     """Display login page or handle login action"""
     if request.method == 'GET':
@@ -72,7 +67,7 @@ def auth(request):  # TODO: is the name 'auth' required by google somehow?
     )
     if user:
         auth_login(request, user)
-        return redirect(request.build_absolute_uri(reverse("home")))
+        return redirect(request.build_absolute_uri(reverse("dashboard")))
     return HttpResponse(status=400)
 
 
