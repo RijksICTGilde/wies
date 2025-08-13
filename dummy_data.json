@@ -20155,11 +20155,8 @@
     "pk": 1007,
     "fields": {
       "assignment": 266,
-      "name": "Consultancy",
-      "description": "Consultancy dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Consultancy",
+      "hours_per_week": 24
     }
   },
   {
@@ -20167,11 +20164,8 @@
     "pk": 1008,
     "fields": {
       "assignment": 266,
-      "name": "Systeembeheer",
-      "description": "Systeembeheer dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Systeembeheer",
+      "hours_per_week": 24
     }
   },
   {
@@ -20179,11 +20173,8 @@
     "pk": 1009,
     "fields": {
       "assignment": 16,
-      "name": "API Management",
-      "description": "API Management dienst voor deze opdracht",
-      "hours_per_week": 8,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "API Management",
+      "hours_per_week": 8
     }
   },
   {
@@ -20191,11 +20182,8 @@
     "pk": 1010,
     "fields": {
       "assignment": 80,
-      "name": "Systeembeheer",
-      "description": "Systeembeheer dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Systeembeheer",
+      "hours_per_week": 24
     }
   },
   {
@@ -20203,11 +20191,8 @@
     "pk": 1011,
     "fields": {
       "assignment": 38,
-      "name": "Performance Monitoring",
-      "description": "Performance Monitoring dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Performance Monitoring",
+      "hours_per_week": 24
     }
   },
   {
@@ -20215,11 +20200,8 @@
     "pk": 1012,
     "fields": {
       "assignment": 38,
-      "name": "Systeembeheer",
-      "description": "Systeembeheer dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Systeembeheer",
+      "hours_per_week": 24
     }
   },
   {
@@ -20227,11 +20209,8 @@
     "pk": 1013,
     "fields": {
       "assignment": 130,
-      "name": "Consultancy",
-      "description": "Consultancy dienst voor deze opdracht",
-      "hours_per_week": 16,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Consultancy",
+      "hours_per_week": 16
     }
   },
   {
@@ -20239,11 +20218,8 @@
     "pk": 1014,
     "fields": {
       "assignment": 130,
-      "name": "Systeembeheer",
-      "description": "Systeembeheer dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Systeembeheer",
+      "hours_per_week": 24
     }
   },
   {
@@ -20251,11 +20227,8 @@
     "pk": 1015,
     "fields": {
       "assignment": 3,
-      "name": "Systeembeheer",
-      "description": "Systeembeheer dienst voor deze opdracht",
-      "hours_per_week": 8,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Systeembeheer",
+      "hours_per_week": 8
     }
   },
   {
@@ -20263,11 +20236,8 @@
     "pk": 1016,
     "fields": {
       "assignment": 124,
-      "name": "Consultancy",
-      "description": "Consultancy dienst voor deze opdracht",
-      "hours_per_week": 32,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Consultancy",
+      "hours_per_week": 32
     }
   },
   {
@@ -20275,11 +20245,8 @@
     "pk": 1017,
     "fields": {
       "assignment": 124,
-      "name": "Security Monitoring",
-      "description": "Security Monitoring dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Security Monitoring",
+      "hours_per_week": 24
     }
   },
   {
@@ -20287,11 +20254,8 @@
     "pk": 1018,
     "fields": {
       "assignment": 124,
-      "name": "Cloud Services",
-      "description": "Cloud Services dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Cloud Services",
+      "hours_per_week": 24
     }
   },
   {
@@ -20299,11 +20263,8 @@
     "pk": 1019,
     "fields": {
       "assignment": 132,
-      "name": "DevOps Support",
-      "description": "DevOps Support dienst voor deze opdracht",
-      "hours_per_week": 8,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "DevOps Support",
+      "hours_per_week": 8
     }
   },
   {
@@ -20311,11 +20272,8 @@
     "pk": 1020,
     "fields": {
       "assignment": 132,
-      "name": "Licentiebeheer",
-      "description": "Licentiebeheer dienst voor deze opdracht",
-      "hours_per_week": 16,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Licentiebeheer",
+      "hours_per_week": 16
     }
   },
   {
@@ -20323,11 +20281,8 @@
     "pk": 1021,
     "fields": {
       "assignment": 25,
-      "name": "Database Beheer",
-      "description": "Database Beheer dienst voor deze opdracht",
-      "hours_per_week": 32,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Database Beheer",
+      "hours_per_week": 32
     }
   },
   {
@@ -20335,11 +20290,8 @@
     "pk": 1022,
     "fields": {
       "assignment": 25,
-      "name": "Architectuur Review",
-      "description": "Architectuur Review dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Architectuur Review",
+      "hours_per_week": 24
     }
   },
   {
@@ -20347,11 +20299,8 @@
     "pk": 1023,
     "fields": {
       "assignment": 25,
-      "name": "Consultancy",
-      "description": "Consultancy dienst voor deze opdracht",
-      "hours_per_week": 8,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Consultancy",
+      "hours_per_week": 8
     }
   },
   {
@@ -20359,11 +20308,8 @@
     "pk": 1024,
     "fields": {
       "assignment": 27,
-      "name": "Technical Support",
-      "description": "Technical Support dienst voor deze opdracht",
-      "hours_per_week": 32,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Technical Support",
+      "hours_per_week": 32
     }
   },
   {
@@ -20371,11 +20317,8 @@
     "pk": 1025,
     "fields": {
       "assignment": 27,
-      "name": "Database Beheer",
-      "description": "Database Beheer dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Database Beheer",
+      "hours_per_week": 24
     }
   },
   {
@@ -20383,11 +20326,8 @@
     "pk": 1026,
     "fields": {
       "assignment": 27,
-      "name": "Cloud Services",
-      "description": "Cloud Services dienst voor deze opdracht",
-      "hours_per_week": 32,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Cloud Services",
+      "hours_per_week": 32
     }
   },
   {
@@ -20395,11 +20335,8 @@
     "pk": 1027,
     "fields": {
       "assignment": 144,
-      "name": "Consultancy",
-      "description": "Consultancy dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Consultancy",
+      "hours_per_week": 24
     }
   },
   {
@@ -20407,11 +20344,8 @@
     "pk": 1028,
     "fields": {
       "assignment": 144,
-      "name": "Architectuur Review",
-      "description": "Architectuur Review dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Architectuur Review",
+      "hours_per_week": 24
     }
   },
   {
@@ -20419,11 +20353,8 @@
     "pk": 1029,
     "fields": {
       "assignment": 144,
-      "name": "Technical Support",
-      "description": "Technical Support dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Technical Support",
+      "hours_per_week": 24
     }
   },
   {
@@ -20431,11 +20362,8 @@
     "pk": 1030,
     "fields": {
       "assignment": 2,
-      "name": "Security Monitoring",
-      "description": "Security Monitoring dienst voor deze opdracht",
-      "hours_per_week": 32,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Security Monitoring",
+      "hours_per_week": 32
     }
   },
   {
@@ -20443,11 +20371,8 @@
     "pk": 1031,
     "fields": {
       "assignment": 2,
-      "name": "Architectuur Review",
-      "description": "Architectuur Review dienst voor deze opdracht",
-      "hours_per_week": 16,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Architectuur Review",
+      "hours_per_week": 16
     }
   },
   {
@@ -20455,11 +20380,8 @@
     "pk": 1032,
     "fields": {
       "assignment": 2,
-      "name": "Performance Monitoring",
-      "description": "Performance Monitoring dienst voor deze opdracht",
-      "hours_per_week": 16,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Performance Monitoring",
+      "hours_per_week": 16
     }
   },
   {
@@ -20467,11 +20389,8 @@
     "pk": 1033,
     "fields": {
       "assignment": 214,
-      "name": "Technical Support",
-      "description": "Technical Support dienst voor deze opdracht",
-      "hours_per_week": 8,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Technical Support",
+      "hours_per_week": 8
     }
   },
   {
@@ -20479,11 +20398,8 @@
     "pk": 1034,
     "fields": {
       "assignment": 223,
-      "name": "Training & Workshops",
-      "description": "Training & Workshops dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Training & Workshops",
+      "hours_per_week": 24
     }
   },
   {
@@ -20491,11 +20407,8 @@
     "pk": 1035,
     "fields": {
       "assignment": 223,
-      "name": "Technical Support",
-      "description": "Technical Support dienst voor deze opdracht",
-      "hours_per_week": 32,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Technical Support",
+      "hours_per_week": 32
     }
   },
   {
@@ -20503,11 +20416,8 @@
     "pk": 1036,
     "fields": {
       "assignment": 223,
-      "name": "Consultancy",
-      "description": "Consultancy dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Consultancy",
+      "hours_per_week": 24
     }
   },
   {
@@ -20515,11 +20425,8 @@
     "pk": 1037,
     "fields": {
       "assignment": 248,
-      "name": "Performance Monitoring",
-      "description": "Performance Monitoring dienst voor deze opdracht",
-      "hours_per_week": 16,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Performance Monitoring",
+      "hours_per_week": 16
     }
   },
   {
@@ -20527,11 +20434,8 @@
     "pk": 1038,
     "fields": {
       "assignment": 248,
-      "name": "Technical Support",
-      "description": "Technical Support dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Technical Support",
+      "hours_per_week": 24
     }
   },
   {
@@ -20539,11 +20443,8 @@
     "pk": 1039,
     "fields": {
       "assignment": 103,
-      "name": "Backup & Recovery",
-      "description": "Backup & Recovery dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Backup & Recovery",
+      "hours_per_week": 24
     }
   },
   {
@@ -20551,11 +20452,8 @@
     "pk": 1040,
     "fields": {
       "assignment": 239,
-      "name": "Consultancy",
-      "description": "Consultancy dienst voor deze opdracht",
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Consultancy",
+      "hours_per_week": 24
     }
   },
   {
@@ -20563,11 +20461,8 @@
     "pk": 1041,
     "fields": {
       "assignment": 129,
-      "name": "Backup & Recovery",
-      "description": "Backup & Recovery dienst voor deze opdracht",
-      "hours_per_week": 32,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Backup & Recovery",
+      "hours_per_week": 32
     }
   },
   {
@@ -20575,11 +20470,8 @@
     "pk": 1042,
     "fields": {
       "assignment": 55,
-      "name": "Performance Monitoring",
-      "description": "Performance Monitoring dienst voor deze opdracht",
-      "hours_per_week": 8,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Performance Monitoring",
+      "hours_per_week": 8
     }
   },
   {
@@ -20587,11 +20479,8 @@
     "pk": 1043,
     "fields": {
       "assignment": 119,
-      "name": "Documentatie",
-      "description": "Documentatie dienst voor deze opdracht",
-      "hours_per_week": 32,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "description": "Documentatie",
+      "hours_per_week": 32
     }
   },
   {
@@ -20600,9 +20489,7 @@
     "fields": {
       "service": 21,
       "colleague": 9,
-      "hours_per_week": 24,
-      "start_date": "2025-01-01",
-      "end_date": "2025-12-31"
+      "hours_per_week": 24
     }
   }
 ]
