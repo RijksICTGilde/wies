@@ -10,6 +10,7 @@ setup:
   uv sync  # to enable exploration in dependencies
   npm ci  # for enable exploration in static assets
   cp overwrite_index.css node_modules/@nl-rvo/assets/index.css  # mimick build
+  if [ ! -f .env ]; then cp .env.local.example .env; fi
   docker compose build
   docker compose run --rm django python manage.py dropdb --noinput
   docker compose run --rm django python manage.py migrate

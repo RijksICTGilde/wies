@@ -12,6 +12,7 @@ Interne tool voor overzicht wie, waar, wat, wanneer
 Setting up the system. Can also be used to clean up current state.
 - installs dependencies
 - sets up database from scratch, including source data
+- creates minimal .env file if non-existent
 
 ```
 just setup
