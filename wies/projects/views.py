@@ -12,9 +12,11 @@ from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.mixins import LoginRequiredMixin
+
 from django.contrib.auth import authenticate as auth_authenticate
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
+from django.contrib.auth.decorators import login_not_required
 from django.core import management
 from django.conf import settings
 from django.http import HttpResponse
@@ -42,6 +44,7 @@ oauth.register(
 )
 
 
+@login_not_required  # login page
 def login(request):
     """Display login page or handle login action"""
     if request.method == 'GET':
@@ -52,7 +55,7 @@ def login(request):
         redirect_uri = request.build_absolute_uri(reverse_lazy('auth'))
         return oauth.oidc.authorize_redirect(request, redirect_uri)
 
-
+@login_not_required  # called by oidc
 def auth(request):
     oidc_response = oauth.oidc.authorize_access_token(request)
     username = oidc_response['userinfo']['sub']
@@ -419,7 +422,7 @@ class AssignmentTabsView(ListView):
             return ['assignment_tabs.html']
 
 
-class ColleagueList(LoginRequiredMixin, ListView):
+class ColleagueList(ListView):
     """
     View for colleagues list with filtering capabilities
     
