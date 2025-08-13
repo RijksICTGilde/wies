@@ -3,7 +3,7 @@ This files lists the changes during the lifetime of this project.
 
 ## Current version
 
-## demo-2025-08-18
+## unreleased
 - add dashboard page as landing page with summary cards
 - add summary cards to dashboard, clients and assignment detail pages
 - add clickable table rows with hover states to all dashboard tables
