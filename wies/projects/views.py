@@ -58,6 +58,7 @@ def auth(request):  # TODO: is the name 'auth' required by google somehow?
     username = oidc_response['userinfo']['sub']
     first_name = oidc_response['userinfo']['given_name']
     last_name = oidc_response['userinfo']['family_name']
+    email = oidc_response['userinfo']['email']
     user = auth_authenticate(request, 
                              username=username, 
                              extra_fields={

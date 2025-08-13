@@ -135,4 +135,7 @@ SESSION_COOKIE_AGE = 24 * 60 * 60  # 24h in s
 
 LOGIN_URL = '/login/'
 
-AUTHENTICATION_BACKENDS = ['wies.projects.auth_backend.AuthBackend']
+AUTHENTICATION_BACKENDS = [
+    'wies.projects.auth_backend.AuthBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
