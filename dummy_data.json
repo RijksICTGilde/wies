@@ -19895,7 +19895,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -19907,7 +19907,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -19931,7 +19931,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -19943,7 +19943,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -19955,7 +19955,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -19967,7 +19967,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -20015,7 +20015,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -20113,7 +20113,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -20137,7 +20137,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -20173,7 +20173,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -20307,7 +20307,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -20479,7 +20479,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -20503,7 +20503,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -20539,7 +20539,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -20563,7 +20563,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -20637,7 +20637,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -20661,7 +20661,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -20697,7 +20697,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -20831,7 +20831,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -20929,7 +20929,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -20977,7 +20977,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -21137,7 +21137,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -21185,7 +21185,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -21259,7 +21259,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -21627,7 +21627,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -21651,7 +21651,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -22059,7 +22059,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -23143,7 +23143,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -23599,7 +23599,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -23623,7 +23623,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -24143,7 +24143,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -24539,7 +24539,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -25043,7 +25043,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -25091,7 +25091,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -25475,7 +25475,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -26169,7 +26169,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -26219,7 +26219,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -26525,7 +26525,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -27443,7 +27443,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -27611,7 +27611,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 4
+      "hours_per_week": 8
     }
   },
   {
@@ -27623,7 +27623,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 4
+      "hours_per_week": 16
     }
   },
   {
@@ -27635,7 +27635,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 4
+      "hours_per_week": 8
     }
   },
   {
@@ -27647,7 +27647,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -27659,7 +27659,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -27671,7 +27671,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 16
     }
   },
   {
@@ -27683,7 +27683,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -27707,7 +27707,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -27719,7 +27719,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -27731,7 +27731,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -27755,7 +27755,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -27767,7 +27767,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -27779,7 +27779,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -27791,7 +27791,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -27803,7 +27803,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -27815,7 +27815,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -27827,7 +27827,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -27851,7 +27851,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 16
     }
   },
   {
@@ -27863,7 +27863,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -27875,7 +27875,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -27887,7 +27887,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -27899,7 +27899,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -27911,7 +27911,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -27935,7 +27935,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -27947,7 +27947,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -27959,7 +27959,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -27971,7 +27971,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -27995,7 +27995,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -28007,7 +28007,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -28019,7 +28019,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -28031,7 +28031,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -28043,7 +28043,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -28055,7 +28055,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -28115,7 +28115,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -28151,7 +28151,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -28163,7 +28163,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -28175,7 +28175,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -28187,7 +28187,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -28199,7 +28199,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -28211,7 +28211,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -28223,7 +28223,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -28235,7 +28235,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -28247,7 +28247,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -28259,7 +28259,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -28271,7 +28271,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -28295,7 +28295,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -28307,7 +28307,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -28319,7 +28319,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -28331,7 +28331,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -28343,7 +28343,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -28355,7 +28355,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -28367,7 +28367,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -28391,7 +28391,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -28403,7 +28403,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -28415,7 +28415,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -28427,7 +28427,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -28439,7 +28439,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -28451,7 +28451,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -28475,7 +28475,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -28487,7 +28487,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -28499,7 +28499,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -28511,7 +28511,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -28523,7 +28523,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -28535,7 +28535,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -28571,7 +28571,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -28583,7 +28583,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -28595,7 +28595,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -28607,7 +28607,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -28619,7 +28619,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -28631,7 +28631,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -28655,7 +28655,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -28679,7 +28679,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -28691,7 +28691,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -28703,7 +28703,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -28715,7 +28715,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -28727,7 +28727,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -28739,7 +28739,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -28763,7 +28763,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -28787,7 +28787,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -28799,7 +28799,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -28811,7 +28811,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -28823,7 +28823,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -28835,7 +28835,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -28847,7 +28847,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -28859,7 +28859,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -28871,7 +28871,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -28883,7 +28883,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -28895,7 +28895,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -28907,7 +28907,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -28919,7 +28919,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -28943,7 +28943,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -28955,7 +28955,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -28979,7 +28979,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -28991,7 +28991,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -29027,7 +29027,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -29039,7 +29039,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -29051,7 +29051,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -29075,7 +29075,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -29111,7 +29111,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -29123,7 +29123,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -29135,7 +29135,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -29159,7 +29159,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -29183,7 +29183,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 12
     }
   },
   {
@@ -29207,7 +29207,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -29219,7 +29219,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -29231,7 +29231,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -29243,7 +29243,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -29255,7 +29255,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -29267,7 +29267,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -29279,7 +29279,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -29291,7 +29291,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -29303,7 +29303,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -29315,7 +29315,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -29327,7 +29327,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -29339,7 +29339,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -29351,7 +29351,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -29375,7 +29375,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -29387,7 +29387,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -29411,7 +29411,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -29423,7 +29423,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -29447,7 +29447,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -29483,7 +29483,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -29507,7 +29507,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -29531,7 +29531,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -29555,7 +29555,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -29567,7 +29567,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -29579,7 +29579,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -29591,7 +29591,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -29603,7 +29603,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -29615,7 +29615,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -29627,7 +29627,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -29639,7 +29639,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -29651,7 +29651,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -29675,7 +29675,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -29687,7 +29687,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -29711,7 +29711,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -29723,7 +29723,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -29735,7 +29735,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -29759,7 +29759,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -29771,7 +29771,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -29783,7 +29783,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -29795,7 +29795,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -29807,7 +29807,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -29819,7 +29819,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -29831,7 +29831,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -29867,7 +29867,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -29891,7 +29891,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -29903,7 +29903,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -29927,7 +29927,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -29939,7 +29939,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -29951,7 +29951,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -29975,7 +29975,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -29987,7 +29987,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -29999,7 +29999,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -30011,7 +30011,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -30023,7 +30023,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 12
     }
   },
   {
@@ -30059,7 +30059,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -30071,7 +30071,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -30107,7 +30107,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -30119,7 +30119,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -30131,7 +30131,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -30143,7 +30143,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -30155,7 +30155,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -30167,7 +30167,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -30179,7 +30179,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -30191,7 +30191,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -30203,7 +30203,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -30239,7 +30239,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -30251,7 +30251,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -30263,7 +30263,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -30275,7 +30275,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -30299,7 +30299,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -30323,7 +30323,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -30347,7 +30347,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -30359,7 +30359,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -30371,7 +30371,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -30383,7 +30383,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -30395,7 +30395,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -30407,7 +30407,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -30419,7 +30419,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -30431,7 +30431,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -30443,7 +30443,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -30455,7 +30455,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -30467,7 +30467,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -30479,7 +30479,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -30491,7 +30491,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -30503,7 +30503,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -30515,7 +30515,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -30527,7 +30527,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -30539,7 +30539,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -30551,7 +30551,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -30575,7 +30575,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -30587,7 +30587,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -30611,7 +30611,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -30623,7 +30623,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -30659,7 +30659,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -30671,7 +30671,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -30695,7 +30695,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -30707,7 +30707,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -30719,7 +30719,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -30743,7 +30743,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -30755,7 +30755,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -30767,7 +30767,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -30779,7 +30779,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -30803,7 +30803,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -30815,7 +30815,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -30827,7 +30827,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -30839,7 +30839,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -30851,7 +30851,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -30863,7 +30863,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -30875,7 +30875,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -30887,7 +30887,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -30923,7 +30923,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -30935,7 +30935,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -30947,7 +30947,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -30959,7 +30959,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -30971,7 +30971,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 24
     }
   },
   {
@@ -30983,7 +30983,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -30995,7 +30995,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -31019,7 +31019,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 24
     }
   },
   {
@@ -31031,7 +31031,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -31043,7 +31043,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 24
     }
   },
   {
@@ -31055,7 +31055,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -31067,7 +31067,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -31079,7 +31079,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -31091,7 +31091,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -31103,7 +31103,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -31115,7 +31115,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -31127,7 +31127,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31139,7 +31139,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -31151,7 +31151,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -31163,7 +31163,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -31175,7 +31175,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -31187,7 +31187,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -31211,7 +31211,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31235,7 +31235,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -31247,7 +31247,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31259,7 +31259,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31271,7 +31271,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31283,7 +31283,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -31295,7 +31295,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -31307,7 +31307,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -31331,7 +31331,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -31391,7 +31391,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -31403,7 +31403,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -31415,7 +31415,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -31451,7 +31451,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31463,7 +31463,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -31475,7 +31475,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -31487,7 +31487,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -31511,7 +31511,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31523,7 +31523,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -31535,7 +31535,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -31547,7 +31547,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -31559,7 +31559,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -31571,7 +31571,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31595,7 +31595,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -31607,7 +31607,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -31619,7 +31619,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -31631,7 +31631,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31643,7 +31643,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -31655,7 +31655,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31667,7 +31667,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -31679,7 +31679,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -31691,7 +31691,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -31715,7 +31715,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31727,7 +31727,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31751,7 +31751,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -31763,7 +31763,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -31775,7 +31775,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -31787,7 +31787,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -31799,7 +31799,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31811,7 +31811,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -31823,7 +31823,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -31835,7 +31835,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -31859,7 +31859,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31871,7 +31871,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -31883,7 +31883,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -31895,7 +31895,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -31907,7 +31907,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -31919,7 +31919,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -31943,7 +31943,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -31955,7 +31955,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -31979,7 +31979,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -32003,7 +32003,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -32027,7 +32027,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -32039,7 +32039,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -32051,7 +32051,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -32075,7 +32075,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -32087,7 +32087,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -32111,7 +32111,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -32135,7 +32135,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -32159,7 +32159,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -32171,7 +32171,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -32183,7 +32183,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -32195,7 +32195,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -32207,7 +32207,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -32219,7 +32219,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -32231,7 +32231,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -32243,7 +32243,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 12
     }
   },
   {
@@ -32279,7 +32279,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -32291,7 +32291,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -32315,7 +32315,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -32327,7 +32327,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -32339,7 +32339,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -32351,7 +32351,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -32375,7 +32375,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -32387,7 +32387,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -32399,7 +32399,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -32411,7 +32411,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -32423,7 +32423,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -32447,7 +32447,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -32459,7 +32459,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -32471,7 +32471,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -32483,7 +32483,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -32495,7 +32495,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -32507,7 +32507,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -32531,7 +32531,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -32555,7 +32555,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -32567,7 +32567,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -32579,7 +32579,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -32591,7 +32591,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -32603,7 +32603,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -32615,7 +32615,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -32627,7 +32627,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -32639,7 +32639,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -32663,7 +32663,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -32675,7 +32675,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -32687,7 +32687,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -32699,7 +32699,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -32711,7 +32711,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -32723,7 +32723,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -32735,7 +32735,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -32747,7 +32747,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -32759,7 +32759,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -32771,7 +32771,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -32783,7 +32783,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -32807,7 +32807,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -32819,7 +32819,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -32831,7 +32831,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -32843,7 +32843,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -32867,7 +32867,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -32891,7 +32891,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -32903,7 +32903,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -32915,7 +32915,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -32927,7 +32927,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -32951,7 +32951,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -32987,7 +32987,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -32999,7 +32999,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -33011,7 +33011,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -33035,7 +33035,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -33047,7 +33047,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -33059,7 +33059,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -33071,7 +33071,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -33083,7 +33083,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33095,7 +33095,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -33107,7 +33107,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -33131,7 +33131,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -33143,7 +33143,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33155,7 +33155,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -33179,7 +33179,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -33191,7 +33191,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -33215,7 +33215,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33263,7 +33263,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -33275,7 +33275,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -33287,7 +33287,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -33299,7 +33299,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -33311,7 +33311,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -33323,7 +33323,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -33335,7 +33335,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33359,7 +33359,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33371,7 +33371,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33383,7 +33383,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -33395,7 +33395,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -33407,7 +33407,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -33431,7 +33431,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -33455,7 +33455,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -33491,7 +33491,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -33503,7 +33503,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -33527,7 +33527,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -33539,7 +33539,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33551,7 +33551,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -33563,7 +33563,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -33575,7 +33575,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -33587,7 +33587,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -33611,7 +33611,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33635,7 +33635,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -33647,7 +33647,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33671,7 +33671,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -33683,7 +33683,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33707,7 +33707,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -33731,7 +33731,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33743,7 +33743,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33755,7 +33755,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -33767,7 +33767,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -33779,7 +33779,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -33791,7 +33791,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33803,7 +33803,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -33815,7 +33815,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -33827,7 +33827,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -33839,7 +33839,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -33851,7 +33851,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -33863,7 +33863,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -33875,7 +33875,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -33887,7 +33887,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -33899,7 +33899,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -33911,7 +33911,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -33923,7 +33923,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -33935,7 +33935,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -33947,7 +33947,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -33971,7 +33971,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -33983,7 +33983,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -33995,7 +33995,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -34007,7 +34007,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -34019,7 +34019,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34031,7 +34031,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34043,7 +34043,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34067,7 +34067,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -34079,7 +34079,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34091,7 +34091,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -34127,7 +34127,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -34175,7 +34175,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -34187,7 +34187,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34199,7 +34199,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -34211,7 +34211,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -34223,7 +34223,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -34235,7 +34235,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34247,7 +34247,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -34283,7 +34283,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34307,7 +34307,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -34331,7 +34331,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -34343,7 +34343,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34355,7 +34355,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -34391,7 +34391,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34403,7 +34403,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -34415,7 +34415,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34427,7 +34427,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34451,7 +34451,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -34475,7 +34475,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -34487,7 +34487,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34499,7 +34499,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -34511,7 +34511,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -34523,7 +34523,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -34535,7 +34535,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -34547,7 +34547,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -34583,7 +34583,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34595,7 +34595,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34607,7 +34607,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34619,7 +34619,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34631,7 +34631,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34643,7 +34643,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -34655,7 +34655,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34667,7 +34667,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -34679,7 +34679,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -34691,7 +34691,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -34703,7 +34703,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34715,7 +34715,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -34727,7 +34727,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -34751,7 +34751,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34775,7 +34775,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34787,7 +34787,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34799,7 +34799,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -34835,7 +34835,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -34847,7 +34847,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34859,7 +34859,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34871,7 +34871,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34883,7 +34883,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34895,7 +34895,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34907,7 +34907,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -34919,7 +34919,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -34931,7 +34931,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -34943,7 +34943,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -34979,7 +34979,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -34991,7 +34991,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -35003,7 +35003,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -35015,7 +35015,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -35027,7 +35027,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35039,7 +35039,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35051,7 +35051,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35063,7 +35063,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -35087,7 +35087,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -35099,7 +35099,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -35111,7 +35111,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35123,7 +35123,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35135,7 +35135,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35159,7 +35159,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -35171,7 +35171,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -35183,7 +35183,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35195,7 +35195,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -35207,7 +35207,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -35243,7 +35243,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -35255,7 +35255,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35267,7 +35267,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35279,7 +35279,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -35291,7 +35291,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -35303,7 +35303,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35327,7 +35327,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35339,7 +35339,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -35351,7 +35351,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -35363,7 +35363,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35375,7 +35375,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -35387,7 +35387,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35399,7 +35399,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -35411,7 +35411,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35447,7 +35447,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35459,7 +35459,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35471,7 +35471,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35483,7 +35483,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -35495,7 +35495,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -35519,7 +35519,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35531,7 +35531,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -35543,7 +35543,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35567,7 +35567,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -35579,7 +35579,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -35591,7 +35591,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -35615,7 +35615,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -35627,7 +35627,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35639,7 +35639,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -35651,7 +35651,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -35675,7 +35675,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35723,7 +35723,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35735,7 +35735,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -35747,7 +35747,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -35759,7 +35759,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35783,7 +35783,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35795,7 +35795,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -35831,7 +35831,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -35843,7 +35843,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35855,7 +35855,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -35867,7 +35867,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35879,7 +35879,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -35903,7 +35903,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -35915,7 +35915,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 32
     }
   },
   {
@@ -35927,7 +35927,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -35939,7 +35939,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35951,7 +35951,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -35963,7 +35963,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -35975,7 +35975,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -35987,7 +35987,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -35999,7 +35999,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -36011,7 +36011,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -36023,7 +36023,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -36047,7 +36047,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -36083,7 +36083,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 40
+      "hours_per_week": 32
     }
   },
   {
@@ -36095,7 +36095,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -36107,7 +36107,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -36119,7 +36119,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -36131,7 +36131,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -36143,7 +36143,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -36167,7 +36167,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -36179,7 +36179,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 32
+      "hours_per_week": 40
     }
   },
   {
@@ -36191,7 +36191,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 40
     }
   },
   {
@@ -36203,7 +36203,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 36
+      "hours_per_week": 32
     }
   },
   {
@@ -36215,7 +36215,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   },
   {
@@ -36227,7 +36227,7 @@
       "period_source": "SERVICE",
       "specific_start_date": null,
       "specific_end_date": null,
-      "hours_per_week": 24
+      "hours_per_week": 40
     }
   }
 ]
