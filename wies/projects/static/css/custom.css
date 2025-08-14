@@ -2,37 +2,37 @@
 
 .select2-container--default .select2-selection--multiple,
 .select2-container--default .select2-selection--single {
-  border: var(--utrecht-form-control-border-width, 1px) solid var(--utrecht-form-control-border-color, #003366);
-  border-radius: var(--utrecht-form-control-border-radius, 8px);
+  border: var(--utrecht-form-control-border-width) solid var(--utrecht-form-control-border-color);
+  border-radius: var(--utrecht-form-control-border-radius);
   min-height: 44px;
   padding: 6px 8px;
-  background: var(--utrecht-form-control-background-color, #fff);
+  background: var(--utrecht-form-control-background-color);
   transition: border-color 0.2s;
-  font-size: var(--rvo-font-size-md, 1rem);
-  font-family: var(--rvo-font-sans-serif-font-family, 'RijksoverheidSansWebText'), var(--rvo-font-sans-serif-fallback-font-family, 'Verdana'), sans-serif;
-  color: var(--utrecht-form-control-color, #003366);
+  font-size: var(--rvo-font-size-md);
+  font-family: var(--rvo-font-sans-serif-font-family);
+  color: var(--utrecht-form-control-color);
 }
 
 .select2-container--default .select2-selection--multiple:focus,
 .select2-container--default .select2-selection--multiple:active,
 .select2-container--default .select2-selection--single:focus,
 .select2-container--default .select2-selection--single:active {
-  border-color: var(--utrecht-form-control-focus-border-color, #009fe3);
-  box-shadow: 0 0 0 2px var(--utrecht-focus-outline-color, #b3e6ff);
+  border-color: var(--utrecht-form-control-focus-border-color);
+  box-shadow: 0 0 0 2px var(--utrecht-focus-outline-color);
   outline: none;
 }
 
 .select2-selection__choice {
-  background: var(--rvo-color-grijs-200, #E2E8F0);
-  color: var(--rvo-color-logoblauw, #154273);
-  border-radius: var(--rvo-tag-border-radius, 3px);
-  padding: var(--rvo-tag-padding-block-start, 4px) var(--rvo-tag-padding-inline-end, 12px)
-           var(--rvo-tag-padding-block-end, 4px) var(--rvo-tag-padding-inline-start, 12px);
+  background: var(--rvo-color-grijs-200);
+  color: var(--rvo-color-logoblauw);
+  border-radius: var(--rvo-tag-border-radius);
+  padding: var(--rvo-tag-padding-block-start) var(--rvo-tag-padding-inline-end)
+           var(--rvo-tag-padding-block-end) var(--rvo-tag-padding-inline-start);
   margin: 2px 6px 2px 0;
-  font-size: var(--rvo-font-size-sm, 0.875rem);
+  font-size: var(--rvo-font-size-sm);
   border: none;
-  font-weight: var(--rvo-font-weight-bold, 700);
-  font-family: var(--rvo-font-sans-serif-font-family, 'RijksoverheidSansWebText'), var(--rvo-font-sans-serif-fallback-font-family, 'Verdana'), sans-serif;
+  font-weight: var(--rvo-font-weight-bold);
+  font-family: var(--rvo-font-sans-serif-font-family);
   box-shadow: none;
   display: flex;
   align-items: center;
@@ -41,17 +41,17 @@
 }
 
 .select2-selection__choice__remove {
-  color: var(--rvo-color-logoblauw, #154273);
+  color: var(--rvo-color-logoblauw);
   margin-right: 6px;
   font-weight: bold;
   cursor: pointer;
 }
 
 .select2-container--default .select2-search--inline .select2-search__field {
-  color: var(--utrecht-form-control-placeholder-color, #6c757d);
+  color: var(--utrecht-form-control-placeholder-color);
   font-style: normal;
-  font-size: var(--rvo-font-size-md, 1rem);
-  font-family: var(--rvo-font-sans-serif-font-family, 'RijksoverheidSansWebText'), var(--rvo-font-sans-serif-fallback-font-family, 'Verdana'), sans-serif;
+  font-size: var(--rvo-font-size-md);
+  font-family: var(--rvo-font-sans-serif-font-family);
   opacity: 1;
   padding: 0;
   margin: 0;
@@ -61,16 +61,16 @@
 }
 
 .select2-container--default .select2-results__option--highlighted[aria-selected] {
-  background-color: var(--utrecht-form-control-focus-border-color, #009fe3);
-  color: var(--rvo-color-wit, #fff);
+  background-color: var(--utrecht-form-control-focus-border-color);
+  color: var(--rvo-color-wit);
 }
 .select2-container--default .select2-results__option[aria-selected=true] {
-  background-color: var(--rvo-color-lichtblauw-150, #e6f2ff);
-  color: var(--utrecht-form-control-color, #003366);
+  background-color: var(--rvo-color-lichtblauw-150);
+  color: var(--utrecht-form-control-color);
 }
 
 .select2-container--default .select2-selection--single .select2-selection__arrow b {
-  border-color: var(--utrecht-form-control-border-color, #003366) transparent transparent transparent;
+  border-color: var(--utrecht-form-control-border-color) transparent transparent transparent;
   border-width: 6px 6px 0 6px;
 }
 
@@ -92,20 +92,20 @@
   padding-top: 6px;
   padding-bottom: 6px;
   box-sizing: border-box;
-  font-size: var(--rvo-font-size-md, 1rem);
-  font-family: var(--rvo-font-sans-serif-font-family, 'RijksoverheidSansWebText'), var(--rvo-font-sans-serif-fallback-font-family, 'Verdana'), sans-serif;
+  font-size: var(--rvo-font-size-md);
+  font-family: var(--rvo-font-sans-serif-font-family);
 } 
 
 /* Tekstkleur in Select2 multi-select (geselecteerde waarden en placeholder) */
 .select2-container--default .select2-selection--multiple,
 .select2-container--default .select2-selection--single {
-  color: var(--utrecht-form-control-color, #003366) !important;
-  font-family: var(--rvo-font-sans-serif-font-family, 'RijksoverheidSansWebText'), var(--rvo-font-sans-serif-fallback-font-family, 'Verdana'), sans-serif;
+  color: var(--utrecht-form-control-color) !important;
+  font-family: var(--rvo-font-sans-serif-font-family);
 }
 
 /* Placeholderkleur in Select2 multi-select */
 .select2-container--default .select2-search--inline .select2-search__field::placeholder {
-  color: var(--utrecht-form-control-color, #003366) !important;
+  color: var(--utrecht-form-control-color) !important;
   opacity: 1;
 }
 
@@ -168,8 +168,8 @@
 }
 
 .rvo-table-header--active-sort {
-  background-color: var(--rvo-color-hemelblauw-50, #eff6ff) !important;
-  color: var(--rvo-color-hemelblauw-700, #1e40af) !important;
+  background-color: var(--rvo-color-hemelblauw-50) !important;
+  color: var(--rvo-color-hemelblauw-700) !important;
 }
 
 .rvo-table-header__sortable-container {
@@ -191,7 +191,7 @@
 }
 
 .clickable-row:hover {
-  background-color: var(--rvo-color-hemelblauw-50, #eff6ff) !important;
+  background-color: var(--rvo-color-hemelblauw-50) !important;
 }
 
 /* Use RVO design system hover states instead of custom CSS */
@@ -241,7 +241,7 @@
 
 /* Sub-menu background styling */
 .rvo-tmp-submenu-wrapper .rvo-menubar__background {
-  background-color: var(--rvo-color-grijs-200, #e5e7eb);
+  background-color: var(--rvo-color-grijs-200);
 }
 
 /* Layout spacing adjustments */
@@ -255,8 +255,8 @@
 }
 
 .rvo-alert-text {
-  font-size: var(--rvo-font-size-2xs, 0.625rem);
-  font-family: var(--rvo-font-sans-serif-font-family, 'RijksoverheidSansWebText'), var(--rvo-font-sans-serif-fallback-font-family, 'Verdana'), sans-serif;
+  font-size: var(--rvo-font-size-2xs);
+  font-family: var(--rvo-font-sans-serif-font-family);
 }
 
 

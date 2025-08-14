@@ -29,23 +29,19 @@ def get_total_budget():
 
 
 def get_assignments_ending_soon(limit=15):
-    """Get assignments ending within 3 months"""
+    """Get assignments ending within 3 months - optimized database query"""
+    from django.db.models import Q
+    
     today = date.today()
     three_months = today + timedelta(days=90)
     
-    # Get all assignments and filter by end_date property
-    all_assignments = Assignment.objects.filter(
+    # Use database filtering instead of Python filtering
+    return Assignment.objects.filter(
+        Q(end_date__gte=today) & Q(end_date__lte=three_months),
         status__in=['LOPEND', 'OPEN']
-    ).exclude(organization='').exclude(organization__isnull=True)
-    
-    # Filter assignments ending within 3 months
-    assignments_ending_soon = []
-    for assignment in all_assignments:
-        if assignment.end_date and today <= assignment.end_date <= three_months:
-            assignments_ending_soon.append(assignment)
-    
-    # Sort by end_date and limit
-    return sorted(assignments_ending_soon, key=lambda x: x.end_date or today)[:limit]
+    ).exclude(
+        Q(organization='') | Q(organization__isnull=True)
+    ).order_by('end_date')[:limit]
 
 
 def get_consultants_on_bench(limit=10):

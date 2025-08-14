@@ -1,28 +1,30 @@
+# Standard library
 import datetime
 from urllib.parse import urlencode
 
-from django.views.generic.list import ListView
-from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
-from django.template.defaulttags import register
-from django.shortcuts import redirect, render
-from django.urls import reverse_lazy
-from django.db import models
-from django.db.models import Q, Count
-from django.http import JsonResponse
+# Django core
 from django.apps import apps
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import user_passes_test
 from django.core import management
-from django.urls import reverse
+from django.db import models
+from django.db.models import Q, Count
+from django.http import JsonResponse
+from django.shortcuts import redirect, render
+from django.template.defaulttags import register
+from django.urls import reverse, reverse_lazy
+from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
+from django.views.generic.list import ListView
 
 
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 from .services.sync import sync_colleagues_from_exact
 from .services.statistics import get_consultants_working, get_total_clients_count, get_total_budget
-from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining, get_total_services, get_services_filled, get_average_utilization, get_available_since
+from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining
+from .services.statistics import get_total_services, get_services_filled, get_average_utilization, get_available_since
 
 from wies.exact.models import ExactEmployee, ExactProject
 
@@ -42,12 +44,10 @@ def dashboard(request):
 
     # Get consultants on bench with availability info
     consultants_bench = get_consultants_on_bench()
-    consultants_bench_with_availability = []
     for consultant in consultants_bench:
         consultant.available_since = get_available_since(consultant)
-        consultants_bench_with_availability.append(consultant)
 
-    # statistics context
+    # Statistics context
     context = {
         'consultants_working': get_consultants_working(),
         'total_clients_count': get_total_clients_count(),
@@ -57,7 +57,7 @@ def dashboard(request):
         'services_filled': get_services_filled(),
         'average_utilization': get_average_utilization(),
         'assignments_ending_soon': get_assignments_ending_soon(),
-        'consultants_bench': consultants_bench_with_availability,
+        'consultants_bench': consultants_bench,
         'new_leads': get_new_leads(),
         'active_tab': active_tab,
     }
@@ -66,7 +66,7 @@ def dashboard(request):
     if 'HX-Request' in request.headers:
         return render(request, 'parts/dashboard_tabs_section.html', context)
     
-    return render(request, template_name='dashboard.html', context=context)
+    return render(request, 'dashboard.html', context)
 
 
 def get_service_details(request, service_id):
@@ -1050,16 +1050,14 @@ def clients(request):
     
     clients = clients.order_by('organization')
     
-    # get statistics for cards
-    consultants_working = get_consultants_working()
-    total_clients_count = get_total_clients_count()
+    # Get statistics for cards
     total_budget = get_total_budget()
     formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
     
     context = {
         'clients': clients,
-        'consultants_working': consultants_working,
-        'total_clients_count': total_clients_count,
+        'consultants_working': get_consultants_working(),
+        'total_clients_count': get_total_clients_count(),
         'total_budget': total_budget,
         'formatted_budget': formatted_budget,
     }
@@ -1068,7 +1066,7 @@ def clients(request):
     if 'HX-Request' in request.headers:
         return render(request, 'parts/clients_table.html', context)
     
-    return render(request, template_name='client_list.html', context=context)
+    return render(request, 'client_list.html', context)
 
 def client(request, name):
     assignments = Assignment.objects.filter(organization=name)
