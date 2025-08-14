@@ -8,6 +8,7 @@ from .otys import OTYSAPI
 
 
 def sync_colleagues_from_exact():
+    # TODO: removal from exact is not handled, they stay in wies. is that desired?
     """
     Sync all ExactEmployee records to Colleague records.
     Creates new Colleague records or updates existing ones based on source_id.
@@ -37,6 +38,7 @@ def sync_colleagues_from_exact():
 
 
 def sync_colleagues_from_otys_iir():
+    # TODO: removal from OTYS is not handled, they stay in wies. is that desired?
 
     OTYS_API_KEY = os.environ['OTYS_API_KEY']
     OTYS_URL = os.environ['OTYS_URL']
