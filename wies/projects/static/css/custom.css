@@ -191,10 +191,18 @@
 }
 
 .clickable-row:hover {
-  background-color: var(--rvo-color-hemelblauw-50) !important;
+  background-color: var(--rvo-color-hemelblauw-50, #e6f3ff) !important;
 }
 
 /* Use RVO design system hover states instead of custom CSS */
+.rvo-table-row:hover {
+  background-color: var(--rvo-color-hemelblauw-50, #e6f3ff) !important;
+}
+
+.rvo-table-row.clickable-row:hover {
+  background-color: var(--rvo-color-hemelblauw-50, #e6f3ff) !important;
+  cursor: pointer;
+}
 
 
 
