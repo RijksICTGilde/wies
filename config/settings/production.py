@@ -44,3 +44,8 @@ LOGGING = {
           },
       },
   }
+
+# for authlib OIDC connection
+OIDC_CLIENT_ID = os.environ['OIDC_CLIENT_ID']
+OIDC_CLIENT_SECRET = os.environ['OIDC_CLIENT_SECRET']
+OIDC_DISCOVERY_URL = os.environ['OIDC_DISCOVERY_URL']

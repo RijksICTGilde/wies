@@ -23,7 +23,7 @@
     <a href="/exact/" class="app-link" target="_blank" rel="noopener noreferrer">
       Exact (mockup) 
       <svg style="width: 10px; height: 10px; margin-left: 0.25rem;" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"/>
+        <path d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 21,19V12H19V19Z"/>
       </svg>
     </a>
   </div>
@@ -49,6 +49,40 @@
   color: #154273;
   text-decoration: underline;
 }
+
+.user-menubar-item {
+  margin-left: auto;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #154273;
+  font-size: 0.9rem;
+}
+
+.user-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.user-info {
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.login-link, .logout-link {
+  color: #154273;
+  text-decoration: none;
+  transition: color 0.3s;
+}
+
+.login-link:hover, .logout-link:hover {
+  color: #0f3659;
+  text-decoration: underline;
+}
 </style>
 
 <div class="rvo-menubar__background rvo-menubar__background--horizontal-rule">
@@ -68,6 +102,17 @@
             </li>
             <li class="rvo-menubar__item">
               <a href="/clients/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Opdrachtgevers & relaties</a>
+            </li>
+            <li class="rvo-menubar__item user-menubar-item">
+              <div class="user-section">
+                <img src="{% static '@nl-rvo/assets/icons/functioneel/user.svg' %}" alt="User" class="user-icon">
+                
+                {% if user.is_authenticated %}
+                  <span class="user-info"> {{ user.get_full_name }} (<a href="/logout/" class="logout-link">log uit</a>)</span>
+                {% else %}
+                  <a href="/login/" class="login-link">log in</a>
+                {% endif %}
+              </div>
             </li>
           </ul>
         </li>

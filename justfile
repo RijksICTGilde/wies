@@ -10,6 +10,7 @@ setup:
   uv sync  # to enable exploration in dependencies
   npm ci  # for enable exploration in static assets
   cp overwrite_index.css node_modules/@nl-rvo/assets/index.css  # mimick build
+  if [ ! -f .env ]; then cp .env.local.example .env; fi
   docker compose build
   docker compose run --rm django python manage.py dropdb --noinput
   docker compose run --rm django python manage.py migrate
@@ -29,14 +30,7 @@ up:
 # up-production:
 #   echo "Starting up container..."
 # docker run --rm \
-# --env DJANGO_SETTINGS_MODULE=config.settings.production \
-# --env DJANGO_SECURE_SSL_REDIRECT=false \
-# --env DJANGO_SUPERUSER_USERNAME=admin \
-# --env DJANGO_SUPERUSER_PASSWORD=admin \
-# --env DJANGO_SUPERUSER_EMAIL="" \
-# --env DJANGO_SECRET_KEY=xxxxxxx \
-# --env WRITABLE_FOLDER=/app/db \
-# --env DJANGO_ALLOWED_HOSTS=localhost,0.0.0.0,127.0.0.1 \
+# --env-file .env \
 # -p 8000:8000 \
 # -v ./db:/app/db \
 # wies
