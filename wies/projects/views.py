@@ -366,7 +366,7 @@ class AssignmentTabsView(ListView):
                 'name': 'ministry',
                 'label': 'Ministerie',
                 'placeholder': 'Alle ministeries',
-                'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
+                'options': [{'value': client['id'], 'label': client['name']} for client in context.get('clients', [])]
             },
         ]
         
