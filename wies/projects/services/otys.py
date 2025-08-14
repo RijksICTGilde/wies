@@ -252,3 +252,91 @@ class OTYSAPI:
         response = requests.request("POST", self.url, headers=headers, json=payload)
         self._raise_for_status(response)
         return response.json()['result']
+    
+    def get_candidate_detail(self, candidate_id: str):
+        method = "Otys.Services.CandidateService.getDetail"
+        payload = {
+            "jsonrpc": "2.0",
+            "method": method,
+            "params": [
+                f"{self.session_id}",
+                f"{candidate_id}",
+                {  # no what here
+                    "uid": 1,
+                    "Person": {
+                        "firstName": 1,
+                        "lastName": 1
+                    },
+                }
+            ],
+            "id": 1
+        }
+        headers = {}
+
+        response = requests.request("POST", self.url, headers=headers, json=payload)
+        self._raise_for_status(response)
+        return response.json()
+
+    def update_candidate_name(self, candidate_id: str, new_firstname: str):
+        """Simple demonstrator for update functionality of API"""
+        method = "Otys.Services.CandidateService.update"
+        payload = {
+            "jsonrpc": "2.0",
+            "method": method,
+            "params": [
+                f"{self.session_id}",
+                f"{candidate_id}",
+                {  # no what here
+                    "Person": {
+                        "firstName": new_firstname,
+                    },
+                }
+            ],
+            "id": 1
+        }
+        headers = {}
+
+        response = requests.request("POST", self.url, headers=headers, json=payload)
+        self._raise_for_status(response)
+
+    def create_candidate(self, firstname: str, lastname: str, email: str):
+        """Simple demonstrator of create functionality over API"""
+        method = "Otys.Services.CandidateService.add"
+        payload = {
+            "jsonrpc": "2.0",
+            "method": method,
+            "params": [
+                f"{self.session_id}",
+                {  # no what here
+                    "Person": {
+                        "firstName": firstname,
+                        "lastName": lastname,
+                        "emailPrimary": email, 
+                    },
+                }
+            ],
+            "id": 1
+        }
+        headers = {}
+
+        response = requests.request("POST", self.url, headers=headers, json=payload)
+        self._raise_for_status(response)
+        return response.json()
+    
+    def delete_candidate(self, candidate_id: str):
+        """Simple demonstrator of delete functionality over API"""
+        method = "Otys.Services.CandidateService.delete"
+        payload = {
+            "jsonrpc": "2.0",
+            "method": method,
+            "params": [
+                f"{self.session_id}",
+                str(candidate_id),
+            ],
+            "id": 1
+        }
+        headers = {}
+
+        response = requests.request("POST", self.url, headers=headers, json=payload)
+        self._raise_for_status(response)
+        return response.json()
