@@ -47,7 +47,7 @@
           {% endif %}
         </td>
         <td class="rvo-table-cell">
-          {% if colleague.placements.all %}
+          {% if colleague.is_active_on_lopend %}
             <span class="rvo-tag status-ingezet">Ingezet</span>
           {% else %}
             <span class="rvo-tag status-beschikbaar">Beschikbaar</span>

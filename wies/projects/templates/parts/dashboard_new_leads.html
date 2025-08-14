@@ -4,7 +4,6 @@
       <tr class="rvo-table-row">
         <th scope="col" class="rvo-table-header">Opdracht</th>
         <th scope="col" class="rvo-table-header">Opdrachtgever</th>
-        <th scope="col" class="rvo-table-header">Status</th>
         <th scope="col" class="rvo-table-header">Startdatum</th>
       </tr>
     </thead>
@@ -15,15 +14,12 @@
           <a href="{% url 'assignment-detail' assignment.pk %}" class="rvo-link rvo-link--no-underline" onclick="event.stopPropagation()">{{ assignment.name }}</a>
         </td>
         <td class="rvo-table-cell">{{ assignment.organization }}</td>
-        <td class="rvo-table-cell">
-          <span class="rvo-tag status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
-        </td>
         <td class="rvo-table-cell">{{ assignment.start_date|date:"d M Y"|default:"-" }}</td>
       </tr>
       {% empty %}
       <tr class="rvo-table-row">
-        <td class="rvo-table-cell" colspan="4" style="text-align: center; padding: 2rem;">
-          <span class="rvo-text--italic">Geen nieuwe leads</span>
+        <td class="rvo-table-cell" colspan="3" style="text-align: center; padding: 2rem;">
+          <span class="rvo-text--italic">Geen nieuwe kansen</span>
         </td>
       </tr>
       {% endfor %}

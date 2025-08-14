@@ -75,6 +75,13 @@ class Colleague(models.Model):
     def end_date(self):
         return self.placements.aggregate(Max('end_date'))['end_date__max']
 
+    @property
+    def is_active_on_lopend(self):
+        """Check if colleague is active on any LOPEND assignment"""
+        return self.placements.filter(
+            service__assignment__status='LOPEND'
+        ).exists()
+
     def get_absolute_url(self):
         return reverse("colleague-detail", kwargs={"pk": self.pk})
 

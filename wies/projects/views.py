@@ -22,7 +22,7 @@ from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, 
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 from .services.sync import sync_colleagues_from_exact
 from .services.statistics import get_consultants_working, get_total_clients_count, get_total_budget
-from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining
+from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining, get_total_services, get_services_filled, get_average_utilization, get_available_since
 
 from wies.exact.models import ExactEmployee, ExactProject
 
@@ -40,14 +40,24 @@ def dashboard(request):
     total_budget = get_total_budget()
     formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
 
+    # Get consultants on bench with availability info
+    consultants_bench = get_consultants_on_bench()
+    consultants_bench_with_availability = []
+    for consultant in consultants_bench:
+        consultant.available_since = get_available_since(consultant)
+        consultants_bench_with_availability.append(consultant)
+
     # statistics context
     context = {
         'consultants_working': get_consultants_working(),
         'total_clients_count': get_total_clients_count(),
         'total_budget': total_budget,
         'formatted_budget': formatted_budget,
+        'total_services': get_total_services(),
+        'services_filled': get_services_filled(),
+        'average_utilization': get_average_utilization(),
         'assignments_ending_soon': get_assignments_ending_soon(),
-        'consultants_bench': get_consultants_on_bench(),
+        'consultants_bench': consultants_bench_with_availability,
         'new_leads': get_new_leads(),
         'active_tab': active_tab,
     }
@@ -413,9 +423,16 @@ class ColleagueList(ListView):
         # Apply status filter (custom logic)
         status_filter = self.request.GET.get('status')
         if status_filter == 'beschikbaar':
-            qs = qs.filter(placements__isnull=True)
+            # Colleagues who have NO active LOPEND placements (may have historical ones)
+            active_colleague_ids = Placement.objects.filter(
+                service__assignment__status='LOPEND'
+            ).values_list('colleague_id', flat=True).distinct()
+            qs = qs.exclude(id__in=active_colleague_ids)
         elif status_filter == 'ingezet':
-            qs = qs.filter(placements__isnull=False)
+            qs = qs.filter(
+                placements__colleague__isnull=False,
+                placements__service__assignment__status='LOPEND'
+            )
         
         return qs.distinct()
     
@@ -501,9 +518,11 @@ class PlacementTableView(ListView):
     template_name = 'placement_table.html'
     
     def get_queryset(self):
-        """Apply filters to placements queryset"""
+        """Apply filters to placements queryset - only show LOPEND assignments, not LEAD"""
         qs = Placement.objects.select_related(
             'colleague', 'colleague__brand', 'service', 'service__skill', 'service__assignment__ministry'
+        ).filter(
+            service__assignment__status='LOPEND'  # Only show placements from running assignments
         ).order_by('-service__assignment__start_date')
         
         # Apply search filter
@@ -526,7 +545,8 @@ class PlacementTableView(ListView):
         filters = {
             'skill': 'service__skill__id',
             'brand': 'colleague__brand__id',
-            'client': 'service__assignment__ministry__id'
+            'client': 'service__assignment__organization',
+            'ministry': 'service__assignment__ministry__id'
         }
         
         for param, lookup in filters.items():
@@ -548,7 +568,12 @@ class PlacementTableView(ListView):
         
         context['skills'] = Skill.objects.order_by('name')
         context['brands'] = Brand.objects.order_by('name')
-        context['clients'] = Ministry.objects.order_by('name')
+        # Get unique organizations from assignments instead of ministries
+        context['clients'] = [
+            {'id': org, 'name': org} 
+            for org in Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').order_by('organization')
+        ]
+        context['ministries'] = Ministry.objects.order_by('name')
         
         # Add consistent filter configuration
         context['primary_filter'] = {
@@ -562,7 +587,7 @@ class PlacementTableView(ListView):
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
         
         # Calculate active filter count
-        modal_filter_params = ['skill', 'client', 'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to']
+        modal_filter_params = ['skill', 'client', 'ministry', 'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
         
         # Add modal filter configuration
@@ -579,7 +604,14 @@ class PlacementTableView(ListView):
                 'name': 'client',
                 'label': 'Opdrachtgever',
                 'placeholder': 'Alle opdrachtgevers',
-                'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
+                'options': [{'value': client['id'], 'label': client['name']} for client in context.get('clients', [])]
+            },
+            {
+                'type': 'select',
+                'name': 'ministry',
+                'label': 'Ministerie',
+                'placeholder': 'Alle ministeries',
+                'options': [{'value': ministry.id, 'label': ministry.name} for ministry in context.get('ministries', [])]
             },
         ]
 
@@ -592,9 +624,11 @@ class PlacementAvailabilityView(ListView):
     template_name = 'placement_availability.html'
     
     def get_queryset(self):
-        """Apply filters to placements queryset"""
+        """Apply filters to placements queryset - only show LOPEND assignments, not LEAD"""
         qs = Placement.objects.select_related(
             'colleague', 'colleague__brand', 'service', 'service__skill', 'service__assignment__ministry'
+        ).filter(
+            service__assignment__status='LOPEND'  # Only show placements from running assignments
         ).order_by('-service__assignment__start_date')
         
         # Apply search filter
@@ -617,7 +651,8 @@ class PlacementAvailabilityView(ListView):
         filters = {
             'skill': 'service__skill__id',
             'brand': 'colleague__brand__id',
-            'client': 'service__assignment__ministry__id'
+            'client': 'service__assignment__organization',
+            'ministry': 'service__assignment__ministry__id'
         }
         
         for param, lookup in filters.items():
@@ -639,7 +674,12 @@ class PlacementAvailabilityView(ListView):
         
         context['skills'] = Skill.objects.order_by('name')
         context['brands'] = Brand.objects.order_by('name')
-        context['clients'] = Ministry.objects.order_by('name')
+        # Get unique organizations from assignments instead of ministries
+        context['clients'] = [
+            {'id': org, 'name': org} 
+            for org in Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').order_by('organization')
+        ]
+        context['ministries'] = Ministry.objects.order_by('name')
         
         context['primary_filter'] = {
             'name': 'brand',
@@ -652,7 +692,7 @@ class PlacementAvailabilityView(ListView):
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
         
         # Calculate active filter count
-        modal_filter_params = ['skill', 'client', 'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to']
+        modal_filter_params = ['skill', 'client', 'ministry', 'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
         
         # Add modal filter configuration
@@ -669,7 +709,14 @@ class PlacementAvailabilityView(ListView):
                 'name': 'client',
                 'label': 'Opdrachtgever',
                 'placeholder': 'Alle opdrachtgevers',
-                'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
+                'options': [{'value': client['id'], 'label': client['name']} for client in context.get('clients', [])]
+            },
+            {
+                'type': 'select',
+                'name': 'ministry',
+                'label': 'Ministerie',
+                'placeholder': 'Alle ministeries',
+                'options': [{'value': ministry.id, 'label': ministry.name} for ministry in context.get('ministries', [])]
             },
         ]
 
@@ -1009,13 +1056,19 @@ def clients(request):
     total_budget = get_total_budget()
     formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
     
-    return render(request, template_name='client_list.html', context={
+    context = {
         'clients': clients,
         'consultants_working': consultants_working,
         'total_clients_count': total_clients_count,
         'total_budget': total_budget,
         'formatted_budget': formatted_budget,
-    })
+    }
+    
+    # If HTMX request, return only the table content
+    if 'HX-Request' in request.headers:
+        return render(request, 'parts/clients_table.html', context)
+    
+    return render(request, template_name='client_list.html', context=context)
 
 def client(request, name):
     assignments = Assignment.objects.filter(organization=name)
