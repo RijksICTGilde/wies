@@ -359,7 +359,7 @@ class AssignmentTabsView(ListView):
                 'name': 'skill',
                 'label': 'Rollen',
                 'placeholder': 'Alle rollen',
-                'options': [{'value': skill.id, 'label': skill.name} for skill in Skill.objects.all()]
+                'options': [{'value': skill.id, 'label': skill.name} for skill in context.get('skills', [])]
             },
             {
                 'type': 'select',
