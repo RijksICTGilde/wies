@@ -10,6 +10,8 @@ This files lists the changes during the lifetime of this project.
 - add service layer for statistics calculations across all pages
 - change environment variables into .env file
 - add openidconnect authentication
+- add service.otys api module
+- add syncing between OTYS IIR and wies colleagues
 
 ## demo-2025-08-11
 - add gunicorn for production server

@@ -1,6 +1,10 @@
+import os
+
 from django.db import transaction
 from wies.exact.models import ExactEmployee
 from wies.projects.models import Colleague, Brand
+
+from .otys import OTYSAPI
 
 
 def sync_colleagues_from_exact():
@@ -21,13 +25,47 @@ def sync_colleagues_from_exact():
             colleague_data = {
                 'name': exact_employee.naam_medewerker,
                 'brand': brand,
-                'source': 'exact',
                 'source_url': f'http://127.0.0.1:8000/exact/employees/{exact_employee.id}/'
             }
             
-            # Update or create colleague based on source_id
+            # Update or create colleague based on source and source_id
             colleague, created = Colleague.objects.update_or_create(
                 source_id=str(exact_employee.id),
                 source='exact',
                 defaults=colleague_data
             )
+
+
+def sync_colleagues_from_otys_iir():
+
+    OTYS_API_KEY = os.environ['OTYS_API_KEY']
+    OTYS_URL = os.environ['OTYS_URL']
+
+    with OTYSAPI(OTYS_API_KEY) as otys_api:
+        otys_colleagues = otys_api.get_candidate_list()['listOutput']  # TODO: apply filter to not transfer all information
+
+    with transaction.atomic():
+
+        brand=Brand.objects.get(name='I-Interim Rijk')  # TODO: now hardcoded on IIR
+
+        for otys_colleague in otys_colleagues:
+        
+            uid = otys_colleague['uid']
+            firstname = otys_colleague['Person']['firstName']
+            lastname = otys_colleague['Person']['lastName']
+            name=f'{firstname} {lastname}'
+
+            # Prepare colleague data
+            colleague_data = {
+                'name': name,
+                'brand': brand,
+                'source_url': f'{OTYS_URL}/us/modular.html#/candidates/{uid}'
+            }
+        
+            # Update or create colleague based on source and source_id
+            colleague, created = Colleague.objects.update_or_create(
+                source_id=str(uid),
+                source='otys_iir',
+                defaults=colleague_data
+            )
+

@@ -11,7 +11,6 @@ from django.db.models import Q, Count
 from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
-from django.contrib.auth.mixins import LoginRequiredMixin
 
 from django.contrib.auth import authenticate as auth_authenticate
 from django.contrib.auth import login as auth_login
@@ -25,7 +24,7 @@ from django.urls import reverse
 
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
-from .services.sync import sync_colleagues_from_exact
+from .services.sync import sync_colleagues_from_exact, sync_colleagues_from_otys_iir
 from .services.statistics import get_consultants_working, get_total_clients_count, get_total_budget
 from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining
 
@@ -170,9 +169,12 @@ def admin_db(request):
             management.call_command('loaddata', 'dummy_data.json')
             management.call_command('loaddata', 'exact_dummy_data.json')
             messages.success(request, 'Data loaded successfully from dummy_data.json')
-        elif action == 'sync_colleagues':
+        elif action == 'sync_colleagues_exact':
             sync_colleagues_from_exact()
             messages.success(request, 'Colleagues synced successfully from Exact')
+        elif action == 'sync_colleagues_otys_iir':
+            sync_colleagues_from_otys_iir()
+            messages.success(request, 'Colleagues synced successfully from OTYS IIR')
         return redirect('admin-db')
     
     return render(request, 'admin_db.html', context)
