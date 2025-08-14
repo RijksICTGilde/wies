@@ -363,7 +363,6 @@ class AssignmentTabsView(ListView):
         
         # Get filter options (simplified - no longer dynamic)
         context['organizations'] = [{'organization': org} for org in Assignment.objects.values_list('organization', flat=True).distinct().order_by('organization') if org]
-        context['clients'] = Ministry.objects.order_by('name')
         
         # Define tab groups with correct counts using the same base queryset
         tab_groups = {
@@ -416,7 +415,7 @@ class AssignmentTabsView(ListView):
                 'name': 'ministry',
                 'label': 'Ministerie',
                 'placeholder': 'Alle ministeries',
-                'options': [{'value': client['id'], 'label': client['name']} for client in context.get('clients', [])]
+                'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
             },
         ]
         
@@ -652,7 +651,7 @@ class PlacementTableView(ListView):
                 'name': 'client',
                 'label': 'Opdrachtgever',
                 'placeholder': 'Alle opdrachtgevers',
-                'options': [{'value': client['id'], 'label': client['name']} for client in context.get('clients', [])]
+                'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
             },
             {
                 'type': 'select',
@@ -757,7 +756,7 @@ class PlacementAvailabilityView(ListView):
                 'name': 'client',
                 'label': 'Opdrachtgever',
                 'placeholder': 'Alle opdrachtgevers',
-                'options': [{'value': client['id'], 'label': client['name']} for client in context.get('clients', [])]
+                'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
             },
             {
                 'type': 'select',
