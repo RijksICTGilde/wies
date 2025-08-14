@@ -185,22 +185,17 @@
   flex-shrink: 0;
 }
 
+
+/* Table row styling with RVO design system */
 .clickable-row {
   cursor: pointer;
   transition: background-color 0.2s ease;
 }
 
-.clickable-row:hover {
-  background-color: var(--rvo-color-hemelblauw-50, #e6f3ff) !important;
-}
-
-/* Use RVO design system hover states instead of custom CSS */
-.rvo-table-row:hover {
-  background-color: var(--rvo-color-hemelblauw-50, #e6f3ff) !important;
-}
-
+.clickable-row:hover,
+.rvo-table-row:hover,
 .rvo-table-row.clickable-row:hover {
-  background-color: var(--rvo-color-hemelblauw-50, #e6f3ff) !important;
+  background-color: var(--rvo-color-hemelblauw-50) !important;
   cursor: pointer;
 }
 
@@ -284,3 +279,4 @@
 .page-header h1 {
   margin: 0;
 }
+

@@ -1,6 +1,6 @@
 from django.db import models
 from django.urls import reverse
-from django.db.models import Max
+from django.db.models import Max, Sum, Case, When, F, FloatField, Q
 
 
 ASSIGNMENT_STATUS = {
@@ -103,7 +103,6 @@ class Assignment(models.Model):
 
     def get_total_services_cost(self):
         """Calculate total cost of all services in this assignment - optimized"""
-        from django.db.models import Sum, Case, When, F, FloatField
         
         # Use database aggregation instead of Python loops
         result = self.services.aggregate(

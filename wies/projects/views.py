@@ -363,6 +363,8 @@ class AssignmentTabsView(ListView):
         
         # Get filter options (simplified - no longer dynamic)
         context['organizations'] = [{'organization': org} for org in Assignment.objects.values_list('organization', flat=True).distinct().order_by('organization') if org]
+        context['skills'] = Skill.objects.all()
+        context['clients'] = Ministry.objects.all()
         
         # Define tab groups with correct counts using the same base queryset
         tab_groups = {
@@ -615,7 +617,6 @@ class PlacementTableView(ListView):
         
         context['skills'] = Skill.objects.order_by('name')
         context['brands'] = Brand.objects.order_by('name')
-        # Get unique organizations from assignments instead of ministries
         context['clients'] = [
             {'id': org, 'name': org} 
             for org in Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').order_by('organization')
@@ -651,7 +652,7 @@ class PlacementTableView(ListView):
                 'name': 'client',
                 'label': 'Opdrachtgever',
                 'placeholder': 'Alle opdrachtgevers',
-                'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
+                'options': [{'value': client['id'], 'label': client['name']} for client in context.get('clients', [])]
             },
             {
                 'type': 'select',
@@ -721,7 +722,6 @@ class PlacementAvailabilityView(ListView):
         
         context['skills'] = Skill.objects.order_by('name')
         context['brands'] = Brand.objects.order_by('name')
-        # Get unique organizations from assignments instead of ministries
         context['clients'] = [
             {'id': org, 'name': org} 
             for org in Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').order_by('organization')
@@ -756,7 +756,7 @@ class PlacementAvailabilityView(ListView):
                 'name': 'client',
                 'label': 'Opdrachtgever',
                 'placeholder': 'Alle opdrachtgevers',
-                'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
+                'options': [{'value': client['id'], 'label': client['name']} for client in context.get('clients', [])]
             },
             {
                 'type': 'select',

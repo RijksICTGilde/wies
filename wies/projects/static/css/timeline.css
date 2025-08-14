@@ -29,7 +29,7 @@
   margin: 0;
   font-size: var(--rvo-font-size-md);
   font-weight: var(--rvo-font-weight-bold);
-  font-family: var(--rvo-font-sans-serif-font-family), var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
+  font-family: var(--rvo-font-sans-serif-font-family);
   color: var(--rvo-color-logoblauw);
 }
 
@@ -45,7 +45,7 @@
   text-align: center;
   font-weight: var(--rvo-font-weight-bold);
   font-size: var(--rvo-font-size-sm);
-  font-family: var(--rvo-font-sans-serif-font-family), var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
+  font-family: var(--rvo-font-sans-serif-font-family);
   color: var(--rvo-color-logoblauw);
   border-right: var(--rvo-border-width-sm) solid var(--rvo-color-grijs-300);
 }

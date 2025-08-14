@@ -1,6 +1,7 @@
 from datetime import date, timedelta
 
-from ..models import Assignment, Colleague, Placement
+from django.db.models import Q
+from ..models import Assignment, Colleague, Placement, Service
 
 
 def get_consultants_working():
@@ -30,7 +31,6 @@ def get_total_budget():
 
 def get_assignments_ending_soon(limit=15):
     """Get assignments ending within 3 months - optimized database query"""
-    from django.db.models import Q
     
     today = date.today()
     three_months = today + timedelta(days=90)
@@ -64,7 +64,6 @@ def get_new_leads(limit=10):
 
 def get_total_services():
     """Get total number of services across all assignments"""
-    from ..models import Service
     return Service.objects.filter(
         assignment__status__in=['LOPEND', 'OPEN', 'LEAD']
     ).count()
@@ -102,7 +101,6 @@ def get_weeks_remaining(assignment):
 
 def get_available_since(colleague):
     """Calculate how long a colleague has been available (on the bench)"""
-    from ..models import Service
     
     # Find their most recent placement that has ended
     last_placement = Placement.objects.filter(

@@ -1,11 +1,6 @@
 /* Placement-specific CSS */
 
 /* Placement table styling */
-.clickable-row {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
 .placement-avatar-container {
   display: flex;
   align-items: center;
