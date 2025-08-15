@@ -14,14 +14,14 @@
 .timeline-header {
   display: flex;
   background: var(--rvo-color-grijs-100);
-  border-bottom: var(--rvo-border-width-lg) solid var(--rvo-color-grijs-300);
+  border-bottom: 1px solid var(--rvo-color-grijs-300);
 }
 
 .consultant-column-header {
   width: 200px;
   min-width: 200px;
   padding: var(--rvo-space-md);
-  border-right: var(--rvo-border-width-sm) solid var(--rvo-color-grijs-300);
+  border-right: 1px solid var(--rvo-color-grijs-300);
   background: var(--rvo-color-grijs-200);
 }
 
@@ -47,7 +47,7 @@
   font-size: var(--rvo-font-size-sm);
   font-family: var(--rvo-font-sans-serif-font-family);
   color: var(--rvo-color-logoblauw);
-  border-right: var(--rvo-border-width-sm) solid var(--rvo-color-grijs-300);
+  border-right: 1px solid var(--rvo-color-grijs-300);
 }
 
 .month-header:last-child {
@@ -62,7 +62,7 @@
 
 .consultant-row {
   display: flex;
-  border-bottom: var(--rvo-border-width-sm) solid var(--rvo-color-grijs-200);
+  border-bottom: 1px solid var(--rvo-color-grijs-200);
   min-height: 60px;
 }
 
@@ -74,7 +74,7 @@
   width: 200px;
   min-width: 200px;
   padding: var(--rvo-space-sm);
-  border-right: var(--rvo-border-width-sm) solid var(--rvo-color-grijs-200);
+  border-right: 1px solid var(--rvo-color-grijs-200);
   background: var(--rvo-color-wit);
   display: flex;
   flex-direction: column;
