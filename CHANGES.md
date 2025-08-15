@@ -10,6 +10,11 @@ This files lists the changes during the lifetime of this project.
 - add service layer for statistics calculations across all pages
 - change environment variables into .env file
 - add openidconnect authentication
+- update colleague page with RVO design system components and improved layout
+- consolidate CSS files - move placement styles to custom.css
+- fix Python import statements placed incorrectly within functions
+- standardize RVO/Utrecht design system class usage across templates
+- fix assignment page filter context and navigation layout
 
 ## demo-2025-08-11
 - add gunicorn for production server

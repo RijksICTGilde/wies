@@ -27,7 +27,7 @@ from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, 
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 from .services.sync import sync_colleagues_from_exact
 from .services.statistics import get_consultants_working, get_total_clients_count, get_total_budget
-from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining
+from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining, get_total_services, get_services_filled, get_average_utilization, get_available_since
 
 from wies.exact.models import ExactEmployee, ExactProject
 
@@ -44,7 +44,7 @@ oauth.register(
 )
 
 
-@login_not_required  # login page
+@login_not_required  # login page cannot require login
 def login(request):
     """Display login page or handle login action"""
     if request.method == 'GET':
@@ -55,7 +55,7 @@ def login(request):
         redirect_uri = request.build_absolute_uri(reverse_lazy('auth'))
         return oauth.oidc.authorize_redirect(request, redirect_uri)
 
-@login_not_required  # called by oidc
+@login_not_required  # called by oidc, cannot have login
 def auth(request):
     oidc_response = oauth.oidc.authorize_access_token(request)
     username = oidc_response['userinfo']['sub']
@@ -90,14 +90,22 @@ def dashboard(request):
     total_budget = get_total_budget()
     formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
 
-    # statistics context
+    # Get consultants on bench with availability info
+    consultants_bench = get_consultants_on_bench()
+    for consultant in consultants_bench:
+        consultant.available_since = get_available_since(consultant)
+
+    # Statistics context
     context = {
         'consultants_working': get_consultants_working(),
         'total_clients_count': get_total_clients_count(),
         'total_budget': total_budget,
         'formatted_budget': formatted_budget,
+        'total_services': get_total_services(),
+        'services_filled': get_services_filled(),
+        'average_utilization': get_average_utilization(),
         'assignments_ending_soon': get_assignments_ending_soon(),
-        'consultants_bench': get_consultants_on_bench(),
+        'consultants_bench': consultants_bench,
         'new_leads': get_new_leads(),
         'active_tab': active_tab,
     }
@@ -106,7 +114,7 @@ def dashboard(request):
     if 'HX-Request' in request.headers:
         return render(request, 'parts/dashboard_tabs_section.html', context)
     
-    return render(request, template_name='dashboard.html', context=context)
+    return render(request, 'dashboard.html', context)
 
 
 def get_service_details(request, service_id):
@@ -350,14 +358,12 @@ class AssignmentTabsView(ListView):
         active_tab = self.request.GET.get('tab', 'leads')
         context['active_tab'] = active_tab
         
-        # Get base queryset with common filters applied (but no status filter yet)
         base_qs = self.get_base_queryset()
         
-        # Get filter options (simplified - no longer dynamic)
         context['organizations'] = [{'organization': org} for org in Assignment.objects.values_list('organization', flat=True).distinct().order_by('organization') if org]
-        context['clients'] = Ministry.objects.order_by('name')
+        context['skills'] = Skill.objects.all()
+        context['clients'] = Ministry.objects.all()
         
-        # Define tab groups with correct counts using the same base queryset
         tab_groups = {
             'leads': {
                 'title': 'Leads & open',
@@ -379,7 +385,6 @@ class AssignmentTabsView(ListView):
         context['tab_groups'] = tab_groups
         context['active_assignments'] = tab_groups[active_tab]['queryset']
         
-        # Add compact filter configuration
         context['primary_filter'] = {
             'name': 'organization',
             'id': 'organization-filter',
@@ -390,18 +395,16 @@ class AssignmentTabsView(ListView):
         context['search_field'] = 'name'
         context['search_placeholder'] = 'Zoek op naam, opdrachtgever of ministerie...'
         
-        # Calculate active filter count
         modal_filter_params = ['skill', 'ministry', 'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
         
-        # Add modal filter configuration
         context['filter_groups'] = [
             {
                 'type': 'select',
                 'name': 'skill',
                 'label': 'Rollen',
                 'placeholder': 'Alle rollen',
-                'options': [{'value': skill.id, 'label': skill.name} for skill in Skill.objects.all()]
+                'options': [{'value': skill.id, 'label': skill.name} for skill in context.get('skills', [])]
             },
             {
                 'type': 'select',
@@ -416,7 +419,6 @@ class AssignmentTabsView(ListView):
     
     def get_template_names(self):
         if 'HX-Request' in self.request.headers:
-            # Always return full tab section for HTMX requests to update counts
             return ['parts/assignment_tabs_section.html']
         else:
             return ['assignment_tabs.html']
@@ -436,22 +438,20 @@ class ColleagueList(ListView):
     
     def get_queryset(self):
         """Apply filters to colleagues queryset"""
-        qs = Colleague.objects.select_related('brand').prefetch_related('skills').order_by('name')
+        qs = Colleague.objects.select_related('brand').prefetch_related('skills', 'expertises').order_by('name')
         
-        # Apply search filter
         name_filter = self.request.GET.get('name')
         if name_filter:
             qs = qs.filter(name__icontains=name_filter)
         
-        # Apply ordering
         ordering = self.request.GET.get('order')
         if ordering:
             qs = qs.order_by(ordering)
 
-        # Apply specific filters
         filters = {
             'skill': 'skills__id',
-            'brand': 'brand__id'
+            'brand': 'brand__id',
+            'expertise': 'expertises__id'
         }
         
         for param, lookup in filters.items():
@@ -459,17 +459,29 @@ class ColleagueList(ListView):
             if value:
                 qs = qs.filter(**{lookup: value})
         
+        status_filter = self.request.GET.get('status')
+        if status_filter == 'beschikbaar':
+            # Colleagues who have NO active LOPEND placements (may have historical ones)
+            active_colleague_ids = Placement.objects.filter(
+                service__assignment__status='LOPEND'
+            ).values_list('colleague_id', flat=True).distinct()
+            qs = qs.exclude(id__in=active_colleague_ids)
+        elif status_filter == 'ingezet':
+            qs = qs.filter(
+                placements__colleague__isnull=False,
+                placements__service__assignment__status='LOPEND'
+            )
+        
         return qs.distinct()
     
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
         
-        # Get filter options (simplified - no longer dynamic)
         context['skills'] = Skill.objects.order_by('name')
         context['brands'] = Brand.objects.order_by('name')
+        context['expertises'] = Expertise.objects.order_by('name')
         
-        # Add compact filter configuration
         context['primary_filter'] = {
             'name': 'brand',
             'id': 'brand-filter',
@@ -480,11 +492,9 @@ class ColleagueList(ListView):
         context['search_field'] = 'name'
         context['search_placeholder'] = 'Zoek op naam...'
         
-        # Calculate active filter count
-        modal_filter_params = ['skill']
+        modal_filter_params = ['skill', 'expertise', 'status']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
         
-        # Add modal filter configuration
         context['filter_groups'] = [
             {
                 'type': 'select',
@@ -492,6 +502,23 @@ class ColleagueList(ListView):
                 'label': 'Rollen',
                 'placeholder': 'Alle rollen',
                 'options': [{'value': skill.id, 'label': skill.name} for skill in context.get('skills', [])]
+            },
+            {
+                'type': 'select',
+                'name': 'expertise',
+                'label': 'ODI Expertise',
+                'placeholder': 'Alle expertise',
+                'options': [{'value': expertise.id, 'label': expertise.name} for expertise in context.get('expertises', [])]
+            },
+            {
+                'type': 'select',
+                'name': 'status',
+                'label': 'Status',
+                'placeholder': 'Alle statussen',
+                'options': [
+                    {'value': 'beschikbaar', 'label': 'Beschikbaar'},
+                    {'value': 'ingezet', 'label': 'Ingezet'}
+                ]
             }
         ]
         
@@ -525,12 +552,13 @@ class PlacementTableView(ListView):
     template_name = 'placement_table.html'
     
     def get_queryset(self):
-        """Apply filters to placements queryset"""
+        """Apply filters to placements queryset - only show LOPEND assignments, not LEAD"""
         qs = Placement.objects.select_related(
             'colleague', 'colleague__brand', 'service', 'service__skill', 'service__assignment__ministry'
+        ).filter(
+            service__assignment__status='LOPEND'
         ).order_by('-service__assignment__start_date')
         
-        # Apply search filter
         search_filter = self.request.GET.get('search')
         if search_filter:
             qs = qs.filter(
@@ -541,16 +569,15 @@ class PlacementTableView(ListView):
                 Q(service__assignment__ministry__abbreviation__icontains=search_filter)
             )
         
-        # Apply ordering
         ordering = self.request.GET.get('order')
         if ordering:
             qs = qs.order_by(ordering)
 
-        # Apply specific filters
         filters = {
             'skill': 'service__skill__id',
             'brand': 'colleague__brand__id',
-            'client': 'service__assignment__ministry__id'
+            'client': 'service__assignment__organization',
+            'ministry': 'service__assignment__ministry__id'
         }
         
         for param, lookup in filters.items():
@@ -572,9 +599,12 @@ class PlacementTableView(ListView):
         
         context['skills'] = Skill.objects.order_by('name')
         context['brands'] = Brand.objects.order_by('name')
-        context['clients'] = Ministry.objects.order_by('name')
+        context['clients'] = [
+            {'id': org, 'name': org} 
+            for org in Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').order_by('organization')
+        ]
+        context['ministries'] = Ministry.objects.order_by('name')
         
-        # Add consistent filter configuration
         context['primary_filter'] = {
             'name': 'brand',
             'id': 'brand-filter',
@@ -585,11 +615,9 @@ class PlacementTableView(ListView):
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
         
-        # Calculate active filter count
-        modal_filter_params = ['skill', 'client', 'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to']
+        modal_filter_params = ['skill', 'client', 'ministry', 'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
         
-        # Add modal filter configuration
         context['filter_groups'] = [
             {
                 'type': 'select',
@@ -603,7 +631,14 @@ class PlacementTableView(ListView):
                 'name': 'client',
                 'label': 'Opdrachtgever',
                 'placeholder': 'Alle opdrachtgevers',
-                'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
+                'options': [{'value': client['id'], 'label': client['name']} for client in context.get('clients', [])]
+            },
+            {
+                'type': 'select',
+                'name': 'ministry',
+                'label': 'Ministerie',
+                'placeholder': 'Alle ministeries',
+                'options': [{'value': ministry.id, 'label': ministry.name} for ministry in context.get('ministries', [])]
             },
         ]
 
@@ -616,12 +651,13 @@ class PlacementAvailabilityView(ListView):
     template_name = 'placement_availability.html'
     
     def get_queryset(self):
-        """Apply filters to placements queryset"""
+        """Apply filters to placements queryset - only show LOPEND assignments, not LEAD"""
         qs = Placement.objects.select_related(
             'colleague', 'colleague__brand', 'service', 'service__skill', 'service__assignment__ministry'
+        ).filter(
+            service__assignment__status='LOPEND'  # Only show placements from running assignments
         ).order_by('-service__assignment__start_date')
         
-        # Apply search filter
         search_filter = self.request.GET.get('search')
         if search_filter:
             qs = qs.filter(
@@ -632,16 +668,15 @@ class PlacementAvailabilityView(ListView):
                 Q(service__assignment__ministry__abbreviation__icontains=search_filter)
             )
         
-        # Apply ordering
         ordering = self.request.GET.get('order')
         if ordering:
             qs = qs.order_by(ordering)
 
-        # Apply specific filters
         filters = {
             'skill': 'service__skill__id',
             'brand': 'colleague__brand__id',
-            'client': 'service__assignment__ministry__id'
+            'client': 'service__assignment__organization',
+            'ministry': 'service__assignment__ministry__id'
         }
         
         for param, lookup in filters.items():
@@ -663,7 +698,11 @@ class PlacementAvailabilityView(ListView):
         
         context['skills'] = Skill.objects.order_by('name')
         context['brands'] = Brand.objects.order_by('name')
-        context['clients'] = Ministry.objects.order_by('name')
+        context['clients'] = [
+            {'id': org, 'name': org} 
+            for org in Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').order_by('organization')
+        ]
+        context['ministries'] = Ministry.objects.order_by('name')
         
         context['primary_filter'] = {
             'name': 'brand',
@@ -675,11 +714,9 @@ class PlacementAvailabilityView(ListView):
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
         
-        # Calculate active filter count
-        modal_filter_params = ['skill', 'client', 'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to']
+        modal_filter_params = ['skill', 'client', 'ministry', 'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
         
-        # Add modal filter configuration
         context['filter_groups'] = [
             {
                 'type': 'select',
@@ -693,7 +730,14 @@ class PlacementAvailabilityView(ListView):
                 'name': 'client',
                 'label': 'Opdrachtgever',
                 'placeholder': 'Alle opdrachtgevers',
-                'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
+                'options': [{'value': client['id'], 'label': client['name']} for client in context.get('clients', [])]
+            },
+            {
+                'type': 'select',
+                'name': 'ministry',
+                'label': 'Ministerie',
+                'placeholder': 'Alle ministeries',
+                'options': [{'value': ministry.id, 'label': ministry.name} for ministry in context.get('ministries', [])]
             },
         ]
 
@@ -721,15 +765,12 @@ class PlacementAvailabilityView(ListView):
             })
             current_month = add_months(current_month, 1)
         
-        # Calculate today position
         today_offset_days = (today - timeline_start).days
         total_timeline_days = (timeline_end - timeline_start).days
         today_position_percent = int((today_offset_days / total_timeline_days) * 100)
         
-        # Apply filters to get filtered placements
         filtered_placements = self.get_queryset()
         
-        # Get consultants from filtered placements
         consultants = Colleague.objects.filter(
             placements__in=filtered_placements
         ).distinct().order_by('name')
@@ -740,15 +781,12 @@ class PlacementAvailabilityView(ListView):
             consultant_placements = []
             total_current_hours = 0
             
-            # Get filtered placements for this consultant
             placements = filtered_placements.filter(
                 colleague=consultant
             ).select_related('service__assignment', 'service__skill')
             
-            # Collect all placement data first
             placement_data_list = []
             for placement in placements:
-                # Calculate placement dates
                 if placement.period_source == 'PLACEMENT':
                     start_date = placement.specific_start_date
                     end_date = placement.specific_end_date
@@ -790,7 +828,6 @@ class PlacementAvailabilityView(ListView):
                     'end_date': end_date,
                 })
             
-            # Sort placements by start date
             placement_data_list.sort(key=lambda x: x['start_date'])
             
             # Calculate horizontal positioning for overlapping assignments
@@ -928,7 +965,6 @@ class ColleagueUpdateView(UpdateView):
     form_class = ColleagueForm
     template_name = 'colleague_update.html'
 
-# Placement views
 class PlacementDetailView(DetailView):
     model = Placement
     template_name = 'placement_detail.html'
@@ -970,7 +1006,6 @@ class PlacementDeleteView(DeleteView):
         super().post(request, *args, **kwargs)
         return redirect(Assignment.objects.get(id=assignment_id))
 
-# Service views
 class ServiceCreateView(CreateView):
     model = Service
     form_class = ServiceForm
@@ -1014,7 +1049,6 @@ class ServiceDetailView(DetailView):
     model = Service
     template_name = 'service_detail.html'
 
-# Client views
 def clients(request):
     """Clients view - uses statistics functions for statistics"""
     
@@ -1027,19 +1061,21 @@ def clients(request):
     
     clients = clients.order_by('organization')
     
-    # get statistics for cards
-    consultants_working = get_consultants_working()
-    total_clients_count = get_total_clients_count()
     total_budget = get_total_budget()
     formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
     
-    return render(request, template_name='client_list.html', context={
+    context = {
         'clients': clients,
-        'consultants_working': consultants_working,
-        'total_clients_count': total_clients_count,
+        'consultants_working': get_consultants_working(),
+        'total_clients_count': get_total_clients_count(),
         'total_budget': total_budget,
         'formatted_budget': formatted_budget,
-    })
+    }
+    
+    if 'HX-Request' in request.headers:
+        return render(request, 'parts/clients_table.html', context)
+    
+    return render(request, 'client_list.html', context)
 
 def client(request, name):
     assignments = Assignment.objects.filter(organization=name)
@@ -1067,7 +1103,6 @@ def client(request, name):
         'assignments': assignments_data
     })
 
-# Ministry views
 class MinistryListView(ListView):
     model = Ministry
     template_name = 'ministry_list.html'
@@ -1078,7 +1113,6 @@ class MinistryListView(ListView):
             assignment_count=Count('assignment')
         ).order_by('name')
         
-        # Apply search filter
         search_query = self.request.GET.get('search')
         if search_query:
             queryset = queryset.filter(
@@ -1092,7 +1126,6 @@ class MinistryListView(ListView):
         """Configure filters for the ministry list"""
         search_query = self.request.GET.get('search', '')
         
-        # Count active filters
         active_filter_count = 0
         if search_query:
             active_filter_count += 1

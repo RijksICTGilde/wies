@@ -1,6 +1,6 @@
 from django.db import models
 from django.urls import reverse
-from django.db.models import Max
+from django.db.models import Max, Sum, Case, When, F, FloatField, Q
 
 
 ASSIGNMENT_STATUS = {
@@ -75,6 +75,13 @@ class Colleague(models.Model):
     def end_date(self):
         return self.placements.aggregate(Max('end_date'))['end_date__max']
 
+    @property
+    def is_active_on_lopend(self):
+        """Check if colleague is active on any LOPEND assignment"""
+        return self.placements.filter(
+            service__assignment__status='LOPEND'
+        ).exists()
+
     def get_absolute_url(self):
         return reverse("colleague-detail", kwargs={"pk": self.pk})
 
@@ -95,16 +102,32 @@ class Assignment(models.Model):
     assignment_type = models.CharField(max_length=20, choices=ASSIGNMENT_TYPE, default='GROUP')
 
     def get_total_services_cost(self):
-        """Calculate total cost of all services in this assignment"""
-        total = 0
-        for service in self.services.all():
-            if service.cost_type == "FIXED_PRICE" and service.fixed_cost:
-                total += service.fixed_cost
-            elif service.cost_type == "PER_HOUR":
-                service_cost = service.get_total_cost()
-                if service_cost:
-                    total += service_cost
-        return total
+        """Calculate total cost of all services in this assignment - optimized"""
+        
+        # Use database aggregation instead of Python loops
+        result = self.services.aggregate(
+            total_fixed=Sum(
+                Case(
+                    When(cost_type='FIXED_PRICE', then=F('fixed_cost')),
+                    default=0,
+                    output_field=FloatField()
+                )
+            ),
+            # For hourly calculation, we need to handle the complex date calculation
+            # This is simplified - in production might need more sophisticated handling
+        )
+        
+        total_fixed = result['total_fixed'] or 0
+        
+        # Handle hourly services (still need loop for complex date calculations)
+        total_hourly = 0
+        hourly_services = self.services.filter(cost_type='PER_HOUR').select_related()
+        for service in hourly_services:
+            service_cost = service.get_total_cost()
+            if service_cost:
+                total_hourly += service_cost
+                
+        return total_fixed + total_hourly
 
     def get_absolute_url(self):
         return reverse("assignment-detail", kwargs={"pk": self.pk})

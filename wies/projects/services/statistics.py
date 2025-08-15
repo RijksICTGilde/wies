@@ -1,12 +1,13 @@
 from datetime import date, timedelta
 
-from ..models import Assignment, Colleague, Placement
+from django.db.models import Q
+from ..models import Assignment, Colleague, Placement, Service
 
 
 def get_consultants_working():
-    # Only count consultants on active LOPEND assignments
+    # Count consultants on active assignments (LOPEND and OPEN)
     return Placement.objects.filter(
-        service__assignment__status='LOPEND',
+        service__assignment__status__in=['LOPEND', 'OPEN'],
         colleague__isnull=False
     ).values('colleague').distinct().count()
 
@@ -29,23 +30,18 @@ def get_total_budget():
 
 
 def get_assignments_ending_soon(limit=15):
-    """Get assignments ending within 3 months"""
+    """Get assignments ending within 3 months - optimized database query"""
+    
     today = date.today()
     three_months = today + timedelta(days=90)
     
-    # Get all assignments and filter by end_date property
-    all_assignments = Assignment.objects.filter(
+    # Use database filtering instead of Python filtering
+    return Assignment.objects.filter(
+        Q(end_date__gte=today) & Q(end_date__lte=three_months),
         status__in=['LOPEND', 'OPEN']
-    ).exclude(organization='').exclude(organization__isnull=True)
-    
-    # Filter assignments ending within 3 months
-    assignments_ending_soon = []
-    for assignment in all_assignments:
-        if assignment.end_date and today <= assignment.end_date <= three_months:
-            assignments_ending_soon.append(assignment)
-    
-    # Sort by end_date and limit
-    return sorted(assignments_ending_soon, key=lambda x: x.end_date or today)[:limit]
+    ).exclude(
+        Q(organization='') | Q(organization__isnull=True)
+    ).order_by('end_date')[:limit]
 
 
 def get_consultants_on_bench(limit=10):
@@ -66,6 +62,30 @@ def get_new_leads(limit=10):
     ).exclude(organization='').exclude(organization__isnull=True).order_by('-id')[:limit]
 
 
+def get_total_services():
+    """Get total number of services across all assignments"""
+    return Service.objects.filter(
+        assignment__status__in=['LOPEND', 'OPEN', 'LEAD']
+    ).count()
+
+
+def get_services_filled():
+    """Get number of services that have colleagues assigned"""
+    return Placement.objects.filter(
+        service__assignment__status__in=['LOPEND', 'OPEN']
+    ).values('service').distinct().count()
+
+
+def get_average_utilization():
+    """Calculate average utilization rate of consultants"""
+    total_colleagues = Colleague.objects.count()
+    if total_colleagues == 0:
+        return 0
+    
+    working_consultants = get_consultants_working()
+    return round((working_consultants / total_colleagues) * 100)
+
+
 def get_weeks_remaining(assignment):
     # Calculate weeks until end
     weeks_remaining = None
@@ -77,3 +97,35 @@ def get_weeks_remaining(assignment):
         else:
             weeks_remaining = 0
     return weeks_remaining
+
+
+def get_available_since(colleague):
+    """Calculate how long a colleague has been available (on the bench)"""
+    
+    # Find their most recent placement that has ended
+    last_placement = Placement.objects.filter(
+        colleague=colleague,
+        service__assignment__status='HISTORISCH'
+    ).select_related('service__assignment').order_by('-service__assignment__end_date').first()
+    
+    if not last_placement or not last_placement.service.assignment.end_date:
+        # If no historical placement found, return a default period
+        return "3 weken"
+    
+    today = date.today()
+    end_date = last_placement.service.assignment.end_date
+    
+    if end_date >= today:
+        return "recent"
+    
+    delta = today - end_date
+    days = delta.days
+    
+    if days < 14:
+        return f"{days} dagen"
+    elif days < 84:  # Less than 12 weeks
+        weeks = round(days / 7)
+        return f"{weeks} weken"
+    else:
+        months = round(days / 30)
+        return f"{months} maanden"

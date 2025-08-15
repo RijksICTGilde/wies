@@ -21,14 +21,14 @@
                 {% endif %}
               </div>
               <div class="placement-info">
-                <div class="placement-name">
+                <div class="rvo-text rvo-text--bold">
                   {% if placement.colleague %}
                     {{ placement.colleague.name }}
                   {% else %}
                     Niet toegewezen
                   {% endif %}
                 </div>
-                <div class="placement-brand">
+                <div class="rvo-text rvo-text--sm rvo-text--subtle">
                   {% if placement.colleague.brand %}
                     {{ placement.colleague.brand.name }}
                   {% else %}
@@ -41,11 +41,11 @@
           <td class="rvo-table-cell">
             <div class="placement-assignment">
               <a href="{% url 'assignment-detail' placement.service.assignment.id %}" 
-                 class="placement-assignment-name"
+                 class="rvo-link rvo-text--bold"
                  onclick="event.stopPropagation()">
                 {{ placement.service.assignment.name }}
               </a>
-              <div class="placement-assignment-org">
+              <div class="rvo-text--sm rvo-text--subtle">
                 {{ placement.service.assignment.organization }}
               </div>
             </div>
@@ -54,14 +54,14 @@
             {% if placement.service.skill %}
               <span class="rvo-tag rvo-tag--default">{{ placement.service.skill.name }}</span>
             {% else %}
-              <span class="placement-no-role">
+              <span class="rvo-text--italic rvo-text--subtle">
                 Geen rol
               </span>
             {% endif %}
           </td>
 
           <td class="rvo-table-cell">
-            <span class="placement-period">
+            <span class="rvo-text">
               {{ placement.start_date|date:"M y" }} - {{ placement.end_date|date:"M y" }}
             </span>
           </td>

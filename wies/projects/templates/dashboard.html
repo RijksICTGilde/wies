@@ -13,30 +13,37 @@
   </span>
 </div>
 
-<!-- Statistics Cards -->
+<!-- Dashboard Statistics Cards -->
 <div class="rvo-max-width-layout rvo-max-width-layout--md rvo-margin-block-end--md">
   <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three">
+    
+    <!-- Consultants actief -->
     <div class="rvo-card rvo-card--outline rvo-card--padding-md">
       <div class="rvo-card__content">
-        <span class="utrecht-icon rvo-icon rvo-icon-man-met-laptop rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Consultants op opdracht"></span>
-        <h4 class="utrecht-heading-4 rvo-heading--no-margins">Consultants op opdracht</h4>
-        {{ consultants_working }}
+        <span class="utrecht-icon rvo-icon rvo-icon-man-met-laptop rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Consultants"></span>
+        <h4 class="utrecht-heading-4 rvo-heading--no-margins">{{ average_utilization }}%</h4>
+        Consultants actief
       </div>
     </div>
+
+    <!-- Diensten bezet -->
     <div class="rvo-card rvo-card--outline rvo-card--padding-md">
       <div class="rvo-card__content">
-        <span class="utrecht-icon rvo-icon rvo-icon-basis-kantoorgebouw rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Aantal opdrachtgevers"></span>
-        <h4 class="utrecht-heading-4 rvo-heading--no-margins">Aantal opdrachtgevers</h4>
-        {{ total_clients_count }}
+        <span class="utrecht-icon rvo-icon rvo-icon-servicedesk-ict rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Diensten"></span>
+        <h4 class="utrecht-heading-4 rvo-heading--no-margins">{% widthratio services_filled total_services 100 %}%</h4>
+        Diensten bezet
       </div>
     </div>
+
+    <!-- Nieuwe kansen -->
     <div class="rvo-card rvo-card--outline rvo-card--padding-md">
       <div class="rvo-card__content">
-        <span class="utrecht-icon rvo-icon rvo-icon-budget rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Totale omzet"></span>
-        <h4 class="utrecht-heading-4 rvo-heading--no-margins">Totale omzet</h4>
-        € {{ formatted_budget }}
+        <span class="utrecht-icon rvo-icon rvo-icon-waarschuwing rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Kansen"></span>
+        <h4 class="utrecht-heading-4 rvo-heading--no-margins">{{ new_leads|length }}</h4>
+        Nieuwe kansen
       </div>
     </div>
+    
   </div>
 </div>
 

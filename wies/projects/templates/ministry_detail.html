@@ -34,13 +34,13 @@
           </thead>
           <tbody class="rvo-table-body">
             {% for assignment in assignments %}
-            <tr class="rvo-table-row clickable-row" style="cursor: pointer;" onclick="window.location='{% url 'assignment-detail' assignment.id %}'">
+            <tr class="rvo-table-row clickable-row" onclick="window.location='{% url 'assignment-detail' assignment.id %}'">
               <td class="rvo-table-cell">
                 {{ assignment.name }}
               </td>
               <td class="rvo-table-cell">{{ assignment.organization }}</td>
               <td class="rvo-table-cell">
-                <span class="status-badge status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
+                <span class="rvo-tag status-{{ assignment.status|lower }}">{{ assignment.status }}</span>
               </td>
               <td class="rvo-table-cell">{{ assignment.start_date|date:"d-m-Y"|default:"-" }}</td>
               <td class="rvo-table-cell">{{ assignment.end_date|date:"d-m-Y"|default:"-" }}</td>

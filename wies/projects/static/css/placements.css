@@ -1,11 +1,6 @@
 /* Placement-specific CSS */
 
 /* Placement table styling */
-.clickable-row {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
 .placement-avatar-container {
   display: flex;
   align-items: center;
@@ -16,13 +11,13 @@
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background-color: var(--rvo-color-hemelblauw-200, #bfdbfe);
+  background-color: var(--rvo-color-hemelblauw-150);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 600;
-  color: var(--rvo-color-hemelblauw-700, #1e40af);
-  font-family: 'RijksoverheidSansWebText', sans-serif;
+  font-weight: var(--rvo-font-weight-semibold);
+  color: var(--rvo-color-logoblauw);
+  font-family: var(--rvo-font-sans-serif-font-family), var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
 }
 
 .placement-info {
@@ -30,16 +25,10 @@
   flex-direction: column;
 }
 
-.placement-name {
-  font-weight: 600;
-  color: var(--rvo-color-grijs-900, #111827);
-  font-family: 'RijksoverheidSansWebText', sans-serif;
-}
-
 .placement-ministry {
-  font-size: 0.75rem;
-  color: var(--rvo-color-grijs-600, #6b7280);
-  font-family: 'RijksoverheidSansWebText', sans-serif;
+  font-size: var(--rvo-font-size-xs);
+  color: var(--rvo-color-grijs-600);
+  font-family: var(--rvo-font-sans-serif-font-family), var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
 }
 
 .placement-assignment {
@@ -47,30 +36,7 @@
   flex-direction: column;
 }
 
-.placement-assignment-name {
-  color: var(--rvo-color-logoblauw, #003366);
-  text-decoration: underline;
-  font-family: 'RijksoverheidSansWebText', sans-serif;
-}
-
-.placement-assignment-org {
-  font-size: 0.75rem;
-  color: var(--rvo-color-grijs-600, #6b7280);
-  font-family: 'RijksoverheidSansWebText', sans-serif;
-}
-
-.placement-no-role {
-  color: var(--rvo-color-grijs-400, #9ca3af);
-  font-style: italic;
-  font-size: 0.75rem;
-  font-family: 'RijksoverheidSansWebText', sans-serif;
-}
-
-.placement-period {
-  color: var(--rvo-color-grijs-700, #374151);
-  font-weight: 500;
-  font-family: 'RijksoverheidSansWebText', sans-serif;
-}
+/* Typography classes replaced with RVO design system classes in templates */
 
 /* Make sure the placement table container uses full width */
 #placement_table {

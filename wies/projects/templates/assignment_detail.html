@@ -69,7 +69,7 @@
       </dd>
       <dt>Status</dt>
       <dd>
-        <span class="status-badge status-{{ object.status|lower }}">{{ object.status }}</span>
+        <span class="rvo-tag status-{{ object.status|lower }}">{{ object.status }}</span>
       </dd>
       <dt>Startdatum</dt>
       <dd>{{ object.start_date }}</dd>
@@ -99,7 +99,7 @@
             <td class="rvo-table-cell">{{ service.description }}</td>
             <td class="rvo-table-cell">
               {% if service.skill %}
-                 <span class="skill-badge">{{ service.skill.name }}</span>
+                 <span class="rvo-tag">{{ service.skill.name }}</span>
               {% else %}
                 <span class="rvo-text--italic">Geen rol opgegeven</span>
               {% endif %}
@@ -159,7 +159,7 @@
               <td class="rvo-table-cell">{{ service.description }}</td>
               <td class="rvo-table-cell">
                 {% if service.skill %}
-                  <span class="skill-badge">{{ service.skill.name }}</span>
+                  <span class="rvo-tag">{{ service.skill.name }}</span>
                 {% else %}
                   <span class="rvo-text--italic">Geen rol opgegeven</span>
                 {% endif %}

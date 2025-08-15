@@ -50,39 +50,6 @@
   text-decoration: underline;
 }
 
-.user-menubar-item {
-  margin-left: auto;
-}
-
-.user-section {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #154273;
-  font-size: 0.9rem;
-}
-
-.user-icon {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-.user-info {
-  font-size: 0.9rem;
-  white-space: nowrap;
-}
-
-.login-link, .logout-link {
-  color: #154273;
-  text-decoration: none;
-  transition: color 0.3s;
-}
-
-.login-link:hover, .logout-link:hover {
-  color: #0f3659;
-  text-decoration: underline;
-}
 </style>
 
 <div class="rvo-menubar__background rvo-menubar__background--horizontal-rule">
@@ -101,18 +68,21 @@
               <a href="/colleagues/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Collega's & expertise</a>
             </li>
             <li class="rvo-menubar__item">
-              <a href="/ministries/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Opdrachtgevers & relaties</a>
+              <a href="/clients/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Opdrachtgevers & relaties</a>
             </li>
-            <li class="rvo-menubar__item user-menubar-item">
-              <div class="user-section">
-                <img src="{% static '@nl-rvo/assets/icons/functioneel/user.svg' %}" alt="User" class="user-icon">
-                
-                {% if user.is_authenticated %}
-                  <span class="user-info"> {{ user.get_full_name }} (<a href="/logout/" class="logout-link">log uit</a>)</span>
-                {% else %}
-                  <a href="/login/" class="login-link">log in</a>
-                {% endif %}
-              </div>
+          </ul>
+          <ul class="rvo-menubar__group--flex">
+            <li class="rvo-menubar__item">
+              {% if user.is_authenticated %}
+                <span class="rvo-link rvo-menubar__link rvo-link--logoblauw">{{ user.get_full_name }}</span>
+              {% endif %}
+            </li>
+            <li class="rvo-menubar__item">
+              {% if user.is_authenticated %}
+                <a href="/logout/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Uitloggen</a>
+              {% else %}
+                <a href="/login/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Inloggen</a>
+              {% endif %}
             </li>
           </ul>
         </li>

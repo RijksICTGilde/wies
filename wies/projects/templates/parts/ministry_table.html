@@ -8,7 +8,7 @@
         </thead>
         <tbody class="rvo-table-body">
             {% for ministry in ministries %}
-            <tr class="rvo-table-row" style="cursor: pointer;" onclick="window.location='{% url 'ministry-detail' ministry.pk %}'">
+            <tr class="rvo-table-row clickable-row" onclick="window.location='{% url 'ministry-detail' ministry.pk %}'">
                 <td class="rvo-table-cell">{{ ministry.name }} ({{ ministry.abbreviation }})</td>
                 <td class="rvo-table-cell">{{ ministry.assignment_count }}</td>
             </tr>
