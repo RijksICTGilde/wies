@@ -19,10 +19,10 @@
         </td>
         <td class="rvo-table-cell">
           {% for skill in colleague.skills.all %}
-            <span class="skill-badge">{{ skill.name }}</span>
+            <span class="rvo-tag">{{ skill.name }}</span>
           {% endfor %}
         </td>
-        <td class="rvo-table-cell">-</td>
+        <td class="rvo-table-cell">{{ colleague.available_since }}</td>
       </tr>
       {% empty %}
       <tr class="rvo-table-row">
