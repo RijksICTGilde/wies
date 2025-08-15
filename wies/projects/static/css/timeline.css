@@ -67,7 +67,7 @@
 }
 
 .consultant-row:hover {
-  background: var(--rvo-color-grijs-50);
+  background: var(--rvo-color-grijs-050);
 }
 
 .consultant-info {
@@ -112,13 +112,13 @@
   align-items: center;
   padding: 0 var(--rvo-space-xs);
   transition: all 0.2s ease;
-  box-shadow: var(--rvo-shadow-sm);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
   background: linear-gradient(135deg, var(--rvo-color-groen-600), var(--rvo-color-groen-750));
 }
 
 .placement-bar:hover {
   transform: scale(1.02);
-  box-shadow: var(--rvo-shadow-md);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   z-index: 10;
 }
 

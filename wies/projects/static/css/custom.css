@@ -168,8 +168,8 @@
 }
 
 .rvo-table-header--active-sort {
-  background-color: var(--rvo-color-hemelblauw-50) !important;
-  color: var(--rvo-color-hemelblauw-700) !important;
+  background-color: var(--rvo-color-hemelblauw-150) !important;
+  color: var(--rvo-color-hemelblauw-750) !important;
 }
 
 .rvo-table-header__sortable-container {
@@ -195,7 +195,7 @@
 .clickable-row:hover,
 .rvo-table-row:hover,
 .rvo-table-row.clickable-row:hover {
-  background-color: var(--rvo-color-hemelblauw-50) !important;
+  background-color: var(--rvo-color-hemelblauw-150) !important;
   cursor: pointer;
 }
 
