@@ -113,7 +113,7 @@
   padding: 0 var(--rvo-space-xs);
   transition: all 0.2s ease;
   box-shadow: var(--rvo-shadow-sm);
-  background: linear-gradient(135deg, var(--rvo-color-groen-600), var(--rvo-color-groen-700));
+  background: linear-gradient(135deg, var(--rvo-color-groen-600), var(--rvo-color-groen-750));
 }
 
 .placement-bar:hover {
