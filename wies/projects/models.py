@@ -19,6 +19,7 @@ ASSIGNMENT_TYPE = {
 SOURCE_CHOICES = {
     'wies': 'WIES',
     'exact': 'Exact',
+    'otys_iir': 'OTYS IIR',
 }
 
 

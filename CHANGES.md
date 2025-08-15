@@ -15,6 +15,8 @@ This files lists the changes during the lifetime of this project.
 - fix Python import statements placed incorrectly within functions
 - standardize RVO/Utrecht design system class usage across templates
 - fix assignment page filter context and navigation layout
+- add service.otys api module
+- add syncing between OTYS IIR and wies colleagues
 
 ## demo-2025-08-11
 - add gunicorn for production server
