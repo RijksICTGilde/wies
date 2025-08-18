@@ -26,7 +26,8 @@ def sync_colleagues_from_exact():
             colleague_data = {
                 'name': exact_employee.naam_medewerker,
                 'brand': brand,
-                'source_url': f'http://127.0.0.1:8000/exact/employees/{exact_employee.id}/'
+                'source_url': f'http://127.0.0.1:8000/exact/employees/{exact_employee.id}/',
+                'email': exact_employee.email,
             }
             
             # Update or create colleague based on source and source_id
@@ -55,13 +56,15 @@ def sync_colleagues_from_otys_iir():
             uid = otys_colleague['uid']
             firstname = otys_colleague['Person']['firstName']
             lastname = otys_colleague['Person']['lastName']
+            email = otys_colleague['Person']['emailPrimary']
             name=f'{firstname} {lastname}'
 
             # Prepare colleague data
             colleague_data = {
                 'name': name,
                 'brand': brand,
-                'source_url': f'{OTYS_URL}/us/modular.html#/candidates/{uid}'
+                'source_url': f'{OTYS_URL}/us/modular.html#/candidates/{uid}',
+                'email': email,
             }
         
             # Update or create colleague based on source and source_id
@@ -70,4 +73,3 @@ def sync_colleagues_from_otys_iir():
                 source='otys_iir',
                 defaults=colleague_data
             )
-
