@@ -19,6 +19,7 @@ This files lists the changes during the lifetime of this project.
 - fix assignment page filter context and navigation layout
 - add service.otys api module
 - add syncing between OTYS IIR and wies colleagues
+- add Colleague.email, update source data to have logical email adresses
 
 ## demo-2025-08-11
 - add gunicorn for production server
