@@ -2,7 +2,8 @@ import datetime
 from urllib.parse import urlencode
 
 from django.views.generic.list import ListView
-from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
+from django.views.generic import DetailView, CreateView, DeleteView, UpdateView, TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.template.defaulttags import register
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy, reverse
@@ -10,7 +11,7 @@ from django.db import models
 from django.db.models import Q, Count
 from django.http import JsonResponse
 from django.contrib import messages
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 
 from django.contrib.auth import authenticate as auth_authenticate
 from django.contrib.auth import login as auth_login
@@ -1194,4 +1195,15 @@ class MinistryDetailView(DetailView):
             })
         
         context['assignments'] = assignments_data
+        return context
+
+
+class ProfileView(LoginRequiredMixin, TemplateView):
+    template_name = 'profile.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get tab from query parameter, default to 'overzicht'
+        active_tab = self.request.GET.get('tab', 'overzicht')
+        context['active_tab'] = active_tab
         return context
