@@ -310,6 +310,7 @@ class AssignmentTabsView(ListView):
         if name_filter:
             qs = qs.filter(
                 models.Q(name__icontains=name_filter) | 
+                models.Q(extra_info__icontains=name_filter) | 
                 models.Q(organization__icontains=name_filter) |
                 models.Q(ministry__name__icontains=name_filter) |
                 models.Q(ministry__abbreviation__icontains=name_filter)
@@ -566,6 +567,7 @@ class PlacementTableView(ListView):
             qs = qs.filter(
                 Q(colleague__name__icontains=search_filter) |
                 Q(service__assignment__name__icontains=search_filter) |
+                Q(service__assignment__extra_info__icontains=search_filter) |
                 Q(service__assignment__organization__icontains=search_filter) |
                 Q(service__assignment__ministry__name__icontains=search_filter) |
                 Q(service__assignment__ministry__abbreviation__icontains=search_filter)
@@ -665,6 +667,7 @@ class PlacementAvailabilityView(ListView):
             qs = qs.filter(
                 Q(colleague__name__icontains=search_filter) |
                 Q(service__assignment__name__icontains=search_filter) |
+                Q(service__assignment__extra_info__icontains=search_filter) |
                 Q(service__assignment__organization__icontains=search_filter) |
                 Q(service__assignment__ministry__name__icontains=search_filter) |
                 Q(service__assignment__ministry__abbreviation__icontains=search_filter)
