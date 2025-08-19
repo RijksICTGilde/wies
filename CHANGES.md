@@ -6,6 +6,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 - add Colleague.email, remove duplicates in dummy data
 - add search on assignment "Extra info"
+- update OTYS URL
 
 ## 2025-08-18
 - add dashboard page as landing page with summary cards

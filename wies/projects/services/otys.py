@@ -99,7 +99,7 @@ class OTYSAPI:
         # a single session is created which will be re-used. This session is maximum valid for 14 hours
         self._api_key = api_key
         self.session_id = None  # set during __enter__
-        self.url = "https://otys.otysapp.com/jservice.php"
+        self.url = "https://ows.otys.nl/jservice.php"
 
     def __enter__(self):
         self.session_id = self._get_session_id(self._api_key)
