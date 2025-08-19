@@ -10,6 +10,8 @@ This files lists the changes during the lifetime of this project.
 - add profile edit functionality through existing colleague update form
 - add Colleague.email, remove duplicates in dummy data
 - add search on assignment "Extra info"
+- add possibility to take over hours per week from service
+- fix Placement update form dynamic field visibility
 
 ## 2025-08-18
 - add dashboard page as landing page with summary cards
