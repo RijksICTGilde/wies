@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 ## Current version
 
 ## unreleased
+- add Colleague.email, remove duplicates in dummy data
 
 ## 2025-08-18
 - add dashboard page as landing page with summary cards
@@ -19,7 +20,6 @@ This files lists the changes during the lifetime of this project.
 - fix assignment page filter context and navigation layout
 - add service.otys api module
 - add syncing between OTYS IIR and wies colleagues
-- add Colleague.email
 
 ## demo-2025-08-11
 - add gunicorn for production server
