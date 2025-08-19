@@ -64,6 +64,7 @@ class Skill(models.Model):
 
 class Colleague(models.Model):
     name = models.CharField(max_length=200)
+    email = models.EmailField()
     brand = models.ForeignKey('Brand', models.SET_NULL, null=True, blank=False)
     expertises = models.ManyToManyField('Expertise', blank=True)
     skills = models.ManyToManyField('Skill', blank=True)

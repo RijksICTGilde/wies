@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 ## Current version
 
 ## unreleased
+- add Colleague.email, remove duplicates in dummy data
 
 ## 2025-08-18
 - add dashboard page as landing page with summary cards
