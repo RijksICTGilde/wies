@@ -23,25 +23,14 @@ class AuthBackend(BaseBackend):
 
         # Link or create Colleague profile
         full_name = f"{user.first_name} {user.last_name}".strip()
-        display_name = full_name if full_name else username
-        self._ensure_colleague_profile(user, email, display_name)
 
-        return user
-    
-    def _ensure_colleague_profile(self, user, email, name):
-        """Ensure user has a linked colleague profile"""
-        # Check if user already has a colleague linked
-        if hasattr(user, 'colleague') and user.colleague:
-            return
-        
-        # Get or create colleague by email, then link to user
-        colleague, created = Colleague.objects.get_or_create(
+        colleague, _ = Colleague.objects.get_or_create(
             email=email,
-            defaults={'name': name, 'user': user}
+            defaults={'name': name}
         )
         
-        # If colleague existed but wasn't linked, link it now
-        if not created and not colleague.user:
+        # if not yet linked, link
+        if not colleague.user:
             colleague.user = user
             colleague.save()
 
