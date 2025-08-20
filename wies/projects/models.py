@@ -1,6 +1,7 @@
 from django.db import models
 from django.urls import reverse
 from django.db.models import Max, Sum, Case, When, F, FloatField, Q
+from django.contrib.auth.models import User
 
 
 ASSIGNMENT_STATUS = {
@@ -63,6 +64,7 @@ class Skill(models.Model):
         return self.name
 
 class Colleague(models.Model):
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='colleague')
     name = models.CharField(max_length=200)
     email = models.EmailField()
     brand = models.ForeignKey('Brand', models.SET_NULL, null=True, blank=False)
