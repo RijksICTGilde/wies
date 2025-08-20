@@ -16,182 +16,260 @@
     <h1 class="utrecht-heading-1 rvo-heading--no-margins">{{ object.name }}</h1>
   </div>
   
-  <!-- Statistics Cards -->
-  <div class="rvo-max-width-layout rvo-max-width-layout--md rvo-layout-margin-bottom--sm">
-    <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three">
-      <div class="rvo-card rvo-card--outline rvo-card--padding-md">
-        <div class="rvo-card__content">
-          <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Weken tot eind opdracht"></span>
-          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Weken tot eind opdracht</h4>
-          {% if weeks_remaining is not None %}
-            {% if weeks_remaining > 0 %}
-              {{ weeks_remaining }} weken
+  <!-- Assignment Information Cards -->
+  <div class="rvo-card rvo-card--outline rvo-card--padding-lg rvo-layout-margin-bottom--xl rvo-card--full-colour--grijs-100">
+    <div class="rvo-layout-grid rvo-layout-gap--lg rvo-layout-grid-columns--two">
+      
+      <!-- Periode -->
+      <div class="rvo-layout-column">
+        <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center rvo-layout-margin-bottom--md">
+          <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Kalender"></span>
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Periode:</h4>
+        </div>
+        <p class="utrecht-paragraph rvo-paragraph--no-margins">
+          {{ object.start_date|date:"j M Y" }} - {{ object.end_date|date:"j M Y" }}
+        </p>
+      </div>
+
+      <!-- Budget -->
+      <div class="rvo-layout-column">
+        <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center rvo-layout-margin-bottom--md">
+          <span class="utrecht-icon rvo-icon rvo-icon-map-vol-documenten rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Budget"></span>
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Budget:</h4>
+        </div>
+        <p class="utrecht-paragraph rvo-paragraph--no-margins">
+          {% with total_cost=object.get_total_cost %}
+            {% if total_cost %}
+              €{{ total_cost|floatformat:2 }}
             {% else %}
-              Afgelopen
+              Niet beschikbaar
             {% endif %}
+          {% endwith %}
+        </p>
+      </div>
+
+      <!-- Opdrachtgever -->
+      <div class="rvo-layout-column">
+        <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center rvo-layout-margin-bottom--md">
+          <span class="utrecht-icon rvo-icon rvo-icon-gebruiker rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Opdrachtgever"></span>
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Opdrachtgever:</h4>
+        </div>
+        <p class="utrecht-paragraph rvo-paragraph--no-margins">
+          {% if object.organization %}
+            {{ object.organization }}
           {% else %}
-            Geen einddatum
+            <span class="rvo-text--italic">Geen opdrachtgever opgegeven</span>
           {% endif %}
-        </div>
+        </p>
       </div>
-      <div class="rvo-card rvo-card--outline rvo-card--padding-md">
-        <div class="rvo-card__content">
-          <span class="utrecht-icon rvo-icon rvo-icon-map-vol-documenten rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Budget besteed"></span>
-          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Budget besteed</h4>
-          {{ budget_percentage }}%
+
+      <!-- Ministerie -->
+      <div class="rvo-layout-column">
+        <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center rvo-layout-margin-bottom--md">
+          <span class="utrecht-icon rvo-icon rvo-icon-informatie rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Ministerie"></span>
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Ministerie:</h4>
         </div>
+        <p class="utrecht-paragraph rvo-paragraph--no-margins">
+          {% if object.ministry %}
+            {{ object.ministry.name }}
+          {% else %}
+            <span class="rvo-text--italic">Geen ministerie opgegeven</span>
+          {% endif %}
+        </p>
       </div>
-      <div class="rvo-card rvo-card--outline rvo-card--padding-md">
-        <div class="rvo-card__content">
-          <span class="utrecht-icon rvo-icon rvo-icon-kalender-met-vinkje rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Kalender met vinkje"></span>
-          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Opdracht score</h4>
-          {{ project_score }}
+
+      <!-- Omschrijving -->
+      <div class="rvo-layout-column">
+        <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center rvo-layout-margin-bottom--md">
+          <span class="utrecht-icon rvo-icon rvo-icon-document-tekst rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Omschrijving"></span>
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Omschrijving:</h4>
         </div>
+        <p class="utrecht-paragraph rvo-paragraph--no-margins">
+          {% if object.extra_info %}
+            {{ object.extra_info }}
+          {% else %}
+            <span class="rvo-text--italic">Geen omschrijving opgegeven</span>
+          {% endif %}
+        </p>
       </div>
+
+      <!-- Status -->
+      <div class="rvo-layout-column">
+        <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center rvo-layout-margin-bottom--md">
+          <span class="utrecht-icon rvo-icon rvo-icon-vinkje rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Status"></span>
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Status:</h4>
+        </div>
+        <p class="utrecht-paragraph rvo-paragraph--no-margins">
+          <span class="rvo-tag rvo-tag--warning">{{ object.status }}</span>
+        </p>
+      </div>
+      
     </div>
   </div>
-  
-  <div class="rvo-layout-column rvo-layout-gap--lg">
-    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Opdracht gegevens</h2>
-    
-    <dl class="rvo-data-list">
-      <dt>Opdracht naam</dt>
-      <dd>{{ object.name }}</dd>
-      <dt>Opdrachtgever</dt>
-      <dd><a href="/clients/{{ object.organization }}">{{ object.organization }}</a></dd>
-      <dt>Ministerie</dt>
-      <dd>
-        {% if object.ministry %}
-          <a href="{% url 'ministry-detail' object.ministry.pk %}" class="rvo-link">{{ object.ministry.name }} ({{ object.ministry.abbreviation }})</a>
-        {% else %}
-          <span class="rvo-text--italic">Geen ministerie opgegeven</span>
-        {% endif %}
-      </dd>
-      <dt>Status</dt>
-      <dd>
-        <span class="rvo-tag status-{{ object.status|lower }}">{{ object.status }}</span>
-      </dd>
-      <dt>Startdatum</dt>
-      <dd>{{ object.start_date }}</dd>
-      <dt>Einddatum</dt>
-      <dd>{{ object.end_date }}</dd>
-      <dt>Extra info</dt>
-      <dd>{{ object.extra_info }}</dd>
-    </dl>
 
 <h2 class="utrecht-heading-2 rvo-heading--no-margins">Diensten</h2>
 
-    <div class="rvo-table--responsive">
-      <table class="rvo-table">
-        <thead class="rvo-table-head">
-          <tr class="rvo-table-row">
-            <th class="rvo-table-header">Omschrijving</th>
-            <th class="rvo-table-header">Rol</th>
-            <th class="rvo-table-header">Start datum</th>
-            <th class="rvo-table-header">Eind datum</th>
-            <th class="rvo-table-header">Kosten</th>
-            <th class="rvo-table-header">Acties</th>
-          </tr>
-        </thead>
-        <tbody class="rvo-table-body">
-          {% for service in object.services.all %}
-          <tr class="rvo-table-row">
-            <td class="rvo-table-cell">{{ service.description }}</td>
-            <td class="rvo-table-cell">
-              {% if service.skill %}
-                 <span class="rvo-tag">{{ service.skill.name }}</span>
-              {% else %}
-                <span class="rvo-text--italic">Geen rol opgegeven</span>
-              {% endif %}
-            </td>
-            <td class="rvo-table-cell">{{ service.start_date}}</td>
-            <td class="rvo-table-cell">{{ service.end_date }}</td>
-            <td class="rvo-table-cell">
+    {% for service in object.services.all %}
+    <div class="rvo-card rvo-card--outline rvo-card--padding-lg rvo-layout-margin-bottom--lg">
+      <!-- Service Header -->
+      <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--space-between rvo-layout-align--center rvo-layout-margin-bottom--lg">
+        <h3 class="utrecht-heading-3 rvo-heading--no-margins">{{ service.description }}</h3>
+        <div class="rvo-layout-row rvo-layout-gap--sm">
+          <a href="/services/{{ service.id }}/update" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm rvo-link--no-underline">
+            Bewerken
+          </a>
+          <a href="/services/{{ service.id }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-sm rvo-link--no-underline">
+            Verwijderen
+          </a>
+        </div>
+      </div>
+
+      <!-- Details Grid -->
+      <div class="rvo-layout-grid rvo-layout-gap--lg rvo-layout-grid-columns--four rvo-layout-margin-bottom--lg">
+        {% if service.skill %}
+          <!-- Search Criteria -->
+          <div class="rvo-layout-column">
+            <h4 class="utrecht-heading-4 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Profiel:</h4>
+            <span class="rvo-tag">{{ service.skill.name }}</span>
+          </div>
+          <div class="rvo-layout-column">
+            <h4 class="utrecht-heading-4 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Wanneer:</h4>
+            <p class="utrecht-paragraph rvo-paragraph--no-margins">
+              {{ service.start_date|date:"j M Y" }} - {{ service.end_date|date:"j M Y" }}
+            </p>
+          </div>
+          
+          <div class="rvo-layout-column">
+            <h4 class="utrecht-heading-4 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Status:</h4>
+            {% if service.placements.count == 0 %}
+              <span class="rvo-tag rvo-tag--warning">Open</span>
+            {% else %}
+              <span class="rvo-tag rvo-tag--success">Matched</span>
+            {% endif %}
+          </div>
+        {% else %}
+          <!-- Cost Item Details -->
+          <div class="rvo-layout-column">
+            <h4 class="utrecht-heading-4 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Type kostenpost:</h4>
+            <span class="rvo-tag rvo-tag--secondary">Service/Middel</span>
+          </div>
+          <div class="rvo-layout-column">
+            <h4 class="utrecht-heading-4 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Periode:</h4>
+            <p class="utrecht-paragraph rvo-paragraph--no-margins">
+              {{ service.start_date|date:"j M Y" }} - {{ service.end_date|date:"j M Y" }}
+            </p>
+          </div>
+          <div class="rvo-layout-column">
+            <h4 class="utrecht-heading-4 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Budget:</h4>
+            <p class="utrecht-paragraph rvo-paragraph--no-margins">
               {% if service.cost_type == "FIXED_PRICE" %}
-                €{{ service.fixed_cost|format_currency }}
+                €{{ service.fixed_cost|floatformat:2 }}
+                <br>
+                <small class="rvo-text--subtle">Vaste kosten</small>
               {% elif service.cost_type == "PER_HOUR" %}
                 {% with total_cost=service.get_total_cost weeks=service.get_weeks %}
                   {% if total_cost %}
-                    €{{ total_cost|format_currency }}
+                    €{{ total_cost|floatformat:2 }}
                     <br>
-                    <small style="color: #666; font-size: 0.8em;">
-                      {{ weeks }} weken × {{ service.hours_per_week }} uur × €100
+                    <small class="rvo-text--subtle">
+                      Geschatte kosten
                     </small>
                   {% else %}
-                    <span class="rvo-text--italic">Niet beschikbaar</span>
+                    <span class="rvo-text--italic">Budget nog te bepalen</span>
                   {% endif %}
                 {% endwith %}
               {% endif %}
-            </td>
-            <td class="rvo-table-cell">
-              <a href="/services/{{ service.id }}/update" class="rvo-link">edit</a> / 
-              <a href="/services/{{ service.id }}/delete" class="rvo-link">delete</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+            </p>
+          </div>
+          <div class="rvo-layout-column">
+            <h4 class="utrecht-heading-4 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Status:</h4>
+            <span class="rvo-tag rvo-tag--info">Goedgekeurd</span>
+          </div>
+        {% endif %}
+      </div>
 
-<a href="/assignments/{{ object.pk }}/services/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
+      <!-- Found Matches (only for people searches) -->
+      {% if service.skill %}
+        <div class="rvo-layout-margin-bottom--md">
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins rvo-layout-margin-bottom--md">Matches:</h4>
+          
+          {% if not service.placements.all %}
+            <!-- Show potential matches when no one is assigned yet -->
+            {% comment %}TODO: Replace with actual available colleague count with matching skill{% endcomment %}
+            {% with potential_matches=5 %}
+              <div class="rvo-card rvo-card--outline rvo-card--padding-sm rvo-layout-margin-bottom--md">
+                <p class="utrecht-paragraph rvo-paragraph--no-margins">
+                  <span class="utrecht-icon rvo-icon rvo-icon-gebruiker rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Mogelijke matches"></span>
+                  {{ potential_matches }} {% if potential_matches == 1 %}mogelijke match{% else %}mogelijke matches{% endif %} beschikbaar
+                </p>
+              </div>
+            {% endwith %}
+          {% else %}
+            <!-- Show assigned people -->
+          {% for placement in service.placements.all %}
+          <div class="rvo-card rvo-card--outline rvo-card--padding-sm rvo-layout-margin-bottom--md rvo-card--full-colour--grijs-100">
+            <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+              <div class="rvo-layout-column">
+                <h5 class="utrecht-heading-5 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Persoon:</h5>
+                {% if placement.colleague %}
+                  <a href="{% url 'colleague-detail' placement.colleague.pk %}" class="rvo-link">{{ placement.colleague.name }}</a>
+                {% else %}
+                  <span class="rvo-text--italic">TBD</span>
+                {% endif %}
+              </div>
+              <div class="rvo-layout-column">
+                <h5 class="utrecht-heading-5 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Beschikbaar:</h5>
+                <span>{{ placement.start_date|date:"j M Y" }} - {{ placement.end_date|date:"j M Y" }}</span>
+              </div>
+              <div class="rvo-layout-column">
+                <h5 class="utrecht-heading-5 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Inzet:</h5>
+                <span>{{ placement.hours_per_week }}u/week</span>
+              </div>
+              <div class="rvo-layout-column">
+                <h5 class="utrecht-heading-5 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Acties:</h5>
+                <div class="rvo-layout-row rvo-layout-gap--sm">
+                  <a href="/placements/{{ placement.id }}/update" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-xs rvo-link--no-underline">
+                    Wijzig
+                  </a>
+                  <a href="/placements/{{ placement.id }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs rvo-link--no-underline">
+                    Remove
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+          {% endif %}
+        </div>
+
+        <!-- Add match button (only for people searches) -->
+        <div>
+          <a href="/assignments/{{ object.pk }}/placements/new?service={{ service.id }}" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-sm rvo-link--no-underline">
+            Bekijk matches
+          </a>
+        </div>
+      {% endif %}
+    </div>
+    {% empty %}
+    <div class="rvo-card rvo-card--outline rvo-card--padding-lg">
+      <p class="utrecht-paragraph rvo-paragraph--no-margins rvo-text--subtle">
+        Nog geen diensten gedefinieerd voor deze opdracht.
+      </p>
+    </div>
+    {% endfor %}
+
+    <div class="rvo-layout-margin-top--xl">
+      <a href="/assignments/{{ object.pk }}/services/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
         Dienst toevoegen
       </a>
-
-    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Inzet</h2>
-
-    <div class="rvo-table--responsive">
-      <table class="rvo-table">
-        <thead class="rvo-table-head">
-          <tr class="rvo-table-row">
-            <th class="rvo-table-header">Dienst</th>
-            <th class="rvo-table-header">Rol</th>
-            <th class="rvo-table-header">Collega</th>
-            <th class="rvo-table-header">Start datum</th>
-            <th class="rvo-table-header">Eind datum</th>
-            <th class="rvo-table-header">Uren per week</th>
-            <th class="rvo-table-header">Acties</th>
-          </tr>
-        </thead>
-        <tbody class="rvo-table-body">
-          {% for service in object.services.all %}
-            {% for placement in service.placements.all %}
-            <tr class="rvo-table-row">
-              <td class="rvo-table-cell">{{ service.description }}</td>
-              <td class="rvo-table-cell">
-                {% if service.skill %}
-                  <span class="rvo-tag">{{ service.skill.name }}</span>
-                {% else %}
-                  <span class="rvo-text--italic">Geen rol opgegeven</span>
-                {% endif %}
-              </td>
-              {% if placement.colleague %}
-                <td class="rvo-table-cell"><a href="{% url 'colleague-detail' placement.colleague.pk %}" class="rvo-link">{{ placement.colleague.name }}</a></td>
-              {% else %}
-                <td class="rvo-table-cell"></td>
-              {% endif %}
-              <td class="rvo-table-cell">{{ placement.start_date }}</td>
-              <td class="rvo-table-cell">{{ placement.end_date }}</td>
-              <td class="rvo-table-cell">{{ placement.hours_per_week }}</td>
-              <td class="rvo-table-cell">
-                <a href="/placements/{{ placement.id }}/update" class="rvo-link">edit</a> / 
-                <a href="/placements/{{ placement.id }}/delete" class="rvo-link">delete</a>
-              </td>
-            </tr>
-            {% endfor %}
-          {% endfor %}
-        </tbody>
-      </table>
     </div>
 
-<a href="/assignments/{{ object.pk }}/placements/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
-        Inzet toevoegen
-      </a>
 
     <div class="rvo-layout-row rvo-layout-gap--md">
-      <a href="/assignments/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
+      <a href="/assignments/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
         Opdracht bewerken
       </a>
-      <a href="/assignments/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md">
+      <a href="/assignments/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md rvo-link--no-underline">
         Opdracht verwijderen
       </a>
     </div>

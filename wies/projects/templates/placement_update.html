@@ -3,107 +3,172 @@
 {% block content %}
 
 <div class="rvo-max-width-layout rvo-max-width-layout--lg rvo-max-width-layout-inline-padding--none">
-  <div class="rvo-layout-column rvo-layout-gap--0">
-    <div class="rvo-layout-column rvo-layout-gap--0">
-      <h1 class="utrecht-heading-1">Inzet bewerken</h1>
-      <p class="rvo-text--lg"><span class='rvo-text--bold'>Pas de gegevens van de inzet aan.</span> Wijzig de inzet.</p>
+  <div class="rvo-layout-column rvo-layout-gap--xl">
+    <!-- Header -->
+    <div class="rvo-layout-column rvo-layout-gap--md">
+      <h1 class="utrecht-heading-1 rvo-heading--no-margins">Match aanpassen</h1>
+      <p class="utrecht-paragraph">Je kunt een andere persoon kiezen of de details van de huidige toewijzing aanpassen.</p>
     </div>
-    <form class="rvo-layout-column rvo-layout-gap--md" method="post" enctype="multipart/form-data">
-      {% csrf_token %}
-      <div class="utrecht-form-fieldset rvo-form-fieldset rvo-layout-gap--0">
-        <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
-          <legend class="utrecht-form-fieldset__legend utrecht-form-fieldset__legend--html-legend">
-            Inzet gegevens
-          </legend>
-          <div class="rvo-layout-column rvo-layout-gap--md">
-            {% for field in form %}
-              {% if field.name == "service" %}
-                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0">
-                  <div class="rvo-form-field__label">
-                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                  </div>
-                  {{ field }}
-                  {% if field.help_text %}
-                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
-                  {% endif %}
-                  {% for error in field.errors %}
-                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
-                  {% endfor %}
-                </div>
-                
-                <!-- Service Preview Table -->
-                <div id="service-preview" style="display: none; margin-top: 1rem;">
-                  <h3 class="utrecht-heading-3">Geselecteerde dienst</h3>
-                  <table class="rvo-table" style="border-collapse: collapse; border: 1px solid #ccc;">
-                    <thead>
-                      <tr>
-                        <th>Omschrijving</th>
-                        <th>Rol</th>
-                        <th>Start datum</th>
-                        <th>Eind datum</th>
-                        <th>Kosten</th>
-                      </tr>
-                    </thead>
-                    <tbody id="service-preview-body">
-                      <!-- Will be populated by JavaScript -->
-                    </tbody>
-                  </table>
-                </div>
-              {% elif field.name == "specific_start_date" %}
-                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0" id="specific_start_date_field" style="display: none;">
-                  <div class="rvo-form-field__label">
-                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                  </div>
-                  {{ field }}
-                  {% if field.help_text %}
-                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
-                  {% endif %}
-                  {% for error in field.errors %}
-                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
-                  {% endfor %}
-                </div>
-              {% elif field.name == "specific_end_date" %}
-                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0" id="specific_end_date_field" style="display: none;">
-                  <div class="rvo-form-field__label">
-                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                  </div>
-                  {{ field }}
-                  {% if field.help_text %}
-                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
-                  {% endif %}
-                  {% for error in field.errors %}
-                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
-                  {% endfor %}
-                </div>
-              {% else %}
-                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0">
-                  <div class="rvo-form-field__label">
-                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                  </div>
-                  {{ field }}
-                  {% if field.help_text %}
-                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
-                  {% endif %}
-                  {% for error in field.errors %}
-                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
-                  {% endfor %}
-                </div>
-              {% endif %}
-            {% endfor %}
-          </div>
-        </fieldset>
+    
+    <!-- Current Assignment -->
+    <div class="rvo-card rvo-card--outline rvo-card--padding-lg rvo-card--full-colour--grijs-100">
+      <h2 class="utrecht-heading-2 rvo-heading--no-margins rvo-layout-margin-bottom--md">Huidige toewijzing</h2>
+      <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+        <div class="rvo-layout-column">
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Persoon:</h4>
+          <p class="utrecht-paragraph rvo-paragraph--no-margins">
+            {% comment %}TODO: Get current placement info from context{% endcomment %}
+            <strong>Anna Mulder</strong>
+          </p>
+        </div>
+        <div class="rvo-layout-column">
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Periode:</h4>
+          <p class="utrecht-paragraph rvo-paragraph--no-margins">
+            1 Jan 2025 - 31 Dec 2025
+          </p>
+        </div>
+        <div class="rvo-layout-column">
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Inzet:</h4>
+          <p class="utrecht-paragraph rvo-paragraph--no-margins">
+            36 uur/week
+          </p>
+        </div>
+        <div class="rvo-layout-column">
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Voor dienst:</h4>
+          <p class="utrecht-paragraph rvo-paragraph--no-margins">
+            <span class="rvo-tag">Backend Developer</span>
+          </p>
+        </div>
       </div>
-      <p class="utrecht-button-group">
-        <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
-          Inzet bijwerken
-        </button>
-        {% if cancel_url %}
-          <a href="{{ cancel_url }}" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md">
-            Annuleren
-          </a>
-        {% endif %}
+    </div>
+
+    <!-- Alternative People -->
+    <div class="rvo-layout-column rvo-layout-gap--md">
+      <h2 class="utrecht-heading-2 rvo-heading--no-margins">Andere beschikbare mensen</h2>
+      <p class="utrecht-paragraph rvo-text--subtle">
+        Wissel naar een andere persoon die ook geschikt is voor deze dienst.
       </p>
-    </form>
+      
+      <!-- Alternative Matches -->
+      <div class="rvo-layout-column rvo-layout-gap--sm">
+        <h3 class="utrecht-heading-3 rvo-heading--no-margins">Alternatieve matches (4)</h3>
+        {% comment %}TODO: Replace with actual alternative colleagues{% endcomment %}
+        
+        <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+          <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--space-between">
+            <div class="rvo-layout-column rvo-layout-gap--xs">
+              <h4 class="utrecht-heading-4 rvo-heading--no-margins">
+                <a href="#" class="rvo-link">Johan de Vries</a>
+              </h4>
+              <p class="utrecht-paragraph rvo-paragraph--no-margins rvo-text--subtle">
+                Backend Developer • 5 jaar ervaring
+              </p>
+              <div class="rvo-layout-row rvo-layout-gap--xs">
+                <span class="rvo-tag rvo-tag--sm">Node.js</span>
+                <span class="rvo-tag rvo-tag--sm">Express</span>
+                <span class="rvo-tag rvo-tag--sm">MongoDB</span>
+              </div>
+            </div>
+            <div class="rvo-layout-column rvo-layout-gap--xs">
+              <p class="utrecht-paragraph rvo-paragraph--no-margins">
+                <strong>Beschikbaar:</strong> 15 Feb - 31 Dec 2025
+              </p>
+              <p class="utrecht-paragraph rvo-paragraph--no-margins">
+                <strong>Capaciteit:</strong> 32u/week
+              </p>
+              <button class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-sm" type="button">
+                Wissel naar Johan
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+          <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--space-between">
+            <div class="rvo-layout-column rvo-layout-gap--xs">
+              <h4 class="utrecht-heading-4 rvo-heading--no-margins">
+                <a href="#" class="rvo-link">Lisa van Berg</a>
+              </h4>
+              <p class="utrecht-paragraph rvo-paragraph--no-margins rvo-text--subtle">
+                Full Stack Developer • 6 jaar ervaring
+              </p>
+              <div class="rvo-layout-row rvo-layout-gap--xs">
+                <span class="rvo-tag rvo-tag--sm">Python</span>
+                <span class="rvo-tag rvo-tag--sm">React</span>
+                <span class="rvo-tag rvo-tag--sm">PostgreSQL</span>
+              </div>
+            </div>
+            <div class="rvo-layout-column rvo-layout-gap--xs">
+              <p class="utrecht-paragraph rvo-paragraph--no-margins">
+                <strong>Beschikbaar:</strong> 1 Mar - 30 Nov 2025
+              </p>
+              <p class="utrecht-paragraph rvo-paragraph--no-margins">
+                <strong>Capaciteit:</strong> 40u/week
+              </p>
+              <button class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-sm" type="button">
+                Wissel naar Lisa
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm" type="button">
+          Toon alle 4 alternatieven
+        </button>
+      </div>
+
+      <!-- Broader Search -->
+      <div class="rvo-layout-column rvo-layout-gap--sm">
+        <button class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md" type="button">
+          Zoek breder (8 extra opties)
+        </button>
+      </div>
+    </div>
+
+    <!-- Manual Form (for detailed adjustments) -->
+    <div class="rvo-layout-column rvo-layout-gap--md">
+      <h2 class="utrecht-heading-2 rvo-heading--no-margins">Of pas handmatig aan</h2>
+      <p class="utrecht-paragraph rvo-text--subtle">
+        Wijzig specifieke details van de huidige toewijzing zonder van persoon te wisselen.
+      </p>
+      
+      <form class="rvo-layout-column rvo-layout-gap--md" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="utrecht-form-fieldset rvo-form-fieldset rvo-layout-gap--md">
+          <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
+            <legend class="utrecht-form-fieldset__legend utrecht-form-fieldset__legend--html-legend">
+              Toewijzing details
+            </legend>
+            <div class="rvo-layout-column rvo-layout-gap--md">
+              {% for field in form %}
+                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--xs">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  </div>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% endfor %}
+            </div>
+          </fieldset>
+        </div>
+        <p class="utrecht-button-group">
+          <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
+            Wijzigingen opslaan
+          </button>
+          {% if cancel_url %}
+            <a href="{{ cancel_url }}" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md">
+              Annuleren
+            </a>
+          {% endif %}
+        </p>
+      </form>
+    </div>
   </div>
 </div>
 
