@@ -12,6 +12,7 @@ This files lists the changes during the lifetime of this project.
 - add search on assignment "Extra info"
 - add possibility to take over hours per week from service
 - fix Placement update form dynamic field visibility
+- fix RVO mixin to have email and numberfield
 
 ## 2025-08-18
 - add dashboard page as landing page with summary cards

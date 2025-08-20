@@ -19,6 +19,12 @@ class RVOFormMixin:
                 widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-select utrecht-select--html-select'
             elif isinstance(widget, forms.SelectMultiple):
                 widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-select utrecht-select--html-select utrecht-select--multiple'
+            elif isinstance(widget, forms.EmailInput):
+                # TODO: check if there is better fitted css for this
+                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input'
+            elif isinstance(widget, forms.NumberInput):
+                # TODO: check if there is better fitted css for this
+                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input'
 
 class AssignmentForm(RVOFormMixin, forms.ModelForm):
     class Meta:
