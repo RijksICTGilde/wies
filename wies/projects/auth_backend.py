@@ -22,8 +22,7 @@ class AuthBackend(BaseBackend):
             user.save()
 
         # Link or create Colleague profile
-        full_name = f"{user.first_name} {user.last_name}".strip()
-
+        name = f"{user.first_name} {user.last_name}".strip()
         colleague, _ = Colleague.objects.get_or_create(
             email=email,
             defaults={'name': name}
