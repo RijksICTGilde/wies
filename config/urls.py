@@ -46,7 +46,7 @@ urlpatterns = [
     path('colleagues/new', ColleagueCreateView.as_view()),
     path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
     path('colleagues/<int:pk>/delete', ColleagueDeleteView.as_view()),
-    path('colleagues/<int:pk>/update', ColleagueUpdateView.as_view()),
+    path('colleagues/<int:pk>/update', ColleagueUpdateView.as_view(), name='colleague-update'),
     path('placements/', PlacementTableView.as_view(), name='placements'),
     path('placements/table/', PlacementTableView.as_view(), name='placements-table'),
     path('placements/availability/', PlacementAvailabilityView.as_view(), name='placements-availability'),
