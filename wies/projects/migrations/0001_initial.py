@@ -105,10 +105,11 @@ class Migration(migrations.Migration):
             name='Placement',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('hours_per_week', models.IntegerField(blank=True, null=True)),
                 ('period_source', models.CharField(choices=[('SERVICE', 'Neem over van dienst'), ('PLACEMENT', 'Specifiek voor inzet')], default='SERVICE', max_length=10)),
                 ('specific_start_date', models.DateField(blank=True, null=True)),
                 ('specific_end_date', models.DateField(blank=True, null=True)),
+                ('hours_source', models.CharField(choices=[('SERVICE', 'Neem over van dienst'), ('PLACEMENT', 'Specifiek voor inzet')], default='SERVICE', max_length=10)),
+                ('specific_hours_per_week', models.IntegerField(blank=True, null=True)),
                 ('colleague', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='placements', to='projects.colleague')),
                 ('service', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='placements', to='projects.service')),
             ],

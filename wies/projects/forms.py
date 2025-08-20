@@ -54,7 +54,7 @@ class ColleagueForm(RVOFormMixin, forms.ModelForm):
 class PlacementForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Placement
-        fields = ['service', 'colleague', 'period_source', 'specific_start_date', 'specific_end_date', 'hours_per_week']
+        fields = ['service', 'colleague', 'period_source', 'specific_start_date', 'specific_end_date', 'hours_source', 'specific_hours_per_week']
         widgets = {
             'colleague': forms.Select(attrs={'class': 'js-colleague-select'}),
         }
@@ -64,7 +64,8 @@ class PlacementForm(RVOFormMixin, forms.ModelForm):
             'period_source': 'Periode',
             'specific_start_date': 'Start datum',
             'specific_end_date': 'Eind datum',
-            'hours_per_week': 'Uren per week',
+            'hours_source': 'Uren per week',
+            'specific_hours_per_week': 'Uren per week',
         }
 
     def __init__(self, *args, **kwargs):

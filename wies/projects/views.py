@@ -147,6 +147,7 @@ def get_service_details(request, service_id):
             'end_date': service.end_date.strftime('%d-%m-%Y') if service.end_date else '',
             'cost': cost_display,
             'cost_calculation': cost_calculation,
+            'cost_type': service.cost_type,
             'skill': service.skill.name if service.skill else 'Geen rol opgegeven'
         }
         return JsonResponse(data)
