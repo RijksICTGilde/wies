@@ -4,6 +4,14 @@ This files lists the changes during the lifetime of this project.
 ## Current version
 
 ## unreleased
+- add user profile page with RVO tab navigation (Overzicht, Opdrachten, CV, Instellingen)
+- link user accounts to colleague profiles via email matching
+- add authentication backend to auto-create colleague profiles on login
+- update profile page to display colleague data (skills, placements, brand)
+- add profile edit functionality through existing colleague update form
+- update header navigation to link authenticated users to profile page
+- update assignment detail template layout
+- remove hardcoded organisation references from profile template
 - add Colleague.email, remove duplicates in dummy data
 - add search on assignment "Extra info"
 
