@@ -1,4 +1,6 @@
 from django import forms
+from django.forms import formset_factory
+
 
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
 
@@ -24,7 +26,7 @@ class AssignmentForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Assignment
         fields = '__all__'
-        exclude = ['assignment_type',]
+        exclude = ['assignment_type', 'ministry']
         labels = {
             'name': 'Naam',
             'start_date': 'Start datum',
@@ -105,3 +107,33 @@ class ServiceForm(RVOFormMixin, forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+
+# TODO: maybe this can also be achived with custom formset renderer 
+# https://docs.djangoproject.com/en/5.2/ref/forms/renderers/#django.forms.renderers.BaseRenderer.formset_template_name
+class HiddenServiceForm(forms.ModelForm):
+    """All attributes are hidden"""
+    class Meta:
+        model = Service
+        fields = ['description', 'hours_per_week']
+        widgets = {
+            'description': forms.HiddenInput(),
+            'hours_per_week': forms.HiddenInput(),
+        }
+        # fields = '__all__'
+        # exclude = ['assignment']
+
+class NewServiceForm(forms.ModelForm):
+    class Meta:
+        model = Service
+        fields = ['description', 'hours_per_week']
+        # fields = '__all__'
+        # exclude = ['assignment']
+
+
+HiddenServiceFormSet = formset_factory(HiddenServiceForm, extra=0)
+
+class AssignmentCreateForm(forms.ModelForm):
+    class Meta:
+        model = Assignment
+        fields = ['name']

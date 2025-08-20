@@ -2,7 +2,7 @@ import datetime
 from urllib.parse import urlencode
 
 from django.views.generic.list import ListView
-from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
+from django.views.generic import DetailView, CreateView, DeleteView, UpdateView, FormView
 from django.template.defaulttags import register
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy, reverse
@@ -23,7 +23,7 @@ from django.urls import reverse
 
 
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
-from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
+from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm, AssignmentCreateForm
 from .services.sync import sync_colleagues_from_exact, sync_colleagues_from_otys_iir
 from .services.statistics import get_consultants_working, get_total_clients_count, get_total_budget
 from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining, get_total_services, get_services_filled, get_average_utilization, get_available_since
@@ -1195,3 +1195,78 @@ class MinistryDetailView(DetailView):
         
         context['assignments'] = assignments_data
         return context
+
+
+from .forms import HiddenServiceFormSet, NewServiceForm
+
+def create_assignment(request):
+
+    if request.method == 'POST':
+
+        service_formset = HiddenServiceFormSet(request.POST)
+        if not service_formset.is_valid():
+            raise ValueError('invalid services')        
+
+        assignment_form = AssignmentForm(request.POST)
+        if not assignment_form.is_valid():
+            print(assignment_form.errors)
+            raise ValueError('invalid assignment')
+
+        if 'HX-Request' in request.headers:
+            # Combine existing service_formset data with new_service_form data
+            
+            new_service_form = NewServiceForm(request.POST)
+            if not new_service_form.is_valid():
+                raise ValueError('invalid new service')
+            
+            formset_data = [
+                *service_formset.cleaned_data,
+                new_service_form.cleaned_data
+            ]
+
+            # re-initialize
+            new_service_form = NewServiceForm()
+            service_formset = HiddenServiceFormSet(initial=formset_data)
+
+        else:
+            # for submitting the entire assignment form and actally create the assignment
+
+            # TODO: wrap in transaction
+
+            assignment_id = Assignment.objects.create(name=assignment_form.cleaned_data['name']).id
+            for service_data in service_formset.cleaned_data:
+                service_data['assignment_id'] = assignment_id
+                Service.objects.create(**service_data)
+            
+            # TODO: update to URL via name
+            return redirect(f'/assignments/{assignment_id}')
+
+    elif request.method == 'GET':
+        assignment_form = AssignmentForm()
+        service_formset = HiddenServiceFormSet()
+        new_service_form = NewServiceForm()
+
+    else:
+        raise ValueError('Invalid method')
+
+    return render(request, "assignment_create.html", {
+        'assignment_form': assignment_form,
+        'service_formset': service_formset,
+        'new_service_form': new_service_form,
+        })
+
+
+
+# # Simplified view classes without duplicated logic
+# class AssignmentCreateView(CreateView):
+#     model = Assignment
+#     form_class = AssignmentForm
+#     template_name = 'assignment_new.html'
+
+#     def get_context_data(self, **kwargs):
+#         context = super().get_context_data(**kwargs)
+#         context.update({
+#             "placement_form": PlacementForm(),
+#             "range": range(2)
+#         })
+#         return context

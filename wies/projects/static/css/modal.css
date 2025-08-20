@@ -1,0 +1,67 @@
+/* Filter modal styling */
+.filter-modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  align-items: center;
+  justify-content: center;
+}
+
+.filter-modal-content {
+  background: white;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.filter-modal-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid #e6e6e6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filter-modal-header h2 {
+  margin: 0;
+}
+
+.filter-modal-close {
+  background: none;
+  border: none;
+  font-size: var(--rvo-font-size-2xl);
+  font-family: var(--rvo-font-sans-serif-font-family), var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
+  cursor: pointer;
+  color: var(--rvo-color-grijs-600);
+}
+
+.filter-modal-form {
+  padding: 1.5rem;
+}
+
+.filter-modal-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e6e6e6;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+}
+
+.filter-modal-footer-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+/* Filter button container */
+.filter-button-container {
+  position: relative;
+}

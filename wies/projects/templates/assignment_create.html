@@ -1,0 +1,50 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- <link rel="stylesheet" href="{% static 'css/modal.css' %}"> -->
+    <script src="https://unpkg.com/htmx.org@2.0.6/dist/htmx.min.js"></script>
+</head>
+<body>
+
+    <form method="post" id="otherform">
+
+        {{ assignment_form }}
+
+        {% csrf_token %}
+        {{ service_formset.management_form }}
+        {{ service_formset.as_p }}
+
+        Services:
+
+        <table>
+            <tr>
+                <th>Omschrijving</th>
+                <th>Rol</th>
+                <th>Start datum</th>
+                <th>Eind datum</th>
+            </tr>
+            {% for form in service_formset %}
+            <tr>
+                <td>{{ form.description.value }}</td>
+                <td>{{ form.skill.label }}</td>
+                <td>{{ form.start_date }}</td>
+                <td>{{ form.end_date }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+
+        <input type="submit" value="Submit">
+    </form>
+
+    Insert new service:
+    <form hx-post="/assignments/create" hx-trigger="submit" hx-target="body" hx-include="[id='otherform']">
+        {% csrf_token %}
+        {{ new_service_form }}
+        <input type="submit" value="Submit">
+    </form>
+
+</body>
+</html> 

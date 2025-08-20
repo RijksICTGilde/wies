@@ -24,7 +24,7 @@ from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpd
 from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView, PlacementAvailabilityView
 from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
 from wies.projects.views import MinistryListView, MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
-from wies.projects.views import admin_db, login, logout, auth
+from wies.projects.views import admin_db, login, logout, auth, create_assignment
 from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIView, ExpertiseDetailAPIView
 
 urlpatterns = [
@@ -36,6 +36,7 @@ urlpatterns = [
     path('auth/', auth, name='auth'),
     path('assignments/', AssignmentTabsView.as_view(), name='assignments'),
     path('assignments/new', AssignmentCreateView.as_view()),
+    path('assignments/create', create_assignment, name='create-assignment'),
     path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
     path('assignments/<int:pk>/delete', AssignmentDeleteView.as_view()),
     path('assignments/<int:pk>/update', AssignmentUpdateView.as_view()),
