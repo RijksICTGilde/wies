@@ -1198,7 +1198,7 @@ class MinistryDetailView(DetailView):
         return context
 
 
-class ProfileView(LoginRequiredMixin, TemplateView):
+class ProfileView(TemplateView):
     template_name = 'profile.html'
     
     def get_context_data(self, **kwargs):
