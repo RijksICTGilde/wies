@@ -15,10 +15,10 @@
         </ol>
     <h1 class="utrecht-heading-1 rvo-heading--no-margins">{{ object.name }}</h1>
   </div>
-  
+
   <!-- Assignment Information Cards -->
   <div class="rvo-card rvo-card--outline rvo-card--padding-lg rvo-layout-margin-bottom--xl rvo-card--full-colour--grijs-100">
-    <div class="rvo-layout-grid rvo-layout-gap--lg rvo-layout-grid-columns--two">
+    <div class="rvo-layout-grid rvo-layout-gap--lg rvo-layout-grid-columns--three">
       
       <!-- Periode -->
       <div class="rvo-layout-column">
@@ -31,20 +31,14 @@
         </p>
       </div>
 
-      <!-- Budget -->
+      <!-- Status -->
       <div class="rvo-layout-column">
         <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center rvo-layout-margin-bottom--md">
-          <span class="utrecht-icon rvo-icon rvo-icon-map-vol-documenten rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Budget"></span>
-          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Budget:</h4>
+          <span class="utrecht-icon rvo-icon rvo-icon-vinkje rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Status"></span>
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Status:</h4>
         </div>
         <p class="utrecht-paragraph rvo-paragraph--no-margins">
-          {% with total_cost=object.get_total_cost %}
-            {% if total_cost %}
-              €{{ total_cost|floatformat:2 }}
-            {% else %}
-              Niet beschikbaar
-            {% endif %}
-          {% endwith %}
+          <span class="rvo-tag rvo-tag--warning">{{ object.status }}</span>
         </p>
       </div>
 
@@ -93,21 +87,36 @@
         </p>
       </div>
 
-      <!-- Status -->
+      <!-- Acties -->
       <div class="rvo-layout-column">
         <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center rvo-layout-margin-bottom--md">
-          <span class="utrecht-icon rvo-icon rvo-icon-vinkje rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Status"></span>
-          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Status:</h4>
+          <span class="utrecht-icon rvo-icon rvo-icon-instellingen rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Acties"></span>
+          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Acties:</h4>
         </div>
-        <p class="utrecht-paragraph rvo-paragraph--no-margins">
-          <span class="rvo-tag rvo-tag--warning">{{ object.status }}</span>
-        </p>
+        <div class="rvo-layout-column rvo-layout-gap--xs">
+          <button class="utrecht-button utrecht-button--rvo-tertiary-action utrecht-button--rvo-md" type="button" onclick="window.location.href='/assignments/{{ object.pk }}/update'">
+            <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--sm rvo-icon--hemelblauw" role="img" aria-label="Bewerken"></span>
+            Bewerken
+          </button>
+          <button class="utrecht-button utrecht-button--rvo-tertiary-action utrecht-button--warning utrecht-button--rvo-md" type="button" onclick="window.location.href='/assignments/{{ object.pk }}/delete'">
+            <span class="utrecht-icon rvo-icon rvo-icon-verwijderen rvo-icon--sm" role="img" aria-label="Verwijderen"></span>
+            Verwijderen
+          </button>
+        </div>
       </div>
       
     </div>
   </div>
 
-<h2 class="utrecht-heading-2 rvo-heading--no-margins">Diensten</h2>
+
+
+  <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--space-between rvo-layout-align--center">
+    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Diensten</h2>
+    <a href="/assignments/{{ object.pk }}/services/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-sm rvo-link--no-underline">
+      <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--sm rvo-icon--wit" role="img" aria-label="Toevoegen"></span>
+      Dienst toevoegen
+    </a>
+  </div>
 
     {% for service in object.services.all %}
     <div class="rvo-card rvo-card--outline rvo-card--padding-lg rvo-layout-margin-bottom--lg">
@@ -258,21 +267,6 @@
     </div>
     {% endfor %}
 
-    <div class="rvo-layout-margin-top--xl">
-      <a href="/assignments/{{ object.pk }}/services/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
-        Dienst toevoegen
-      </a>
-    </div>
-
-
-    <div class="rvo-layout-row rvo-layout-gap--md">
-      <a href="/assignments/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
-        Opdracht bewerken
-      </a>
-      <a href="/assignments/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md rvo-link--no-underline">
-        Opdracht verwijderen
-      </a>
-    </div>
   </div>
 </div>
 {% endblock content %}
