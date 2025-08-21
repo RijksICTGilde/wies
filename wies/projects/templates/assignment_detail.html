@@ -115,111 +115,103 @@
     <div id="tab-diensten">
       <h2 class="utrecht-heading-2 rvo-heading--no-margins">Diensten</h2>
 
-    <div class="rvo-table--responsive">
-      <table class="rvo-table">
-        <thead class="rvo-table-head">
-          <tr class="rvo-table-row">
-            <th class="rvo-table-header">Omschrijving</th>
-            <th class="rvo-table-header">Rol</th>
-            <th class="rvo-table-header">Start datum</th>
-            <th class="rvo-table-header">Eind datum</th>
-            <th class="rvo-table-header">Kosten</th>
-            <th class="rvo-table-header">Acties</th>
-          </tr>
-        </thead>
-        <tbody class="rvo-table-body">
-          {% for service in object.services.all %}
-          <tr class="rvo-table-row">
-            <td class="rvo-table-cell">{{ service.description }}</td>
-            <td class="rvo-table-cell">
-              {% if service.skill %}
-                 <span class="rvo-tag">{{ service.skill.name }}</span>
-              {% else %}
-                <span class="rvo-text--italic">Geen rol opgegeven</span>
-              {% endif %}
-            </td>
-            <td class="rvo-table-cell">{{ service.start_date}}</td>
-            <td class="rvo-table-cell">{{ service.end_date }}</td>
-            <td class="rvo-table-cell">
-              {% if service.cost_type == "FIXED_PRICE" %}
-                €{{ service.fixed_cost|format_currency }}
-              {% elif service.cost_type == "PER_HOUR" %}
-                {% with total_cost=service.get_total_cost weeks=service.get_weeks %}
-                  {% if total_cost %}
-                    €{{ total_cost|format_currency }}
-                    <br>
-                    <small style="color: #666; font-size: 0.8em;">
-                      {{ weeks }} weken × {{ service.hours_per_week }} uur × €100
-                    </small>
-                  {% else %}
-                    <span class="rvo-text--italic">Niet beschikbaar</span>
-                  {% endif %}
-                {% endwith %}
-              {% endif %}
-            </td>
-            <td class="rvo-table-cell">
-              <a href="/services/{{ service.id }}/update" class="rvo-link">edit</a> / 
-              <a href="/services/{{ service.id }}/delete" class="rvo-link">delete</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+      {% for service in object.services.all %}
+      <div class="rvo-card rvo-card--outline rvo-card--padding-lg rvo-layout-margin-bottom--lg" style="margin: 10px;">
+        <!-- Service Header -->
+        <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--space-between rvo-layout-align--center rvo-layout-margin-bottom--lg">
+          <h3 class="utrecht-heading-3 rvo-heading--no-margins">{{ service.description }}</h3>
+          <div class="rvo-layout-row rvo-layout-gap--sm">
+            <a href="/services/{{ service.id }}/update" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm rvo-link--no-underline">
+              Bewerken
+            </a>
+            <a href="/services/{{ service.id }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-sm rvo-link--no-underline">
+              Verwijderen
+            </a>
+          </div>
+        </div>
 
-<a href="/assignments/{{ object.pk }}/services/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
-        Dienst toevoegen
-      </a>
+        <!-- Details Grid -->
+        <div class="rvo-layout-grid rvo-layout-gap--lg rvo-layout-grid-columns--four rvo-layout-margin-bottom--lg">
+            <!-- Search Criteria -->
+            <div class="rvo-layout-column">
+              <h4 class="utrecht-heading-4 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Rol:</h4>
+              <span class="rvo-tag">{% if service.skill %}{{ service.skill.name }}{% else %}-{% endif %}</span>
+            </div>
+            <div class="rvo-layout-column">
+              <h4 class="utrecht-heading-4 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Wanneer:</h4>
+              <p class="utrecht-paragraph rvo-paragraph--no-margins">
+                {{ service.start_date|date:"j M Y" }} - {{ service.end_date|date:"j M Y" }}
+              </p>
+            </div>
+        </div>
+        
+        {% if service.placements.all %}
+        <div class="rvo-layout-margin-bottom--md">
+            <h4 class="utrecht-heading-4 rvo-heading--no-margins rvo-layout-margin-bottom--md">Personen:</h4>
 
-    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Inzet</h2>
-
-    <div class="rvo-table--responsive">
-      <table class="rvo-table">
-        <thead class="rvo-table-head">
-          <tr class="rvo-table-row">
-            <th class="rvo-table-header">Dienst</th>
-            <th class="rvo-table-header">Rol</th>
-            <th class="rvo-table-header">Collega</th>
-            <th class="rvo-table-header">Start datum</th>
-            <th class="rvo-table-header">Eind datum</th>
-            <th class="rvo-table-header">Uren per week</th>
-            <th class="rvo-table-header">Acties</th>
-          </tr>
-        </thead>
-        <tbody class="rvo-table-body">
-          {% for service in object.services.all %}
+              <!-- Show assigned people -->
             {% for placement in service.placements.all %}
-            <tr class="rvo-table-row">
-              <td class="rvo-table-cell">{{ service.description }}</td>
-              <td class="rvo-table-cell">
-                {% if service.skill %}
-                  <span class="rvo-tag">{{ service.skill.name }}</span>
-                {% else %}
-                  <span class="rvo-text--italic">Geen rol opgegeven</span>
-                {% endif %}
-              </td>
-              {% if placement.colleague %}
-                <td class="rvo-table-cell"><a href="{% url 'colleague-detail' placement.colleague.pk %}" class="rvo-link">{{ placement.colleague.name }}</a></td>
-              {% else %}
-                <td class="rvo-table-cell"></td>
-              {% endif %}
-              <td class="rvo-table-cell">{{ placement.start_date }}</td>
-              <td class="rvo-table-cell">{{ placement.end_date }}</td>
-              <td class="rvo-table-cell">{{ placement.hours_per_week }}</td>
-              <td class="rvo-table-cell">
-                <a href="/placements/{{ placement.id }}/update" class="rvo-link">edit</a> / 
-                <a href="/placements/{{ placement.id }}/delete" class="rvo-link">delete</a>
-              </td>
-            </tr>
+            <div class="rvo-card rvo-card--outline rvo-card--padding-sm rvo-layout-margin-bottom--md rvo-card--full-colour--grijs-100">
+              <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+                <div class="rvo-layout-column">
+                  <h5 class="utrecht-heading-5 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Naam:</h5>
+                  {% if placement.colleague %}
+                    <a href="{% url 'colleague-detail' placement.colleague.pk %}" class="rvo-link">{{ placement.colleague.name }}</a>
+                  {% else %}
+                    <span class="rvo-text--italic">TBD</span>
+                  {% endif %}
+                </div>
+                <div class="rvo-layout-column">
+                  <h5 class="utrecht-heading-5 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Periode:</h5>
+                  <span>{{ placement.start_date|date:"j M Y" }} - {{ placement.end_date|date:"j M Y" }}</span>
+                </div>
+                <div class="rvo-layout-column">
+                  <h5 class="utrecht-heading-5 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Inzet:</h5>
+                  <span>{% if placement.hours_per_week %}{{ placement.hours_per_week }} u/week{% else %}-{% endif %} </span>
+                </div>
+                <div class="rvo-layout-column">
+                  <h5 class="utrecht-heading-5 rvo-heading--no-margins rvo-layout-margin-bottom--xs">Acties:</h5>
+                  <div class="rvo-layout-row rvo-layout-gap--sm">
+                    <a href="/placements/{{ placement.id }}/update" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-xs rvo-link--no-underline">
+                      Wijzigen
+                    </a>
+                    <a href="/placements/{{ placement.id }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs rvo-link--no-underline">
+                      Verwijderen
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
             {% endfor %}
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
 
-<a href="/assignments/{{ object.pk }}/placements/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
-        Inzet toevoegen
-      </a>
+        </div>
+        {% endif %}
+        
+          <div style="margin-top: 10px;">
+
+            <a href="/colleagues/?status=beschikbaar{% if service.skill %}&skill={{ service.skill.id }}{% endif %}" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm rvo-link--no-underline">
+              Bekijk matches
+            </a>
+            <a href="/services/{{ service.id }}/placements/new" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm rvo-link--no-underline">
+              Voeg persoon toe
+            </a>
+          </div>
+  
+      </div>
+      {% empty %}
+      <div class="rvo-card rvo-card--outline rvo-card--padding-lg">
+        <p class="utrecht-paragraph rvo-paragraph--no-margins rvo-text--subtle">
+          Nog geen diensten gedefinieerd voor deze opdracht.
+        </p>
+      </div>
+      {% endfor %}
+
+      <div class="rvo-layout-margin-top--xl">
+        <a href="/assignments/{{ object.pk }}/services/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
+          Dienst toevoegen
+        </a>
+      </div>
+    
     </div>
     {% endif %}
 

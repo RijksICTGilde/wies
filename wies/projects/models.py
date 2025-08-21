@@ -180,13 +180,6 @@ class Placement(models.Model):
         else:
             return self.specific_hours_per_week
 
-    def clean(self):
-        super().clean()
-        if self.service and self.service.cost_type == 'FIXED_PRICE' and self.hours_source == 'SERVICE':
-            raise ValidationError({
-                'hours_source': 'Als de dienst een vaste prijs heeft, moeten de uren specifiek voor de inzet worden opgegeven.'
-            })
-
     def get_absolute_url(self):
         return reverse("placement-detail", kwargs={"pk": self.pk})
 
