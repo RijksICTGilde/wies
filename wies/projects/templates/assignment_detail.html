@@ -79,7 +79,41 @@
       <dd>{{ object.extra_info }}</dd>
     </dl>
 
-<h2 class="utrecht-heading-2 rvo-heading--no-margins">Diensten</h2>
+    <div class="rvo-layout-row rvo-layout-gap--md">
+      <a href="/assignments/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
+        Opdracht bewerken
+      </a>
+      <a href="/assignments/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md">
+        Opdracht verwijderen
+      </a>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="assignment-tabs-navigation" style="margin-top: 2rem; margin-bottom: 1rem;">
+      <ul
+        class="rvo-tabs rvo-ul rvo-ul--no-margin rvo-ul--no-padding rvo-ul--icon rvo-ul--icon-option-2"
+        role="tablist"
+        aria-label="Assignment Detail Tabs"
+      >
+        {% for tab_key, tab_data in tab_groups.items %}
+        <li role="presentation" class="rvo-tabs__item">
+          <a
+            href="?tab={{ tab_key }}"
+            class="rvo-link rvo-tabs__item-link {% if active_tab == tab_key %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline"
+            role="tab"
+            aria-selected="{% if active_tab == tab_key %}true{% else %}false{% endif %}"
+          >
+            {{ tab_data.title }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <!-- Tab Content -->
+    {% if active_tab == 'services' %}
+    <div id="tab-diensten">
+      <h2 class="utrecht-heading-2 rvo-heading--no-margins">Diensten</h2>
 
     <div class="rvo-table--responsive">
       <table class="rvo-table">
@@ -186,8 +220,12 @@
 <a href="/assignments/{{ object.pk }}/placements/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
         Inzet toevoegen
       </a>
+    </div>
+    {% endif %}
 
-    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Notities</h2>
+    {% if active_tab == 'notes' %}
+    <div id="tab-notities">
+      <h2 class="utrecht-heading-2 rvo-heading--no-margins">Notities</h2>
 
     {% if notes %}
       <div class="rvo-layout-column rvo-layout-gap--md">
@@ -244,15 +282,9 @@
         }
       }
     </script>
-
-    <div class="rvo-layout-row rvo-layout-gap--md">
-      <a href="/assignments/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
-        Opdracht bewerken
-      </a>
-      <a href="/assignments/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md">
-        Opdracht verwijderen
-      </a>
     </div>
+    {% endif %}
+
   </div>
 </div>
 {% endblock content %}

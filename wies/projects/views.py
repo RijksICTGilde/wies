@@ -924,8 +924,25 @@ class AssignmentDetail(DetailView):
 
         context.update(assignment_data)
         
+        # Get the active tab from request, default to 'diensten'
+        active_tab = self.request.GET.get('tab', 'services')
+        context['active_tab'] = active_tab
+        
         # Add notes to context
         context['notes'] = assignment.notes.all()
+        
+        # Define tab groups for navigation
+        tab_groups = {
+            'services': {
+                'title': 'Diensten',
+                'content': 'services_and_placements'
+            },
+            'notes': {
+                'title': 'Notities',
+                'content': 'notes'
+            }
+        }
+        context['tab_groups'] = tab_groups
         
         return context
 

@@ -16,6 +16,7 @@ This files lists the changes during the lifetime of this project.
 - add notes: create and list from assignment detail page
 - add possibility for primary action on filter group
 - add create assignment button and move organisation into filter modal
+- split assignment page into two tabes: services and notes
 
 ## 2025-08-18
 - add dashboard page as landing page with summary cards
