@@ -40,7 +40,7 @@ urlpatterns = [
     path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
     path('assignments/<int:pk>/delete', AssignmentDeleteView.as_view()),
     path('assignments/<int:pk>/update', AssignmentUpdateView.as_view()),
-    path('assignments/<int:pk>/placements/new', PlacementCreateView.as_view()),
+    path('services/<int:pk>/placements/new', PlacementCreateView.as_view()),
     path('assignments/<int:pk>/services/new', ServiceCreateView.as_view()),
     path('assignments/<int:assignment_id>/add-note', add_note, name='add-note'),
     path('colleagues/', ColleagueList.as_view(), name='colleagues'),

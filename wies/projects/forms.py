@@ -60,12 +60,11 @@ class ColleagueForm(RVOFormMixin, forms.ModelForm):
 class PlacementForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Placement
-        fields = ['service', 'colleague', 'period_source', 'specific_start_date', 'specific_end_date', 'hours_source', 'specific_hours_per_week']
+        fields = ['colleague', 'period_source', 'specific_start_date', 'specific_end_date', 'hours_source', 'specific_hours_per_week']
         widgets = {
             'colleague': forms.Select(attrs={'class': 'js-colleague-select'}),
         }
         labels = {
-            'service': 'Dienst',
             'colleague': 'Consultant',
             'period_source': 'Periode',
             'specific_start_date': 'Start datum',
@@ -73,18 +72,14 @@ class PlacementForm(RVOFormMixin, forms.ModelForm):
             'hours_source': 'Uren per week',
             'specific_hours_per_week': 'Uren per week',
         }
-
-    def __init__(self, *args, **kwargs):
-        assignment_id = kwargs.pop('assignment_id', None)
-        super().__init__(*args, **kwargs)
-        
-        # Filter services to only show services from the same assignment
-        if self.instance and self.instance.pk and self.instance.service:
-            assignment = self.instance.service.assignment
-            self.fields['service'].queryset = Service.objects.filter(assignment=assignment)
-        elif assignment_id:
-            # For create forms where assignment_id is passed
-            self.fields['service'].queryset = Service.objects.filter(assignment_id=assignment_id)
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if hasattr(self, 'service_id'):
+            instance.service_id = self.service_id
+        if commit:
+            instance.save()
+        return instance
 
 
 class ServiceForm(RVOFormMixin, forms.ModelForm):

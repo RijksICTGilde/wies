@@ -77,117 +77,155 @@
       <dd>{{ object.end_date }}</dd>
       <dt>Extra info</dt>
       <dd>{{ object.extra_info }}</dd>
+      <dt>Acties</dt>
+      <dd>
+        <div class="rvo-layout-row rvo-layout-gap--sm">
+          <a href="/assignments/{{ object.pk }}/update" class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs rvo-link--no-underline">
+            Opdracht bewerken
+          </a>
+          <a href="/assignments/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs rvo-link--no-underline">
+            Opdracht verwijderen
+          </a>
+        </div>
+      </dd>
     </dl>
 
-<h2 class="utrecht-heading-2 rvo-heading--no-margins">Diensten</h2>
-
-    <div class="rvo-table--responsive">
-      <table class="rvo-table">
-        <thead class="rvo-table-head">
-          <tr class="rvo-table-row">
-            <th class="rvo-table-header">Omschrijving</th>
-            <th class="rvo-table-header">Rol</th>
-            <th class="rvo-table-header">Start datum</th>
-            <th class="rvo-table-header">Eind datum</th>
-            <th class="rvo-table-header">Kosten</th>
-            <th class="rvo-table-header">Acties</th>
-          </tr>
-        </thead>
-        <tbody class="rvo-table-body">
-          {% for service in object.services.all %}
-          <tr class="rvo-table-row">
-            <td class="rvo-table-cell">{{ service.description }}</td>
-            <td class="rvo-table-cell">
-              {% if service.skill %}
-                 <span class="rvo-tag">{{ service.skill.name }}</span>
-              {% else %}
-                <span class="rvo-text--italic">Geen rol opgegeven</span>
-              {% endif %}
-            </td>
-            <td class="rvo-table-cell">{{ service.start_date}}</td>
-            <td class="rvo-table-cell">{{ service.end_date }}</td>
-            <td class="rvo-table-cell">
-              {% if service.cost_type == "FIXED_PRICE" %}
-                €{{ service.fixed_cost|format_currency }}
-              {% elif service.cost_type == "PER_HOUR" %}
-                {% with total_cost=service.get_total_cost weeks=service.get_weeks %}
-                  {% if total_cost %}
-                    €{{ total_cost|format_currency }}
-                    <br>
-                    <small style="color: #666; font-size: 0.8em;">
-                      {{ weeks }} weken × {{ service.hours_per_week }} uur × €100
-                    </small>
-                  {% else %}
-                    <span class="rvo-text--italic">Niet beschikbaar</span>
-                  {% endif %}
-                {% endwith %}
-              {% endif %}
-            </td>
-            <td class="rvo-table-cell">
-              <a href="/services/{{ service.id }}/update" class="rvo-link">edit</a> / 
-              <a href="/services/{{ service.id }}/delete" class="rvo-link">delete</a>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+    <!-- Tab Navigation -->
+    <div class="assignment-tabs-navigation">
+      <ul
+        class="rvo-tabs rvo-ul rvo-ul--no-margin rvo-ul--no-padding rvo-ul--icon rvo-ul--icon-option-2"
+        role="tablist"
+        aria-label="Assignment Detail Tabs"
+      >
+        {% for tab_key, tab_data in tab_groups.items %}
+        <li role="presentation" class="rvo-tabs__item">
+          <a
+            href="?tab={{ tab_key }}"
+            class="rvo-link rvo-tabs__item-link {% if active_tab == tab_key %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline"
+            role="tab"
+            aria-selected="{% if active_tab == tab_key %}true{% else %}false{% endif %}"
+          >
+            {{ tab_data.title }}
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
     </div>
 
-<a href="/assignments/{{ object.pk }}/services/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
-        Dienst toevoegen
-      </a>
+    <!-- Tab Content -->
+    {% if active_tab == 'services' %}
+    <div id="tab-diensten" class="rvo-margin-block-end--md">
 
-    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Inzet</h2>
+      {% for service in object.services.all %}
+      <div class="rvo-card rvo-card--outline rvo-card--padding-lg rvo-layout-margin-bottom--lg rvo-card--full-colour--grijs-100" style="margin: 10px;">
+        <!-- Service Header -->
+        <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--space-between rvo-layout-align--center rvo-layout-margin-bottom--lg">
+          <h3 class="utrecht-heading-3">{{ service.description }}</h3>
+        </div>
 
-    <div class="rvo-table--responsive">
-      <table class="rvo-table">
-        <thead class="rvo-table-head">
-          <tr class="rvo-table-row">
-            <th class="rvo-table-header">Dienst</th>
-            <th class="rvo-table-header">Rol</th>
-            <th class="rvo-table-header">Collega</th>
-            <th class="rvo-table-header">Start datum</th>
-            <th class="rvo-table-header">Eind datum</th>
-            <th class="rvo-table-header">Uren per week</th>
-            <th class="rvo-table-header">Acties</th>
-          </tr>
-        </thead>
-        <tbody class="rvo-table-body">
-          {% for service in object.services.all %}
+        <!-- Details Grid -->
+        <div class="rvo-layout-grid rvo-layout-gap--lg rvo-layout-grid-columns--three rvo-layout-margin-bottom--lg">
+            <!-- Search Criteria -->
+            <div class="rvo-layout-column">
+              <label class="rvo-label">Rol </label>
+              <span class="rvo-tag">{% if service.skill %}{{ service.skill.name }}{% else %}-{% endif %}</span>
+            </div>
+            <div class="rvo-layout-column">
+              <label class="rvo-label">Wanneer </label>
+              <p class="utrecht-paragraph rvo-paragraph--no-margins">
+                {{ service.start_date|date:"j M Y" }} - {{ service.end_date|date:"j M Y" }}
+              </p>
+            </div>
+            <div class="rvo-layout-column">
+              <label class="rvo-label">Acties </label>
+              <div class="rvo-layout-row rvo-layout-gap--sm">
+                <a href="/services/{{ service.id }}/update" class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs rvo-link--no-underline">
+                  Dienst bewerken
+                </a>
+                <a href="/services/{{ service.id }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs rvo-link--no-underline">
+                  Dienst verwijderen
+                </a>
+              </div>
+            </div>
+        </div>
+        
+        {% if service.placements.all %}
+        <div class="rvo-layout-margin-bottom--md">
+            <h4 class="utrecht-heading-4 rvo-layout-margin-bottom--md">Personen:</h4>
+
+              <!-- Show assigned people -->
             {% for placement in service.placements.all %}
-            <tr class="rvo-table-row">
-              <td class="rvo-table-cell">{{ service.description }}</td>
-              <td class="rvo-table-cell">
-                {% if service.skill %}
-                  <span class="rvo-tag">{{ service.skill.name }}</span>
-                {% else %}
-                  <span class="rvo-text--italic">Geen rol opgegeven</span>
-                {% endif %}
-              </td>
-              {% if placement.colleague %}
-                <td class="rvo-table-cell"><a href="{% url 'colleague-detail' placement.colleague.pk %}" class="rvo-link">{{ placement.colleague.name }}</a></td>
-              {% else %}
-                <td class="rvo-table-cell"></td>
-              {% endif %}
-              <td class="rvo-table-cell">{{ placement.start_date }}</td>
-              <td class="rvo-table-cell">{{ placement.end_date }}</td>
-              <td class="rvo-table-cell">{{ placement.hours_per_week }}</td>
-              <td class="rvo-table-cell">
-                <a href="/placements/{{ placement.id }}/update" class="rvo-link">edit</a> / 
-                <a href="/placements/{{ placement.id }}/delete" class="rvo-link">delete</a>
-              </td>
-            </tr>
+            <div class="rvo-card rvo-card--outline rvo-card--padding-sm rvo-layout-margin-bottom--md rvo-card--full-colour--wit">
+              <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--four">
+                <div class="rvo-layout-column">
+                 <label class="rvo-label">Naam </label>
+                  {% if placement.colleague %}
+                    <a href="{% url 'colleague-detail' placement.colleague.pk %}" class="rvo-link">{{ placement.colleague.name }}</a>
+                  {% else %}
+                    <span class="rvo-text--italic">TBD</span>
+                  {% endif %}
+                </div>
+                <div class="rvo-layout-column">
+                  <label class="rvo-label">Periode</label>
+                  <span>{{ placement.start_date|date:"j M Y" }} - {{ placement.end_date|date:"j M Y" }}</span>
+                </div>
+                <div class="rvo-layout-column">
+                  <label class="rvo-label">Inzet </label>
+                  <span>{% if placement.hours_per_week %}{{ placement.hours_per_week }} u/week{% else %}-{% endif %} </span>
+                </div>
+                <div class="rvo-layout-column">
+                  <label class="rvo-label">Acties </label>
+                  <div class="rvo-layout-row rvo-layout-gap--sm">
+                    <a href="/placements/{{ placement.id }}/update" class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs rvo-link--no-underline">
+                      Bewerken
+                    </a>
+                    <a href="/placements/{{ placement.id }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs rvo-link--no-underline">
+                      Verwijderen
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
             {% endfor %}
-          {% endfor %}
-        </tbody>
-      </table>
+
+        </div>
+        {% endif %}
+        
+          <div style="margin-top: 10px;">
+            <a href="/services/{{ service.id }}/placements/new" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm rvo-link--no-underline">
+              Voeg persoon toe
+            </a>
+            <a href="/colleagues/?status=beschikbaar{% if service.skill %}&skill={{ service.skill.id }}{% endif %}" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm rvo-link--no-underline">
+              Bekijk matches
+            </a>
+          </div>
+  
+      </div>
+      {% empty %}
+      <div class="rvo-card rvo-card--outline rvo-card--padding-lg">
+        <p class="utrecht-paragraph rvo-paragraph--no-margins rvo-text--subtle">
+          Nog geen diensten gedefinieerd voor deze opdracht.
+        </p>
+      </div>
+      {% endfor %}
+
+      <div class="rvo-layout-margin-top--xl">
+        <div class="rvo-card rvo-card--outline rvo-card--padding-lg rvo-layout-margin-bottom--lg rvo-card--full-colour--grijs-100" style="margin: 10px;">
+          <div class="rvo-card__content">
+            <a class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--donkerblauw" href="/assignments/{{ object.pk }}/services/new">
+              <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--sm rvo-icon--donkerblauw rvo-link__icon--before" role="img" aria-label="Plus"></span>
+              Dienst toevoegen
+            </a>
+          </div>
+        </div>
+      </div>
+    
     </div>
+    {% endif %}
 
-<a href="/assignments/{{ object.pk }}/placements/new" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
-        Inzet toevoegen
-      </a>
-
-    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Notities</h2>
+    {% if active_tab == 'notes' %}
+    <div id="tab-notities">
+      <h2 class="utrecht-heading-2 rvo-heading--no-margins">Notities</h2>
 
     {% if notes %}
       <div class="rvo-layout-column rvo-layout-gap--md">
@@ -244,15 +282,9 @@
         }
       }
     </script>
-
-    <div class="rvo-layout-row rvo-layout-gap--md">
-      <a href="/assignments/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
-        Opdracht bewerken
-      </a>
-      <a href="/assignments/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md">
-        Opdracht verwijderen
-      </a>
     </div>
+    {% endif %}
+
   </div>
 </div>
 {% endblock content %}

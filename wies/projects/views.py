@@ -924,8 +924,25 @@ class AssignmentDetail(DetailView):
 
         context.update(assignment_data)
         
+        # Get the active tab from request, default to 'diensten'
+        active_tab = self.request.GET.get('tab', 'services')
+        context['active_tab'] = active_tab
+        
         # Add notes to context
         context['notes'] = assignment.notes.all()
+        
+        # Define tab groups for navigation
+        tab_groups = {
+            'services': {
+                'title': 'Diensten',
+                'content': 'services_and_placements'
+            },
+            'notes': {
+                'title': 'Notities',
+                'content': 'notes'
+            }
+        }
+        context['tab_groups'] = tab_groups
         
         return context
 
@@ -999,17 +1016,19 @@ class PlacementCreateView(CreateView):
     model = Placement
     form_class = PlacementForm
     template_name = 'placement_new.html'
-    
-    def get_form_kwargs(self):
-        kwargs = super().get_form_kwargs()
-        kwargs['assignment_id'] = self.kwargs['pk']
-        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        service = Service.objects.get(id=self.kwargs['pk'])
+        context['service'] = service
+        return context
     
     def form_valid(self, form):
-        assignment_id = self.kwargs['pk']
+        service_id = self.kwargs['pk']
+        form.service_id = service_id
         super().form_valid(form)
-        return redirect(Assignment.objects.get(id=assignment_id))
-    
+        return redirect(Service.objects.get(id=service_id).assignment)
+
 class PlacementDeleteView(DeleteView):
     model = Placement
     success_url = reverse_lazy("assignments")
