@@ -72,6 +72,17 @@ Usage:
         </button>
         {% endif %}
       </div>
+
+      <div>
+        <!-- somehow moving the if to the div above does not work, it hides the search icon -->
+        {% if primary_action %}
+        
+        <a class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline" 
+           href="{{ primary_action.url }}">
+          <span class="filter-text">{{ primary_action.button_text }}</span>
+        </a>
+        {% endif %}
+      </div>
       
     </div>
   </form>

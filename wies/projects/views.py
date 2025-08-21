@@ -388,13 +388,7 @@ class AssignmentTabsView(ListView):
         
         context['tab_groups'] = tab_groups
         context['active_assignments'] = tab_groups[active_tab]['queryset']
-        
-        context['primary_filter'] = {
-            'name': 'organization',
-            'id': 'organization-filter',
-            'placeholder': 'Alle opdrachtgevers',
-            'options': [{'value': org['organization'], 'label': org['organization']} for org in context.get('organizations', [])]
-        }
+
         
         context['search_field'] = 'name'
         context['search_placeholder'] = 'Zoek op naam, opdrachtgever of ministerie...'
@@ -403,6 +397,13 @@ class AssignmentTabsView(ListView):
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
         
         context['filter_groups'] = [
+            {
+            'type': 'select',
+            'name': 'organization',
+            'label': 'opdrachtgever',
+            'placeholder': 'Alle opdrachtgevers',
+            'options': [{'value': org['organization'], 'label': org['organization']} for org in context.get('organizations', [])]
+            }, 
             {
                 'type': 'select',
                 'name': 'skill',
@@ -418,6 +419,11 @@ class AssignmentTabsView(ListView):
                 'options': [{'value': client.id, 'label': client.name} for client in context.get('clients', [])]
             },
         ]
+
+        context['primary_action'] = {
+            'url': '/assignments/new',
+            'button_text': 'Opdracht toevoegen'
+        }
         
         return context
     
