@@ -3,7 +3,6 @@ from urllib.parse import urlencode
 
 from django.views.generic.list import ListView
 from django.views.generic import DetailView, CreateView, DeleteView, UpdateView, TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
 from django.template.defaulttags import register
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy, reverse
@@ -11,7 +10,7 @@ from django.db import models
 from django.db.models import Q, Count
 from django.http import JsonResponse
 from django.contrib import messages
-from django.contrib.auth.decorators import user_passes_test, login_required
+from django.contrib.auth.decorators import user_passes_test
 
 from django.contrib.auth import authenticate as auth_authenticate
 from django.contrib.auth import login as auth_login
@@ -23,7 +22,7 @@ from django.http import HttpResponse
 from django.urls import reverse
 
 
-from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
+from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise, Note
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 from .services.sync import sync_colleagues_from_exact, sync_colleagues_from_otys_iir
 from .services.statistics import get_consultants_working, get_total_clients_count, get_total_budget
@@ -919,6 +918,9 @@ class AssignmentDetail(DetailView):
 
         context.update(assignment_data)
         
+        # Add notes to context
+        context['notes'] = assignment.notes.all()
+        
         return context
 
 class AssignmentDeleteView(DeleteView):
@@ -1222,3 +1224,26 @@ class ProfileView(TemplateView):
         context['colleague'] = colleague
         context['recent_placements'] = recent_placements
         return context
+
+
+def add_note(request, assignment_id):
+    """Add a new note to an assignment"""
+    if request.method == 'POST':
+        message = request.POST.get('message')
+        if message:
+            # Get the colleague associated with the current user
+            if hasattr(request.user, 'colleague') and request.user.colleague:
+                assignment = Assignment.objects.get(pk=assignment_id)
+                colleague = request.user.colleague
+                Note.objects.create(
+                    assignment=assignment,
+                    colleague=colleague,
+                    message=message
+                )
+                messages.success(request, 'Notitie succesvol toegevoegd.')
+            else:
+                messages.error(request, 'Geen collega profiel gevonden voor huidige gebruiker.')
+        else:
+            messages.error(request, 'Notitie mag niet leeg zijn.')
+    
+    return redirect('assignment-detail', pk=assignment_id)

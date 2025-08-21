@@ -187,6 +187,64 @@
         Inzet toevoegen
       </a>
 
+    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Notities</h2>
+
+    {% if notes %}
+      <div class="rvo-layout-column rvo-layout-gap--md">
+        {% for note in notes %}
+          <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+            <div class="rvo-card__content">
+              <div class="rvo-layout-row rvo-layout-gap--sm">
+                <strong>{{ note.colleague.name }}</strong>
+                <span class="rvo-text--subtle">{{ note.created_at|date:"d-m-Y H:i" }}</span>
+              </div>
+              <p class="rvo-paragraph">{{ note.message }}</p>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="rvo-text--italic">Nog geen notities toegevoegd.</p>
+    {% endif %}
+
+    <div class="rvo-layout-row rvo-layout-gap--md">
+      <button type="button" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md" onclick="toggleNoteForm()">
+        Notitie toevoegen
+      </button>
+    </div>
+
+    <!-- Note form (initially hidden) -->
+    <div id="note-form" class="rvo-layout-column rvo-layout-gap--md" style="display: none; margin-top: 1rem;">
+      <form method="post" action="{% url 'add-note' object.pk %}">
+        {% csrf_token %}
+        <div class="rvo-form-field">
+          <label for="note-message" class="rvo-label">Notitie:</label>
+          <textarea id="note-message" name="message" class="rvo-textarea" rows="4" placeholder="Voer uw notitie in..." required></textarea>
+        </div>
+        <div class="rvo-layout-row rvo-layout-gap--sm">
+          <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-sm">
+            Notitie opslaan
+          </button>
+          <button type="button" class="utrecht-button utrecht-button--subtle utrecht-button--rvo-sm" onclick="toggleNoteForm()">
+            Annuleren
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      function toggleNoteForm() {
+        const form = document.getElementById('note-form');
+        const isHidden = form.style.display === 'none';
+        form.style.display = isHidden ? 'block' : 'none';
+        
+        if (isHidden) {
+          // Clear the form when showing
+          document.getElementById('note-message').value = '';
+        }
+      }
+    </script>
+
     <div class="rvo-layout-row rvo-layout-gap--md">
       <a href="/assignments/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
         Opdracht bewerken
