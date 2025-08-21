@@ -19,6 +19,12 @@ class RVOFormMixin:
                 widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-select utrecht-select--html-select'
             elif isinstance(widget, forms.SelectMultiple):
                 widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-select utrecht-select--html-select utrecht-select--multiple'
+            elif isinstance(widget, forms.EmailInput):
+                # TODO: check if there is better fitted css for this
+                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input'
+            elif isinstance(widget, forms.NumberInput):
+                # TODO: check if there is better fitted css for this
+                widget.attrs['class'] = widget.attrs.get('class', '') + ' utrecht-textbox utrecht-textbox--html-input'
 
 class AssignmentForm(RVOFormMixin, forms.ModelForm):
     class Meta:
@@ -39,7 +45,7 @@ class ColleagueForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Colleague
         fields = '__all__'
-        exclude = ['source', 'source_id', 'source_url']
+        exclude = ['source', 'source_id', 'source_url', 'user']
         widgets = {
             'expertises': forms.SelectMultiple(attrs={'class': 'js-expertises-select-multiple'}),
             'skills': forms.SelectMultiple(attrs={'class': 'js-skills-select-create-multiple'})
@@ -54,7 +60,7 @@ class ColleagueForm(RVOFormMixin, forms.ModelForm):
 class PlacementForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Placement
-        fields = ['service', 'colleague', 'period_source', 'specific_start_date', 'specific_end_date', 'hours_per_week']
+        fields = ['service', 'colleague', 'period_source', 'specific_start_date', 'specific_end_date', 'hours_source', 'specific_hours_per_week']
         widgets = {
             'colleague': forms.Select(attrs={'class': 'js-colleague-select'}),
         }
@@ -64,7 +70,8 @@ class PlacementForm(RVOFormMixin, forms.ModelForm):
             'period_source': 'Periode',
             'specific_start_date': 'Start datum',
             'specific_end_date': 'Eind datum',
-            'hours_per_week': 'Uren per week',
+            'hours_source': 'Uren per week',
+            'specific_hours_per_week': 'Uren per week',
         }
 
     def __init__(self, *args, **kwargs):

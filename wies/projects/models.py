@@ -1,6 +1,8 @@
 from django.db import models
 from django.urls import reverse
 from django.db.models import Max, Sum, Case, When, F, FloatField, Q
+from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
 
 
 ASSIGNMENT_STATUS = {
@@ -63,6 +65,7 @@ class Skill(models.Model):
         return self.name
 
 class Colleague(models.Model):
+    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='colleague')
     name = models.CharField(max_length=200)
     email = models.EmailField()
     brand = models.ForeignKey('Brand', models.SET_NULL, null=True, blank=False)
@@ -140,17 +143,18 @@ class Assignment(models.Model):
 class Placement(models.Model):
     SERVICE = "SERVICE"
     PLACEMENT = "PLACEMENT"
-    PERIOD_SOURCE_CHOICES = {
+    SOURCE_CHOICES = {
         SERVICE: "Neem over van dienst",
         PLACEMENT: "Specifiek voor inzet"
     }
     
     colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='placements', null=True, blank=True) # TODO: removal of colleague triggers removal of placement, probably undesirable
     service = models.ForeignKey('Service', models.CASCADE, related_name='placements')
-    hours_per_week = models.IntegerField(null=True, blank=True)
-    period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=SERVICE)
+    period_source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default=SERVICE)
     specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
     specific_end_date = models.DateField(null=True, blank=True) # do not use, use properties below
+    hours_source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default=SERVICE)
+    specific_hours_per_week = models.IntegerField(null=True, blank=True)
 
     @property
     def start_date(self):
@@ -165,6 +169,23 @@ class Placement(models.Model):
             return self.service.end_date
         else:
             return self.specific_end_date
+
+    @property
+    def hours_per_week(self):
+        if self.hours_source == 'SERVICE':
+            # If service is not per hour, it can only be specific
+            if self.service.cost_type != 'PER_HOUR':
+                return self.specific_hours_per_week
+            return self.service.hours_per_week
+        else:
+            return self.specific_hours_per_week
+
+    def clean(self):
+        super().clean()
+        if self.service and self.service.cost_type == 'FIXED_PRICE' and self.hours_source == 'SERVICE':
+            raise ValidationError({
+                'hours_source': 'Als de dienst een vaste prijs heeft, moeten de uren specifiek voor de inzet worden opgegeven.'
+            })
 
     def get_absolute_url(self):
         return reverse("placement-detail", kwargs={"pk": self.pk})

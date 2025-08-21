@@ -2,7 +2,8 @@ import datetime
 from urllib.parse import urlencode
 
 from django.views.generic.list import ListView
-from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
+from django.views.generic import DetailView, CreateView, DeleteView, UpdateView, TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.template.defaulttags import register
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy, reverse
@@ -10,7 +11,7 @@ from django.db import models
 from django.db.models import Q, Count
 from django.http import JsonResponse
 from django.contrib import messages
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, login_required
 
 from django.contrib.auth import authenticate as auth_authenticate
 from django.contrib.auth import login as auth_login
@@ -146,6 +147,7 @@ def get_service_details(request, service_id):
             'end_date': service.end_date.strftime('%d-%m-%Y') if service.end_date else '',
             'cost': cost_display,
             'cost_calculation': cost_calculation,
+            'cost_type': service.cost_type,
             'skill': service.skill.name if service.skill else 'Geen rol opgegeven'
         }
         return JsonResponse(data)
@@ -1194,4 +1196,29 @@ class MinistryDetailView(DetailView):
             })
         
         context['assignments'] = assignments_data
+        return context
+
+
+class ProfileView(TemplateView):
+    template_name = 'profile.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # Get tab from query parameter, default to 'overzicht'
+        active_tab = self.request.GET.get('tab', 'overzicht')
+        context['active_tab'] = active_tab
+        
+        # Get or create colleague profile for current user
+        colleague = None
+        recent_placements = []
+        if hasattr(self.request.user, 'colleague'):
+            colleague = self.request.user.colleague
+            if colleague:
+                # Get recent placements for this colleague
+                recent_placements = colleague.placements.select_related(
+                    'service__assignment'
+                ).order_by('-specific_end_date', '-service__assignment__end_date')[:3]
+        
+        context['colleague'] = colleague
+        context['recent_placements'] = recent_placements
         return context

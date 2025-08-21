@@ -4,8 +4,15 @@ This files lists the changes during the lifetime of this project.
 ## Current version
 
 ## unreleased
+- add user profile page with RVO tab navigation (Overzicht, Opdrachten, CV, Instellingen)
+- link user accounts to colleague profiles via email matching
+- add auto-create colleague on login
+- add profile edit functionality through existing colleague update form
 - add Colleague.email, remove duplicates in dummy data
 - add search on assignment "Extra info"
+- add possibility to take over hours per week from service
+- fix Placement update form dynamic field visibility
+- fix RVO mixin to have email and numberfield
 
 ## 2025-08-18
 - add dashboard page as landing page with summary cards

@@ -10,6 +10,7 @@
       <h1 class="utrecht-heading-1 rvo-heading--no-margins">Persoon toewijzen</h1>
       <p class="utrecht-paragraph">Kies wie je wilt toewijzen aan deze dienst. We laten eerst de best passende mensen zien.</p>
     </div>
+<<<<<<< HEAD
     
     <!-- Service Context Card -->
     <div class="rvo-card rvo-card--outline rvo-card--padding-lg rvo-card--full-colour--grijs-100">
@@ -34,6 +35,105 @@
             €205.600
           </p>
         </div>
+=======
+    <form class="rvo-layout-column rvo-layout-gap--md" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="utrecht-form-fieldset rvo-form-fieldset rvo-layout-gap--0">
+        <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
+          <legend class="utrecht-form-fieldset__legend utrecht-form-fieldset__legend--html-legend">
+            Inzet gegevens
+          </legend>
+          <div class="rvo-layout-column rvo-layout-gap--md">
+            {% for field in form %}
+              {% if field.name == "service" %}
+                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  </div>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
+                </div>
+                
+                <!-- Service Preview Table -->
+                <div id="service-preview" style="display: none; margin-top: 1rem;">
+                  <h3 class="utrecht-heading-3">Geselecteerde dienst</h3>
+                  <table class="rvo-table" style="border-collapse: collapse; border: 1px solid #ccc;">
+                    <thead>
+                      <tr>
+                        <th>Omschrijving</th>
+                        <th>Rol</th>
+                        <th>Start datum</th>
+                        <th>Eind datum</th>
+                        <th>Kosten</th>
+                      </tr>
+                    </thead>
+                    <tbody id="service-preview-body">
+                      <!-- Will be populated by JavaScript -->
+                    </tbody>
+                  </table>
+                </div>
+              {% elif field.name == "specific_start_date" %}
+                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0" id="specific_start_date_field" style="display: none;">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  </div>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% elif field.name == "specific_end_date" %}
+                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0" id="specific_end_date_field" style="display: none;">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  </div>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% elif field.name == "specific_hours_per_week" %}
+                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0" id="specific_hours_per_week_field" style="display: none;">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  </div>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  </div>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </fieldset>
+>>>>>>> origin/main
       </div>
     </div>
 
