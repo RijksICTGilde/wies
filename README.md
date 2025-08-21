@@ -43,6 +43,6 @@ The following URLs are not linked through the UI
 ### Release
 - everything in main
 - change "unreleased" in CHANGES to date + commit & push
-- tag with date using "yyyy-mm-dd": e.g. `git tag -a 2025-08-18 -m "demo-2025-08-18"`
+- tag with date using "yyyy-mm-dd": e.g. `git tag -a 2025-08-18 -m "2025-08-18"`
 - push tag: `git push --tags`
 - (CI produces image)
