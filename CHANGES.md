@@ -16,7 +16,7 @@ This files lists the changes during the lifetime of this project.
 - add notes: create and list from assignment detail page
 - add possibility for primary action on filter group
 - add create assignment button and move organisation into filter modal
-- split assignment page into two tabes: services and notes
+- split assignment page into two tabs: services and notes
 - nest placement creation under service
 - update looks of services/placements
 - add link to relevant colleague page for matching
