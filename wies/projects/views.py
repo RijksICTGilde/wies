@@ -1236,7 +1236,11 @@ def add_note(request, assignment_id):
             if hasattr(request.user, 'colleague') and request.user.colleague:
                 assignment = Assignment.objects.get(pk=assignment_id)
                 colleague = request.user.colleague
-                create_note(assignment, colleague, message)
+                Note.objects.create(
+                    assignment=assignment,
+                    colleague=colleague,
+                    message=message
+                )
                 messages.success(request, 'Notitie succesvol toegevoegd.')
             else:
                 messages.error(request, 'Geen collega profiel gevonden voor huidige gebruiker.')
