@@ -1,9 +1,9 @@
 # Changes
 This files lists the changes during the lifetime of this project.
 
-## Current version
-
 ## unreleased
+
+## 2025-08-21
 - add user profile page with RVO tab navigation (Overzicht, Opdrachten, CV, Instellingen)
 - link user accounts to colleague profiles via email matching
 - add auto-create colleague on login
