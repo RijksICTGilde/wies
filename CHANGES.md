@@ -2,6 +2,7 @@
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
+- update dependencies to latest, including django security release
 
 ## 2025-08-21
 - add user profile page with RVO tab navigation (Overzicht, Opdrachten, CV, Instellingen)
