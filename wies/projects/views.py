@@ -956,6 +956,11 @@ class AssignmentUpdateView(UpdateView):
     form_class = AssignmentForm
     template_name = 'assignment_update.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/assignments/{context["object"].pk}/'
+        return context
+
 class ColleagueCreateView(CreateView):
     model = Colleague
     form_class = ColleagueForm
@@ -997,6 +1002,11 @@ class ColleagueUpdateView(UpdateView):
     form_class = ColleagueForm
     template_name = 'colleague_update.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/colleagues/{context["object"].pk}/'
+        return context
+
 class PlacementDetailView(DetailView):
     model = Placement
     template_name = 'placement_detail.html'
@@ -1005,6 +1015,11 @@ class PlacementUpdateView(UpdateView):
     model = Placement
     form_class = PlacementForm
     template_name = 'placement_update.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/placements/{context["object"].pk}/'
+        return context
 
     def form_valid(self, form):
         placement_id = self.kwargs['pk']
@@ -1184,11 +1199,23 @@ class MinistryCreateView(CreateView):
     fields = ['name', 'abbreviation']
     success_url = reverse_lazy('ministries')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = '/ministries/'
+        return context
+
+
 class MinistryUpdateView(UpdateView):
     model = Ministry
     template_name = 'ministry_form.html'
     fields = ['name', 'abbreviation']
     success_url = reverse_lazy('ministries')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/ministries/{context["object"].pk}/'
+        return context
+
 
 class MinistryDeleteView(DeleteView):
     model = Ministry
