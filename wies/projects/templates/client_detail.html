@@ -2,6 +2,18 @@
 
 {% block content %}
 <div class="rvo-layout-column rvo-layout-gap--xl">
+
+  <!-- Breadcrumbs -->
+  <ol class="rvo-breadcrumbs rvo-breadcrumbs--sm">
+    <li class="rvo-breadcrumbs-item">
+      <a href="/clients/" class="rvo-link rvo-link--no-underline">Opdrachtgevers</a>
+    </li>
+    <li class="rvo-breadcrumbs-item">
+      <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+      <span class="rvo-breadcrumb-current-page">{{ client_name }}</span>
+    </li>
+  </ol>
+
   <div>
     <h1 class="utrecht-heading-1 rvo-heading--no-margins">{{ client_name }}</h1>
   </div>
