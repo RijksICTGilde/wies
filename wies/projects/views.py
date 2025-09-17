@@ -897,7 +897,8 @@ class AssignmentCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         context.update({
             "placement_form": PlacementForm(),
-            "range": range(2)
+            "range": range(2),
+            "cancel_url": "/assignments/"
         })
         return context
 
@@ -978,6 +979,7 @@ class ColleagueCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['skills'] = Skill.objects.all()
+        context['cancel_url'] = '/colleagues/'
         return context
 
 class ColleagueDetail(DetailView):
@@ -1046,6 +1048,7 @@ class PlacementCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         service = Service.objects.get(id=self.kwargs['pk'])
         context['service'] = service
+        context['cancel_url'] = f'/assignments/{service.assignment.id}/'
         return context
     
     def form_valid(self, form):
@@ -1074,7 +1077,13 @@ class ServiceCreateView(CreateView):
     model = Service
     form_class = ServiceForm
     template_name = 'service_new.html'
-    
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        assignment_id = self.kwargs['pk']
+        context['cancel_url'] = f'/assignments/{assignment_id}/'
+        return context
+
     def form_valid(self, form):
         assignment_id = self.kwargs['pk']
         form.assignment_id = assignment_id

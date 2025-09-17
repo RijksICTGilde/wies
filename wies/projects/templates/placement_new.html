@@ -103,6 +103,11 @@
         <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
           Inzet toevoegen
         </button>
+        {% if cancel_url %}
+          <a href="{{ cancel_url }}" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md">
+            Annuleren
+          </a>
+        {% endif %}
       </p>
     </form>
   </div>
