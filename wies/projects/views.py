@@ -897,7 +897,8 @@ class AssignmentCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         context.update({
             "placement_form": PlacementForm(),
-            "range": range(2)
+            "range": range(2),
+            "cancel_url": "/assignments/"
         })
         return context
 
@@ -951,10 +952,20 @@ class AssignmentDeleteView(DeleteView):
     success_url = reverse_lazy("assignments")
     template_name = 'assignment_delete.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/assignments/{context["object"].pk}/'
+        return context
+
 class AssignmentUpdateView(UpdateView):
     model = Assignment
     form_class = AssignmentForm
     template_name = 'assignment_update.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/assignments/{context["object"].pk}/'
+        return context
 
 class ColleagueCreateView(CreateView):
     model = Colleague
@@ -968,6 +979,7 @@ class ColleagueCreateView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['skills'] = Skill.objects.all()
+        context['cancel_url'] = '/colleagues/'
         return context
 
 class ColleagueDetail(DetailView):
@@ -992,10 +1004,20 @@ class ColleagueDeleteView(DeleteView):
     success_url = reverse_lazy("colleagues")
     template_name = 'colleague_delete.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/colleagues/{context["object"].pk}/'
+        return context
+
 class ColleagueUpdateView(UpdateView):
     model = Colleague
     form_class = ColleagueForm
     template_name = 'colleague_update.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/colleagues/{context["object"].pk}/'
+        return context
 
 class PlacementDetailView(DetailView):
     model = Placement
@@ -1005,6 +1027,11 @@ class PlacementUpdateView(UpdateView):
     model = Placement
     form_class = PlacementForm
     template_name = 'placement_update.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/assignments/{context["object"].service.assignment.id}/'
+        return context
 
     def form_valid(self, form):
         placement_id = self.kwargs['pk']
@@ -1021,6 +1048,7 @@ class PlacementCreateView(CreateView):
         context = super().get_context_data(**kwargs)
         service = Service.objects.get(id=self.kwargs['pk'])
         context['service'] = service
+        context['cancel_url'] = f'/assignments/{service.assignment.id}/'
         return context
     
     def form_valid(self, form):
@@ -1033,7 +1061,12 @@ class PlacementDeleteView(DeleteView):
     model = Placement
     success_url = reverse_lazy("assignments")
     template_name = 'placement_delete.html'
-    
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/assignments/{context["object"].service.assignment.id}/'
+        return context
+
     def post(self, request, *args, **kwargs):
         placement_id = self.kwargs['pk']
         assignment_id = Placement.objects.get(id=placement_id).service.assignment.id
@@ -1044,7 +1077,13 @@ class ServiceCreateView(CreateView):
     model = Service
     form_class = ServiceForm
     template_name = 'service_new.html'
-    
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        assignment_id = self.kwargs['pk']
+        context['cancel_url'] = f'/assignments/{assignment_id}/'
+        return context
+
     def form_valid(self, form):
         assignment_id = self.kwargs['pk']
         form.assignment_id = assignment_id
@@ -1072,7 +1111,12 @@ class ServiceDeleteView(DeleteView):
     model = Service
     success_url = reverse_lazy("assignments")
     template_name = 'service_delete.html'
-    
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/assignments/{context["object"].assignment.id}/'
+        return context
+
     def post(self, request, *args, **kwargs):
         service_id = self.kwargs['pk']
         assignment_id = Service.objects.get(id=service_id).assignment.id
@@ -1184,16 +1228,33 @@ class MinistryCreateView(CreateView):
     fields = ['name', 'abbreviation']
     success_url = reverse_lazy('ministries')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = '/ministries/'
+        return context
+
+
 class MinistryUpdateView(UpdateView):
     model = Ministry
     template_name = 'ministry_form.html'
     fields = ['name', 'abbreviation']
     success_url = reverse_lazy('ministries')
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/ministries/{context["object"].pk}/'
+        return context
+
+
 class MinistryDeleteView(DeleteView):
     model = Ministry
     template_name = 'ministry_confirm_delete.html'
     success_url = reverse_lazy('ministries')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['cancel_url'] = f'/ministries/{context["object"].pk}/'
+        return context
 
 class MinistryDetailView(DetailView):
     model = Ministry

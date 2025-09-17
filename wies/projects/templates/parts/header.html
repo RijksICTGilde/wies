@@ -59,16 +59,16 @@
         <li class="rvo-menubar__list">
           <ul class="rvo-menubar__group--flex">
             <li class="rvo-menubar__item">
-              <a href="/placements/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Inzet & beschikbaarheid</a>
+              <a href="/placements/" class="rvo-link rvo-menubar__link rvo-link--logoblauw {% if '/placements/' in request.path %}rvo-link--active{% endif %}">Inzet & beschikbaarheid</a>
             </li>
             <li class="rvo-menubar__item">
-              <a href="/assignments/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Opdrachten & leads</a>
+              <a href="/assignments/" class="rvo-link rvo-menubar__link rvo-link--logoblauw {% if '/assignments/' in request.path %}rvo-link--active{% endif %}">Opdrachten & leads</a>
             </li>
             <li class="rvo-menubar__item">
-              <a href="/colleagues/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Collega's & expertise</a>
+              <a href="/colleagues/" class="rvo-link rvo-menubar__link rvo-link--logoblauw {% if '/colleagues/' in request.path %}rvo-link--active{% endif %}">Collega's & expertise</a>
             </li>
             <li class="rvo-menubar__item">
-              <a href="/clients/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">Opdrachtgevers & relaties</a>
+              <a href="/clients/" class="rvo-link rvo-menubar__link rvo-link--logoblauw {% if '/clients/' in request.path or '/ministries/' in request.path %}rvo-link--active{% endif %}">Opdrachtgevers & relaties</a>
             </li>
           </ul>
           <ul class="rvo-menubar__group--flex">

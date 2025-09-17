@@ -3,6 +3,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 - update dependencies to latest, including django security release
+- fix that a cancel action on create/edit/remove takes user back to page from which action was perfomed
+- add breadcrumbs on client detail page
+- add underline active state to main tabs
 
 ## 2025-08-21
 - add user profile page with RVO tab navigation (Overzicht, Opdrachten, CV, Instellingen)
