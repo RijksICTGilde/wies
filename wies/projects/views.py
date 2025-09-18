@@ -568,7 +568,7 @@ class PlacementTableView(ListView):
         ).filter(
             service__assignment__status='LOPEND'
         ).order_by('-service__assignment__start_date')
-        
+
         search_filter = self.request.GET.get('search')
         if search_filter:
             qs = qs.filter(
@@ -579,7 +579,7 @@ class PlacementTableView(ListView):
                 Q(service__assignment__ministry__name__icontains=search_filter) |
                 Q(service__assignment__ministry__abbreviation__icontains=search_filter)
             )
-        
+
         ordering = self.request.GET.get('order')
         if ordering:
             qs = qs.order_by(ordering)
@@ -590,12 +590,44 @@ class PlacementTableView(ListView):
             'client': 'service__assignment__organization',
             'ministry': 'service__assignment__ministry__id'
         }
-        
+
         for param, lookup in filters.items():
             value = self.request.GET.get(param)
             if value:
                 qs = qs.filter(**{lookup: value})
-                        
+
+        # Apply period filtering for overlapping periods
+        period_from = self.request.GET.get('period_from')
+        period_to = self.request.GET.get('period_to')
+
+        if period_from or period_to:
+            if period_from:
+                period_from = datetime.datetime.strptime(period_from, '%Y-%m-%d').date()
+            if period_to:
+                period_to = datetime.datetime.strptime(period_to, '%Y-%m-%d').date()
+
+            # We need to filter placements where their period overlaps with the filter period
+            # A placement overlaps if: placement_start <= filter_end AND placement_end >= filter_start
+
+            placement_ids = []
+            for placement in qs:
+                placement_start = placement.start_date
+                placement_end = placement.end_date
+
+                if placement_start and placement_end:
+                    # Check for overlap
+                    overlaps = True
+
+                    if period_to and placement_start > period_to:
+                        overlaps = False
+                    if period_from and placement_end < period_from:
+                        overlaps = False
+
+                    if overlaps:
+                        placement_ids.append(placement.id)
+
+            qs = qs.filter(id__in=placement_ids)
+
         return qs.distinct()
 
     def get_template_names(self):
@@ -625,10 +657,10 @@ class PlacementTableView(ListView):
         
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
-        
-        modal_filter_params = ['skill', 'client', 'ministry', 'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to']
+
+        modal_filter_params = ['skill', 'client', 'ministry', 'period_from', 'period_to']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
-        
+
         context['filter_groups'] = [
             {
                 'type': 'select',
@@ -650,6 +682,15 @@ class PlacementTableView(ListView):
                 'label': 'Ministerie',
                 'placeholder': 'Alle ministeries',
                 'options': [{'value': ministry.id, 'label': ministry.name} for ministry in context.get('ministries', [])]
+            },
+            {
+                'type': 'date_range',
+                'name': 'period',
+                'label': 'Periode',
+                'from_label': 'Van',
+                'to_label': 'Tot',
+                'name_from': 'period_from',
+                'name_to': 'period_to'
             },
         ]
 
@@ -725,10 +766,10 @@ class PlacementAvailabilityView(ListView):
         
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
-        
-        modal_filter_params = ['skill', 'client', 'ministry', 'start_date_from', 'start_date_to', 'end_date_from', 'end_date_to']
+
+        modal_filter_params = ['skill', 'client', 'ministry', 'period_from', 'period_to']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
-        
+
         context['filter_groups'] = [
             {
                 'type': 'select',
@@ -750,6 +791,15 @@ class PlacementAvailabilityView(ListView):
                 'label': 'Ministerie',
                 'placeholder': 'Alle ministeries',
                 'options': [{'value': ministry.id, 'label': ministry.name} for ministry in context.get('ministries', [])]
+            },
+            {
+                'type': 'date_range',
+                'name': 'period',
+                'label': 'Periode',
+                'from_label': 'Van',
+                'to_label': 'Tot',
+                'name_from': 'period_from',
+                'name_to': 'period_to'
             },
         ]
 
