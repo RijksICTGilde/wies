@@ -2,6 +2,8 @@
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
+
+## 2025-09-19
 - update dependencies to latest, including django security release
 - fix that a cancel action on create/edit/remove takes user back to page from which action was perfomed
 - add breadcrumbs on client detail page
