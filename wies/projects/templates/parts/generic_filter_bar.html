@@ -126,12 +126,14 @@ Usage:
             <div class="rvo-form-field__label">
               <label class="rvo-label" for="modal-{{ filter_group.name }}-from">{{ filter_group.from_label }}</label>
             </div>
-            <input 
-              type="date" 
-              id="modal-{{ filter_group.name }}-from" 
-              name="{{ filter_group.name }}_from" 
-              class="utrecht-textbox utrecht-textbox--html-input rvo-input" 
-              value="{{ request.GET|lookup:filter_group.name_from }}" 
+            <input
+              type="date"
+              id="modal-{{ filter_group.name }}-from"
+              name="{{ filter_group.name }}_from"
+              class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
+              data-require-both="{{ filter_group.require_both|yesno:'true,false' }}"
+              data-combined-name="{{ filter_group.name }}"
+              value="{% if request.GET|lookup:filter_group.name and '_' in request.GET|lookup:filter_group.name %}{{ request.GET|lookup:filter_group.name|slice:':10' }}{% endif %}"
               onchange="applyFiltersInstant()"
             />
           </div>
@@ -139,16 +141,23 @@ Usage:
             <div class="rvo-form-field__label">
               <label class="rvo-label" for="modal-{{ filter_group.name }}-to">{{ filter_group.to_label }}</label>
             </div>
-            <input 
-              type="date" 
-              id="modal-{{ filter_group.name }}-to" 
-              name="{{ filter_group.name }}_to" 
-              class="utrecht-textbox utrecht-textbox--html-input rvo-input" 
-              value="{{ request.GET|lookup:filter_group.name_to }}" 
+            <input
+              type="date"
+              id="modal-{{ filter_group.name }}-to"
+              name="{{ filter_group.name }}_to"
+              class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
+              data-require-both="{{ filter_group.require_both|yesno:'true,false' }}"
+              data-combined-name="{{ filter_group.name }}"
+              value="{% if request.GET|lookup:filter_group.name and '_' in request.GET|lookup:filter_group.name %}{{ request.GET|lookup:filter_group.name|slice:'11:' }}{% endif %}"
               onchange="applyFiltersInstant()"
             />
           </div>
         </div>
+        {% if filter_group.require_both %}
+        <div id="{{ filter_group.name }}-validation-message" class="date-range-validation-message" style="display: none; color: #e17000; font-size: 0.875rem; margin-top: 0.25rem;">
+          Beide datums zijn vereist voor een geldige periode filter.
+        </div>
+        {% endif %}
         {% endif %}
         {% endfor %}
 
