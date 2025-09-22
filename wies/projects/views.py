@@ -27,6 +27,7 @@ from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 from .services.sync import sync_colleagues_from_exact, sync_colleagues_from_otys_iir
 from .services.statistics import get_consultants_working, get_total_clients_count, get_total_budget
 from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining, get_total_services, get_services_filled, get_average_utilization, get_available_since
+from .services.placements import filter_placements_by_period
 
 from wies.exact.models import ExactEmployee, ExactProject
 
@@ -598,39 +599,8 @@ class PlacementTableView(ListView):
 
         # Apply period filtering for overlapping periods
         period = self.request.GET.get('period')
-
         if period:
-            # Parse period in format "YYYY-MM-DD_YYYY-MM-DD"
-            if '_' in period:
-                try:
-                    period_from_str, period_to_str = period.split('_', 1)
-                    period_from = datetime.datetime.strptime(period_from_str, '%Y-%m-%d').date()
-                    period_to = datetime.datetime.strptime(period_to_str, '%Y-%m-%d').date()
-
-                    # We need to filter placements where their period overlaps with the filter period
-                    # A placement overlaps if: placement_start <= filter_end AND placement_end >= filter_start
-
-                    placement_ids = []
-                    for placement in qs:
-                        placement_start = placement.start_date
-                        placement_end = placement.end_date
-
-                        if placement_start and placement_end:
-                            # Check for overlap
-                            overlaps = True
-
-                            if placement_start > period_to:
-                                overlaps = False
-                            if placement_end < period_from:
-                                overlaps = False
-
-                            if overlaps:
-                                placement_ids.append(placement.id)
-
-                    qs = qs.filter(id__in=placement_ids)
-                except ValueError:
-                    # Invalid date format, ignore filter
-                    pass
+            qs = filter_placements_by_period(qs, period)
 
         return qs.distinct()
 
@@ -739,7 +709,12 @@ class PlacementAvailabilityView(ListView):
             value = self.request.GET.get(param)
             if value:
                 qs = qs.filter(**{lookup: value})
-                        
+
+        # Apply period filtering for overlapping periods
+        period = self.request.GET.get('period')
+        if period:
+            qs = filter_placements_by_period(qs, period)
+
         return qs.distinct()
 
     def get_template_names(self):
