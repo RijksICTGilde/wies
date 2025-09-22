@@ -704,16 +704,11 @@ class PlacementAvailabilityView(ListView):
             'client': 'service__assignment__organization',
             'ministry': 'service__assignment__ministry__id'
         }
-        
+
         for param, lookup in filters.items():
             value = self.request.GET.get(param)
             if value:
                 qs = qs.filter(**{lookup: value})
-
-        # Apply period filtering for overlapping periods
-        period = self.request.GET.get('period')
-        if period:
-            qs = filter_placements_by_period(qs, period)
 
         return qs.distinct()
 
@@ -745,7 +740,7 @@ class PlacementAvailabilityView(ListView):
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
 
-        modal_filter_params = ['skill', 'client', 'ministry', 'period']
+        modal_filter_params = ['skill', 'client', 'ministry']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
 
         context['filter_groups'] = [
@@ -769,14 +764,6 @@ class PlacementAvailabilityView(ListView):
                 'label': 'Ministerie',
                 'placeholder': 'Alle ministeries',
                 'options': [{'value': ministry.id, 'label': ministry.name} for ministry in context.get('ministries', [])]
-            },
-            {
-                'type': 'date_range',
-                'name': 'period',
-                'label': 'Periode',
-                'from_label': 'Van',
-                'to_label': 'Tot',
-                'require_both': True
             },
         ]
 
