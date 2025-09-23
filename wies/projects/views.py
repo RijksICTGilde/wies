@@ -490,7 +490,6 @@ class ColleagueList(ListView):
                 if colleague.end_date:
                     placed_colleague_ids.add(colleague.id)
             if status_filter == 'beschikbaar':
-                print('in beschikbaar filter')
                 qs = qs.exclude(id__in=placed_colleague_ids)
             elif status_filter == 'ingezet':
                 qs = qs.filter(id__in=placed_colleague_ids)
