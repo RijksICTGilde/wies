@@ -65,7 +65,6 @@ function applyFiltersInstant() {
         hiddenInput.name = hiddenName;
         mainForm.appendChild(hiddenInput);
       }
-      console.log("hiddenValue", hiddenValue)
       hiddenInput.value = hiddenValue;
     } else {
       // Remove hidden input if value is empty
