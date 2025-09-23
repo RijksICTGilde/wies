@@ -1177,7 +1177,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1189,7 +1189,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1201,7 +1201,7 @@
       "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1213,7 +1213,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1225,7 +1225,7 @@
       "skill": 7,
       "cost_type": "FIXED_PRICE",
       "fixed_cost": 15000.0,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1237,7 +1237,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1249,7 +1249,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1261,7 +1261,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1273,7 +1273,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1285,7 +1285,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1297,7 +1297,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1309,7 +1309,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1321,7 +1321,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1333,7 +1333,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1345,7 +1345,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1357,7 +1357,7 @@
       "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1369,7 +1369,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1381,7 +1381,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1393,7 +1393,7 @@
       "skill": 7,
       "cost_type": "FIXED_PRICE",
       "fixed_cost": 25000.0,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1405,7 +1405,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1417,7 +1417,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1429,7 +1429,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1441,7 +1441,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1453,7 +1453,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 16,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1465,7 +1465,7 @@
       "skill": 13,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1477,7 +1477,7 @@
       "skill": 14,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1489,7 +1489,7 @@
       "skill": 11,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1501,7 +1501,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1513,7 +1513,7 @@
       "skill": 15,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1525,7 +1525,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -1537,7 +1537,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13422,7 +13422,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13434,7 +13434,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13446,7 +13446,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13458,7 +13458,7 @@
       "skill": 18,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13470,7 +13470,7 @@
       "skill": 28,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13482,7 +13482,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13494,7 +13494,7 @@
       "skill": 11,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13506,7 +13506,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13518,7 +13518,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13530,7 +13530,7 @@
       "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13542,7 +13542,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13554,7 +13554,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13566,7 +13566,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13578,7 +13578,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13590,7 +13590,7 @@
       "skill": 14,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13602,7 +13602,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13614,7 +13614,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13626,7 +13626,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13638,7 +13638,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13650,7 +13650,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13662,7 +13662,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13674,7 +13674,7 @@
       "skill": 15,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13686,7 +13686,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13698,7 +13698,7 @@
       "skill": 21,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13710,7 +13710,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13722,7 +13722,7 @@
       "skill": 23,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13734,7 +13734,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13746,7 +13746,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13758,7 +13758,7 @@
       "skill": 21,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13770,7 +13770,7 @@
       "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13782,7 +13782,7 @@
       "skill": 15,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13794,7 +13794,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13806,7 +13806,7 @@
       "skill": 15,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13818,7 +13818,7 @@
       "skill": 12,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13830,7 +13830,7 @@
       "skill": 22,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13842,7 +13842,7 @@
       "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13854,7 +13854,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13866,7 +13866,7 @@
       "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13878,7 +13878,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13890,7 +13890,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13902,7 +13902,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13914,7 +13914,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13926,7 +13926,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13938,7 +13938,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13950,7 +13950,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13962,7 +13962,7 @@
       "skill": 17,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13974,7 +13974,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13986,7 +13986,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -13998,7 +13998,7 @@
       "skill": 28,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14010,7 +14010,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14022,7 +14022,7 @@
       "skill": 14,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14034,7 +14034,7 @@
       "skill": 22,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14046,7 +14046,7 @@
       "skill": 15,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14058,7 +14058,7 @@
       "skill": 15,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14070,7 +14070,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14082,7 +14082,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14094,7 +14094,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14106,7 +14106,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14118,7 +14118,7 @@
       "skill": 24,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14130,7 +14130,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14142,7 +14142,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14154,7 +14154,7 @@
       "skill": 21,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14166,7 +14166,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14178,7 +14178,7 @@
       "skill": 23,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14190,7 +14190,7 @@
       "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14202,7 +14202,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14214,7 +14214,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14226,7 +14226,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14238,7 +14238,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14250,7 +14250,7 @@
       "skill": 12,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14262,7 +14262,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14274,7 +14274,7 @@
       "skill": 11,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14286,7 +14286,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14298,7 +14298,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14310,7 +14310,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14322,7 +14322,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14334,7 +14334,7 @@
       "skill": 14,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14346,7 +14346,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14358,7 +14358,7 @@
       "skill": 17,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14370,7 +14370,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14382,7 +14382,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14394,7 +14394,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14406,7 +14406,7 @@
       "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14418,7 +14418,7 @@
       "skill": 27,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14430,7 +14430,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14442,7 +14442,7 @@
       "skill": 23,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14454,7 +14454,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14466,7 +14466,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14478,7 +14478,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14490,7 +14490,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14502,7 +14502,7 @@
       "skill": 18,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14514,7 +14514,7 @@
       "skill": 18,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14526,7 +14526,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14538,7 +14538,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14550,7 +14550,7 @@
       "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14562,7 +14562,7 @@
       "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14574,7 +14574,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14586,7 +14586,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14598,7 +14598,7 @@
       "skill": 17,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14610,7 +14610,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14622,7 +14622,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14634,7 +14634,7 @@
       "skill": 18,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14646,7 +14646,7 @@
       "skill": 21,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14658,7 +14658,7 @@
       "skill": 22,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14670,7 +14670,7 @@
       "skill": 17,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14682,7 +14682,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14694,7 +14694,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14706,7 +14706,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14718,7 +14718,7 @@
       "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14730,7 +14730,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14742,7 +14742,7 @@
       "skill": 11,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14754,7 +14754,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14766,7 +14766,7 @@
       "skill": 14,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14778,7 +14778,7 @@
       "skill": 23,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14790,7 +14790,7 @@
       "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14802,7 +14802,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14814,7 +14814,7 @@
       "skill": 15,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14826,7 +14826,7 @@
       "skill": 17,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14838,7 +14838,7 @@
       "skill": 11,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14850,7 +14850,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14862,7 +14862,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14874,7 +14874,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14886,7 +14886,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14898,7 +14898,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14910,7 +14910,7 @@
       "skill": 22,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14922,7 +14922,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14934,7 +14934,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14946,7 +14946,7 @@
       "skill": 24,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14958,7 +14958,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14970,7 +14970,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14982,7 +14982,7 @@
       "skill": 28,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -14994,7 +14994,7 @@
       "skill": 13,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15006,7 +15006,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15018,7 +15018,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15030,7 +15030,7 @@
       "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15042,7 +15042,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15054,7 +15054,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15066,7 +15066,7 @@
       "skill": 27,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15078,7 +15078,7 @@
       "skill": 14,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15090,7 +15090,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15102,7 +15102,7 @@
       "skill": 22,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15114,7 +15114,7 @@
       "skill": 23,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15126,7 +15126,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15138,7 +15138,7 @@
       "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15150,7 +15150,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15162,7 +15162,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15174,7 +15174,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15186,7 +15186,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15198,7 +15198,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15210,7 +15210,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15222,7 +15222,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15234,7 +15234,7 @@
       "skill": 28,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15246,7 +15246,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15258,7 +15258,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15270,7 +15270,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15282,7 +15282,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15294,7 +15294,7 @@
       "skill": 12,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15306,7 +15306,7 @@
       "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15318,7 +15318,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15330,7 +15330,7 @@
       "skill": 17,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15342,7 +15342,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15354,7 +15354,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15366,7 +15366,7 @@
       "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15378,7 +15378,7 @@
       "skill": 11,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15390,7 +15390,7 @@
       "skill": 21,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15402,7 +15402,7 @@
       "skill": 17,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15414,7 +15414,7 @@
       "skill": 23,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15426,7 +15426,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15438,7 +15438,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15450,7 +15450,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15462,7 +15462,7 @@
       "skill": 13,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15474,7 +15474,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15486,7 +15486,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15498,7 +15498,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15510,7 +15510,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15522,7 +15522,7 @@
       "skill": 11,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15534,7 +15534,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15546,7 +15546,7 @@
       "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15558,7 +15558,7 @@
       "skill": 24,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15570,7 +15570,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15582,7 +15582,7 @@
       "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15594,7 +15594,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15606,7 +15606,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15618,7 +15618,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15630,7 +15630,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15642,7 +15642,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15654,7 +15654,7 @@
       "skill": 17,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15666,7 +15666,7 @@
       "skill": 12,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15678,7 +15678,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15690,7 +15690,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15702,7 +15702,7 @@
       "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15714,7 +15714,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15726,7 +15726,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15738,7 +15738,7 @@
       "skill": 24,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15750,7 +15750,7 @@
       "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15762,7 +15762,7 @@
       "skill": 14,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15774,7 +15774,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15786,7 +15786,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15798,7 +15798,7 @@
       "skill": 12,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15810,7 +15810,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15822,7 +15822,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15834,7 +15834,7 @@
       "skill": 24,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15846,7 +15846,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15858,7 +15858,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 24,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15962,7 +15962,7 @@
       "skill": 17,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -15988,7 +15988,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16014,7 +16014,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16040,7 +16040,7 @@
       "skill": 12,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16066,7 +16066,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16092,7 +16092,7 @@
       "skill": 28,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16118,7 +16118,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16144,7 +16144,7 @@
       "skill": 12,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16170,7 +16170,7 @@
       "skill": 21,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16182,7 +16182,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16207,7 +16207,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16219,7 +16219,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16231,7 +16231,7 @@
       "skill": 24,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16243,7 +16243,7 @@
       "skill": 21,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16269,7 +16269,7 @@
       "skill": 15,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16295,7 +16295,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16321,7 +16321,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16347,7 +16347,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16373,7 +16373,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16385,7 +16385,7 @@
       "skill": 22,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16410,7 +16410,7 @@
       "skill": 27,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16422,7 +16422,7 @@
       "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16434,7 +16434,7 @@
       "skill": 11,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16446,7 +16446,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16472,7 +16472,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16498,7 +16498,7 @@
       "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16524,7 +16524,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16564,7 +16564,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16590,7 +16590,7 @@
       "skill": 18,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16616,7 +16616,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16642,7 +16642,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16668,7 +16668,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16694,7 +16694,7 @@
       "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16720,7 +16720,7 @@
       "skill": 23,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16746,7 +16746,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16772,7 +16772,7 @@
       "skill": 15,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16798,7 +16798,7 @@
       "skill": 18,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16810,7 +16810,7 @@
       "skill": 27,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16822,7 +16822,7 @@
       "skill": 18,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16834,7 +16834,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16846,7 +16846,7 @@
       "skill": 2,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16858,7 +16858,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16884,7 +16884,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16910,7 +16910,7 @@
       "skill": 22,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16936,7 +16936,7 @@
       "skill": 22,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16962,7 +16962,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -16988,7 +16988,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17014,7 +17014,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17040,7 +17040,7 @@
       "skill": 15,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17094,7 +17094,7 @@
       "skill": 21,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17106,7 +17106,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17118,7 +17118,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17130,7 +17130,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17155,7 +17155,7 @@
       "skill": 23,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17167,7 +17167,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17179,7 +17179,7 @@
       "skill": 9,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17191,7 +17191,7 @@
       "skill": 24,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17217,7 +17217,7 @@
       "skill": 28,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17243,7 +17243,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17269,7 +17269,7 @@
       "skill": 27,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17281,7 +17281,7 @@
       "skill": 22,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17293,7 +17293,7 @@
       "skill": 28,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17305,7 +17305,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17331,7 +17331,7 @@
       "skill": 14,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17357,7 +17357,7 @@
       "skill": 27,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17369,7 +17369,7 @@
       "skill": 27,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17381,7 +17381,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17393,7 +17393,7 @@
       "skill": 11,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17405,7 +17405,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17417,7 +17417,7 @@
       "skill": 13,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17429,7 +17429,7 @@
       "skill": 6,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17455,7 +17455,7 @@
       "skill": 12,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17481,7 +17481,7 @@
       "skill": 20,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17535,7 +17535,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17588,7 +17588,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17614,7 +17614,7 @@
       "skill": 22,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17640,7 +17640,7 @@
       "skill": 11,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17680,7 +17680,7 @@
       "skill": 11,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17706,7 +17706,7 @@
       "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17732,7 +17732,7 @@
       "skill": 13,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17758,7 +17758,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17784,7 +17784,7 @@
       "skill": 12,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17810,7 +17810,7 @@
       "skill": 18,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17836,7 +17836,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17875,7 +17875,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17915,7 +17915,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17927,7 +17927,7 @@
       "skill": 4,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17939,7 +17939,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17951,7 +17951,7 @@
       "skill": 5,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -17977,7 +17977,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18003,7 +18003,7 @@
       "skill": 18,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18029,7 +18029,7 @@
       "skill": 3,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18055,7 +18055,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18095,7 +18095,7 @@
       "skill": 8,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18121,7 +18121,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18161,7 +18161,7 @@
       "skill": 17,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18187,7 +18187,7 @@
       "skill": 10,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18213,7 +18213,7 @@
       "skill": 12,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18267,7 +18267,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18279,7 +18279,7 @@
       "skill": 25,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18291,7 +18291,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18330,7 +18330,7 @@
       "skill": 19,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18356,7 +18356,7 @@
       "skill": 13,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18382,7 +18382,7 @@
       "skill": 12,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18408,7 +18408,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18434,7 +18434,7 @@
       "skill": 1,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18460,7 +18460,7 @@
       "skill": 14,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18486,7 +18486,7 @@
       "skill": 24,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18540,7 +18540,7 @@
       "skill": 15,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18566,7 +18566,7 @@
       "skill": 13,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18606,7 +18606,7 @@
       "skill": 7,
       "cost_type": "PER_HOUR",
       "hours_per_week": 32,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18632,7 +18632,7 @@
       "skill": 29,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18672,7 +18672,7 @@
       "skill": 23,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18712,7 +18712,7 @@
       "skill": 13,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18738,7 +18738,7 @@
       "skill": 23,
       "cost_type": "PER_HOUR",
       "hours_per_week": 40,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18750,7 +18750,7 @@
       "skill": 16,
       "cost_type": "PER_HOUR",
       "hours_per_week": 12,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -18762,7 +18762,7 @@
       "skill": 14,
       "cost_type": "PER_HOUR",
       "hours_per_week": 8,
-      "period_source": "SERVICE"
+      "period_source": "ASSIGNMENT"
     }
   },
   {
@@ -27805,7 +27805,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 274,
@@ -27820,7 +27820,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 275,
@@ -27835,7 +27835,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 275,
@@ -27850,7 +27850,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 39,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 275,
@@ -27865,7 +27865,7 @@
       "cost_type": "VAST",
       "fixed_cost": 189222,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 275,
@@ -27880,7 +27880,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 23,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 276,
@@ -27895,7 +27895,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 276,
@@ -27910,7 +27910,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 277,
@@ -27925,7 +27925,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 157109,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 277,
@@ -27940,7 +27940,7 @@
       "cost_type": "VAST",
       "fixed_cost": 123192,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 278,
@@ -27955,7 +27955,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 33,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 278,
@@ -27970,7 +27970,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 278,
@@ -27985,7 +27985,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 118353,
       "hours_per_week": 19,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 278,
@@ -28000,7 +28000,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 28,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 279,
@@ -28015,7 +28015,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 39,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 279,
@@ -28030,7 +28030,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 23,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 280,
@@ -28045,7 +28045,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 280,
@@ -28060,7 +28060,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 91257,
       "hours_per_week": 23,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 280,
@@ -28075,7 +28075,7 @@
       "cost_type": "VAST",
       "fixed_cost": 165442,
       "hours_per_week": 29,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 281,
@@ -28090,7 +28090,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 282,
@@ -28105,7 +28105,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 282,
@@ -28120,7 +28120,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 170002,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 283,
@@ -28135,7 +28135,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 284,
@@ -28150,7 +28150,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 284,
@@ -28165,7 +28165,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 285,
@@ -28180,7 +28180,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 39,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 285,
@@ -28195,7 +28195,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 163763,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 285,
@@ -28210,7 +28210,7 @@
       "cost_type": "VAST",
       "fixed_cost": 98866,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 285,
@@ -28225,7 +28225,7 @@
       "cost_type": "VAST",
       "fixed_cost": 140128,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 286,
@@ -28240,7 +28240,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 19,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 286,
@@ -28255,7 +28255,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 286,
@@ -28270,7 +28270,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 287,
@@ -28285,7 +28285,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 288,
@@ -28300,7 +28300,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 288,
@@ -28315,7 +28315,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 289,
@@ -28330,7 +28330,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 85389,
       "hours_per_week": 33,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 289,
@@ -28345,7 +28345,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 289,
@@ -28360,7 +28360,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 290,
@@ -28375,7 +28375,7 @@
       "cost_type": "VAST",
       "fixed_cost": 86789,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 291,
@@ -28390,7 +28390,7 @@
       "cost_type": "VAST",
       "fixed_cost": 169283,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 291,
@@ -28405,7 +28405,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 291,
@@ -28420,7 +28420,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 292,
@@ -28435,7 +28435,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 146883,
       "hours_per_week": 28,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 292,
@@ -28450,7 +28450,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 130331,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 292,
@@ -28465,7 +28465,7 @@
       "cost_type": "VAST",
       "fixed_cost": 71366,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 293,
@@ -28480,7 +28480,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 293,
@@ -28495,7 +28495,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 293,
@@ -28510,7 +28510,7 @@
       "cost_type": "VAST",
       "fixed_cost": 114558,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 293,
@@ -28525,7 +28525,7 @@
       "cost_type": "VAST",
       "fixed_cost": 198296,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 293,
@@ -28540,7 +28540,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 294,
@@ -28555,7 +28555,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 16,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 294,
@@ -28570,7 +28570,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 16,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 295,
@@ -28585,7 +28585,7 @@
       "cost_type": "VAST",
       "fixed_cost": 56111,
       "hours_per_week": 29,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 295,
@@ -28600,7 +28600,7 @@
       "cost_type": "VAST",
       "fixed_cost": 81783,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 295,
@@ -28615,7 +28615,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 133986,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 295,
@@ -28630,7 +28630,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 296,
@@ -28645,7 +28645,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 92784,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 296,
@@ -28660,7 +28660,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 29,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 297,
@@ -28675,7 +28675,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 30,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 297,
@@ -28690,7 +28690,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 298,
@@ -28705,7 +28705,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 33,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 298,
@@ -28720,7 +28720,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 88958,
       "hours_per_week": 33,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 298,
@@ -28735,7 +28735,7 @@
       "cost_type": "VAST",
       "fixed_cost": 56900,
       "hours_per_week": 23,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 299,
@@ -28750,7 +28750,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 183113,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 299,
@@ -28765,7 +28765,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 94950,
       "hours_per_week": 18,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 299,
@@ -28780,7 +28780,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 300,
@@ -28795,7 +28795,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 300,
@@ -28810,7 +28810,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 300,
@@ -28825,7 +28825,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 117502,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 301,
@@ -28840,7 +28840,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 301,
@@ -28855,7 +28855,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 302,
@@ -28870,7 +28870,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 302,
@@ -28885,7 +28885,7 @@
       "cost_type": "VAST",
       "fixed_cost": 95748,
       "hours_per_week": 16,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 303,
@@ -28900,7 +28900,7 @@
       "cost_type": "VAST",
       "fixed_cost": 172424,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 304,
@@ -28915,7 +28915,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 188018,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 304,
@@ -28930,7 +28930,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 304,
@@ -28945,7 +28945,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 305,
@@ -28960,7 +28960,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 107490,
       "hours_per_week": 31,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 305,
@@ -28975,7 +28975,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 23,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 306,
@@ -28990,7 +28990,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 149263,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 306,
@@ -29005,7 +29005,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 16,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 307,
@@ -29020,7 +29020,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 29,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 308,
@@ -29035,7 +29035,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 308,
@@ -29050,7 +29050,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 102859,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 309,
@@ -29065,7 +29065,7 @@
       "cost_type": "VAST",
       "fixed_cost": 168489,
       "hours_per_week": 39,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 309,
@@ -29080,7 +29080,7 @@
       "cost_type": "VAST",
       "fixed_cost": 136843,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 309,
@@ -29095,7 +29095,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 19,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 310,
@@ -29110,7 +29110,7 @@
       "cost_type": "VAST",
       "fixed_cost": 185982,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 310,
@@ -29125,7 +29125,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 74734,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 311,
@@ -29140,7 +29140,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 29,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 311,
@@ -29155,7 +29155,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 311,
@@ -29170,7 +29170,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 181297,
       "hours_per_week": 28,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 311,
@@ -29185,7 +29185,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 31,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 312,
@@ -29200,7 +29200,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 312,
@@ -29215,7 +29215,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 313,
@@ -29230,7 +29230,7 @@
       "cost_type": "VAST",
       "fixed_cost": 138977,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 313,
@@ -29245,7 +29245,7 @@
       "cost_type": "VAST",
       "fixed_cost": 87451,
       "hours_per_week": 19,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 313,
@@ -29260,7 +29260,7 @@
       "cost_type": "VAST",
       "fixed_cost": 59457,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 314,
@@ -29275,7 +29275,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 147191,
       "hours_per_week": 23,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 315,
@@ -29290,7 +29290,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 315,
@@ -29305,7 +29305,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 142139,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 315,
@@ -29320,7 +29320,7 @@
       "cost_type": "VAST",
       "fixed_cost": 119785,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 315,
@@ -29335,7 +29335,7 @@
       "cost_type": "VAST",
       "fixed_cost": 180664,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 316,
@@ -29350,7 +29350,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 39,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 316,
@@ -29365,7 +29365,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 124809,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 316,
@@ -29380,7 +29380,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 316,
@@ -29395,7 +29395,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 84671,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 316,
@@ -29410,7 +29410,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 28,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 317,
@@ -29425,7 +29425,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 318,
@@ -29440,7 +29440,7 @@
       "cost_type": "VAST",
       "fixed_cost": 158561,
       "hours_per_week": 19,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 319,
@@ -29455,7 +29455,7 @@
       "cost_type": "VAST",
       "fixed_cost": 138683,
       "hours_per_week": 36,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 319,
@@ -29470,7 +29470,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 29,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 319,
@@ -29485,7 +29485,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 319,
@@ -29500,7 +29500,7 @@
       "cost_type": "VAST",
       "fixed_cost": 107086,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 320,
@@ -29515,7 +29515,7 @@
       "cost_type": "VAST",
       "fixed_cost": 73176,
       "hours_per_week": 39,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 321,
@@ -29530,7 +29530,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 181007,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 321,
@@ -29545,7 +29545,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 322,
@@ -29560,7 +29560,7 @@
       "cost_type": "VAST",
       "fixed_cost": 166664,
       "hours_per_week": 26,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 322,
@@ -29575,7 +29575,7 @@
       "cost_type": "VAST",
       "fixed_cost": 151674,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 322,
@@ -29590,7 +29590,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 322,
@@ -29605,7 +29605,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 31,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 323,
@@ -29620,7 +29620,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 323,
@@ -29635,7 +29635,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 133464,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 324,
@@ -29650,7 +29650,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 111181,
       "hours_per_week": 33,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 324,
@@ -29665,7 +29665,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 19,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 325,
@@ -29680,7 +29680,7 @@
       "cost_type": "VAST",
       "fixed_cost": 185958,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 325,
@@ -29695,7 +29695,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 31,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 325,
@@ -29710,7 +29710,7 @@
       "cost_type": "VAST",
       "fixed_cost": 93867,
       "hours_per_week": 30,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 326,
@@ -29725,7 +29725,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 326,
@@ -29740,7 +29740,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 327,
@@ -29755,7 +29755,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 98533,
       "hours_per_week": 18,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 328,
@@ -29770,7 +29770,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 173768,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 329,
@@ -29785,7 +29785,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 156373,
       "hours_per_week": 18,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 329,
@@ -29800,7 +29800,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 175901,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 329,
@@ -29815,7 +29815,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 182520,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 329,
@@ -29830,7 +29830,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 329,
@@ -29845,7 +29845,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 16,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 330,
@@ -29860,7 +29860,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 330,
@@ -29875,7 +29875,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 330,
@@ -29890,7 +29890,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 105098,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 330,
@@ -29905,7 +29905,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 331,
@@ -29920,7 +29920,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 166293,
       "hours_per_week": 30,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 331,
@@ -29935,7 +29935,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 180281,
       "hours_per_week": 26,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 331,
@@ -29950,7 +29950,7 @@
       "cost_type": "VAST",
       "fixed_cost": 81768,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 332,
@@ -29965,7 +29965,7 @@
       "cost_type": "VAST",
       "fixed_cost": 114875,
       "hours_per_week": 23,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 332,
@@ -29980,7 +29980,7 @@
       "cost_type": "VAST",
       "fixed_cost": 156844,
       "hours_per_week": 29,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 332,
@@ -29995,7 +29995,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 333,
@@ -30010,7 +30010,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 33,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 333,
@@ -30025,7 +30025,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 182408,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 334,
@@ -30040,7 +30040,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 81130,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 335,
@@ -30055,7 +30055,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 28,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 335,
@@ -30070,7 +30070,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 335,
@@ -30085,7 +30085,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 182319,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 336,
@@ -30100,7 +30100,7 @@
       "cost_type": "VAST",
       "fixed_cost": 112753,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 336,
@@ -30115,7 +30115,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 28,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 336,
@@ -30130,7 +30130,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 16,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 337,
@@ -30145,7 +30145,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 112046,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 337,
@@ -30160,7 +30160,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 109256,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 337,
@@ -30175,7 +30175,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 23,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 338,
@@ -30190,7 +30190,7 @@
       "cost_type": "VAST",
       "fixed_cost": 103246,
       "hours_per_week": 19,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 338,
@@ -30205,7 +30205,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 338,
@@ -30220,7 +30220,7 @@
       "cost_type": "VAST",
       "fixed_cost": 161389,
       "hours_per_week": 29,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 339,
@@ -30235,7 +30235,7 @@
       "cost_type": "VAST",
       "fixed_cost": 103933,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 339,
@@ -30250,7 +30250,7 @@
       "cost_type": "VAST",
       "fixed_cost": 171264,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 340,
@@ -30265,7 +30265,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 127076,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 341,
@@ -30280,7 +30280,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 39,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 341,
@@ -30295,7 +30295,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 341,
@@ -30310,7 +30310,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 342,
@@ -30325,7 +30325,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 342,
@@ -30340,7 +30340,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 16,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 342,
@@ -30355,7 +30355,7 @@
       "cost_type": "VAST",
       "fixed_cost": 101803,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 343,
@@ -30370,7 +30370,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 343,
@@ -30385,7 +30385,7 @@
       "cost_type": "VAST",
       "fixed_cost": 160243,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 343,
@@ -30400,7 +30400,7 @@
       "cost_type": "VAST",
       "fixed_cost": 128522,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 344,
@@ -30415,7 +30415,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 140168,
       "hours_per_week": 39,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 344,
@@ -30430,7 +30430,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 143151,
       "hours_per_week": 33,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 345,
@@ -30445,7 +30445,7 @@
       "cost_type": "VAST",
       "fixed_cost": 120179,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 346,
@@ -30460,7 +30460,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 28,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 346,
@@ -30475,7 +30475,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 154208,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 346,
@@ -30490,7 +30490,7 @@
       "cost_type": "VAST",
       "fixed_cost": 80258,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 347,
@@ -30505,7 +30505,7 @@
       "cost_type": "VAST",
       "fixed_cost": 82937,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 348,
@@ -30520,7 +30520,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 348,
@@ -30535,7 +30535,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 187280,
       "hours_per_week": 19,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 349,
@@ -30550,7 +30550,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 195497,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 349,
@@ -30565,7 +30565,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 79881,
       "hours_per_week": 26,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 350,
@@ -30580,7 +30580,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 162906,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 351,
@@ -30595,7 +30595,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 19,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 351,
@@ -30610,7 +30610,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 16,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 351,
@@ -30625,7 +30625,7 @@
       "cost_type": "VAST",
       "fixed_cost": 97232,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 352,
@@ -30640,7 +30640,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 138643,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 352,
@@ -30655,7 +30655,7 @@
       "cost_type": "VAST",
       "fixed_cost": 89007,
       "hours_per_week": 18,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 352,
@@ -30670,7 +30670,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 89061,
       "hours_per_week": 29,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 353,
@@ -30685,7 +30685,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 144226,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 353,
@@ -30700,7 +30700,7 @@
       "cost_type": "VAST",
       "fixed_cost": 164794,
       "hours_per_week": 39,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 353,
@@ -30715,7 +30715,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 353,
@@ -30730,7 +30730,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 30,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 354,
@@ -30745,7 +30745,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 354,
@@ -30760,7 +30760,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 354,
@@ -30775,7 +30775,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 29,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 355,
@@ -30790,7 +30790,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 355,
@@ -30805,7 +30805,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 197313,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 355,
@@ -30820,7 +30820,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 26,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 356,
@@ -30835,7 +30835,7 @@
       "cost_type": "VAST",
       "fixed_cost": 99306,
       "hours_per_week": 16,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 356,
@@ -30850,7 +30850,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 112790,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 357,
@@ -30865,7 +30865,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 19,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 358,
@@ -30880,7 +30880,7 @@
       "cost_type": "VAST",
       "fixed_cost": 166419,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 358,
@@ -30895,7 +30895,7 @@
       "cost_type": "VAST",
       "fixed_cost": 69268,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 358,
@@ -30910,7 +30910,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 197079,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 358,
@@ -30925,7 +30925,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 359,
@@ -30940,7 +30940,7 @@
       "cost_type": "VAST",
       "fixed_cost": 81463,
       "hours_per_week": 31,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 359,
@@ -30955,7 +30955,7 @@
       "cost_type": "VAST",
       "fixed_cost": 54859,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 360,
@@ -30970,7 +30970,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 360,
@@ -30985,7 +30985,7 @@
       "cost_type": "VAST",
       "fixed_cost": 143256,
       "hours_per_week": 23,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 360,
@@ -31000,7 +31000,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 39,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 360,
@@ -31015,7 +31015,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 361,
@@ -31030,7 +31030,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 152042,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 361,
@@ -31045,7 +31045,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 66259,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 361,
@@ -31060,7 +31060,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 30,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 362,
@@ -31075,7 +31075,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 102961,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 362,
@@ -31090,7 +31090,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 180205,
       "hours_per_week": 26,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 363,
@@ -31105,7 +31105,7 @@
       "cost_type": "VAST",
       "fixed_cost": 134216,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 363,
@@ -31120,7 +31120,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 19,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 363,
@@ -31135,7 +31135,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 33,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 364,
@@ -31150,7 +31150,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 26,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 365,
@@ -31165,7 +31165,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 51232,
       "hours_per_week": 19,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 366,
@@ -31180,7 +31180,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 18,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 366,
@@ -31195,7 +31195,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 23,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 366,
@@ -31210,7 +31210,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 180323,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 367,
@@ -31225,7 +31225,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 33,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 367,
@@ -31240,7 +31240,7 @@
       "cost_type": "VAST",
       "fixed_cost": 110516,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 368,
@@ -31255,7 +31255,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 188469,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 368,
@@ -31270,7 +31270,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 64388,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 368,
@@ -31285,7 +31285,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 19,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 369,
@@ -31300,7 +31300,7 @@
       "cost_type": "VAST",
       "fixed_cost": 111869,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 369,
@@ -31315,7 +31315,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 370,
@@ -31330,7 +31330,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 61138,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 370,
@@ -31345,7 +31345,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 371,
@@ -31360,7 +31360,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 86932,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 371,
@@ -31375,7 +31375,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 18,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 371,
@@ -31390,7 +31390,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 372,
@@ -31405,7 +31405,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 372,
@@ -31420,7 +31420,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 159223,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 373,
@@ -31435,7 +31435,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 61034,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 373,
@@ -31450,7 +31450,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 373,
@@ -31465,7 +31465,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 374,
@@ -31480,7 +31480,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 374,
@@ -31495,7 +31495,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 374,
@@ -31510,7 +31510,7 @@
       "cost_type": "VAST",
       "fixed_cost": 78936,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 375,
@@ -31525,7 +31525,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 104851,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 375,
@@ -31540,7 +31540,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 73820,
       "hours_per_week": 31,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 376,
@@ -31555,7 +31555,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 376,
@@ -31570,7 +31570,7 @@
       "cost_type": "VAST",
       "fixed_cost": 90223,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 376,
@@ -31585,7 +31585,7 @@
       "cost_type": "VAST",
       "fixed_cost": 149180,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 376,
@@ -31600,7 +31600,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 377,
@@ -31615,7 +31615,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 377,
@@ -31630,7 +31630,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 377,
@@ -31645,7 +31645,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 378,
@@ -31660,7 +31660,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 30,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 378,
@@ -31675,7 +31675,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 158979,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 378,
@@ -31690,7 +31690,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 75449,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 378,
@@ -31705,7 +31705,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 379,
@@ -31720,7 +31720,7 @@
       "cost_type": "VAST",
       "fixed_cost": 74756,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 380,
@@ -31735,7 +31735,7 @@
       "cost_type": "VAST",
       "fixed_cost": 154860,
       "hours_per_week": 28,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 381,
@@ -31750,7 +31750,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 36,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 382,
@@ -31765,7 +31765,7 @@
       "cost_type": "VAST",
       "fixed_cost": 145122,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 382,
@@ -31780,7 +31780,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 119026,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 383,
@@ -31795,7 +31795,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 185830,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 383,
@@ -31810,7 +31810,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 383,
@@ -31825,7 +31825,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 383,
@@ -31840,7 +31840,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 384,
@@ -31855,7 +31855,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 384,
@@ -31870,7 +31870,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 133342,
       "hours_per_week": 18,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 384,
@@ -31885,7 +31885,7 @@
       "cost_type": "VAST",
       "fixed_cost": 51049,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 384,
@@ -31900,7 +31900,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 147542,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 384,
@@ -31915,7 +31915,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 385,
@@ -31930,7 +31930,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 191582,
       "hours_per_week": 30,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 385,
@@ -31945,7 +31945,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 386,
@@ -31960,7 +31960,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 387,
@@ -31975,7 +31975,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 120499,
       "hours_per_week": 39,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 387,
@@ -31990,7 +31990,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 28,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 387,
@@ -32005,7 +32005,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 33,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 388,
@@ -32020,7 +32020,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 388,
@@ -32035,7 +32035,7 @@
       "cost_type": "VAST",
       "fixed_cost": 71127,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 388,
@@ -32050,7 +32050,7 @@
       "cost_type": "VAST",
       "fixed_cost": 135542,
       "hours_per_week": 28,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 388,
@@ -32065,7 +32065,7 @@
       "cost_type": "VAST",
       "fixed_cost": 181078,
       "hours_per_week": 30,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 389,
@@ -32080,7 +32080,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 389,
@@ -32095,7 +32095,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 177272,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 389,
@@ -32110,7 +32110,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 112860,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 390,
@@ -32125,7 +32125,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 29,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 390,
@@ -32140,7 +32140,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 33,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 391,
@@ -32155,7 +32155,7 @@
       "cost_type": "VAST",
       "fixed_cost": 69988,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 392,
@@ -32170,7 +32170,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 393,
@@ -32185,7 +32185,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 393,
@@ -32200,7 +32200,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 136752,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 394,
@@ -32215,7 +32215,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 87637,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 394,
@@ -32230,7 +32230,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 395,
@@ -32245,7 +32245,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 395,
@@ -32260,7 +32260,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 52286,
       "hours_per_week": 36,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 395,
@@ -32275,7 +32275,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 23,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 396,
@@ -32290,7 +32290,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 120999,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 397,
@@ -32305,7 +32305,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 153143,
       "hours_per_week": 27,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 397,
@@ -32320,7 +32320,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 30,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 397,
@@ -32335,7 +32335,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 177623,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 398,
@@ -32350,7 +32350,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 398,
@@ -32365,7 +32365,7 @@
       "cost_type": "VAST",
       "fixed_cost": 190218,
       "hours_per_week": 30,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 398,
@@ -32380,7 +32380,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 399,
@@ -32395,7 +32395,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 104442,
       "hours_per_week": 31,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 399,
@@ -32410,7 +32410,7 @@
       "cost_type": "VAST",
       "fixed_cost": 138317,
       "hours_per_week": 36,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 400,
@@ -32425,7 +32425,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 400,
@@ -32440,7 +32440,7 @@
       "cost_type": "VAST",
       "fixed_cost": 152135,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 401,
@@ -32455,7 +32455,7 @@
       "cost_type": "VAST",
       "fixed_cost": 177579,
       "hours_per_week": 16,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 401,
@@ -32470,7 +32470,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 402,
@@ -32485,7 +32485,7 @@
       "cost_type": "VAST",
       "fixed_cost": 176024,
       "hours_per_week": 36,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 402,
@@ -32500,7 +32500,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 403,
@@ -32515,7 +32515,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 125879,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 404,
@@ -32530,7 +32530,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 404,
@@ -32545,7 +32545,7 @@
       "cost_type": "VAST",
       "fixed_cost": 166973,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 404,
@@ -32560,7 +32560,7 @@
       "cost_type": "VAST",
       "fixed_cost": 195379,
       "hours_per_week": 29,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 405,
@@ -32575,7 +32575,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 16,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 406,
@@ -32590,7 +32590,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 406,
@@ -32605,7 +32605,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 406,
@@ -32620,7 +32620,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 152890,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 407,
@@ -32635,7 +32635,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 63363,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 407,
@@ -32650,7 +32650,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 102897,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 407,
@@ -32665,7 +32665,7 @@
       "cost_type": "VAST",
       "fixed_cost": 95141,
       "hours_per_week": 36,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 408,
@@ -32680,7 +32680,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 35,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 408,
@@ -32695,7 +32695,7 @@
       "cost_type": "VAST",
       "fixed_cost": 91739,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 409,
@@ -32710,7 +32710,7 @@
       "cost_type": "VAST",
       "fixed_cost": 131149,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 409,
@@ -32725,7 +32725,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 410,
@@ -32740,7 +32740,7 @@
       "cost_type": "VAST",
       "fixed_cost": 189031,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 410,
@@ -32755,7 +32755,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 155215,
       "hours_per_week": 31,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 410,
@@ -32770,7 +32770,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 18,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 410,
@@ -32785,7 +32785,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 28,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 411,
@@ -32800,7 +32800,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 33,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 411,
@@ -32815,7 +32815,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 118946,
       "hours_per_week": 24,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 412,
@@ -32830,7 +32830,7 @@
       "cost_type": "VAST",
       "fixed_cost": 179680,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 412,
@@ -32845,7 +32845,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 126654,
       "hours_per_week": 16,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 412,
@@ -32860,7 +32860,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 412,
@@ -32875,7 +32875,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 39,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 413,
@@ -32890,7 +32890,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 20,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 413,
@@ -32905,7 +32905,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 39,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 413,
@@ -32920,7 +32920,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 122007,
       "hours_per_week": 36,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 413,
@@ -32935,7 +32935,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 159753,
       "hours_per_week": 23,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 414,
@@ -32950,7 +32950,7 @@
       "cost_type": "VAST",
       "fixed_cost": 58220,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 414,
@@ -32965,7 +32965,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 100421,
       "hours_per_week": 18,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 414,
@@ -32980,7 +32980,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 26,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 415,
@@ -32995,7 +32995,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 84494,
       "hours_per_week": 38,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 416,
@@ -33010,7 +33010,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 140448,
       "hours_per_week": 40,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 416,
@@ -33025,7 +33025,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 28,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 416,
@@ -33040,7 +33040,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 416,
@@ -33055,7 +33055,7 @@
       "cost_type": "VAST",
       "fixed_cost": 153546,
       "hours_per_week": 18,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 417,
@@ -33070,7 +33070,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 31,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 417,
@@ -33085,7 +33085,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 37,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 417,
@@ -33100,7 +33100,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 18,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 418,
@@ -33115,7 +33115,7 @@
       "cost_type": "VAST",
       "fixed_cost": 166563,
       "hours_per_week": 33,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 418,
@@ -33130,7 +33130,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 26,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 418,
@@ -33145,7 +33145,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 25,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 419,
@@ -33160,7 +33160,7 @@
       "cost_type": "VAST",
       "fixed_cost": 115193,
       "hours_per_week": 18,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 420,
@@ -33175,7 +33175,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 32,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 420,
@@ -33190,7 +33190,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 190855,
       "hours_per_week": 17,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 420,
@@ -33205,7 +33205,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 99093,
       "hours_per_week": 28,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 420,
@@ -33220,7 +33220,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": null,
       "hours_per_week": 34,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 421,
@@ -33235,7 +33235,7 @@
       "cost_type": "VAST",
       "fixed_cost": 95931,
       "hours_per_week": 21,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 421,
@@ -33250,7 +33250,7 @@
       "cost_type": "VAST",
       "fixed_cost": null,
       "hours_per_week": 22,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 422,
@@ -33265,7 +33265,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 108699,
       "hours_per_week": 26,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 422,
@@ -33280,7 +33280,7 @@
       "cost_type": "VAST",
       "fixed_cost": 150490,
       "hours_per_week": 29,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 423,
@@ -33295,7 +33295,7 @@
       "cost_type": "PER_UUR",
       "fixed_cost": 176506,
       "hours_per_week": 23,
-      "period_source": "SERVICE",
+      "period_source": "ASSIGNMENT",
       "specific_start_date": null,
       "specific_end_date": null,
       "assignment": 423,
