@@ -2,6 +2,7 @@
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
+- add period filter to placement page
 - add end date of current placement to colleague list
 - add availability sorting to colleague list
 
