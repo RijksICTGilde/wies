@@ -47,8 +47,10 @@
           {% endif %}
         </td>
         <td class="rvo-table-cell">
-          {% if colleague.is_active_on_lopend %}
-            <span class="rvo-tag status-ingezet">Ingezet</span>
+          {% if colleague.end_date %}
+            <div class="status-container">
+              <span class="rvo-tag status-ingezet">Ingezet</span>
+                <div class="rvo-text rvo-text--xs rvo-text--subtle">tot {{ colleague.end_date|date:"M y" }}</div>
           {% else %}
             <span class="rvo-tag status-beschikbaar">Beschikbaar</span>
           {% endif %}

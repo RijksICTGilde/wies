@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import models
 from django.urls import reverse
 from django.db.models import Max, Sum, Case, When, F, FloatField, Q
@@ -7,10 +9,9 @@ from django.contrib.auth.models import User
 
 ASSIGNMENT_STATUS = {
     'LEAD': "LEAD",
-    'OPEN': "OPEN",
-    'LOPEND': "LOPEND",
+    'VACATURE': "VACATURE",
+    'INGEVULD': "INGEVULD",
     'AFGEWEZEN': "AFGEWEZEN",
-    'HISTORISCH': "HISTORISCH",
 }
 
 ASSIGNMENT_TYPE = {
@@ -78,14 +79,23 @@ class Colleague(models.Model):
 
     @property
     def end_date(self):
-        return self.placements.aggregate(Max('end_date'))['end_date__max']
-
-    @property
-    def is_active_on_lopend(self):
-        """Check if colleague is active on any LOPEND assignment"""
-        return self.placements.filter(
-            service__assignment__status='LOPEND'
-        ).exists()
+        """
+        Max end_date of current placements
+        """
+        end_date = None
+        today_date = datetime.datetime.today().date()
+        for placement in self.placements.all():
+            # filtering out ill-formed placements and historical and future placements
+            if (placement.end_date is None 
+                or placement.start_date is None 
+                or placement.start_date > today_date
+                or placement.end_date < today_date):
+                # todo: probably should make end-date required when someone is assigned (on placement?)
+                # this otherwise leads to difficult to interpret results
+                continue
+            if end_date is None or placement.end_date > end_date:
+                end_date = placement.end_date
+        return end_date
 
     def get_absolute_url(self):
         return reverse("colleague-detail", kwargs={"pk": self.pk})
@@ -105,6 +115,20 @@ class Assignment(models.Model):
     ministry = models.ForeignKey('Ministry', models.SET_NULL, null=True, blank=False)
     extra_info = models.TextField(blank=True)
     assignment_type = models.CharField(max_length=20, choices=ASSIGNMENT_TYPE, default='GROUP')
+
+
+    @property
+    def phase(self):
+        today_date = datetime.datetime.today().date()
+        if None in (self.start_date, self.end_date):
+            # this is undertermined
+            return None
+        if self.start_date > today_date:
+            return "planned"
+        elif self.end_date < today_date:
+            return "completed"
+        else:
+            return "active"
 
     def get_total_services_cost(self):
         """Calculate total cost of all services in this assignment - optimized"""
@@ -158,6 +182,7 @@ class Placement(models.Model):
 
     @property
     def start_date(self):
+        # TODO: can this be sped-up by using annotated column with prefetch_related?
         if self.period_source == 'SERVICE':
             return self.service.start_date
         else:

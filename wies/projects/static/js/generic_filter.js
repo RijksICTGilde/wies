@@ -15,32 +15,69 @@ function closeFilterModal() {
 function applyFiltersInstant() {
   const form = document.getElementById('modalFilterForm');
   const mainForm = document.querySelector('.rvo-form');
-  
+
   // Copy values from modal form to main form
   const modalInputs = form.querySelectorAll('select, input');
   modalInputs.forEach(input => {
-    if (input.value) {
+    const requireBoth = input.dataset.requireBoth === 'true';
+    const combinedName = input.dataset.combinedName;
+
+    if (requireBoth && combinedName) {
+      // Handle date range inputs that require both dates
+      
+      const fromInput = form.querySelector(`input[name="${combinedName}_from"]`);
+      const toInput = form.querySelector(`input[name="${combinedName}_to"]`);
+      const validationMessage = document.getElementById(`${combinedName}-validation-message`);
+
+      const fromValue = fromInput ? fromInput.value : '';
+      const toValue = toInput ? toInput.value : '';
+
+      if (validationMessage) {
+        // Show/hide validation message
+        if ((fromValue && !toValue) || (!fromValue && toValue)) {
+          validationMessage.style.display = 'block';
+        } else {
+          validationMessage.style.display = 'none';
+        }
+
+        // If both dates are provided, create combined parameter
+        if (fromValue && toValue) {
+          combinedValue = `${fromValue}_${toValue}`;        
+        } else {
+          combinedValue = ''
+        }
+
+        hiddenName = combinedName
+        hiddenValue = combinedValue  
+      }
+    } else {
+      // single value
+      hiddenName = input.name
+      hiddenValue = input.value
+    }
+
+    if (hiddenValue) {
       // Create or update hidden input for this filter
-      let hiddenInput = mainForm.querySelector(`input[name="${input.name}"]`);
+      let hiddenInput = mainForm.querySelector(`input[name="${hiddenName}"]`);
       if (!hiddenInput) {
         hiddenInput = document.createElement('input');
         hiddenInput.type = 'hidden';
-        hiddenInput.name = input.name;
+        hiddenInput.name = hiddenName;
         mainForm.appendChild(hiddenInput);
       }
-      hiddenInput.value = input.value;
+      hiddenInput.value = hiddenValue;
     } else {
       // Remove hidden input if value is empty
-      const hiddenInput = mainForm.querySelector(`input[name="${input.name}"]`);
+      const hiddenInput = mainForm.querySelector(`input[name="${hiddenName}"]`);
       if (hiddenInput && hiddenInput.type === 'hidden') {
         hiddenInput.remove();
       }
     }
   });
-  
+
   // Trigger HTMX request without closing modal
   htmx.trigger(mainForm, 'change');
-  
+
   // Update filter indicator immediately
   setTimeout(updateFilterIndicator, 100);
 }
@@ -49,6 +86,7 @@ function applyFilters() {
   applyFiltersInstant();
   closeFilterModal();
 }
+
 
 function clearAllFilters() {
   const form = document.getElementById('modalFilterForm');
@@ -116,3 +154,4 @@ document.addEventListener('keydown', function(e) {
     closeFilterModal();
   }
 });
+
