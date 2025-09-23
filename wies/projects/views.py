@@ -348,9 +348,9 @@ class AssignmentTabsView(ListView):
         
         # Define status mapping for tabs
         tab_statuses = {
-            'leads': ['LEAD', 'OPEN'],
-            'current': ['LOPEND'],
-            'historical': ['AFGEWEZEN', 'HISTORISCH']
+            'leads': ['LEAD', 'VACATURE'],
+            'current': ['INGEVULD'],
+            'historical': ['AFGEWEZEN']
         }
         
         # Filter by active tab statuses
@@ -368,22 +368,35 @@ class AssignmentTabsView(ListView):
         context['organizations'] = [{'organization': org} for org in Assignment.objects.values_list('organization', flat=True).distinct().order_by('organization') if org]
         context['skills'] = Skill.objects.all()
         context['clients'] = Ministry.objects.all()
-        
+
+        huidig_qs = base_qs.filter(status__in=['INGEVULD'])
+        active_assignment_ids = set()
+        for assignment in huidig_qs.all():
+            if assignment.phase == 'active':
+                active_assignment_ids.add(assignment.id)
+        huidig_qs = huidig_qs.filter(id__in=active_assignment_ids)
+
+        reject_and_historical_qs = base_qs.filter(status__in=['INGEVULD', 'AFGEWEZEN'])
+        assignment_ids = set()
+        for assignment in reject_and_historical_qs:
+            if assignment.status == 'AFGEWEZEN':
+                assignment_ids.add(assignment.id)
+            if assignment.status == 'INGEVULD' and assignment.phase == 'completed':
+                assignment_ids.add(assignment.id)
+        reject_and_historical_qs = reject_and_historical_qs.filter(id__in=assignment_ids)
+
         tab_groups = {
             'leads': {
                 'title': 'Leads & open',
-                'statuses': ['LEAD', 'OPEN'],
-                'queryset': base_qs.filter(status__in=['LEAD', 'OPEN'])
+                'queryset': base_qs.filter(status__in=['LEAD', 'VACATURE'])
             },
             'current': {
                 'title': 'Huidig', 
-                'statuses': ['LOPEND'],
-                'queryset': base_qs.filter(status__in=['LOPEND'])
+                'queryset': huidig_qs
             },
             'historical': {
                 'title': 'Historisch & afgewezen',
-                'statuses': ['AFGEWEZEN', 'HISTORISCH'], 
-                'queryset': base_qs.filter(status__in=['AFGEWEZEN', 'HISTORISCH'])
+                'queryset': reject_and_historical_qs
             }
         }
         
@@ -471,18 +484,17 @@ class ColleagueList(ListView):
                 qs = qs.filter(**{lookup: value})
         
         status_filter = self.request.GET.get('status')
-        if status_filter == 'beschikbaar':
-            # Colleagues who have NO active LOPEND placements (may have historical ones)
-            active_colleague_ids = Placement.objects.filter(
-                service__assignment__status='LOPEND'
-            ).values_list('colleague_id', flat=True).distinct()
-            qs = qs.exclude(id__in=active_colleague_ids)
-        elif status_filter == 'ingezet':
-            qs = qs.filter(
-                placements__colleague__isnull=False,
-                placements__service__assignment__status='LOPEND'
-            )
-        
+        if status_filter:
+            placed_colleague_ids = set()
+            for colleague in qs.all():
+                if colleague.end_date:
+                    placed_colleague_ids.add(colleague.id)
+            if status_filter == 'beschikbaar':
+                print('in beschikbaar filter')
+                qs = qs.exclude(id__in=placed_colleague_ids)
+            elif status_filter == 'ingezet':
+                qs = qs.filter(id__in=placed_colleague_ids)
+
         return qs.distinct()
     
     def get_context_data(self, **kwargs):
@@ -569,11 +581,11 @@ class PlacementTableView(ListView):
     template_name = 'placement_table.html'
 
     def get_queryset(self):
-        """Apply filters to placements queryset - only show LOPEND assignments, not LEAD"""
+        """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
         qs = Placement.objects.select_related(
             'colleague', 'colleague__brand', 'service', 'service__skill', 'service__assignment__ministry'
         ).filter(
-            service__assignment__status='LOPEND'
+            service__assignment__status='INGEVULD'
         ).order_by('-service__assignment__start_date')
 
         search_filter = self.request.GET.get('search')
@@ -682,11 +694,11 @@ class PlacementAvailabilityView(ListView):
     template_name = 'placement_availability.html'
     
     def get_queryset(self):
-        """Apply filters to placements queryset - only show LOPEND assignments, not LEAD"""
+        """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
         qs = Placement.objects.select_related(
             'colleague', 'colleague__brand', 'service', 'service__skill', 'service__assignment__ministry'
         ).filter(
-            service__assignment__status='LOPEND'  # Only show placements from running assignments
+            service__assignment__status='INGEVULD'
         ).order_by('-service__assignment__start_date')
         
         search_filter = self.request.GET.get('search')

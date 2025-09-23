@@ -5,11 +5,13 @@ from ..models import Assignment, Colleague, Placement, Service
 
 
 def get_consultants_working():
-    # Count consultants on active assignments (LOPEND and OPEN)
-    return Placement.objects.filter(
-        service__assignment__status__in=['LOPEND', 'OPEN'],
-        colleague__isnull=False
-    ).values('colleague').distinct().count()
+    active_colleague_ids = set()
+    for colleague in Colleague.objects.all():
+        if colleague.end_date:
+            active_colleague_ids.add(colleague.id)
+    return Colleague.objects.filter(
+        id__in=active_colleague_ids
+    ).count()
 
 
 def get_total_clients_count():
@@ -38,18 +40,19 @@ def get_assignments_ending_soon(limit=15):
     # Use database filtering instead of Python filtering
     return Assignment.objects.filter(
         Q(end_date__gte=today) & Q(end_date__lte=three_months),
-        status__in=['LOPEND', 'OPEN']
+        status__in=['INGEVULD', 'VACATURE']
     ).exclude(
         Q(organization='') | Q(organization__isnull=True)
     ).order_by('end_date')[:limit]
 
 
 def get_consultants_on_bench(limit=10):
-    """Get consultants who are not currently on active assignments"""
-    active_colleague_ids = Placement.objects.filter(
-        service__assignment__status='LOPEND'
-    ).values_list('colleague_id', flat=True).distinct()
-    
+    """Get consultants who are not currently on active assignments"""    
+    active_colleague_ids = set()
+    for colleague in Colleague.objects.all():
+        if colleague.end_date:
+            active_colleague_ids.add(colleague.id)
+
     return Colleague.objects.exclude(
         id__in=active_colleague_ids
     ).exclude(id__isnull=True)[:limit]
@@ -65,14 +68,14 @@ def get_new_leads(limit=10):
 def get_total_services():
     """Get total number of services across all assignments"""
     return Service.objects.filter(
-        assignment__status__in=['LOPEND', 'OPEN', 'LEAD']
+        assignment__status__in=['INGEVULD', 'VACATURE', 'LEAD']
     ).count()
 
 
 def get_services_filled():
     """Get number of services that have colleagues assigned"""
     return Placement.objects.filter(
-        service__assignment__status__in=['LOPEND', 'OPEN']
+        service__assignment__status__in=['INGEVULD', 'VACATURE']
     ).values('service').distinct().count()
 
 
@@ -102,25 +105,29 @@ def get_weeks_remaining(assignment):
 def get_available_since(colleague):
     """Calculate how long a colleague has been available (on the bench)"""
     
+    if colleague.end_date:
+        raise ValueError("Active colleague, not on bench")
+
     # Find their most recent placement that has ended
-    last_placement = Placement.objects.filter(
-        colleague=colleague,
-        service__assignment__status='HISTORISCH'
-    ).select_related('service__assignment').order_by('-service__assignment__end_date').first()
+
+    available_since = None
+    last_placement = None
+    for placement in colleague.placements.all():
+        if (placement.service.assignment.status != 'INGEVULD'
+            or not placement.start_date
+            or not placement.end_date):
+            continue  # skip invalid placements
+
+        if placement.service.assignment.phase == 'completed' and (available_since is None or placement.end_date):
+            available_since = placement.end_date
+            last_placement = placement
     
-    if not last_placement or not last_placement.service.assignment.end_date:
+    if not last_placement:
         # If no historical placement found, return a default period
-        return "3 weken"
+        return "altijd"
     
-    today = date.today()
-    end_date = last_placement.service.assignment.end_date
-    
-    if end_date >= today:
-        return "recent"
-    
-    delta = today - end_date
-    days = delta.days
-    
+    days = (date.today() - last_placement.end_date).days
+
     if days < 14:
         return f"{days} dagen"
     elif days < 84:  # Less than 12 weeks

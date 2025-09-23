@@ -9,10 +9,9 @@ from django.contrib.auth.models import User
 
 ASSIGNMENT_STATUS = {
     'LEAD': "LEAD",
-    'OPEN': "OPEN",
-    'LOPEND': "LOPEND",
+    'VACATURE': "VACATURE",
+    'INGEVULD': "INGEVULD",
     'AFGEWEZEN': "AFGEWEZEN",
-    'HISTORISCH': "HISTORISCH",
 }
 
 ASSIGNMENT_TYPE = {
@@ -116,6 +115,20 @@ class Assignment(models.Model):
     ministry = models.ForeignKey('Ministry', models.SET_NULL, null=True, blank=False)
     extra_info = models.TextField(blank=True)
     assignment_type = models.CharField(max_length=20, choices=ASSIGNMENT_TYPE, default='GROUP')
+
+
+    @property
+    def phase(self):
+        today_date = datetime.datetime.today().date()
+        if None in (self.start_date, self.end_date):
+            # this is undertermined
+            return None
+        if self.start_date > today_date:
+            return "planned"
+        elif self.end_date < today_date:
+            return "completed"
+        else:
+            return "active"
 
     def get_total_services_cost(self):
         """Calculate total cost of all services in this assignment - optimized"""
