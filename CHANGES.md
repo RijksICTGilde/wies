@@ -7,6 +7,7 @@ This files lists the changes during the lifetime of this project.
 - add availability sorting to colleague list
 - (backwards incompatible) change assignment status. new list: LEAD, VACATURE, INGEVULD, AFGEWEZEN
 - changed that assignment phase is computed instead of assigned
+- changed to also unavailble colleagues are shown when checking out matches
 
 ## 2025-09-19
 - update dependencies to latest, including django security release
