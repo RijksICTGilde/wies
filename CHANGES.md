@@ -2,6 +2,8 @@
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
+- add end date of current placement to colleague list
+- add availability sorting to colleague list
 
 ## 2025-09-19
 - update dependencies to latest, including django security release

@@ -488,7 +488,13 @@ class ColleagueList(ListView):
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
-        
+
+        # Sort ingezet colleagues by availability date (sooner first)
+        colleagues = list(context['object_list'])
+        # Sort by end_date, with None values first
+        colleagues.sort(key=lambda c: c.end_date or datetime.date.min)
+        context['object_list'] = colleagues
+
         context['skills'] = Skill.objects.order_by('name')
         context['brands'] = Brand.objects.order_by('name')
         context['expertises'] = Expertise.objects.order_by('name')
