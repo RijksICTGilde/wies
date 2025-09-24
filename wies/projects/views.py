@@ -822,7 +822,6 @@ class PlacementAvailabilityView(ListView):
         consultant_data = []
         for consultant in consultants:
             consultant_placements = []
-            total_current_hours = 0
             
             placements = filtered_placements.filter(
                 colleague=consultant
@@ -839,9 +838,6 @@ class PlacementAvailabilityView(ListView):
 
                 # Skip placements that don't overlap with the timeline range
                 if start_date >= timeline_end or end_date <= timeline_start:
-                    # Check if placement is current for hours calculation (before skipping)
-                    if start_date <= today <= end_date:
-                        total_current_hours += placement.service.hours_per_week or 0
                     continue
 
                 # Calculate timeline positions
@@ -855,10 +851,6 @@ class PlacementAvailabilityView(ListView):
                 
                 start_offset_percent = int((start_offset_days / total_timeline_days) * 100)
                 width_percent = int(((end_offset_days - start_offset_days) / total_timeline_days) * 100)
-                
-                # Check if placement is current
-                if start_date <= today <= end_date:
-                    total_current_hours += placement.service.hours_per_week or 0
                 
                 placement_data_list.append({
                     'project_name': placement.service.assignment.name,
@@ -903,7 +895,6 @@ class PlacementAvailabilityView(ListView):
             consultant_data.append({
                 'consultant': consultant,
                 'placements': consultant_placements,
-                'total_current_hours': total_current_hours,
                 'total_tracks_height': total_tracks_height,
             })
         

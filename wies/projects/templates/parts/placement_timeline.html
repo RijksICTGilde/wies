@@ -22,7 +22,7 @@
           </a>
         </div>
         <div class="consultant-hours">
-          {% if consultant_data.total_current_hours > 0 %}
+          {% if consultant_data.placements|length > 0 %}
           {% else %}
             <span class="available">Beschikbaar</span>
           {% endif %}
