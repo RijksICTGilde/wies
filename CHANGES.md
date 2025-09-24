@@ -11,6 +11,7 @@ This files lists the changes during the lifetime of this project.
 - fix source data to have correct Placement.period_source
 - bump authlib dependency due to security patch
 - saved note redirects to notes tab, whitespace underneath note form, always show note form
+- availability timeline: ordered by availability, filters on on colleague properties
 
 ## 2025-09-19
 - update dependencies to latest, including django security release
