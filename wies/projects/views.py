@@ -830,6 +830,8 @@ class PlacementAvailabilityView(ListView):
             
             placement_data_list = []
             for placement in placements:
+
+                    
                 if placement.period_source == 'PLACEMENT':
                     start_date = placement.specific_start_date
                     end_date = placement.specific_end_date
@@ -845,11 +847,18 @@ class PlacementAvailabilityView(ListView):
                 
                 if not start_date or not end_date:
                     continue
-                
+
+                # Skip placements that don't overlap with the timeline range
+                if start_date >= timeline_end or end_date <= timeline_start:
+                    # Check if placement is current for hours calculation (before skipping)
+                    if start_date <= today <= end_date:
+                        total_current_hours += placement.service.hours_per_week or 0
+                    continue
+
                 # Calculate timeline positions
                 start_offset_days = (start_date - timeline_start).days
                 end_offset_days = (end_date - timeline_start).days
-                
+
                 if start_offset_days < 0:
                     start_offset_days = 0
                 if end_offset_days > total_timeline_days:
