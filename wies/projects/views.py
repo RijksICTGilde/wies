@@ -832,6 +832,7 @@ class PlacementAvailabilityView(ListView):
 
                 start_date = placement.start_date
                 end_date = placement.end_date
+                hours_per_week = placement.hours_per_week
                 
                 if not start_date or not end_date:
                     continue
@@ -854,7 +855,7 @@ class PlacementAvailabilityView(ListView):
                 
                 placement_data_list.append({
                     'project_name': placement.service.assignment.name,
-                    'hours_per_week': placement.service.hours_per_week or 0,
+                    'hours_per_week': hours_per_week,
                     'start_offset_percent': start_offset_percent,
                     'width_percent': width_percent,
                     'start_date': start_date,
