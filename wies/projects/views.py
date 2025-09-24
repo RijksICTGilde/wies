@@ -730,20 +730,51 @@ class AvailabilityView(ListView):
         context['brands'] = Brand.objects.order_by('name')
         context['expertises'] = Expertise.objects.order_by('name')
 
+        # Generate future months for dropdown
+        today = datetime.date.today()
+        future_months = []
+        current_month = today.replace(day=1)
+
+        # Dutch month names
+        dutch_months = [
+            'Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni',
+            'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'
+        ]
+
+        # Generate next 24 months (2 years)
+        for i in range(24):
+            month_value = current_month.strftime('%Y-%m')
+            month_label = f"{dutch_months[current_month.month - 1]} {current_month.year}"
+            future_months.append({
+                'value': month_value,
+                'label': month_label
+            })
+            current_month = add_months(current_month, 1)
+
+        context['future_months'] = future_months
+
+        # Month selector as primary filter
         context['primary_filter'] = {
-            'name': 'brand',
-            'id': 'brand-filter',
-            'placeholder': 'Alle merken',
-            'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
+            'name': 'timeline_start_month',
+            'id': 'timeline-month-filter',
+            'placeholder': 'Selecteer maand',
+            'options': [{'value': month_option['value'], 'label': month_option['label']} for month_option in future_months]
         }
 
         context['search_field'] = 'name'
         context['search_placeholder'] = 'Zoek op naam...'
 
-        modal_filter_params = ['skill', 'expertise', 'status']
+        modal_filter_params = ['brand', 'skill', 'expertise', 'status']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
 
         context['filter_groups'] = [
+            {
+                'type': 'select',
+                'name': 'brand',
+                'label': 'Merk',
+                'placeholder': 'Alle merken',
+                'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
+            },
             {
                 'type': 'select',
                 'name': 'skill',
@@ -766,13 +797,32 @@ class AvailabilityView(ListView):
     def _get_timeline_context(self, colleagues):
         """
         Generate timeline context data for availability view
-        
+
         Returns:
             Dict with timeline data including months, consultant data, and positioning
         """
+        # Get selected month from primary filter parameter
+        selected_month = self.request.GET.get('timeline_start_month')
         today = datetime.date.today()
-        timeline_start = add_timedelta(today, datetime.timedelta(weeks=-24)).replace(day=1)
-        timeline_end = add_timedelta(today, datetime.timedelta(weeks=36)).replace(day=1)
+
+        if selected_month:
+            try:
+                # Parse selected month (format: YYYY-MM)
+                year, month = map(int, selected_month.split('-'))
+                selected_date = datetime.date(year, month, 1)
+
+                # Timeline: selected month - 1 month to selected month + 6 months
+                timeline_start = add_months(selected_date, -1)
+                timeline_end = add_months(selected_date, 6)
+            except (ValueError, AttributeError):
+                # Fallback to default if parsing fails
+                today = datetime.date.today()
+                timeline_start = add_timedelta(today, datetime.timedelta(weeks=-12)).replace(day=1)
+                timeline_end = add_timedelta(today, datetime.timedelta(weeks=36)).replace(day=1)
+        else:
+            # Default timeline range when no month is selected
+            timeline_start = add_timedelta(today, datetime.timedelta(weeks=-12)).replace(day=1)
+            timeline_end = add_timedelta(today, datetime.timedelta(weeks=36)).replace(day=1)
         
         # Generate month headers
         months = []
@@ -783,10 +833,12 @@ class AvailabilityView(ListView):
                 'name': current_month.strftime('%b %Y')
             })
             current_month = add_months(current_month, 1)
-        
+
         today_offset_days = (today - timeline_start).days
         total_timeline_days = (timeline_end - timeline_start).days
         today_position_percent = int((today_offset_days / total_timeline_days) * 100)
+        if today_position_percent < 0 or today_position_percent > 100:
+            today_position_percent = None
         
         # Generate consultant data for timeline
         consultant_data = []
@@ -879,7 +931,7 @@ class AvailabilityView(ListView):
 
         return {
             'timeline_start': timeline_start,
-            'timeline_end': timeline_end, 
+            'timeline_end': timeline_end,
             'months': months,
             'today_position_percent': today_position_percent,
             'consultant_data': consultant_data,

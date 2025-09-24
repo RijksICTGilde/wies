@@ -44,7 +44,9 @@
         {% endfor %}
         
         <!-- Today line -->
+         {% if today_position_percent %}
         <div class="today-line" style="left: {{ today_position_percent }}%;"></div>
+        {% endif %}
       </div>
     </div>
     {% empty %}

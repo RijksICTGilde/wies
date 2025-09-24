@@ -54,6 +54,12 @@
   border-right: none;
 }
 
+.timeline-period-selector {
+  display: flex;
+  justify-content: center;
+  align-items: end;
+}
+
 /* Timeline Body */
 .timeline-body {
   max-height: 70vh;
