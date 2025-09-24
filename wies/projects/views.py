@@ -831,19 +831,8 @@ class PlacementAvailabilityView(ListView):
             placement_data_list = []
             for placement in placements:
 
-                    
-                if placement.period_source == 'PLACEMENT':
-                    start_date = placement.specific_start_date
-                    end_date = placement.specific_end_date
-                elif placement.period_source == 'SERVICE':
-                    if placement.service.period_source == 'ASSIGNMENT':
-                        start_date = placement.service.assignment.start_date
-                        end_date = placement.service.assignment.end_date
-                    else:
-                        start_date = placement.service.specific_start_date
-                        end_date = placement.service.specific_end_date
-                else:
-                    continue
+                start_date = placement.start_date
+                end_date = placement.end_date
                 
                 if not start_date or not end_date:
                     continue
