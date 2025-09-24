@@ -1363,4 +1363,4 @@ def add_note(request, assignment_id):
         else:
             messages.error(request, 'Notitie mag niet leeg zijn.')
     
-    return redirect('assignment-detail', pk=assignment_id)
+    return redirect(f'/assignments/{assignment_id}/?tab=notes')

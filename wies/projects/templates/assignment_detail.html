@@ -224,7 +224,7 @@
     {% endif %}
 
     {% if active_tab == 'notes' %}
-    <div id="tab-notities">
+    <div id="tab-notities" class="rvo-margin-block-end--md">
       <h2 class="utrecht-heading-2 rvo-heading--no-margins">Notities</h2>
 
     {% if notes %}
@@ -245,14 +245,8 @@
       <p class="rvo-text--italic">Nog geen notities toegevoegd.</p>
     {% endif %}
 
-    <div class="rvo-layout-row rvo-layout-gap--md">
-      <button type="button" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md" onclick="toggleNoteForm()">
-        Notitie toevoegen
-      </button>
-    </div>
-
     <!-- Note form (initially hidden) -->
-    <div id="note-form" class="rvo-layout-column rvo-layout-gap--md" style="display: none; margin-top: 1rem;">
+    <div id="note-form" class="rvo-layout-column rvo-layout-gap--md" style="display: block; margin-top: 1rem;">
       <form method="post" action="{% url 'add-note' object.pk %}">
         {% csrf_token %}
         <div class="rvo-form-field">
@@ -263,25 +257,10 @@
           <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-sm">
             Notitie opslaan
           </button>
-          <button type="button" class="utrecht-button utrecht-button--subtle utrecht-button--rvo-sm" onclick="toggleNoteForm()">
-            Annuleren
-          </button>
         </div>
       </form>
     </div>
 
-    <script>
-      function toggleNoteForm() {
-        const form = document.getElementById('note-form');
-        const isHidden = form.style.display === 'none';
-        form.style.display = isHidden ? 'block' : 'none';
-        
-        if (isHidden) {
-          // Clear the form when showing
-          document.getElementById('note-message').value = '';
-        }
-      }
-    </script>
     </div>
     {% endif %}
 
