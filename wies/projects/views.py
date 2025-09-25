@@ -301,32 +301,32 @@ def placements_url_with_tab(context, tab_key):
 
 class AssignmentTabsView(ListView):
     template_name = 'assignment_tabs.html'
-    model = Assignment
+    model = Service
 
     def get_base_queryset(self):
         """Get base queryset without status filtering"""
-        qs = Assignment.objects.select_related('ministry').prefetch_related('services__skill').order_by('-start_date')
+        qs = Service.objects.select_related('assignment__ministry', 'skill').order_by('-assignment__start_date')
         
         # Apply name filter if provided
         name_filter = self.request.GET.get('name')
         if name_filter:
             qs = qs.filter(
-                models.Q(name__icontains=name_filter) | 
-                models.Q(extra_info__icontains=name_filter) | 
-                models.Q(organization__icontains=name_filter) |
-                models.Q(ministry__name__icontains=name_filter) |
-                models.Q(ministry__abbreviation__icontains=name_filter)
+                models.Q(description__icontains=name_filter) | 
+                models.Q(assignment__extra_info__icontains=name_filter) | 
+                models.Q(assignment__organization__icontains=name_filter) |
+                models.Q(assignment__ministry__name__icontains=name_filter) |
+                models.Q(assignment__ministry__abbreviation__icontains=name_filter)
             )
         
         # Apply skill filter if provided
         skill_filter = self.request.GET.get('skill')
         if skill_filter:
-            qs = qs.filter(services__skill__id=skill_filter).distinct()
+            qs = qs.filter(skill__id=skill_filter)
         
         # Apply specific filters
         filters = {
-            'organization': 'organization',
-            'ministry': 'ministry__id'
+            'organization': 'assignment__organization',
+            'ministry': 'assignment__ministry__id'
         }
         
         for param, lookup in filters.items():
@@ -342,67 +342,36 @@ class AssignmentTabsView(ListView):
         return qs
     
     def get_queryset(self):
-        """Get queryset for the active tab only"""
-        active_tab = self.request.GET.get('tab', 'leads')
+        """Get queryset for vacatures only (status = LEAD)"""
         base_qs = self.get_base_queryset()
         
-        # Define status mapping for tabs
-        tab_statuses = {
-            'leads': ['LEAD', 'VACATURE'],
-            'current': ['INGEVULD'],
-            'historical': ['AFGEWEZEN']
-        }
-        
-        # Filter by active tab statuses
-        return base_qs.filter(status__in=tab_statuses[active_tab])
+        # Only show services from assignments with LEAD status (open vacatures)
+        return base_qs.filter(assignment__status='LEAD')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
-        # Get the active tab from request, default to 'leads'
-        active_tab = self.request.GET.get('tab', 'leads')
-        context['active_tab'] = active_tab
+        # Group services by ministry and organization
+        services = context['object_list']
+        grouped_data = {}
         
-        base_qs = self.get_base_queryset()
+        for service in services:
+            ministry_name = service.assignment.ministry.name if service.assignment.ministry else 'Geen ministerie'
+            org_name = service.assignment.organization if service.assignment.organization else 'Geen organisatie'
+            
+            if ministry_name not in grouped_data:
+                grouped_data[ministry_name] = {}
+            
+            if org_name not in grouped_data[ministry_name]:
+                grouped_data[ministry_name][org_name] = []
+            
+            grouped_data[ministry_name][org_name].append(service)
         
-        context['organizations'] = [{'organization': org} for org in Assignment.objects.values_list('organization', flat=True).distinct().order_by('organization') if org]
+        context['grouped_services'] = grouped_data
+        
+        context['organizations'] = [{'organization': org} for org in Service.objects.values_list('assignment__organization', flat=True).distinct().order_by('assignment__organization') if org]
         context['skills'] = Skill.objects.all()
         context['clients'] = Ministry.objects.all()
-
-        huidig_qs = base_qs.filter(status__in=['INGEVULD'])
-        active_assignment_ids = set()
-        for assignment in huidig_qs.all():
-            if assignment.phase == 'active':
-                active_assignment_ids.add(assignment.id)
-        huidig_qs = huidig_qs.filter(id__in=active_assignment_ids)
-
-        reject_and_historical_qs = base_qs.filter(status__in=['INGEVULD', 'AFGEWEZEN'])
-        assignment_ids = set()
-        for assignment in reject_and_historical_qs:
-            if assignment.status == 'AFGEWEZEN':
-                assignment_ids.add(assignment.id)
-            if assignment.status == 'INGEVULD' and assignment.phase == 'completed':
-                assignment_ids.add(assignment.id)
-        reject_and_historical_qs = reject_and_historical_qs.filter(id__in=assignment_ids)
-
-        tab_groups = {
-            'leads': {
-                'title': 'Leads & open',
-                'queryset': base_qs.filter(status__in=['LEAD', 'VACATURE'])
-            },
-            'current': {
-                'title': 'Huidig', 
-                'queryset': huidig_qs
-            },
-            'historical': {
-                'title': 'Historisch & afgewezen',
-                'queryset': reject_and_historical_qs
-            }
-        }
-        
-        context['tab_groups'] = tab_groups
-        context['active_assignments'] = tab_groups[active_tab]['queryset']
-
         
         context['search_field'] = 'name'
         context['search_placeholder'] = 'Zoek op naam, opdrachtgever of ministerie...'
@@ -436,14 +405,14 @@ class AssignmentTabsView(ListView):
 
         context['primary_action'] = {
             'url': '/assignments/new',
-            'button_text': 'Opdracht toevoegen'
+            'button_text': 'Vacature toevoegen'
         }
         
         return context
     
     def get_template_names(self):
         if 'HX-Request' in self.request.headers:
-            return ['parts/assignment_tabs_section.html']
+            return ['parts/assignment_table.html']
         else:
             return ['assignment_tabs.html']
 
@@ -1159,22 +1128,67 @@ class ServiceDetailView(DetailView):
     template_name = 'service_detail.html'
 
 def clients(request):
-    """Clients view - uses statistics functions for statistics"""
+    """Clients view - shows clients grouped by ministry"""
     
     search_query = request.GET.get('search', '')
     
-    clients = Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').exclude(organization__isnull=True)
+    # Get all assignments with organizations and ministries
+    assignments_query = Assignment.objects.select_related('ministry').exclude(organization='').exclude(organization__isnull=True)
     
     if search_query:
-        clients = clients.filter(organization__icontains=search_query)
+        assignments_query = assignments_query.filter(
+            models.Q(organization__icontains=search_query) |
+            models.Q(ministry__name__icontains=search_query)
+        )
     
-    clients = clients.order_by('organization')
+    # Group clients by ministry with assignment counts
+    grouped_clients = {}
+    ministry_counts = {}
+    organization_ministry_counts = {}
+    
+    for assignment in assignments_query:
+        ministry_name = assignment.ministry.name if assignment.ministry else 'Geen ministerie'
+        org_name = assignment.organization
+        
+        if ministry_name not in grouped_clients:
+            grouped_clients[ministry_name] = set()
+            ministry_counts[ministry_name] = 0
+        
+        grouped_clients[ministry_name].add(org_name)
+        ministry_counts[ministry_name] += 1
+        
+        # Count per organization within this ministry
+        key = (org_name, ministry_name)
+        if key not in organization_ministry_counts:
+            organization_ministry_counts[key] = 0
+        organization_ministry_counts[key] += 1
+    
+    # Convert sets to sorted lists with counts
+    for ministry in grouped_clients:
+        org_list = []
+        for org in sorted(list(grouped_clients[ministry])):
+            org_count = organization_ministry_counts.get((org, ministry), 0)
+            org_list.append({
+                'name': org,
+                'count': org_count
+            })
+        grouped_clients[ministry] = org_list
+    
+    # Sort ministries and add counts
+    ministry_data = {}
+    for ministry in sorted(grouped_clients.keys()):
+        ministry_data[ministry] = {
+            'organizations': grouped_clients[ministry],
+            'total_count': ministry_counts[ministry]
+        }
+    
+    grouped_clients = ministry_data
     
     total_budget = get_total_budget()
     formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
     
     context = {
-        'clients': clients,
+        'grouped_clients': grouped_clients,
         'consultants_working': get_consultants_working(),
         'total_clients_count': get_total_clients_count(),
         'total_budget': total_budget,

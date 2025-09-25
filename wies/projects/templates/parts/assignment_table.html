@@ -1,0 +1,57 @@
+<div class="rvo-table--responsive" id="assignment-content">
+  <style>
+    #assignment-content .rvo-table th:nth-child(1),
+    #assignment-content .rvo-table td:nth-child(1) {
+      width: 25%;
+    }
+    #assignment-content .rvo-table th:nth-child(2),
+    #assignment-content .rvo-table td:nth-child(2) {
+      width: 55%;
+    }
+    #assignment-content .rvo-table th:nth-child(3),
+    #assignment-content .rvo-table td:nth-child(3) {
+      width: 20%;
+    }
+  </style>
+  <table class="rvo-table">
+    <thead class="rvo-table-head">
+      <tr class="rvo-table-row">
+        {% include 'parts/generic_sortable_header.html' with field='skill__name' label='Rol' target='#assignment-content' %}
+        {% include 'parts/generic_sortable_header.html' with field='assignment__organization' label='Opdrachtgever' target='#assignment-content' %}
+        <th class="rvo-table-header">Periode</th>
+      </tr>
+    </thead>
+    <tbody class="rvo-table-body">
+      {% for ministry_name, organizations in grouped_services.items %}
+        {% for org_name, services in organizations.items %}
+          {% for service in services %}
+            <tr class="rvo-table-row clickable-row" onclick="window.location='{{ service.assignment.get_absolute_url }}'">
+              <td class="rvo-table-cell">
+                {% if service.skill %}
+                  <span class="rvo-tag">{{ service.skill.name }}</span>
+                {% endif %}
+              </td>
+              <td class="rvo-table-cell">
+                <div>{{ ministry_name }}</div>
+                {% if org_name != 'Geen organisatie' %}
+                  <div style="font-size: 0.875em; color: var(--rvo-color-grijs-600); margin-top: 0.25rem;">{{ org_name }}</div>
+                {% endif %}
+              </td>
+              <td class="rvo-table-cell">
+                <span class="assignment-period">
+                  {{ service.assignment.start_date|date:"M y"|default:"-" }} - {{ service.assignment.end_date|date:"M y"|default:"-" }}
+                </span>
+              </td>
+            </tr>
+          {% endfor %}
+        {% endfor %}
+      {% empty %}
+        <tr class="rvo-table-row">
+          <td class="rvo-table-cell" colspan="3" style="text-align: center; padding: 2rem; color: var(--rvo-color-grijs-600);">
+            <span class="rvo-text--italic">Geen vacatures gevonden.</span>
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

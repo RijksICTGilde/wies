@@ -1,20 +1,22 @@
-<div class="rvo-table--responsive">
-  <table class="rvo-table">
-    <thead class="rvo-table-head">
-      <tr class="rvo-table-row">
-        <th scope="col" class="rvo-table-header">
-          <div class="rvo-table-header__sortable-container">
-            Naam
+<div class="rvo-layout-column rvo-layout-gap--md">
+  {% for ministry_name, ministry_data in grouped_clients.items %}
+    <div class="ministry-group">
+      <h3 class="rvo-heading--h3" style="margin-bottom: 1rem; color: var(--rvo-color-logoblauw); border-bottom: 2px solid var(--rvo-color-logoblauw); padding-bottom: 0.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <span>{{ ministry_name }}</span>
+        <span class="rvo-tag" style="background-color: var(--rvo-color-logoblauw); color: white;">{{ ministry_data.total_count }} opdrachten</span>
+      </h3>
+      <div class="rvo-layout-column rvo-layout-gap--sm" style="margin-left: 1rem;">
+        {% for organization in ministry_data.organizations %}
+          <div class="rvo-card rvo-card--outline" style="padding: 1rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="window.location='/clients/{{ organization.name }}'">
+            <div class="rvo-text">{{ organization.name }}</div>
+            <span class="rvo-tag">{{ organization.count }} opdrachten</span>
           </div>
-        </th>
-      </tr>
-    </thead>
-    <tbody class="rvo-table-body">
-      {% for client in clients %}
-      <tr class="rvo-table-row clickable-row" onclick="window.location='/clients/{{ client }}'">
-        <td class="rvo-table-cell">{{ client }}</td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+        {% endfor %}
+      </div>
+    </div>
+  {% empty %}
+    <div class="rvo-text" style="text-align: center; padding: 2rem; color: var(--rvo-color-grijs-600);">
+      Geen opdrachtgevers gevonden.
+    </div>
+  {% endfor %}
 </div>
