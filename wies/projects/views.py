@@ -527,7 +527,7 @@ class ColleagueList(ListView):
             {
                 'type': 'select',
                 'name': 'skill',
-                'label': 'Rollen',
+                'label': 'Rol',
                 'placeholder': 'Alle rollen',
                 'options': [{'value': skill.id, 'label': skill.name} for skill in context.get('skills', [])]
             },
@@ -687,39 +687,23 @@ class PlacementTableView(ListView):
         return context
 
 
-class PlacementAvailabilityView(ListView):
-    """View for placements availability (timeline view)"""
-    model = Placement
+class AvailabilityView(ListView):
+    """View for colleague availability (timeline view)"""
+    model = Colleague
     template_name = 'placement_availability.html'
-    
+
     def get_queryset(self):
-        """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
-        qs = Placement.objects.select_related(
-            'colleague', 'colleague__brand', 'service', 'service__skill', 'service__assignment__ministry'
-        ).filter(
-            service__assignment__status='INGEVULD'
-        ).order_by('-service__assignment__start_date')
-        
-        search_filter = self.request.GET.get('search')
-        if search_filter:
-            qs = qs.filter(
-                Q(colleague__name__icontains=search_filter) |
-                Q(service__assignment__name__icontains=search_filter) |
-                Q(service__assignment__extra_info__icontains=search_filter) |
-                Q(service__assignment__organization__icontains=search_filter) |
-                Q(service__assignment__ministry__name__icontains=search_filter) |
-                Q(service__assignment__ministry__abbreviation__icontains=search_filter)
-            )
-        
-        ordering = self.request.GET.get('order')
-        if ordering:
-            qs = qs.order_by(ordering)
+        """Apply filters to colleagues queryset"""
+        qs = Colleague.objects.select_related('brand').prefetch_related('skills', 'expertises')
+
+        name_filter = self.request.GET.get('name')
+        if name_filter:
+            qs = qs.filter(name__icontains=name_filter)
 
         filters = {
-            'skill': 'service__skill__id',
-            'brand': 'colleague__brand__id',
-            'client': 'service__assignment__organization',
-            'ministry': 'service__assignment__ministry__id'
+            'skill': 'skills__id',
+            'brand': 'brand__id',
+            'expertise': 'expertises__id'
         }
 
         for param, lookup in filters.items():
@@ -738,65 +722,107 @@ class PlacementAvailabilityView(ListView):
     def get_context_data(self, **kwargs):
         """Add dynamic filter options and timeline data"""
         context = super().get_context_data(**kwargs)
-        
+
+        # Sort colleagues by end_date, with None values first (like ColleagueList)
+        colleagues = context['object_list']
+
         context['skills'] = Skill.objects.order_by('name')
         context['brands'] = Brand.objects.order_by('name')
-        context['clients'] = [
-            {'id': org, 'name': org} 
-            for org in Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').order_by('organization')
-        ]
-        context['ministries'] = Ministry.objects.order_by('name')
-        
-        context['primary_filter'] = {
-            'name': 'brand',
-            'id': 'brand-filter',
-            'placeholder': 'Alle merken',
-            'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
-        }
-        
-        context['search_field'] = 'search'
-        context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
+        context['expertises'] = Expertise.objects.order_by('name')
 
-        modal_filter_params = ['skill', 'client', 'ministry']
+        # Generate future months for dropdown
+        today = datetime.date.today()
+        future_months = []
+        current_month = today.replace(day=1)
+
+        # Dutch month names
+        dutch_months = [
+            'Januari', 'Februari', 'Maart', 'April', 'Mei', 'Juni',
+            'Juli', 'Augustus', 'September', 'Oktober', 'November', 'December'
+        ]
+
+        # Generate next 24 months (2 years)
+        for i in range(24):
+            month_value = current_month.strftime('%Y-%m')
+            month_label = f"{dutch_months[current_month.month - 1]} {current_month.year}"
+            future_months.append({
+                'value': month_value,
+                'label': month_label
+            })
+            current_month = add_months(current_month, 1)
+
+        context['future_months'] = future_months
+
+        # Month selector as primary filter
+        context['primary_filter'] = {
+            'name': 'timeline_start_month',
+            'id': 'timeline-month-filter',
+            'placeholder': 'Selecteer maand',
+            'options': [{'value': month_option['value'], 'label': month_option['label']} for month_option in future_months]
+        }
+
+        context['search_field'] = 'name'
+        context['search_placeholder'] = 'Zoek op naam...'
+
+        modal_filter_params = ['brand', 'skill', 'expertise', 'status']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
 
         context['filter_groups'] = [
             {
                 'type': 'select',
+                'name': 'brand',
+                'label': 'Merk',
+                'placeholder': 'Alle merken',
+                'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
+            },
+            {
+                'type': 'select',
                 'name': 'skill',
-                'label': 'Rollen',
+                'label': 'Rol',
                 'placeholder': 'Alle rollen',
                 'options': [{'value': skill.id, 'label': skill.name} for skill in context.get('skills', [])]
             },
             {
                 'type': 'select',
-                'name': 'client',
-                'label': 'Opdrachtgever',
-                'placeholder': 'Alle opdrachtgevers',
-                'options': [{'value': client['id'], 'label': client['name']} for client in context.get('clients', [])]
-            },
-            {
-                'type': 'select',
-                'name': 'ministry',
-                'label': 'Ministerie',
-                'placeholder': 'Alle ministeries',
-                'options': [{'value': ministry.id, 'label': ministry.name} for ministry in context.get('ministries', [])]
+                'name': 'expertise',
+                'label': 'ODI Expertise',
+                'placeholder': 'Alle expertise',
+                'options': [{'value': expertise.id, 'label': expertise.name} for expertise in context.get('expertises', [])]
             },
         ]
 
-        context.update(self._get_timeline_context())
+        context.update(self._get_timeline_context(colleagues))
         return context
     
-    def _get_timeline_context(self):
+    def _get_timeline_context(self, colleagues):
         """
         Generate timeline context data for availability view
-        
+
         Returns:
             Dict with timeline data including months, consultant data, and positioning
         """
+        # Get selected month from primary filter parameter
+        selected_month = self.request.GET.get('timeline_start_month')
         today = datetime.date.today()
-        timeline_start = add_timedelta(today, datetime.timedelta(weeks=-12)).replace(day=1)
-        timeline_end = add_timedelta(today, datetime.timedelta(weeks=36)).replace(day=1)
+
+        if selected_month:
+            try:
+                # Parse selected month (format: YYYY-MM)
+                year, month = map(int, selected_month.split('-'))
+                selected_date = datetime.date(year, month, 1)
+
+                # Timeline: selected month - 1 month to selected month + 6 months
+                timeline_start = add_months(selected_date, -1)
+                timeline_end = add_months(selected_date, 6)
+            except (ValueError, AttributeError):
+                # Fallback to default if parsing fails
+                today = datetime.date.today()
+                timeline_start = add_timedelta(today, datetime.timedelta(weeks=-12)).replace(day=1)
+                timeline_end = add_timedelta(today, datetime.timedelta(weeks=36)).replace(day=1)
+        else:
+            # Default timeline range when no month is selected
+            timeline_start = add_timedelta(today, datetime.timedelta(weeks=-12)).replace(day=1)
+            timeline_end = add_timedelta(today, datetime.timedelta(weeks=36)).replace(day=1)
         
         # Generate month headers
         months = []
@@ -807,49 +833,45 @@ class PlacementAvailabilityView(ListView):
                 'name': current_month.strftime('%b %Y')
             })
             current_month = add_months(current_month, 1)
-        
+
         today_offset_days = (today - timeline_start).days
         total_timeline_days = (timeline_end - timeline_start).days
         today_position_percent = int((today_offset_days / total_timeline_days) * 100)
-        
-        filtered_placements = self.get_queryset()
-        
-        consultants = Colleague.objects.filter(
-            placements__in=filtered_placements
-        ).distinct().order_by('name')
+        if today_position_percent < 0 or today_position_percent > 100:
+            today_position_percent = None
         
         # Generate consultant data for timeline
         consultant_data = []
-        for consultant in consultants:
+        for consultant in colleagues:
+            available_from = None
             consultant_placements = []
-            total_current_hours = 0
             
-            placements = filtered_placements.filter(
-                colleague=consultant
+            placements = consultant.placements.filter(
+                service__assignment__status='INGEVULD'
             ).select_related('service__assignment', 'service__skill')
             
             placement_data_list = []
             for placement in placements:
-                if placement.period_source == 'PLACEMENT':
-                    start_date = placement.specific_start_date
-                    end_date = placement.specific_end_date
-                elif placement.period_source == 'SERVICE':
-                    if placement.service.period_source == 'ASSIGNMENT':
-                        start_date = placement.service.assignment.start_date
-                        end_date = placement.service.assignment.end_date
-                    else:
-                        start_date = placement.service.specific_start_date
-                        end_date = placement.service.specific_end_date
-                else:
-                    continue
+
+                start_date = placement.start_date
+                end_date = placement.end_date
+                hours_per_week = placement.hours_per_week
                 
                 if not start_date or not end_date:
                     continue
-                
+
+                # Skip placements that don't overlap with the timeline range
+                if start_date >= timeline_end or end_date <= timeline_start:
+                    continue
+
+                # availability defined within range
+                if available_from is None or end_date > available_from:
+                    available_from = end_date
+
                 # Calculate timeline positions
                 start_offset_days = (start_date - timeline_start).days
                 end_offset_days = (end_date - timeline_start).days
-                
+
                 if start_offset_days < 0:
                     start_offset_days = 0
                 if end_offset_days > total_timeline_days:
@@ -858,13 +880,9 @@ class PlacementAvailabilityView(ListView):
                 start_offset_percent = int((start_offset_days / total_timeline_days) * 100)
                 width_percent = int(((end_offset_days - start_offset_days) / total_timeline_days) * 100)
                 
-                # Check if placement is current
-                if start_date <= today <= end_date:
-                    total_current_hours += placement.service.hours_per_week or 0
-                
                 placement_data_list.append({
                     'project_name': placement.service.assignment.name,
-                    'hours_per_week': placement.service.hours_per_week or 0,
+                    'hours_per_week': hours_per_week,
                     'start_offset_percent': start_offset_percent,
                     'width_percent': width_percent,
                     'start_date': start_date,
@@ -903,15 +921,17 @@ class PlacementAvailabilityView(ListView):
             total_tracks_height = max(max_lanes * 30, 60)  # Minimum 60px height
             
             consultant_data.append({
+                'available_from': available_from,
                 'consultant': consultant,
                 'placements': consultant_placements,
-                'total_current_hours': total_current_hours,
                 'total_tracks_height': total_tracks_height,
             })
         
+        consultant_data.sort(key=lambda c: c['available_from'] or datetime.date.min)
+
         return {
             'timeline_start': timeline_start,
-            'timeline_end': timeline_end, 
+            'timeline_end': timeline_end,
             'months': months,
             'today_position_percent': today_position_percent,
             'consultant_data': consultant_data,

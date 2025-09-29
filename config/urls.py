@@ -21,7 +21,7 @@ from wies.projects.views import client, clients, get_service_details, dashboard
 from wies.projects.views import AssignmentTabsView
 from wies.projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
 from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
-from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView, PlacementAvailabilityView
+from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView, AvailabilityView
 from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
 from wies.projects.views import MinistryListView, MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
 from wies.projects.views import admin_db, login, logout, auth, ProfileView, add_note
@@ -50,7 +50,7 @@ urlpatterns = [
     path('colleagues/<int:pk>/update', ColleagueUpdateView.as_view(), name='colleague-update'),
     path('placements/', PlacementTableView.as_view(), name='placements'),
     path('placements/table/', PlacementTableView.as_view(), name='placements-table'),
-    path('placements/availability/', PlacementAvailabilityView.as_view(), name='placements-availability'),
+    path('placements/availability/', AvailabilityView.as_view(), name='placements-availability'),
     path('placements/<int:pk>/', PlacementDetailView.as_view(), name='placement-detail'),
     path('placements/<int:pk>/update', PlacementUpdateView.as_view()),
     path('placements/<int:pk>/delete', PlacementDeleteView.as_view()),

@@ -11,6 +11,10 @@ This files lists the changes during the lifetime of this project.
 - fix source data to have correct Placement.period_source
 - bump authlib dependency due to security patch
 - saved note redirects to notes tab, whitespace underneath note form, always show note form
+- changed availability timeline: dont show placements outside range
+- changed availability timeline: brand and ODI skill filter added to modal, removed client and ministery
+- added to availability timeline: start month input
+
 
 ## 2025-09-19
 - update dependencies to latest, including django security release
