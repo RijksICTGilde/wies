@@ -14,6 +14,8 @@ This files lists the changes during the lifetime of this project.
 - changed availability timeline: dont show placements outside range
 - changed availability timeline: brand and ODI skill filter added to modal, removed client and ministery
 - added to availability timeline: start month input
+- added search to main navigation
+- added search results page
 
 
 ## 2025-09-19

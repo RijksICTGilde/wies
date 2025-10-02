@@ -1,0 +1,114 @@
+/**
+ * Global Search Styles
+ * Styling for search functionality including menu search and search results
+ */
+
+/* Menu Search Styles */
+.app-switcher-links {
+  position: absolute;
+  top: 4rem;
+  right: 2rem;
+}
+
+.app-link {
+  color: rgba(21, 66, 115, 0.8);
+  text-decoration: none;
+  font-size: 0.8rem;
+  transition: color 0.3s;
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-link:hover {
+  color: #154273;
+  text-decoration: underline;
+}
+
+/* Inline Menu Search Styles */
+.rvo-menubar__item--search {
+  margin-left: auto;
+  margin-right: 1rem;
+  display: flex !important;
+}
+
+.rvo-menubar-search-form {
+  height: 100%;
+  display: flex !important;
+  align-items: center;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.rvo-menubar-search-input-wrapper {
+  display: flex !important;
+  align-items: center;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+  padding: 0;
+  transition: background-color 0.3s ease;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.rvo-menubar-search-input-wrapper:hover,
+.rvo-menubar-search-input-wrapper:focus-within {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+.rvo-menubar-search-input {
+  background: transparent !important;
+  border: none !important;
+  color: white !important;
+  font-size: 0.875rem;
+  padding: 0.5rem 0.75rem;
+  width: 200px;
+  outline: none;
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+.rvo-menubar-search-input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.rvo-menubar-search-input:focus {
+  width: 250px;
+  transition: width 0.3s ease;
+}
+
+.rvo-menubar-search-button {
+  background: transparent;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+.rvo-menubar-search-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 0 4px 4px 0;
+}
+
+/* Search Results Styles */
+.hidden { 
+  display: none; 
+}
+
+.rvo-link {
+  border: none !important;
+  outline: none !important;
+}
+
+.rvo-link:focus {
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.rvo-layout-row {
+  margin-top: 1rem;
+}
