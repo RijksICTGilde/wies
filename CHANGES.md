@@ -16,6 +16,7 @@ This files lists the changes during the lifetime of this project.
 - added to availability timeline: start month input
 - added search to main navigation
 - added search results page
+- bump django to 5.2.7 due to CVE (unaffected)
 
 
 ## 2025-09-19
