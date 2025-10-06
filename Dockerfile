@@ -19,6 +19,14 @@ ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 ENV VIRTUAL_ENV=/opt/venv
 
+# Install (required) system dependencies
+RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
+  # Devcontainer dependencies and utils
+  git \
+  # Cleaning up unused files
+  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+  && rm -rf /var/lib/apt/lists/*
+
 RUN --mount=from=uv,source=/uv,target=/bin/uv \
   --mount=type=cache,target=/opt/uv-cache/ \
   --mount=type=bind,source=pyproject.toml,target=pyproject.toml \

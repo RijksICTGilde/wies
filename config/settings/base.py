@@ -15,6 +15,8 @@ import os
 
 from django.utils.translation import gettext_lazy
 
+import jinja_roos_components
+
 # env vars
 WRITABLE_FOLDER = Path(os.environ.get('WRITABLE_FOLDER', ''))  # in deployment these should be explicitly mountable
 
@@ -51,6 +53,16 @@ MIDDLEWARE = [
 ]
 
 TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.jinja2.Jinja2',
+        'APP_DIRS': True,
+        'DIRS': [
+            'projects.jinja2'  # TODO: why necessary here, not in demo?
+        ],
+        'OPTIONS': {
+            'environment': 'config.jinja2.environment'
+        },
+    },
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [],
@@ -116,6 +128,7 @@ STATIC_URL = 'static/'
 
 STATICFILES_DIRS = [
     BASE_DIR / "node_modules",
+    Path(jinja_roos_components.__file__).parent / 'static',  # dir 'roos'
 ]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
