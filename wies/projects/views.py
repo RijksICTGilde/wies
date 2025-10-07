@@ -1452,6 +1452,3 @@ class GlobalSearchView(TemplateView):
             }
         
         return context
-
-def roos(request):
-    return render(request, 'roos.html', {"name": "foobar"})

@@ -65,7 +65,6 @@ urlpatterns = [
     path('ministries/<int:pk>/', MinistryDetailView.as_view(), name='ministry-detail'),
     path('ministries/<int:pk>/update/', MinistryUpdateView.as_view(), name='ministry-update'),
     path('ministries/<int:pk>/delete/', MinistryDeleteView.as_view(), name='ministry-delete'),
-    path('roos/', roos),
     path('api/skills/', SkillsAPIView.as_view(), name='api-skills'),
     path('api/skills/<int:skill_id>/', SkillDetailAPIView.as_view(), name='api-skill-detail'),
     path('api/expertises/', ExpertisesAPIView.as_view(), name='api-expertises'),
