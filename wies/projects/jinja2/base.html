@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Wies{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ static('WIES-fav.png') }}">
+    <link rel="shortcut icon" type="image/png" href="{{ static('WIES-fav.png') }}">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nl-rvo/design-tokens@1.7.1/dist/index.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nl-rvo/component-library-css@4.9.0/dist/index.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" />
+    <link rel="stylesheet" href="{{ static('@nl-rvo/assets/icons/index.css') }}">
+    <link rel="stylesheet" href="{{ static('@nl-rvo/assets/fonts/index.css') }}">
+    <link rel="stylesheet" href="{{ static('css/custom.css') }}">
+    <script src="https://unpkg.com/htmx.org@2.0.6/dist/htmx.min.js"></script>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="rvo-theme">
+    {% block header %}
+        {% include "parts/header.html" %}
+    {% endblock %}
+    <div class="rvo-layout-column rvo-layout-gap--3xl rvo-margin-block-start--md">
+      <div class="rvo-layout-column rvo-layout-gap--xl">
+        <main class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--md">
+            {% block content %}{% endblock %}
+        </main>
+      </div>
+    </div>
+    {% block footer %}
+        <!-- evt. include van je footer -->
+    {% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+</body>
+</html> 
