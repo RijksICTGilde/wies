@@ -1,7 +1,8 @@
 {# 
 Usage:
-{% include 'parts/generic_filter_bar.html' with url_name='placements-table' target_selector='#placement-content' %}
-{% endcomment
+{% with field='name', label='Naam', target='#assignment-tabs-section' %}
+  {% include 'parts/generic_sortable_header.html' %}
+{% endwith %}
 #}
 
 <link rel="stylesheet" href="{{ static('css/filter.css') }}">
@@ -75,11 +76,9 @@ Usage:
       <div>
         <!-- somehow moving the if to the div above does not work, it hides the search icon -->
         {% if primary_action %}
-        
-        <a class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline" 
-           href="{{ primary_action.url }}">
-          <span class="filter-text">{{ primary_action.button_text }}</span>
-        </a>
+        <c-button kind="primary" @click="window.location.href = '{{ primary_action.url }}'">
+          {{ primary_action.button_text }}
+        </c-button>
         {% endif %}
       </div>
       
@@ -102,6 +101,7 @@ Usage:
         
         {% for filter_group in filter_groups %}
         {% if filter_group.type == 'select' %}
+
         <!-- Select Filter -->
         <div class="utrecht-form-field">
           <div class="rvo-form-field__label">
@@ -164,16 +164,16 @@ Usage:
 
       <!-- Modal Footer -->
       <div class="filter-modal-footer">
-        <button type="button" onclick="clearAllFilters()" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md rvo-button">
+        <c-button kind="warning-subtle" @click="clearAllFilters()">
           Wis alle filters
-        </button>
+        </c-button>
         <div class="filter-modal-footer-buttons">
-          <button type="button" onclick="closeFilterModal()" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md rvo-button">
+          <c-button kind="secondary" @click="closeFilterModal()">
             Annuleren
-          </button>
-          <button type="button" onclick="closeFilterModal()" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button">
+          </c-button>
+          <c-button kind="primary" @click="closeFilterModal()">
             Naar resultaten
-          </button>
+          </c-button>
         </div>
       </div>
     </form>
