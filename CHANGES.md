@@ -17,7 +17,8 @@ This files lists the changes during the lifetime of this project.
 - added search to main navigation
 - added search results page
 - bump django to 5.2.7 due to CVE (unaffected)
-
+- improve query performance
+- introduce pagination on placements and colleagues
 
 ## 2025-09-19
 - update dependencies to latest, including django security release

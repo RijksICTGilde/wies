@@ -5,7 +5,8 @@ This module provides efficient database-level annotations for start_date and end
 that cascade from Assignment -> Service -> Placement hierarchy.
 """
 
-from django.db.models import Case, When, F, Q
+from datetime import date
+from django.db.models import Case, When, F, Q, Max
 
 
 def annotate_placement_dates(queryset):
@@ -73,4 +74,93 @@ def filter_by_date_overlap(queryset, start_date, end_date, start_field='actual_s
         Q(**{f'{end_field}__gte': start_date}) &
         Q(**{f'{start_field}__isnull': False}) &
         Q(**{f'{end_field}__isnull': False})
+    )
+
+
+def annotate_colleague_max_end_date(queryset):
+    """
+    Annotate Colleague queryset with max end_date of current placements.
+
+    This calculates the maximum end_date across all placements that are currently active
+    (start_date <= today AND end_date >= today), handling the full hierarchy where dates
+    can come from Assignment -> Service -> Placement levels.
+
+    Returns:
+        QuerySet with 'max_current_end_date' annotation (nullable)
+
+    Note:
+        Colleagues without current placements will have NULL max_current_end_date.
+        Use F('max_current_end_date').asc(nulls_first=True) for sorting.
+    """
+    today = date.today()
+
+    # Calculate actual_start_date inline (same logic as annotate_placement_dates)
+    actual_start_date_expr = Case(
+        When(
+            placements__period_source='SERVICE',
+            then=Case(
+                When(placements__service__period_source='ASSIGNMENT',
+                     then=F('placements__service__assignment__start_date')),
+                default=F('placements__service__specific_start_date')
+            )
+        ),
+        default=F('placements__specific_start_date')
+    )
+
+    # Calculate actual_end_date inline (same logic as annotate_placement_dates)
+    actual_end_date_expr = Case(
+        When(
+            placements__period_source='SERVICE',
+            then=Case(
+                When(placements__service__period_source='ASSIGNMENT',
+                     then=F('placements__service__assignment__end_date')),
+                default=F('placements__service__specific_end_date')
+            )
+        ),
+        default=F('placements__specific_end_date')
+    )
+
+    # Build filter conditions for currently active placements
+    # A placement is current if: start_date <= today AND end_date >= today
+    # We need to check all three possible date sources
+
+    current_placement_filter = (
+        # Placement has its own dates and they're current
+        (
+            Q(placements__period_source='PLACEMENT') &
+            Q(placements__specific_start_date__lte=today) &
+            Q(placements__specific_end_date__gte=today) &
+            Q(placements__specific_start_date__isnull=False) &
+            Q(placements__specific_end_date__isnull=False)
+        ) |
+        # Or placement uses service dates
+        (
+            Q(placements__period_source='SERVICE') &
+            (
+                # Service has its own dates
+                (
+                    Q(placements__service__period_source='SERVICE') &
+                    Q(placements__service__specific_start_date__lte=today) &
+                    Q(placements__service__specific_end_date__gte=today) &
+                    Q(placements__service__specific_start_date__isnull=False) &
+                    Q(placements__service__specific_end_date__isnull=False)
+                ) |
+                # Or service uses assignment dates
+                (
+                    Q(placements__service__period_source='ASSIGNMENT') &
+                    Q(placements__service__assignment__start_date__lte=today) &
+                    Q(placements__service__assignment__end_date__gte=today) &
+                    Q(placements__service__assignment__start_date__isnull=False) &
+                    Q(placements__service__assignment__end_date__isnull=False)
+                )
+            )
+        )
+    )
+
+    # Annotate with max end_date, filtering for current placements only
+    return queryset.annotate(
+        max_current_end_date=Max(
+            actual_end_date_expr,
+            filter=current_placement_filter
+        )
     )
