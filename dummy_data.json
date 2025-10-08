@@ -38072,5 +38072,77 @@
       "hours_source": "SERVICE",
       "specific_hours_per_week": 23
     }
+  },
+  {
+    "model": "projects.assignmentform",
+    "pk": 1,
+    "fields": {
+      "assignment": 1,
+      "form_type": "opdrachtbeschrijving",
+      "content": {
+        "tech_consultant": "Jan de Vries",
+        "opdrachtgever": "Logius",
+        "onderdeel": "Digitale Dienstverlening",
+        "project_naam": "Digitale Identiteit Platform",
+        "standplaats": "Den Haag",
+        "functietitel": "Backend Developer",
+        "periode_uren": "12 maanden, 32 uur per week",
+        "inhurende_manager": "Petra Jansen - Manager ICT",
+        "business_manager": "Mark Hendriksen",
+        "leidinggevende": "Petra Jansen - Manager ICT\npjansen@logius.nl\n06-12345678",
+        "team_beschrijving": "Het team bestaat uit 12 developers, 2 product owners en 1 UX designer. We werken volgens Scrum met 2-wekelijkse sprints. Hybride werkplek met 2 dagen kantoor per week.",
+        "cultuur_sfeer": "Open en innovatieve cultuur met ruimte voor eigen initiatief. Sterke hiërarchie maar mate van innovativiteit is hoog.",
+        "projecten_uitdagingen": "De afdeling werkt aan het realiseren van een landelijk identiteitsplatform. Komende 12 maanden: implementatie authenticatie, integratie met DigiD, en uitrol naar gemeenten.",
+        "stakeholders": "BZK, gemeenten, Logius management, externe leveranciers",
+        "algemene_omschrijving": "Je werkt als backend developer binnen een team aan de bouw van een applicatie voor digitale identiteit.",
+        "taken_verantwoordelijkheden": "- Ontwikkelen van backend services\n- Code reviews\n- Technische documentatie\n- Samenwerken met frontend developers",
+        "resultaat": "Een schaalbaar en veilig backend platform voor digitale identiteit",
+        "succesvol_afgerond": "Wanneer het platform live is gegaan en de eerste gemeenten succesvol zijn aangesloten"
+      },
+      "created_at": "2024-06-15T10:30:00Z",
+      "updated_at": "2024-06-15T10:30:00Z"
+    }
+  },
+  {
+    "model": "projects.assignmentform",
+    "pk": 2,
+    "fields": {
+      "assignment": 1,
+      "form_type": "evaluatie_consultant",
+      "content": {
+        "medewerker": "Jan de Vries",
+        "opdrachtgever": "Logius",
+        "manager_collega": "Petra Jansen",
+        "algemene_indruk": "Het project verloopt goed en de samenwerking met het team is uitstekend. De opdrachtgever is duidelijk in communicatie en verwachtingen.",
+        "tops": "- Goede technische uitdagingen\n- Fijne teamsamenstelling\n- Duidelijke product owner\n- Flexibiliteit in werktijden",
+        "tips": "- Meer tijd voor technische verdieping\n- Soms onduidelijke prioriteiten vanuit business",
+        "opdrachtsfocus": "De focus ligt op het afronden van de authenticatie module en het voorbereiden van de DigiD integratie.",
+        "nodig_van_opdrachtgever": "Meer betrokkenheid van security experts bij architectuur beslissingen",
+        "ambities_groei": "Ik wil graag meer betrokken worden bij architectuur beslissingen en zou graag een cursus cloud security willen volgen.",
+        "andere_zaken": "Over het algemeen zeer tevreden. De werkdruk is soms hoog maar wel beheersbaar."
+      },
+      "created_at": "2024-12-10T14:20:00Z",
+      "updated_at": "2024-12-10T14:20:00Z"
+    }
+  },
+  {
+    "model": "projects.assignmentform",
+    "pk": 3,
+    "fields": {
+      "assignment": 1,
+      "form_type": "evaluatie_opdrachtgever",
+      "content": {
+        "medewerker": "Jan de Vries",
+        "opdrachtgever": "Logius",
+        "manager_collega": "Petra Jansen",
+        "algemene_indruk": "Jan levert kwalitatief hoogstaand werk en is een waardevolle toevoeging aan het team.",
+        "tops": "- Sterke technische kennis\n- Goede communicatie\n- Proactieve houding\n- Snelle aanpassing aan team",
+        "tips": "- Zou meer eigen initiatief mogen nemen in overleggen\n- Soms te gefocust op details",
+        "focus_aankomende_periode": "We verwachten dat Jan een leidende rol gaat spelen in de DigiD integratie en meer junior developers gaat begeleiden.",
+        "andere_zaken": "We zijn zeer tevreden met Jan's inzet en hopen de samenwerking te verlengen."
+      },
+      "created_at": "2024-12-12T09:15:00Z",
+      "updated_at": "2024-12-12T09:15:00Z"
+    }
   }
 ]

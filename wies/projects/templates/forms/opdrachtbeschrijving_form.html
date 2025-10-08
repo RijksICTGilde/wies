@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="rvo-layout-column rvo-layout-gap--xl">
+  <div>
+    <!-- Breadcrumbs -->
+    <ol class="rvo-breadcrumbs rvo-breadcrumbs--sm">
+      <li class="rvo-breadcrumbs-item">
+        <a href="/assignments/" class="rvo-link rvo-link--no-underline">Opdrachten</a>
+      </li>
+      <li class="rvo-breadcrumbs-item">
+        <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+        <a href="/assignments/{{ assignment.pk }}/" class="rvo-link rvo-link--no-underline">{{ assignment.name }}</a>
+      </li>
+      <li class="rvo-breadcrumbs-item">
+        <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+        <span class="rvo-breadcrumb-current-page">{{ form_type_display }}</span>
+      </li>
+    </ol>
+    <h1 class="utrecht-heading-1 rvo-heading--no-margins">{{ form_type_display }}</h1>
+  </div>
+
+  <div class="rvo-card rvo-card--outline rvo-card--padding-lg">
+    <form method="post">
+      {% csrf_token %}
+
+      <h2 class="utrecht-heading-2">Algemene informatie opdracht</h2>
+
+      {% for field in form %}
+        {% if field.name in 'tech_consultant,opdrachtgever,onderdeel,project_naam,standplaats,functietitel,periode_uren,inhurende_manager,business_manager,leidinggevende' %}
+          <div class="rvo-form-field">
+            <label for="{{ field.id_for_label }}" class="rvo-label">{{ field.label }}:</label>
+            {{ field }}
+            {% if field.errors %}
+              <div class="rvo-form-field__error">{{ field.errors }}</div>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+
+      <h2 class="utrecht-heading-2 rvo-layout-margin-top--xl">Meer over de opdrachtgever</h2>
+
+      {% for field in form %}
+        {% if field.name in 'team_beschrijving,cultuur_sfeer,projecten_uitdagingen,stakeholders' %}
+          <div class="rvo-form-field">
+            <label for="{{ field.id_for_label }}" class="rvo-label">{{ field.label }}:</label>
+            {{ field }}
+            {% if field.errors %}
+              <div class="rvo-form-field__error">{{ field.errors }}</div>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+
+      <h2 class="utrecht-heading-2 rvo-layout-margin-top--xl">Functieomschrijving</h2>
+
+      {% for field in form %}
+        {% if field.name in 'algemene_omschrijving,taken_verantwoordelijkheden,resultaat,succesvol_afgerond' %}
+          <div class="rvo-form-field">
+            <label for="{{ field.id_for_label }}" class="rvo-label">{{ field.label }}:</label>
+            {{ field }}
+            {% if field.errors %}
+              <div class="rvo-form-field__error">{{ field.errors }}</div>
+            {% endif %}
+          </div>
+        {% endif %}
+      {% endfor %}
+
+      <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-margin-top--xl">
+        <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
+          Formulier opslaan
+        </button>
+        <a href="{{ cancel_url }}" class="utrecht-button utrecht-button--subtle utrecht-button--rvo-md rvo-link--no-underline">
+          Annuleren
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock content %}

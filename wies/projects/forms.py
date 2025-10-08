@@ -107,3 +107,149 @@ class ServiceForm(RVOFormMixin, forms.ModelForm):
         if commit:
             instance.save()
         return instance
+
+
+class OpdrachtbeschrijvingForm(RVOFormMixin, forms.Form):
+    """Form for Opdrachtbeschrijving Rijks ICT Gilde"""
+
+    # Algemene informatie opdracht
+    tech_consultant = forms.ModelChoiceField(Colleague.objects, widget=forms.Select(attrs={'class': 'js-colleague-select'}), )    
+    opdrachtgever = forms.CharField(label='Opdrachtgever', required=False)
+    onderdeel = forms.CharField(label='Onderdeel waar je werkzaam bent', required=False)
+    project_naam = forms.CharField(label='Eventueel naam project/opdracht', required=False)
+    standplaats = forms.CharField(label='Standplaats opdrachtgever', required=False)
+    functietitel = forms.CharField(label='Jouw functietitel bij de opdrachtgever', required=False)
+    periode_uren = forms.CharField(label='Periode aanstelling + uren per week', required=False)
+    inhurende_manager = forms.CharField(label='Inhurende manager + functietitel', required=False)
+    business_manager = forms.CharField(label='Business manager RIG', required=False)
+    leidinggevende = forms.CharField(
+        label='Leidinggevende op opdracht + functietitel + e-mailadres + mobiele telefoonnummer',
+        widget=forms.Textarea(attrs={'rows': 3}),
+        required=False
+    )
+
+    # Meer over de opdrachtgever
+    team_beschrijving = forms.CharField(
+        label='Hoe ziet de afdeling/het team eruit (aantal personen, aansturing, werkplek etc.)',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    cultuur_sfeer = forms.CharField(
+        label='Hoe zou je de cultuur en sfeer omschrijven',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    projecten_uitdagingen = forms.CharField(
+        label='Waar is de afdeling mee bezig, welke projecten spelen er momenteel, uitdagingen voor de komende 12 maanden',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    stakeholders = forms.CharField(
+        label='Met welke belangrijke stakeholders heb je te maken',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+
+    # Functieomschrijving
+    algemene_omschrijving = forms.CharField(
+        label='Algemene omschrijving opdracht',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    taken_verantwoordelijkheden = forms.CharField(
+        label='Belangrijkste taken/verantwoordelijkheden',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    resultaat = forms.CharField(
+        label='Wat is het resultaat van de opdracht',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    succesvol_afgerond = forms.CharField(
+        label='Wanneer heb jij de opdracht succesvol afgerond',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+
+
+class EvaluatieConsultantForm(RVOFormMixin, forms.Form):
+    """Form for Evaluatiegesprek Rijks ICT Gilde - Consultant"""
+
+    # Algemene informatie
+    medewerker = forms.CharField(label='Naam medewerker', required=False)
+    opdrachtgever = forms.CharField(label='Naam opdrachtgever', required=False)
+    manager_collega = forms.CharField(label='Naam manager/collega', required=False)
+
+    # De opdracht en de inzet
+    algemene_indruk = forms.CharField(
+        label='Algemene indruk over opdracht en opdrachtgever',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    tops = forms.CharField(
+        label='Wat ging afgelopen jaar echt goed (tops)',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    tips = forms.CharField(
+        label='Wat ging afgelopen jaar minder goed (tips)',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    opdrachtsfocus = forms.CharField(
+        label='Waar ligt opdrachtsfocus (persoonlijk en vanuit opdrachtgever) de aankomende periode',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    nodig_van_opdrachtgever = forms.CharField(
+        label='Wat heb je nodig van je opdrachtgever om jouw opdracht (nog) beter uit te voeren?',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    ambities_groei = forms.CharField(
+        label='Welke ambities heb je in betrekking tot je huidige opdracht voor het aankomende jaar? Welke groei wil je maken en zijn daar mogelijkheden voor binnen deze opdracht?',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    andere_zaken = forms.CharField(
+        label='Andere belangrijke te bespreken zaken (denk aan: conflicten, behaalde resultaten, werkomgeving, wensen, behoeftes, etc.)',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+
+
+class EvaluatieOpdrachtgeverForm(RVOFormMixin, forms.Form):
+    """Form for Evaluatiegesprek Rijks ICT Gilde - Opdrachtgever"""
+
+    # Algemene informatie
+    medewerker = forms.CharField(label='Naam medewerker', required=False)
+    opdrachtgever = forms.CharField(label='Naam opdrachtgever', required=False)
+    manager_collega = forms.CharField(label='Naam manager/collega', required=False)
+
+    # De opdracht en de inzet
+    algemene_indruk = forms.CharField(
+        label='Algemene indruk over inzet consultant',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    tops = forms.CharField(
+        label='Wat ging afgelopen jaar echt goed (tops)',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    tips = forms.CharField(
+        label='Wat ging afgelopen jaar minder goed (tips)',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    focus_aankomende_periode = forms.CharField(
+        label='Waar ligt focus mbt inzet consultant de aankomende periode (indien van toepassing)',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )
+    andere_zaken = forms.CharField(
+        label='Andere belangrijke te bespreken zaken',
+        widget=forms.Textarea(attrs={'rows': 4}),
+        required=False
+    )

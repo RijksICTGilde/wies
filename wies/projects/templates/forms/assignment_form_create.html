@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="rvo-layout-column rvo-layout-gap--xl">
+  <div>
+    <!-- Breadcrumbs -->
+    <ol class="rvo-breadcrumbs rvo-breadcrumbs--sm">
+      <li class="rvo-breadcrumbs-item">
+        <a href="/assignments/" class="rvo-link rvo-link--no-underline">Opdrachten</a>
+      </li>
+      <li class="rvo-breadcrumbs-item">
+        <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+        <a href="/assignments/{{ assignment.pk }}/" class="rvo-link rvo-link--no-underline">{{ assignment.name }}</a>
+      </li>
+      <li class="rvo-breadcrumbs-item">
+        <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+        <span class="rvo-breadcrumb-current-page">{{ form_type_display }}</span>
+      </li>
+    </ol>
+  </div>
+
+  {% include "parts/rvo_form_layout.html" with form=form submit_text="Formulier toevoegen" %}
+</div>
+
+{% endblock content %}

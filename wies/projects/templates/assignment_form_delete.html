@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="rvo-layout-column rvo-layout-gap--xl">
+  <div>
+    <!-- Breadcrumbs -->
+    <ol class="rvo-breadcrumbs rvo-breadcrumbs--sm">
+      <li class="rvo-breadcrumbs-item">
+        <a href="/assignments/" class="rvo-link rvo-link--no-underline">Opdrachten</a>
+      </li>
+      <li class="rvo-breadcrumbs-item">
+        <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+        <a href="/assignments/{{ assignment.pk }}/" class="rvo-link rvo-link--no-underline">{{ assignment.name }}</a>
+      </li>
+      <li class="rvo-breadcrumbs-item">
+        <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+        <span class="rvo-breadcrumb-current-page">Formulier verwijderen</span>
+      </li>
+    </ol>
+    <h1 class="utrecht-heading-1 rvo-heading--no-margins">Formulier verwijderen</h1>
+  </div>
+
+  <div class="rvo-card rvo-card--outline rvo-card--padding-lg">
+    <p class="utrecht-paragraph">
+      Weet je zeker dat je het formulier "{{ form.get_form_type_display }}" wilt verwijderen?
+    </p>
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-margin-top--lg">
+        <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--warning utrecht-button--rvo-md">
+          Verwijderen
+        </button>
+        <a href="{{ cancel_url }}" class="utrecht-button utrecht-button--subtle utrecht-button--rvo-md rvo-link--no-underline">
+          Annuleren
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock content %}

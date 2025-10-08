@@ -21,8 +21,8 @@ from django.conf import settings
 from django.http import HttpResponse
 
 
-from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise, Note
-from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
+from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise, Note, AssignmentForm as AssignmentFormModel, FORM_TYPE_CHOICES
+from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm, OpdrachtbeschrijvingForm, EvaluatieConsultantForm, EvaluatieOpdrachtgeverForm
 from .services.sync import sync_colleagues_from_exact, sync_colleagues_from_otys_iir
 from .services.statistics import get_consultants_working, get_total_clients_count, get_total_budget
 from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining, get_total_services, get_services_filled, get_average_utilization, get_available_since
@@ -955,13 +955,13 @@ class AssignmentCreateView(CreateView):
 class AssignmentDetail(DetailView):
     model = Assignment
     template_name = 'assignment_detail.html'
-    
+
     def get_context_data(self, **kwargs):
         """Assignment detail view - uses statistics functions for calculations"""
-        
+
         context = super().get_context_data(**kwargs)
         assignment = self.get_object()
-        
+
         total_budget = assignment.get_total_services_cost()
         formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
 
@@ -971,17 +971,20 @@ class AssignmentDetail(DetailView):
             'formatted_budget': formatted_budget,
             'budget_percentage': 85,  # Placeholder percentage,
             'project_score': 8.5,  # This could be calculated based on deadlines, budget, etc.,
-        } 
+        }
 
         context.update(assignment_data)
-        
+
         # Get the active tab from request, default to 'diensten'
         active_tab = self.request.GET.get('tab', 'services')
         context['active_tab'] = active_tab
-        
+
         # Add notes to context
         context['notes'] = assignment.notes.all()
-        
+
+        # Add forms to context
+        context['assignment_forms'] = assignment.forms.all()
+
         # Define tab groups for navigation
         tab_groups = {
             'services': {
@@ -994,7 +997,7 @@ class AssignmentDetail(DetailView):
             }
         }
         context['tab_groups'] = tab_groups
-        
+
         return context
 
 class AssignmentDeleteView(DeleteView):
@@ -1389,21 +1392,21 @@ class GlobalSearchView(TemplateView):
     """
     Global search view that searches across all major entities:
     - Assignments
-    - Colleagues 
+    - Colleagues
     - Placements
     - Services
     - Ministries
     - Clients
     """
     template_name = 'search_results.html'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         search_query = self.request.GET.get('search', '').strip()
         context['search_query'] = search_query
-        
-        
+
+
         # Initialize empty results
         context['results'] = {
             'assignments': [],
@@ -1411,7 +1414,7 @@ class GlobalSearchView(TemplateView):
             'ministries': [],
             'total_count': 0
         }
-        
+
         if search_query:
             # Search Assignments
             assignments_qs = Assignment.objects.filter(
@@ -1421,7 +1424,7 @@ class GlobalSearchView(TemplateView):
             ).select_related('ministry')
             assignments_count = assignments_qs.count()
             assignments = assignments_qs
-            
+
             # Search Colleagues
             colleagues_qs = Colleague.objects.filter(
                 Q(name__icontains=search_query) |
@@ -1431,7 +1434,7 @@ class GlobalSearchView(TemplateView):
             ).distinct().select_related('brand').prefetch_related('skills', 'expertises')
             colleagues_count = colleagues_qs.count()
             colleagues = colleagues_qs
-            
+
             # Search Ministries
             ministries_qs = Ministry.objects.filter(
                 Q(name__icontains=search_query) |
@@ -1439,10 +1442,10 @@ class GlobalSearchView(TemplateView):
             ).annotate(assignment_count=Count('assignment'))
             ministries_count = ministries_qs.count()
             ministries = ministries_qs
-            
+
             # Calculate total count
             total_count = assignments_count + colleagues_count + ministries_count
-            
+
             # Update context with results
             context['results'] = {
                 'assignments': assignments,
@@ -1450,5 +1453,108 @@ class GlobalSearchView(TemplateView):
                 'ministries': ministries,
                 'total_count': total_count
             }
-        
+
         return context
+
+
+def assignment_form_select_type(request, assignment_id):
+    """View to select form type"""
+    assignment = Assignment.objects.get(pk=assignment_id)
+
+    if request.method == 'POST':
+        form_type = request.POST.get('form_type')
+        if form_type in dict(FORM_TYPE_CHOICES):
+            return redirect('assignment-form-create', assignment_id=assignment_id, form_type=form_type)
+
+    context = {
+        'assignment': assignment,
+        'form_types': FORM_TYPE_CHOICES,
+        'cancel_url': f'/assignments/{assignment_id}/'
+    }
+    return render(request, 'assignment_form_select_type.html', context)
+
+
+def assignment_form_create(request, assignment_id, form_type):
+    """View to create/edit assignment form"""
+    assignment = Assignment.objects.get(pk=assignment_id)
+
+    if form_type not in dict(FORM_TYPE_CHOICES):
+        return redirect('assignment-detail', pk=assignment_id)
+
+    # Map form types to form classes
+    form_class_map = {
+        'opdrachtbeschrijving': OpdrachtbeschrijvingForm,
+        'evaluatie_consultant': EvaluatieConsultantForm,
+        'evaluatie_opdrachtgever': EvaluatieOpdrachtgeverForm,
+    }
+
+    form_class = form_class_map[form_type]
+
+    if request.method == 'POST':
+        form = form_class(request.POST)
+        if form.is_valid():
+            # Save form data to AssignmentForm model
+            cleaned_data = form.cleaned_data
+
+            # map to id if Colleague object
+            # todo: generalize, because known in form
+            if isinstance(cleaned_data.get('tech_consultant'), Colleague):
+                cleaned_data['tech_consultant'] = cleaned_data['tech_consultant'].id
+
+            AssignmentFormModel.objects.create(
+                assignment=assignment,
+                form_type=form_type,
+                content=form.cleaned_data
+            )
+            messages.success(request, 'Formulier succesvol toegevoegd.')
+            return redirect('assignment-detail', pk=assignment_id)
+    else:
+        form = form_class()
+
+    context = {
+        'assignment': assignment,
+        'form': form,
+        'form_type': form_type,
+        'form_type_display': dict(FORM_TYPE_CHOICES)[form_type],
+        'cancel_url': f'/assignments/{assignment_id}/'
+    }
+
+    return render(request, 'forms/assignment_form_create.html', context)
+
+
+def assignment_form_detail(request, form_id):
+    """View to display a filled form"""
+    form = AssignmentFormModel.objects.get(pk=form_id)
+
+    context = {
+        'form': form,
+        'assignment': form.assignment,
+        'back_url': f'/assignments/{form.assignment.id}/'
+    }
+
+    # Select template based on form type
+    template_map = {
+        'opdrachtbeschrijving': 'forms/opdrachtbeschrijving_detail.html',
+        'evaluatie_consultant': 'forms/evaluatie_consultant_detail.html',
+        'evaluatie_opdrachtgever': 'forms/evaluatie_opdrachtgever_detail.html',
+    }
+
+    return render(request, template_map[form.form_type], context)
+
+
+def assignment_form_delete(request, form_id):
+    """View to delete a form"""
+    form = AssignmentFormModel.objects.get(pk=form_id)
+    assignment_id = form.assignment.id
+
+    if request.method == 'POST':
+        form.delete()
+        messages.success(request, 'Formulier succesvol verwijderd.')
+        return redirect('assignment-detail', pk=assignment_id)
+
+    context = {
+        'form': form,
+        'assignment': form.assignment,
+        'cancel_url': f'/assignments/{assignment_id}/'
+    }
+    return render(request, 'assignment_form_delete.html', context)

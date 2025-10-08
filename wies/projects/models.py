@@ -286,3 +286,24 @@ class Note(models.Model):
 
     def __str__(self):
         return f"Note by {self.colleague.name} on {self.assignment.name}"
+
+
+FORM_TYPE_CHOICES = {
+    'opdrachtbeschrijving': 'Opdrachtbeschrijving Rijks ICT Gilde',
+    'evaluatie_consultant': 'Evaluatiegesprek Rijks ICT Gilde - Consultant',
+    'evaluatie_opdrachtgever': 'Evaluatiegesprek Rijks ICT Gilde - Opdrachtgever',
+}
+
+
+class AssignmentForm(models.Model):
+    assignment = models.ForeignKey('Assignment', models.CASCADE, related_name='forms')
+    form_type = models.CharField(max_length=50, choices=FORM_TYPE_CHOICES)
+    content = models.JSONField(default=dict)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.get_form_type_display()} for {self.assignment.name}"

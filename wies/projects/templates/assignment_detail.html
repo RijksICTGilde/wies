@@ -77,6 +77,27 @@
       <dd>{{ object.end_date }}</dd>
       <dt>Extra info</dt>
       <dd>{{ object.extra_info }}</dd>
+      <dt>Formulieren</dt>
+      <dd>
+        {% if assignment_forms %}
+          <div class="rvo-layout-column rvo-layout-gap--sm">
+            {% for form in assignment_forms %}
+              <div class="rvo-layout-row rvo-layout-gap--sm">
+                <a href="{% url 'assignment-form-detail' form.id %}" class="rvo-link">
+                  {{ form.get_form_type_display }} ({{ form.created_at|date:"d-m-Y" }})
+                </a>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <span class="rvo-text--italic">Geen formulieren</span>
+        {% endif %}
+        <div class="rvo-layout-margin-top--sm">
+          <a href="{% url 'assignment-form-select-type' object.pk %}" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-xs rvo-link--no-underline">
+            Formulier toevoegen
+          </a>
+        </div>
+      </dd>
       <dt>Acties</dt>
       <dd>
         <div class="rvo-layout-row rvo-layout-gap--sm">

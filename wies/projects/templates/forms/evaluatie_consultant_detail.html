@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+<!-- TODO: this should be generalized for all assignment forms -->
+
+{% block content %}
+<div class="rvo-layout-column rvo-layout-gap--xl">
+  <div>
+    <!-- Breadcrumbs -->
+    <ol class="rvo-breadcrumbs rvo-breadcrumbs--sm">
+      <li class="rvo-breadcrumbs-item">
+        <a href="/assignments/" class="rvo-link rvo-link--no-underline">Opdrachten</a>
+      </li>
+      <li class="rvo-breadcrumbs-item">
+        <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+        <a href="/assignments/{{ assignment.pk }}/" class="rvo-link rvo-link--no-underline">{{ assignment.name }}</a>
+      </li>
+      <li class="rvo-breadcrumbs-item">
+        <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+        <span class="rvo-breadcrumb-current-page">{{ form.get_form_type_display }}</span>
+      </li>
+    </ol>
+    <h1 class="utrecht-heading-1 rvo-heading--no-margins">{{ form.get_form_type_display }}</h1>
+    <p class="rvo-text--subtle">Aangemaakt op {{ form.created_at|date:"d-m-Y H:i" }}</p>
+  </div>
+
+  <div class="rvo-card rvo-card--outline rvo-card--padding-lg">
+    <h2 class="utrecht-heading-2">Algemene informatie</h2>
+
+    <dl class="rvo-data-list">
+      <dt>Naam medewerker</dt>
+      <dd>{{ form.content.medewerker|default:"-" }}</dd>
+
+      <dt>Naam opdrachtgever</dt>
+      <dd>{{ form.content.opdrachtgever|default:"-" }}</dd>
+
+      <dt>Naam manager/collega</dt>
+      <dd>{{ form.content.manager_collega|default:"-" }}</dd>
+    </dl>
+
+    <h2 class="utrecht-heading-2 rvo-layout-margin-top--xl">De opdracht en de inzet</h2>
+
+    <dl class="rvo-data-list">
+      <dt>Algemene indruk over opdracht en opdrachtgever</dt>
+      <dd>{{ form.content.algemene_indruk|default:"-"|linebreaksbr }}</dd>
+
+      <dt>Wat ging afgelopen jaar echt goed (tops)</dt>
+      <dd>{{ form.content.tops|default:"-"|linebreaksbr }}</dd>
+
+      <dt>Wat ging afgelopen jaar minder goed (tips)</dt>
+      <dd>{{ form.content.tips|default:"-"|linebreaksbr }}</dd>
+
+      <dt>Waar ligt opdrachtsfocus de aankomende periode</dt>
+      <dd>{{ form.content.opdrachtsfocus|default:"-"|linebreaksbr }}</dd>
+
+      <dt>Wat heb je nodig van je opdrachtgever</dt>
+      <dd>{{ form.content.nodig_van_opdrachtgever|default:"-"|linebreaksbr }}</dd>
+
+      <dt>Ambities en groei</dt>
+      <dd>{{ form.content.ambities_groei|default:"-"|linebreaksbr }}</dd>
+
+      <dt>Andere belangrijke te bespreken zaken</dt>
+      <dd>{{ form.content.andere_zaken|default:"-"|linebreaksbr }}</dd>
+    </dl>
+
+    <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-margin-top--xl">
+      <a href="{{ back_url }}" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline">
+        Terug naar opdracht
+      </a>
+      <a href="{% url 'assignment-form-delete' form.id %}" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md rvo-link--no-underline">
+        Verwijderen
+      </a>
+    </div>
+  </div>
+</div>
+{% endblock content %}

@@ -2,6 +2,10 @@
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
+- add assignment forms functionality with three form types: opdrachtbeschrijving, evaluatie consultant, and evaluatie opdrachtgever
+- add forms section to assignment detail page (Opdracht gegevens block)
+- add form type selection, creation, viewing, and deletion
+- add AssignmentForm model with JSON content storage
 - add period filter to placement page
 - add end date of current placement to colleague list
 - add availability sorting to colleague list

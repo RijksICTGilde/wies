@@ -25,6 +25,7 @@ from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpd
 from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
 from wies.projects.views import MinistryListView, MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
 from wies.projects.views import admin_db, login, logout, auth, ProfileView, add_note, GlobalSearchView
+from wies.projects.views import assignment_form_select_type, assignment_form_create, assignment_form_detail, assignment_form_delete
 from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIView, ExpertiseDetailAPIView
 
 urlpatterns = [
@@ -44,6 +45,10 @@ urlpatterns = [
     path('services/<int:pk>/placements/new', PlacementCreateView.as_view()),
     path('assignments/<int:pk>/services/new', ServiceCreateView.as_view()),
     path('assignments/<int:assignment_id>/add-note', add_note, name='add-note'),
+    path('assignments/<int:assignment_id>/forms/new', assignment_form_select_type, name='assignment-form-select-type'),
+    path('assignments/<int:assignment_id>/forms/new/<str:form_type>', assignment_form_create, name='assignment-form-create'),
+    path('assignment-forms/<int:form_id>/', assignment_form_detail, name='assignment-form-detail'),
+    path('assignment-forms/<int:form_id>/delete', assignment_form_delete, name='assignment-form-delete'),
     path('colleagues/', ColleagueList.as_view(), name='colleagues'),
     path('colleagues/new', ColleagueCreateView.as_view()),
     path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
