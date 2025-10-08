@@ -7,7 +7,7 @@ from django.template.defaulttags import register
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy, reverse
 from django.db import models
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Prefetch
 from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
@@ -1036,6 +1036,13 @@ class ColleagueDetail(DetailView):
     model = Colleague
     template_name = 'colleague_detail.html'
 
+    def get_queryset(self):
+        return Colleague.objects.prefetch_related(
+            Prefetch('placements', queryset=Placement.objects.select_related(
+                'service__assignment'
+            ))
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         assignment_list = [
@@ -1206,9 +1213,15 @@ def clients(request):
     return render(request, 'client_list.html', context)
 
 def client(request, name):
-    assignments = Assignment.objects.filter(organization=name)
+    assignments = Assignment.objects.filter(
+        organization=name
+    ).prefetch_related(
+        Prefetch('services', queryset=Service.objects.prefetch_related(
+            Prefetch('placements', queryset=Placement.objects.select_related('colleague'))
+        ))
+    )
     assignments_data = []
-    
+
     for assignment in assignments:
         colleagues = [
             {'id': placement.colleague.pk, 'name': placement.colleague.name}
@@ -1216,7 +1229,7 @@ def client(request, name):
             for placement in service.placements.all()
             if placement.colleague
         ]
-        
+
         assignments_data.append({
             'id': assignment.pk,
             'name': assignment.name,
@@ -1312,8 +1325,14 @@ class MinistryDetailView(DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        assignments = Assignment.objects.filter(ministry=self.object)
-        
+        assignments = Assignment.objects.filter(
+            ministry=self.object
+        ).prefetch_related(
+            Prefetch('services', queryset=Service.objects.prefetch_related(
+                Prefetch('placements', queryset=Placement.objects.select_related('colleague'))
+            ))
+        )
+
         assignments_data = []
         for assignment in assignments:
             colleagues = [
@@ -1322,7 +1341,7 @@ class MinistryDetailView(DetailView):
                 for placement in service.placements.all()
                 if placement.colleague
             ]
-            
+
             assignments_data.append({
                 'id': assignment.pk,
                 'name': assignment.name,
@@ -1332,7 +1351,7 @@ class MinistryDetailView(DetailView):
                 'colleagues': colleagues,
                 'status': assignment.status,
             })
-        
+
         context['assignments'] = assignments_data
         return context
 

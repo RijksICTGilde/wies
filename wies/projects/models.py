@@ -80,21 +80,35 @@ class Colleague(models.Model):
     @property
     def end_date(self):
         """
-        Max end_date of current placements
+        Max end_date of current placements.
+        This property has N+1 query issues.
+        Use get_colleague_end_date_efficient() from statistics module instead for batch operations.
         """
+        from .querysets import annotate_placement_dates
+
         end_date = None
         today_date = datetime.datetime.today().date()
-        for placement in self.placements.all():
+
+        # Use optimized query with select_related and annotations
+        placements = annotate_placement_dates(
+            self.placements.select_related('service__assignment')
+        )
+
+        for placement in placements:
+            # Use annotated fields instead of properties
+            placement_start = placement.actual_start_date
+            placement_end = placement.actual_end_date
+
             # filtering out ill-formed placements and historical and future placements
-            if (placement.end_date is None 
-                or placement.start_date is None 
-                or placement.start_date > today_date
-                or placement.end_date < today_date):
+            if (placement_end is None
+                or placement_start is None
+                or placement_start > today_date
+                or placement_end < today_date):
                 # todo: probably should make end-date required when someone is assigned (on placement?)
                 # this otherwise leads to difficult to interpret results
                 continue
-            if end_date is None or placement.end_date > end_date:
-                end_date = placement.end_date
+            if end_date is None or placement_end > end_date:
+                end_date = placement_end
         return end_date
 
     def get_absolute_url(self):

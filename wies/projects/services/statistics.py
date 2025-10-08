@@ -1,17 +1,32 @@
 from datetime import date, timedelta
 
-from django.db.models import Q
+from django.db.models import Q, Max, Case, When, F
 from ..models import Assignment, Colleague, Placement, Service
+from ..querysets import annotate_placement_dates
 
 
 def get_consultants_working():
-    active_colleague_ids = set()
-    for colleague in Colleague.objects.all():
-        if colleague.end_date:
-            active_colleague_ids.add(colleague.id)
+    """
+    Get count of consultants with active placements.
+
+    Optimized to use database-level queries instead of iterating through all colleagues.
+    """
+    today = date.today()
+
+    # Get colleagues who have at least one current placement
+    # Using subquery with annotated dates for efficiency
+    active_placements = annotate_placement_dates(
+        Placement.objects.select_related('service__assignment')
+    ).filter(
+        actual_start_date__isnull=False,
+        actual_end_date__isnull=False,
+        actual_start_date__lte=today,
+        actual_end_date__gte=today
+    )
+
     return Colleague.objects.filter(
-        id__in=active_colleague_ids
-    ).count()
+        placements__in=active_placements
+    ).distinct().count()
 
 
 def get_total_clients_count():
@@ -47,11 +62,26 @@ def get_assignments_ending_soon(limit=15):
 
 
 def get_consultants_on_bench(limit=10):
-    """Get consultants who are not currently on active assignments"""    
-    active_colleague_ids = set()
-    for colleague in Colleague.objects.all():
-        if colleague.end_date:
-            active_colleague_ids.add(colleague.id)
+    """
+    Get consultants who are not currently on active assignments.
+
+    Optimized to use database-level queries.
+    """
+    today = date.today()
+
+    # Get colleagues who have at least one current placement
+    active_placements = annotate_placement_dates(
+        Placement.objects.select_related('service__assignment')
+    ).filter(
+        actual_start_date__isnull=False,
+        actual_end_date__isnull=False,
+        actual_start_date__lte=today,
+        actual_end_date__gte=today
+    )
+
+    active_colleague_ids = Colleague.objects.filter(
+        placements__in=active_placements
+    ).distinct().values_list('id', flat=True)
 
     return Colleague.objects.exclude(
         id__in=active_colleague_ids
@@ -103,30 +133,32 @@ def get_weeks_remaining(assignment):
 
 
 def get_available_since(colleague):
-    """Calculate how long a colleague has been available (on the bench)"""
-    
+    """
+    Calculate how long a colleague has been available (on the bench).
+
+    Optimized to use database-level queries with annotations.
+    """
     if colleague.end_date:
         raise ValueError("Active colleague, not on bench")
 
-    # Find their most recent placement that has ended
+    # Find their most recent completed placement using optimized query
+    completed_placements = annotate_placement_dates(
+        colleague.placements.filter(
+            service__assignment__status='INGEVULD'
+        ).select_related('service__assignment')
+    ).filter(
+        actual_start_date__isnull=False,
+        actual_end_date__isnull=False,
+        actual_end_date__lt=date.today()
+    ).order_by('-actual_end_date')
 
-    available_since = None
-    last_placement = None
-    for placement in colleague.placements.all():
-        if (placement.service.assignment.status != 'INGEVULD'
-            or not placement.start_date
-            or not placement.end_date):
-            continue  # skip invalid placements
+    last_placement = completed_placements.first()
 
-        if placement.service.assignment.phase == 'completed' and (available_since is None or placement.end_date):
-            available_since = placement.end_date
-            last_placement = placement
-    
     if not last_placement:
         # If no historical placement found, return a default period
         return "altijd"
-    
-    days = (date.today() - last_placement.end_date).days
+
+    days = (date.today() - last_placement.actual_end_date).days
 
     if days < 14:
         return f"{days} dagen"
