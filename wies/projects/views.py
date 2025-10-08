@@ -513,21 +513,21 @@ class ColleagueList(ListView):
         context['skills'] = Skill.objects.order_by('name')
         context['brands'] = Brand.objects.order_by('name')
         context['expertises'] = Expertise.objects.order_by('name')
-        
-        context['primary_filter'] = {
-            'name': 'brand',
-            'id': 'brand-filter',
-            'placeholder': 'Alle merken',
-            'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
-        }
-        
+
         context['search_field'] = 'name'
         context['search_placeholder'] = 'Zoek op naam...'
-        
-        modal_filter_params = ['skill', 'expertise', 'status']
+
+        modal_filter_params = ['brand', 'skill', 'expertise', 'status']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
-        
+
         context['filter_groups'] = [
+            {
+                'type': 'select',
+                'name': 'brand',
+                'label': 'Merk',
+                'placeholder': 'Alle merken',
+                'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
+            },
             {
                 'type': 'select',
                 'name': 'skill',
@@ -664,20 +664,20 @@ class PlacementTableView(ListView):
         ]
         context['ministries'] = Ministry.objects.order_by('name')
 
-        context['primary_filter'] = {
-            'name': 'brand',
-            'id': 'brand-filter',
-            'placeholder': 'Alle merken',
-            'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
-        }
-
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
 
-        modal_filter_params = ['skill', 'client', 'ministry', 'period']
+        modal_filter_params = ['brand', 'skill', 'client', 'ministry', 'period']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
 
         context['filter_groups'] = [
+            {
+                'type': 'select',
+                'name': 'brand',
+                'label': 'Merk',
+                'placeholder': 'Alle merken',
+                'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
+            },
             {
                 'type': 'select',
                 'name': 'skill',
