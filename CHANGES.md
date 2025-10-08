@@ -19,6 +19,7 @@ This files lists the changes during the lifetime of this project.
 - bump django to 5.2.7 due to CVE (unaffected)
 - improve query performance
 - introduce pagination on placements and colleagues
+- remove dashboard page
 
 ## 2025-09-19
 - update dependencies to latest, including django security release

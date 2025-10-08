@@ -16,6 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.views.generic import RedirectView
 
 from wies.projects.views import client, clients, get_service_details, dashboard
 from wies.projects.views import AssignmentTabsView
@@ -30,7 +31,8 @@ from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIVi
 urlpatterns = [
     path('admin/db/', admin_db, name='admin-db'),
     path('admin/', admin.site.urls),
-    path('', dashboard, name='dashboard'),
+    path('', RedirectView.as_view(pattern_name='placements', permanent=False), name='home'),
+    path('dashboard/', dashboard, name='dashboard'),
     path('login/', login, name='login'),
     path('logout/', logout, name='logout'),
     path('auth/', auth, name='auth'),
