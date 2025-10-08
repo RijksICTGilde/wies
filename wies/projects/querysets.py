@@ -8,29 +8,6 @@ that cascade from Assignment -> Service -> Placement hierarchy.
 from django.db.models import Case, When, F, Q
 
 
-def annotate_service_dates(queryset):
-    """
-    Annotate Service queryset with actual start_date and end_date.
-
-    Handles the hierarchy where dates can come from:
-    - Assignment level (when period_source='ASSIGNMENT')
-    - Service level (when period_source='SERVICE')
-
-    Returns:
-        QuerySet with 'actual_start_date' and 'actual_end_date' annotations
-    """
-    return queryset.annotate(
-        actual_start_date=Case(
-            When(period_source='ASSIGNMENT', then=F('assignment__start_date')),
-            default=F('specific_start_date')
-        ),
-        actual_end_date=Case(
-            When(period_source='ASSIGNMENT', then=F('assignment__end_date')),
-            default=F('specific_end_date')
-        )
-    )
-
-
 def annotate_placement_dates(queryset):
     """
     Annotate Placement queryset with actual start_date and end_date.
@@ -96,20 +73,4 @@ def filter_by_date_overlap(queryset, start_date, end_date, start_field='actual_s
         Q(**{f'{end_field}__gte': start_date}) &
         Q(**{f'{start_field}__isnull': False}) &
         Q(**{f'{end_field}__isnull': False})
-    )
-
-
-def get_optimized_placements():
-    """
-    Get a base Placement queryset with optimized select_related.
-
-    This avoids N+1 queries when accessing placement.service.assignment
-    """
-    from .models import Placement
-    return Placement.objects.select_related(
-        'colleague',
-        'service',
-        'service__assignment',
-        'service__assignment__ministry',
-        'service__skill'
     )
