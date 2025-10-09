@@ -19,7 +19,7 @@
         </td>
         <td class="rvo-table-cell">
           {% for skill in colleague.skills.all %}
-            <span class="rvo-tag">{{ skill.name }}</span>
+            <div class="rvo-tag rvo-tag--default">{{ skill.name }}</div>
           {% endfor %}
         </td>
         <td class="rvo-table-cell">{{ colleague.available_since }}</td>

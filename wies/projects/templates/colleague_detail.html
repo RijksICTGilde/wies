@@ -46,7 +46,7 @@
       <dd>
         {% if object.expertises.all %}
           {% for expertise in object.expertises.all %}
-            <span class="rvo-tag rvo-tag--expertise">{{ expertise.name }}</span>
+            <div class="rvo-tag rvo-tag--info">{{ expertise.name }}</div>
           {% endfor %}
         {% else %}
           <span class="rvo-text--italic">Geen expertise opgegeven</span>
@@ -55,7 +55,7 @@
       <dt>Rollen</dt>
       <dd>
         {% for skill in object.skills.all %}
-        <span class="rvo-tag">{{ skill.name }}</span>
+        <div class="rvo-tag rvo-tag--default">{{ skill.name }}</div>
         {% endfor %}
       </dd>
     </dl>
@@ -77,7 +77,7 @@
         <tr class="rvo-table-row clickable-row" style="cursor: pointer;" onclick="window.location='/assignments/{{ placement.service.assignment.id }}/'">
           <td class="rvo-table-cell">{{ placement.service.assignment.name }}</td>
           <td class="rvo-table-cell">
-            <span class="rvo-tag status-{{ placement.service.assignment.status|lower }}">{{ placement.service.assignment.status }}</span>
+            <div class="rvo-tag {% if placement.service.assignment.status == 'LEAD' %}rvo-tag--warning{% elif placement.service.assignment.status == 'OPEN' %}rvo-tag--info{% elif placement.service.assignment.status == 'LOPEND' %}rvo-tag--success{% elif placement.service.assignment.status == 'AFGEWEZEN' %}rvo-tag--error{% else %}rvo-tag--default{% endif %}">{{ placement.service.assignment.status }}</div>
           </td>
           <td class="rvo-table-cell">
             <div>{{ placement.service.assignment.organization }}</div>
@@ -86,7 +86,7 @@
             {% endif %}
           </td>
           <td class="rvo-table-cell">
-            <span class="rvo-tag">{{ placement.service.skill.name }}</span>
+            <div class="rvo-tag rvo-tag--default">{{ placement.service.skill.name }}</div>
           </td>
           <td class="rvo-table-cell">{{ placement.start_date }} - {{ placement.end_date }}</td>
         </tr>

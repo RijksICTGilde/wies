@@ -25,13 +25,13 @@
 }
 
 /* Inline Menu Search Styles */
-.rvo-menubar__item--search {
+.wies-menubar__item--search {
   margin-left: auto;
   margin-right: 1rem;
   display: flex !important;
 }
 
-.rvo-menubar-search-form {
+.wies-menubar-search-form {
   height: 100%;
   display: flex !important;
   align-items: center;
@@ -39,7 +39,7 @@
   opacity: 1 !important;
 }
 
-.rvo-menubar-search-input-wrapper {
+.wies-menubar-search-input-wrapper {
   display: flex !important;
   align-items: center;
   background-color: rgba(255, 255, 255, 0.15);
@@ -50,12 +50,12 @@
   opacity: 1 !important;
 }
 
-.rvo-menubar-search-input-wrapper:hover,
-.rvo-menubar-search-input-wrapper:focus-within {
+.wies-menubar-search-input-wrapper:hover,
+.wies-menubar-search-input-wrapper:focus-within {
   background-color: rgba(255, 255, 255, 0.25);
 }
 
-.rvo-menubar-search-input {
+.wies-menubar-search-input {
   background: transparent !important;
   border: none !important;
   color: white !important;
@@ -68,16 +68,16 @@
   opacity: 1 !important;
 }
 
-.rvo-menubar-search-input::placeholder {
+.wies-menubar-search-input::placeholder {
   color: rgba(255, 255, 255, 0.7);
 }
 
-.rvo-menubar-search-input:focus {
+.wies-menubar-search-input:focus {
   width: 250px;
   transition: width 0.3s ease;
 }
 
-.rvo-menubar-search-button {
+.wies-menubar-search-button {
   background: transparent;
   border: none;
   color: white;
@@ -88,7 +88,7 @@
   transition: background-color 0.3s ease;
 }
 
-.rvo-menubar-search-button:hover {
+.wies-menubar-search-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 0 4px 4px 0;
 }
@@ -98,17 +98,49 @@
   display: none; 
 }
 
-.rvo-link {
-  border: none !important;
-  outline: none !important;
+/* Clients Table Styles */
+.show-all-button {
+  margin-top: 0.5rem;
 }
 
-.rvo-link:focus {
-  border: none !important;
-  outline: none !important;
-  box-shadow: none !important;
+.no-results {
+  text-align: center;
+  padding: 2rem;
+  color: var(--rvo-color-grijs-600);
 }
 
-.rvo-layout-row {
-  margin-top: 1rem;
+/* External link icon */
+.external-link-icon {
+  width: 10px;
+  height: 10px;
+  margin-left: 0.25rem;
+}
+
+/* Search form styles */
+.search-form-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.search-form-field-wrapper {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.search-form-input {
+  height: 100%;
+}
+
+.search-form-label-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
