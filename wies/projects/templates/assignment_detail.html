@@ -69,7 +69,7 @@
       </dd>
       <dt>Status</dt>
       <dd>
-        <span class="rvo-tag status-{{ object.status|lower }}">{{ object.status }}</span>
+        <div class="rvo-tag {% if object.status == 'LEAD' %}rvo-tag--warning{% elif object.status == 'OPEN' %}rvo-tag--info{% elif object.status == 'LOPEND' %}rvo-tag--success{% elif object.status == 'AFGEWEZEN' %}rvo-tag--error{% else %}rvo-tag--default{% endif %}">{{ object.status }}</div>
       </dd>
       <dt>Startdatum</dt>
       <dd>{{ object.start_date }}</dd>
@@ -128,7 +128,7 @@
             <!-- Search Criteria -->
             <div class="rvo-layout-column">
               <label class="rvo-label">Rol </label>
-              <span class="rvo-tag">{% if service.skill %}{{ service.skill.name }}{% else %}-{% endif %}</span>
+              <div class="rvo-tag rvo-tag--default">{% if service.skill %}{{ service.skill.name }}{% else %}-{% endif %}</div>
             </div>
             <div class="rvo-layout-column">
               <label class="rvo-label">Wanneer </label>

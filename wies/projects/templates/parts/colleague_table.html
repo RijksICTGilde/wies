@@ -32,7 +32,7 @@
         </td>
         <td class="rvo-table-cell">
           {% for skill in colleague.skills.all %}
-            <span class="rvo-tag skill-badge">{{ skill.name }}</span>
+            <div class="rvo-tag rvo-tag--default">{{ skill.name }}</div>
           {% endfor %}
           {% if not colleague.skills.all %}
             <span class="rvo-text--italic rvo-text--subtle">Geen rollen</span>
@@ -40,7 +40,7 @@
         </td>
         <td class="rvo-table-cell">
           {% for expertise in colleague.expertises.all %}
-            <span class="rvo-tag rvo-tag--expertise skill-badge">{{ expertise.name }}</span>
+            <div class="rvo-tag rvo-tag--info">{{ expertise.name }}</div>
           {% endfor %}
           {% if not colleague.expertises.all %}
             <span class="rvo-text--italic rvo-text--subtle">Geen expertise</span>
@@ -49,10 +49,10 @@
         <td class="rvo-table-cell">
           {% if colleague.end_date %}
             <div class="status-container">
-              <span class="rvo-tag status-ingezet">Ingezet</span>
+              <div class="rvo-tag rvo-tag--warning">Ingezet</div>
                 <div class="rvo-text rvo-text--xs rvo-text--subtle">tot {{ colleague.end_date|date:"M y" }}</div>
           {% else %}
-            <span class="rvo-tag status-beschikbaar">Beschikbaar</span>
+            <div class="rvo-tag rvo-tag--success">Beschikbaar</div>
           {% endif %}
         </td>
       </tr>

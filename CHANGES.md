@@ -17,6 +17,9 @@ This files lists the changes during the lifetime of this project.
 - added search to main navigation
 - added search results page
 - bump django to 5.2.7 due to CVE (unaffected)
+- update clients page
+- update page names
+- clean up css
 
 
 ## 2025-09-19

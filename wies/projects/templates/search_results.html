@@ -60,9 +60,9 @@
         </ul>
         {% if results.assignments|length > 3 %}
         <div class="rvo-layout-row">
-          <button type="button" class="rvo-link" onclick="toggleAssignments()" id="assignments-toggle">
+          <a href="#" class="rvo-link" onclick="toggleAssignments(); return false;" id="assignments-toggle">
             Toon alle resultaten
-          </button>
+          </a>
         </div>
         {% endif %}
       </div>
@@ -94,7 +94,7 @@
               </div>
               <div class="rvo-layout-row rvo-layout-gap--xs rvo-align--center">
                 {% for skill in colleague.skills.all|slice:":2" %}
-                  <span class="rvo-tag rvo-tag--xs">{{ skill.name }}</span>
+                  <div class="rvo-tag rvo-tag--default rvo-tag--xs">{{ skill.name }}</div>
                 {% endfor %}
                 {% if colleague.skills.all|length > 2 %}
                   <span class="rvo-text--xs rvo-text--subtle">+{{ colleague.skills.all|length|add:"-2" }}</span>
@@ -106,9 +106,9 @@
         </ul>
         {% if results.colleagues|length > 3 %}
         <div class="rvo-layout-row">
-          <button type="button" class="rvo-link" onclick="toggleColleagues()" id="colleagues-toggle">
+          <a href="#" class="rvo-link" onclick="toggleColleagues(); return false;" id="colleagues-toggle">
             Toon alle resultaten
-          </button>
+          </a>
         </div>
         {% endif %}
       </div>
@@ -146,9 +146,9 @@
         </ul>
         {% if results.ministries|length > 3 %}
         <div class="rvo-layout-row">
-          <button type="button" class="rvo-link" onclick="toggleMinistries()" id="ministries-toggle">
+          <a href="#" class="rvo-link" onclick="toggleMinistries(); return false;" id="ministries-toggle">
             Toon alle resultaten
-          </button>
+          </a>
         </div>
         {% endif %}
       </div>
