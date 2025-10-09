@@ -1182,18 +1182,52 @@ def clients(request):
     
     search_query = request.GET.get('search', '')
     
-    clients = Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').exclude(organization__isnull=True)
+    # Get assignments with organization and ministry info
+    assignments_qs = Assignment.objects.select_related('ministry').exclude(organization='').exclude(organization__isnull=True)
     
     if search_query:
-        clients = clients.filter(organization__icontains=search_query)
+        assignments_qs = assignments_qs.filter(
+            models.Q(organization__icontains=search_query) |
+            models.Q(ministry__name__icontains=search_query)
+        )
     
-    clients = clients.order_by('organization')
+    # Group by ministry and organization
+    grouped_clients = {}
+    
+    for assignment in assignments_qs:
+        ministry_name = assignment.ministry.name if assignment.ministry else 'Onbekend ministerie'
+        org_name = assignment.organization
+        
+        if ministry_name not in grouped_clients:
+            grouped_clients[ministry_name] = {
+                'organizations': {},
+                'total_count': 0
+            }
+        
+        if org_name not in grouped_clients[ministry_name]['organizations']:
+            grouped_clients[ministry_name]['organizations'][org_name] = {
+                'name': org_name,
+                'count': 0
+            }
+        
+        grouped_clients[ministry_name]['organizations'][org_name]['count'] += 1
+        grouped_clients[ministry_name]['total_count'] += 1
+    
+    # Convert organizations dict to list and sort
+    for ministry_data in grouped_clients.values():
+        ministry_data['organizations'] = sorted(
+            ministry_data['organizations'].values(),
+            key=lambda x: x['name']
+        )
+    
+    # Sort ministries
+    grouped_clients = dict(sorted(grouped_clients.items()))
     
     total_budget = get_total_budget()
     formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
     
     context = {
-        'clients': clients,
+        'grouped_clients': grouped_clients,
         'consultants_working': get_consultants_working(),
         'total_clients_count': get_total_clients_count(),
         'total_budget': total_budget,

@@ -8,7 +8,7 @@ Usage:
 <link rel="stylesheet" href="{% static 'css/filter.css' %}">
 
 <!-- Generic Compact Filters Section -->
-<div class="rvo-filter-section">
+<div class="wies-filter-section">
   <form class="rvo-form" hx-get="{% url url_name %}" hx-target="{{ target_selector|default:'#content' }}" hx-push-url="true" hx-trigger="change,input delay:500ms from:input">
     {% if tab_param %}
       <input type="hidden" name="tab" value="{{ tab_param }}">
@@ -22,7 +22,7 @@ Usage:
     {% endfor %}
     
     <!-- Compact filter bar -->
-    <div class="rvo-compact-filter-bar">
+    <div class="wies-compact-filter-bar">
       
       {% if primary_filter %}
       <!-- Primary Filter (first) -->
@@ -47,7 +47,7 @@ Usage:
 
       <!-- Search Field -->
       <div role="group" aria-labelledby="search-field-label" class="utrecht-form-field utrecht-form-field--text">
-        <span class="utrecht-icon rvo-icon rvo-icon-zoek rvo-icon--lg rvo-search-icon" 
+        <span class="utrecht-icon rvo-icon rvo-icon-zoek rvo-icon--lg wies-search-icon" 
               role="img" aria-label="Zoeken"></span>
         <input 
           id="search" 

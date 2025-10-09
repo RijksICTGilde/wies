@@ -109,48 +109,6 @@
   opacity: 1;
 }
 
-/* Status color variants for rvo-tag elements */
-.rvo-tag.status-lead {
-  background-color: var(--rvo-color-donkergeel-150) !important;
-  color: var(--rvo-color-logoblauw) !important;
-}
-
-.rvo-tag.status-open {
-  background-color: var(--rvo-color-hemelblauw-150) !important;
-  color: var(--rvo-color-logoblauw) !important;
-}
-
-.rvo-tag.status-lopend {
-  background-color: var(--rvo-color-groen-150) !important;
-  color: var(--rvo-color-logoblauw) !important;
-}
-
-.rvo-tag.status-afgewezen {
-  background-color: var(--rvo-color-rood-150) !important;
-  color: var(--rvo-color-logoblauw) !important;
-}
-
-.rvo-tag.status-historisch {
-  background-color: var(--rvo-color-grijs-200) !important;
-  color: var(--rvo-color-logoblauw) !important;
-}
-
-.rvo-tag.status-beschikbaar {
-  background-color: var(--rvo-color-groen-150) !important;
-  color: var(--rvo-color-logoblauw) !important;
-}
-
-.rvo-tag.status-ingezet {
-  background-color: var(--rvo-color-oranje-150) !important;
-  color: var(--rvo-color-logoblauw) !important;
-}
-
-
-/* Tag spacing for multiple tags */
-.rvo-tag {
-  margin-right: 0.25rem;
-  margin-bottom: 0.25rem;
-}
 
 /* Unused colleague classes removed - using placement-avatar instead */
 
@@ -203,7 +161,7 @@
 
 
 /* Ensure the results container takes full width */
-.rvo-results {
+.wies-results {
   width: 100%;
   max-width: none;
 }
@@ -215,32 +173,11 @@
 
 
 
-/* Minimal RVO tag color overrides */
-.rvo-tag {
-  background-color: var(--rvo-color-grijs-200) !important;
-  color: var(--rvo-color-logoblauw) !important;
-}
-
-.rvo-tag--expertise {
-  background-color: var(--rvo-color-hemelblauw-150) !important;
-  color: var(--rvo-color-logoblauw) !important;
-}
 
 
 
-/* Fix RVO select chevron */
-.rvo-select-wrapper::after {
-  background-color: white !important;
-  -webkit-mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
-  mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
-}
 
 
-/* Sub-menu navigation styling */
-.rvo-link--active {
-  font-weight: 600;
-  text-decoration: underline !important;
-}
 
 /* Sub-menu background styling */
 .rvo-tmp-submenu-wrapper .rvo-menubar__background {
@@ -265,6 +202,13 @@
 
 .rvo-form {
   margin-bottom: 0;
+}
+
+/* Custom select chevron fix */
+.rvo-select-wrapper::after {
+  background-color: white;
+  -webkit-mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
+  mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
 }
 
 /* Page header styling */

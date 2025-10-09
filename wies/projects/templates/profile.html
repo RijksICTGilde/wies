@@ -33,10 +33,10 @@
               <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout--wrap">
                 {% if colleague %}
                   {% for skill in colleague.skills.all|slice:":5" %}
-                    <span class="rvo-tag rvo-tag--info">{{ skill.name }}</span>
+                    <div class="rvo-tag rvo-tag--default">{{ skill.name }}</div>
                   {% endfor %}
                   {% if colleague.skills.count > 5 %}
-                    <span class="rvo-tag rvo-tag--subtle">+{{ colleague.skills.count|add:"-5" }} meer</span>
+                    <div class="rvo-tag rvo-tag--info">+{{ colleague.skills.count|add:"-5" }} meer</div>
                   {% endif %}
                 {% else %}
                   <span class="rvo-text--subtle rvo-text--sm">Nog geen vaardigheden toegevoegd</span>
@@ -65,7 +65,7 @@
                       <div class="rvo-layout-column rvo-layout-gap--2xs">
                         <div class="rvo-layout-row rvo-layout-gap--xs">
                           {% if placement.service.assignment.status == 'INGEVULD' %}
-                            <span class="rvo-tag rvo-tag--warning">Actief</span>
+                            <div class="rvo-tag rvo-tag--warning">Actief</div>
                           {% else %}
                             <span class="utrecht-icon rvo-icon rvo-icon-vinkje rvo-icon--sm rvo-icon--hemelblauw" role="img" aria-label="Afgerond"></span>
                           {% endif %}
