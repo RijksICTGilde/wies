@@ -1,9 +1,13 @@
 import datetime
 
+from ..querysets import annotate_placement_dates, filter_by_date_overlap
+
 
 def filter_placements_by_period(queryset, period):
     """
-    Filter placement queryset by period range for overlapping periods
+    Filter placement queryset by period range for overlapping periods.
+
+    This function uses database-level annotations and filtering for optimal performance.
 
     Args:
         queryset: Placement queryset to filter
@@ -24,27 +28,12 @@ def filter_placements_by_period(queryset, period):
         period_from = datetime.datetime.strptime(period_from_str, '%Y-%m-%d').date()
         period_to = datetime.datetime.strptime(period_to_str, '%Y-%m-%d').date()
 
-        # We need to filter placements where their period overlaps with the filter period
-        # A placement overlaps if: placement_start <= filter_end AND placement_end >= filter_start
+        # Annotate with actual dates at database level
+        queryset = annotate_placement_dates(queryset)
 
-        placement_ids = []
-        for placement in queryset:
-            placement_start = placement.start_date
-            placement_end = placement.end_date
+        # Filter for overlapping periods at database level
+        return filter_by_date_overlap(queryset, period_from, period_to)
 
-            if placement_start and placement_end:
-                # Check for overlap
-                overlaps = True
-
-                if placement_start > period_to:
-                    overlaps = False
-                if placement_end < period_from:
-                    overlaps = False
-
-                if overlaps:
-                    placement_ids.append(placement.id)
-
-        return queryset.filter(id__in=placement_ids)
     except ValueError:
         # Invalid date format, ignore filter
         return queryset

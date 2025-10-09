@@ -30,6 +30,10 @@
   margin-bottom: 0;
 }
 
+.rvo-filter-section .rvo-form {
+  width: 100%;
+}
+
 .wies-results {
   width: 100%;
   max-width: none;
@@ -61,26 +65,34 @@
 .wies-compact-filter-bar {
   display: flex;
   gap: 0.75rem;
-  align-items: center;
+  align-items: stretch;
   margin-bottom: 1rem;
+  width: 100%;
 }
 
-.wies-compact-filter-bar .utrecht-form-field:first-child {
-  min-width: 160px;
+/* Primary filter (when present) - fixed width */
+.wies-compact-filter-bar > .utrecht-form-field:first-child:has(select) {
+  flex: 0 0 200px;
+  min-width: 200px;
   max-width: 200px;
 }
 
-.wies-compact-filter-bar .utrecht-form-field:nth-child(2) {
-  flex: 1;
+/* Search field - wider but not full width */
+.wies-compact-filter-bar > .utrecht-form-field:has(input[type="text"]) {
+  flex: 1 1 500px;
   min-width: 300px;
+  max-width: 600px;
   position: relative;
 }
 
-/* When there's no primary filter, the search field is first and should expand */
-.wies-compact-filter-bar .utrecht-form-field:first-child:not(:last-child) {
-  flex: 1;
-  min-width: 300px;
-  position: relative;
+/* Filter button container - fixed width */
+.wies-compact-filter-bar > .filter-button-container {
+  flex: 0 0 auto;
+}
+
+/* Primary action container - fixed width */
+.wies-compact-filter-bar > div:last-child {
+  flex: 0 0 auto;
 }
 
 .wies-compact-filter-bar .utrecht-select,

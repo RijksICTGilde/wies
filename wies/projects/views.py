@@ -7,7 +7,7 @@ from django.template.defaulttags import register
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy, reverse
 from django.db import models
-from django.db.models import Q, Count
+from django.db.models import Q, Count, Prefetch
 from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
@@ -450,23 +450,35 @@ class AssignmentTabsView(ListView):
 class ColleagueList(ListView):
     """
     View for colleagues list with filtering capabilities
-    
+
     Features:
     - Search by name
     - Filter by skills and brands
     - HTMX support for smooth interactions
+    - Infinite scroll pagination (50 per page)
     """
     template_name = 'colleague_list.html'
     model = Colleague
-    
+    paginate_by = 50
+
     def get_queryset(self):
         """Apply filters to colleagues queryset"""
-        qs = Colleague.objects.select_related('brand').prefetch_related('skills', 'expertises').order_by('name')
-        
+        from .querysets import annotate_colleague_max_end_date
+        from django.db.models import F
+
+        # Annotate with max current end_date for sorting
+        qs = annotate_colleague_max_end_date(
+            Colleague.objects.select_related('brand').prefetch_related('skills', 'expertises')
+        )
+
+        # Default ordering: by availability (soonest first), then by name
+        # Colleagues without placements (NULL max_current_end_date) come first
+        qs = qs.order_by(F('max_current_end_date').asc(nulls_first=True), 'name')
+
         name_filter = self.request.GET.get('name')
         if name_filter:
             qs = qs.filter(name__icontains=name_filter)
-        
+
         ordering = self.request.GET.get('order')
         if ordering:
             qs = qs.order_by(ordering)
@@ -476,22 +488,21 @@ class ColleagueList(ListView):
             'brand': 'brand__id',
             'expertise': 'expertises__id'
         }
-        
+
         for param, lookup in filters.items():
             value = self.request.GET.get(param)
             if value:
                 qs = qs.filter(**{lookup: value})
-        
+
         status_filter = self.request.GET.get('status')
         if status_filter:
-            placed_colleague_ids = set()
-            for colleague in qs.all():
-                if colleague.end_date:
-                    placed_colleague_ids.add(colleague.id)
+            # Use the annotation to filter by status
             if status_filter == 'beschikbaar':
-                qs = qs.exclude(id__in=placed_colleague_ids)
+                # Available: no current placements (NULL max_current_end_date)
+                qs = qs.filter(max_current_end_date__isnull=True)
             elif status_filter == 'ingezet':
-                qs = qs.filter(id__in=placed_colleague_ids)
+                # Placed: has current placements (NOT NULL max_current_end_date)
+                qs = qs.filter(max_current_end_date__isnull=False)
 
         return qs.distinct()
     
@@ -499,30 +510,24 @@ class ColleagueList(ListView):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
 
-        # Sort ingezet colleagues by availability date (sooner first)
-        colleagues = list(context['object_list'])
-        # Sort by end_date, with None values first
-        colleagues.sort(key=lambda c: c.end_date or datetime.date.min)
-        context['object_list'] = colleagues
-
         context['skills'] = Skill.objects.order_by('name')
         context['brands'] = Brand.objects.order_by('name')
         context['expertises'] = Expertise.objects.order_by('name')
-        
-        context['primary_filter'] = {
-            'name': 'brand',
-            'id': 'brand-filter',
-            'placeholder': 'Alle merken',
-            'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
-        }
-        
+
         context['search_field'] = 'name'
         context['search_placeholder'] = 'Zoek op naam...'
-        
-        modal_filter_params = ['skill', 'expertise', 'status']
+
+        modal_filter_params = ['brand', 'skill', 'expertise', 'status']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
-        
+
         context['filter_groups'] = [
+            {
+                'type': 'select',
+                'name': 'brand',
+                'label': 'Merk',
+                'placeholder': 'Alle merken',
+                'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
+            },
             {
                 'type': 'select',
                 'name': 'skill',
@@ -548,12 +553,28 @@ class ColleagueList(ListView):
                 ]
             }
         ]
-        
+
+        # Build next page URL with all current filters
+        if context.get('page_obj') and context['page_obj'].has_next():
+            filter_params = []
+            for key, value in self.request.GET.items():
+                if key != 'page':  # Exclude page param
+                    filter_params.append(f'{key}={value}')
+            params_str = '&'.join(filter_params)
+            next_page = context['page_obj'].next_page_number()
+            context['next_page_url'] = f'?page={next_page}' + (f'&{params_str}' if params_str else '')
+        else:
+            context['next_page_url'] = None
+
         return context
-    
+
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if 'HX-Request' in self.request.headers:
+            # If paginating, return only rows
+            if self.request.GET.get('page'):
+                return ['parts/colleague_table_rows.html']
+            # Otherwise, return full table (for filter changes)
             return ['parts/colleague_table.html']
         else:
             return ['colleague_list.html']
@@ -574,9 +595,10 @@ def add_timedelta(source_date, timedelta):
 
 
 class PlacementTableView(ListView):
-    """View for placements table view"""
+    """View for placements table view with infinite scroll pagination"""
     model = Placement
     template_name = 'placement_table.html'
+    paginate_by = 50
 
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
@@ -623,6 +645,10 @@ class PlacementTableView(ListView):
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if 'HX-Request' in self.request.headers:
+            # If paginating, return only rows
+            if self.request.GET.get('page'):
+                return ['parts/placement_table_rows.html']
+            # Otherwise, return full table (for filter changes)
             return ['parts/placement_table.html']
         return ['placement_table.html']
 
@@ -638,20 +664,20 @@ class PlacementTableView(ListView):
         ]
         context['ministries'] = Ministry.objects.order_by('name')
 
-        context['primary_filter'] = {
-            'name': 'brand',
-            'id': 'brand-filter',
-            'placeholder': 'Alle merken',
-            'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
-        }
-
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
 
-        modal_filter_params = ['skill', 'client', 'ministry', 'period']
+        modal_filter_params = ['brand', 'skill', 'client', 'ministry', 'period']
         context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
 
         context['filter_groups'] = [
+            {
+                'type': 'select',
+                'name': 'brand',
+                'label': 'Merk',
+                'placeholder': 'Alle merken',
+                'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
+            },
             {
                 'type': 'select',
                 'name': 'skill',
@@ -682,6 +708,18 @@ class PlacementTableView(ListView):
                 'require_both': True
             },
         ]
+
+        # Build next page URL with all current filters
+        if context.get('page_obj') and context['page_obj'].has_next():
+            filter_params = []
+            for key, value in self.request.GET.items():
+                if key != 'page':  # Exclude page param
+                    filter_params.append(f'{key}={value}')
+            params_str = '&'.join(filter_params)
+            next_page = context['page_obj'].next_page_number()
+            context['next_page_url'] = f'?page={next_page}' + (f'&{params_str}' if params_str else '')
+        else:
+            context['next_page_url'] = None
 
         return context
 
@@ -1036,6 +1074,13 @@ class ColleagueDetail(DetailView):
     model = Colleague
     template_name = 'colleague_detail.html'
 
+    def get_queryset(self):
+        return Colleague.objects.prefetch_related(
+            Prefetch('placements', queryset=Placement.objects.select_related(
+                'service__assignment'
+            ))
+        )
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         assignment_list = [
@@ -1240,9 +1285,15 @@ def clients(request):
     return render(request, 'client_list.html', context)
 
 def client(request, name):
-    assignments = Assignment.objects.filter(organization=name)
+    assignments = Assignment.objects.filter(
+        organization=name
+    ).prefetch_related(
+        Prefetch('services', queryset=Service.objects.prefetch_related(
+            Prefetch('placements', queryset=Placement.objects.select_related('colleague'))
+        ))
+    )
     assignments_data = []
-    
+
     for assignment in assignments:
         colleagues = [
             {'id': placement.colleague.pk, 'name': placement.colleague.name}
@@ -1250,7 +1301,7 @@ def client(request, name):
             for placement in service.placements.all()
             if placement.colleague
         ]
-        
+
         assignments_data.append({
             'id': assignment.pk,
             'name': assignment.name,
@@ -1346,8 +1397,14 @@ class MinistryDetailView(DetailView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        assignments = Assignment.objects.filter(ministry=self.object)
-        
+        assignments = Assignment.objects.filter(
+            ministry=self.object
+        ).prefetch_related(
+            Prefetch('services', queryset=Service.objects.prefetch_related(
+                Prefetch('placements', queryset=Placement.objects.select_related('colleague'))
+            ))
+        )
+
         assignments_data = []
         for assignment in assignments:
             colleagues = [
@@ -1356,7 +1413,7 @@ class MinistryDetailView(DetailView):
                 for placement in service.placements.all()
                 if placement.colleague
             ]
-            
+
             assignments_data.append({
                 'id': assignment.pk,
                 'name': assignment.name,
@@ -1366,7 +1423,7 @@ class MinistryDetailView(DetailView):
                 'colleagues': colleagues,
                 'status': assignment.status,
             })
-        
+
         context['assignments'] = assignments_data
         return context
 

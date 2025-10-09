@@ -20,7 +20,10 @@ This files lists the changes during the lifetime of this project.
 - update clients page
 - update page names
 - clean up css
-
+- improve query performance
+- introduce pagination on placements and colleagues
+- remove dashboard page
+- move brand filter inside modal
 
 ## 2025-09-19
 - update dependencies to latest, including django security release

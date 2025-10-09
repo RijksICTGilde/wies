@@ -9,70 +9,15 @@
       </tr>
     </thead>
     <tbody>
-      {% for placement in object_list %}
-        <tr class="rvo-table-row clickable-row" onclick="{% if placement.colleague %}window.location.href='{% url 'colleague-detail' placement.colleague.id %}'{% endif %}">
-          <td class="rvo-table-cell">
-            <div class="placement-avatar-container">
-              <div class="placement-avatar">
-                {% if placement.colleague %}
-                  {{ placement.colleague.name|first|upper }}
-                {% else %}
-                  ?
-                {% endif %}
-              </div>
-              <div class="placement-info">
-                <div class="rvo-text rvo-text--bold">
-                  {% if placement.colleague %}
-                    {{ placement.colleague.name }}
-                  {% else %}
-                    Niet toegewezen
-                  {% endif %}
-                </div>
-                <div class="rvo-text rvo-text--sm rvo-text--subtle">
-                  {% if placement.colleague.brand %}
-                    {{ placement.colleague.brand.name }}
-                  {% else %}
-                    -
-                  {% endif %}
-                </div>
-              </div>
-            </div>
-          </td>
-          <td class="rvo-table-cell">
-            <div class="placement-assignment">
-              <a href="{% url 'assignment-detail' placement.service.assignment.id %}" 
-                 class="rvo-link rvo-text--bold"
-                 onclick="event.stopPropagation()">
-                {{ placement.service.assignment.name }}
-              </a>
-              <div class="rvo-text--sm rvo-text--subtle">
-                {{ placement.service.assignment.organization }}
-              </div>
-            </div>
-          </td>
-          <td class="rvo-table-cell">
-            {% if placement.service.skill %}
-              <div class="rvo-tag rvo-tag--default">{{ placement.service.skill.name }}</div>
-            {% else %}
-              <span class="rvo-text--italic rvo-text--subtle">
-                Geen rol
-              </span>
-            {% endif %}
-          </td>
-
-          <td class="rvo-table-cell">
-            <span class="rvo-text">
-              {{ placement.start_date|date:"M y" }} - {{ placement.end_date|date:"M y" }}
-            </span>
-          </td>
-        </tr>
-      {% empty %}
+      {% if object_list %}
+        {% include 'parts/placement_table_rows.html' %}
+      {% else %}
         <tr class="rvo-table-row">
           <td class="rvo-table-cell" colspan="4">
             <span class="rvo-text--italic">Geen inzetten gevonden.</span>
           </td>
         </tr>
-      {% endfor %}
+      {% endif %}
     </tbody>
   </table>
 </div>
