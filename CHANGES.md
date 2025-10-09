@@ -2,6 +2,8 @@
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
+
+## 2025-10-09
 - add period filter to placement page
 - add end date of current placement to colleague list
 - add availability sorting to colleague list
@@ -27,7 +29,6 @@ This files lists the changes during the lifetime of this project.
 - upgrade rvo token and components to latest
 - change tag styling
 - introduce "VACATURE" entries in dummy data
-
 
 ## 2025-09-19
 - update dependencies to latest, including django security release
