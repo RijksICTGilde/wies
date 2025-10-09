@@ -71,7 +71,7 @@ def auth(request):
     )
     if user:
         auth_login(request, user)
-        return redirect(request.build_absolute_uri(reverse("dashboard")))
+        return redirect(request.build_absolute_uri(reverse("home")))
     return HttpResponse(status=400)
 
 
@@ -386,7 +386,7 @@ class AssignmentTabsView(ListView):
 
         tab_groups = {
             'leads': {
-                'title': 'Leads & open',
+                'title': 'Leads & vacatures',
                 'queryset': base_qs.filter(status__in=['LEAD', 'VACATURE'])
             },
             'current': {

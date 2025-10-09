@@ -45,7 +45,7 @@
           {% endif %}
         </td>
         <td class="rvo-table-cell">
-          <div class="rvo-tag {% if assignment.status == 'LEAD' %}rvo-tag--warning{% elif assignment.status == 'OPEN' %}rvo-tag--info{% elif assignment.status == 'LOPEND' %}rvo-tag--success{% elif assignment.status == 'AFGEWEZEN' %}rvo-tag--error{% else %}rvo-tag--default{% endif %}">{{ assignment.status }}</div>
+          <div class="rvo-tag {% if assignment.status == 'LEAD' %}wies-tag--light-yellow{% elif assignment.status == 'OPEN' %}rvo-tag--info{% elif assignment.status == 'LOPEND' %}rvo-tag--success{% elif assignment.status == 'AFGEWEZEN' %}rvo-tag--error{% else %}rvo-tag--default{% endif %}">{{ assignment.status }}</div>
         </td>
         <td class="rvo-table-cell">
           <span class="assignment-period">

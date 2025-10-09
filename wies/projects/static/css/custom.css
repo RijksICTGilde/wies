@@ -224,4 +224,19 @@
   margin: 0;
 }
 
+.wies-tag--light-green{
+  --utrecht-icon-color: var(--rvo-tag-warning-icon-color);
+  --rvo-tag-default-background-color: var(--rvo-color-groen-300);
+  --rvo-tag-default-color: var(--rvo-tag-warning-color);
+}
 
+.wies-tag--light-yellow{
+  --utrecht-icon-color: var(--rvo-tag-warning-icon-color);
+  --rvo-tag-default-background-color: var(--rvo-color-donkergeel-300);
+  --rvo-tag-default-color: var(--rvo-tag-warning-color);
+}
+
+.wies-menu-item--active{
+  font-weight: 600;
+  text-decoration: underline !important;
+}

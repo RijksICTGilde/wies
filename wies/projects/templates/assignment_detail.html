@@ -69,7 +69,7 @@
       </dd>
       <dt>Status</dt>
       <dd>
-        <div class="rvo-tag {% if object.status == 'LEAD' %}rvo-tag--warning{% elif object.status == 'OPEN' %}rvo-tag--info{% elif object.status == 'LOPEND' %}rvo-tag--success{% elif object.status == 'AFGEWEZEN' %}rvo-tag--error{% else %}rvo-tag--default{% endif %}">{{ object.status }}</div>
+        <div class="rvo-tag {% if object.status == 'LEAD' %}wies-tag--light-yellow{% elif object.status == 'OPEN' %}rvo-tag--info{% elif object.status == 'LOPEND' %}rvo-tag--success{% elif object.status == 'AFGEWEZEN' %}rvo-tag--error{% else %}rvo-tag--default{% endif %}">{{ object.status }}</div>
       </dd>
       <dt>Startdatum</dt>
       <dd>{{ object.start_date }}</dd>

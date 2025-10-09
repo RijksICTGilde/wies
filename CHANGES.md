@@ -24,6 +24,8 @@ This files lists the changes during the lifetime of this project.
 - introduce pagination on placements and colleagues
 - remove dashboard page
 - move brand filter inside modal
+- upgrade rvo token and components to latest
+- change tag styling
 
 ## 2025-09-19
 - update dependencies to latest, including django security release

@@ -36,7 +36,7 @@
                     <div class="rvo-tag rvo-tag--default">{{ skill.name }}</div>
                   {% endfor %}
                   {% if colleague.skills.count > 5 %}
-                    <div class="rvo-tag rvo-tag--info">+{{ colleague.skills.count|add:"-5" }} meer</div>
+                    <div class="rvo-tag rvo-tag--default">+{{ colleague.skills.count|add:"-5" }} meer</div>
                   {% endif %}
                 {% else %}
                   <span class="rvo-text--subtle rvo-text--sm">Nog geen vaardigheden toegevoegd</span>
@@ -65,7 +65,7 @@
                       <div class="rvo-layout-column rvo-layout-gap--2xs">
                         <div class="rvo-layout-row rvo-layout-gap--xs">
                           {% if placement.service.assignment.status == 'INGEVULD' %}
-                            <div class="rvo-tag rvo-tag--warning">Actief</div>
+                            <div class="rvo-tag rvo-tag--default">Actief</div>
                           {% else %}
                             <span class="utrecht-icon rvo-icon rvo-icon-vinkje rvo-icon--sm rvo-icon--hemelblauw" role="img" aria-label="Afgerond"></span>
                           {% endif %}
