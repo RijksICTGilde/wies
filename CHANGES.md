@@ -26,6 +26,8 @@ This files lists the changes during the lifetime of this project.
 - move brand filter inside modal
 - upgrade rvo token and components to latest
 - change tag styling
+- introduce "VACATURE" entries in dummy data
+
 
 ## 2025-09-19
 - update dependencies to latest, including django security release
