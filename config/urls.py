@@ -25,7 +25,7 @@ from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpd
 from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView, AvailabilityView
 from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
 from wies.projects.views import MinistryListView, MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
-from wies.projects.views import admin_db, login, logout, auth, ProfileView, add_note, GlobalSearchView
+from wies.projects.views import admin_db, login, logout, auth, ProfileView, add_note, GlobalSearchView, llm_search
 from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIView, ExpertiseDetailAPIView
 
 urlpatterns = [
@@ -72,5 +72,6 @@ urlpatterns = [
     path('api/expertises/', ExpertisesAPIView.as_view(), name='api-expertises'),
     path('api/expertises/<int:expertise_id>/', ExpertiseDetailAPIView.as_view(), name='api-expertise-detail'),
     path('api/services/<int:service_id>/', get_service_details, name='api-service-details'),
+    path('api/llm-search/', llm_search, name='llm-search'),
     path('exact/', include('wies.exact.urls')),
 ]
