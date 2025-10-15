@@ -204,7 +204,7 @@ wheels = [
 [[package]]
 name = "jinja-roos-components"
 version = "0.1.0"
-source = { git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=static-paths#a8cd1d005d4f40609a51ddd79a0b0350c4018bbb" }
+source = { git = "https://github.com/RijksICTGilde/jinja-roos-components.git#36074efa3923e276e751fa717f63c1786eb071ce" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "jinja2" },
@@ -440,7 +440,7 @@ requires-dist = [
     { name = "django-extensions", specifier = "==4.1" },
     { name = "django-multiselectfield", specifier = "==1.0.1" },
     { name = "gunicorn", specifier = "==23.0.0" },
-    { name = "jinja-roos-components", git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=static-paths" },
+    { name = "jinja-roos-components", git = "https://github.com/RijksICTGilde/jinja-roos-components.git" },
     { name = "jinja2", specifier = "==3.1.6" },
     { name = "requests", specifier = "==2.32.5" },
     { name = "whitenoise", specifier = "==6.10.0" },
