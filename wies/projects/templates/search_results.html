@@ -12,14 +12,10 @@
 <div class="rvo-layout-column rvo-layout-gap--lg rvo-margin-block-end--3xl">
   
   <!-- Search Header -->
-  <div class="rvo-layout-column rvo-layout-gap--xs">
+  <div id="search-header" class="rvo-layout-column rvo-layout-gap--xs">
     {% if search_query %}
       <h1 class="utrecht-heading-1">
-        {% if results.total_count > 0 %}
-          Zoekresultaten voor "{{ search_query }}"
-        {% else %}
-          Geen resultaten voor "{{ search_query }}"
-        {% endif %}
+        Zoekresultaten voor "{{ search_query }}"
       </h1>
     {% else %}
       <h1 class="utrecht-heading-1" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;">Zoekresultaten</h1>
@@ -29,13 +25,34 @@
     {% endif %}
   </div>
 
+  <!-- LLM Response Section -->
+  {% if search_query %}
+  <div id="llm-response-container" style="display: none;" class="rvo-layout-column rvo-layout-gap--sm">
+    <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+      <div id="llm-loading-indicator" style="display: none;">
+        <p class="rvo-paragraph rvo-text--subtle">
+          <span class="rvo-icon rvo-icon--delta-omhoog" style="display: inline-block; animation: spin 1s linear infinite;"></span>
+          Antwoord wordt gegenereerd...
+        </p>
+      </div>
+      <div id="llm-response-content" style="display: none;">
+        <!-- LLM response will be inserted here by JavaScript -->
+      </div>
+    </div>
+  </div>
+  {% endif %}
 
+  <!-- Traditional Search Results Section -->
   {% if search_query and results.total_count > 0 %}
-  <!-- Search Results by Section -->
-  <div class="rvo-layout-column rvo-layout-gap--xl">
-    
-    <!-- Assignments Section -->
-    {% if results.assignments %}
+  <div id="traditional-results-section" class="rvo-layout-column rvo-layout-gap--md" style="display: none;">
+    <div class="rvo-layout-column rvo-layout-gap--xs">
+      <h2 class="utrecht-heading-2">Database resultaten</h2>
+      <p class="rvo-paragraph rvo-text--subtle rvo-text--sm">Directe matches uit de database</p>
+    </div>
+
+    <div class="rvo-layout-column rvo-layout-gap--xl">
+      <!-- Assignments Section -->
+      {% if results.assignments %}
     <div class="rvo-layout-grid rvo-layout-gap--lg" style="grid-template-columns: 1fr 3fr;">
       <div>
         <h2 class="utrecht-heading-3">
@@ -154,11 +171,11 @@
       </div>
     </div>
     {% endif %}
-    
+
+    </div>
   </div>
   {% endif %}
 
 </div>
 
-<script src="{% static 'js/search.js' %}"></script>
 {% endblock %}

@@ -140,3 +140,10 @@ AUTHENTICATION_BACKENDS = [
     'wies.projects.auth_backend.AuthBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+# Anthropic API
+ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')
+
+# OTYS API
+OTYS_API_KEY = os.environ.get('OTYS_API_KEY', '')
+OTYS_URL = os.environ.get('OTYS_URL', '')

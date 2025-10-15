@@ -3,6 +3,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 - bump authlib for security patches
+- move env read out to settings
+- introduce LLM powered search, based on anthropic (BYO token)
 
 ## 2025-10-09
 - add period filter to placement page

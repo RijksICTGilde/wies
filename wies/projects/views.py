@@ -16,7 +16,7 @@ from django.contrib.auth import authenticate as auth_authenticate
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_not_required
-from django.core import management
+from django.core import management, exceptions
 from django.conf import settings
 from django.http import HttpResponse
 
@@ -27,6 +27,7 @@ from .services.sync import sync_colleagues_from_exact, sync_colleagues_from_otys
 from .services.statistics import get_consultants_working, get_total_clients_count, get_total_budget
 from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining, get_total_services, get_services_filled, get_average_utilization, get_available_since
 from .services.placements import filter_placements_by_period
+from .services.llm_search import process_search_query
 
 from wies.exact.models import ExactEmployee, ExactProject
 
@@ -1476,25 +1477,50 @@ def add_note(request, assignment_id):
     return redirect(f'/assignments/{assignment_id}/?tab=notes')
 
 
+def llm_search(request):
+
+    """
+    LLM-powered search endpoint that returns JSON responses.
+
+    Accepts search query and returns natural language response.
+    """
+
+    if request.method == 'GET':
+        search_query = request.GET.get('search', '').strip()
+
+        if not search_query:
+            return JsonResponse({
+                'success': False,
+                'response': None,
+                'user_message': 'Geen zoekopdracht opgegeven'
+            })
+
+        # Process query through LLM
+        result = process_search_query(search_query)
+
+        return JsonResponse(result)
+    else:
+        raise exceptions.BadRequest
+
+
 class GlobalSearchView(TemplateView):
     """
     Global search view that searches across all major entities:
     - Assignments
-    - Colleagues 
+    - Colleagues
     - Placements
     - Services
     - Ministries
     - Clients
     """
     template_name = 'search_results.html'
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
+
         search_query = self.request.GET.get('search', '').strip()
         context['search_query'] = search_query
-        
-        
+
         # Initialize empty results
         context['results'] = {
             'assignments': [],
@@ -1502,9 +1528,9 @@ class GlobalSearchView(TemplateView):
             'ministries': [],
             'total_count': 0
         }
-        
+
         if search_query:
-            # Search Assignments
+            # Search Assignments (traditional)
             assignments_qs = Assignment.objects.filter(
                 Q(name__icontains=search_query) |
                 Q(organization__icontains=search_query) |
@@ -1512,8 +1538,8 @@ class GlobalSearchView(TemplateView):
             ).select_related('ministry')
             assignments_count = assignments_qs.count()
             assignments = assignments_qs
-            
-            # Search Colleagues
+
+            # Search Colleagues (traditional)
             colleagues_qs = Colleague.objects.filter(
                 Q(name__icontains=search_query) |
                 Q(email__icontains=search_query) |
@@ -1522,18 +1548,18 @@ class GlobalSearchView(TemplateView):
             ).distinct().select_related('brand').prefetch_related('skills', 'expertises')
             colleagues_count = colleagues_qs.count()
             colleagues = colleagues_qs
-            
-            # Search Ministries
+
+            # Search Ministries (traditional)
             ministries_qs = Ministry.objects.filter(
                 Q(name__icontains=search_query) |
                 Q(abbreviation__icontains=search_query)
             ).annotate(assignment_count=Count('assignment'))
             ministries_count = ministries_qs.count()
             ministries = ministries_qs
-            
+
             # Calculate total count
             total_count = assignments_count + colleagues_count + ministries_count
-            
+
             # Update context with results
             context['results'] = {
                 'assignments': assignments,
@@ -1541,5 +1567,5 @@ class GlobalSearchView(TemplateView):
                 'ministries': ministries,
                 'total_count': total_count
             }
-        
+
         return context

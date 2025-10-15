@@ -1,6 +1,5 @@
-import os
-
 from django.db import transaction
+from django.conf import settings
 from wies.exact.models import ExactEmployee
 from wies.projects.models import Colleague, Brand
 
@@ -41,8 +40,11 @@ def sync_colleagues_from_exact():
 def sync_colleagues_from_otys_iir():
     # TODO: removal from OTYS is not handled, they stay in wies. is that desired?
 
-    OTYS_API_KEY = os.environ['OTYS_API_KEY']
-    OTYS_URL = os.environ['OTYS_URL']
+    OTYS_API_KEY = settings.OTYS_API_KEY
+    OTYS_URL = settings.OTYS_URL
+
+    if not OTYS_API_KEY or not OTYS_URL:
+        raise EnvironmentError('OTYS_API_KEY and OTYS_URL environment variables must be set')
 
     with OTYSAPI(OTYS_API_KEY) as otys_api:
         otys_colleagues = otys_api.get_candidate_list()['listOutput']  # TODO: apply filter to not transfer all information
