@@ -1,0 +1,27 @@
+# ervaringen
+Ervaring met jinja-roos-componenten
+
+algemeen
+- autocomplete geeft veel extra attributen van generieke html elementen
+- bijv c-button heeft "title" wat niet werkt
+- voor bestaande django project met django templating, moet je eerst alles omschrijven naar jinja templating. oa:
+	- static -> function
+	- include with -> {% with ... %}
+	- default calling
+	- comment
+	- url -> function
+	- undefined values raising errors
+- er mist een table component
+
+- c-button: 
+	- je kan text via "label" invoegen en als child. is dat handig/wenselijk? of moet er 1 manier zijn?
+	- wij gebruikten een "a" op de achtegrond (link als button), dat heeft c-button niet als optie. dit betekent dat we 'click' moeten gebruiken met JS, is dat erg?
+	- er zijn verschillende namen voor argumenten. "onclick" (html button), "onClick" (react, mind capitalization), "@click" (jrc). 
+
+-> misschien is het logisch om het pad vanaf html logisch te maken? meestal niet van react -> SSR.
+
+c-select
+	- ik probeerde eerst zoals HTML te doen (met child element), maar dat werkte niet. zou misschien mooi zijn als dat ook kan? net zoals c-button
+	- gekke ":" syntax, waarom is dit?
+	- select vs select-field: wat zijn de verschillen? volgens mij form-field use? label er wel/niet bij?
+
