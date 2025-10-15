@@ -6,7 +6,6 @@ This files lists the changes during the lifetime of this project.
 - move env read out to settings
 - introduce LLM powered search, based on anthropic (BYO token)
 
-
 ## 2025-10-09
 - add period filter to placement page
 - add end date of current placement to colleague list
