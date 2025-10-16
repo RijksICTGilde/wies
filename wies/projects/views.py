@@ -24,7 +24,7 @@ from django.http import HttpResponse
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise, Note
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 from .services.sync import sync_colleagues_from_exact, sync_colleagues_from_otys_iir
-from .services.statistics import get_consultants_working, get_total_clients_count, get_total_budget
+from .services.statistics import get_consultants_working, get_total_clients_count
 from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining, get_total_services, get_services_filled, get_average_utilization, get_available_since
 from .services.placements import filter_placements_by_period
 
@@ -82,12 +82,9 @@ def logout(request):
 
 def dashboard(request):
     """Dashboard view - uses statistics functions for data calculations"""
-    
+
     # Get active tab from request
     active_tab = request.GET.get('tab', 'ending_soon')
-    
-    total_budget = get_total_budget()
-    formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
 
     # Get consultants on bench with availability info
     consultants_bench = get_consultants_on_bench()
@@ -98,8 +95,6 @@ def dashboard(request):
     context = {
         'consultants_working': get_consultants_working(),
         'total_clients_count': get_total_clients_count(),
-        'total_budget': total_budget,
-        'formatted_budget': formatted_budget,
         'total_services': get_total_services(),
         'services_filled': get_services_filled(),
         'average_utilization': get_average_utilization(),
@@ -112,41 +107,24 @@ def dashboard(request):
     # If HTMX request, return the dashboard tabs section
     if 'HX-Request' in request.headers:
         return render(request, 'parts/dashboard_tabs_section.html', context)
-    
+
     return render(request, 'dashboard.html', context)
 
 
 def get_service_details(request, service_id):
     """
     AJAX endpoint to get service details for placement form
-    
+
     Returns JSON with service details including:
-    - description, dates, cost calculation, and skill
+    - description, dates, and skill
     """
     try:
         service = Service.objects.get(id=service_id)
-        
-        # Calculate total cost
-        total_cost = service.get_total_cost()
-        weeks = service.get_weeks()
-        
-        if service.cost_type == "FIXED_PRICE" and service.fixed_cost:
-            cost_display = f"€{service.fixed_cost:,.2f}".replace(',', '.')
-            cost_calculation = None
-        elif total_cost and weeks and service.hours_per_week:
-            cost_display = f"€{total_cost:,.2f}".replace(',', '.')
-            cost_calculation = f"{weeks} weken × {service.hours_per_week} uur × €100"
-        else:
-            cost_display = "Niet beschikbaar"
-            cost_calculation = None
-        
+
         data = {
             'description': service.description,
             'start_date': service.start_date.strftime('%d-%m-%Y') if service.start_date else '',
             'end_date': service.end_date.strftime('%d-%m-%Y') if service.end_date else '',
-            'cost': cost_display,
-            'cost_calculation': cost_calculation,
-            'cost_type': service.cost_type,
             'skill': service.skill.name if service.skill else 'Geen rol opgegeven'
         }
         return JsonResponse(data)
@@ -993,33 +971,27 @@ class AssignmentCreateView(CreateView):
 class AssignmentDetail(DetailView):
     model = Assignment
     template_name = 'assignment_detail.html'
-    
+
     def get_context_data(self, **kwargs):
         """Assignment detail view - uses statistics functions for calculations"""
-        
+
         context = super().get_context_data(**kwargs)
         assignment = self.get_object()
-        
-        total_budget = assignment.get_total_services_cost()
-        formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
 
         assignment_data = {
             'weeks_remaining': get_weeks_remaining(assignment),
-            'total_budget': total_budget,
-            'formatted_budget': formatted_budget,
-            'budget_percentage': 85,  # Placeholder percentage,
             'project_score': 8.5,  # This could be calculated based on deadlines, budget, etc.,
-        } 
+        }
 
         context.update(assignment_data)
-        
+
         # Get the active tab from request, default to 'diensten'
         active_tab = self.request.GET.get('tab', 'services')
         context['active_tab'] = active_tab
-        
+
         # Add notes to context
         context['notes'] = assignment.notes.all()
-        
+
         # Define tab groups for navigation
         tab_groups = {
             'services': {
@@ -1032,7 +1004,7 @@ class AssignmentDetail(DetailView):
             }
         }
         context['tab_groups'] = tab_groups
-        
+
         return context
 
 class AssignmentDeleteView(DeleteView):
@@ -1224,64 +1196,59 @@ class ServiceDetailView(DetailView):
 
 def clients(request):
     """Clients view - uses statistics functions for statistics"""
-    
+
     search_query = request.GET.get('search', '')
-    
+
     # Get assignments with organization and ministry info
     assignments_qs = Assignment.objects.select_related('ministry').exclude(organization='').exclude(organization__isnull=True)
-    
+
     if search_query:
         assignments_qs = assignments_qs.filter(
             models.Q(organization__icontains=search_query) |
             models.Q(ministry__name__icontains=search_query)
         )
-    
+
     # Group by ministry and organization
     grouped_clients = {}
-    
+
     for assignment in assignments_qs:
         ministry_name = assignment.ministry.name if assignment.ministry else 'Onbekend ministerie'
         org_name = assignment.organization
-        
+
         if ministry_name not in grouped_clients:
             grouped_clients[ministry_name] = {
                 'organizations': {},
                 'total_count': 0
             }
-        
+
         if org_name not in grouped_clients[ministry_name]['organizations']:
             grouped_clients[ministry_name]['organizations'][org_name] = {
                 'name': org_name,
                 'count': 0
             }
-        
+
         grouped_clients[ministry_name]['organizations'][org_name]['count'] += 1
         grouped_clients[ministry_name]['total_count'] += 1
-    
+
     # Convert organizations dict to list and sort
     for ministry_data in grouped_clients.values():
         ministry_data['organizations'] = sorted(
             ministry_data['organizations'].values(),
             key=lambda x: x['name']
         )
-    
+
     # Sort ministries
     grouped_clients = dict(sorted(grouped_clients.items()))
-    
-    total_budget = get_total_budget()
-    formatted_budget = f"{int(total_budget):,}".replace(',', '.') if total_budget else "0"
-    
+
     context = {
         'grouped_clients': grouped_clients,
         'consultants_working': get_consultants_working(),
         'total_clients_count': get_total_clients_count(),
-        'total_budget': total_budget,
-        'formatted_budget': formatted_budget,
     }
-    
+
     if 'HX-Request' in request.headers:
         return render(request, 'parts/clients_table.html', context)
-    
+
     return render(request, 'client_list.html', context)
 
 def client(request, name):

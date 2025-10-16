@@ -1175,7 +1175,6 @@
       "assignment": 1,
       "description": "Backend ontwikkeling en projectleiding",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1187,7 +1186,6 @@
       "assignment": 2,
       "description": "Data engineering en projectleiding",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -1199,7 +1197,6 @@
       "assignment": 3,
       "description": "Juridische AI expertise",
       "skill": 6,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -1211,7 +1208,6 @@
       "assignment": 4,
       "description": "Frontend ontwikkeling en projectleiding",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1223,8 +1219,6 @@
       "assignment": 5,
       "description": "Blockchain onderzoek",
       "skill": 7,
-      "cost_type": "FIXED_PRICE",
-      "fixed_cost": 15000.0,
       "period_source": "ASSIGNMENT"
     }
   },
@@ -1235,7 +1229,6 @@
       "assignment": 6,
       "description": "Backend en AI ontwikkeling",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1247,7 +1240,6 @@
       "assignment": 7,
       "description": "Frontend en UX voor dashboard",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1259,7 +1251,6 @@
       "assignment": 8,
       "description": "Onderzoek en backend ontwikkeling",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -1271,7 +1262,6 @@
       "assignment": 9,
       "description": "Projectleiding logistiek",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1283,7 +1273,6 @@
       "assignment": 10,
       "description": "Frontend ontwikkeling mobile",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1295,7 +1284,6 @@
       "assignment": 10,
       "description": "Backend ontwikkeling mobile",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -1307,7 +1295,6 @@
       "assignment": 11,
       "description": "Data engineering voor zorgdata",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -1319,7 +1306,6 @@
       "assignment": 12,
       "description": "Data engineering voor energie",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1331,7 +1317,6 @@
       "assignment": 12,
       "description": "AI consultancy energie",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -1343,7 +1328,6 @@
       "assignment": 13,
       "description": "Product owner e-learning",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1355,7 +1339,6 @@
       "assignment": 14,
       "description": "UX design en product owner IoT",
       "skill": 4,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1367,7 +1350,6 @@
       "assignment": 15,
       "description": "AI consultancy digital twin",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -1379,7 +1361,6 @@
       "assignment": 16,
       "description": "Onderzoek sociale media",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1391,8 +1372,6 @@
       "assignment": 17,
       "description": "Onderzoek landbouw AI",
       "skill": 7,
-      "cost_type": "FIXED_PRICE",
-      "fixed_cost": 25000.0,
       "period_source": "ASSIGNMENT"
     }
   },
@@ -1403,7 +1382,6 @@
       "assignment": 18,
       "description": "Projectleiding supply chain",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1415,7 +1393,6 @@
       "assignment": 19,
       "description": "Data engineering fraudedetectie",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -1427,7 +1404,6 @@
       "assignment": 20,
       "description": "Projectleiding en data engineering",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1439,7 +1415,6 @@
       "assignment": 20,
       "description": "Frontend ontwikkeling portal",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -1451,7 +1426,6 @@
       "assignment": 20,
       "description": "Product owner klimaatdata",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT"
     }
@@ -1463,7 +1437,6 @@
       "assignment": 21,
       "description": "Programmamanager sociale zekerheid",
       "skill": 13,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1475,7 +1448,6 @@
       "assignment": 22,
       "description": "Beleidsadviseur AI strategie",
       "skill": 14,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -1487,7 +1459,6 @@
       "assignment": 23,
       "description": "Procesbegeleider migratie",
       "skill": 11,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1499,7 +1470,6 @@
       "assignment": 24,
       "description": "Solution Architect diplomatie",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1511,7 +1481,6 @@
       "assignment": 25,
       "description": "Kwartiermaker woningbouw",
       "skill": 15,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -1523,7 +1492,6 @@
       "assignment": 26,
       "description": "Verandermanager onderwijs",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -1535,7 +1503,6 @@
       "assignment": 27,
       "description": "(Interim) Manager communicatie",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13420,7 +13387,6 @@
       "assignment": 28,
       "description": "Implementatie researcher best practices",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -13432,7 +13398,6 @@
       "assignment": 29,
       "description": "Optimalisatie process analyst processen",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13444,7 +13409,6 @@
       "assignment": 30,
       "description": "Training en kennisoverdracht solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13456,7 +13420,6 @@
       "assignment": 31,
       "description": "Optimalisatie cio processen",
       "skill": 18,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13468,7 +13431,6 @@
       "assignment": 32,
       "description": "Consultancy en coaching information manager",
       "skill": 28,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13480,7 +13442,6 @@
       "assignment": 33,
       "description": "Strategische advisering cybersecurity specialist",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13492,7 +13453,6 @@
       "assignment": 34,
       "description": "Training en kennisoverdracht procesbegeleider",
       "skill": 11,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13504,7 +13464,6 @@
       "assignment": 35,
       "description": "Data pipeline voor AI/ML workflows",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13516,7 +13475,6 @@
       "assignment": 35,
       "description": "Strategische advisering project leader",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13528,7 +13486,6 @@
       "assignment": 35,
       "description": "Privacy by design voor AI systemen",
       "skill": 6,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13540,7 +13497,6 @@
       "assignment": 36,
       "description": "Strategische advisering verandermanager",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13552,7 +13508,6 @@
       "assignment": 37,
       "description": "Consultancy en coaching project leader",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -13564,7 +13519,6 @@
       "assignment": 38,
       "description": "Consultancy en coaching solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13576,7 +13530,6 @@
       "assignment": 39,
       "description": "Consultancy en coaching solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13588,7 +13541,6 @@
       "assignment": 40,
       "description": "Strategische advisering beleidsadviseur",
       "skill": 14,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -13600,7 +13552,6 @@
       "assignment": 41,
       "description": "Consultancy en coaching verandermanager",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13612,7 +13563,6 @@
       "assignment": 42,
       "description": "Strategische advisering cybersecurity specialist",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13624,7 +13574,6 @@
       "assignment": 43,
       "description": "Progressive Web App voor offline gebruik",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13636,7 +13585,6 @@
       "assignment": 44,
       "description": "Optimalisatie data engineer processen",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13648,7 +13596,6 @@
       "assignment": 45,
       "description": "Toegankelijke interfaces volgens WCAG standaarden",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13660,7 +13607,6 @@
       "assignment": 46,
       "description": "AI strategie en implementatie roadmap",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -13672,7 +13618,6 @@
       "assignment": 47,
       "description": "Consultancy en coaching kwartiermaker",
       "skill": 15,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13684,7 +13629,6 @@
       "assignment": 48,
       "description": "Strategische advisering project leader",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13696,7 +13640,6 @@
       "assignment": 49,
       "description": "Strategische advisering data architect",
       "skill": 21,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13708,7 +13651,6 @@
       "assignment": 49,
       "description": "Gebruiksvriendelijke portal ontwikkeling",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13720,7 +13662,6 @@
       "assignment": 49,
       "description": "Training en kennisoverdracht scrum master",
       "skill": 23,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13732,7 +13673,6 @@
       "assignment": 49,
       "description": "Implementatie (interim) manager best practices",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13744,7 +13684,6 @@
       "assignment": 49,
       "description": "Mobile-first design implementatie",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -13756,7 +13695,6 @@
       "assignment": 49,
       "description": "Strategische advisering data architect",
       "skill": 21,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13768,7 +13706,6 @@
       "assignment": 50,
       "description": "Wireframing en interactief prototype design",
       "skill": 4,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -13780,7 +13717,6 @@
       "assignment": 51,
       "description": "Implementatie kwartiermaker best practices",
       "skill": 15,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -13792,7 +13728,6 @@
       "assignment": 52,
       "description": "AI strategie en implementatie roadmap",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13804,7 +13739,6 @@
       "assignment": 53,
       "description": "Strategische advisering kwartiermaker",
       "skill": 15,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -13816,7 +13750,6 @@
       "assignment": 54,
       "description": "Training en kennisoverdracht organisatieadviseur",
       "skill": 12,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13828,7 +13761,6 @@
       "assignment": 55,
       "description": "Consultancy en coaching privacy officer",
       "skill": 22,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13840,7 +13772,6 @@
       "assignment": 56,
       "description": "Service design voor complexe processen",
       "skill": 4,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13852,7 +13783,6 @@
       "assignment": 56,
       "description": "Training en kennisoverdracht solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -13864,7 +13794,6 @@
       "assignment": 56,
       "description": "Juridische risico-analyse van AI projecten",
       "skill": 6,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13876,7 +13805,6 @@
       "assignment": 56,
       "description": "Optimalisatie (interim) manager processen",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13888,7 +13816,6 @@
       "assignment": 57,
       "description": "Consultancy en coaching process analyst",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13900,7 +13827,6 @@
       "assignment": 58,
       "description": "Training en kennisoverdracht solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -13912,7 +13838,6 @@
       "assignment": 59,
       "description": "Predictive analytics voor beleidsondersteuning",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -13924,7 +13849,6 @@
       "assignment": 60,
       "description": "Chatbot en conversational AI oplossingen",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13936,7 +13860,6 @@
       "assignment": 61,
       "description": "Consultancy en coaching process analyst",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13948,7 +13871,6 @@
       "assignment": 62,
       "description": "Security implementatie voor gevoelige data",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13960,7 +13882,6 @@
       "assignment": 63,
       "description": "Consultancy en coaching i-adviseur",
       "skill": 17,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -13972,7 +13893,6 @@
       "assignment": 64,
       "description": "Consultancy en coaching solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -13984,7 +13904,6 @@
       "assignment": 65,
       "description": "Optimalisatie cybersecurity specialist processen",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -13996,7 +13915,6 @@
       "assignment": 66,
       "description": "Implementatie information manager best practices",
       "skill": 28,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14008,7 +13926,6 @@
       "assignment": 67,
       "description": "Implementatie devops engineer best practices",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14020,7 +13937,6 @@
       "assignment": 67,
       "description": "Consultancy en coaching beleidsadviseur",
       "skill": 14,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14032,7 +13948,6 @@
       "assignment": 67,
       "description": "Strategische advisering privacy officer",
       "skill": 22,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14044,7 +13959,6 @@
       "assignment": 67,
       "description": "Strategische advisering kwartiermaker",
       "skill": 15,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14056,7 +13970,6 @@
       "assignment": 67,
       "description": "Consultancy en coaching kwartiermaker",
       "skill": 15,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14068,7 +13981,6 @@
       "assignment": 68,
       "description": "Consultancy en coaching solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14080,7 +13992,6 @@
       "assignment": 69,
       "description": "Toegankelijke interfaces volgens WCAG standaarden",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14092,7 +14003,6 @@
       "assignment": 70,
       "description": "Optimalisatie solution architect processen",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14104,7 +14014,6 @@
       "assignment": 71,
       "description": "Strategische advisering devops engineer",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14116,7 +14025,6 @@
       "assignment": 72,
       "description": "Optimalisatie business analist processen",
       "skill": 24,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14128,7 +14036,6 @@
       "assignment": 73,
       "description": "Ethische AI governance en beleid",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14140,7 +14047,6 @@
       "assignment": 74,
       "description": "Strategische advisering cybersecurity specialist",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14152,7 +14058,6 @@
       "assignment": 75,
       "description": "Implementatie data architect best practices",
       "skill": 21,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14164,7 +14069,6 @@
       "assignment": 76,
       "description": "Consultancy en coaching cybersecurity specialist",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14176,7 +14080,6 @@
       "assignment": 77,
       "description": "Strategische advisering scrum master",
       "skill": 23,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14188,7 +14091,6 @@
       "assignment": 78,
       "description": "Juridische risico-analyse van AI projecten",
       "skill": 6,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14200,7 +14102,6 @@
       "assignment": 79,
       "description": "Training en kennisoverdracht solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14212,7 +14113,6 @@
       "assignment": 80,
       "description": "Strategische advisering project leader",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14224,7 +14124,6 @@
       "assignment": 81,
       "description": "Ethische AI governance en beleid",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14236,7 +14135,6 @@
       "assignment": 82,
       "description": "Training en kennisoverdracht process analyst",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14248,7 +14146,6 @@
       "assignment": 83,
       "description": "Optimalisatie organisatieadviseur processen",
       "skill": 12,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14260,7 +14157,6 @@
       "assignment": 84,
       "description": "Optimalisatie data engineer processen",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14272,7 +14168,6 @@
       "assignment": 85,
       "description": "Consultancy en coaching procesbegeleider",
       "skill": 11,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14284,7 +14179,6 @@
       "assignment": 86,
       "description": "DevOps pipeline opzet en automatisering",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14296,7 +14190,6 @@
       "assignment": 86,
       "description": "Optimalisatie devops engineer processen",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14308,7 +14201,6 @@
       "assignment": 86,
       "description": "Training en kennisoverdracht data engineer",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14320,7 +14212,6 @@
       "assignment": 86,
       "description": "Implementatie solution architect best practices",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14332,7 +14223,6 @@
       "assignment": 86,
       "description": "Optimalisatie beleidsadviseur processen",
       "skill": 14,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14344,7 +14234,6 @@
       "assignment": 86,
       "description": "Strategische advisering process analyst",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14356,7 +14245,6 @@
       "assignment": 87,
       "description": "Implementatie i-adviseur best practices",
       "skill": 17,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14368,7 +14256,6 @@
       "assignment": 88,
       "description": "Optimalisatie process analyst processen",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14380,7 +14267,6 @@
       "assignment": 89,
       "description": "Strategische advisering devops engineer",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14392,7 +14278,6 @@
       "assignment": 90,
       "description": "Implementatie solution architect best practices",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14404,7 +14289,6 @@
       "assignment": 91,
       "description": "Algoritme transparantie en verantwoording",
       "skill": 6,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14416,7 +14300,6 @@
       "assignment": 92,
       "description": "Consultancy en coaching test manager",
       "skill": 27,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14428,7 +14311,6 @@
       "assignment": 92,
       "description": "Implementatie project leader best practices",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14440,7 +14322,6 @@
       "assignment": 93,
       "description": "Implementatie scrum master best practices",
       "skill": 23,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14452,7 +14333,6 @@
       "assignment": 94,
       "description": "Strategische advisering solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14464,7 +14344,6 @@
       "assignment": 95,
       "description": "Training en kennisoverdracht verandermanager",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14476,7 +14355,6 @@
       "assignment": 96,
       "description": "User story mapping en acceptatiecriteria",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14488,7 +14366,6 @@
       "assignment": 97,
       "description": "Strategische advisering process analyst",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14500,7 +14377,6 @@
       "assignment": 98,
       "description": "Training en kennisoverdracht cio",
       "skill": 18,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14512,7 +14388,6 @@
       "assignment": 99,
       "description": "Implementatie cio best practices",
       "skill": 18,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14524,7 +14399,6 @@
       "assignment": 100,
       "description": "Optimalisatie solution architect processen",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14536,7 +14410,6 @@
       "assignment": 101,
       "description": "User story mapping en acceptatiecriteria",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14548,7 +14421,6 @@
       "assignment": 102,
       "description": "AI ethiek en bias detectie frameworks",
       "skill": 6,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14560,7 +14432,6 @@
       "assignment": 103,
       "description": "Juridische risico-analyse van AI projecten",
       "skill": 6,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14572,7 +14443,6 @@
       "assignment": 104,
       "description": "Optimalisatie researcher processen",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14584,7 +14454,6 @@
       "assignment": 104,
       "description": "Training en kennisoverdracht project leader",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14596,7 +14465,6 @@
       "assignment": 104,
       "description": "Optimalisatie i-adviseur processen",
       "skill": 17,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14608,7 +14476,6 @@
       "assignment": 105,
       "description": "Implementatie devops engineer best practices",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14620,7 +14487,6 @@
       "assignment": 106,
       "description": "Strategische advisering cybersecurity specialist",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14632,7 +14498,6 @@
       "assignment": 107,
       "description": "Training en kennisoverdracht cio",
       "skill": 18,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14644,7 +14509,6 @@
       "assignment": 108,
       "description": "Training en kennisoverdracht data architect",
       "skill": 21,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14656,7 +14520,6 @@
       "assignment": 109,
       "description": "Implementatie privacy officer best practices",
       "skill": 22,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14668,7 +14531,6 @@
       "assignment": 110,
       "description": "Implementatie i-adviseur best practices",
       "skill": 17,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14680,7 +14542,6 @@
       "assignment": 111,
       "description": "Optimalisatie data engineer processen",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14692,7 +14553,6 @@
       "assignment": 112,
       "description": "Computer vision voor documentverwerking",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14704,7 +14564,6 @@
       "assignment": 113,
       "description": "Consultancy en coaching devops engineer",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14716,7 +14575,6 @@
       "assignment": 114,
       "description": "Toegankelijkheid audit en verbeteringen",
       "skill": 4,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14728,7 +14586,6 @@
       "assignment": 115,
       "description": "Strategische advisering researcher",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14740,7 +14597,6 @@
       "assignment": 116,
       "description": "Optimalisatie procesbegeleider processen",
       "skill": 11,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14752,7 +14608,6 @@
       "assignment": 117,
       "description": "Strategische advisering researcher",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14764,7 +14619,6 @@
       "assignment": 118,
       "description": "Consultancy en coaching beleidsadviseur",
       "skill": 14,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14776,7 +14630,6 @@
       "assignment": 119,
       "description": "Implementatie scrum master best practices",
       "skill": 23,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14788,7 +14641,6 @@
       "assignment": 120,
       "description": "Privacy by design voor AI systemen",
       "skill": 6,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14800,7 +14652,6 @@
       "assignment": 121,
       "description": "Consultancy en coaching process analyst",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14812,7 +14663,6 @@
       "assignment": 121,
       "description": "Training en kennisoverdracht kwartiermaker",
       "skill": 15,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14824,7 +14674,6 @@
       "assignment": 121,
       "description": "Optimalisatie i-adviseur processen",
       "skill": 17,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14836,7 +14685,6 @@
       "assignment": 121,
       "description": "Strategische advisering procesbegeleider",
       "skill": 11,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14848,7 +14696,6 @@
       "assignment": 122,
       "description": "Strategische advisering devops engineer",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14860,7 +14707,6 @@
       "assignment": 123,
       "description": "Consultancy en coaching devops engineer",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14872,7 +14718,6 @@
       "assignment": 124,
       "description": "Implementatie process analyst best practices",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14884,7 +14729,6 @@
       "assignment": 125,
       "description": "Feature planning en release management",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14896,7 +14740,6 @@
       "assignment": 126,
       "description": "AI strategie en implementatie roadmap",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14908,7 +14751,6 @@
       "assignment": 127,
       "description": "Strategische advisering privacy officer",
       "skill": 22,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14920,7 +14762,6 @@
       "assignment": 127,
       "description": "Implementatie verandermanager best practices",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14932,7 +14773,6 @@
       "assignment": 127,
       "description": "Training en kennisoverdracht devops engineer",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -14944,7 +14784,6 @@
       "assignment": 127,
       "description": "Consultancy en coaching business analist",
       "skill": 24,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14956,7 +14795,6 @@
       "assignment": 128,
       "description": "Implementatie cybersecurity specialist best practices",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -14968,7 +14806,6 @@
       "assignment": 129,
       "description": "Agile product backlog prioritering",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14980,7 +14817,6 @@
       "assignment": 130,
       "description": "Implementatie information manager best practices",
       "skill": 28,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -14992,7 +14828,6 @@
       "assignment": 131,
       "description": "Optimalisatie programmamanager processen",
       "skill": 13,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15004,7 +14839,6 @@
       "assignment": 132,
       "description": "Optimalisatie devops engineer processen",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15016,7 +14850,6 @@
       "assignment": 133,
       "description": "Feature planning en release management",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15028,7 +14861,6 @@
       "assignment": 134,
       "description": "Gebruikersonderzoek en persona ontwikkeling",
       "skill": 4,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15040,7 +14872,6 @@
       "assignment": 135,
       "description": "Implementatie data engineer best practices",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15052,7 +14883,6 @@
       "assignment": 136,
       "description": "Optimalisatie (interim) manager processen",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15064,7 +14894,6 @@
       "assignment": 137,
       "description": "Consultancy en coaching test manager",
       "skill": 27,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15076,7 +14905,6 @@
       "assignment": 138,
       "description": "Consultancy en coaching beleidsadviseur",
       "skill": 14,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15088,7 +14916,6 @@
       "assignment": 139,
       "description": "Implementatie verandermanager best practices",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15100,7 +14927,6 @@
       "assignment": 140,
       "description": "Strategische advisering privacy officer",
       "skill": 22,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15112,7 +14938,6 @@
       "assignment": 141,
       "description": "Implementatie scrum master best practices",
       "skill": 23,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15124,7 +14949,6 @@
       "assignment": 142,
       "description": "Strategische advisering solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15136,7 +14960,6 @@
       "assignment": 143,
       "description": "Usability testing en feedback verwerking",
       "skill": 4,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15148,7 +14971,6 @@
       "assignment": 144,
       "description": "Mobile-first design implementatie",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15160,7 +14982,6 @@
       "assignment": 145,
       "description": "Strategische advisering devops engineer",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15172,7 +14993,6 @@
       "assignment": 146,
       "description": "Consultancy en coaching verandermanager",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15184,7 +15004,6 @@
       "assignment": 147,
       "description": "Toegankelijke interfaces volgens WCAG standaarden",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15196,7 +15015,6 @@
       "assignment": 148,
       "description": "Implementatie solution architect best practices",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15208,7 +15026,6 @@
       "assignment": 149,
       "description": "Implementatie devops engineer best practices",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15220,7 +15037,6 @@
       "assignment": 150,
       "description": "Training en kennisoverdracht cybersecurity specialist",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15232,7 +15048,6 @@
       "assignment": 151,
       "description": "Optimalisatie information manager processen",
       "skill": 28,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15244,7 +15059,6 @@
       "assignment": 152,
       "description": "Training en kennisoverdracht solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15256,7 +15070,6 @@
       "assignment": 152,
       "description": "Training en kennisoverdracht process analyst",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15268,7 +15081,6 @@
       "assignment": 152,
       "description": "Strategische advisering process analyst",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15280,7 +15092,6 @@
       "assignment": 152,
       "description": "Component library ontwikkeling",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15292,7 +15103,6 @@
       "assignment": 152,
       "description": "Strategische advisering organisatieadviseur",
       "skill": 12,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15304,7 +15114,6 @@
       "assignment": 152,
       "description": "AVG/GDPR implicaties van AI toepassingen",
       "skill": 6,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15316,7 +15125,6 @@
       "assignment": 153,
       "description": "Strategische advisering project leader",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15328,7 +15136,6 @@
       "assignment": 154,
       "description": "Optimalisatie i-adviseur processen",
       "skill": 17,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15340,7 +15147,6 @@
       "assignment": 154,
       "description": "Machine learning model ontwikkeling",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15352,7 +15158,6 @@
       "assignment": 154,
       "description": "Optimalisatie project leader processen",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15364,7 +15169,6 @@
       "assignment": 154,
       "description": "Service design voor complexe processen",
       "skill": 4,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15376,7 +15180,6 @@
       "assignment": 154,
       "description": "Implementatie procesbegeleider best practices",
       "skill": 11,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15388,7 +15191,6 @@
       "assignment": 154,
       "description": "Strategische advisering data architect",
       "skill": 21,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15400,7 +15202,6 @@
       "assignment": 155,
       "description": "Optimalisatie i-adviseur processen",
       "skill": 17,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15412,7 +15213,6 @@
       "assignment": 156,
       "description": "Consultancy en coaching scrum master",
       "skill": 23,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15424,7 +15224,6 @@
       "assignment": 157,
       "description": "Consultancy en coaching solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15436,7 +15235,6 @@
       "assignment": 158,
       "description": "Optimalisatie verandermanager processen",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15448,7 +15246,6 @@
       "assignment": 159,
       "description": "Optimalisatie (interim) manager processen",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15460,7 +15257,6 @@
       "assignment": 160,
       "description": "Strategische advisering programmamanager",
       "skill": 13,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15472,7 +15268,6 @@
       "assignment": 161,
       "description": "Consultancy en coaching data engineer",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15484,7 +15279,6 @@
       "assignment": 162,
       "description": "Optimalisatie (interim) manager processen",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15496,7 +15290,6 @@
       "assignment": 163,
       "description": "Toegankelijke interfaces volgens WCAG standaarden",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15508,7 +15301,6 @@
       "assignment": 164,
       "description": "Consultancy en coaching researcher",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15520,7 +15312,6 @@
       "assignment": 165,
       "description": "Consultancy en coaching procesbegeleider",
       "skill": 11,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15532,7 +15323,6 @@
       "assignment": 166,
       "description": "Training en kennisoverdracht cybersecurity specialist",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15544,7 +15334,6 @@
       "assignment": 167,
       "description": "Gebruikersonderzoek en persona ontwikkeling",
       "skill": 4,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15556,7 +15345,6 @@
       "assignment": 168,
       "description": "Strategische advisering business analist",
       "skill": 24,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15568,7 +15356,6 @@
       "assignment": 169,
       "description": "Database optimalisatie en performance tuning",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15580,7 +15367,6 @@
       "assignment": 169,
       "description": "Usability testing en feedback verwerking",
       "skill": 4,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15592,7 +15378,6 @@
       "assignment": 169,
       "description": "Product strategy voor digitale transformatie",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15604,7 +15389,6 @@
       "assignment": 170,
       "description": "Consultancy en coaching (interim) manager",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15616,7 +15400,6 @@
       "assignment": 170,
       "description": "Training en kennisoverdracht solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15628,7 +15411,6 @@
       "assignment": 170,
       "description": "Agile product backlog prioritering",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15640,7 +15422,6 @@
       "assignment": 170,
       "description": "Database optimalisatie en performance tuning",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15652,7 +15433,6 @@
       "assignment": 171,
       "description": "Consultancy en coaching i-adviseur",
       "skill": 17,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15664,7 +15444,6 @@
       "assignment": 172,
       "description": "Optimalisatie organisatieadviseur processen",
       "skill": 12,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15676,7 +15455,6 @@
       "assignment": 173,
       "description": "Strategische advisering cybersecurity specialist",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15688,7 +15466,6 @@
       "assignment": 173,
       "description": "Implementatie data engineer best practices",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15700,7 +15477,6 @@
       "assignment": 174,
       "description": "User journey mapping en ervaring optimalisatie",
       "skill": 4,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15712,7 +15488,6 @@
       "assignment": 175,
       "description": "Feature planning en release management",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15724,7 +15499,6 @@
       "assignment": 175,
       "description": "Optimalisatie devops engineer processen",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15736,7 +15510,6 @@
       "assignment": 175,
       "description": "Implementatie business analist best practices",
       "skill": 24,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15748,7 +15521,6 @@
       "assignment": 175,
       "description": "Juridische risico-analyse van AI projecten",
       "skill": 6,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15760,7 +15532,6 @@
       "assignment": 175,
       "description": "Implementatie beleidsadviseur best practices",
       "skill": 14,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15772,7 +15543,6 @@
       "assignment": 175,
       "description": "Training en kennisoverdracht process analyst",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15784,7 +15554,6 @@
       "assignment": 176,
       "description": "Strategische advisering process analyst",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15796,7 +15565,6 @@
       "assignment": 176,
       "description": "Implementatie organisatieadviseur best practices",
       "skill": 12,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15808,7 +15576,6 @@
       "assignment": 176,
       "description": "Strategische advisering solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -15820,7 +15587,6 @@
       "assignment": 176,
       "description": "User story mapping en acceptatiecriteria",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15832,7 +15598,6 @@
       "assignment": 176,
       "description": "Training en kennisoverdracht business analist",
       "skill": 24,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15844,7 +15609,6 @@
       "assignment": 176,
       "description": "Toegankelijke interfaces volgens WCAG standaarden",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15856,7 +15620,6 @@
       "assignment": 177,
       "description": "Consultancy en coaching solution architect",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT"
     }
@@ -15960,7 +15723,6 @@
       "assignment": 178,
       "description": "Senior specialistische dienstverlening voor BD project",
       "skill": 17,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -15986,7 +15748,6 @@
       "assignment": 179,
       "description": "Senior specialistische dienstverlening voor EZK project",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16012,7 +15773,6 @@
       "assignment": 180,
       "description": "Senior specialistische dienstverlening voor BD project",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16038,7 +15798,6 @@
       "assignment": 181,
       "description": "Senior specialistische dienstverlening voor DEF project",
       "skill": 12,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16064,7 +15823,6 @@
       "assignment": 182,
       "description": "Senior specialistische dienstverlening voor VWS project",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16090,7 +15848,6 @@
       "assignment": 183,
       "description": "Senior specialistische dienstverlening voor FIN project",
       "skill": 28,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16116,7 +15873,6 @@
       "assignment": 184,
       "description": "Senior specialistische dienstverlening voor DUO project",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16142,7 +15898,6 @@
       "assignment": 185,
       "description": "Senior specialistische dienstverlening voor FIN project",
       "skill": 12,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16168,7 +15923,6 @@
       "assignment": 186,
       "description": "Senior specialistische dienstverlening voor Logius project",
       "skill": 21,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16180,7 +15934,6 @@
       "assignment": 186,
       "description": "Senior specialistische dienstverlening voor Logius project",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16205,7 +15958,6 @@
       "assignment": 186,
       "description": "Senior specialistische dienstverlening voor Logius project",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16217,7 +15969,6 @@
       "assignment": 186,
       "description": "Senior specialistische dienstverlening voor Logius project",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16229,7 +15980,6 @@
       "assignment": 186,
       "description": "Senior specialistische dienstverlening voor Logius project",
       "skill": 24,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16241,7 +15991,6 @@
       "assignment": 186,
       "description": "Senior specialistische dienstverlening voor Logius project",
       "skill": 21,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16267,7 +16016,6 @@
       "assignment": 187,
       "description": "Senior specialistische dienstverlening voor EZK project",
       "skill": 15,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16293,7 +16041,6 @@
       "assignment": 188,
       "description": "Senior specialistische dienstverlening voor FIN project",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16319,7 +16066,6 @@
       "assignment": 189,
       "description": "Senior specialistische dienstverlening voor BZK project",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16345,7 +16091,6 @@
       "assignment": 190,
       "description": "Senior specialistische dienstverlening voor FIN project",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16371,7 +16116,6 @@
       "assignment": 191,
       "description": "Senior specialistische dienstverlening voor DEF project",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16383,7 +16127,6 @@
       "assignment": 191,
       "description": "Senior specialistische dienstverlening voor DEF project",
       "skill": 22,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16408,7 +16151,6 @@
       "assignment": 191,
       "description": "Senior specialistische dienstverlening voor DEF project",
       "skill": 27,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16420,7 +16162,6 @@
       "assignment": 191,
       "description": "Senior specialistische dienstverlening voor DEF project",
       "skill": 6,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16432,7 +16173,6 @@
       "assignment": 191,
       "description": "Senior specialistische dienstverlening voor DEF project",
       "skill": 11,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16444,7 +16184,6 @@
       "assignment": 191,
       "description": "Senior specialistische dienstverlening voor DEF project",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16470,7 +16209,6 @@
       "assignment": 192,
       "description": "Senior specialistische dienstverlening voor BZK project",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16496,7 +16234,6 @@
       "assignment": 193,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 4,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16522,7 +16259,6 @@
       "assignment": 194,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16562,7 +16298,6 @@
       "assignment": 196,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16588,7 +16323,6 @@
       "assignment": 197,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 18,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16614,7 +16348,6 @@
       "assignment": 198,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16640,7 +16373,6 @@
       "assignment": 199,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16666,7 +16398,6 @@
       "assignment": 200,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16692,7 +16423,6 @@
       "assignment": 201,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 6,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16718,7 +16448,6 @@
       "assignment": 202,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 23,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16744,7 +16473,6 @@
       "assignment": 203,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16770,7 +16498,6 @@
       "assignment": 204,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 15,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16796,7 +16523,6 @@
       "assignment": 205,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 18,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16808,7 +16534,6 @@
       "assignment": 205,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 27,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16820,7 +16545,6 @@
       "assignment": 205,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 18,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16832,7 +16556,6 @@
       "assignment": 205,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16844,7 +16567,6 @@
       "assignment": 205,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 2,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16856,7 +16578,6 @@
       "assignment": 205,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16882,7 +16603,6 @@
       "assignment": 206,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -16908,7 +16628,6 @@
       "assignment": 207,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 22,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16934,7 +16653,6 @@
       "assignment": 208,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 22,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16960,7 +16678,6 @@
       "assignment": 209,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -16986,7 +16703,6 @@
       "assignment": 210,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17012,7 +16728,6 @@
       "assignment": 211,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17038,7 +16753,6 @@
       "assignment": 212,
       "description": "Senior consultancy voor BZK digitalisering",
       "skill": 15,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17092,7 +16806,6 @@
       "assignment": 215,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 21,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17104,7 +16817,6 @@
       "assignment": 215,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17116,7 +16828,6 @@
       "assignment": 215,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17128,7 +16839,6 @@
       "assignment": 215,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17153,7 +16863,6 @@
       "assignment": 215,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 23,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17165,7 +16874,6 @@
       "assignment": 215,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17177,7 +16885,6 @@
       "assignment": 215,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 9,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17189,7 +16896,6 @@
       "assignment": 215,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 24,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17215,7 +16921,6 @@
       "assignment": 216,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 28,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17241,7 +16946,6 @@
       "assignment": 217,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17267,7 +16971,6 @@
       "assignment": 218,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 27,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17279,7 +16982,6 @@
       "assignment": 218,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 22,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17291,7 +16993,6 @@
       "assignment": 218,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 28,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17303,7 +17004,6 @@
       "assignment": 218,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17329,7 +17029,6 @@
       "assignment": 219,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 14,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17355,7 +17054,6 @@
       "assignment": 220,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 27,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17367,7 +17065,6 @@
       "assignment": 220,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 27,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17379,7 +17076,6 @@
       "assignment": 220,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17391,7 +17087,6 @@
       "assignment": 220,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 11,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17403,7 +17098,6 @@
       "assignment": 220,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17415,7 +17109,6 @@
       "assignment": 220,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 13,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17427,7 +17120,6 @@
       "assignment": 220,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 6,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17453,7 +17145,6 @@
       "assignment": 221,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 12,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17479,7 +17170,6 @@
       "assignment": 222,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 20,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17533,7 +17223,6 @@
       "assignment": 225,
       "description": "Senior consultancy voor FIN digitalisering",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17586,7 +17275,6 @@
       "assignment": 227,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17612,7 +17300,6 @@
       "assignment": 228,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 22,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17638,7 +17325,6 @@
       "assignment": 229,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 11,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17678,7 +17364,6 @@
       "assignment": 231,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 11,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17704,7 +17389,6 @@
       "assignment": 232,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 4,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17730,7 +17414,6 @@
       "assignment": 233,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 13,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17756,7 +17439,6 @@
       "assignment": 234,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17782,7 +17464,6 @@
       "assignment": 235,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 12,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17808,7 +17489,6 @@
       "assignment": 236,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 18,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17834,7 +17514,6 @@
       "assignment": 237,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17873,7 +17552,6 @@
       "assignment": 238,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17913,7 +17591,6 @@
       "assignment": 240,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17925,7 +17602,6 @@
       "assignment": 240,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 4,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17937,7 +17613,6 @@
       "assignment": 240,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -17949,7 +17624,6 @@
       "assignment": 240,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 5,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -17975,7 +17649,6 @@
       "assignment": 241,
       "description": "Senior consultancy voor VWS digitalisering",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -18001,7 +17674,6 @@
       "assignment": 242,
       "description": "Senior consultancy voor DEF digitalisering",
       "skill": 18,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18027,7 +17699,6 @@
       "assignment": 243,
       "description": "Senior consultancy voor DEF digitalisering",
       "skill": 3,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18053,7 +17724,6 @@
       "assignment": 244,
       "description": "Senior consultancy voor DEF digitalisering",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18093,7 +17763,6 @@
       "assignment": 246,
       "description": "Senior consultancy voor DEF digitalisering",
       "skill": 8,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -18119,7 +17788,6 @@
       "assignment": 247,
       "description": "Senior consultancy voor DEF digitalisering",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18159,7 +17827,6 @@
       "assignment": 249,
       "description": "Senior consultancy voor EZK digitalisering",
       "skill": 17,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18185,7 +17852,6 @@
       "assignment": 250,
       "description": "Senior consultancy voor EZK digitalisering",
       "skill": 10,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18211,7 +17877,6 @@
       "assignment": 251,
       "description": "Senior consultancy voor EZK digitalisering",
       "skill": 12,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18265,7 +17930,6 @@
       "assignment": 254,
       "description": "Senior consultancy voor EZK digitalisering",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -18277,7 +17941,6 @@
       "assignment": 254,
       "description": "Senior consultancy voor EZK digitalisering",
       "skill": 25,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18289,7 +17952,6 @@
       "assignment": 254,
       "description": "Senior consultancy voor EZK digitalisering",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18328,7 +17990,6 @@
       "assignment": 255,
       "description": "Senior consultancy voor EZK digitalisering",
       "skill": 19,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -18354,7 +18015,6 @@
       "assignment": 256,
       "description": "Senior consultancy voor EZK digitalisering",
       "skill": 13,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -18380,7 +18040,6 @@
       "assignment": 257,
       "description": "Senior consultancy voor EZK digitalisering",
       "skill": 12,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -18406,7 +18065,6 @@
       "assignment": 258,
       "description": "Senior consultancy voor EZK digitalisering",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18432,7 +18090,6 @@
       "assignment": 259,
       "description": "Senior consultancy voor BD digitalisering",
       "skill": 1,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18458,7 +18115,6 @@
       "assignment": 260,
       "description": "Senior consultancy voor BD digitalisering",
       "skill": 14,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18484,7 +18140,6 @@
       "assignment": 261,
       "description": "Senior consultancy voor BD digitalisering",
       "skill": 24,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -18538,7 +18193,6 @@
       "assignment": 264,
       "description": "Senior consultancy voor BD digitalisering",
       "skill": 15,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -18564,7 +18218,6 @@
       "assignment": 265,
       "description": "Senior consultancy voor BD digitalisering",
       "skill": 13,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18604,7 +18257,6 @@
       "assignment": 267,
       "description": "Senior consultancy voor Logius digitalisering",
       "skill": 7,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT"
     }
@@ -18630,7 +18282,6 @@
       "assignment": 268,
       "description": "Senior consultancy voor Logius digitalisering",
       "skill": 29,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18670,7 +18321,6 @@
       "assignment": 270,
       "description": "Senior consultancy voor Logius digitalisering",
       "skill": 23,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18710,7 +18360,6 @@
       "assignment": 272,
       "description": "Senior consultancy voor Logius digitalisering",
       "skill": 13,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18736,7 +18385,6 @@
       "assignment": 273,
       "description": "Senior consultancy voor Logius digitalisering",
       "skill": 23,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT"
     }
@@ -18748,7 +18396,6 @@
       "assignment": 142,
       "description": "Deeltijd ondersteuning - UWV Security Scan",
       "skill": 16,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 12,
       "period_source": "ASSIGNMENT"
     }
@@ -18760,7 +18407,6 @@
       "assignment": 10,
       "description": "Deeltijd ondersteuning - Fintech Mobile App",
       "skill": 14,
-      "cost_type": "PER_HOUR",
       "hours_per_week": 8,
       "period_source": "ASSIGNMENT"
     }
@@ -27802,8 +27448,6 @@
     "pk": 1044,
     "fields": {
       "description": "Dienst 1 voor CAS Identity Management",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -27817,8 +27461,6 @@
     "pk": 1045,
     "fields": {
       "description": "Dienst 1 voor SVB Pensioen Portal",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -27832,8 +27474,6 @@
     "pk": 1046,
     "fields": {
       "description": "Dienst 2 voor SVB Pensioen Portal",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -27847,8 +27487,6 @@
     "pk": 1047,
     "fields": {
       "description": "Dienst 3 voor SVB Pensioen Portal",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 39,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -27862,8 +27500,6 @@
     "pk": 1048,
     "fields": {
       "description": "Dienst 4 voor SVB Pensioen Portal",
-      "cost_type": "VAST",
-      "fixed_cost": 189222,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -27877,8 +27513,6 @@
     "pk": 1049,
     "fields": {
       "description": "Dienst 1 voor DigiD 2019 Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 23,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -27892,8 +27526,6 @@
     "pk": 1050,
     "fields": {
       "description": "Dienst 2 voor DigiD 2019 Migratie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -27907,8 +27539,6 @@
     "pk": 1051,
     "fields": {
       "description": "Dienst 1 voor MijnOverheid Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -27922,8 +27552,6 @@
     "pk": 1052,
     "fields": {
       "description": "Dienst 2 voor MijnOverheid Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 157109,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -27937,8 +27565,6 @@
     "pk": 1053,
     "fields": {
       "description": "Dienst 1 voor CIBG Zorgregister",
-      "cost_type": "VAST",
-      "fixed_cost": 123192,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -27952,8 +27578,6 @@
     "pk": 1054,
     "fields": {
       "description": "Dienst 2 voor CIBG Zorgregister",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 33,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -27967,8 +27591,6 @@
     "pk": 1055,
     "fields": {
       "description": "Dienst 3 voor CIBG Zorgregister",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -27982,8 +27604,6 @@
     "pk": 1056,
     "fields": {
       "description": "Dienst 4 voor CIBG Zorgregister",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 118353,
       "hours_per_week": 19,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -27997,8 +27617,6 @@
     "pk": 1057,
     "fields": {
       "description": "Dienst 1 voor RCE Monumenten Register",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 28,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28012,8 +27630,6 @@
     "pk": 1058,
     "fields": {
       "description": "Dienst 2 voor RCE Monumenten Register",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 39,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28027,8 +27643,6 @@
     "pk": 1059,
     "fields": {
       "description": "Dienst 1 voor KNMI Weather API v3",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 23,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28042,8 +27656,6 @@
     "pk": 1060,
     "fields": {
       "description": "Dienst 2 voor KNMI Weather API v3",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28057,8 +27669,6 @@
     "pk": 1061,
     "fields": {
       "description": "Dienst 3 voor KNMI Weather API v3",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 91257,
       "hours_per_week": 23,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28072,8 +27682,6 @@
     "pk": 1062,
     "fields": {
       "description": "Dienst 1 voor IND Digitaal Loket",
-      "cost_type": "VAST",
-      "fixed_cost": 165442,
       "hours_per_week": 29,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28087,8 +27695,6 @@
     "pk": 1063,
     "fields": {
       "description": "Dienst 1 voor PBL Klimaatmonitor",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28102,8 +27708,6 @@
     "pk": 1064,
     "fields": {
       "description": "Dienst 2 voor PBL Klimaatmonitor",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28117,8 +27721,6 @@
     "pk": 1065,
     "fields": {
       "description": "Dienst 1 voor RIVM Gezondheidsmonitor",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 170002,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28132,8 +27734,6 @@
     "pk": 1066,
     "fields": {
       "description": "Dienst 1 voor CJIB Digitale Boetes",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28147,8 +27747,6 @@
     "pk": 1067,
     "fields": {
       "description": "Dienst 2 voor CJIB Digitale Boetes",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28162,8 +27760,6 @@
     "pk": 1068,
     "fields": {
       "description": "Dienst 1 voor AIVD Analyse Platform",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28177,8 +27773,6 @@
     "pk": 1069,
     "fields": {
       "description": "Dienst 2 voor AIVD Analyse Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 39,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28192,8 +27786,6 @@
     "pk": 1070,
     "fields": {
       "description": "Dienst 3 voor AIVD Analyse Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 163763,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28207,8 +27799,6 @@
     "pk": 1071,
     "fields": {
       "description": "Dienst 4 voor AIVD Analyse Platform",
-      "cost_type": "VAST",
-      "fixed_cost": 98866,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28222,8 +27812,6 @@
     "pk": 1072,
     "fields": {
       "description": "Dienst 1 voor AIVD Analyse Platform",
-      "cost_type": "VAST",
-      "fixed_cost": 140128,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28237,8 +27825,6 @@
     "pk": 1073,
     "fields": {
       "description": "Dienst 2 voor AIVD Analyse Platform",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 19,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28252,8 +27838,6 @@
     "pk": 1074,
     "fields": {
       "description": "Dienst 3 voor AIVD Analyse Platform",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28267,8 +27851,6 @@
     "pk": 1075,
     "fields": {
       "description": "Dienst 1 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28282,8 +27864,6 @@
     "pk": 1076,
     "fields": {
       "description": "Dienst 1 voor Defensie Cloud Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28297,8 +27877,6 @@
     "pk": 1077,
     "fields": {
       "description": "Dienst 2 voor Defensie Cloud Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28312,8 +27890,6 @@
     "pk": 1078,
     "fields": {
       "description": "Dienst 1 voor RDW Voertuigcertificering Online",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28327,8 +27903,6 @@
     "pk": 1079,
     "fields": {
       "description": "Dienst 2 voor RDW Voertuigcertificering Online",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 85389,
       "hours_per_week": 33,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28342,8 +27916,6 @@
     "pk": 1080,
     "fields": {
       "description": "Dienst 3 voor RDW Voertuigcertificering Online",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28357,8 +27929,6 @@
     "pk": 1081,
     "fields": {
       "description": "Dienst 1 voor TNO Innovation Portal",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28372,8 +27942,6 @@
     "pk": 1082,
     "fields": {
       "description": "Dienst 1 voor Logius Digikoppeling",
-      "cost_type": "VAST",
-      "fixed_cost": 86789,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28387,8 +27955,6 @@
     "pk": 1083,
     "fields": {
       "description": "Dienst 2 voor Logius Digikoppeling",
-      "cost_type": "VAST",
-      "fixed_cost": 169283,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28402,8 +27968,6 @@
     "pk": 1084,
     "fields": {
       "description": "Dienst 3 voor Logius Digikoppeling",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28417,8 +27981,6 @@
     "pk": 1085,
     "fields": {
       "description": "Dienst 1 voor Kadaster BRK Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28432,8 +27994,6 @@
     "pk": 1086,
     "fields": {
       "description": "Dienst 2 voor Kadaster BRK Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 146883,
       "hours_per_week": 28,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28447,8 +28007,6 @@
     "pk": 1087,
     "fields": {
       "description": "Dienst 3 voor Kadaster BRK Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 130331,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28462,8 +28020,6 @@
     "pk": 1088,
     "fields": {
       "description": "Dienst 1 voor CBS Data Lake Implementatie",
-      "cost_type": "VAST",
-      "fixed_cost": 71366,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28477,8 +28033,6 @@
     "pk": 1089,
     "fields": {
       "description": "Dienst 2 voor CBS Data Lake Implementatie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28492,8 +28046,6 @@
     "pk": 1090,
     "fields": {
       "description": "Dienst 3 voor CBS Data Lake Implementatie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28507,8 +28059,6 @@
     "pk": 1091,
     "fields": {
       "description": "Dienst 4 voor CBS Data Lake Implementatie",
-      "cost_type": "VAST",
-      "fixed_cost": 114558,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28522,8 +28072,6 @@
     "pk": 1092,
     "fields": {
       "description": "Dienst 5 voor CBS Data Lake Implementatie",
-      "cost_type": "VAST",
-      "fixed_cost": 198296,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28537,8 +28085,6 @@
     "pk": 1093,
     "fields": {
       "description": "Dienst 1 voor ACM Markttoezicht Portal",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28552,8 +28098,6 @@
     "pk": 1094,
     "fields": {
       "description": "Dienst 2 voor ACM Markttoezicht Portal",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28567,8 +28111,6 @@
     "pk": 1095,
     "fields": {
       "description": "Dienst 1 voor BSN Modernisering 2022",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28582,8 +28124,6 @@
     "pk": 1096,
     "fields": {
       "description": "Dienst 2 voor BSN Modernisering 2022",
-      "cost_type": "VAST",
-      "fixed_cost": 56111,
       "hours_per_week": 29,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28597,8 +28137,6 @@
     "pk": 1097,
     "fields": {
       "description": "Dienst 3 voor BSN Modernisering 2022",
-      "cost_type": "VAST",
-      "fixed_cost": 81783,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28612,8 +28150,6 @@
     "pk": 1098,
     "fields": {
       "description": "Dienst 4 voor BSN Modernisering 2022",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 133986,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28627,8 +28163,6 @@
     "pk": 1099,
     "fields": {
       "description": "Dienst 1 voor eHerkenning Upgrade",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28642,8 +28176,6 @@
     "pk": 1100,
     "fields": {
       "description": "Dienst 2 voor eHerkenning Upgrade",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 92784,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28657,8 +28189,6 @@
     "pk": 1101,
     "fields": {
       "description": "Dienst 1 voor CIBG Zorgregister",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 29,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28672,8 +28202,6 @@
     "pk": 1102,
     "fields": {
       "description": "Dienst 2 voor CIBG Zorgregister",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 30,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28687,8 +28215,6 @@
     "pk": 1103,
     "fields": {
       "description": "Dienst 1 voor RDW Voertuigcertificering Online",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28702,8 +28228,6 @@
     "pk": 1104,
     "fields": {
       "description": "Dienst 2 voor RDW Voertuigcertificering Online",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 33,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28717,8 +28241,6 @@
     "pk": 1105,
     "fields": {
       "description": "Dienst 3 voor RDW Voertuigcertificering Online",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 88958,
       "hours_per_week": 33,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28732,8 +28254,6 @@
     "pk": 1106,
     "fields": {
       "description": "Dienst 1 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "VAST",
-      "fixed_cost": 56900,
       "hours_per_week": 23,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28747,8 +28267,6 @@
     "pk": 1107,
     "fields": {
       "description": "Dienst 2 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 183113,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28762,8 +28280,6 @@
     "pk": 1108,
     "fields": {
       "description": "Dienst 3 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 94950,
       "hours_per_week": 18,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28777,8 +28293,6 @@
     "pk": 1109,
     "fields": {
       "description": "Dienst 1 voor PBL Klimaatmonitor",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28792,8 +28306,6 @@
     "pk": 1110,
     "fields": {
       "description": "Dienst 2 voor PBL Klimaatmonitor",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28807,8 +28319,6 @@
     "pk": 1111,
     "fields": {
       "description": "Dienst 3 voor PBL Klimaatmonitor",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28822,8 +28332,6 @@
     "pk": 1112,
     "fields": {
       "description": "Dienst 1 voor CBS Open Data Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 117502,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28837,8 +28345,6 @@
     "pk": 1113,
     "fields": {
       "description": "Dienst 2 voor CBS Open Data Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28852,8 +28358,6 @@
     "pk": 1114,
     "fields": {
       "description": "Dienst 1 voor Defensie Cloud Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28867,8 +28371,6 @@
     "pk": 1115,
     "fields": {
       "description": "Dienst 2 voor Defensie Cloud Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28882,8 +28384,6 @@
     "pk": 1116,
     "fields": {
       "description": "Dienst 1 voor CAS Identity Management",
-      "cost_type": "VAST",
-      "fixed_cost": 95748,
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28897,8 +28397,6 @@
     "pk": 1117,
     "fields": {
       "description": "Dienst 1 voor CAS Identity Management",
-      "cost_type": "VAST",
-      "fixed_cost": 172424,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28912,8 +28410,6 @@
     "pk": 1118,
     "fields": {
       "description": "Dienst 2 voor CAS Identity Management",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 188018,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28927,8 +28423,6 @@
     "pk": 1119,
     "fields": {
       "description": "Dienst 3 voor CAS Identity Management",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28942,8 +28436,6 @@
     "pk": 1120,
     "fields": {
       "description": "Dienst 1 voor GGD Vaccinatie Register",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28957,8 +28449,6 @@
     "pk": 1121,
     "fields": {
       "description": "Dienst 2 voor GGD Vaccinatie Register",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 107490,
       "hours_per_week": 31,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28972,8 +28462,6 @@
     "pk": 1122,
     "fields": {
       "description": "Dienst 1 voor PBL Klimaatmonitor",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 23,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -28987,8 +28475,6 @@
     "pk": 1123,
     "fields": {
       "description": "Dienst 2 voor PBL Klimaatmonitor",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 149263,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29002,8 +28488,6 @@
     "pk": 1124,
     "fields": {
       "description": "Dienst 1 voor RvIG BRP Modernisering",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29017,8 +28501,6 @@
     "pk": 1125,
     "fields": {
       "description": "Dienst 1 voor Kadaster BRK Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 29,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29032,8 +28514,6 @@
     "pk": 1126,
     "fields": {
       "description": "Dienst 2 voor Kadaster BRK Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29047,8 +28527,6 @@
     "pk": 1127,
     "fields": {
       "description": "Dienst 1 voor UWV Digitale Transformatie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 102859,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29062,8 +28540,6 @@
     "pk": 1128,
     "fields": {
       "description": "Dienst 2 voor UWV Digitale Transformatie",
-      "cost_type": "VAST",
-      "fixed_cost": 168489,
       "hours_per_week": 39,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29077,8 +28553,6 @@
     "pk": 1129,
     "fields": {
       "description": "Dienst 3 voor UWV Digitale Transformatie",
-      "cost_type": "VAST",
-      "fixed_cost": 136843,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29092,8 +28566,6 @@
     "pk": 1130,
     "fields": {
       "description": "Dienst 1 voor RIVM COVID Dashboard",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 19,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29107,8 +28579,6 @@
     "pk": 1131,
     "fields": {
       "description": "Dienst 2 voor RIVM COVID Dashboard",
-      "cost_type": "VAST",
-      "fixed_cost": 185982,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29122,8 +28592,6 @@
     "pk": 1132,
     "fields": {
       "description": "Dienst 1 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 74734,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29137,8 +28605,6 @@
     "pk": 1133,
     "fields": {
       "description": "Dienst 2 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 29,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29152,8 +28618,6 @@
     "pk": 1134,
     "fields": {
       "description": "Dienst 3 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29167,8 +28631,6 @@
     "pk": 1135,
     "fields": {
       "description": "Dienst 4 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 181297,
       "hours_per_week": 28,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29182,8 +28644,6 @@
     "pk": 1136,
     "fields": {
       "description": "Dienst 1 voor RvIG BRP Modernisering",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 31,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29197,8 +28657,6 @@
     "pk": 1137,
     "fields": {
       "description": "Dienst 2 voor RvIG BRP Modernisering",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29212,8 +28670,6 @@
     "pk": 1138,
     "fields": {
       "description": "Dienst 1 voor MijnOverheid Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29227,8 +28683,6 @@
     "pk": 1139,
     "fields": {
       "description": "Dienst 2 voor MijnOverheid Vernieuwing",
-      "cost_type": "VAST",
-      "fixed_cost": 138977,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29242,8 +28696,6 @@
     "pk": 1140,
     "fields": {
       "description": "Dienst 3 voor MijnOverheid Vernieuwing",
-      "cost_type": "VAST",
-      "fixed_cost": 87451,
       "hours_per_week": 19,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29257,8 +28709,6 @@
     "pk": 1141,
     "fields": {
       "description": "Dienst 1 voor Belastingaangifte 2021 Platform",
-      "cost_type": "VAST",
-      "fixed_cost": 59457,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29272,8 +28722,6 @@
     "pk": 1142,
     "fields": {
       "description": "Dienst 1 voor Belastingaangifte 2021 Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 147191,
       "hours_per_week": 23,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29287,8 +28735,6 @@
     "pk": 1143,
     "fields": {
       "description": "Dienst 2 voor Belastingaangifte 2021 Platform",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29302,8 +28748,6 @@
     "pk": 1144,
     "fields": {
       "description": "Dienst 3 voor Belastingaangifte 2021 Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 142139,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29317,8 +28761,6 @@
     "pk": 1145,
     "fields": {
       "description": "Dienst 4 voor Belastingaangifte 2021 Platform",
-      "cost_type": "VAST",
-      "fixed_cost": 119785,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29332,8 +28774,6 @@
     "pk": 1146,
     "fields": {
       "description": "Dienst 1 voor DigiD 2019 Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": 180664,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29347,8 +28787,6 @@
     "pk": 1147,
     "fields": {
       "description": "Dienst 2 voor DigiD 2019 Migratie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 39,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29362,8 +28800,6 @@
     "pk": 1148,
     "fields": {
       "description": "Dienst 3 voor DigiD 2019 Migratie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 124809,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29377,8 +28813,6 @@
     "pk": 1149,
     "fields": {
       "description": "Dienst 4 voor DigiD 2019 Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29392,8 +28826,6 @@
     "pk": 1150,
     "fields": {
       "description": "Dienst 5 voor DigiD 2019 Migratie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 84671,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29407,8 +28839,6 @@
     "pk": 1151,
     "fields": {
       "description": "Dienst 1 voor CBS Data Lake Implementatie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 28,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29422,8 +28852,6 @@
     "pk": 1152,
     "fields": {
       "description": "Dienst 1 voor CJIB Digitale Boetes",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29437,8 +28865,6 @@
     "pk": 1153,
     "fields": {
       "description": "Dienst 1 voor CAS Identity Management",
-      "cost_type": "VAST",
-      "fixed_cost": 158561,
       "hours_per_week": 19,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29452,8 +28878,6 @@
     "pk": 1154,
     "fields": {
       "description": "Dienst 2 voor CAS Identity Management",
-      "cost_type": "VAST",
-      "fixed_cost": 138683,
       "hours_per_week": 36,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29467,8 +28891,6 @@
     "pk": 1155,
     "fields": {
       "description": "Dienst 3 voor CAS Identity Management",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 29,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29482,8 +28904,6 @@
     "pk": 1156,
     "fields": {
       "description": "Dienst 4 voor CAS Identity Management",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29497,8 +28917,6 @@
     "pk": 1157,
     "fields": {
       "description": "Dienst 1 voor RCE Monumenten Register",
-      "cost_type": "VAST",
-      "fixed_cost": 107086,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29512,8 +28930,6 @@
     "pk": 1158,
     "fields": {
       "description": "Dienst 1 voor RVO Subsidieloket 3.0",
-      "cost_type": "VAST",
-      "fixed_cost": 73176,
       "hours_per_week": 39,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29527,8 +28943,6 @@
     "pk": 1159,
     "fields": {
       "description": "Dienst 2 voor RVO Subsidieloket 3.0",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 181007,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29542,8 +28956,6 @@
     "pk": 1160,
     "fields": {
       "description": "Dienst 1 voor Kadaster BRK Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29557,8 +28969,6 @@
     "pk": 1161,
     "fields": {
       "description": "Dienst 2 voor Kadaster BRK Vernieuwing",
-      "cost_type": "VAST",
-      "fixed_cost": 166664,
       "hours_per_week": 26,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29572,8 +28982,6 @@
     "pk": 1162,
     "fields": {
       "description": "Dienst 3 voor Kadaster BRK Vernieuwing",
-      "cost_type": "VAST",
-      "fixed_cost": 151674,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29587,8 +28995,6 @@
     "pk": 1163,
     "fields": {
       "description": "Dienst 4 voor Kadaster BRK Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29602,8 +29008,6 @@
     "pk": 1164,
     "fields": {
       "description": "Dienst 1 voor PBL Omgevingsatlas",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 31,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29617,8 +29021,6 @@
     "pk": 1165,
     "fields": {
       "description": "Dienst 2 voor PBL Omgevingsatlas",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29632,8 +29034,6 @@
     "pk": 1166,
     "fields": {
       "description": "Dienst 1 voor DUO Studielink Upgrade",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 133464,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29647,8 +29047,6 @@
     "pk": 1167,
     "fields": {
       "description": "Dienst 2 voor DUO Studielink Upgrade",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 111181,
       "hours_per_week": 33,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29662,8 +29060,6 @@
     "pk": 1168,
     "fields": {
       "description": "Dienst 1 voor ACM Markttoezicht Portal",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 19,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29677,8 +29073,6 @@
     "pk": 1169,
     "fields": {
       "description": "Dienst 2 voor ACM Markttoezicht Portal",
-      "cost_type": "VAST",
-      "fixed_cost": 185958,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29692,8 +29086,6 @@
     "pk": 1170,
     "fields": {
       "description": "Dienst 3 voor ACM Markttoezicht Portal",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 31,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29707,8 +29099,6 @@
     "pk": 1171,
     "fields": {
       "description": "Dienst 1 voor eHerkenning Upgrade",
-      "cost_type": "VAST",
-      "fixed_cost": 93867,
       "hours_per_week": 30,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29722,8 +29112,6 @@
     "pk": 1172,
     "fields": {
       "description": "Dienst 2 voor eHerkenning Upgrade",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29737,8 +29125,6 @@
     "pk": 1173,
     "fields": {
       "description": "Dienst 1 voor SVB Pensioen Portal",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29752,8 +29138,6 @@
     "pk": 1174,
     "fields": {
       "description": "Dienst 1 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 98533,
       "hours_per_week": 18,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29767,8 +29151,6 @@
     "pk": 1175,
     "fields": {
       "description": "Dienst 1 voor Logius Digikoppeling",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 173768,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29782,8 +29164,6 @@
     "pk": 1176,
     "fields": {
       "description": "Dienst 2 voor Logius Digikoppeling",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 156373,
       "hours_per_week": 18,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29797,8 +29177,6 @@
     "pk": 1177,
     "fields": {
       "description": "Dienst 3 voor Logius Digikoppeling",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 175901,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29812,8 +29190,6 @@
     "pk": 1178,
     "fields": {
       "description": "Dienst 4 voor Logius Digikoppeling",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 182520,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29827,8 +29203,6 @@
     "pk": 1179,
     "fields": {
       "description": "Dienst 5 voor Logius Digikoppeling",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29842,8 +29216,6 @@
     "pk": 1180,
     "fields": {
       "description": "Dienst 1 voor RCE Monumenten Register",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29857,8 +29229,6 @@
     "pk": 1181,
     "fields": {
       "description": "Dienst 2 voor RCE Monumenten Register",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29872,8 +29242,6 @@
     "pk": 1182,
     "fields": {
       "description": "Dienst 3 voor RCE Monumenten Register",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29887,8 +29255,6 @@
     "pk": 1183,
     "fields": {
       "description": "Dienst 4 voor RCE Monumenten Register",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 105098,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29902,8 +29268,6 @@
     "pk": 1184,
     "fields": {
       "description": "Dienst 1 voor CBS Open Data Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29917,8 +29281,6 @@
     "pk": 1185,
     "fields": {
       "description": "Dienst 2 voor CBS Open Data Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 166293,
       "hours_per_week": 30,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29932,8 +29294,6 @@
     "pk": 1186,
     "fields": {
       "description": "Dienst 3 voor CBS Open Data Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 180281,
       "hours_per_week": 26,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29947,8 +29307,6 @@
     "pk": 1187,
     "fields": {
       "description": "Dienst 1 voor Corona Check App Backend",
-      "cost_type": "VAST",
-      "fixed_cost": 81768,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29962,8 +29320,6 @@
     "pk": 1188,
     "fields": {
       "description": "Dienst 2 voor Corona Check App Backend",
-      "cost_type": "VAST",
-      "fixed_cost": 114875,
       "hours_per_week": 23,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29977,8 +29333,6 @@
     "pk": 1189,
     "fields": {
       "description": "Dienst 3 voor Corona Check App Backend",
-      "cost_type": "VAST",
-      "fixed_cost": 156844,
       "hours_per_week": 29,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -29992,8 +29346,6 @@
     "pk": 1190,
     "fields": {
       "description": "Dienst 1 voor TNO Innovation Portal",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30007,8 +29359,6 @@
     "pk": 1191,
     "fields": {
       "description": "Dienst 2 voor TNO Innovation Portal",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 33,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30022,8 +29372,6 @@
     "pk": 1192,
     "fields": {
       "description": "Dienst 1 voor AFM Toezicht Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 182408,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30037,8 +29385,6 @@
     "pk": 1193,
     "fields": {
       "description": "Dienst 1 voor RvIG BRP Modernisering",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 81130,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30052,8 +29398,6 @@
     "pk": 1194,
     "fields": {
       "description": "Dienst 2 voor RvIG BRP Modernisering",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 28,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30067,8 +29411,6 @@
     "pk": 1195,
     "fields": {
       "description": "Dienst 3 voor RvIG BRP Modernisering",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30082,8 +29424,6 @@
     "pk": 1196,
     "fields": {
       "description": "Dienst 1 voor RIVM Gezondheidsmonitor",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 182319,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30097,8 +29437,6 @@
     "pk": 1197,
     "fields": {
       "description": "Dienst 2 voor RIVM Gezondheidsmonitor",
-      "cost_type": "VAST",
-      "fixed_cost": 112753,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30112,8 +29450,6 @@
     "pk": 1198,
     "fields": {
       "description": "Dienst 3 voor RIVM Gezondheidsmonitor",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 28,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30127,8 +29463,6 @@
     "pk": 1199,
     "fields": {
       "description": "Dienst 1 voor Corona Check App Backend",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30142,8 +29476,6 @@
     "pk": 1200,
     "fields": {
       "description": "Dienst 2 voor Corona Check App Backend",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 112046,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30157,8 +29489,6 @@
     "pk": 1201,
     "fields": {
       "description": "Dienst 3 voor Corona Check App Backend",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 109256,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30172,8 +29502,6 @@
     "pk": 1202,
     "fields": {
       "description": "Dienst 1 voor Defensie Cloud Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 23,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30187,8 +29515,6 @@
     "pk": 1203,
     "fields": {
       "description": "Dienst 2 voor Defensie Cloud Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": 103246,
       "hours_per_week": 19,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30202,8 +29528,6 @@
     "pk": 1204,
     "fields": {
       "description": "Dienst 3 voor Defensie Cloud Migratie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30217,8 +29541,6 @@
     "pk": 1205,
     "fields": {
       "description": "Dienst 1 voor IND Digitaal Loket",
-      "cost_type": "VAST",
-      "fixed_cost": 161389,
       "hours_per_week": 29,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30232,8 +29554,6 @@
     "pk": 1206,
     "fields": {
       "description": "Dienst 2 voor IND Digitaal Loket",
-      "cost_type": "VAST",
-      "fixed_cost": 103933,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30247,8 +29567,6 @@
     "pk": 1207,
     "fields": {
       "description": "Dienst 1 voor Defensie Cloud Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": 171264,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30262,8 +29580,6 @@
     "pk": 1208,
     "fields": {
       "description": "Dienst 1 voor GGD Vaccinatie Register",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 127076,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30277,8 +29593,6 @@
     "pk": 1209,
     "fields": {
       "description": "Dienst 2 voor GGD Vaccinatie Register",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 39,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30292,8 +29606,6 @@
     "pk": 1210,
     "fields": {
       "description": "Dienst 3 voor GGD Vaccinatie Register",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30307,8 +29619,6 @@
     "pk": 1211,
     "fields": {
       "description": "Dienst 1 voor Belastingdienst Fraud Detectie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30322,8 +29632,6 @@
     "pk": 1212,
     "fields": {
       "description": "Dienst 2 voor Belastingdienst Fraud Detectie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30337,8 +29645,6 @@
     "pk": 1213,
     "fields": {
       "description": "Dienst 3 voor Belastingdienst Fraud Detectie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30352,8 +29658,6 @@
     "pk": 1214,
     "fields": {
       "description": "Dienst 1 voor RCE Monumenten Register",
-      "cost_type": "VAST",
-      "fixed_cost": 101803,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30367,8 +29671,6 @@
     "pk": 1215,
     "fields": {
       "description": "Dienst 2 voor RCE Monumenten Register",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30382,8 +29684,6 @@
     "pk": 1216,
     "fields": {
       "description": "Dienst 3 voor RCE Monumenten Register",
-      "cost_type": "VAST",
-      "fixed_cost": 160243,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30397,8 +29697,6 @@
     "pk": 1217,
     "fields": {
       "description": "Dienst 1 voor RVO Subsidieloket 3.0",
-      "cost_type": "VAST",
-      "fixed_cost": 128522,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30412,8 +29710,6 @@
     "pk": 1218,
     "fields": {
       "description": "Dienst 2 voor RVO Subsidieloket 3.0",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 140168,
       "hours_per_week": 39,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30427,8 +29723,6 @@
     "pk": 1219,
     "fields": {
       "description": "Dienst 1 voor GGD Vaccinatie Register",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 143151,
       "hours_per_week": 33,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30442,8 +29736,6 @@
     "pk": 1220,
     "fields": {
       "description": "Dienst 1 voor KNMI Weather API v3",
-      "cost_type": "VAST",
-      "fixed_cost": 120179,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30457,8 +29749,6 @@
     "pk": 1221,
     "fields": {
       "description": "Dienst 2 voor KNMI Weather API v3",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 28,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30472,8 +29762,6 @@
     "pk": 1222,
     "fields": {
       "description": "Dienst 3 voor KNMI Weather API v3",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 154208,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30487,8 +29775,6 @@
     "pk": 1223,
     "fields": {
       "description": "Dienst 1 voor RvIG BRP Modernisering",
-      "cost_type": "VAST",
-      "fixed_cost": 80258,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30502,8 +29788,6 @@
     "pk": 1224,
     "fields": {
       "description": "Dienst 1 voor Belastingaangifte 2021 Platform",
-      "cost_type": "VAST",
-      "fixed_cost": 82937,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30517,8 +29801,6 @@
     "pk": 1225,
     "fields": {
       "description": "Dienst 2 voor Belastingaangifte 2021 Platform",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30532,8 +29814,6 @@
     "pk": 1226,
     "fields": {
       "description": "Dienst 1 voor RIVM COVID Dashboard",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 187280,
       "hours_per_week": 19,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30547,8 +29827,6 @@
     "pk": 1227,
     "fields": {
       "description": "Dienst 2 voor RIVM COVID Dashboard",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 195497,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30562,8 +29840,6 @@
     "pk": 1228,
     "fields": {
       "description": "Dienst 1 voor MijnOverheid Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 79881,
       "hours_per_week": 26,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30577,8 +29853,6 @@
     "pk": 1229,
     "fields": {
       "description": "Dienst 1 voor ACM Markttoezicht Portal",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 162906,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30592,8 +29866,6 @@
     "pk": 1230,
     "fields": {
       "description": "Dienst 2 voor ACM Markttoezicht Portal",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 19,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30607,8 +29879,6 @@
     "pk": 1231,
     "fields": {
       "description": "Dienst 3 voor ACM Markttoezicht Portal",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30622,8 +29892,6 @@
     "pk": 1232,
     "fields": {
       "description": "Dienst 1 voor DUO Studielink Upgrade",
-      "cost_type": "VAST",
-      "fixed_cost": 97232,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30637,8 +29905,6 @@
     "pk": 1233,
     "fields": {
       "description": "Dienst 2 voor DUO Studielink Upgrade",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 138643,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30652,8 +29918,6 @@
     "pk": 1234,
     "fields": {
       "description": "Dienst 3 voor DUO Studielink Upgrade",
-      "cost_type": "VAST",
-      "fixed_cost": 89007,
       "hours_per_week": 18,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30667,8 +29931,6 @@
     "pk": 1235,
     "fields": {
       "description": "Dienst 1 voor Belastingaangifte 2021 Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 89061,
       "hours_per_week": 29,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30682,8 +29944,6 @@
     "pk": 1236,
     "fields": {
       "description": "Dienst 2 voor Belastingaangifte 2021 Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 144226,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30697,8 +29957,6 @@
     "pk": 1237,
     "fields": {
       "description": "Dienst 3 voor Belastingaangifte 2021 Platform",
-      "cost_type": "VAST",
-      "fixed_cost": 164794,
       "hours_per_week": 39,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30712,8 +29970,6 @@
     "pk": 1238,
     "fields": {
       "description": "Dienst 4 voor Belastingaangifte 2021 Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30727,8 +29983,6 @@
     "pk": 1239,
     "fields": {
       "description": "Dienst 1 voor Logius Digikoppeling",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 30,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30742,8 +29996,6 @@
     "pk": 1240,
     "fields": {
       "description": "Dienst 2 voor Logius Digikoppeling",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30757,8 +30009,6 @@
     "pk": 1241,
     "fields": {
       "description": "Dienst 3 voor Logius Digikoppeling",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30772,8 +30022,6 @@
     "pk": 1242,
     "fields": {
       "description": "Dienst 1 voor Corona Check App Backend",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 29,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30787,8 +30035,6 @@
     "pk": 1243,
     "fields": {
       "description": "Dienst 2 voor Corona Check App Backend",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30802,8 +30048,6 @@
     "pk": 1244,
     "fields": {
       "description": "Dienst 3 voor Corona Check App Backend",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 197313,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30817,8 +30061,6 @@
     "pk": 1245,
     "fields": {
       "description": "Dienst 1 voor RVO Subsidieloket 3.0",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 26,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30832,8 +30074,6 @@
     "pk": 1246,
     "fields": {
       "description": "Dienst 2 voor RVO Subsidieloket 3.0",
-      "cost_type": "VAST",
-      "fixed_cost": 99306,
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30847,8 +30087,6 @@
     "pk": 1247,
     "fields": {
       "description": "Dienst 1 voor Belastingaangifte 2021 Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 112790,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30862,8 +30100,6 @@
     "pk": 1248,
     "fields": {
       "description": "Dienst 1 voor DNB Stress Test Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 19,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30877,8 +30113,6 @@
     "pk": 1249,
     "fields": {
       "description": "Dienst 2 voor DNB Stress Test Platform",
-      "cost_type": "VAST",
-      "fixed_cost": 166419,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30892,8 +30126,6 @@
     "pk": 1250,
     "fields": {
       "description": "Dienst 3 voor DNB Stress Test Platform",
-      "cost_type": "VAST",
-      "fixed_cost": 69268,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30907,8 +30139,6 @@
     "pk": 1251,
     "fields": {
       "description": "Dienst 4 voor DNB Stress Test Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 197079,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30922,8 +30152,6 @@
     "pk": 1252,
     "fields": {
       "description": "Dienst 1 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30937,8 +30165,6 @@
     "pk": 1253,
     "fields": {
       "description": "Dienst 2 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "VAST",
-      "fixed_cost": 81463,
       "hours_per_week": 31,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30952,8 +30178,6 @@
     "pk": 1254,
     "fields": {
       "description": "Dienst 1 voor RVO Subsidieloket 3.0",
-      "cost_type": "VAST",
-      "fixed_cost": 54859,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30967,8 +30191,6 @@
     "pk": 1255,
     "fields": {
       "description": "Dienst 2 voor RVO Subsidieloket 3.0",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30982,8 +30204,6 @@
     "pk": 1256,
     "fields": {
       "description": "Dienst 3 voor RVO Subsidieloket 3.0",
-      "cost_type": "VAST",
-      "fixed_cost": 143256,
       "hours_per_week": 23,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -30997,8 +30217,6 @@
     "pk": 1257,
     "fields": {
       "description": "Dienst 4 voor RVO Subsidieloket 3.0",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 39,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31012,8 +30230,6 @@
     "pk": 1258,
     "fields": {
       "description": "Dienst 1 voor RvIG BRP Modernisering",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31027,8 +30243,6 @@
     "pk": 1259,
     "fields": {
       "description": "Dienst 2 voor RvIG BRP Modernisering",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 152042,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31042,8 +30256,6 @@
     "pk": 1260,
     "fields": {
       "description": "Dienst 3 voor RvIG BRP Modernisering",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 66259,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31057,8 +30269,6 @@
     "pk": 1261,
     "fields": {
       "description": "Dienst 1 voor eHerkenning Upgrade",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 30,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31072,8 +30282,6 @@
     "pk": 1262,
     "fields": {
       "description": "Dienst 2 voor eHerkenning Upgrade",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 102961,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31087,8 +30295,6 @@
     "pk": 1263,
     "fields": {
       "description": "Dienst 1 voor BSN Modernisering 2022",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 180205,
       "hours_per_week": 26,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31102,8 +30308,6 @@
     "pk": 1264,
     "fields": {
       "description": "Dienst 2 voor BSN Modernisering 2022",
-      "cost_type": "VAST",
-      "fixed_cost": 134216,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31117,8 +30321,6 @@
     "pk": 1265,
     "fields": {
       "description": "Dienst 3 voor BSN Modernisering 2022",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 19,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31132,8 +30334,6 @@
     "pk": 1266,
     "fields": {
       "description": "Dienst 1 voor CBS Data Lake Implementatie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 33,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31147,8 +30347,6 @@
     "pk": 1267,
     "fields": {
       "description": "Dienst 1 voor UWV Digitale Transformatie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 26,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31162,8 +30360,6 @@
     "pk": 1268,
     "fields": {
       "description": "Dienst 1 voor CIBG Zorgregister",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 51232,
       "hours_per_week": 19,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31177,8 +30373,6 @@
     "pk": 1269,
     "fields": {
       "description": "Dienst 2 voor CIBG Zorgregister",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 18,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31192,8 +30386,6 @@
     "pk": 1270,
     "fields": {
       "description": "Dienst 3 voor CIBG Zorgregister",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 23,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31207,8 +30399,6 @@
     "pk": 1271,
     "fields": {
       "description": "Dienst 1 voor RCE Monumenten Register",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 180323,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31222,8 +30412,6 @@
     "pk": 1272,
     "fields": {
       "description": "Dienst 2 voor RCE Monumenten Register",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 33,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31237,8 +30425,6 @@
     "pk": 1273,
     "fields": {
       "description": "Dienst 1 voor CBS Data Lake Implementatie",
-      "cost_type": "VAST",
-      "fixed_cost": 110516,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31252,8 +30438,6 @@
     "pk": 1274,
     "fields": {
       "description": "Dienst 2 voor CBS Data Lake Implementatie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 188469,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31267,8 +30451,6 @@
     "pk": 1275,
     "fields": {
       "description": "Dienst 3 voor CBS Data Lake Implementatie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 64388,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31282,8 +30464,6 @@
     "pk": 1276,
     "fields": {
       "description": "Dienst 1 voor KvK Handelsregister API",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 19,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31297,8 +30477,6 @@
     "pk": 1277,
     "fields": {
       "description": "Dienst 2 voor KvK Handelsregister API",
-      "cost_type": "VAST",
-      "fixed_cost": 111869,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31312,8 +30490,6 @@
     "pk": 1278,
     "fields": {
       "description": "Dienst 1 voor Agentschap Telecom Frequentie Register",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31327,8 +30503,6 @@
     "pk": 1279,
     "fields": {
       "description": "Dienst 2 voor Agentschap Telecom Frequentie Register",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 61138,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31342,8 +30516,6 @@
     "pk": 1280,
     "fields": {
       "description": "Dienst 1 voor RDW Voertuig API Modernisering",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31357,8 +30529,6 @@
     "pk": 1281,
     "fields": {
       "description": "Dienst 2 voor RDW Voertuig API Modernisering",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 86932,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31372,8 +30542,6 @@
     "pk": 1282,
     "fields": {
       "description": "Dienst 3 voor RDW Voertuig API Modernisering",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 18,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31387,8 +30555,6 @@
     "pk": 1283,
     "fields": {
       "description": "Dienst 1 voor RvIG BRP Modernisering",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31402,8 +30568,6 @@
     "pk": 1284,
     "fields": {
       "description": "Dienst 2 voor RvIG BRP Modernisering",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31417,8 +30581,6 @@
     "pk": 1285,
     "fields": {
       "description": "Dienst 1 voor KvK Handelsregister API",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 159223,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31432,8 +30594,6 @@
     "pk": 1286,
     "fields": {
       "description": "Dienst 2 voor KvK Handelsregister API",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 61034,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31447,8 +30607,6 @@
     "pk": 1287,
     "fields": {
       "description": "Dienst 3 voor KvK Handelsregister API",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31462,8 +30620,6 @@
     "pk": 1288,
     "fields": {
       "description": "Dienst 1 voor Kadaster BRK Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31477,8 +30633,6 @@
     "pk": 1289,
     "fields": {
       "description": "Dienst 2 voor Kadaster BRK Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31492,8 +30646,6 @@
     "pk": 1290,
     "fields": {
       "description": "Dienst 3 voor Kadaster BRK Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31507,8 +30659,6 @@
     "pk": 1291,
     "fields": {
       "description": "Dienst 1 voor UWV Digitale Transformatie",
-      "cost_type": "VAST",
-      "fixed_cost": 78936,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31522,8 +30672,6 @@
     "pk": 1292,
     "fields": {
       "description": "Dienst 2 voor UWV Digitale Transformatie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 104851,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31537,8 +30685,6 @@
     "pk": 1293,
     "fields": {
       "description": "Dienst 1 voor Corona Check App Backend",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 73820,
       "hours_per_week": 31,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31552,8 +30698,6 @@
     "pk": 1294,
     "fields": {
       "description": "Dienst 2 voor Corona Check App Backend",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31567,8 +30711,6 @@
     "pk": 1295,
     "fields": {
       "description": "Dienst 3 voor Corona Check App Backend",
-      "cost_type": "VAST",
-      "fixed_cost": 90223,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31582,8 +30724,6 @@
     "pk": 1296,
     "fields": {
       "description": "Dienst 4 voor Corona Check App Backend",
-      "cost_type": "VAST",
-      "fixed_cost": 149180,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31597,8 +30737,6 @@
     "pk": 1297,
     "fields": {
       "description": "Dienst 1 voor BSN Modernisering 2022",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31612,8 +30750,6 @@
     "pk": 1298,
     "fields": {
       "description": "Dienst 2 voor BSN Modernisering 2022",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31627,8 +30763,6 @@
     "pk": 1299,
     "fields": {
       "description": "Dienst 3 voor BSN Modernisering 2022",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31642,8 +30776,6 @@
     "pk": 1300,
     "fields": {
       "description": "Dienst 1 voor RIVM Gezondheidsmonitor",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31657,8 +30789,6 @@
     "pk": 1301,
     "fields": {
       "description": "Dienst 2 voor RIVM Gezondheidsmonitor",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 30,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31672,8 +30802,6 @@
     "pk": 1302,
     "fields": {
       "description": "Dienst 3 voor RIVM Gezondheidsmonitor",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 158979,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31687,8 +30815,6 @@
     "pk": 1303,
     "fields": {
       "description": "Dienst 4 voor RIVM Gezondheidsmonitor",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 75449,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31702,8 +30828,6 @@
     "pk": 1304,
     "fields": {
       "description": "Dienst 1 voor BSN Modernisering 2022",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31717,8 +30841,6 @@
     "pk": 1305,
     "fields": {
       "description": "Dienst 1 voor KvK Handelsregister API",
-      "cost_type": "VAST",
-      "fixed_cost": 74756,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31732,8 +30854,6 @@
     "pk": 1306,
     "fields": {
       "description": "Dienst 1 voor PBL Omgevingsatlas",
-      "cost_type": "VAST",
-      "fixed_cost": 154860,
       "hours_per_week": 28,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31747,8 +30867,6 @@
     "pk": 1307,
     "fields": {
       "description": "Dienst 1 voor MijnOverheid Vernieuwing",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 36,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31762,8 +30880,6 @@
     "pk": 1308,
     "fields": {
       "description": "Dienst 2 voor MijnOverheid Vernieuwing",
-      "cost_type": "VAST",
-      "fixed_cost": 145122,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31777,8 +30893,6 @@
     "pk": 1309,
     "fields": {
       "description": "Dienst 1 voor MijnOverheid Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 119026,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31792,8 +30906,6 @@
     "pk": 1310,
     "fields": {
       "description": "Dienst 2 voor MijnOverheid Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 185830,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31807,8 +30919,6 @@
     "pk": 1311,
     "fields": {
       "description": "Dienst 3 voor MijnOverheid Vernieuwing",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31822,8 +30932,6 @@
     "pk": 1312,
     "fields": {
       "description": "Dienst 4 voor MijnOverheid Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31837,8 +30945,6 @@
     "pk": 1313,
     "fields": {
       "description": "Dienst 1 voor PBL Omgevingsatlas",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31852,8 +30958,6 @@
     "pk": 1314,
     "fields": {
       "description": "Dienst 2 voor PBL Omgevingsatlas",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31867,8 +30971,6 @@
     "pk": 1315,
     "fields": {
       "description": "Dienst 3 voor PBL Omgevingsatlas",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 133342,
       "hours_per_week": 18,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31882,8 +30984,6 @@
     "pk": 1316,
     "fields": {
       "description": "Dienst 4 voor PBL Omgevingsatlas",
-      "cost_type": "VAST",
-      "fixed_cost": 51049,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31897,8 +30997,6 @@
     "pk": 1317,
     "fields": {
       "description": "Dienst 5 voor PBL Omgevingsatlas",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 147542,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31912,8 +31010,6 @@
     "pk": 1318,
     "fields": {
       "description": "Dienst 1 voor PBL Omgevingsatlas",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31927,8 +31023,6 @@
     "pk": 1319,
     "fields": {
       "description": "Dienst 2 voor PBL Omgevingsatlas",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 191582,
       "hours_per_week": 30,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31942,8 +31036,6 @@
     "pk": 1320,
     "fields": {
       "description": "Dienst 1 voor CAS Identity Management",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31957,8 +31049,6 @@
     "pk": 1321,
     "fields": {
       "description": "Dienst 1 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31972,8 +31062,6 @@
     "pk": 1322,
     "fields": {
       "description": "Dienst 2 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 120499,
       "hours_per_week": 39,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -31987,8 +31075,6 @@
     "pk": 1323,
     "fields": {
       "description": "Dienst 3 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 28,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32002,8 +31088,6 @@
     "pk": 1324,
     "fields": {
       "description": "Dienst 1 voor Agentschap Telecom Frequentie Register",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 33,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32017,8 +31101,6 @@
     "pk": 1325,
     "fields": {
       "description": "Dienst 2 voor Agentschap Telecom Frequentie Register",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32032,8 +31114,6 @@
     "pk": 1326,
     "fields": {
       "description": "Dienst 3 voor Agentschap Telecom Frequentie Register",
-      "cost_type": "VAST",
-      "fixed_cost": 71127,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32047,8 +31127,6 @@
     "pk": 1327,
     "fields": {
       "description": "Dienst 4 voor Agentschap Telecom Frequentie Register",
-      "cost_type": "VAST",
-      "fixed_cost": 135542,
       "hours_per_week": 28,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32062,8 +31140,6 @@
     "pk": 1328,
     "fields": {
       "description": "Dienst 1 voor AIVD Analyse Platform",
-      "cost_type": "VAST",
-      "fixed_cost": 181078,
       "hours_per_week": 30,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32077,8 +31153,6 @@
     "pk": 1329,
     "fields": {
       "description": "Dienst 2 voor AIVD Analyse Platform",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32092,8 +31166,6 @@
     "pk": 1330,
     "fields": {
       "description": "Dienst 3 voor AIVD Analyse Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 177272,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32107,8 +31179,6 @@
     "pk": 1331,
     "fields": {
       "description": "Dienst 1 voor Digitaal Stelsel Omgevingswet",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 112860,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32122,8 +31192,6 @@
     "pk": 1332,
     "fields": {
       "description": "Dienst 2 voor Digitaal Stelsel Omgevingswet",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 29,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32137,8 +31205,6 @@
     "pk": 1333,
     "fields": {
       "description": "Dienst 1 voor RCE Monumenten Register",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 33,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32152,8 +31218,6 @@
     "pk": 1334,
     "fields": {
       "description": "Dienst 1 voor SVB Pensioen Portal",
-      "cost_type": "VAST",
-      "fixed_cost": 69988,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32167,8 +31231,6 @@
     "pk": 1335,
     "fields": {
       "description": "Dienst 1 voor ACM Markttoezicht Portal",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32182,8 +31244,6 @@
     "pk": 1336,
     "fields": {
       "description": "Dienst 2 voor ACM Markttoezicht Portal",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32197,8 +31257,6 @@
     "pk": 1337,
     "fields": {
       "description": "Dienst 1 voor PBL Klimaatmonitor",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 136752,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32212,8 +31270,6 @@
     "pk": 1338,
     "fields": {
       "description": "Dienst 2 voor PBL Klimaatmonitor",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 87637,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32227,8 +31283,6 @@
     "pk": 1339,
     "fields": {
       "description": "Dienst 1 voor CIBG Zorgregister",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32242,8 +31296,6 @@
     "pk": 1340,
     "fields": {
       "description": "Dienst 2 voor CIBG Zorgregister",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32257,8 +31309,6 @@
     "pk": 1341,
     "fields": {
       "description": "Dienst 3 voor CIBG Zorgregister",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 52286,
       "hours_per_week": 36,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32272,8 +31322,6 @@
     "pk": 1342,
     "fields": {
       "description": "Dienst 1 voor RDW Voertuig API Modernisering",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 23,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32287,8 +31335,6 @@
     "pk": 1343,
     "fields": {
       "description": "Dienst 1 voor KB Digitale Collectie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 120999,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32302,8 +31348,6 @@
     "pk": 1344,
     "fields": {
       "description": "Dienst 2 voor KB Digitale Collectie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 153143,
       "hours_per_week": 27,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32317,8 +31361,6 @@
     "pk": 1345,
     "fields": {
       "description": "Dienst 3 voor KB Digitale Collectie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 30,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32332,8 +31374,6 @@
     "pk": 1346,
     "fields": {
       "description": "Dienst 1 voor DigiD 2019 Migratie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 177623,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32347,8 +31387,6 @@
     "pk": 1347,
     "fields": {
       "description": "Dienst 2 voor DigiD 2019 Migratie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32362,8 +31400,6 @@
     "pk": 1348,
     "fields": {
       "description": "Dienst 3 voor DigiD 2019 Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": 190218,
       "hours_per_week": 30,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32377,8 +31413,6 @@
     "pk": 1349,
     "fields": {
       "description": "Dienst 1 voor RVO Subsidieloket 3.0",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32392,8 +31426,6 @@
     "pk": 1350,
     "fields": {
       "description": "Dienst 2 voor RVO Subsidieloket 3.0",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 104442,
       "hours_per_week": 31,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32407,8 +31439,6 @@
     "pk": 1351,
     "fields": {
       "description": "Dienst 1 voor KvK Handelsregister API",
-      "cost_type": "VAST",
-      "fixed_cost": 138317,
       "hours_per_week": 36,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32422,8 +31452,6 @@
     "pk": 1352,
     "fields": {
       "description": "Dienst 2 voor KvK Handelsregister API",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32437,8 +31465,6 @@
     "pk": 1353,
     "fields": {
       "description": "Dienst 1 voor DigiD 2019 Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": 152135,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32452,8 +31478,6 @@
     "pk": 1354,
     "fields": {
       "description": "Dienst 2 voor DigiD 2019 Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": 177579,
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32467,8 +31491,6 @@
     "pk": 1355,
     "fields": {
       "description": "Dienst 1 voor Kadaster BRK Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32482,8 +31504,6 @@
     "pk": 1356,
     "fields": {
       "description": "Dienst 2 voor Kadaster BRK Vernieuwing",
-      "cost_type": "VAST",
-      "fixed_cost": 176024,
       "hours_per_week": 36,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32497,8 +31517,6 @@
     "pk": 1357,
     "fields": {
       "description": "Dienst 1 voor AIVD Analyse Platform",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32512,8 +31530,6 @@
     "pk": 1358,
     "fields": {
       "description": "Dienst 1 voor UWV Digitale Transformatie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 125879,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32527,8 +31543,6 @@
     "pk": 1359,
     "fields": {
       "description": "Dienst 2 voor UWV Digitale Transformatie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32542,8 +31556,6 @@
     "pk": 1360,
     "fields": {
       "description": "Dienst 3 voor UWV Digitale Transformatie",
-      "cost_type": "VAST",
-      "fixed_cost": 166973,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32557,8 +31569,6 @@
     "pk": 1361,
     "fields": {
       "description": "Dienst 1 voor PBL Klimaatmonitor",
-      "cost_type": "VAST",
-      "fixed_cost": 195379,
       "hours_per_week": 29,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32572,8 +31582,6 @@
     "pk": 1362,
     "fields": {
       "description": "Dienst 1 voor Corona Check App Backend",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32587,8 +31595,6 @@
     "pk": 1363,
     "fields": {
       "description": "Dienst 2 voor Corona Check App Backend",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32602,8 +31608,6 @@
     "pk": 1364,
     "fields": {
       "description": "Dienst 3 voor Corona Check App Backend",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32617,8 +31621,6 @@
     "pk": 1365,
     "fields": {
       "description": "Dienst 1 voor CJIB Digitale Boetes",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 152890,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32632,8 +31634,6 @@
     "pk": 1366,
     "fields": {
       "description": "Dienst 2 voor CJIB Digitale Boetes",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 63363,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32647,8 +31647,6 @@
     "pk": 1367,
     "fields": {
       "description": "Dienst 3 voor CJIB Digitale Boetes",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 102897,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32662,8 +31660,6 @@
     "pk": 1368,
     "fields": {
       "description": "Dienst 1 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "VAST",
-      "fixed_cost": 95141,
       "hours_per_week": 36,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32677,8 +31673,6 @@
     "pk": 1369,
     "fields": {
       "description": "Dienst 2 voor NVWA Traceerbaarheid Systeem",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 35,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32692,8 +31686,6 @@
     "pk": 1370,
     "fields": {
       "description": "Dienst 1 voor KB Digitale Collectie",
-      "cost_type": "VAST",
-      "fixed_cost": 91739,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32707,8 +31699,6 @@
     "pk": 1371,
     "fields": {
       "description": "Dienst 2 voor KB Digitale Collectie",
-      "cost_type": "VAST",
-      "fixed_cost": 131149,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32722,8 +31712,6 @@
     "pk": 1372,
     "fields": {
       "description": "Dienst 1 voor Defensie Cloud Migratie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32737,8 +31725,6 @@
     "pk": 1373,
     "fields": {
       "description": "Dienst 2 voor Defensie Cloud Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": 189031,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32752,8 +31738,6 @@
     "pk": 1374,
     "fields": {
       "description": "Dienst 3 voor Defensie Cloud Migratie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 155215,
       "hours_per_week": 31,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32767,8 +31751,6 @@
     "pk": 1375,
     "fields": {
       "description": "Dienst 4 voor Defensie Cloud Migratie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 18,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32782,8 +31764,6 @@
     "pk": 1376,
     "fields": {
       "description": "Dienst 1 voor BSN Modernisering 2022",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 28,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32797,8 +31777,6 @@
     "pk": 1377,
     "fields": {
       "description": "Dienst 2 voor BSN Modernisering 2022",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 33,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32812,8 +31790,6 @@
     "pk": 1378,
     "fields": {
       "description": "Dienst 1 voor MijnOverheid Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 118946,
       "hours_per_week": 24,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32827,8 +31803,6 @@
     "pk": 1379,
     "fields": {
       "description": "Dienst 2 voor MijnOverheid Vernieuwing",
-      "cost_type": "VAST",
-      "fixed_cost": 179680,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32842,8 +31816,6 @@
     "pk": 1380,
     "fields": {
       "description": "Dienst 3 voor MijnOverheid Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 126654,
       "hours_per_week": 16,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32857,8 +31829,6 @@
     "pk": 1381,
     "fields": {
       "description": "Dienst 4 voor MijnOverheid Vernieuwing",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32872,8 +31842,6 @@
     "pk": 1382,
     "fields": {
       "description": "Dienst 1 voor AIVD Analyse Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 39,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32887,8 +31855,6 @@
     "pk": 1383,
     "fields": {
       "description": "Dienst 2 voor AIVD Analyse Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 20,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32902,8 +31868,6 @@
     "pk": 1384,
     "fields": {
       "description": "Dienst 3 voor AIVD Analyse Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 39,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32917,8 +31881,6 @@
     "pk": 1385,
     "fields": {
       "description": "Dienst 4 voor AIVD Analyse Platform",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 122007,
       "hours_per_week": 36,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32932,8 +31894,6 @@
     "pk": 1386,
     "fields": {
       "description": "Dienst 1 voor CIBG Zorgregister",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 159753,
       "hours_per_week": 23,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32947,8 +31907,6 @@
     "pk": 1387,
     "fields": {
       "description": "Dienst 2 voor CIBG Zorgregister",
-      "cost_type": "VAST",
-      "fixed_cost": 58220,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32962,8 +31920,6 @@
     "pk": 1388,
     "fields": {
       "description": "Dienst 3 voor CIBG Zorgregister",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 100421,
       "hours_per_week": 18,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32977,8 +31933,6 @@
     "pk": 1389,
     "fields": {
       "description": "Dienst 1 voor Agentschap Telecom Frequentie Register",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 26,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -32992,8 +31946,6 @@
     "pk": 1390,
     "fields": {
       "description": "Dienst 1 voor NEa Energieregister",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 84494,
       "hours_per_week": 38,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33007,8 +31959,6 @@
     "pk": 1391,
     "fields": {
       "description": "Dienst 2 voor NEa Energieregister",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 140448,
       "hours_per_week": 40,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33022,8 +31972,6 @@
     "pk": 1392,
     "fields": {
       "description": "Dienst 3 voor NEa Energieregister",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 28,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33037,8 +31985,6 @@
     "pk": 1393,
     "fields": {
       "description": "Dienst 4 voor NEa Energieregister",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33052,8 +31998,6 @@
     "pk": 1394,
     "fields": {
       "description": "Dienst 1 voor Agentschap Telecom Frequentie Register",
-      "cost_type": "VAST",
-      "fixed_cost": 153546,
       "hours_per_week": 18,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33067,8 +32011,6 @@
     "pk": 1395,
     "fields": {
       "description": "Dienst 2 voor Agentschap Telecom Frequentie Register",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 31,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33082,8 +32024,6 @@
     "pk": 1396,
     "fields": {
       "description": "Dienst 3 voor Agentschap Telecom Frequentie Register",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 37,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33097,8 +32037,6 @@
     "pk": 1397,
     "fields": {
       "description": "Dienst 1 voor Belastingdienst Fraud Detectie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 18,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33112,8 +32050,6 @@
     "pk": 1398,
     "fields": {
       "description": "Dienst 2 voor Belastingdienst Fraud Detectie",
-      "cost_type": "VAST",
-      "fixed_cost": 166563,
       "hours_per_week": 33,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33127,8 +32063,6 @@
     "pk": 1399,
     "fields": {
       "description": "Dienst 3 voor Belastingdienst Fraud Detectie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 26,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33142,8 +32076,6 @@
     "pk": 1400,
     "fields": {
       "description": "Dienst 1 voor Rijksmuseum Collectie API",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 25,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33157,8 +32089,6 @@
     "pk": 1401,
     "fields": {
       "description": "Dienst 1 voor CJIB Digitale Boetes",
-      "cost_type": "VAST",
-      "fixed_cost": 115193,
       "hours_per_week": 18,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33172,8 +32102,6 @@
     "pk": 1402,
     "fields": {
       "description": "Dienst 2 voor CJIB Digitale Boetes",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 32,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33187,8 +32115,6 @@
     "pk": 1403,
     "fields": {
       "description": "Dienst 3 voor CJIB Digitale Boetes",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 190855,
       "hours_per_week": 17,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33202,8 +32128,6 @@
     "pk": 1404,
     "fields": {
       "description": "Dienst 4 voor CJIB Digitale Boetes",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 99093,
       "hours_per_week": 28,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33217,8 +32141,6 @@
     "pk": 1405,
     "fields": {
       "description": "Dienst 1 voor DUO Studielink Upgrade",
-      "cost_type": "PER_UUR",
-      "fixed_cost": null,
       "hours_per_week": 34,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33232,8 +32154,6 @@
     "pk": 1406,
     "fields": {
       "description": "Dienst 2 voor DUO Studielink Upgrade",
-      "cost_type": "VAST",
-      "fixed_cost": 95931,
       "hours_per_week": 21,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33247,8 +32167,6 @@
     "pk": 1407,
     "fields": {
       "description": "Dienst 1 voor KB Digitale Collectie",
-      "cost_type": "VAST",
-      "fixed_cost": null,
       "hours_per_week": 22,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33262,8 +32180,6 @@
     "pk": 1408,
     "fields": {
       "description": "Dienst 2 voor KB Digitale Collectie",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 108699,
       "hours_per_week": 26,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33277,8 +32193,6 @@
     "pk": 1409,
     "fields": {
       "description": "Dienst 1 voor Digitaal Stelsel Omgevingswet",
-      "cost_type": "VAST",
-      "fixed_cost": 150490,
       "hours_per_week": 29,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,
@@ -33292,8 +32206,6 @@
     "pk": 1410,
     "fields": {
       "description": "Dienst 2 voor Digitaal Stelsel Omgevingswet",
-      "cost_type": "PER_UUR",
-      "fixed_cost": 176506,
       "hours_per_week": 23,
       "period_source": "ASSIGNMENT",
       "specific_start_date": null,

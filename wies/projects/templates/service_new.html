@@ -7,7 +7,7 @@
   <div class="rvo-layout-column rvo-layout-gap--0">
     <div class="rvo-layout-column rvo-layout-gap--0">
       <h1 class="utrecht-heading-1">Nieuw dienst toevoegen</h1>
-      <p class="rvo-text--lg"><span class='rvo-text--bold'>Vul de gegevens in van de nieuwe dienst.</span> Vul de beschrijving en kosten in.</p>
+      <p class="rvo-text--lg"><span class='rvo-text--bold'>Vul de gegevens in van de nieuwe dienst.</span> Vul de beschrijving in.</p>
     </div>
     <form class="rvo-layout-column rvo-layout-gap--md" method="post" enctype="multipart/form-data">
       {% csrf_token %}
@@ -18,33 +18,7 @@
           </legend>
           <div class="rvo-layout-column rvo-layout-gap--md">
             {% for field in form %}
-              {% if field.name == "fixed_cost" %}
-                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0" id="fixed_cost_field" style="display: none;">
-                  <div class="rvo-form-field__label">
-                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                  </div>
-                  {{ field }}
-                  {% if field.help_text %}
-                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
-                  {% endif %}
-                  {% for error in field.errors %}
-                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
-                  {% endfor %}
-                </div>
-              {% elif field.name == "hours_per_week" %}
-                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0" id="hours_per_week_field" style="display: none;">
-                  <div class="rvo-form-field__label">
-                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-                  </div>
-                  {{ field }}
-                  {% if field.help_text %}
-                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
-                  {% endif %}
-                  {% for error in field.errors %}
-                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
-                  {% endfor %}
-                </div>
-              {% elif field.name == "specific_start_date" %}
+              {% if field.name == "specific_start_date" %}
                 <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0" id="specific_start_date_field" style="display: none;">
                   <div class="rvo-form-field__label">
                     <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>

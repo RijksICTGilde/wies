@@ -85,15 +85,13 @@ class PlacementForm(RVOFormMixin, forms.ModelForm):
 class ServiceForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['description', 'skill', 'cost_type', 'fixed_cost', 'hours_per_week', 'period_source', 'specific_start_date', 'specific_end_date']
+        fields = ['description', 'skill', 'hours_per_week', 'period_source', 'specific_start_date', 'specific_end_date']
         widgets = {
             'skill': forms.Select(attrs={'class': 'js-skills-select-single'}),
         }
         labels = {
             'description': 'Omschrijving',
             'skill': 'Rol',
-            'cost_type': 'Kosten type',
-            'fixed_cost': 'Vaste kosten',
             'hours_per_week': 'Uren per week',
             'period_source': 'Periode',
             'specific_start_date': 'Start datum',
