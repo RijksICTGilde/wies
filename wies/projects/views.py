@@ -1085,16 +1085,6 @@ class ColleagueDetail(DetailView):
 
         return context
 
-class ColleagueDeleteView(DeleteView):
-    model = Colleague
-    success_url = reverse_lazy("colleagues")
-    template_name = 'colleague_delete.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/colleagues/{context["object"].pk}/'
-        return context
-
 class ColleagueUpdateView(UpdateView):
     model = Colleague
     form_class = ColleagueForm

@@ -7,6 +7,7 @@ This files lists the changes during the lifetime of this project.
 - (backwards incompatible) remove cost part of assignment
 - (backwards incompatible) add assignment owner
 - add assignment edit permissions based on usergroup
+- remove ability to delete colleagues over API/interface (only admin panel remaining)
 
 ## 2025-10-09
 - add period filter to placement page
