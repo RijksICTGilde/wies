@@ -959,6 +959,13 @@ class AssignmentCreateView(CreateView):
     form_class = AssignmentForm
     template_name = 'assignment_new.html'
 
+    def get_initial(self):
+        """Set current user's colleague as default owner"""
+        initial = super().get_initial()
+        if hasattr(self.request.user, 'colleague') and self.request.user.colleague:
+            initial['owner'] = self.request.user.colleague
+        return initial
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update({

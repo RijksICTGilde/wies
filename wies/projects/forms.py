@@ -31,6 +31,9 @@ class AssignmentForm(RVOFormMixin, forms.ModelForm):
         model = Assignment
         fields = '__all__'
         exclude = ['assignment_type',]
+        widgets = {
+            'owner': forms.Select(attrs={'class': 'js-colleague-select'}),
+        }
         labels = {
             'name': 'Naam',
             'start_date': 'Start datum',
@@ -38,6 +41,7 @@ class AssignmentForm(RVOFormMixin, forms.ModelForm):
             'status': 'Status',
             'organization': 'Opdrachtgever',
             'ministry': 'Ministerie',
+            'owner': 'Eigenaar',
             'extra_info': 'Extra informatie',
         }
 

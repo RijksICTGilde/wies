@@ -60,6 +60,14 @@
           <span class="rvo-text--italic">Geen ministerie opgegeven</span>
         {% endif %}
       </dd>
+      <dt>Eigenaar</dt>
+      <dd>
+        {% if object.owner %}
+          <a href="{% url 'colleague-detail' object.owner.pk %}" class="rvo-link">{{ object.owner.name }}</a>
+        {% else %}
+          <span class="rvo-text--italic">Geen eigenaar opgegeven</span>
+        {% endif %}
+      </dd>
       <dt>Status</dt>
       <dd>
         <div class="rvo-tag {% if object.status == 'LEAD' %}wies-tag--light-yellow{% elif object.status == 'OPEN' %}rvo-tag--info{% elif object.status == 'LOPEND' %}rvo-tag--success{% elif object.status == 'AFGEWEZEN' %}rvo-tag--error{% else %}rvo-tag--default{% endif %}">{{ object.status }}</div>
