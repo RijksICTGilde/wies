@@ -18,7 +18,7 @@
   
   <!-- Statistics Cards -->
   <div class="rvo-max-width-layout rvo-max-width-layout--md rvo-layout-margin-bottom--sm">
-    <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three">
+    <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
       <div class="rvo-card rvo-card--outline rvo-card--padding-md">
         <div class="rvo-card__content">
           <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Weken tot eind opdracht"></span>
@@ -32,13 +32,6 @@
           {% else %}
             Geen einddatum
           {% endif %}
-        </div>
-      </div>
-      <div class="rvo-card rvo-card--outline rvo-card--padding-md">
-        <div class="rvo-card__content">
-          <span class="utrecht-icon rvo-icon rvo-icon-map-vol-documenten rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Budget besteed"></span>
-          <h4 class="utrecht-heading-4 rvo-heading--no-margins">Budget besteed</h4>
-          {{ budget_percentage }}%
         </div>
       </div>
       <div class="rvo-card rvo-card--outline rvo-card--padding-md">
@@ -65,6 +58,14 @@
           <a href="{% url 'ministry-detail' object.ministry.pk %}" class="rvo-link">{{ object.ministry.name }} ({{ object.ministry.abbreviation }})</a>
         {% else %}
           <span class="rvo-text--italic">Geen ministerie opgegeven</span>
+        {% endif %}
+      </dd>
+      <dt>Eigenaar</dt>
+      <dd>
+        {% if object.owner %}
+          <a href="{% url 'colleague-detail' object.owner.pk %}" class="rvo-link">{{ object.owner.name }}</a>
+        {% else %}
+          <span class="rvo-text--italic">Geen eigenaar opgegeven</span>
         {% endif %}
       </dd>
       <dt>Status</dt>

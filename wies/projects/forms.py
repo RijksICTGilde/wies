@@ -31,6 +31,9 @@ class AssignmentForm(RVOFormMixin, forms.ModelForm):
         model = Assignment
         fields = '__all__'
         exclude = ['assignment_type',]
+        widgets = {
+            'owner': forms.Select(attrs={'class': 'js-colleague-select'}),
+        }
         labels = {
             'name': 'Naam',
             'start_date': 'Start datum',
@@ -38,6 +41,7 @@ class AssignmentForm(RVOFormMixin, forms.ModelForm):
             'status': 'Status',
             'organization': 'Opdrachtgever',
             'ministry': 'Ministerie',
+            'owner': 'Eigenaar',
             'extra_info': 'Extra informatie',
         }
 
@@ -85,15 +89,13 @@ class PlacementForm(RVOFormMixin, forms.ModelForm):
 class ServiceForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Service
-        fields = ['description', 'skill', 'cost_type', 'fixed_cost', 'hours_per_week', 'period_source', 'specific_start_date', 'specific_end_date']
+        fields = ['description', 'skill', 'hours_per_week', 'period_source', 'specific_start_date', 'specific_end_date']
         widgets = {
             'skill': forms.Select(attrs={'class': 'js-skills-select-single'}),
         }
         labels = {
             'description': 'Omschrijving',
             'skill': 'Rol',
-            'cost_type': 'Kosten type',
-            'fixed_cost': 'Vaste kosten',
             'hours_per_week': 'Uren per week',
             'period_source': 'Periode',
             'specific_start_date': 'Start datum',

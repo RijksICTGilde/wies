@@ -2,7 +2,7 @@ import datetime
 
 from django.db import models
 from django.urls import reverse
-from django.db.models import Max, Sum, Case, When, F, FloatField, Q
+from django.db.models import Max
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
@@ -127,6 +127,7 @@ class Assignment(models.Model):
     status = models.CharField(max_length=20, choices=ASSIGNMENT_STATUS, default='LEAD')
     organization = models.CharField(blank=True)
     ministry = models.ForeignKey('Ministry', models.SET_NULL, null=True, blank=False)
+    owner = models.ForeignKey('Colleague', models.SET_NULL, null=True, blank=False, related_name='owned_assignments')
     extra_info = models.TextField(blank=True)
     assignment_type = models.CharField(max_length=20, choices=ASSIGNMENT_TYPE, default='GROUP')
 
@@ -143,34 +144,6 @@ class Assignment(models.Model):
             return "completed"
         else:
             return "active"
-
-    def get_total_services_cost(self):
-        """Calculate total cost of all services in this assignment - optimized"""
-        
-        # Use database aggregation instead of Python loops
-        result = self.services.aggregate(
-            total_fixed=Sum(
-                Case(
-                    When(cost_type='FIXED_PRICE', then=F('fixed_cost')),
-                    default=0,
-                    output_field=FloatField()
-                )
-            ),
-            # For hourly calculation, we need to handle the complex date calculation
-            # This is simplified - in production might need more sophisticated handling
-        )
-        
-        total_fixed = result['total_fixed'] or 0
-        
-        # Handle hourly services (still need loop for complex date calculations)
-        total_hourly = 0
-        hourly_services = self.services.filter(cost_type='PER_HOUR').select_related()
-        for service in hourly_services:
-            service_cost = service.get_total_cost()
-            if service_cost:
-                total_hourly += service_cost
-                
-        return total_fixed + total_hourly
 
     def get_absolute_url(self):
         return reverse("assignment-detail", kwargs={"pk": self.pk})
@@ -212,9 +185,6 @@ class Placement(models.Model):
     @property
     def hours_per_week(self):
         if self.hours_source == 'SERVICE':
-            # If service is not per hour, it can only be specific
-            if self.service.cost_type != 'PER_HOUR':
-                return self.specific_hours_per_week
             return self.service.hours_per_week
         else:
             return self.specific_hours_per_week
@@ -224,13 +194,6 @@ class Placement(models.Model):
 
 
 class Service(models.Model):
-    FIXED_PRICE = "FIXED_PRICE"
-    PER_HOUR = "PER_HOUR"
-    COST_TYPE_CHOICES = {
-        FIXED_PRICE: "Vaste prijs",
-        PER_HOUR: "Per uur",
-    }
-
     ASSIGNMENT = "ASSIGNMENT"
     SERVICE = "SERVICE"
     PERIOD_SOURCE_CHOICES = {
@@ -241,8 +204,6 @@ class Service(models.Model):
     assignment = models.ForeignKey('Assignment', models.CASCADE, related_name='services')
     description = models.CharField(max_length=500)
     skill = models.ForeignKey('Skill', models.SET_NULL, related_name='services', null=True, blank=True)
-    cost_type = models.CharField(max_length=20, choices=COST_TYPE_CHOICES, default=PER_HOUR)
-    fixed_cost = models.IntegerField(null=True, blank=True)
     hours_per_week = models.IntegerField(null=True, blank=True)
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=ASSIGNMENT)
     specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
@@ -262,25 +223,6 @@ class Service(models.Model):
             return self.assignment.end_date
         else:
             return self.specific_end_date
-
-    def get_weeks(self):
-        """Calculate number of weeks between start and end date"""
-        if not self.start_date or not self.end_date:
-            return None
-        delta = self.end_date - self.start_date
-        return round(delta.days / 7, 1)
-
-    def get_total_cost(self):
-        """Calculate total cost: aantal weken * uren per week * 100 euro/uur"""
-        if not self.start_date or not self.end_date or not self.hours_per_week:
-            return None
-        
-        # Calculate number of weeks
-        weeks = self.get_weeks()
-        
-        # Calculate total cost
-        total_cost = weeks * self.hours_per_week * 100
-        return round(total_cost, 2)
 
     def __str__(self):
         return f"{self.description} "
