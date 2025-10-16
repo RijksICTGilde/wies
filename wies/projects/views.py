@@ -1086,7 +1086,7 @@ class PlacementDetailView(DetailView):
     model = Placement
     template_name = 'placement_detail.html'
 
-class PlacementUpdateView(UpdateView):
+class PlacementUpdateView(UserCanEditAssignmentsMixin, UpdateView):
     model = Placement
     form_class = PlacementForm
     template_name = 'placement_update.html'
@@ -1102,7 +1102,7 @@ class PlacementUpdateView(UpdateView):
         super().form_valid(form)
         return redirect(Assignment.objects.get(id=assignment_id))
 
-class PlacementCreateView(CreateView):
+class PlacementCreateView(UserCanEditAssignmentsMixin, CreateView):
     model = Placement
     form_class = PlacementForm
     template_name = 'placement_new.html'
@@ -1136,7 +1136,7 @@ class PlacementDeleteView(DeleteView):
         super().post(request, *args, **kwargs)
         return redirect(Assignment.objects.get(id=assignment_id))
 
-class ServiceCreateView(CreateView):
+class ServiceCreateView(UserCanEditAssignmentsMixin, CreateView):
     model = Service
     form_class = ServiceForm
     template_name = 'service_new.html'
@@ -1153,7 +1153,7 @@ class ServiceCreateView(CreateView):
         super().form_valid(form)
         return redirect(Assignment.objects.get(id=assignment_id))
 
-class ServiceUpdateView(UpdateView):
+class ServiceUpdateView(UserCanEditAssignmentsMixin, UpdateView):
     model = Service
     form_class = ServiceForm
     template_name = 'service_update.html'
@@ -1170,7 +1170,7 @@ class ServiceUpdateView(UpdateView):
         super().form_valid(form)
         return redirect(Assignment.objects.get(id=assignment_id))
 
-class ServiceDeleteView(DeleteView):
+class ServiceDeleteView(UserCanEditAssignmentsMixin, DeleteView):
     model = Service
     success_url = reverse_lazy("assignments")
     template_name = 'service_delete.html'
@@ -1320,7 +1320,7 @@ class MinistryListView(ListView):
         else:
             return ['ministry_list.html']
 
-class MinistryCreateView(CreateView):
+class MinistryCreateView(UserCanEditAssignmentsMixin, CreateView):
     model = Ministry
     template_name = 'ministry_form.html'
     fields = ['name', 'abbreviation']
@@ -1332,7 +1332,7 @@ class MinistryCreateView(CreateView):
         return context
 
 
-class MinistryUpdateView(UpdateView):
+class MinistryUpdateView(UserCanEditAssignmentsMixin, UpdateView):
     model = Ministry
     template_name = 'ministry_form.html'
     fields = ['name', 'abbreviation']
@@ -1344,7 +1344,7 @@ class MinistryUpdateView(UpdateView):
         return context
 
 
-class MinistryDeleteView(DeleteView):
+class MinistryDeleteView(UserCanEditAssignmentsMixin, DeleteView):
     model = Ministry
     template_name = 'ministry_confirm_delete.html'
     success_url = reverse_lazy('ministries')

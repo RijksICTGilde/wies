@@ -6,7 +6,7 @@ This files lists the changes during the lifetime of this project.
 - fix that assignment row clickable again
 - (backwards incompatible) remove cost part of assignment
 - (backwards incompatible) add assignment owner
-- add assignment edit permissions based on usergroup
+- limit actions when user is not in group "BDM"
 - remove ability to delete colleagues over API/interface (only admin panel)
 - remove Colleague create over API (only admin panel)
 - make Colleague.email read-only after creation
