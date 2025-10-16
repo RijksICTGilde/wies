@@ -23,7 +23,7 @@ from django.http import HttpResponse
 
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise, Note
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
-from .permissions import UserCanEditAssignmentsMixin, user_can_edit_assignments
+from .permissions import UserCanEditAssignmentsMixin, UserCanEditColleagueMixin, user_can_edit_assignments, user_can_edit_colleague
 from .services.sync import sync_colleagues_from_exact, sync_colleagues_from_otys_iir
 from .services.statistics import get_consultants_working, get_total_clients_count
 from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining, get_total_services, get_services_filled, get_average_utilization, get_available_since
@@ -1068,9 +1068,11 @@ class ColleagueDetail(DetailView):
         else:
             context['user_groups'] = []
 
+        context['user_can_edit_colleague'] = user_can_edit_colleague(self.request.user, self.object)
+
         return context
 
-class ColleagueUpdateView(UpdateView):
+class ColleagueUpdateView(UserCanEditColleagueMixin, UpdateView):
     model = Colleague
     form_class = ColleagueForm
     template_name = 'colleague_update.html'

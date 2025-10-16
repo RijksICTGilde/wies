@@ -46,6 +46,9 @@ class AssignmentForm(RVOFormMixin, forms.ModelForm):
         }
 
 class ColleagueForm(RVOFormMixin, forms.ModelForm):
+
+    email = forms.EmailField(disabled=True)
+
     class Meta:
         model = Colleague
         fields = '__all__'

@@ -100,11 +100,11 @@
     </table>
 
     <div class="rvo-layout-row rvo-layout-gap--md">
-      {% if object.source == 'wies' %}
+      {% if object.source == 'wies' and user_can_edit_colleague %}
       <a href="/colleagues/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
         Collega bewerken
       </a>
-      {% else %}
+      {% elif object.source != 'wies' %}
       <button class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display }}">
         Collega bewerken
       </button>
