@@ -3,6 +3,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 - bump authlib for security patches
+- fix that assignment row clickable again
 
 ## 2025-10-09
 - add period filter to placement page
