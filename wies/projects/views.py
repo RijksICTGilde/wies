@@ -23,6 +23,7 @@ from django.http import HttpResponse
 
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise, Note
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
+from .permissions import UserCanEditAssignmentsMixin, user_can_edit_assignments
 from .services.sync import sync_colleagues_from_exact, sync_colleagues_from_otys_iir
 from .services.statistics import get_consultants_working, get_total_clients_count
 from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining, get_total_services, get_services_filled, get_average_utilization, get_available_since
@@ -411,11 +412,13 @@ class AssignmentTabsView(ListView):
             },
         ]
 
-        context['primary_action'] = {
-            'url': '/assignments/new',
-            'button_text': 'Opdracht toevoegen'
-        }
-        
+        # Only show "Opdracht toevoegen" button for BDM users
+        if user_can_edit_assignments(self.request.user):
+            context['primary_action'] = {
+                'url': '/assignments/new',
+                'button_text': 'Opdracht toevoegen'
+            }
+
         return context
     
     def get_template_names(self):
@@ -954,7 +957,7 @@ class AvailabilityView(ListView):
 
 
 # Simplified view classes without duplicated logic
-class AssignmentCreateView(CreateView):
+class AssignmentCreateView(UserCanEditAssignmentsMixin, CreateView):
     model = Assignment
     form_class = AssignmentForm
     template_name = 'assignment_new.html'
@@ -1012,9 +1015,11 @@ class AssignmentDetail(DetailView):
         }
         context['tab_groups'] = tab_groups
 
+        context['user_can_edit_assignments'] = user_can_edit_assignments(self.request.user)
+
         return context
 
-class AssignmentDeleteView(DeleteView):
+class AssignmentDeleteView(UserCanEditAssignmentsMixin, DeleteView):
     model = Assignment
     success_url = reverse_lazy("assignments")
     template_name = 'assignment_delete.html'
@@ -1024,7 +1029,7 @@ class AssignmentDeleteView(DeleteView):
         context['cancel_url'] = f'/assignments/{context["object"].pk}/'
         return context
 
-class AssignmentUpdateView(UpdateView):
+class AssignmentUpdateView(UserCanEditAssignmentsMixin, UpdateView):
     model = Assignment
     form_class = AssignmentForm
     template_name = 'assignment_update.html'
@@ -1071,6 +1076,13 @@ class ColleagueDetail(DetailView):
             for placement in self.object.placements.all()
         ]
         context["assignment_list"] = assignment_list
+
+        # Get group names for the colleague's user
+        if self.object.user:
+            context['user_groups'] = list(self.object.user.groups.values_list('name', flat=True))
+        else:
+            context['user_groups'] = []
+
         return context
 
 class ColleagueDeleteView(DeleteView):

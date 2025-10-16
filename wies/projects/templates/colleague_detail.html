@@ -13,7 +13,12 @@
             <span class="rvo-breadcrumb-current-page">{{ object.name }}</span>
           </li>
         </ol>
-    <h1 class="utrecht-heading-1 rvo-heading--no-margins">{{ object.name }}</h1>
+    <h1 class="utrecht-heading-1 rvo-heading--no-margins">
+      {{ object.name }}
+      {% if user_groups %}
+        <span style="font-weight: normal; color: var(--rvo-color-grijs-600);">({{ user_groups|join:", " }})</span>
+      {% endif %}
+    </h1>
   </div>
   
   <div class="rvo-layout-column rvo-layout-gap--lg">

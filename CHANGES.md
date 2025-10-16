@@ -6,6 +6,7 @@ This files lists the changes during the lifetime of this project.
 - fix that assignment row clickable again
 - (backwards incompatible) remove cost part of assignment
 - (backwards incompatible) add assignment owner
+- add assignment edit permissions based on usergroup
 
 ## 2025-10-09
 - add period filter to placement page
