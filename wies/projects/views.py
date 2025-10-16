@@ -1391,29 +1391,6 @@ class MinistryDetailView(DetailView):
         return context
 
 
-class ProfileView(TemplateView):
-    template_name = 'profile.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        # Get tab from query parameter, default to 'overzicht'
-        active_tab = self.request.GET.get('tab', 'overzicht')
-        context['active_tab'] = active_tab
-        
-        # Get or create colleague profile for current user
-        colleague = None
-        recent_placements = []
-        if hasattr(self.request.user, 'colleague'):
-            colleague = self.request.user.colleague
-            if colleague:
-                # Get recent placements for this colleague
-                recent_placements = colleague.placements.select_related(
-                    'service__assignment'
-                ).order_by('-specific_end_date', '-service__assignment__end_date')[:3]
-        
-        context['colleague'] = colleague
-        context['recent_placements'] = recent_placements
-        return context
 
 
 def add_note(request, assignment_id):

@@ -11,6 +11,7 @@ This files lists the changes during the lifetime of this project.
 - remove Colleague create over API (only admin panel)
 - make Colleague.email read-only after creation
 - restrict users to only edit own colleague record
+- link user name to colleague page, remove profile page
 
 ## 2025-10-09
 - add period filter to placement page
