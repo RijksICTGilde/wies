@@ -12,6 +12,7 @@ This files lists the changes during the lifetime of this project.
 - make Colleague.email read-only after creation
 - restrict users to only edit own colleague record
 - link user name to colleague page, remove profile page
+- block users logging in that don't have a colleague record in the db
 
 ## 2025-10-09
 - add period filter to placement page

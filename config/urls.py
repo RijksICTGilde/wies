@@ -25,7 +25,7 @@ from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpd
 from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView, AvailabilityView
 from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
 from wies.projects.views import MinistryListView, MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
-from wies.projects.views import admin_db, login, logout, auth, add_note, GlobalSearchView
+from wies.projects.views import admin_db, login, no_access, logout, auth, add_note, GlobalSearchView
 from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIView, ExpertiseDetailAPIView
 
 urlpatterns = [
@@ -34,6 +34,7 @@ urlpatterns = [
     path('', RedirectView.as_view(pattern_name='placements', permanent=False), name='home'),
     path('dashboard/', dashboard, name='dashboard'),
     path('login/', login, name='login'),
+    path('no-access/', no_access),
     path('logout/', logout, name='logout'),
     path('auth/', auth, name='auth'),
     path('search/', GlobalSearchView.as_view(), name='global-search'),

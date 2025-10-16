@@ -1,5 +1,6 @@
 from django.contrib.auth.backends import BaseBackend
 from django.contrib.auth.models import User
+from django.core.exceptions import ObjectDoesNotExist
 from .models import Colleague
 
 
@@ -15,18 +16,17 @@ class AuthBackend(BaseBackend):
             extra_fields = {}
 
         try:
+            colleague = Colleague.objects.get(email=email)
+        except Colleague.DoesNotExist:
+            # do not authenticate if Colleague record does not exist
+            return None
+
+        try:
             # TODO: this does not handle if user data is updated after first login
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             user = User(username=username, email=email, **extra_fields)
             user.save()
-
-        # Link or create Colleague profile
-        name = f"{user.first_name} {user.last_name}".strip()
-        colleague, _ = Colleague.objects.get_or_create(
-            email=email,
-            defaults={'name': name}
-        )
         
         # if not yet linked, link
         if not colleague.user:
