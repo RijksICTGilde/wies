@@ -1039,21 +1039,6 @@ class AssignmentUpdateView(UserCanEditAssignmentsMixin, UpdateView):
         context['cancel_url'] = f'/assignments/{context["object"].pk}/'
         return context
 
-class ColleagueCreateView(CreateView):
-    model = Colleague
-    form_class = ColleagueForm
-    template_name = 'colleague_new.html'
-
-    def form_valid(self, form):
-        form.instance.source = 'wies'
-        return super().form_valid(form)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['skills'] = Skill.objects.all()
-        context['cancel_url'] = '/colleagues/'
-        return context
-
 class ColleagueDetail(DetailView):
     model = Colleague
     template_name = 'colleague_detail.html'

@@ -52,7 +52,8 @@ class ColleagueForm(RVOFormMixin, forms.ModelForm):
         exclude = ['source', 'source_id', 'source_url', 'user']
         widgets = {
             'expertises': forms.SelectMultiple(attrs={'class': 'js-expertises-select-multiple'}),
-            'skills': forms.SelectMultiple(attrs={'class': 'js-skills-select-create-multiple'})
+            'skills': forms.SelectMultiple(attrs={'class': 'js-skills-select-create-multiple'}),
+            'email': forms.EmailInput(attrs={'readonly': 'readonly'})
         }
         labels = {
             'name': 'Naam',
