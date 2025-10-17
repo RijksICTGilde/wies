@@ -20,12 +20,12 @@ from django.views.generic import RedirectView
 
 from wies.projects.views import client, clients, get_service_details, dashboard
 from wies.projects.views import AssignmentTabsView
-from wies.projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
+from wies.projects.views import AssignmentCreateView, AssignmentDeleteView
 from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
 from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView, AvailabilityView
 from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
 from wies.projects.views import MinistryListView, MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
-from wies.projects.views import admin_db, login, logout, auth, ProfileView, add_note, GlobalSearchView
+from wies.projects.views import admin_db, login, no_access, logout, auth, add_note, GlobalSearchView
 from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIView, ExpertiseDetailAPIView
 
 urlpatterns = [
@@ -34,9 +34,9 @@ urlpatterns = [
     path('', RedirectView.as_view(pattern_name='placements', permanent=False), name='home'),
     path('dashboard/', dashboard, name='dashboard'),
     path('login/', login, name='login'),
+    path('no-access/', no_access),
     path('logout/', logout, name='logout'),
     path('auth/', auth, name='auth'),
-    path('profile/', ProfileView.as_view(), name='profile'),
     path('search/', GlobalSearchView.as_view(), name='global-search'),
     path('assignments/', AssignmentTabsView.as_view(), name='assignments'),
     path('assignments/new', AssignmentCreateView.as_view()),
@@ -47,9 +47,7 @@ urlpatterns = [
     path('assignments/<int:pk>/services/new', ServiceCreateView.as_view()),
     path('assignments/<int:assignment_id>/add-note', add_note, name='add-note'),
     path('colleagues/', ColleagueList.as_view(), name='colleagues'),
-    path('colleagues/new', ColleagueCreateView.as_view()),
     path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
-    path('colleagues/<int:pk>/delete', ColleagueDeleteView.as_view()),
     path('colleagues/<int:pk>/update', ColleagueUpdateView.as_view(), name='colleague-update'),
     path('placements/', PlacementTableView.as_view(), name='placements'),
     path('placements/table/', PlacementTableView.as_view(), name='placements-table'),

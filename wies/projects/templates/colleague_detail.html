@@ -13,7 +13,12 @@
             <span class="rvo-breadcrumb-current-page">{{ object.name }}</span>
           </li>
         </ol>
-    <h1 class="utrecht-heading-1 rvo-heading--no-margins">{{ object.name }}</h1>
+    <h1 class="utrecht-heading-1 rvo-heading--no-margins">
+      {{ object.name }}
+      {% if user_groups %}
+        <span style="font-weight: normal; color: var(--rvo-color-grijs-600);">({{ user_groups|join:", " }})</span>
+      {% endif %}
+    </h1>
   </div>
   
   <div class="rvo-layout-column rvo-layout-gap--lg">
@@ -95,19 +100,13 @@
     </table>
 
     <div class="rvo-layout-row rvo-layout-gap--md">
-      {% if object.source == 'wies' %}
+      {% if object.source == 'wies' and user_can_edit_colleague %}
       <a href="/colleagues/{{ object.pk }}/update" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
         Collega bewerken
       </a>
-      <a href="/colleagues/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md">
-        Collega verwijderen
-      </a>
-      {% else %}
+      {% elif object.source != 'wies' %}
       <button class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display }}">
         Collega bewerken
-      </button>
-      <button class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display }}">
-        Collega verwijderen
       </button>
       {% endif %}
     </div>

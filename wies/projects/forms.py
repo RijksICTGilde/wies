@@ -46,13 +46,17 @@ class AssignmentForm(RVOFormMixin, forms.ModelForm):
         }
 
 class ColleagueForm(RVOFormMixin, forms.ModelForm):
+
+    email = forms.EmailField(disabled=True)
+
     class Meta:
         model = Colleague
         fields = '__all__'
         exclude = ['source', 'source_id', 'source_url', 'user']
         widgets = {
             'expertises': forms.SelectMultiple(attrs={'class': 'js-expertises-select-multiple'}),
-            'skills': forms.SelectMultiple(attrs={'class': 'js-skills-select-create-multiple'})
+            'skills': forms.SelectMultiple(attrs={'class': 'js-skills-select-create-multiple'}),
+            'email': forms.EmailInput(attrs={'readonly': 'readonly'})
         }
         labels = {
             'name': 'Naam',

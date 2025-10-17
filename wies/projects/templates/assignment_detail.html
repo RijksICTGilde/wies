@@ -78,6 +78,7 @@
       <dd>{{ object.end_date }}</dd>
       <dt>Extra info</dt>
       <dd>{{ object.extra_info }}</dd>
+      {% if user_can_edit_assignments %}
       <dt>Acties</dt>
       <dd>
         <div class="rvo-layout-row rvo-layout-gap--sm">
@@ -89,6 +90,7 @@
           </a>
         </div>
       </dd>
+      {% endif %}
     </dl>
 
     <!-- Tab Navigation -->
@@ -137,6 +139,7 @@
                 {{ service.start_date|date:"j M Y" }} - {{ service.end_date|date:"j M Y" }}
               </p>
             </div>
+            {% if user_can_edit_assignments %}
             <div class="rvo-layout-column">
               <label class="rvo-label">Acties </label>
               <div class="rvo-layout-row rvo-layout-gap--sm">
@@ -148,6 +151,7 @@
                 </a>
               </div>
             </div>
+            {% endif %}
         </div>
         
         {% if service.placements.all %}
@@ -174,6 +178,7 @@
                   <label class="rvo-label">Inzet </label>
                   <span>{% if placement.hours_per_week %}{{ placement.hours_per_week }} u/week{% else %}-{% endif %} </span>
                 </div>
+                {% if user_can_edit_assignments %}
                 <div class="rvo-layout-column">
                   <label class="rvo-label">Acties </label>
                   <div class="rvo-layout-row rvo-layout-gap--sm">
@@ -185,6 +190,7 @@
                     </a>
                   </div>
                 </div>
+                {% endif %}
               </div>
             </div>
             {% endfor %}
@@ -193,12 +199,14 @@
         {% endif %}
         
           <div style="margin-top: 10px;">
+            {% if user_can_edit_assignments %}
             <a href="/services/{{ service.id }}/placements/new" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm rvo-link--no-underline">
               Voeg persoon toe
             </a>
             <a href="/colleagues/?{% if service.skill %}&skill={{ service.skill.id }}{% endif %}" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm rvo-link--no-underline">
               Bekijk matches
             </a>
+            {% endif %}
           </div>
   
       </div>
@@ -210,6 +218,7 @@
       </div>
       {% endfor %}
 
+      {% if user_can_edit_assignments %}
       <div class="rvo-layout-margin-top--xl">
         <div class="rvo-card rvo-card--outline rvo-card--padding-lg rvo-layout-margin-bottom--lg rvo-card--full-colour--grijs-100" style="margin: 10px;">
           <div class="rvo-card__content">
@@ -220,6 +229,7 @@
           </div>
         </div>
       </div>
+      {% endif %}
     
     </div>
     {% endif %}

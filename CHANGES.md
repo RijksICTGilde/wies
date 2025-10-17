@@ -6,6 +6,13 @@ This files lists the changes during the lifetime of this project.
 - fix that assignment row clickable again
 - (backwards incompatible) remove cost part of assignment
 - (backwards incompatible) add assignment owner
+- limit actions when user is not in group "BDM"
+- remove ability to delete colleagues over API/interface (only admin panel)
+- remove Colleague create over API (only admin panel)
+- make Colleague.email read-only after creation
+- restrict users to only edit own colleague record
+- link user name to colleague page, remove profile page
+- block users logging in that don't have a colleague record in the db
 
 ## 2025-10-09
 - add period filter to placement page
