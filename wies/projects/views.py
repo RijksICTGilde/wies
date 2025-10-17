@@ -1123,7 +1123,7 @@ class PlacementCreateView(UserCanEditAssignmentsMixin, CreateView):
         super().form_valid(form)
         return redirect(Service.objects.get(id=service_id).assignment)
 
-class PlacementDeleteView(DeleteView):
+class PlacementDeleteView(UserCanEditAssignmentsMixin, DeleteView):
     model = Placement
     success_url = reverse_lazy("assignments")
     template_name = 'placement_delete.html'
