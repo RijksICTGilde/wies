@@ -40,14 +40,24 @@ c-select vs c-select-field
 - ! how to insert dynamic options via variable?
 
 - @change ipv onchange
-
-c-link
-- when icon is inserted, still need to define "showIcon", otherwise not shown. maybe better to default to left or right?
-- iconColor needs to be defined to be seen on white background
-- iconSize default "sm", maybe a bit small? maybe "md" as default is better. icon itself also has "md" as default size
-- tag has "iconPlacement" instead of "showIcon"
-
 on supporting all html actions
 - in wies we use <a href="#" onlick="js_func()">. it folds open a portion of the page. this is not supported in c-link, and there is no c-a. maybe this is good?
 that you think about what the intent is of this html element? is this the correct use of the element? that would make it quite opinionated
 
+date picker
+- no date without label (should there be one?)
+- a bit unclear naming wise what are the form ones
+- data- properties are now blocked, this blocks the usage of date overwrite_index
+- https://developer.mozilla.org/en-US/docs/Web/HTML/How_to/Use_data_attributes
+
+
+
+
+
+
+
+adressed
+- when icon is inserted, still need to define "showIcon", otherwise not shown. maybe better to default to left or right?
+- tag has "iconPlacement" instead of "showIcon"
+- iconColor needs to be defined to be seen on white background
+- iconSize default "sm", maybe a bit small? maybe "md" as default is better. icon itself also has "md" as default size
