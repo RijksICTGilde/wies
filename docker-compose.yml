@@ -8,5 +8,6 @@ services:
       - 8000:8000
     volumes:
       - .:/app:z
-    command: python manage.py runserver 0.0.0.0:8000
+      - /Users/matthijs/jinja-roos-components:/app/jinja-roos-components
+    command: sh -c "uv pip install -e ./jinja-roos-components && python manage.py runserver 0.0.0.0:8000"
     env_file: .env

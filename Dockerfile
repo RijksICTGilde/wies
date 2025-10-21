@@ -73,6 +73,9 @@ RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
 COPY --from=python-build --chown=app:app /opt/venv /opt/venv
 COPY --from=js-build --chown=app:app /app/node_modules /app/node_modules
 
+# copy uv to enable runtime including editable package
+COPY --from=uv /uv /bin/uv
+
 COPY --chown=app:app . /app
 RUN chown -R app:app /app
 RUN rm -rf /app/docker && \
