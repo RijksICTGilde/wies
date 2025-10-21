@@ -50,7 +50,7 @@
                 <tbody>
                     {% for employee in employees %}
                     <tr>
-                        <td><a href="{{ employee.get_absolute_url }}" style="color: #e1141d; text-decoration: none;">{{ employee.naam_medewerker }}</a></td>
+                        <td><a href="{{ employee.get_absolute_url() }}" style="color: #e1141d; text-decoration: none;">{{ employee.naam_medewerker }}</a></td>
                         <td>{{ employee.rin_nummer }}</td>
                         <td>{{ employee.aantal_uren }}</td>
                         <td>
@@ -58,7 +58,7 @@
                                 {% if employee.status == 'ACTIEF' %}background-color: #d4edda; color: #155724;
                                 {% elif employee.status == 'INACTIEF' %}background-color: #f8d7da; color: #721c24;
                                 {% else %}background-color: #fff3cd; color: #856404;{% endif %}">
-                                {{ employee.get_status_display }}
+                                {{ employee.get_status_display() }}
                             </span>
                         </td>
                         <td>{{ employee.organisatieonderdeel }}</td>

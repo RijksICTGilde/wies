@@ -39,11 +39,11 @@
                 </tr>
                 <tr>
                     <td style="padding: 0.5rem 0; font-weight: 500;">Start datum:</td>
-                    <td style="padding: 0.5rem 0;">{{ project.start_datum|date("d-m-Y") }}</td>
+                    <td style="padding: 0.5rem 0;">{{ project.start_datum.strftime("%d-%m-%Y") }}</td>
                 </tr>
                 <tr>
                     <td style="padding: 0.5rem 0; font-weight: 500;">Eind datum:</td>
-                    <td style="padding: 0.5rem 0;">{{ project.eind_datum|date("d-m-Y") }}</td>
+                    <td style="padding: 0.5rem 0;">{{ project.eind_datum.strftime("%d-%m-%Y") }}</td>
                 </tr>
                 <tr>
                     <td style="padding: 0.5rem 0; font-weight: 500;">Aantal uur:</td>
@@ -51,11 +51,11 @@
                 </tr>
                 <tr>
                     <td style="padding: 0.5rem 0; font-weight: 500;">Tarief:</td>
-                    <td style="padding: 0.5rem 0;">€ {{ project.tarief|floatformat:2 }}</td>
+                    <td style="padding: 0.5rem 0;">€ {{ "%.2f"|format(project.tarief) }}</td>
                 </tr>
                 <tr style="border-top: 2px solid #0650d0;">
                     <td style="padding: 0.5rem 0; font-weight: 600;">Totale waarde:</td>
-                    <td style="padding: 0.5rem 0; font-weight: 600; color: #0650d0;">€ {{ project.total_value|floatformat:2 }}</td>
+                    <td style="padding: 0.5rem 0; font-weight: 600; color: #0650d0;">€ {{ "%.2f"|format(project.total_value) }}</td>
                 </tr>
             </table>
         </div>
@@ -72,7 +72,7 @@
                             {% if project.type_project == 'INTERN' %}background-color: #d4edda; color: #155724;
                             {% elif project.type_project == 'EXTERN' %}background-color: #d1ecf1; color: #0c5460;
                             {% else %}background-color: #fff3cd; color: #856404;{% endif %}">
-                            {{ project.get_type_project_display }}
+                            {{ project.get_type_project_display() }}
                         </span>
                     </td>
                 </tr>
@@ -161,11 +161,11 @@
         <table style="width: 100%;">
             <tr>
                 <td style="padding: 0.5rem 0; font-weight: 500; width: 20%;">Aangemaakt:</td>
-                <td style="padding: 0.5rem 0;">{{ project.created_at|date("d-m-Y H:i") }}</td>
+                <td style="padding: 0.5rem 0;">{{ project.created_at.strftime("%d-%m-%Y %H:%M") }}</td>
             </tr>
             <tr>
                 <td style="padding: 0.5rem 0; font-weight: 500;">Laatst bijgewerkt:</td>
-                <td style="padding: 0.5rem 0;">{{ project.updated_at|date("d-m-Y H:i") }}</td>
+                <td style="padding: 0.5rem 0;">{{ project.updated_at.strftime("%d-%m-%Y %H:%M") }}</td>
             </tr>
         </table>
     </div>

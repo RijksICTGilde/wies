@@ -50,19 +50,19 @@
                 <tbody>
                     {% for project in projects %}
                     <tr>
-                        <td><a href="{{ project.get_absolute_url }}" style="color: #e1141d; text-decoration: none;">{{ project.projectnaam }}</a></td>
+                        <td><a href="{{ project.get_absolute_url() }}" style="color: #e1141d; text-decoration: none;">{{ project.projectnaam }}</a></td>
                         <td>
                             <span style="padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem; 
                                 {% if project.type_project == 'INTERN' %}background-color: #d4edda; color: #155724;
                                 {% elif project.type_project == 'EXTERN' %}background-color: #d1ecf1; color: #0c5460;
                                 {% else %}background-color: #fff3cd; color: #856404;{% endif %}">
-                                {{ project.get_type_project_display }}
+                                {{ project.get_type_project_display() }}
                             </span>
                         </td>
-                        <td>{{ project.start_datum|date("d-m-Y") }}</td>
-                        <td>{{ project.eind_datum|date("d-m-Y") }}</td>
+                        <td>{{ project.start_datum.strftime("%d-%m-%Y") }}</td>
+                        <td>{{ project.eind_datum.strftime("%d-%m-%Y") }}</td>
                         <td>{{ project.aantal_uur }}</td>
-                        <td>€ {{ project.total_value|floatformat:2 }}</td>
+                        <td>€ {{ "%.2f"|format(project.total_value) }}</td>
                         <td>
                             <a href="{{ url('exact:project-update', args=[project.pk]) }}" class="btn btn-secondary btn-sm">Bewerk</a>
                             <a href="{{ url('exact:project-delete', args=[project.pk]) }}" class="btn btn-danger btn-sm">Verwijder</a>

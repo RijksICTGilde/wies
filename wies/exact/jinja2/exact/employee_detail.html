@@ -86,7 +86,7 @@
                             {% if employee.status == 'ACTIEF' %}background-color: #d4edda; color: #155724;
                             {% elif employee.status == 'INACTIEF' %}background-color: #f8d7da; color: #721c24;
                             {% else %}background-color: #fff3cd; color: #856404;{% endif %}">
-                            {{ employee.get_status_display }}
+                            {{ employee.get_status_display() }}
                         </span>
                     </td>
                 </tr>
@@ -101,11 +101,11 @@
         <table style="width: 100%;">
             <tr>
                 <td style="padding: 0.5rem 0; font-weight: 500; width: 20%;">Aangemaakt:</td>
-                <td style="padding: 0.5rem 0;">{{ employee.created_at|date("d-m-Y H:i") }}</td>
+                <td style="padding: 0.5rem 0;">{{ employee.created_at.strftime("%d-%m-%Y %H:%M") }}</td>
             </tr>
             <tr>
                 <td style="padding: 0.5rem 0; font-weight: 500;">Laatst bijgewerkt:</td>
-                <td style="padding: 0.5rem 0;">{{ employee.updated_at|date("d-m-Y H:i") }}</td>
+                <td style="padding: 0.5rem 0;">{{ employee.updated_at.strftime("%d-%m-%Y %H:%M") }}</td>
             </tr>
         </table>
     </div>

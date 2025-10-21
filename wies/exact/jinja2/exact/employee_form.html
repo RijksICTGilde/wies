@@ -123,7 +123,7 @@
             
             <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e6ecf1; display: flex; gap: 1rem;">
                 <button type="submit" class="btn btn-primary">Opslaan</button>
-                <a href="{% if object %}{{ object.get_absolute_url }}{% else %}{{ url('exact:employee-list') }}{% endif %}" class="btn btn-secondary">Annuleren</a>
+                <a href="{% if object %}{{ object.get_absolute_url() }}{% else %}{{ url('exact:employee-list') }}{% endif %}" class="btn btn-secondary">Annuleren</a>
             </div>
         </form>
     </div>

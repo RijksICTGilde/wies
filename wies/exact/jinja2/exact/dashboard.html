@@ -42,8 +42,8 @@
                     <tbody>
                         {% for employee in recent_employees %}
                         <tr>
-                            <td><a href="{{ employee.get_absolute_url }}" style="color: #e1141d; text-decoration: none;">{{ employee.naam_medewerker }}</a></td>
-                            <td>{{ employee.get_status_display }}</td>
+                            <td><a href="{{ employee.get_absolute_url() }}" style="color: #e1141d; text-decoration: none;">{{ employee.naam_medewerker }}</a></td>
+                            <td>{{ employee.get_status_display() }}</td>
                             <td>{{ employee.organisatieonderdeel }}</td>
                         </tr>
                         {% endfor %}
@@ -71,9 +71,9 @@
                     <tbody>
                         {% for project in recent_projects %}
                         <tr>
-                            <td><a href="{{ project.get_absolute_url }}" style="color: #e1141d; text-decoration: none;">{{ project.projectnaam }}</a></td>
-                            <td>{{ project.get_type_project_display }}</td>
-                            <td>{{ project.start_datum|date("d-m-Y") }}</td>
+                            <td><a href="{{ project.get_absolute_url() }}" style="color: #e1141d; text-decoration: none;">{{ project.projectnaam }}</a></td>
+                            <td>{{ project.get_type_project_display() }}</td>
+                            <td>{{ project.start_datum.strftime("%d-%m-%Y") }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
