@@ -11,6 +11,9 @@ from django.db.models import Q, Count, Prefetch
 from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+import json
 
 from django.contrib.auth import authenticate as auth_authenticate
 from django.contrib.auth import login as auth_login
@@ -319,26 +322,14 @@ class AssignmentTabsView(ListView):
         return qs
     
     def get_queryset(self):
-        """Get queryset for the active tab only"""
-        active_tab = self.request.GET.get('tab', 'leads')
+        """Get queryset for vacatures only"""
         base_qs = self.get_base_queryset()
         
-        # Define status mapping for tabs
-        tab_statuses = {
-            'leads': ['LEAD', 'VACATURE'],
-            'current': ['INGEVULD'],
-            'historical': ['AFGEWEZEN']
-        }
-        
-        # Filter by active tab statuses
-        return base_qs.filter(status__in=tab_statuses[active_tab])
+        # Only show vacatures
+        return base_qs.filter(status='VACATURE')
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        
-        # Get the active tab from request, default to 'leads'
-        active_tab = self.request.GET.get('tab', 'leads')
-        context['active_tab'] = active_tab
         
         base_qs = self.get_base_queryset()
         
@@ -346,39 +337,8 @@ class AssignmentTabsView(ListView):
         context['skills'] = Skill.objects.all()
         context['clients'] = Ministry.objects.all()
 
-        huidig_qs = base_qs.filter(status__in=['INGEVULD'])
-        active_assignment_ids = set()
-        for assignment in huidig_qs.all():
-            if assignment.phase == 'active':
-                active_assignment_ids.add(assignment.id)
-        huidig_qs = huidig_qs.filter(id__in=active_assignment_ids)
-
-        reject_and_historical_qs = base_qs.filter(status__in=['INGEVULD', 'AFGEWEZEN'])
-        assignment_ids = set()
-        for assignment in reject_and_historical_qs:
-            if assignment.status == 'AFGEWEZEN':
-                assignment_ids.add(assignment.id)
-            if assignment.status == 'INGEVULD' and assignment.phase == 'completed':
-                assignment_ids.add(assignment.id)
-        reject_and_historical_qs = reject_and_historical_qs.filter(id__in=assignment_ids)
-
-        tab_groups = {
-            'leads': {
-                'title': 'Leads & vacatures',
-                'queryset': base_qs.filter(status__in=['LEAD', 'VACATURE'])
-            },
-            'current': {
-                'title': 'Huidig', 
-                'queryset': huidig_qs
-            },
-            'historical': {
-                'title': 'Historisch & afgewezen',
-                'queryset': reject_and_historical_qs
-            }
-        }
-        
-        context['tab_groups'] = tab_groups
-        context['active_assignments'] = tab_groups[active_tab]['queryset']
+        # Set active assignments to just vacatures
+        context['active_assignments'] = self.get_queryset()
 
         
         context['search_field'] = 'name'
@@ -411,10 +371,6 @@ class AssignmentTabsView(ListView):
             },
         ]
 
-        context['primary_action'] = {
-            'url': '/assignments/new',
-            'button_text': 'Opdracht toevoegen'
-        }
         
         return context
     
@@ -1517,3 +1473,118 @@ class GlobalSearchView(TemplateView):
             }
         
         return context
+
+
+class MatchingView(TemplateView):
+    """
+    Matching pagina met kanban board voor het matchen van collega's aan opdrachten
+    """
+    template_name = 'matching.html'
+    
+    def get_template_names(self):
+        if 'HX-Request' in self.request.headers:
+            return ['parts/matching_board.html']
+        else:
+            return ['matching.html']
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Haal filter parameters op
+        search_query = self.request.GET.get('search', '')
+        ministry_filter = self.request.GET.get('ministry', '')
+        owner_filter = self.request.GET.get('owner', '')
+        
+        # Start met alle opdrachten
+        queryset = Assignment.objects.select_related('ministry').all()
+        
+        # Apply filters
+        if search_query:
+            queryset = queryset.filter(
+                Q(name__icontains=search_query) |
+                Q(organization__icontains=search_query) |
+                Q(extra_info__icontains=search_query)
+            )
+        
+        if ministry_filter:
+            queryset = queryset.filter(ministry_id=ministry_filter)
+            
+        # Note: owner field requires migration - temporarily disabled
+        # if owner_filter:
+        #     queryset = queryset.filter(owner_id=owner_filter)
+        
+        # Groepeer per status
+        assignments_by_status = {
+            'LEAD': [],
+            'VACATURE': [],
+            'INGEVULD': [],
+            'AFGEWEZEN': []
+        }
+        
+        for assignment in queryset:
+            status = assignment.status
+            if status in assignments_by_status:
+                assignments_by_status[status].append(assignment)
+        
+        # Haal dropdown opties op
+        all_ministries = Ministry.objects.all().order_by('name')
+        # Note: owner field requires migration - temporarily disabled
+        # all_owners = Colleague.objects.all().order_by('name')
+        
+        context.update({
+            'assignments_by_status': assignments_by_status,
+            'all_ministries': all_ministries,
+            'search_query': search_query,
+            'ministry_filter': ministry_filter,
+            
+            # Voor generic filter bar
+            'filter_groups': [
+                {
+                    'type': 'select',
+                    'name': 'ministry',
+                    'label': 'Ministerie',
+                    'placeholder': 'Alle ministeries',
+                    'options': [{'value': m.id, 'label': m.name} for m in all_ministries]
+                }
+            ],
+            'active_filter_count': sum([1 for f in [ministry_filter] if f]),
+            'primary_action': {
+                'url': '/assignments/new',
+                'button_text': 'Opdracht toevoegen'
+            },
+            'url_name': 'matching',
+            'target_selector': '#matching-content',
+            'search_placeholder': 'Zoek opdrachten...'
+        })
+        
+        return context
+    
+    def patch(self, request, *args, **kwargs):
+        """Handle assignment status updates via drag & drop"""
+        try:
+            data = json.loads(request.body)
+            assignment_id = data.get('assignmentId')
+            new_status = data.get('statusId')
+            
+            if not assignment_id or not new_status:
+                return JsonResponse({'error': 'Missing assignmentId or statusId'}, status=400)
+            
+            # Validate status
+            valid_statuses = ['LEAD', 'VACATURE', 'INGEVULD', 'AFGEWEZEN']
+            if new_status not in valid_statuses:
+                return JsonResponse({'error': 'Invalid status'}, status=400)
+            
+            # Update assignment
+            try:
+                assignment = Assignment.objects.get(id=assignment_id)
+                assignment.status = new_status
+                assignment.save()
+                
+                return JsonResponse({'success': True, 'message': f'Assignment status updated to {new_status}'})
+            except Assignment.DoesNotExist:
+                return JsonResponse({'error': 'Assignment not found'}, status=404)
+                
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)

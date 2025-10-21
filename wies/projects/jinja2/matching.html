@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- Header with title -->
+<div class="page-header">
+  <h1>Matching</h1>
+</div>
+
+<div class="rvo-layout-column rvo-layout-gap--md">
+  
+  {% include 'parts/generic_filter_bar.html' %}
+
+  <!-- Matching Content -->
+  <div id="matching-content" class="wies-matching-container">
+    {% include 'parts/matching_board.html' %}
+  </div>
+
+</div>
+
+{% endblock %}
