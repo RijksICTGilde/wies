@@ -25,3 +25,26 @@ c-select
 	- gekke ":" syntax, waarom is dit?
 	- select vs select-field: wat zijn de verschillen? volgens mij form-field use? label er wel/niet bij?
 
+--------------
+c-input-field
+- aria-label not supported
+- value not supported. it is in logic, but not in definitions! (necessary for initializing value based on url)
+
+c-icon: default witte invulling ipv kleur?
+
+zoekblak:
+- icon inclusion just like button?
+
+c-button:
+- forget "@click syntact", especially since normal "onclick" works without @
+- "active" state is present in template, but not in definition
+
+c-select vs c-select-field
+- whats the difference?
+- cannot use <option> children
+- optionlist should use single quote, to have valid JS object
+- ! how to insert dynamic options via variable?
+
+
+
+- @change ipv onchange

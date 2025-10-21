@@ -20,7 +20,7 @@ Usage:
         <input type="hidden" name="{{ param }}" value="{{ value }}">
       {% endif %}
     {% endfor %}
-    
+
     <!-- Compact filter bar -->
     <div class="rvo-compact-filter-bar">
       
@@ -47,41 +47,41 @@ Usage:
 
       <!-- Search Field -->
       <div role="group" aria-labelledby="search-field-label" class="utrecht-form-field utrecht-form-field--text">
-        <span class="utrecht-icon rvo-icon rvo-icon-zoek rvo-icon--lg rvo-search-icon" 
-              role="img" aria-label="Zoeken"></span>
-        <input 
+        <c-icon icon="zoek" color="logoblauw" size="md" class="wies-search-icon"/>
+        <c-input
           id="search" 
           name="{{ search_field|default('search') }}" 
           placeholder="{{ search_placeholder|default('Zoeken...') }}" 
-          type="text" 
-          class="utrecht-textbox utrecht-textbox--html-input rvo-input" 
+          type="text"
+          size="md"
           value="{% if search_field and request.GET.get(search_field) %}{{ request.GET.get(search_field) }}{% else %}{% endif %}" 
-          aria-label="{{ search_placeholder|default('Zoeken') }}"
         />
+        <!-- TODO: search bar now smaller. if use lg, it ends up underneath filter -->
       </div>
-
+    
       <!-- Filters Button with indicator -->
       <div class="filter-button-container">
-        <!-- somehow moving the iff to the div above does not work, it hides the search icon -->
-        {% if filter_groups %}  
-        <button type="button" 
-                class="utrecht-button utrecht-button--secondary-action{% if active_filter_count > 0 %} utrecht-button--active{% endif %} utrecht-button--rvo-md utrecht-button--icon-before rvo-button" 
-                onclick="openFilterModal()">
-          <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before" role="img" aria-label="Trechter"></span>
-          <span class="filter-text">Filters{% if active_filter_count > 0 %} ({{ active_filter_count }}){% endif %}</span>
-        </button>
-        {% endif %}
-      </div>
-
-      <div>
         <!-- somehow moving the if to the div above does not work, it hides the search icon -->
-        {% if primary_action %}
-        <c-button kind="primary" @click="window.location.href = '{{ primary_action.url }}'">
-          {{ primary_action.button_text }}
+        {% if filter_groups %} 
+        <c-button 
+          id="filter-button"
+          kind="secondary"
+          showIcon="before"
+          icon="trechter"
+          @click="openFilterModal()"
+        >
+          <span class="filter-text">Filters{% if active_filter_count > 0 %} ({{ active_filter_count }}){% endif %}</span>
         </c-button>
         {% endif %}
       </div>
-      
+
+      <!-- somehow moving the if to the div above does not work, it hides the search icon -->
+      {% if primary_action %}
+      <c-button kind="primary" @click="window.location.href = '{{ primary_action.url }}'">
+        {{ primary_action.button_text }}
+      </c-button>
+      {% endif %}
+
     </div>
   </form>
 </div>
@@ -91,7 +91,7 @@ Usage:
   <div class="filter-modal-content">
     <!-- Modal Header -->
     <div class="filter-modal-header">
-      <h2 class="utrecht-heading-2" style="margin: 0;">Filters</h2>
+      <c-h2>Filters</c-h2>
       <button type="button" onclick="closeFilterModal()" class="filter-modal-close">&times;</button>
     </div>
 
@@ -107,17 +107,16 @@ Usage:
           <div class="rvo-form-field__label">
             <label class="rvo-label" for="modal-{{ filter_group.name }}">{{ filter_group.label }}</label>
           </div>
-          <div class="rvo-select-wrapper">
-            <select name="{{ filter_group.name }}" id="modal-{{ filter_group.name }}" class="utrecht-select utrecht-select--html-select rvo-select" onchange="applyFiltersInstant()">
-              <option value="">{{ filter_group.placeholder }}</option>
-              {% for option in filter_group.options %}
-                <option value="{{ option.value }}" {% if request.GET.get(filter_group.name)|string == option.value|string %}selected{% endif %}>
-                  {{ option.label }}
-                </option>
-              {% endfor %}
-            </select>
-          </div>
+          <c-select name="{{ filter_group.name }}" id="modal-{{ filter_group.name }}" @change="applyFiltersInstant()">
+            <option value="">{{ filter_group.placeholder }}</option>
+            {% for option in filter_group.options %}
+              <option value="{{ option.value }}" {% if request.GET.get(filter_group.name)|string == option.value|string %}selected{% endif %}>
+                {{ option.label }}
+              </option>
+            {% endfor %}
+          </c-select>
         </div>
+
         {% elif filter_group.type == 'date_range' %}
         <!-- Date Range Filters -->
         <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
@@ -129,7 +128,7 @@ Usage:
               type="date"
               id="modal-{{ filter_group.name }}-from"
               name="{{ filter_group.name }}_from"
-              class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
+              class="utrecht-textbox utrecht-textbox--html-input rvo-input"
               data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
               data-combined-name="{{ filter_group.name }}"
               value="{% if request.GET.get(filter_group.name) and '_' in request.GET.get(filter_group.name) %}{{ request.GET.get(filter_group.name)[:10] }}{% endif %}"
@@ -144,7 +143,7 @@ Usage:
               type="date"
               id="modal-{{ filter_group.name }}-to"
               name="{{ filter_group.name }}_to"
-              class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
+              class="utrecht-textbox utrecht-textbox--html-input rvo-input"
               data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
               data-combined-name="{{ filter_group.name }}"
               value="{% if request.GET.get(filter_group.name) and '_' in request.GET.get(filter_group.name) %}{{ request.GET.get(filter_group.name)[11:] }}{% endif %}"
@@ -153,7 +152,7 @@ Usage:
           </div>
         </div>
         {% if filter_group.require_both %}
-        <div id="{{ filter_group.name }}-validation-message" class="date-range-validation-message" style="display: none; color: #e17000; font-size: 0.875rem; margin-top: 0.25rem;">
+        <div id="{{ filter_group.name }}-validation-message" class="date-range-validation-message" style="display: none; color: #d06801; font-size: 0.875rem; margin-top: 0.25rem;">
           Beide datums zijn vereist voor een geldige periode filter.
         </div>
         {% endif %}
