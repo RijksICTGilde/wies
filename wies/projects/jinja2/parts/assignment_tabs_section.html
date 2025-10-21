@@ -1,0 +1,71 @@
+<div class="rvo-table--responsive" id="assignment-tabs-section">
+  <!-- Tab Navigation -->
+  <ul
+    class="rvo-tabs rvo-ul rvo-ul--no-margin rvo-ul--no-padding rvo-ul--icon rvo-ul--icon-option-2"
+    role="tablist"
+    aria-label="Tabs"
+  >
+    {% for tab_key, tab_data in tab_groups.items() %}
+    <li role="presentation" class="rvo-tabs__item">
+      <a
+        href="#tab-{{ tab_key }}"
+        class="rvo-link rvo-tabs__item-link {% if active_tab == tab_key %}rvo-tabs__item-link--active rvo-link--active{% else %}rvo-link--normal{% endif %} rvo-link--no-underline"
+        role="tab"
+        aria-selected="{% if active_tab == tab_key %}true{% else %}false{% endif %}"
+        hx-get="{{ assignments_url_with_tab(request, tab_key) }}"
+        hx-target="#assignment-tabs-section"
+        hx-swap="outerHTML"
+        hx-push-url="true"
+      >
+        {{ tab_data.title }}
+        <span class="tab-count">({{ tab_data.queryset.count() }})</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+
+  <!-- Tab Content -->
+  <table class="rvo-table">
+    <thead class="rvo-table-head">
+      <tr class="rvo-table-row">
+        {% with field='name', label='Naam', target='#assignment-tabs-section' %}
+  {% include 'parts/generic_sortable_header.html' %}
+{% endwith %}
+        {% with field='organization', label='Opdrachtgever', target='#assignment-tabs-section' %}
+  {% include 'parts/generic_sortable_header.html' %}
+{% endwith %}
+        {% with field='status', label='Status', target='#assignment-tabs-section' %}
+  {% include 'parts/generic_sortable_header.html' %}
+{% endwith %}
+        <th class="rvo-table-header">Periode</th>
+      </tr>
+    </thead>
+    <tbody class="rvo-table-body">
+      {% for assignment in active_assignments %}
+      <tr class="rvo-table-row clickable-row" onclick="window.location.href='/assignments/{{ assignment.pk }}/'">
+        <td class="rvo-table-cell">{{ assignment.name }}</td>
+        <td class="rvo-table-cell">
+          <div>{{ assignment.organization }}</div>
+          {% if assignment.ministry %}
+            <div style="font-size: 0.875em; color: var(--rvo-color-grijs-600); margin-top: 0.25rem;">{{ assignment.ministry.abbreviation }}</div>
+          {% endif %}
+        </td>
+        <td class="rvo-table-cell">
+          <div class="rvo-tag {% if assignment.status == 'LEAD' %}wies-tag--light-yellow{% elif assignment.status == 'OPEN' %}rvo-tag--info{% elif assignment.status == 'LOPEND' %}rvo-tag--success{% elif assignment.status == 'AFGEWEZEN' %}rvo-tag--error{% else %}rvo-tag--default{% endif %}">{{ assignment.status }}</div>
+        </td>
+        <td class="rvo-table-cell">
+          <span class="assignment-period">
+            {{ assignment.start_date.strftime("%b %y")|default("-") }} - {{ assignment.end_date.strftime("%b %y")|default("-") }}
+          </span>
+        </td>
+      </tr>
+      {% else %}
+      <tr class="rvo-table-row">
+        <td class="rvo-table-cell" colspan="4" style="text-align: center; padding: 2rem; color: var(--rvo-color-grijs-600);">
+          <span class="rvo-text--italic">Geen opdrachten gevonden voor deze categorie.</span>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

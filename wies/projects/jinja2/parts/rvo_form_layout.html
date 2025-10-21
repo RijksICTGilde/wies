@@ -1,0 +1,62 @@
+{#  Centrale RVO form layout  #}
+<div class="rvo-max-width-layout rvo-max-width-layout--lg rvo-max-width-layout-inline-padding--none">
+  <div class="rvo-layout-column rvo-layout-gap--0">
+    <div class="rvo-layout-column rvo-layout-gap--0">
+      {% if heading %}
+        <h1 class="utrecht-heading-1">{{ heading }}</h1>
+      {% endif %}
+      {% if form_intro %}
+        <p class="rvo-text--lg">{{ form_intro|safe }}</p>
+      {% endif %}
+    </div>
+    <form class="rvo-layout-column rvo-layout-gap--md" method="post" enctype="multipart/form-data">
+      {{ get_csrf_hidden_input(request) }}
+      <div class="utrecht-form-fieldset rvo-form-fieldset rvo-layout-gap--0">
+        <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
+          <legend class="utrecht-form-fieldset__legend utrecht-form-fieldset__legend--html-legend">
+            {{ legend|default("Formulier") }}
+          </legend>
+          <div class="rvo-layout-column rvo-layout-gap--md">
+            {% for field in form %}
+              {% if field.name == "colleagues" %}
+                <div class="rvo-layout-column rvo-layout-gap--xs">
+                  <label for="{{ field.id_for_label }}" class="rvo-label">{{ field.label }}</label>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  </div>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </fieldset>
+      </div>
+      <p class="utrecht-button-group">
+        <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
+          {{ submit_text|default("Opslaan") }}
+        </button>
+        {% if cancel_url %}
+          <a href="{{ cancel_url }}" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md">
+            Annuleren
+          </a>
+        {% endif %}
+      </p>
+    </form>
+  </div>
+</div> 

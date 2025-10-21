@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<!-- Page Header -->
+<div class="rvo-layout-column rvo-layout-gap--xs rvo-layout-margin-bottom--md rvo-margin-block-end--md">
+  <h1 class="utrecht-heading-1 rvo-heading--no-margins">
+    WIES
+  </h1>
+  <span class="rvo-text--subtle">
+    Wie, wat, waar, wanneer
+  </span>
+</div>
+
+<!-- Dashboard Statistics Cards -->
+<div class="rvo-max-width-layout rvo-max-width-layout--md rvo-margin-block-end--md">
+  <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--three">
+    
+    <!-- Consultants actief -->
+    <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+      <div class="rvo-card__content">
+        <span class="utrecht-icon rvo-icon rvo-icon-man-met-laptop rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Consultants"></span>
+        <h4 class="utrecht-heading-4 rvo-heading--no-margins">{{ average_utilization }}%</h4>
+        Consultants actief
+      </div>
+    </div>
+
+    <!-- Diensten bezet -->
+    <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+      <div class="rvo-card__content">
+        <span class="utrecht-icon rvo-icon rvo-icon-servicedesk-ict rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Diensten"></span>
+        <h4 class="utrecht-heading-4 rvo-heading--no-margins">{{ ((services_filled / total_services * 100) | int) if total_services else 0 }}%</h4>
+        Diensten bezet
+      </div>
+    </div>
+
+    <!-- Nieuwe kansen -->
+    <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+      <div class="rvo-card__content">
+        <span class="utrecht-icon rvo-icon rvo-icon-waarschuwing rvo-icon--2xl rvo-icon--hemelblauw" role="img" aria-label="Kansen"></span>
+        <h4 class="utrecht-heading-4 rvo-heading--no-margins">{{ new_leads|length }}</h4>
+        Nieuwe kansen
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<!-- Dashboard Tabs -->
+{% include 'parts/dashboard_tabs_section.html' %}
+
+{% endblock content %}

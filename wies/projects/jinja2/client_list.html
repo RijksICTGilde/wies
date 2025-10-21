@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block header %}
+{{ super() }}
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>Opdrachtgevers</h1>
+</div>
+
+{% with url_name='clients', target_selector='#client_table' %}
+  {% include 'parts/generic_filter_bar.html' %}
+{% endwith %}
+
+<div class="rvo-layout-column rvo-layout-gap--md">
+  <!-- Clients Content -->
+  <div id="client_table">
+    {% include 'parts/clients_table.html' %}
+  </div>
+</div>
+
+{% endblock content %}
+
+{% block extra_js %}
+<script src="{{ static('js/clients.js') }}"></script>
+<script>
+{% for ministry_name, ministry_data in grouped_clients.items() %}
+{% if ministry_data.organizations|length > 3 %}
+function toggleMinistry{{ loop.index0 }}() {
+  const hiddenItems = document.querySelectorAll('.ministry-{{ loop.index0 }}-org.hidden');
+  const button = document.getElementById('ministry-{{ loop.index0 }}-toggle');
+  
+  if (hiddenItems.length > 0) {
+    hiddenItems.forEach(item => item.classList.remove('hidden'));
+    button.textContent = 'Toon minder opdrachtgevers';
+  } else {
+    const allItems = document.querySelectorAll('.ministry-{{ loop.index0 }}-org');
+    allItems.forEach((item, index) => {
+      if (index >= 3) item.classList.add('hidden');
+    });
+    button.textContent = 'Toon meer opdrachtgevers';
+  }
+}
+{% endif %}
+{% endfor %}
+</script>
+{% endblock %}

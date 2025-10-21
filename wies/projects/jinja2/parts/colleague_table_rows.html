@@ -1,0 +1,60 @@
+{% for colleague in object_list %}
+<tr class="rvo-table-row clickable-row" onclick="window.location.href='{{ colleague.get_absolute_url() }}'">
+  <td class="rvo-table-cell">
+    <div class="placement-avatar-container">
+      <div class="placement-avatar">
+        {{ colleague.name|first|upper }}
+      </div>
+      <div class="placement-info">
+        <div class="rvo-text rvo-text--bold">
+          {{ colleague.name }}
+        </div>
+        <div class="rvo-text rvo-text--sm rvo-text--subtle">
+          {% if colleague.brand %}
+            {{ colleague.brand.name }}
+          {% else %}
+            -
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </td>
+  <td class="rvo-table-cell">
+    {% for skill in colleague.skills.all() %}
+      <span class="rvo-tag rvo-tag--default">{{ skill.name }}</span>
+    {% endfor %}
+    {% if not colleague.skills.all() %}
+      <span class="rvo-text--italic rvo-text--subtle">Geen rollen</span>
+    {% endif %}
+  </td>
+  <td class="rvo-table-cell">
+    {% for expertise in colleague.expertises.all() %}
+      <span class="rvo-tag rvo-tag--default">{{ expertise.name }}</span>
+    {% endfor %}
+    {% if not colleague.expertises.all() %}
+      <span class="rvo-text--italic rvo-text--subtle">Geen expertise</span>
+    {% endif %}
+  </td>
+  <td class="rvo-table-cell">
+    {% if colleague.end_date %}
+      <div class="status-container">
+        <span class="rvo-tag wies-tag--light-yellow">Ingezet</span>
+          <div class="rvo-text rvo-text--xs rvo-text--subtle">tot {{ colleague.end_date.strftime("%b %y") }}</div>
+    {% else %}
+      <span class="rvo-tag wies-tag--light-green">Beschikbaar</span>
+    {% endif %}
+  </td>
+</tr>
+{% endfor %}
+
+{% if next_page_url %}
+<tr hx-get="{{ next_page_url }}"
+    hx-trigger="revealed"
+    hx-swap="outerHTML">
+  <td colspan="4" class="rvo-table-cell">
+    <div style="text-align: center; padding: 1rem;">
+      <span class="rvo-text--subtle">Meer laden...</span>
+    </div>
+  </td>
+</tr>
+{% endif %}

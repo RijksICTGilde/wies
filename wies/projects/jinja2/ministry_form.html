@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if object %}
+    {% with heading="Ministerie, bewerken", legend="Ministerie gegevens", submit_text="Bijwerken" %}
+  {% include 'parts/rvo_form_layout.html' %}
+{% endwith %}
+{% else %}
+    {% with heading="Nieuw, ministerie", legend="Ministerie gegevens", submit_text="Aanmaken" %}
+  {% include 'parts/rvo_form_layout.html' %}
+{% endwith %}
+{% endif %}
+
+{% endblock content %}

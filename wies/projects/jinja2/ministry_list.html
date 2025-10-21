@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block header %}
+{{ super() }}
+{% with active_page='ministries' %}
+  {% include 'parts/clients_navigation.html' %}
+{% endwith %}
+{% endblock %}
+
+{% block content %}
+
+<div class="rvo-layout-column rvo-layout-gap--md">
+  
+  {% with url_name='ministries', target_selector='#ministry_table' %}
+  {% include 'parts/generic_filter_bar.html' %}
+{% endwith %}
+
+  <!-- Ministries Content -->
+  <div id="ministry_table">
+    {% include 'parts/ministry_table.html' %}
+  </div>
+
+</div>
+
+{% endblock %}

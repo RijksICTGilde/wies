@@ -1,0 +1,91 @@
+{% extends 'exact/base.html' %}
+
+{% block title %}Medewerkers - Exact{% endblock %}
+
+{% block breadcrumb %}
+    <div class="breadcrumb">
+        <a href="{{ url('exact:dashboard') }}">Dashboard</a> > <span>Medewerkers</span>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h1 class="page-title">Medewerkers</h1>
+        <a href="{{ url('exact:employee-create') }}" class="btn btn-primary">+ Nieuwe Medewerker</a>
+    </div>
+    
+    <div class="card">
+        <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+            <form method="get" style="display: flex; gap: 1rem; align-items: end; flex: 1;">
+                <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                    <label class="form-label" for="search">Zoeken</label>
+                    <input type="text" name="search" id="search" class="form-control" value="{{ request.GET.search }}" placeholder="Zoek op naam...">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="status">Status</label>
+                    <select name="status" id="status" class="form-control">
+                        <option value="">Alle statussen</option>
+                        <option value="ACTIEF" {% if request.GET.status == 'ACTIEF' %}selected{% endif %}>Actief</option>
+                        <option value="INACTIEF" {% if request.GET.status == 'INACTIEF' %}selected{% endif %}>Inactief</option>
+                        <option value="VERLOF" {% if request.GET.status == 'VERLOF' %}selected{% endif %}>Verlof</option>
+                        <option value="UITDIENST" {% if request.GET.status == 'UITDIENST' %}selected{% endif %}>Uit dienst</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-primary">Zoeken</button>
+            </form>
+        </div>
+        
+        {% if employees %}
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Naam</th>
+                        <th>RIN Nummer</th>
+                        <th>Aantal Uren</th>
+                        <th>Status</th>
+                        <th>Organisatie</th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees %}
+                    <tr>
+                        <td><a href="{{ employee.get_absolute_url }}" style="color: #e1141d; text-decoration: none;">{{ employee.naam_medewerker }}</a></td>
+                        <td>{{ employee.rin_nummer }}</td>
+                        <td>{{ employee.aantal_uren }}</td>
+                        <td>
+                            <span style="padding: 0.25rem 0.5rem; border-radius: 12px; font-size: 0.8rem; 
+                                {% if employee.status == 'ACTIEF' %}background-color: #d4edda; color: #155724;
+                                {% elif employee.status == 'INACTIEF' %}background-color: #f8d7da; color: #721c24;
+                                {% else %}background-color: #fff3cd; color: #856404;{% endif %}">
+                                {{ employee.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ employee.organisatieonderdeel }}</td>
+                        <td>
+                            <a href="{{ url('exact:employee-update', args=[employee.pk]) }}" class="btn btn-secondary btn-sm">Bewerk</a>
+                            <a href="{{ url('exact:employee-delete', args=[employee.pk]) }}" class="btn btn-danger btn-sm">Verwijder</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            {% if is_paginated %}
+                <div style="text-align: center; margin-top: 1rem;">
+                    <div>
+                        <span>Pagina {{ page_obj.number }} van {{ page_obj.paginator.num_pages }}</span>
+                        {% if page_obj.has_previous %}
+                            <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="btn btn-secondary btn-sm">Vorige</a>
+                        {% endif %}
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="btn btn-secondary btn-sm">Volgende</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <p style="color: #6d6f6f; text-align: center; padding: 2rem;">Geen medewerkers gevonden.</p>
+        {% endif %}
+    </div>
+{% endblock %}

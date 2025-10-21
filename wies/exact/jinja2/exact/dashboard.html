@@ -1,0 +1,86 @@
+{% extends 'exact/base.html' %}
+
+{% block title %}Dashboard - Exact{% endblock %}
+
+{% block content %}
+    <div class="breadcrumb">
+        <span>Dashboard</span>
+    </div>
+    
+    <h1 class="page-title">Dashboard</h1>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-number">{{ employee_count }}</span>
+            <div class="stat-label">Totaal Medewerkers</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ active_employee_count }}</span>
+            <div class="stat-label">Actieve Medewerkers</div>
+        </div>
+        <div class="stat-card">
+            <span class="stat-number">{{ project_count }}</span>
+            <div class="stat-label">Totaal Projecten</div>
+        </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Recente Medewerkers</h2>
+                <a href="{{ url('exact:employee-list') }}" class="btn btn-primary btn-sm">Alle Medewerkers</a>
+            </div>
+            {% if recent_employees %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Naam</th>
+                            <th>Status</th>
+                            <th>Organisatie</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for employee in recent_employees %}
+                        <tr>
+                            <td><a href="{{ employee.get_absolute_url }}" style="color: #e1141d; text-decoration: none;">{{ employee.naam_medewerker }}</a></td>
+                            <td>{{ employee.get_status_display }}</td>
+                            <td>{{ employee.organisatieonderdeel }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p style="color: #6d6f6f;">Geen medewerkers gevonden.</p>
+            {% endif %}
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Recente Projecten</h2>
+                <a href="{{ url('exact:project-list') }}" class="btn btn-primary btn-sm">Alle Projecten</a>
+            </div>
+            {% if recent_projects %}
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Projectnaam</th>
+                            <th>Type</th>
+                            <th>Start datum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for project in recent_projects %}
+                        <tr>
+                            <td><a href="{{ project.get_absolute_url }}" style="color: #e1141d; text-decoration: none;">{{ project.projectnaam }}</a></td>
+                            <td>{{ project.get_type_project_display }}</td>
+                            <td>{{ project.start_datum|date("d-m-Y") }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p style="color: #6d6f6f;">Geen projecten gevonden.</p>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
