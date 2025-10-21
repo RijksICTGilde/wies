@@ -7,6 +7,7 @@ This files lists the changes during the lifetime of this project.
 - (backwards incompatible) remove cost part of assignment
 - (backwards incompatible) add assignment owner
 - convert to jinja templating
+- add `jinja_roos_components` library for roos components
 
 ## 2025-10-09
 - add period filter to placement page

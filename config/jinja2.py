@@ -3,18 +3,20 @@ from django.templatetags.static import static
 from django.urls import reverse
 from django.middleware.csrf import get_token
 from django.utils.safestring import mark_safe
+from jinja_roos_components import setup_components
 
 from wies.projects.views import assignments_url_with_tab, placements_url_with_filters
 
 
-def environment(**options):
-    env = Environment(**options)
-
-    def get_csrf_hidden_input(request):
+def get_csrf_hidden_input(request):
         """Returns a hidden input field with CSRF token"""
         token = get_token(request)
         return mark_safe(f'<input type="hidden" name="csrfmiddlewaretoken" value="{token}">')
 
+
+def environment(**options):
+    env = Environment(**options)
+    setup_components(env)
     env.globals.update({
         'static': static,
         'url': reverse,
