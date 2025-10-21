@@ -1,0 +1,29 @@
+<div class="rvo-table--responsive" id="placement_table">
+  <table class="rvo-table">
+    <thead class="rvo-table-head">
+      <tr class="rvo-table-row">
+        {% with field='colleague__name', label='Naam', target='#placement_table' %}
+  {% include 'parts/generic_sortable_header.html' %}
+{% endwith %}
+        {% with field='service__assignment__name', label='Opdracht', target='#placement_table' %}
+  {% include 'parts/generic_sortable_header.html' %}
+{% endwith %}
+        {% with field='service__skill__name', label='Rol', target='#placement_table' %}
+  {% include 'parts/generic_sortable_header.html' %}
+{% endwith %}
+        <th class="rvo-table-header">Periode</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if object_list %}
+        {% include 'parts/placement_table_rows.html' %}
+      {% else %}
+        <tr class="rvo-table-row">
+          <td class="rvo-table-cell" colspan="4">
+            <span class="rvo-text--italic">Geen inzetten gevonden.</span>
+          </td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>

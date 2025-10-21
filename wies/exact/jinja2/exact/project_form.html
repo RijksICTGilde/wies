@@ -1,0 +1,210 @@
+{% extends 'exact/base.html' %}
+
+{% block title %}
+    {% if object %}Bewerk {{ object.projectnaam }}{% else %}Nieuw Project{% endif %} - Exact
+{% endblock %}
+
+{% block breadcrumb %}
+    <div class="breadcrumb">
+        <a href="{{ url('exact:dashboard') }}">Dashboard</a> > 
+        <a href="{{ url('exact:project-list') }}">Projecten</a> > 
+        <span>{% if object %}Bewerk{% else %}Nieuw Project{% endif %}</span>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-title">
+        {% if object %}Bewerk {{ object.projectnaam }}{% else %}Nieuw Project{% endif %}
+    </h1>
+    
+    <div class="card">
+        <form method="post">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ get_csrf_token(request) }}">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                <div>
+                    <h3 style="margin-bottom: 1rem; color: #333;">Project Basis</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.projectnaam.id_for_label }}">{{ form.projectnaam.label }}</label>
+                        {{ form.projectnaam }}
+                        {% if form.projectnaam.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.projectnaam.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.odi_thema.id_for_label }}">{{ form.odi_thema.label }}</label>
+                        {{ form.odi_thema }}
+                        {% if form.odi_thema.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.odi_thema.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.product_dienst_assortiment.id_for_label }}">{{ form.product_dienst_assortiment.label }}</label>
+                        {{ form.product_dienst_assortiment }}
+                        {% if form.product_dienst_assortiment.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.product_dienst_assortiment.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.start_datum.id_for_label }}">{{ form.start_datum.label }}</label>
+                            {{ form.start_datum }}
+                            {% if form.start_datum.errors %}
+                                <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.start_datum.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.eind_datum.id_for_label }}">{{ form.eind_datum.label }}</label>
+                            {{ form.eind_datum }}
+                            {% if form.eind_datum.errors %}
+                                <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.eind_datum.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.aantal_uur.id_for_label }}">{{ form.aantal_uur.label }}</label>
+                            {{ form.aantal_uur }}
+                            {% if form.aantal_uur.errors %}
+                                <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.aantal_uur.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label" for="{{ form.tarief.id_for_label }}">{{ form.tarief.label }}</label>
+                            {{ form.tarief }}
+                            {% if form.tarief.errors %}
+                                <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.tarief.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="margin-bottom: 1rem; color: #333;">RC Gegevens</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.type_project.id_for_label }}">{{ form.type_project.label }}</label>
+                        {{ form.type_project }}
+                        {% if form.type_project.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.type_project.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.organisatieonderdeel.id_for_label }}">{{ form.organisatieonderdeel.label }}</label>
+                        {{ form.organisatieonderdeel }}
+                        {% if form.organisatieonderdeel.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.organisatieonderdeel.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.manager.id_for_label }}">{{ form.manager.label }}</label>
+                        {{ form.manager }}
+                        {% if form.manager.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.manager.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.moeder.id_for_label }}">{{ form.moeder.label }}</label>
+                        {{ form.moeder }}
+                        {% if form.moeder.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.moeder.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+                <div>
+                    <h3 style="margin-bottom: 1rem; color: #333;">Contract</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.contract_besteld_door.id_for_label }}">{{ form.contract_besteld_door.label }}</label>
+                        {{ form.contract_besteld_door }}
+                        {% if form.contract_besteld_door.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.contract_besteld_door.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.contract_contactpersoon.id_for_label }}">{{ form.contract_contactpersoon.label }}</label>
+                        {{ form.contract_contactpersoon }}
+                        {% if form.contract_contactpersoon.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.contract_contactpersoon.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.contract_factuur_voor.id_for_label }}">{{ form.contract_factuur_voor.label }}</label>
+                        {{ form.contract_factuur_voor }}
+                        {% if form.contract_factuur_voor.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.contract_factuur_voor.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.contract_ter_attentie_van.id_for_label }}">{{ form.contract_ter_attentie_van.label }}</label>
+                        {{ form.contract_ter_attentie_van }}
+                        {% if form.contract_ter_attentie_van.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.contract_ter_attentie_van.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            {{ form.contract_eenzijdig_getekend }}
+                            <span>{{ form.contract_eenzijdig_getekend.label }}</span>
+                        </label>
+                        {% if form.contract_eenzijdig_getekend.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.contract_eenzijdig_getekend.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            {{ form.contract_tweezijdig_getekend }}
+                            <span>{{ form.contract_tweezijdig_getekend.label }}</span>
+                        </label>
+                        {% if form.contract_tweezijdig_getekend.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.contract_tweezijdig_getekend.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="margin-bottom: 1rem; color: #333;">Referenties</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.uw_referentie.id_for_label }}">{{ form.uw_referentie.label }}</label>
+                        {{ form.uw_referentie }}
+                        {% if form.uw_referentie.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.uw_referentie.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.uw_kenmerk.id_for_label }}">{{ form.uw_kenmerk.label }}</label>
+                        {{ form.uw_kenmerk }}
+                        {% if form.uw_kenmerk.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.uw_kenmerk.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e6ecf1; display: flex; gap: 1rem;">
+                <button type="submit" class="btn btn-primary">Opslaan</button>
+                <a href="{% if object %}{{ object.get_absolute_url() }}{% else %}{{ url('exact:project-list') }}{% endif %}" class="btn btn-secondary">Annuleren</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block title %}Mijn Profiel{% endblock %}
+
+{% block content %}
+<div class="rvo-layout-column rvo-layout-gap--xl">
+  <div class="rvo-layout-column rvo-layout-gap--xs">
+    <h1 class="utrecht-heading-1 rvo-heading--no-margins">Mijn Profiel</h1>
+  </div>
+  
+  <!-- 2-kolommen layout -->
+  <div class="rvo-layout-grid-container">
+    <div class="rvo-layout-grid rvo-layout-gap--2xl rvo-layout-grid-columns--two rvo-layout-grid--division" style="--division: 2fr 1fr;">
+      <!-- Linker kolom -->
+      <div>
+        <div class="rvo-layout-column rvo-layout-gap--2xl">
+          <!-- Welkomst & profiel kaart -->
+          <div class="rvo-card rvo-card--outline rvo-card--padding-xl">
+            <div class="rvo-layout-column rvo-layout-gap--md">
+              <div>
+                <span class="rvo-text--subtle">Welkom terug</span><br>
+                <h2 class="utrecht-heading-2 rvo-heading--no-margins">
+                  {% if colleague %}{{ colleague.name }}{% else %}{{ user.get_full_name() }}{% endif %}
+                </h2>
+                <span class="rvo-text--subtle rvo-text--sm">
+                  {% if colleague and colleague.brand %}{{ colleague.brand.name }}{% endif %}
+                  {% if colleague.skills.exists() %} • {% for skill in colleague.skills.all()[:3] %}{{ skill.name }}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}
+                </span>
+              </div>
+              
+              <!-- Competentie highlights -->
+              <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout--wrap">
+                {% if colleague %}
+                  {% for skill in colleague.skills.all()[:5] %}
+                    <div class="rvo-tag rvo-tag--default">{{ skill.name }}</div>
+                  {% endfor %}
+                  {% if colleague.skills.count() > 5 %}
+                    <div class="rvo-tag rvo-tag--default">+{{ colleague.skills.count() - 5 }} meer</div>
+                  {% endif %}
+                {% else %}
+                  <span class="rvo-text--subtle rvo-text--sm">Nog geen vaardigheden toegevoegd</span>
+                {% endif %}
+              </div>
+              
+              <hr class="rvo-hr rvo-margin-block-end--md rvo-margin-block-start--sm">              
+              <div class="rvo-layout-row rvo-layout-gap--md">
+                <a href="?tab=cv" class="rvo-link rvo-link--with-icon rvo-link--no-underline">
+                  Bekijk volledig CV
+                  <span class="utrecht-icon rvo-icon rvo-icon-pijl-naar-rechts rvo-icon--md rvo-icon--hemelblauw rvo-link__icon--after" role="img" aria-label="Pijl naar rechts"></span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Opdrachten overzicht -->
+          <div class="rvo-card rvo-card--outline rvo-card--padding-xl">
+            <div class="rvo-layout-column rvo-layout-gap--md">
+              <h2 class="utrecht-heading-2 rvo-heading--no-margins">Recente opdrachten</h2>
+              
+              <div class="rvo-layout-column rvo-layout-gap--md">
+                {% if recent_placements %}
+                  {% for placement in recent_placements %}
+                    <div class="rvo-layout-row rvo-layout-align-items-start rvo-layout-justify-content-space-between rvo-layout-gap--md">
+                      <div class="rvo-layout-column rvo-layout-gap--2xs">
+                        <div class="rvo-layout-row rvo-layout-gap--xs">
+                          {% if placement.service.assignment.status == 'INGEVULD' %}
+                            <div class="rvo-tag rvo-tag--default">Actief</div>
+                          {% else %}
+                            <span class="utrecht-icon rvo-icon rvo-icon-vinkje rvo-icon--sm rvo-icon--hemelblauw" role="img" aria-label="Afgerond"></span>
+                          {% endif %}
+                          <p class="rvo-text--bold rvo-text--no-margins">{{ placement.service.assignment.name }}</p>
+                        </div>
+                        <span class="rvo-text--subtle rvo-text--sm">{{ placement.service.assignment.customer.name|default("Rijksoverheid") }}</span>
+                        <span class="rvo-text--sm">
+                          {{ placement.start_date.strftime("%b %Y") }} - 
+                          {% if placement.end_date %}{{ placement.end_date.strftime("%b %Y") }}{% else %}heden{% endif %} · 
+                          <strong>{{ placement.role|default("Consultant") }}</strong>
+                        </span>
+                      </div>
+                      <a href="{{ placement.service.assignment.get_absolute_url() }}" class="rvo-link rvo-link--with-icon rvo-link--no-underline">
+                        Bekijk details
+                      </a>
+                    </div>
+                    {% if not loop.last %}
+                      <hr class="rvo-hr">
+                    {% endif %}
+                  {% endfor %}
+                  
+                  {% if colleague.placements.count() > 3 %}
+                    <div class="rvo-margin-block-start--lg rvo-text--center">
+                      <button class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md" type="button" onclick="window.location.href='/colleagues/{{ colleague.pk }}/'">
+                        Toon alle opdrachten ({{ colleague.placements.count() }} totaal)
+                      </button>
+                    </div>
+                  {% endif %}
+                {% else %}
+                  <div class="rvo-text--center rvo-layout-gap--md">
+                    <span class="rvo-text--subtle">Nog geen opdrachten gevonden</span>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Rechter kolom -->
+      <div>
+        <div class="rvo-layout-column rvo-layout-gap--2xl">
+          <!-- Snelle acties -->
+          <div class="rvo-card rvo-card--outline rvo-card--padding-xl">
+            <h2 class="utrecht-heading-2">Snelle acties</h2>
+            <div class="rvo-layout-column rvo-layout-gap--md">
+              <div class="rvo-layout-column rvo-layout-gap--xs">
+                <button class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--rvo-full-width" type="button" onclick="window.location.href='?tab=cv'">
+                  CV bijwerken
+                </button>
+              </div>
+              <div class="rvo-layout-column rvo-layout-gap--xs">
+                <a href="/assignments/" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--rvo-full-width rvo-link--no-underline">
+                  Zoek opdrachten
+                </a>
+              </div>
+              <div class="rvo-layout-column rvo-layout-gap--xs">
+                {% if colleague %}
+                  <a href="{{ url('colleague-update', args=[colleague.pk]) }}" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--rvo-full-width rvo-link--no-underline">
+                    Profiel bewerken
+                  </a>
+                {% else %}
+                  <button class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--rvo-full-width" type="button" onclick="alert('Geen colleague profiel gevonden')">
+                    Profiel bewerken
+                  </button>
+                {% endif %}
+              </div>
+              <div class="rvo-layout-column rvo-layout-gap--xs">
+                <form method="post" action="/logout/">
+                  {{ get_csrf_hidden_input(request) }}
+                  <button class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md utrecht-button--rvo-full-width utrecht-button--icon-before" type="submit">
+                    <span class="utrecht-icon rvo-icon rvo-icon-secure-link rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Uitloggen"></span>
+                    Uitloggen
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Persoonlijke gegevens -->
+          <div class="rvo-card rvo-card--outline rvo-card--padding-xl">
+            <h2 class="utrecht-heading-2 rvo-heading--no-margins">Persoonlijke gegevens</h2>
+            <div class="rvo-layout-column rvo-layout-gap--md">
+              <div class="rvo-layout-column rvo-layout-gap--0">
+                <span class="rvo-text--subtle rvo-text--sm">Volledige naam</span>
+                {% if colleague %}{{ colleague.name }}{% else %}{{ user.get_full_name() }}{% endif %}
+              </div>
+              <div class="rvo-layout-column rvo-layout-gap--0">
+                <span class="rvo-text--subtle rvo-text--sm">E-mailadres</span>
+                {% if colleague %}{{ colleague.email }}{% else %}{{ user.email }}{% endif %}
+              </div>
+              <div class="rvo-layout-column rvo-layout-gap--0">
+                <span class="rvo-text--subtle rvo-text--sm">Organisatie</span>
+                {% if colleague and colleague.brand %}{{ colleague.brand.name }}{% endif %}
+              </div>
+              <div class="rvo-layout-column rvo-layout-gap--0">
+                <span class="rvo-text--subtle rvo-text--sm">Lid sinds</span>
+                {{ user.date_joined.strftime("%B %Y") }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

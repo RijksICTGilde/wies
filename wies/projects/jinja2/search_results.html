@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}Zoekresultaten{% if search_query %} - {{ search_query }}{% endif %}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ static('css/placements.css') }}">
+<link rel="stylesheet" href="{{ static('css/search.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="rvo-layout-column rvo-layout-gap--lg rvo-margin-block-end--3xl">
+  
+  <!-- Search Header -->
+  <div class="rvo-layout-column rvo-layout-gap--xs">
+    {% if search_query %}
+      <h1 class="utrecht-heading-1">
+        {% if results.total_count > 0 %}
+          Zoekresultaten voor "{{ search_query }}"
+        {% else %}
+          Geen resultaten voor "{{ search_query }}"
+        {% endif %}
+      </h1>
+    {% else %}
+      <h1 class="utrecht-heading-1" style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;">Zoekresultaten</h1>
+      <p class="rvo-paragraph rvo-paragraph--md">
+        Voer een zoekterm in om te beginnen met zoeken.
+      </p>
+    {% endif %}
+  </div>
+
+
+  {% if search_query and results.total_count > 0 %}
+  <!-- Search Results by Section -->
+  <div class="rvo-layout-column rvo-layout-gap--xl">
+    
+    <!-- Assignments Section -->
+    {% if results.assignments %}
+    <div class="rvo-layout-grid rvo-layout-gap--lg" style="grid-template-columns: 1fr 3fr;">
+      <div>
+        <h2 class="utrecht-heading-3">
+          Opdrachten ({{ results.assignments|length }})
+        </h2>
+      </div>
+      <div>
+        <ul class="rvo-item-list">
+          {% for assignment in results.assignments %}
+          <li class="rvo-item-list__item clickable-row assignment-item{% if loop.index > 3 %} hidden{% endif %}" onclick="window.location.href='/assignments/{{ assignment.pk }}/';">
+            <div class="rvo-layout-row rvo-layout-gap--sm rvo-align--center">
+              <div class="rvo-flex--grow">
+                <div class="rvo-text rvo-text--bold">{{ assignment.name }} <span class="rvo-text--sm rvo-text--subtle">{{ assignment.get_status_display() }}</span></div>
+                <span class="rvo-text--sm rvo-text--subtle">
+                  @ {{ assignment.organization }}
+                  {% if assignment.ministry %} • {{ assignment.ministry.name }}{% endif %}
+                </span>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% if results.assignments|length > 3 %}
+        <div class="rvo-layout-row">
+          <a href="#" class="rvo-link" onclick="toggleAssignments(); return false;" id="assignments-toggle">
+            Toon alle resultaten
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Colleagues Section -->
+    {% if results.colleagues %}
+    <div class="rvo-layout-grid rvo-layout-gap--lg" style="grid-template-columns: 1fr 3fr;">
+      <div>
+        <h2 class="utrecht-heading-3">
+          Collega's ({{ results.colleagues|length }})
+        </h2>
+      </div>
+      <div>
+        <ul class="rvo-item-list">
+          {% for colleague in results.colleagues %}
+          <li class="rvo-item-list__item clickable-row colleague-item{% if loop.index > 3 %} hidden{% endif %}" onclick="window.location.href='/colleagues/{{ colleague.pk }}/';">
+            <div class="rvo-layout-row rvo-layout-gap--sm rvo-align--center">
+              <div class="placement-avatar">
+                {{ colleague.name|first|upper }}
+              </div>
+              <div class="rvo-flex--grow">
+                <div class="rvo-text rvo-text--bold">{{ colleague.name }}</div>
+                <span class="rvo-text--sm rvo-text--subtle">
+                  {% if colleague.brand %}{{ colleague.brand.name }}{% endif %}
+                  {% if colleague.email %} • {{ colleague.email }}{% endif %}
+                </span>
+              </div>
+              <div class="rvo-layout-row rvo-layout-gap--xs rvo-align--center">
+                {% for skill in colleague.skills.all()[:2] %}
+                  <div class="rvo-tag rvo-tag--default rvo-tag--xs">{{ skill.name }}</div>
+                {% endfor %}
+                {% if colleague.skills.all()|length > 2 %}
+                  <span class="rvo-text--xs rvo-text--subtle">+{{ colleague.skills.all()|length - 2 }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% if results.colleagues|length > 3 %}
+        <div class="rvo-layout-row">
+          <a href="#" class="rvo-link" onclick="toggleColleagues(); return false;" id="colleagues-toggle">
+            Toon alle resultaten
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+
+
+    <!-- Ministries Section -->
+    {% if results.ministries %}
+    <div class="rvo-layout-grid rvo-layout-gap--lg" style="grid-template-columns: 1fr 3fr;">
+      <div>
+        <h2 class="utrecht-heading-3">
+          Ministeries ({{ results.ministries|length }})
+        </h2>
+      </div>
+      <div>
+        <ul class="rvo-item-list">
+          {% for ministry in results.ministries %}
+          <li class="rvo-item-list__item clickable-row ministry-item{% if loop.index > 3 %} hidden{% endif %}" onclick="window.location.href='/ministries/{{ ministry.pk }}/';">
+            <div class="rvo-layout-row rvo-layout-gap--sm rvo-align--center">
+              <div class="rvo-flex--grow">
+                <div class="rvo-text rvo-text--bold">{{ ministry.name }}</div>
+                <span class="rvo-text--sm rvo-text--subtle">
+                  {% if ministry.abbreviation %}{{ ministry.abbreviation }}{% endif %}
+                </span>
+              </div>
+              <div class="rvo-layout-row rvo-layout-gap--xs rvo-align--center">
+                <span class="rvo-text--sm rvo-text--subtle">
+                  {{ ministry.assignment_count }} opdracht{{ "en" if ministry.assignment_count != 1 else "" }}
+                </span>
+              </div>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% if results.ministries|length > 3 %}
+        <div class="rvo-layout-row">
+          <a href="#" class="rvo-link" onclick="toggleMinistries(); return false;" id="ministries-toggle">
+            Toon alle resultaten
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+    
+  </div>
+  {% endif %}
+
+</div>
+
+<script src="{{ static('js/search.js') }}"></script>
+{% endblock %}

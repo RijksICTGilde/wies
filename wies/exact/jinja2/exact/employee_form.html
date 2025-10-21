@@ -1,0 +1,130 @@
+{% extends 'exact/base.html' %}
+
+{% block title %}
+    {% if object %}Bewerk {{ object.naam_medewerker }}{% else %}Nieuwe Medewerker{% endif %} - Exact
+{% endblock %}
+
+{% block breadcrumb %}
+    <div class="breadcrumb">
+        <a href="{{ url('exact:dashboard') }}">Dashboard</a> > 
+        <a href="{{ url('exact:employee-list') }}">Medewerkers</a> > 
+        <span>{% if object %}Bewerk{% else %}Nieuwe Medewerker{% endif %}</span>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-title">
+        {% if object %}Bewerk {{ object.naam_medewerker }}{% else %}Nieuwe Medewerker{% endif %}
+    </h1>
+    
+    <div class="card">
+        <form method="post">
+            <input type="hidden" name="csrfmiddlewaretoken" value="{{ get_csrf_token(request) }}">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div>
+                    <h3 style="margin-bottom: 1rem; color: #333;">Basisgegevens</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.naam_medewerker.id_for_label }}">{{ form.naam_medewerker.label }}</label>
+                        {{ form.naam_medewerker }}
+                        {% if form.naam_medewerker.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.naam_medewerker.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.rin_nummer.id_for_label }}">{{ form.rin_nummer.label }}</label>
+                        {{ form.rin_nummer }}
+                        {% if form.rin_nummer.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.rin_nummer.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.aantal_uren.id_for_label }}">{{ form.aantal_uren.label }}</label>
+                        {{ form.aantal_uren }}
+                        {% if form.aantal_uren.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.aantal_uren.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.schaalniveau.id_for_label }}">{{ form.schaalniveau.label }}</label>
+                        {{ form.schaalniveau }}
+                        {% if form.schaalniveau.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.schaalniveau.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.kostenplaats.id_for_label }}">{{ form.kostenplaats.label }}</label>
+                        {{ form.kostenplaats }}
+                        {% if form.kostenplaats.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.kostenplaats.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.if_kf.id_for_label }}">{{ form.if_kf.label }}</label>
+                        {{ form.if_kf }}
+                        {% if form.if_kf.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.if_kf.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 style="margin-bottom: 1rem; color: #333;">RC Gegevens</h3>
+                    
+                    <div class="form-group">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                            {{ form.uren_schrijven }}
+                            <span>{{ form.uren_schrijven.label }}</span>
+                        </label>
+                        {% if form.uren_schrijven.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.uren_schrijven.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.email.id_for_label }}">{{ form.email.label }}</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.organisatieonderdeel.id_for_label }}">{{ form.organisatieonderdeel.label }}</label>
+                        {{ form.organisatieonderdeel }}
+                        {% if form.organisatieonderdeel.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.organisatieonderdeel.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.manager.id_for_label }}">{{ form.manager.label }}</label>
+                        {{ form.manager }}
+                        {% if form.manager.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.manager.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="{{ form.status.id_for_label }}">{{ form.status.label }}</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div style="color: #e1141d; font-size: 0.8rem; margin-top: 0.25rem;">{{ form.status.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid #e6ecf1; display: flex; gap: 1rem;">
+                <button type="submit" class="btn btn-primary">Opslaan</button>
+                <a href="{% if object %}{{ object.get_absolute_url() }}{% else %}{{ url('exact:employee-list') }}{% endif %}" class="btn btn-secondary">Annuleren</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

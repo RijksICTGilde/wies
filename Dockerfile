@@ -19,6 +19,14 @@ ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 ENV VIRTUAL_ENV=/opt/venv
 
+# Install git to enable installation of jrc from github
+# can be removed when jrc is on pypi
+RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
+  git \
+  # Cleaning up unused files
+  && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+  && rm -rf /var/lib/apt/lists/*
+
 RUN --mount=from=uv,source=/uv,target=/bin/uv \
   --mount=type=cache,target=/opt/uv-cache/ \
   --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
@@ -64,6 +72,9 @@ RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
 # copy results from build stages
 COPY --from=python-build --chown=app:app /opt/venv /opt/venv
 COPY --from=js-build --chown=app:app /app/node_modules /app/node_modules
+
+# copy uv to enable runtime including editable package during development
+COPY --from=uv /uv /bin/uv
 
 COPY --chown=app:app . /app
 RUN chown -R app:app /app

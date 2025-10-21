@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="rvo-max-width-layout rvo-max-width-layout--lg rvo-max-width-layout-inline-padding--none">
+  <div class="rvo-layout-column rvo-layout-gap--0">
+    <div class="rvo-layout-column rvo-layout-gap--0">
+      <h1 class="utrecht-heading-1">Dienst bewerken</h1>
+      <p class="rvo-text--lg"><span class='rvo-text--bold'>Pas de gegevens van de dienst aan.</span> Wijzig de dienst.</p>
+    </div>
+    <form class="rvo-layout-column rvo-layout-gap--md" method="post" enctype="multipart/form-data">
+      {{ get_csrf_hidden_input(request) }}
+      <div class="utrecht-form-fieldset rvo-form-fieldset rvo-layout-gap--0">
+        <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
+          <legend class="utrecht-form-fieldset__legend utrecht-form-fieldset__legend--html-legend">
+            Dienst gegevens
+          </legend>
+          <div class="rvo-layout-column rvo-layout-gap--md">
+            {% for field in form %}
+              {% if field.name == "specific_start_date" %}
+                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0" id="specific_start_date_field" style="display: none;">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  </div>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% elif field.name == "specific_end_date" %}
+                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0" id="specific_end_date_field" style="display: none;">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  </div>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% else %}
+                <div class="utrecht-form-field rvo-form-field rvo-layout-gap--0">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                  </div>
+                  {{ field }}
+                  {% if field.help_text %}
+                    <div class="utrecht-form-field-description">{{ field.help_text }}</div>
+                  {% endif %}
+                  {% for error in field.errors %}
+                    <div class="utrecht-form-field-description utrecht-form-field-description--invalid rvo-form-feedback rvo-form-feedback--error">{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        </fieldset>
+      </div>
+      <p class="utrecht-button-group">
+        <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
+          Dienst bijwerken
+        </button>
+        {% if cancel_url %}
+          <a href="{{ cancel_url }}" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md">
+            Annuleren
+          </a>
+        {% endif %}
+      </p>
+    </form>
+  </div>
+</div>
+
+<script src="{{ static('js/service_form.js') }}"></script>
+
+{% endblock content %}

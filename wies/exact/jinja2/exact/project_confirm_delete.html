@@ -1,0 +1,55 @@
+{% extends 'exact/base.html' %}
+
+{% block title %}Verwijder {{ object.projectnaam }} - Exact{% endblock %}
+
+{% block breadcrumb %}
+    <div class="breadcrumb">
+        <a href="{{ url('exact:dashboard') }}">Dashboard</a> > 
+        <a href="{{ url('exact:project-list') }}">Projecten</a> > 
+        <a href="{{ object.get_absolute_url() }}">{{ object.projectnaam }}</a> > 
+        <span>Verwijderen</span>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <h1 class="page-title">Project Verwijderen</h1>
+    
+    <div class="card">
+        <div style="text-align: center; padding: 2rem;">
+            <div style="color: #e1141d; font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+            <h2 style="color: #333; margin-bottom: 1rem;">Weet je het zeker?</h2>
+            <p style="color: #6d6f6f; margin-bottom: 2rem; font-size: 1.1rem;">
+                Je staat op het punt om project <strong>{{ object.projectnaam }}</strong> te verwijderen.<br>
+                Deze actie kan niet ongedaan gemaakt worden.
+            </p>
+            
+            <div class="card" style="background-color: #f8f9fa; text-align: left; margin-bottom: 2rem;">
+                <h3 style="margin-bottom: 1rem; color: #333;">Project details:</h3>
+                <table style="width: 100%;">
+                    <tr>
+                        <td style="padding: 0.5rem 0; font-weight: 500; width: 30%;">Projectnaam:</td>
+                        <td style="padding: 0.5rem 0;">{{ object.projectnaam }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem 0; font-weight: 500;">Type:</td>
+                        <td style="padding: 0.5rem 0;">{{ object.get_type_project_display() }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem 0; font-weight: 500;">Start datum:</td>
+                        <td style="padding: 0.5rem 0;">{{ object.start_datum.strftime("%d-%m-%Y") }}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 0.5rem 0; font-weight: 500;">Totale waarde:</td>
+                        <td style="padding: 0.5rem 0;">€ {{ "%.2f"|format(object.total_value) }}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <form method="post" style="display: inline-block; margin-right: 1rem;">
+                <input type="hidden" name="csrfmiddlewaretoken" value="{{ get_csrf_token(request) }}">
+                <button type="submit" class="btn btn-danger">Ja, Verwijderen</button>
+            </form>
+            <a href="{{ object.get_absolute_url() }}" class="btn btn-secondary">Annuleren</a>
+        </div>
+    </div>
+{% endblock %}
