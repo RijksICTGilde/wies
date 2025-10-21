@@ -1,0 +1,53 @@
+# ervaringen
+Ervaring met jinja-roos-componenten
+
+algemeen
+- autocomplete geeft veel extra attributen van generieke html elementen
+- bijv c-button heeft "title" wat niet werkt
+- er mist een table component
+
+- c-button: 
+	- je kan text via "label" invoegen en als child. is dat handig/wenselijk? of moet er 1 manier zijn?
+        in het geval van "label" lijkt het weinig extra's te bieden? bij bijv "options" wel. dit afwegen>
+	- wij gebruikten een "a" op de achtegrond (link als button), dat heeft c-button niet als optie. dit betekent dat we 'click' moeten gebruiken met JS, is dat erg?
+	- er zijn verschillende namen voor argumenten. "onclick" (html button), "onClick" (react, mind capitalization), "@click" (jrc). 
+
+-> misschien is het logisch om het pad vanaf html logisch te maken? meestal niet van react -> SSR.
+
+c-select
+	- ik probeerde eerst zoals HTML te doen (met child element), maar dat werkte niet. zou misschien mooi zijn als dat ook kan? net zoals c-button
+	- gekke ":" syntax, waarom is dit?
+	- select vs select-field: wat zijn de verschillen? volgens mij form-field use? label er wel/niet bij?
+
+--------------
+c-input-field
+- aria-label not supported
+- value not supported. it is in logic, but not in definitions! (necessary for initializing value based on url)
+
+c-icon: default witte invulling ipv kleur?
+
+zoekblak:
+- icon inclusion just like button?
+
+c-button:
+- forgot "@click" syntax, especially since normal "onclick" works without @
+- "active" state is present in template, but not in definition
+
+c-select vs c-select-field
+- whats the difference?
+- cannot use <option> children
+- optionlist should use single quote, to have valid JS object
+- ! how to insert dynamic options via variable?
+
+- @change ipv onchange
+
+c-link
+- when icon is inserted, still need to define "showIcon", otherwise not shown. maybe better to default to left or right?
+- iconColor needs to be defined to be seen on white background
+- iconSize default "sm", maybe a bit small? maybe "md" as default is better. icon itself also has "md" as default size
+- tag has "iconPlacement" instead of "showIcon"
+
+on supporting all html actions
+- in wies we use <a href="#" onlick="js_func()">. it folds open a portion of the page. this is not supported in c-link, and there is no c-a. maybe this is good?
+that you think about what the intent is of this html element? is this the correct use of the element? that would make it quite opinionated
+
