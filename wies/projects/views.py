@@ -1496,7 +1496,7 @@ class MatchingView(TemplateView):
         owner_filter = self.request.GET.get('owner', '')
         
         # Start met alle opdrachten
-        queryset = Assignment.objects.select_related('ministry').all()
+        queryset = Assignment.objects.select_related('ministry', 'owner').all()
         
         # Apply filters
         if search_query:
@@ -1509,9 +1509,8 @@ class MatchingView(TemplateView):
         if ministry_filter:
             queryset = queryset.filter(ministry_id=ministry_filter)
             
-        # Note: owner field requires migration - temporarily disabled
-        # if owner_filter:
-        #     queryset = queryset.filter(owner_id=owner_filter)
+        if owner_filter:
+            queryset = queryset.filter(owner_id=owner_filter)
         
         # Groepeer per status
         assignments_by_status = {
@@ -1528,14 +1527,15 @@ class MatchingView(TemplateView):
         
         # Haal dropdown opties op
         all_ministries = Ministry.objects.all().order_by('name')
-        # Note: owner field requires migration - temporarily disabled
-        # all_owners = Colleague.objects.all().order_by('name')
+        all_owners = Colleague.objects.all().order_by('name')
         
         context.update({
             'assignments_by_status': assignments_by_status,
             'all_ministries': all_ministries,
+            'all_owners': all_owners,
             'search_query': search_query,
             'ministry_filter': ministry_filter,
+            'owner_filter': owner_filter,
             
             # Voor generic filter bar
             'filter_groups': [
@@ -1545,9 +1545,16 @@ class MatchingView(TemplateView):
                     'label': 'Ministerie',
                     'placeholder': 'Alle ministeries',
                     'options': [{'value': m.id, 'label': m.name} for m in all_ministries]
+                },
+                {
+                    'type': 'select', 
+                    'name': 'owner',
+                    'label': 'Eigenaar',
+                    'placeholder': 'Alle eigenaren',
+                    'options': [{'value': o.id, 'label': o.name} for o in all_owners]
                 }
             ],
-            'active_filter_count': sum([1 for f in [ministry_filter] if f]),
+            'active_filter_count': sum([1 for f in [ministry_filter, owner_filter] if f]),
             'primary_action': {
                 'url': '/assignments/new',
                 'button_text': 'Opdracht toevoegen'

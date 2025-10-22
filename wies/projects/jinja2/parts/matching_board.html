@@ -27,12 +27,14 @@
         <div class="wies-kanban-cards" id="lead-cards">
             {% for assignment in assignments_by_status.LEAD %}
             <div class="wies-kanban-card" draggable="true" data-type="assignment" data-id="{{ assignment.id }}" onclick="openAssignment({{ assignment.id }})">
-                <div class="wies-card-title">{{ assignment.name }}</div>
-                <div class="wies-card-subtitle">{{ assignment.ministry.name }}</div>
-                <div class="wies-card-meta">
-                    {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
-                    {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
-                </div>
+                <c-card title="{{ assignment.name }}">
+                    <div class="wies-card-subtitle">{{ assignment.ministry.name }}</div>
+                    <div class="wies-card-meta">
+                        {% if assignment.owner %}Eigenaar: {{ assignment.owner.name }}<br>{% endif %}
+                        {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
+                        {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
+                    </div>
+                </c-card>
             </div>
             {% else %}
             <div class="rvo-text rvo-text--subtle">Geen lead opdrachten</div>
@@ -52,12 +54,14 @@
         <div class="wies-kanban-cards" id="vacature-cards">
             {% for assignment in assignments_by_status.VACATURE %}
             <div class="wies-kanban-card" draggable="true" data-type="assignment" data-id="{{ assignment.id }}" onclick="openAssignment({{ assignment.id }})">
-                <div class="wies-card-title">{{ assignment.name }}</div>
-                <div class="wies-card-subtitle">{{ assignment.ministry.name }}</div>
-                <div class="wies-card-meta">
-                    {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
-                    {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
-                </div>
+                <c-card title="{{ assignment.name }}">
+                    <div class="wies-card-subtitle">{{ assignment.ministry.name }}</div>
+                    <div class="wies-card-meta">
+                        {% if assignment.owner %}Eigenaar: {{ assignment.owner.name }}<br>{% endif %}
+                        {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
+                        {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
+                    </div>
+                </c-card>
             </div>
             {% else %}
             <div class="rvo-text rvo-text--subtle">Geen vacature opdrachten</div>
@@ -77,12 +81,14 @@
         <div class="wies-kanban-cards" id="ingevuld-cards">
             {% for assignment in assignments_by_status.INGEVULD %}
             <div class="wies-kanban-card" draggable="true" data-type="assignment" data-id="{{ assignment.id }}" onclick="openAssignment({{ assignment.id }})">
-                <div class="wies-card-title">{{ assignment.name }}</div>
-                <div class="wies-card-subtitle">{{ assignment.ministry.name }}</div>
-                <div class="wies-card-meta">
-                    {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
-                    {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
-                </div>
+                <c-card title="{{ assignment.name }}">
+                    <div class="wies-card-subtitle">{{ assignment.ministry.name }}</div>
+                    <div class="wies-card-meta">
+                        {% if assignment.owner %}Eigenaar: {{ assignment.owner.name }}<br>{% endif %}
+                        {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
+                        {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
+                    </div>
+                </c-card>
             </div>
             {% else %}
             <div class="rvo-text rvo-text--subtle">Geen ingevulde opdrachten</div>
@@ -102,12 +108,14 @@
         <div class="wies-kanban-cards" id="afgewezen-cards">
             {% for assignment in assignments_by_status.AFGEWEZEN %}
             <div class="wies-kanban-card" draggable="true" data-type="assignment" data-id="{{ assignment.id }}" onclick="openAssignment({{ assignment.id }})">
-                <div class="wies-card-title">{{ assignment.name }}</div>
-                <div class="wies-card-subtitle">{{ assignment.ministry.name }}</div>
-                <div class="wies-card-meta">
-                    {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
-                    {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
-                </div>
+                <c-card title="{{ assignment.name }}">
+                    <div class="wies-card-subtitle">{{ assignment.ministry.name }}</div>
+                    <div class="wies-card-meta">
+                        {% if assignment.owner %}Eigenaar: {{ assignment.owner.name }}<br>{% endif %}
+                        {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
+                        {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
+                    </div>
+                </c-card>
             </div>
             {% else %}
             <div class="rvo-text rvo-text--subtle">Geen afgewezen opdrachten</div>
@@ -117,98 +125,3 @@
 
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    let draggedElement = null;
-    let draggedData = null;
-
-    // Maak alle cards draggable
-    document.querySelectorAll('.wies-kanban-card[draggable="true"]').forEach(card => {
-        card.addEventListener('dragstart', function(e) {
-            draggedElement = this;
-            draggedData = {
-                type: this.dataset.type,
-                id: this.dataset.id
-            };
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-        });
-
-        card.addEventListener('dragend', function(e) {
-            this.classList.remove('dragging');
-            draggedElement = null;
-            draggedData = null;
-            
-            // Verwijder drag-over class van alle kolommen
-            document.querySelectorAll('.wies-kanban-column').forEach(col => {
-                col.classList.remove('drag-over');
-            });
-        });
-    });
-
-    // Maak kolommen droppable
-    document.querySelectorAll('.wies-kanban-column').forEach(column => {
-        column.addEventListener('dragover', function(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            this.classList.add('drag-over');
-        });
-
-        column.addEventListener('dragleave', function(e) {
-            // Check of we echt de kolom verlaten (niet alleen een child element)
-            if (!this.contains(e.relatedTarget)) {
-                this.classList.remove('drag-over');
-            }
-        });
-
-        column.addEventListener('drop', function(e) {
-            e.preventDefault();
-            this.classList.remove('drag-over');
-            
-            if (!draggedElement || !draggedData) return;
-
-            const targetColumn = this.dataset.column;
-            const cardsContainer = this.querySelector('.wies-kanban-cards');
-            
-            // Bepaal welke acties toegestaan zijn
-            const sourceColumn = draggedElement.closest('.wies-kanban-column').dataset.column;
-            
-            if (sourceColumn === targetColumn) {
-                return; // Geen actie nodig
-            }
-
-            // Update de status van de opdracht
-            handleStatusChange(draggedData, targetColumn);
-            
-            // Verplaats de kaart visueel
-            cardsContainer.appendChild(draggedElement);
-            
-            // Update de counter
-            updateColumnCounts();
-            
-            // Trigger HTMX event voor backend update
-            document.querySelector('input[name="assignmentId"]').value = draggedData.id;
-            document.querySelector('input[name="statusId"]').value = targetColumn;
-            htmx.trigger('#assignmentMovedForm', 'assignmentmoved');
-        });
-    });
-
-    function handleStatusChange(draggedData, targetColumn) {
-        console.log('Status wijzigen van opdracht:', draggedData.id, 'naar:', targetColumn);
-    }
-
-    function updateColumnCounts() {
-        document.querySelectorAll('.wies-kanban-column').forEach(column => {
-            const count = column.querySelectorAll('.wies-kanban-card').length;
-            const countElement = column.querySelector('.rvo-badge');
-            countElement.textContent = count;
-        });
-    }
-    
-    // Open assignment detail page
-    window.openAssignment = function(assignmentId) {
-        window.location.href = '/assignments/' + assignmentId + '/';
-    }
-    
-});
-</script>

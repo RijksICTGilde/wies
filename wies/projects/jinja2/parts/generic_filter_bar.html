@@ -78,9 +78,8 @@ Usage:
         <!-- somehow moving the if to the div above does not work, it hides the search icon -->
         {% if primary_action %}
         
-        <a class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline" 
-           href="{{ primary_action.url }}">
-          <span class="filter-text">{{ primary_action.button_text }}</span>
+        <a href="{{ primary_action.url }}" class="rvo-link--no-underline">
+          <c-button kind="primary" label="{{ primary_action.button_text }}"></c-button>
         </a>
         {% endif %}
       </div>
@@ -166,16 +165,10 @@ Usage:
 
       <!-- Modal Footer -->
       <div class="filter-modal-footer">
-        <button type="button" onclick="clearAllFilters()" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md rvo-button">
-          Wis alle filters
-        </button>
+        <c-button type="button" click="clearAllFilters()" kind="warning" label="Wis alle filters"></c-button>
         <div class="filter-modal-footer-buttons">
-          <button type="button" onclick="closeFilterModal()" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md rvo-button">
-            Annuleren
-          </button>
-          <button type="button" onclick="closeFilterModal()" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button">
-            Naar resultaten
-          </button>
+          <c-button type="button" click="closeFilterModal()" kind="secondary" label="Annuleren"></c-button>
+          <c-button type="button" click="closeFilterModal()" kind="primary" label="Naar resultaten"></c-button>
         </div>
       </div>
     </form>

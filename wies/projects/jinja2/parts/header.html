@@ -106,22 +106,29 @@
                     Zoekterm
                   </label>
                 </div>
-                <input
+                <c-input
                   id="globalSearchField"
                   placeholder="Zoek op naam, opdrachttitel, organisatie..."
                   type="text"
-                  class="utrecht-textbox utrecht-textbox--html-input utrecht-textbox--lg search-form-input"
-                  dir="auto"
-                  value="{{ request.GET.search|default('') }}"
-                />
+                  name="search"
+                ></c-input>
+                {% if request.GET.search %}
+                <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const searchField = document.getElementById('globalSearchField');
+                    if (searchField) {
+                        searchField.value = '{{ request.GET.search|default("") }}';
+                    }
+                });
+                </script>
+                {% endif %}
               </div>
-              <button
-                class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md"
+              <c-button
                 type="button"
-                onclick="performGlobalSearch()"
-              >
-                Zoeken
-              </button>
+                click="performGlobalSearch()"
+                kind="primary"
+                label="Zoeken"
+              ></c-button>
             </div>
           </div>
         </div>
