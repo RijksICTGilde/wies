@@ -217,6 +217,42 @@ class OTYSAPI:
         self._raise_for_status(response)
         print(response.json())
 
+    def get_vacancy_list(self, limit=25, offset=0, condition=None, what=None, sort=None):
+        """docs: https://ows.otys.nl/info/detail.php?service=Otys.Services.VacancyService"""
+
+        if sort is None:
+            sort = {}
+
+        method = "Otys.Services.VacancyService.getListEx"
+        payload = {
+            "jsonrpc": "2.0",
+            "method": method,
+            "params": [
+                f"{self.session_id}",
+                {
+                    # "what": what,  (optionally added later)
+                    "limit": limit,
+                    "offset": offset,
+                    "getTotalCount": 1,
+                    "sort": sort,
+                    "excludeLimitCheck": True,
+                    # "condition": condition,  (optionally added later)
+                }
+            ],
+            "id": 1
+        }
+
+        if what is not None:
+            payload['params'][1]['what'] = what
+        if condition is not None:
+            payload['params'][1]['condition'] = condition
+
+        headers = {}
+
+        response = requests.request("POST", self.url, headers=headers, json=payload)
+        self._raise_for_status(response)
+        return response.json()['result']
+
     def get_candidate_list(self, limit=25, offset=0, condition=None, what=None, sort=None):
         """docs: https://ows.otys.nl/info/detail.php?service=Otys.Services.CandidateService"""
 

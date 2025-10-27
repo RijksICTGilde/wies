@@ -23,7 +23,7 @@ from django.http import HttpResponse
 
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise, Note
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
-from .services.sync import sync_colleagues_from_exact, sync_colleagues_from_otys_iir
+from .services.sync import sync_colleagues_from_exact, sync_colleagues_from_otys_iir, sync_all_otys_iir_records
 from .services.statistics import get_consultants_working, get_total_clients_count
 from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining, get_total_services, get_services_filled, get_average_utilization, get_available_since
 from .services.placements import filter_placements_by_period
@@ -134,7 +134,8 @@ def get_service_details(request, service_id):
 @user_passes_test(lambda u: u.is_superuser and u.is_authenticated, login_url='/admin/login/')
 def admin_db(request):
     context = {
-        'assignment_count': Assignment.objects.count()
+        'assignment_count': Assignment.objects.count(),
+        'colleague_count': Colleague.objects.count(),
     }
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -162,6 +163,10 @@ def admin_db(request):
         elif action == 'sync_colleagues_otys_iir':
             sync_colleagues_from_otys_iir()
             messages.success(request, 'Colleagues synced successfully from OTYS IIR')
+        elif action == 'sync_all_otys_records':
+            sync_all_otys_iir_records()
+            messages.success(request, 'All records synced successfully from OTYS IIR')
+        
         return redirect('admin-db')
     
     return render(request, 'admin_db.html', context)

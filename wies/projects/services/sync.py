@@ -73,3 +73,7 @@ def sync_colleagues_from_otys_iir():
                 source='otys_iir',
                 defaults=colleague_data
             )
+
+
+def sync_all_otys_iir_records():
+    pass

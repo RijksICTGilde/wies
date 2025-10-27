@@ -6,7 +6,8 @@
 <body>
     <h1><a href="/">home</a>/Database Admin</h1>
     
-    Nr of assignments: {{ assignment_count }}
+    Nr of assignments: {{ assignment_count }} <br>
+    Nr of colleagues: {{ colleague_count }}
 
     {% if messages %}
         {% for message in messages %}
@@ -40,6 +41,13 @@
         {{ get_csrf_hidden_input(request) }}
         <input type="hidden" name="action" value="sync_colleagues_otys_iir">
         <button type="submit">Sync Colleagues from OTYS IIR</button>
+    </form>
+
+    <h2>Sync all records from OTYS IIR</h2>
+    <form method="post">
+        {{ get_csrf_hidden_input(request) }}
+        <input type="hidden" name="action" value="sync_all_otys_records">
+        <button type="submit">Sync all records from OTYS IIR</button>
     </form>
 </body>
 </html>
