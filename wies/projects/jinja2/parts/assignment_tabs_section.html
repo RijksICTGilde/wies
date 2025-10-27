@@ -55,7 +55,7 @@
         </td>
         <td class="rvo-table-cell">
           <span class="assignment-period">
-            {{ assignment.start_date.strftime("%b %y")|default("-") }} - {{ assignment.end_date.strftime("%b %y")|default("-") }}
+            {{ assignment.start_date.strftime("%b %y") if assignment.start_date else "-" }} - {{ assignment.end_date.strftime("%b %y") if assignment.end_date else "-" }}
           </span>
         </td>
       </tr>

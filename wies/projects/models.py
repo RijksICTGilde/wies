@@ -130,6 +130,9 @@ class Assignment(models.Model):
     owner = models.ForeignKey('Colleague', models.SET_NULL, null=True, blank=False, related_name='owned_assignments')
     extra_info = models.TextField(blank=True)
     assignment_type = models.CharField(max_length=20, choices=ASSIGNMENT_TYPE, default='GROUP')
+    source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='wies')
+    source_id = models.CharField(blank=True)
+    source_url = models.URLField(null=True, blank=True)  # only for non wies
 
 
     @property
@@ -154,18 +157,21 @@ class Assignment(models.Model):
 class Placement(models.Model):
     SERVICE = "SERVICE"
     PLACEMENT = "PLACEMENT"
-    SOURCE_CHOICES = {
+    PERIOD_SOURCE_CHOICES = {
         SERVICE: "Neem over van dienst",
         PLACEMENT: "Specifiek voor inzet"
     }
-    
+
     colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='placements', null=True, blank=True) # TODO: removal of colleague triggers removal of placement, probably undesirable
     service = models.ForeignKey('Service', models.CASCADE, related_name='placements')
-    period_source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default=SERVICE)
+    period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=SERVICE)
     specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
     specific_end_date = models.DateField(null=True, blank=True) # do not use, use properties below
-    hours_source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default=SERVICE)
+    hours_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=SERVICE)
     specific_hours_per_week = models.IntegerField(null=True, blank=True)
+    source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='wies')
+    source_id = models.CharField(blank=True)
+    source_url = models.URLField(null=True, blank=True)  # only for non wies
 
     @property
     def start_date(self):
@@ -208,6 +214,9 @@ class Service(models.Model):
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=ASSIGNMENT)
     specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
     specific_end_date = models.DateField(null=True, blank=True) # do not use, use properties below
+    source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='wies')
+    source_id = models.CharField(blank=True)
+    source_url = models.URLField(null=True, blank=True)  # only for non wies
     # placements via reverse relation
 
     @property

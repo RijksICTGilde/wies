@@ -72,6 +72,16 @@
       <dd>
         <div class="rvo-tag {% if object.status == 'LEAD' %}wies-tag--light-yellow{% elif object.status == 'OPEN' %}rvo-tag--info{% elif object.status == 'LOPEND' %}rvo-tag--success{% elif object.status == 'AFGEWEZEN' %}rvo-tag--error{% else %}rvo-tag--default{% endif %}">{{ object.status }}</div>
       </dd>
+      {% if object.source != 'wies' %}
+      <dt>Bron</dt>
+      <dd>
+        {% if object.source_url %}
+          <a href="{{ object.source_url }}" target="_blank" class="rvo-link">{{ object.get_source_display() }} <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs" role="img" aria-label="Externe link"></span></a>
+        {% else %}
+          {{ object.get_source_display() }}
+        {% endif %}
+      </dd>
+      {% endif %}
       <dt>Startdatum</dt>
       <dd>{{ object.start_date }}</dd>
       <dt>Einddatum</dt>
@@ -81,12 +91,21 @@
       <dt>Acties</dt>
       <dd>
         <div class="rvo-layout-row rvo-layout-gap--sm">
+          {% if object.source == 'wies' %}
           <a href="/assignments/{{ object.pk }}/update" class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs rvo-link--no-underline">
             Opdracht bewerken
           </a>
           <a href="/assignments/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs rvo-link--no-underline">
             Opdracht verwijderen
           </a>
+          {% else %}
+          <button class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display() }}">
+            Opdracht bewerken
+          </button>
+          <button class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display() }}">
+            Opdracht verwijderen
+          </button>
+          {% endif %}
         </div>
       </dd>
     </dl>
@@ -134,18 +153,35 @@
             <div class="rvo-layout-column">
               <label class="rvo-label">Wanneer </label>
               <p class="utrecht-paragraph rvo-paragraph--no-margins">
-                {{ service.start_date.strftime("%-d %b %Y") }} - {{ service.end_date.strftime("%-d %b %Y") }}
+                {% if service.start_date and service.end_date %}
+                  {{ service.start_date.strftime("%-d %b %Y") }} - {{ service.end_date.strftime("%-d %b %Y") }}
+                {% elif service.start_date %}
+                  {{ service.start_date.strftime("%-d %b %Y") }} - (geen einddatum)
+                {% elif service.end_date %}
+                  (geen startdatum) - {{ service.end_date.strftime("%-d %b %Y") }}
+                {% else %}
+                  <span class="rvo-text--italic">Geen periode opgegeven</span>
+                {% endif %}
               </p>
             </div>
             <div class="rvo-layout-column">
               <label class="rvo-label">Acties </label>
               <div class="rvo-layout-row rvo-layout-gap--sm">
+                {% if service.source == 'wies' %}
                 <a href="/services/{{ service.id }}/update" class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs rvo-link--no-underline">
                   Dienst bewerken
                 </a>
                 <a href="/services/{{ service.id }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs rvo-link--no-underline">
                   Dienst verwijderen
                 </a>
+                {% else %}
+                <button class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ service.get_source_display() }}">
+                  Dienst bewerken
+                </button>
+                <button class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ service.get_source_display() }}">
+                  Dienst verwijderen
+                </button>
+                {% endif %}
               </div>
             </div>
         </div>
@@ -168,7 +204,17 @@
                 </div>
                 <div class="rvo-layout-column">
                   <label class="rvo-label">Periode</label>
-                  <span>{{ placement.start_date.strftime("%-d %b %Y") }} - {{ placement.end_date.strftime("%-d %b %Y") }}</span>
+                  <span>
+                    {% if placement.start_date and placement.end_date %}
+                      {{ placement.start_date.strftime("%-d %b %Y") }} - {{ placement.end_date.strftime("%-d %b %Y") }}
+                    {% elif placement.start_date %}
+                      {{ placement.start_date.strftime("%-d %b %Y") }} - (geen einddatum)
+                    {% elif placement.end_date %}
+                      (geen startdatum) - {{ placement.end_date.strftime("%-d %b %Y") }}
+                    {% else %}
+                      <span class="rvo-text--italic">Geen periode opgegeven</span>
+                    {% endif %}
+                  </span>
                 </div>
                 <div class="rvo-layout-column">
                   <label class="rvo-label">Inzet </label>
@@ -177,12 +223,21 @@
                 <div class="rvo-layout-column">
                   <label class="rvo-label">Acties </label>
                   <div class="rvo-layout-row rvo-layout-gap--sm">
+                    {% if placement.source == 'wies' %}
                     <a href="/placements/{{ placement.id }}/update" class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs rvo-link--no-underline">
                       Bewerken
                     </a>
                     <a href="/placements/{{ placement.id }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs rvo-link--no-underline">
                       Verwijderen
                     </a>
+                    {% else %}
+                    <button class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ placement.get_source_display() }}">
+                      Bewerken
+                    </button>
+                    <button class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ placement.get_source_display() }}">
+                      Verwijderen
+                    </button>
+                    {% endif %}
                   </div>
                 </div>
               </div>

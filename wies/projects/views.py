@@ -966,6 +966,10 @@ class AssignmentCreateView(CreateView):
             initial['owner'] = self.request.user.colleague
         return initial
 
+    def form_valid(self, form):
+        form.instance.source = 'wies'
+        return super().form_valid(form)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context.update({
@@ -1124,10 +1128,11 @@ class PlacementCreateView(CreateView):
         context['service'] = service
         context['cancel_url'] = f'/assignments/{service.assignment.id}/'
         return context
-    
+
     def form_valid(self, form):
         service_id = self.kwargs['pk']
         form.service_id = service_id
+        form.instance.source = 'wies'
         super().form_valid(form)
         return redirect(Service.objects.get(id=service_id).assignment)
 
@@ -1161,6 +1166,7 @@ class ServiceCreateView(CreateView):
     def form_valid(self, form):
         assignment_id = self.kwargs['pk']
         form.assignment_id = assignment_id
+        form.instance.source = 'wies'
         super().form_valid(form)
         return redirect(Assignment.objects.get(id=assignment_id))
 

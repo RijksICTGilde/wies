@@ -30,7 +30,7 @@ class AssignmentForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Assignment
         fields = '__all__'
-        exclude = ['assignment_type',]
+        exclude = ['assignment_type', 'source', 'source_id', 'source_url']
         widgets = {
             'owner': forms.Select(attrs={'class': 'js-colleague-select'}),
         }
@@ -65,6 +65,7 @@ class PlacementForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Placement
         fields = ['colleague', 'period_source', 'specific_start_date', 'specific_end_date', 'hours_source', 'specific_hours_per_week']
+        exclude = ['source', 'source_id', 'source_url']
         widgets = {
             'colleague': forms.Select(attrs={'class': 'js-colleague-select'}),
         }
@@ -90,6 +91,7 @@ class ServiceForm(RVOFormMixin, forms.ModelForm):
     class Meta:
         model = Service
         fields = ['description', 'skill', 'hours_per_week', 'period_source', 'specific_start_date', 'specific_end_date']
+        exclude = ['source', 'source_id', 'source_url']
         widgets = {
             'skill': forms.Select(attrs={'class': 'js-skills-select-single'}),
         }
