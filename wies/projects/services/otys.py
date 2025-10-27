@@ -253,6 +253,100 @@ class OTYSAPI:
         self._raise_for_status(response)
         return response.json()['result']
 
+    def get_vacancy_detail(self, vacancy_id: str, what=None):
+        """docs: https://ows.otys.nl/info/detail.php?service=Otys.Services.VacancyService"""
+
+        method = "Otys.Services.VacancyService.getDetail"
+
+        # Default what fields if not provided
+        if what is None:
+            what = {
+                "uid": 1,
+                "createdDateTime": 1,
+                "versionId": 1,
+                "title": 1,
+                "description": 1,
+                "startDate": 1,
+                "endDate": 1,
+                "Customer": {
+                    "relation": 1,
+                    "relationId": 1
+                }
+            }
+
+        payload = {
+            "jsonrpc": "2.0",
+            "method": method,
+            "params": [
+                f"{self.session_id}",
+                f"{vacancy_id}",
+                # what
+            ],
+            "id": 1
+        }
+        headers = {}
+
+        response = requests.request("POST", self.url, headers=headers, json=payload)
+        self._raise_for_status(response)
+        return response.json()['result']
+
+    def get_procedure_list(self, limit=25, offset=0, condition=None, what=None, sort=None):
+        """
+        docs: https://ows.otys.nl/info/detail.php?service=Otys.Services.ProcedureService
+        A procedure is a connection between a candidate and a vacancy
+        """
+
+        if sort is None:
+            sort = {}
+
+        method = "Otys.Services.ProcedureService.getListEx"
+        payload = {
+            "jsonrpc": "2.0",
+            "method": method,
+            "params": [
+                f"{self.session_id}",
+                {
+                    # "what": what,  (optionally added later)
+                    "limit": limit,
+                    "offset": offset,
+                    "getTotalCount": 1,
+                    "sort": sort,
+                    "excludeLimitCheck": True,
+                    # "condition": condition,  (optionally added later)
+                }
+            ],
+            "id": 1
+        }
+
+        if what is not None:
+            payload['params'][1]['what'] = what
+        if condition is not None:
+            payload['params'][1]['condition'] = condition
+
+        headers = {}
+
+        response = requests.request("POST", self.url, headers=headers, json=payload)
+        self._raise_for_status(response)
+        return response.json()['result']
+
+    def get_procedures_for_specific_vacancy(self, vacancy_uid: str, **kwargs):
+        """Own help function to ease use, already constructing the condition"""
+        specific_vacancy_condition = {
+            "type": "AND",
+            "items": [
+                {
+                    "type": "COND",
+                    "field": "vacancyUid",
+                    "op": "EQ",
+                    "param": vacancy_uid
+                },
+            ]
+        }
+
+        kwargs['condition'] = specific_vacancy_condition
+
+        return self.get_procedure_list(**kwargs)
+
     def get_candidate_list(self, limit=25, offset=0, condition=None, what=None, sort=None):
         """docs: https://ows.otys.nl/info/detail.php?service=Otys.Services.CandidateService"""
 

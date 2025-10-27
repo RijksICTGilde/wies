@@ -354,7 +354,7 @@ class AssignmentTabsView(ListView):
         huidig_qs = base_qs.filter(status__in=['INGEVULD'])
         active_assignment_ids = set()
         for assignment in huidig_qs.all():
-            if assignment.phase == 'active':
+            if assignment.phase in ('active', 'planned', None):
                 active_assignment_ids.add(assignment.id)
         huidig_qs = huidig_qs.filter(id__in=active_assignment_ids)
 

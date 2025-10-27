@@ -51,7 +51,15 @@
 
     <td class="rvo-table-cell">
       <span class="rvo-text">
-        {{ placement.start_date.strftime("%b %y") }} - {{ placement.end_date.strftime("%b %y") }}
+        {% if placement.start_date and placement.end_date %}
+          {{ placement.start_date.strftime("%b %y") }} - {{ placement.end_date.strftime("%b %y") }}
+        {% elif placement.start_date %}
+          {{ placement.start_date.strftime("%b %y") }} - (geen einddatum)
+        {% elif placement.end_date %}
+          (geen startdatum) - {{ placement.end_date.strftime("%b %y") }}
+        {% else %}
+          <span class="rvo-text--italic rvo-text--subtle">Geen periode</span>
+        {% endif %}
       </span>
     </td>
   </tr>

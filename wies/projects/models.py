@@ -139,7 +139,7 @@ class Assignment(models.Model):
     def phase(self):
         today_date = datetime.datetime.today().date()
         if None in (self.start_date, self.end_date):
-            # this is undertermined
+            # this is undetermined
             return None
         if self.start_date > today_date:
             return "planned"

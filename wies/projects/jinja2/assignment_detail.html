@@ -246,16 +246,22 @@
 
         </div>
         {% endif %}
-        
+
           <div style="margin-top: 10px;">
+            {% if service.source == 'wies' %}
             <a href="/services/{{ service.id }}/placements/new" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm rvo-link--no-underline">
               Voeg persoon toe
             </a>
+            {% else %}
+            <button class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm" disabled title="Wijzigingen moeten worden doorgevoerd in {{ service.get_source_display() }}">
+              Voeg persoon toe
+            </button>
+            {% endif %}
             <a href="/colleagues/?{% if service.skill %}&skill={{ service.skill.id }}{% endif %}" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm rvo-link--no-underline">
               Bekijk matches
             </a>
           </div>
-  
+
       </div>
       {% else %}
       <div class="rvo-card rvo-card--outline rvo-card--padding-lg">
@@ -265,6 +271,7 @@
       </div>
       {% endfor %}
 
+      {% if object.source == 'wies' %}
       <div class="rvo-layout-margin-top--xl">
         <div class="rvo-card rvo-card--outline rvo-card--padding-lg rvo-layout-margin-bottom--lg rvo-card--full-colour--grijs-100" style="margin: 10px;">
           <div class="rvo-card__content">
@@ -275,6 +282,7 @@
           </div>
         </div>
       </div>
+      {% endif %}
     
     </div>
     {% endif %}
