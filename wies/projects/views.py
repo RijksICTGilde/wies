@@ -25,7 +25,7 @@ from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, 
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 from .services.sync import sync_colleagues_from_otys_iir
 from .services.statistics import get_consultants_working, get_total_clients_count
-from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining, get_total_services, get_services_filled, get_average_utilization, get_available_since
+from .services.statistics import get_weeks_remaining
 from .services.placements import filter_placements_by_period
 
 from authlib.integrations.django_client import OAuth
@@ -77,36 +77,6 @@ def logout(request):
     if request.user:
         auth_logout(request)
     return redirect('/')
-
-def dashboard(request):
-    """Dashboard view - uses statistics functions for data calculations"""
-
-    # Get active tab from request
-    active_tab = request.GET.get('tab', 'ending_soon')
-
-    # Get consultants on bench with availability info
-    consultants_bench = get_consultants_on_bench()
-    for consultant in consultants_bench:
-        consultant.available_since = get_available_since(consultant)
-
-    # Statistics context
-    context = {
-        'consultants_working': get_consultants_working(),
-        'total_clients_count': get_total_clients_count(),
-        'total_services': get_total_services(),
-        'services_filled': get_services_filled(),
-        'average_utilization': get_average_utilization(),
-        'assignments_ending_soon': get_assignments_ending_soon(),
-        'consultants_bench': consultants_bench,
-        'new_leads': get_new_leads(),
-        'active_tab': active_tab,
-    }
-
-    # If HTMX request, return the dashboard tabs section
-    if 'HX-Request' in request.headers:
-        return render(request, 'parts/dashboard_tabs_section.html', context)
-
-    return render(request, 'dashboard.html', context)
 
 
 def get_service_details(request, service_id):

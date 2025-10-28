@@ -15,10 +15,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
 from django.views.generic import RedirectView
 
-from wies.projects.views import client, clients, get_service_details, dashboard
+from wies.projects.views import client, clients, get_service_details
 from wies.projects.views import AssignmentTabsView
 from wies.projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
 from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
@@ -32,7 +32,6 @@ urlpatterns = [
     path('admin/db/', admin_db, name='admin-db'),
     path('admin/', admin.site.urls),
     path('', RedirectView.as_view(pattern_name='placements', permanent=False), name='home'),
-    path('dashboard/', dashboard, name='dashboard'),
     path('login/', login, name='login'),
     path('logout/', logout, name='logout'),
     path('auth/', auth, name='auth'),
