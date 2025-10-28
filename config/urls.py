@@ -19,10 +19,9 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from wies.projects.views import get_service_details, client
-from wies.projects.views import AssignmentTabsView
 from wies.projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
 from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
-from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView, AvailabilityView
+from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView
 from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
 from wies.projects.views import MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
 from wies.projects.views import admin_db, login, logout, auth, ProfileView, add_note, GlobalSearchView
@@ -37,7 +36,6 @@ urlpatterns = [
     path('auth/', auth, name='auth'),
     path('profile/', ProfileView.as_view(), name='profile'),
     path('search/', GlobalSearchView.as_view(), name='global-search'),
-    path('assignments/', AssignmentTabsView.as_view(), name='assignments'),
     path('assignments/new', AssignmentCreateView.as_view()),
     path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
     path('assignments/<int:pk>/delete', AssignmentDeleteView.as_view()),
@@ -51,8 +49,6 @@ urlpatterns = [
     path('colleagues/<int:pk>/delete', ColleagueDeleteView.as_view()),
     path('colleagues/<int:pk>/update', ColleagueUpdateView.as_view(), name='colleague-update'),
     path('placements/', PlacementTableView.as_view(), name='placements'),
-    path('placements/table/', PlacementTableView.as_view(), name='placements-table'),
-    path('placements/availability/', AvailabilityView.as_view(), name='placements-availability'),
     path('placements/<int:pk>/', PlacementDetailView.as_view(), name='placement-detail'),
     path('placements/<int:pk>/update', PlacementUpdateView.as_view()),
     path('placements/<int:pk>/delete', PlacementDeleteView.as_view()),

@@ -4,17 +4,15 @@
 <link rel="stylesheet" href="{{ static('css/placements.css') }}">
 {% endblock %}
 
-{% block header %}
-{{ super() }}
-{% with active_page='table' %}
-  {% include 'parts/placement_navigation.html' %}
-{% endwith %}
-{% endblock %}
-
 {% block content %}
 <div class="rvo-layout-column rvo-layout-gap--md">
-  
-  {% with url_name='placements-table', target_selector='#placement_table' %}
+
+<!-- Header with title -->
+<div class="page-header">
+  <h1>Wie zit waar?</h1>
+</div>
+
+{% with url_name='placements', target_selector='#placement_table' %}
   {% include 'parts/generic_filter_bar.html' %}
 {% endwith %}
 
