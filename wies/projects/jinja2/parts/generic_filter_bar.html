@@ -24,27 +24,6 @@ Usage:
     
     <!-- Compact filter bar -->
     <div class="wies-compact-filter-bar">
-      
-      {% if primary_filter %}
-      <!-- Primary Filter (first) -->
-      <div role="group" aria-labelledby="{{ primary_filter.id }}-label" class="utrecht-form-field utrecht-form-field--text">
-        <div class="rvo-select-wrapper">
-          <select 
-            name="{{ primary_filter.name }}" 
-            id="{{ primary_filter.id }}" 
-            class="utrecht-select utrecht-select--html-select rvo-select" 
-            aria-label="{{ primary_filter.placeholder }}"
-          >
-            <option value="">{{ primary_filter.placeholder }}</option>
-            {% for option in primary_filter.options %}
-              <option value="{{ option.value }}" {% if request.GET.get(primary_filter.name) == option.value|string %}selected{% endif %}>
-                {{ option.label }}
-              </option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-      {% endif %}
 
       <!-- Search Field -->
       <div role="group" aria-labelledby="search-field-label" class="utrecht-form-field utrecht-form-field--text">
@@ -71,17 +50,6 @@ Usage:
           <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before" role="img" aria-label="Trechter"></span>
           <span class="filter-text">Filters{% if active_filter_count > 0 %} ({{ active_filter_count }}){% endif %}</span>
         </button>
-        {% endif %}
-      </div>
-
-      <div>
-        <!-- somehow moving the if to the div above does not work, it hides the search icon -->
-        {% if primary_action %}
-        
-        <a class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-link--no-underline" 
-           href="{{ primary_action.url }}">
-          <span class="filter-text">{{ primary_action.button_text }}</span>
-        </a>
         {% endif %}
       </div>
       

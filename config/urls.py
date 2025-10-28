@@ -22,7 +22,7 @@ from wies.projects.views import get_service_details, client
 from wies.projects.views import AssignmentDetail, ColleagueDetail
 from wies.projects.views import PlacementTableView
 from wies.projects.views import MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
-from wies.projects.views import admin_db, login, logout, auth, GlobalSearchView
+from wies.projects.views import admin_db, login, logout, auth
 from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIView, ExpertiseDetailAPIView
 
 urlpatterns = [

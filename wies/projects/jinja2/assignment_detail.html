@@ -44,6 +44,14 @@
       <dd>
         <div class="rvo-tag {% if object.status == 'LEAD' %}wies-tag--light-yellow{% elif object.status == 'OPEN' %}rvo-tag--info{% elif object.status == 'LOPEND' %}rvo-tag--success{% elif object.status == 'AFGEWEZEN' %}rvo-tag--error{% else %}rvo-tag--default{% endif %}">{{ object.status }}</div>
       </dd>
+      <dt>Bron</dt>
+      <dd>
+        {% if object.source_url %}
+          <a href="{{ object.source_url }}" target="_blank" class="rvo-link">{{ object.get_source_display() }} <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs" role="img" aria-label="Externe link"></span></a>
+        {% else %}
+          {{ object.get_source_display() }}
+        {% endif %}
+      </dd>
       <dt>Startdatum</dt>
       <dd>{{ object.start_date }}</dd>
       <dt>Einddatum</dt>
@@ -53,12 +61,12 @@
       <dt>Acties</dt>
       <dd>
         <div class="rvo-layout-row rvo-layout-gap--sm">
-          <a href="/assignments/{{ object.pk }}/update" class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs rvo-link--no-underline">
+          <button class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display() }}">
             Opdracht bewerken
-          </a>
-          <a href="/assignments/{{ object.pk }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs rvo-link--no-underline">
+          </button>
+          <button class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display() }}">
             Opdracht verwijderen
-          </a>
+          </button>
         </div>
       </dd>
     </dl>

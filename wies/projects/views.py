@@ -1,11 +1,8 @@
-from urllib.parse import urlencode
-
 from django.views.generic.list import ListView
-from django.views.generic import DetailView, CreateView, DeleteView, UpdateView, TemplateView
-from django.template.defaulttags import register
+from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy, reverse
-from django.db.models import Q, Count, Prefetch
+from django.db.models import Q, Prefetch
 from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
@@ -17,12 +14,11 @@ from django.core import management
 from django.conf import settings
 from django.http import HttpResponse
 
+from authlib.integrations.django_client import OAuth
+
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
 from .services.sync import sync_colleagues_from_otys_iir
 from .services.placements import filter_placements_by_period
-
-from authlib.integrations.django_client import OAuth
-
 
 oauth = OAuth()
 oauth.register(
@@ -381,73 +377,4 @@ class MinistryDetailView(DetailView):
             })
 
         context['assignments'] = assignments_data
-        return context
-
-
-class GlobalSearchView(TemplateView):
-    """
-    Global search view that searches across all major entities:
-    - Assignments
-    - Colleagues 
-    - Placements
-    - Services
-    - Ministries
-    - Clients
-    """
-    template_name = 'search_results.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        
-        search_query = self.request.GET.get('search', '').strip()
-        context['search_query'] = search_query
-        
-        
-        # Initialize empty results
-        context['results'] = {
-            'assignments': [],
-            'colleagues': [],
-            'ministries': [],
-            'total_count': 0
-        }
-        
-        if search_query:
-            # Search Assignments
-            assignments_qs = Assignment.objects.filter(
-                Q(name__icontains=search_query) |
-                Q(organization__icontains=search_query) |
-                Q(extra_info__icontains=search_query)
-            ).select_related('ministry')
-            assignments_count = assignments_qs.count()
-            assignments = assignments_qs
-            
-            # Search Colleagues
-            colleagues_qs = Colleague.objects.filter(
-                Q(name__icontains=search_query) |
-                Q(email__icontains=search_query) |
-                Q(skills__name__icontains=search_query) |
-                Q(expertises__name__icontains=search_query)
-            ).distinct().select_related('brand').prefetch_related('skills', 'expertises')
-            colleagues_count = colleagues_qs.count()
-            colleagues = colleagues_qs
-            
-            # Search Ministries
-            ministries_qs = Ministry.objects.filter(
-                Q(name__icontains=search_query) |
-                Q(abbreviation__icontains=search_query)
-            ).annotate(assignment_count=Count('assignment'))
-            ministries_count = ministries_qs.count()
-            ministries = ministries_qs
-            
-            # Calculate total count
-            total_count = assignments_count + colleagues_count + ministries_count
-            
-            # Update context with results
-            context['results'] = {
-                'assignments': assignments,
-                'colleagues': colleagues,
-                'ministries': ministries,
-                'total_count': total_count
-            }
-        
         return context
