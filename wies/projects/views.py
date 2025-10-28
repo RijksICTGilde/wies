@@ -24,7 +24,6 @@ from django.http import HttpResponse
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise, Note
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
 from .services.sync import sync_colleagues_from_otys_iir
-from .services.statistics import get_consultants_working, get_total_clients_count
 from .services.statistics import get_weeks_remaining
 from .services.placements import filter_placements_by_period
 
@@ -1161,63 +1160,6 @@ class ServiceDetailView(DetailView):
     model = Service
     template_name = 'service_detail.html'
 
-def clients(request):
-    """Clients view - uses statistics functions for statistics"""
-
-    search_query = request.GET.get('search', '')
-
-    # Get assignments with organization and ministry info
-    assignments_qs = Assignment.objects.select_related('ministry').exclude(organization='').exclude(organization__isnull=True)
-
-    if search_query:
-        assignments_qs = assignments_qs.filter(
-            models.Q(organization__icontains=search_query) |
-            models.Q(ministry__name__icontains=search_query)
-        )
-
-    # Group by ministry and organization
-    grouped_clients = {}
-
-    for assignment in assignments_qs:
-        ministry_name = assignment.ministry.name if assignment.ministry else 'Onbekend ministerie'
-        org_name = assignment.organization
-
-        if ministry_name not in grouped_clients:
-            grouped_clients[ministry_name] = {
-                'organizations': {},
-                'total_count': 0
-            }
-
-        if org_name not in grouped_clients[ministry_name]['organizations']:
-            grouped_clients[ministry_name]['organizations'][org_name] = {
-                'name': org_name,
-                'count': 0
-            }
-
-        grouped_clients[ministry_name]['organizations'][org_name]['count'] += 1
-        grouped_clients[ministry_name]['total_count'] += 1
-
-    # Convert organizations dict to list and sort
-    for ministry_data in grouped_clients.values():
-        ministry_data['organizations'] = sorted(
-            ministry_data['organizations'].values(),
-            key=lambda x: x['name']
-        )
-
-    # Sort ministries
-    grouped_clients = dict(sorted(grouped_clients.items()))
-
-    context = {
-        'grouped_clients': grouped_clients,
-        'consultants_working': get_consultants_working(),
-        'total_clients_count': get_total_clients_count(),
-    }
-
-    if 'HX-Request' in request.headers:
-        return render(request, 'parts/clients_table.html', context)
-
-    return render(request, 'client_list.html', context)
-
 def client(request, name):
     assignments = Assignment.objects.filter(
         organization=name
@@ -1250,46 +1192,6 @@ def client(request, name):
         'assignments': assignments_data
     })
 
-class MinistryListView(ListView):
-    model = Ministry
-    template_name = 'ministry_list.html'
-    context_object_name = 'ministries'
-    
-    def get_queryset(self):
-        queryset = Ministry.objects.annotate(
-            assignment_count=Count('assignment')
-        ).order_by('name')
-        
-        search_query = self.request.GET.get('search')
-        if search_query:
-            queryset = queryset.filter(
-                Q(name__icontains=search_query) |
-                Q(abbreviation__icontains=search_query)
-            )
-        
-        return queryset
-    
-    def get_filter_context_data(self):
-        """Configure filters for the ministry list"""
-        search_query = self.request.GET.get('search', '')
-        
-        active_filter_count = 0
-        if search_query:
-            active_filter_count += 1
-        
-        return {
-            'search_field': 'search',
-            'search_placeholder': 'Zoek ministeries...',
-            'active_filter_count': active_filter_count,
-            'filter_groups': [],  # No additional filters for ministries
-        }
-
-    def get_template_names(self):
-        """Return appropriate template based on request type"""
-        if 'HX-Request' in self.request.headers:
-            return ['parts/ministry_table.html']
-        else:
-            return ['ministry_list.html']
 
 class MinistryCreateView(CreateView):
     model = Ministry

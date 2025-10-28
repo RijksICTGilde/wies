@@ -18,13 +18,13 @@ from django.contrib import admin
 from django.urls import path
 from django.views.generic import RedirectView
 
-from wies.projects.views import client, clients, get_service_details
+from wies.projects.views import get_service_details, client
 from wies.projects.views import AssignmentTabsView
 from wies.projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
 from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
 from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView, AvailabilityView
 from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
-from wies.projects.views import MinistryListView, MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
+from wies.projects.views import MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
 from wies.projects.views import admin_db, login, logout, auth, ProfileView, add_note, GlobalSearchView
 from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIView, ExpertiseDetailAPIView
 
@@ -59,9 +59,7 @@ urlpatterns = [
     path('services/<int:pk>/', ServiceDetailView.as_view(), name='service-detail'),
     path('services/<int:pk>/update', ServiceUpdateView.as_view()),
     path('services/<int:pk>/delete', ServiceDeleteView.as_view()),
-    path('clients/', clients, name='clients'),
     path('clients/<str:name>', client),
-    path('ministries/', MinistryListView.as_view(), name='ministries'),
     path('ministries/new/', MinistryCreateView.as_view(), name='ministry-create'),
     path('ministries/<int:pk>/', MinistryDetailView.as_view(), name='ministry-detail'),
     path('ministries/<int:pk>/update/', MinistryUpdateView.as_view(), name='ministry-update'),
