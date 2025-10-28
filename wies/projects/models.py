@@ -6,10 +6,8 @@ from django.contrib.auth.models import User
 
 
 ASSIGNMENT_STATUS = {
-    'LEAD': "LEAD",
     'VACATURE': "VACATURE",
     'INGEVULD': "INGEVULD",
-    'AFGEWEZEN': "AFGEWEZEN",
 }
 
 ASSIGNMENT_TYPE = {
@@ -225,16 +223,3 @@ class Service(models.Model):
 
     def get_absolute_url(self):
         return reverse("service-detail", kwargs={"pk": self.pk})
-
-
-class Note(models.Model):
-    assignment = models.ForeignKey('Assignment', models.CASCADE, related_name='notes')
-    colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='notes')
-    created_at = models.DateTimeField(auto_now_add=True)
-    message = models.TextField()
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"Note by {self.colleague.name} on {self.assignment.name}"

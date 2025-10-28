@@ -1,4 +1,3 @@
-import datetime
 from urllib.parse import urlencode
 
 from django.views.generic.list import ListView
@@ -10,7 +9,6 @@ from django.db.models import Q, Count, Prefetch
 from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
-
 from django.contrib.auth import authenticate as auth_authenticate
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
@@ -19,11 +17,9 @@ from django.core import management
 from django.conf import settings
 from django.http import HttpResponse
 
-
-from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise, Note
-from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
+from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
+from .forms import ServiceForm
 from .services.sync import sync_colleagues_from_otys_iir
-from .services.statistics import get_weeks_remaining
 from .services.placements import filter_placements_by_period
 
 from authlib.integrations.django_client import OAuth
@@ -364,27 +360,6 @@ class PlacementTableView(ListView):
         return context
 
 
-class AssignmentCreateView(CreateView):
-    model = Assignment
-    form_class = AssignmentForm
-    template_name = 'assignment_new.html'
-
-    def get_initial(self):
-        """Set current user's colleague as default owner"""
-        initial = super().get_initial()
-        if hasattr(self.request.user, 'colleague') and self.request.user.colleague:
-            initial['owner'] = self.request.user.colleague
-        return initial
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context.update({
-            "placement_form": PlacementForm(),
-            "range": range(2),
-            "cancel_url": "/assignments/"
-        })
-        return context
-
 class AssignmentDetail(DetailView):
     model = Assignment
     template_name = 'assignment_detail.html'
@@ -394,13 +369,6 @@ class AssignmentDetail(DetailView):
 
         context = super().get_context_data(**kwargs)
         assignment = self.get_object()
-
-        assignment_data = {
-            'weeks_remaining': get_weeks_remaining(assignment),
-            'project_score': 8.5,  # This could be calculated based on deadlines, budget, etc.,
-        }
-
-        context.update(assignment_data)
 
         # Get the active tab from request, default to 'diensten'
         active_tab = self.request.GET.get('tab', 'services')
@@ -424,40 +392,6 @@ class AssignmentDetail(DetailView):
 
         return context
 
-class AssignmentDeleteView(DeleteView):
-    model = Assignment
-    success_url = reverse_lazy("assignments")
-    template_name = 'assignment_delete.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/assignments/{context["object"].pk}/'
-        return context
-
-class AssignmentUpdateView(UpdateView):
-    model = Assignment
-    form_class = AssignmentForm
-    template_name = 'assignment_update.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/assignments/{context["object"].pk}/'
-        return context
-
-class ColleagueCreateView(CreateView):
-    model = Colleague
-    form_class = ColleagueForm
-    template_name = 'colleague_new.html'
-
-    def form_valid(self, form):
-        form.instance.source = 'wies'
-        return super().form_valid(form)
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['skills'] = Skill.objects.all()
-        context['cancel_url'] = '/colleagues/'
-        return context
 
 class ColleagueDetail(DetailView):
     model = Colleague
@@ -483,76 +417,6 @@ class ColleagueDetail(DetailView):
         context["assignment_list"] = assignment_list
         return context
 
-class ColleagueDeleteView(DeleteView):
-    model = Colleague
-    success_url = reverse_lazy("colleagues")
-    template_name = 'colleague_delete.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/colleagues/{context["object"].pk}/'
-        return context
-
-class ColleagueUpdateView(UpdateView):
-    model = Colleague
-    form_class = ColleagueForm
-    template_name = 'colleague_update.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/colleagues/{context["object"].pk}/'
-        return context
-
-
-class PlacementUpdateView(UpdateView):
-    model = Placement
-    form_class = PlacementForm
-    template_name = 'placement_update.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/assignments/{context["object"].service.assignment.id}/'
-        return context
-
-    def form_valid(self, form):
-        placement_id = self.kwargs['pk']
-        assignment_id = Placement.objects.get(id=placement_id).service.assignment.id
-        super().form_valid(form)
-        return redirect(Assignment.objects.get(id=assignment_id))
-
-class PlacementCreateView(CreateView):
-    model = Placement
-    form_class = PlacementForm
-    template_name = 'placement_new.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        service = Service.objects.get(id=self.kwargs['pk'])
-        context['service'] = service
-        context['cancel_url'] = f'/assignments/{service.assignment.id}/'
-        return context
-    
-    def form_valid(self, form):
-        service_id = self.kwargs['pk']
-        form.service_id = service_id
-        super().form_valid(form)
-        return redirect(Service.objects.get(id=service_id).assignment)
-
-class PlacementDeleteView(DeleteView):
-    model = Placement
-    success_url = reverse_lazy("assignments")
-    template_name = 'placement_delete.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/assignments/{context["object"].service.assignment.id}/'
-        return context
-
-    def post(self, request, *args, **kwargs):
-        placement_id = self.kwargs['pk']
-        assignment_id = Placement.objects.get(id=placement_id).service.assignment.id
-        super().post(request, *args, **kwargs)
-        return redirect(Assignment.objects.get(id=assignment_id))
 
 class ServiceCreateView(CreateView):
     model = Service
@@ -710,29 +574,6 @@ class MinistryDetailView(DetailView):
 
         context['assignments'] = assignments_data
         return context
-
-
-def add_note(request, assignment_id):
-    """Add a new note to an assignment"""
-    if request.method == 'POST':
-        message = request.POST.get('message')
-        if message:
-            # Get the colleague associated with the current user
-            if hasattr(request.user, 'colleague') and request.user.colleague:
-                assignment = Assignment.objects.get(pk=assignment_id)
-                colleague = request.user.colleague
-                Note.objects.create(
-                    assignment=assignment,
-                    colleague=colleague,
-                    message=message
-                )
-                messages.success(request, 'Notitie succesvol toegevoegd.')
-            else:
-                messages.error(request, 'Geen collega profiel gevonden voor huidige gebruiker.')
-        else:
-            messages.error(request, 'Notitie mag niet leeg zijn.')
-    
-    return redirect(f'/assignments/{assignment_id}/?tab=notes')
 
 
 class GlobalSearchView(TemplateView):

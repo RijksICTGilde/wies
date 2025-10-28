@@ -19,12 +19,10 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from wies.projects.views import get_service_details, client
-from wies.projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
-from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
-from wies.projects.views import PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView
-from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
+from wies.projects.views import AssignmentDetail, ColleagueDetail
+from wies.projects.views import PlacementTableView
 from wies.projects.views import MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
-from wies.projects.views import admin_db, login, logout, auth, add_note, GlobalSearchView
+from wies.projects.views import admin_db, login, logout, auth, GlobalSearchView
 from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIView, ExpertiseDetailAPIView
 
 urlpatterns = [
@@ -35,23 +33,9 @@ urlpatterns = [
     path('logout/', logout, name='logout'),
     path('auth/', auth, name='auth'),
     path('search/', GlobalSearchView.as_view(), name='global-search'),
-    path('assignments/new', AssignmentCreateView.as_view()),
     path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
-    path('assignments/<int:pk>/delete', AssignmentDeleteView.as_view()),
-    path('assignments/<int:pk>/update', AssignmentUpdateView.as_view()),
-    path('services/<int:pk>/placements/new', PlacementCreateView.as_view()),
-    path('assignments/<int:pk>/services/new', ServiceCreateView.as_view()),
-    path('assignments/<int:assignment_id>/add-note', add_note, name='add-note'),
-    path('colleagues/new', ColleagueCreateView.as_view()),
     path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
-    path('colleagues/<int:pk>/delete', ColleagueDeleteView.as_view()),
-    path('colleagues/<int:pk>/update', ColleagueUpdateView.as_view(), name='colleague-update'),
     path('placements/', PlacementTableView.as_view(), name='placements'),
-    path('placements/<int:pk>/update', PlacementUpdateView.as_view()),
-    path('placements/<int:pk>/delete', PlacementDeleteView.as_view()),
-    path('services/<int:pk>/', ServiceDetailView.as_view(), name='service-detail'),
-    path('services/<int:pk>/update', ServiceUpdateView.as_view()),
-    path('services/<int:pk>/delete', ServiceDeleteView.as_view()),
     path('clients/<str:name>', client),
     path('ministries/new/', MinistryCreateView.as_view(), name='ministry-create'),
     path('ministries/<int:pk>/', MinistryDetailView.as_view(), name='ministry-detail'),
