@@ -86,17 +86,6 @@
                 {{ service.start_date.strftime("%-d %b %Y") }} - {{ service.end_date.strftime("%-d %b %Y") }}
               </p>
             </div>
-            <div class="rvo-layout-column">
-              <label class="rvo-label">Acties </label>
-              <div class="rvo-layout-row rvo-layout-gap--sm">
-                <a href="/services/{{ service.id }}/update" class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs rvo-link--no-underline">
-                  Dienst bewerken
-                </a>
-                <a href="/services/{{ service.id }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs rvo-link--no-underline">
-                  Dienst verwijderen
-                </a>
-              </div>
-            </div>
         </div>
         
         {% if service.placements.all() %}
@@ -123,32 +112,12 @@
                   <label class="rvo-label">Inzet </label>
                   <span>{% if placement.hours_per_week %}{{ placement.hours_per_week }} u/week{% else %}-{% endif %} </span>
                 </div>
-                <div class="rvo-layout-column">
-                  <label class="rvo-label">Acties </label>
-                  <div class="rvo-layout-row rvo-layout-gap--sm">
-                    <a href="/placements/{{ placement.id }}/update" class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs rvo-link--no-underline">
-                      Bewerken
-                    </a>
-                    <a href="/placements/{{ placement.id }}/delete" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs rvo-link--no-underline">
-                      Verwijderen
-                    </a>
-                  </div>
-                </div>
               </div>
             </div>
             {% endfor %}
 
         </div>
         {% endif %}
-        
-          <div style="margin-top: 10px;">
-            <a href="/services/{{ service.id }}/placements/new" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm rvo-link--no-underline">
-              Voeg persoon toe
-            </a>
-            <a href="/colleagues/?{% if service.skill %}&skill={{ service.skill.id }}{% endif %}" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-sm rvo-link--no-underline">
-              Bekijk matches
-            </a>
-          </div>
   
       </div>
       {% else %}
