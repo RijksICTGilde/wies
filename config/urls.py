@@ -24,7 +24,7 @@ from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpd
 from wies.projects.views import PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView
 from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
 from wies.projects.views import MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
-from wies.projects.views import admin_db, login, logout, auth, ProfileView, add_note, GlobalSearchView
+from wies.projects.views import admin_db, login, logout, auth, add_note, GlobalSearchView
 from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIView, ExpertiseDetailAPIView
 
 urlpatterns = [
@@ -34,7 +34,6 @@ urlpatterns = [
     path('login/', login, name='login'),
     path('logout/', logout, name='logout'),
     path('auth/', auth, name='auth'),
-    path('profile/', ProfileView.as_view(), name='profile'),
     path('search/', GlobalSearchView.as_view(), name='global-search'),
     path('assignments/new', AssignmentCreateView.as_view()),
     path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
@@ -48,7 +47,6 @@ urlpatterns = [
     path('colleagues/<int:pk>/delete', ColleagueDeleteView.as_view()),
     path('colleagues/<int:pk>/update', ColleagueUpdateView.as_view(), name='colleague-update'),
     path('placements/', PlacementTableView.as_view(), name='placements'),
-    path('placements/<int:pk>/', PlacementDetailView.as_view(), name='placement-detail'),
     path('placements/<int:pk>/update', PlacementUpdateView.as_view()),
     path('placements/<int:pk>/delete', PlacementDeleteView.as_view()),
     path('services/<int:pk>/', ServiceDetailView.as_view(), name='service-detail'),

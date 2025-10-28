@@ -45,8 +45,8 @@
               </a>
             </li>
             <li class="rvo-menubar__item">
-              {% if user.is_authenticated %}
-                <a href="/profile/" class="rvo-link rvo-menubar__link rvo-link--logoblauw">
+              {% if user.is_authenticated and user.colleague %}
+                <a href="/colleagues/{{ user.colleague.id }}" class="rvo-link rvo-menubar__link rvo-link--logoblauw">
                   <span
                     class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--wit"
                     role="img"
