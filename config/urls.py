@@ -18,7 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from django.views.generic import RedirectView
 
-from wies.projects.views import get_service_details, client
+from wies.projects.views import client
 from wies.projects.views import AssignmentDetail, ColleagueDetail
 from wies.projects.views import PlacementTableView
 from wies.projects.views import MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
@@ -44,5 +44,4 @@ urlpatterns = [
     path('api/skills/<int:skill_id>/', SkillDetailAPIView.as_view(), name='api-skill-detail'),
     path('api/expertises/', ExpertisesAPIView.as_view(), name='api-expertises'),
     path('api/expertises/<int:expertise_id>/', ExpertiseDetailAPIView.as_view(), name='api-expertise-detail'),
-    path('api/services/<int:service_id>/', get_service_details, name='api-service-details'),
 ]

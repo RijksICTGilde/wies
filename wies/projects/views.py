@@ -68,26 +68,6 @@ def logout(request):
     return redirect('/')
 
 
-def get_service_details(request, service_id):
-    """
-    AJAX endpoint to get service details for placement form
-
-    Returns JSON with service details including:
-    - description, dates, and skill
-    """
-    try:
-        service = Service.objects.get(id=service_id)
-
-        data = {
-            'description': service.description,
-            'start_date': service.start_date.strftime('%d-%m-%Y') if service.start_date else '',
-            'end_date': service.end_date.strftime('%d-%m-%Y') if service.end_date else '',
-            'skill': service.skill.name if service.skill else 'Geen rol opgegeven'
-        }
-        return JsonResponse(data)
-    except Service.DoesNotExist:
-        return JsonResponse({'error': 'Service not found'}, status=404)
-
 @user_passes_test(lambda u: u.is_superuser and u.is_authenticated, login_url='/admin/login/')
 def admin_db(request):
     context = {
