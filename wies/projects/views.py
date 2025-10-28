@@ -18,7 +18,6 @@ from django.conf import settings
 from django.http import HttpResponse
 
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
-from .forms import ServiceForm
 from .services.sync import sync_colleagues_from_otys_iir
 from .services.placements import filter_placements_by_period
 
@@ -417,60 +416,6 @@ class ColleagueDetail(DetailView):
         context["assignment_list"] = assignment_list
         return context
 
-
-class ServiceCreateView(CreateView):
-    model = Service
-    form_class = ServiceForm
-    template_name = 'service_new.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        assignment_id = self.kwargs['pk']
-        context['cancel_url'] = f'/assignments/{assignment_id}/'
-        return context
-
-    def form_valid(self, form):
-        assignment_id = self.kwargs['pk']
-        form.assignment_id = assignment_id
-        super().form_valid(form)
-        return redirect(Assignment.objects.get(id=assignment_id))
-
-class ServiceUpdateView(UpdateView):
-    model = Service
-    form_class = ServiceForm
-    template_name = 'service_update.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/assignments/{context["object"].assignment.id}/'
-        return context
-
-    def form_valid(self, form):
-        # TODO: not super happy about this work around, but good enough for now
-        service_id = self.kwargs['pk']
-        assignment_id = Service.objects.get(id=service_id).assignment.id
-        super().form_valid(form)
-        return redirect(Assignment.objects.get(id=assignment_id))
-
-class ServiceDeleteView(DeleteView):
-    model = Service
-    success_url = reverse_lazy("assignments")
-    template_name = 'service_delete.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/assignments/{context["object"].assignment.id}/'
-        return context
-
-    def post(self, request, *args, **kwargs):
-        service_id = self.kwargs['pk']
-        assignment_id = Service.objects.get(id=service_id).assignment.id
-        super().post(request, *args, **kwargs)
-        return redirect(Assignment.objects.get(id=assignment_id))
-
-class ServiceDetailView(DetailView):
-    model = Service
-    template_name = 'service_detail.html'
 
 def client(request, name):
     assignments = Assignment.objects.filter(

@@ -200,8 +200,8 @@ class Service(models.Model):
     skill = models.ForeignKey('Skill', models.SET_NULL, related_name='services', null=True, blank=True)
     hours_per_week = models.IntegerField(null=True, blank=True)
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=ASSIGNMENT)
-    specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
-    specific_end_date = models.DateField(null=True, blank=True) # do not use, use properties below
+    specific_start_date = models.DateField(null=True, blank=True) # do not use directly, see property below
+    specific_end_date = models.DateField(null=True, blank=True) # do not use directly, see property below
     # placements via reverse relation
 
     @property
