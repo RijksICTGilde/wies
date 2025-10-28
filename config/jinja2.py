@@ -5,8 +5,6 @@ from django.middleware.csrf import get_token
 from django.utils.safestring import mark_safe
 from jinja_roos_components import setup_components
 
-from wies.projects.views import assignments_url_with_tab, placements_url_with_filters
-
 
 def get_csrf_hidden_input(request):
         """Returns a hidden input field with CSRF token"""
@@ -22,8 +20,6 @@ def environment(**options):
         'url': reverse,
         'get_csrf_token': get_token,
         'get_csrf_hidden_input': get_csrf_hidden_input,
-        'assignments_url_with_tab': lambda request, tab_key: assignments_url_with_tab({'request': request}, tab_key),
-        'placements_url_with_filters': lambda request, url_name: placements_url_with_filters({'request': request}, url_name),
     })
 
     return env

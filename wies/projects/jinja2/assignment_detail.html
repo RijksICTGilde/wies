@@ -63,30 +63,7 @@
       </dd>
     </dl>
 
-    <!-- Tab Navigation -->
-    <div class="assignment-tabs-navigation">
-      <ul
-        class="rvo-tabs rvo-ul rvo-ul--no-margin rvo-ul--no-padding rvo-ul--icon rvo-ul--icon-option-2"
-        role="tablist"
-        aria-label="Assignment Detail Tabs"
-      >
-        {% for tab_key, tab_data in tab_groups.items() %}
-        <li role="presentation" class="rvo-tabs__item">
-          <a
-            href="?tab={{ tab_key }}"
-            class="rvo-link rvo-tabs__item-link {% if active_tab == tab_key %}rvo-tabs__item-link--active rvo-link--active{% endif %} rvo-link--no-underline"
-            role="tab"
-            aria-selected="{% if active_tab == tab_key %}true{% else %}false{% endif %}"
-          >
-            {{ tab_data.title }}
-          </a>
-        </li>
-        {% endfor %}
-      </ul>
-    </div>
-
     <!-- Tab Content -->
-    {% if active_tab == 'services' %}
     <div id="tab-diensten" class="rvo-margin-block-end--md">
 
       {% for service in object.services.all() %}
@@ -177,65 +154,12 @@
       {% else %}
       <div class="rvo-card rvo-card--outline rvo-card--padding-lg">
         <p class="utrecht-paragraph rvo-paragraph--no-margins rvo-text--subtle">
-          Nog geen diensten gedefinieerd voor deze opdracht.
+          Geen diensten gedefinieerd voor deze opdracht.
         </p>
       </div>
       {% endfor %}
-
-      <div class="rvo-layout-margin-top--xl">
-        <div class="rvo-card rvo-card--outline rvo-card--padding-lg rvo-layout-margin-bottom--lg rvo-card--full-colour--grijs-100" style="margin: 10px;">
-          <div class="rvo-card__content">
-            <a class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--donkerblauw" href="/assignments/{{ object.pk }}/services/new">
-              <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--sm rvo-icon--donkerblauw rvo-link__icon--before" role="img" aria-label="Plus"></span>
-              Dienst toevoegen
-            </a>
-          </div>
-        </div>
-      </div>
     
     </div>
-    {% endif %}
-
-    {% if active_tab == 'notes' %}
-    <div id="tab-notities" class="rvo-margin-block-end--md">
-      <h2 class="utrecht-heading-2 rvo-heading--no-margins">Notities</h2>
-
-    {% if notes %}
-      <div class="rvo-layout-column rvo-layout-gap--md">
-        {% for note in notes %}
-          <div class="rvo-card rvo-card--outline rvo-card--padding-md">
-            <div class="rvo-card__content">
-              <div class="rvo-layout-row rvo-layout-gap--sm">
-                <strong>{{ note.colleague.name }}</strong>
-                <span class="rvo-text--subtle">{{ note.created_at.strftime("%d-%m-%Y %H:%M") }}</span>
-              </div>
-              <p class="rvo-paragraph">{{ note.message }}</p>
-            </div>
-          </div>
-        {% endfor %}
-      </div>
-    {% else %}
-      <p class="rvo-text--italic">Nog geen notities toegevoegd.</p>
-    {% endif %}
-
-    <!-- Note form (initially hidden) -->
-    <div id="note-form" class="rvo-layout-column rvo-layout-gap--md" style="display: block; margin-top: 1rem;">
-      <form method="post" action="{{ url('add-note', args=[object.pk]) }}">
-        {{ get_csrf_hidden_input(request) }}
-        <div class="rvo-form-field">
-          <label for="note-message" class="rvo-label">Notitie:</label>
-          <textarea id="note-message" name="message" class="rvo-textarea" rows="4" placeholder="Voer uw notitie in..." required></textarea>
-        </div>
-        <div class="rvo-layout-row rvo-layout-gap--sm">
-          <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-sm">
-            Notitie opslaan
-          </button>
-        </div>
-      </form>
-    </div>
-
-    </div>
-    {% endif %}
 
   </div>
 </div>

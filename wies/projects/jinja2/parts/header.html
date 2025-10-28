@@ -20,9 +20,6 @@
   </div>
 </header>
 
-<link rel="stylesheet" href="{{ static('css/search.css') }}">
-<script src="{{ static('js/search.js') }}"></script>
-
 <div class="rvo-menubar__background rvo-menubar__background--horizontal-rule">
   <div class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--none">
     <nav class="rvo-menubar rvo-menubar--md">
@@ -34,16 +31,6 @@
             </li>
           </ul>
           <ul class="rvo-menubar__group--flex">
-            <li class="rvo-menubar__item">
-              <a href="#" class="rvo-link rvo-menubar__link rvo-link--logoblauw" onclick="toggleSearchForm(event)">
-                <span
-                  class="utrecht-icon rvo-icon rvo-icon-zoek rvo-icon--md rvo-icon--wit"
-                  role="img"
-                  aria-label="Zoek"
-                ></span>
-                Zoeken
-              </a>
-            </li>
             <li class="rvo-menubar__item">
               {% if user.is_authenticated and user.colleague %}
                 <a href="/colleagues/{{ user.colleague.id }}" class="rvo-link rvo-menubar__link rvo-link--logoblauw">
@@ -63,51 +50,3 @@
     </nav>
   </div>
 </div>
-
-<!-- Search Form Section - dropdown search form -->
-<div id="searchFormSection" class="rvo-layout-column rvo-layout-gap--md" style="display: {% if '/search/' in request.path %}block{% else %}none{% endif %};">
-  <div class="search-form">
-    <div class="utrecht-form-fieldset rvo-form-fieldset">
-      <fieldset
-        class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset"
-      >
-        <div class="rvo-form-layout">
-          <div
-            class="rvo-max-width-layout rvo-max-width-layout--sm rvo-max-width-layout-inline-padding--none"
-          >
-            <div class="search-form-field-wrapper">
-              <div
-                role="group"
-                aria-labelledby="globalSearchLabel"
-                class="search-form-container"
-              >
-                <div class="rvo-form-field__label">
-                  <label class="rvo-label search-form-label-hidden" id="globalSearchLabel" for="globalSearchField">
-                    Zoekterm
-                  </label>
-                </div>
-                <input
-                  id="globalSearchField"
-                  placeholder="Zoek op naam, opdrachttitel, organisatie..."
-                  type="text"
-                  class="utrecht-textbox utrecht-textbox--html-input utrecht-textbox--lg search-form-input"
-                  dir="auto"
-                  value="{{ request.GET.search|default('') }}"
-                />
-              </div>
-              <button
-                class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md"
-                type="button"
-                onclick="performGlobalSearch()"
-              >
-                Zoeken
-              </button>
-            </div>
-          </div>
-        </div>
-      </fieldset>
-    </div>
-  </div>
-</div>
-
- 

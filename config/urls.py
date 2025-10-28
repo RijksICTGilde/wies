@@ -32,7 +32,6 @@ urlpatterns = [
     path('login/', login, name='login'),
     path('logout/', logout, name='logout'),
     path('auth/', auth, name='auth'),
-    path('search/', GlobalSearchView.as_view(), name='global-search'),
     path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
     path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
     path('placements/', PlacementTableView.as_view(), name='placements'),
