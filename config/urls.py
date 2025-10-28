@@ -21,7 +21,7 @@ from django.views.generic import RedirectView
 from wies.projects.views import get_service_details, client
 from wies.projects.views import AssignmentCreateView, ColleagueCreateView, AssignmentDeleteView, ColleagueDeleteView
 from wies.projects.views import AssignmentDetail, ColleagueDetail, AssignmentUpdateView, ColleagueUpdateView
-from wies.projects.views import ColleagueList, PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView
+from wies.projects.views import PlacementDetailView, PlacementUpdateView, PlacementCreateView, PlacementDeleteView, PlacementTableView
 from wies.projects.views import ServiceCreateView, ServiceDeleteView, ServiceUpdateView, ServiceDetailView
 from wies.projects.views import MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
 from wies.projects.views import admin_db, login, logout, auth, ProfileView, add_note, GlobalSearchView
@@ -43,7 +43,6 @@ urlpatterns = [
     path('services/<int:pk>/placements/new', PlacementCreateView.as_view()),
     path('assignments/<int:pk>/services/new', ServiceCreateView.as_view()),
     path('assignments/<int:assignment_id>/add-note', add_note, name='add-note'),
-    path('colleagues/', ColleagueList.as_view(), name='colleagues'),
     path('colleagues/new', ColleagueCreateView.as_view()),
     path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
     path('colleagues/<int:pk>/delete', ColleagueDeleteView.as_view()),
