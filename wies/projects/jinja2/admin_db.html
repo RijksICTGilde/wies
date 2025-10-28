@@ -27,13 +27,6 @@
         <input type="hidden" name="action" value="load_data">
         <button type="submit">Load Dummy Data</button>
     </form>
-    
-    <h2>Sync Colleagues from Exact</h2>
-    <form method="post">
-        {{ get_csrf_hidden_input(request) }}
-        <input type="hidden" name="action" value="sync_colleagues_exact">
-        <button type="submit">Sync Colleagues from Exact</button>
-    </form>
 
     <h2>Sync Colleagues from OTYS IIR</h2>
     <form method="post">

@@ -72,5 +72,4 @@ urlpatterns = [
     path('api/expertises/', ExpertisesAPIView.as_view(), name='api-expertises'),
     path('api/expertises/<int:expertise_id>/', ExpertiseDetailAPIView.as_view(), name='api-expertise-detail'),
     path('api/services/<int:service_id>/', get_service_details, name='api-service-details'),
-    path('exact/', include('wies.exact.urls')),
 ]

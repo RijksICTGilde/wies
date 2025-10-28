@@ -23,12 +23,10 @@ from django.http import HttpResponse
 
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise, Note
 from .forms import AssignmentForm, ColleagueForm, PlacementForm, ServiceForm
-from .services.sync import sync_colleagues_from_exact, sync_colleagues_from_otys_iir
+from .services.sync import sync_colleagues_from_otys_iir
 from .services.statistics import get_consultants_working, get_total_clients_count
 from .services.statistics import get_assignments_ending_soon, get_consultants_on_bench, get_new_leads, get_weeks_remaining, get_total_services, get_services_filled, get_average_utilization, get_available_since
 from .services.placements import filter_placements_by_period
-
-from wies.exact.models import ExactEmployee, ExactProject
 
 from authlib.integrations.django_client import OAuth
 
@@ -148,17 +146,9 @@ def admin_db(request):
             Ministry.objects.all().delete()
             Brand.objects.all().delete()
             Expertise.objects.all().delete()
-
-            ExactEmployee.objects.all().delete()
-            ExactProject.objects.all().delete()
-
         elif action == 'load_data':
             management.call_command('loaddata', 'dummy_data.json')
-            management.call_command('loaddata', 'exact_dummy_data.json')
             messages.success(request, 'Data loaded successfully from dummy_data.json')
-        elif action == 'sync_colleagues_exact':
-            sync_colleagues_from_exact()
-            messages.success(request, 'Colleagues synced successfully from Exact')
         elif action == 'sync_colleagues_otys_iir':
             sync_colleagues_from_otys_iir()
             messages.success(request, 'Colleagues synced successfully from OTYS IIR')

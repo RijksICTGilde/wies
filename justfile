@@ -15,7 +15,6 @@ setup:
   docker compose run --rm django python manage.py dropdb --noinput
   docker compose run --rm django python manage.py migrate
   docker compose run --rm django python manage.py loaddata dummy_data.json
-  docker compose run --rm django python manage.py loaddata exact_dummy_data.json  
   docker-compose run --rm django python manage.py createsuperuser --noinput
   docker compose run --rm django python manage.py loaddata dummy_data.json
 
@@ -40,9 +39,7 @@ rebuild-db:
   echo "removing db, migrations and building up again from scratch"
   docker compose run --rm django python manage.py dropdb --noinput
   rm -r wies/projects/migrations/*
-  rm -r wies/exact/migrations/*
   touch wies/projects/migrations/__init__.py
-  touch wies/exact/migrations/__init__.py
   docker compose run --rm django python manage.py makemigrations
 
 # Executes `manage.py` command.

@@ -2,8 +2,6 @@ import datetime
 
 from django.db import models
 from django.urls import reverse
-from django.db.models import Max
-from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 
 
@@ -20,8 +18,6 @@ ASSIGNMENT_TYPE = {
 }
 
 SOURCE_CHOICES = {
-    'wies': 'WIES',
-    'exact': 'Exact',
     'otys_iir': 'OTYS IIR',
 }
 
