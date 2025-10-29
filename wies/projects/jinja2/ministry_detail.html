@@ -63,14 +63,6 @@
       <p class="rvo-text--italic">Geen opdrachten gevonden voor dit ministerie.</p>
     {% endif %}
 
-    <div class="rvo-layout-row rvo-layout-gap--md">
-      <a href="{{ url('ministry-update', args=[object.pk]) }}" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md">
-        Ministerie bewerken
-      </a>
-      <a href="{{ url('ministry-delete', args=[object.pk]) }}" class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md">
-        Ministerie verwijderen
-      </a>
-    </div>
   </div>
 </div>
 {% endblock content %}
