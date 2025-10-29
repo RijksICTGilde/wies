@@ -1,5 +1,5 @@
 from django.views.generic.list import ListView
-from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
+from django.views.generic import DetailView
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Prefetch
@@ -83,7 +83,6 @@ def admin_db(request):
             Service.objects.all().delete()
             Ministry.objects.all().delete()
             Brand.objects.all().delete()
-            Expertise.objects.all().delete()
         elif action == 'load_data':
             management.call_command('loaddata', 'dummy_data.json')
             messages.success(request, 'Data loaded successfully from dummy_data.json')
@@ -286,40 +285,6 @@ def client(request, name):
         'assignments': assignments_data
     })
 
-
-class MinistryCreateView(CreateView):
-    model = Ministry
-    template_name = 'ministry_form.html'
-    fields = ['name', 'abbreviation']
-    success_url = reverse_lazy('ministries')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = '/ministries/'
-        return context
-
-
-class MinistryUpdateView(UpdateView):
-    model = Ministry
-    template_name = 'ministry_form.html'
-    fields = ['name', 'abbreviation']
-    success_url = reverse_lazy('ministries')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/ministries/{context["object"].pk}/'
-        return context
-
-
-class MinistryDeleteView(DeleteView):
-    model = Ministry
-    template_name = 'ministry_confirm_delete.html'
-    success_url = reverse_lazy('ministries')
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['cancel_url'] = f'/ministries/{context["object"].pk}/'
-        return context
 
 class MinistryDetailView(DetailView):
     model = Ministry

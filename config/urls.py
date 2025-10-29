@@ -21,7 +21,7 @@ from django.views.generic import RedirectView
 from wies.projects.views import client
 from wies.projects.views import AssignmentDetail, ColleagueDetail
 from wies.projects.views import PlacementTableView
-from wies.projects.views import MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
+from wies.projects.views import MinistryDetailView
 from wies.projects.views import admin_db, login, logout, auth
 
 urlpatterns = [
@@ -35,8 +35,5 @@ urlpatterns = [
     path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
     path('placements/', PlacementTableView.as_view(), name='placements'),
     path('clients/<str:name>', client),
-    path('ministries/new/', MinistryCreateView.as_view(), name='ministry-create'),
     path('ministries/<int:pk>/', MinistryDetailView.as_view(), name='ministry-detail'),
-    path('ministries/<int:pk>/update/', MinistryUpdateView.as_view(), name='ministry-update'),
-    path('ministries/<int:pk>/delete/', MinistryDeleteView.as_view(), name='ministry-delete'),
 ]
