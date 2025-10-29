@@ -55,6 +55,12 @@
       </span>
     </td>
   </tr>
+{% else %}
+  <tr class="rvo-table-row">
+    <td class="rvo-table-cell" colspan="4">
+      <span class="rvo-text--italic">Geen inzetten gevonden.</span>
+    </td>
+  </tr>
 {% endfor %}
 
 {% if next_page_url %}
