@@ -35,8 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django_extensions',
-    'wies.projects',
-    'wies.exact',
+    'wies.core',
 ]
 
 MIDDLEWARE = [
@@ -152,6 +151,6 @@ SESSION_COOKIE_AGE = 24 * 60 * 60  # 24h in s
 LOGIN_URL = '/login/'
 
 AUTHENTICATION_BACKENDS = [
-    'wies.projects.auth_backend.AuthBackend',
+    'wies.core.auth_backend.AuthBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
