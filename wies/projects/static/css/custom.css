@@ -3,7 +3,7 @@
   width: 100%;
 }
 
-/* Custom table interactivity */
+Custom table interactivity
 .rvo-table-header {
   cursor: pointer;
   transition: background-color 0.2s ease;

@@ -42,12 +42,14 @@
       </dd>
       <dt>Status</dt>
       <dd>
-        <div class="rvo-tag {% if object.status == 'LEAD' %}wies-tag--light-yellow{% elif object.status == 'OPEN' %}rvo-tag--info{% elif object.status == 'LOPEND' %}rvo-tag--success{% elif object.status == 'AFGEWEZEN' %}rvo-tag--error{% else %}rvo-tag--default{% endif %}">{{ object.status }}</div>
+        <div class="rvo-tag rvo-tag--default">{{ object.status }}</div>
       </dd>
       <dt>Bron</dt>
       <dd>
         {% if object.source_url %}
-          <a href="{{ object.source_url }}" target="_blank" class="rvo-link">{{ object.get_source_display() }} <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs" role="img" aria-label="Externe link"></span></a>
+          <a href="{{ object.source_url }}" target="_blank" class="rvo-link">{{ object.get_source_display() }} 
+            <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs" role="img" aria-label="Externe link"></span>
+          </a>
         {% else %}
           {{ object.get_source_display() }}
         {% endif %}

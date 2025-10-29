@@ -154,4 +154,3 @@ document.addEventListener('keydown', function(e) {
     closeFilterModal();
   }
 });
-

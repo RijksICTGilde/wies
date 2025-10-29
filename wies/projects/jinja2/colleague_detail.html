@@ -59,7 +59,7 @@
         <tr class="rvo-table-row clickable-row" style="cursor: pointer;" onclick="window.location='/assignments/{{ placement.service.assignment.id }}/'">
           <td class="rvo-table-cell">{{ placement.service.assignment.name }}</td>
           <td class="rvo-table-cell">
-            <div class="rvo-tag {% if placement.service.assignment.status == 'LEAD' %}wies-tag--light-yellow{% elif placement.service.assignment.status == 'OPEN' %}rvo-tag--info{% elif placement.service.assignment.status == 'LOPEND' %}rvo-tag--success{% elif placement.service.assignment.status == 'AFGEWEZEN' %}rvo-tag--error{% else %}rvo-tag--default{% endif %}">{{ placement.service.assignment.status }}</div>
+            <div class="rvo-tag rvo-tag--default">{{ placement.service.assignment.status }}</div>
           </td>
           <td class="rvo-table-cell">
             <div>{{ placement.service.assignment.organization }}</div>
