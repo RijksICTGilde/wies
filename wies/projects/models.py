@@ -10,11 +10,6 @@ ASSIGNMENT_STATUS = {
     'INGEVULD': "INGEVULD",
 }
 
-ASSIGNMENT_TYPE = {
-    'GROUP': "GROUP",
-    'INDIVIDUAL': "INDIVIDUAL",
-}
-
 SOURCE_CHOICES = {
     'otys_iir': 'OTYS IIR',
 }
@@ -123,7 +118,6 @@ class Assignment(models.Model):
     ministry = models.ForeignKey('Ministry', models.SET_NULL, null=True, blank=False)
     owner = models.ForeignKey('Colleague', models.SET_NULL, null=True, blank=False, related_name='owned_assignments')
     extra_info = models.TextField(blank=True)
-    assignment_type = models.CharField(max_length=20, choices=ASSIGNMENT_TYPE, default='GROUP')
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='otys_iir')
     source_id = models.CharField(blank=True)
     source_url = models.URLField(null=True, blank=True)

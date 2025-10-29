@@ -801,7 +801,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Ontwikkeling van een veilig digitaal identiteitsplatform voor overheidsservices",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -816,7 +815,6 @@
       "organization": "Zorginstituut Nederland",
       "ministry": 14,
       "extra_info": "Opzetten van een centraal data platform voor het analyseren van zorgdata",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -831,7 +829,6 @@
       "organization": "Directie Wetgeving en Juridische Zaken",
       "ministry": 1,
       "extra_info": "AI-tool voor het ondersteunen van juristen bij contractanalyse",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -846,7 +843,6 @@
       "organization": "Rijksdienst voor Ondernemend Nederland (RVO)",
       "ministry": 6,
       "extra_info": "Complete redesign van het e-commerce platform met focus on mobile-first",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -861,7 +857,6 @@
       "organization": "De Nederlandsche Bank (DNB)",
       "ministry": 7,
       "extra_info": "Haalbaarheidsstudie voor blockchain implementatie in betalingsverkeer",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -876,7 +871,6 @@
       "organization": "RIVM - Centrum Infectieziektebestrijding",
       "ministry": 4,
       "extra_info": "Ontwikkeling van een ML platform voor medische beeldanalyse",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -891,7 +885,6 @@
       "organization": "Directie Digitalisering BZK",
       "ministry": 4,
       "extra_info": "Modernisering van digitale overheidsloketten voor betere gebruikerservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -906,7 +899,6 @@
       "organization": "Agentschap Telecom",
       "ministry": 6,
       "extra_info": "Geautomatiseerde tool voor cybersecurity audits",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -921,7 +913,6 @@
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "ministry": 8,
       "extra_info": "AI-gedreven optimalisatie van logistieke routes",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -936,7 +927,6 @@
       "organization": "Belastingdienst - Directie ICT",
       "ministry": 7,
       "extra_info": "Nieuwe features voor mobile banking applicatie",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -951,7 +941,6 @@
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "ministry": 14,
       "extra_info": "Analyse van pati\u00ebntdata voor verbeterde zorguitkomsten",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -966,7 +955,6 @@
       "organization": "Netbeheer Nederland",
       "ministry": 12,
       "extra_info": "Smart grid management en energie voorspelling",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -981,7 +969,6 @@
       "organization": "DUO - Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Interactief leerplatform voor online onderwijs",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -996,7 +983,6 @@
       "organization": "Royal Schiphol Group",
       "ministry": 9,
       "extra_info": "Real-time monitoring van luchthaven infrastructuur",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -1011,7 +997,6 @@
       "organization": "TNO - Nederlandse Organisatie voor Toegepast Natuurwetenschappelijk Onderzoek",
       "ministry": 2,
       "extra_info": "Digitale tweeling voor productie-optimalisatie",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -1026,7 +1011,6 @@
       "organization": "Centraal Bureau voor de Statistiek (CBS)",
       "ministry": 6,
       "extra_info": "Sentimentanalyse van sociale media voor content strategie",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -1041,7 +1025,6 @@
       "organization": "Wageningen University & Research",
       "ministry": 7,
       "extra_info": "AI-tool voor gewasvoorspelling en bodem analyse",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -1056,7 +1039,6 @@
       "organization": "Kamer van Koophandel (KvK)",
       "ministry": 1,
       "extra_info": "Blockchain-gebaseerde supply chain tracking",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -1071,7 +1053,6 @@
       "organization": "Fiscale Inlichtingen- en Opsporingsdienst (FIOD)",
       "ministry": 1,
       "extra_info": "Machine learning voor fraudedetectie in transacties",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -1086,7 +1067,6 @@
       "organization": "Koninklijk Nederlands Meteorologisch Instituut (KNMI)",
       "ministry": 2,
       "extra_info": "Publieke portal voor toegang tot klimaatdata",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -1101,7 +1081,6 @@
       "organization": "UWV",
       "ministry": 13,
       "extra_info": "Vernieuwing van IT-systemen voor uitkeringen en sociale zekerheid",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -1116,7 +1095,6 @@
       "organization": "Defensie Materieel Organisatie",
       "ministry": 5,
       "extra_info": "Strategische implementatie van AI-toepassingen binnen Defensie",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -1131,7 +1109,6 @@
       "organization": "Immigratie- en Naturalisatiedienst (IND)",
       "ministry": 9,
       "extra_info": "Centraal platform voor migratie en asielprocedure data-analyse",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -1146,7 +1123,6 @@
       "organization": "Directie Digitale Diplomatie",
       "ministry": 4,
       "extra_info": "Platform voor digitale diplomatieke communicatie en samenwerking",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -1161,7 +1137,6 @@
       "organization": "Rijksdienst voor Ondernemend Nederland (RVO)",
       "ministry": 6,
       "extra_info": "Real-time monitoring en analyse van woningbouwprojecten",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -1176,7 +1151,6 @@
       "organization": "Inspectie van het Onderwijs",
       "ministry": 9,
       "extra_info": "Data-analyse voor onderwijskwaliteit en prestatiemonitoring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -1191,7 +1165,6 @@
       "organization": "Rijksvoorlichtingsdienst (RVD)",
       "ministry": 4,
       "extra_info": "Modernisering van digitale communicatiekanalen van het Kabinet",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11318,7 +11291,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11333,7 +11305,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11348,7 +11319,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11363,7 +11333,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11378,7 +11347,6 @@
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11393,7 +11361,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11408,7 +11375,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11423,7 +11389,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 10,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11438,7 +11403,6 @@
       "organization": "Nationaal Archief",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11453,7 +11417,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11468,7 +11431,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11483,7 +11445,6 @@
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11498,7 +11459,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11513,7 +11473,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11528,7 +11487,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11543,7 +11501,6 @@
       "organization": "Nationaal Archief",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11558,7 +11515,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11573,7 +11529,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11588,7 +11543,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11603,7 +11557,6 @@
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11618,7 +11571,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11633,7 +11585,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11648,7 +11599,6 @@
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11663,7 +11613,6 @@
       "organization": "Nationaal Archief",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11678,7 +11627,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11693,7 +11641,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11708,7 +11655,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11723,7 +11669,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11738,7 +11683,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11753,7 +11697,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11768,7 +11711,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 10,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11783,7 +11725,6 @@
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11798,7 +11739,6 @@
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11813,7 +11753,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 1,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11828,7 +11767,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11843,7 +11781,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 8,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11858,7 +11795,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11873,7 +11809,6 @@
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11888,7 +11823,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11903,7 +11837,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11918,7 +11851,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11933,7 +11865,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11948,7 +11879,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11963,7 +11893,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -11978,7 +11907,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -11993,7 +11921,6 @@
       "organization": "Nationaal Archief",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12008,7 +11935,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12023,7 +11949,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12038,7 +11963,6 @@
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12053,7 +11977,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12068,7 +11991,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12083,7 +12005,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12098,7 +12019,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12113,7 +12033,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12128,7 +12047,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12143,7 +12061,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12158,7 +12075,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12173,7 +12089,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12188,7 +12103,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12203,7 +12117,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12218,7 +12131,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12233,7 +12145,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12248,7 +12159,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12263,7 +12173,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12278,7 +12187,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12293,7 +12201,6 @@
       "organization": "Nationaal Archief",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12308,7 +12215,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12323,7 +12229,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 14,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12338,7 +12243,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12353,7 +12257,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12368,7 +12271,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12383,7 +12285,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12398,7 +12299,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12413,7 +12313,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12428,7 +12327,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12443,7 +12341,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12458,7 +12355,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12473,7 +12369,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12488,7 +12383,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12503,7 +12397,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 2,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12518,7 +12411,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 10,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12533,7 +12425,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12548,7 +12439,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12563,7 +12453,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 9,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12578,7 +12467,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12593,7 +12481,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12608,7 +12495,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12623,7 +12509,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12638,7 +12523,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12653,7 +12537,6 @@
       "organization": "Nationaal Archief",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12668,7 +12551,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12683,7 +12565,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12698,7 +12579,6 @@
       "organization": "Nationaal Archief",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12713,7 +12593,6 @@
       "organization": "Nationaal Archief",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12728,7 +12607,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12743,7 +12621,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12758,7 +12635,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12773,7 +12649,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12788,7 +12663,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12803,7 +12677,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12818,7 +12691,6 @@
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12833,7 +12705,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12848,7 +12719,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12863,7 +12733,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12878,7 +12747,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12893,7 +12761,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12908,7 +12775,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12923,7 +12789,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12938,7 +12803,6 @@
       "organization": "Nationaal Archief",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12953,7 +12817,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12968,7 +12831,6 @@
       "organization": "Nationaal Archief",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -12983,7 +12845,6 @@
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -12998,7 +12859,6 @@
       "organization": "Nationaal Archief",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13013,7 +12873,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -13028,7 +12887,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -13043,7 +12901,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 4,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -13058,7 +12915,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13073,7 +12929,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 8,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -13088,7 +12943,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13103,7 +12957,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 15,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13118,7 +12971,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13133,7 +12985,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13148,7 +12999,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13163,7 +13013,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13178,7 +13027,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13193,7 +13041,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13208,7 +13055,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13223,7 +13069,6 @@
       "organization": "Nationaal Archief",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -13238,7 +13083,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13253,7 +13097,6 @@
       "organization": "Rijksdienst voor het Cultureel Erfgoed",
       "ministry": 9,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor het Cultureel Erfgoed",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -13268,7 +13111,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 5,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13283,7 +13125,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13298,7 +13139,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -13313,7 +13153,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13328,7 +13167,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -13343,7 +13181,6 @@
       "organization": "Nederlandse Voedsel- en Warenautoriteit",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Nederlandse Voedsel- en Warenautoriteit",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13358,7 +13195,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -13373,7 +13209,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -13388,7 +13223,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13403,7 +13237,6 @@
       "organization": "Uitvoeringsinstituut Werknemersverzekeringen",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Uitvoeringsinstituut Werknemersverzekeringen",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13418,7 +13251,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13433,7 +13265,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Digitalisering en modernisering project voor Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13448,7 +13279,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13463,7 +13293,6 @@
       "organization": "Centraal Bureau voor de Statistiek",
       "ministry": 6,
       "extra_info": "Digitalisering en modernisering project voor Centraal Bureau voor de Statistiek",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13478,7 +13307,6 @@
       "organization": "Sociale Verzekeringsbank",
       "ministry": 13,
       "extra_info": "Digitalisering en modernisering project voor Sociale Verzekeringsbank",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -13493,7 +13321,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Dienst Uitvoering Onderwijs",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13508,7 +13335,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Logius",
-      "assignment_type": "INDIVIDUAL",
       "owner": 1
     }
   },
@@ -13523,7 +13349,6 @@
       "organization": "Nationaal Archief",
       "ministry": 12,
       "extra_info": "Digitalisering en modernisering project voor Nationaal Archief",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13538,7 +13363,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 11,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -13553,7 +13377,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens",
       "ministry": 3,
       "extra_info": "Digitalisering en modernisering project voor Rijksdienst voor Identiteitsgegevens",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -15890,7 +15713,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Groot digitalisering project voor Belastingdienst met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -15916,7 +15738,6 @@
       "organization": "Directie Energiemarkt",
       "ministry": 6,
       "extra_info": "Groot digitalisering project voor Ministerie van Economische Zaken en Klimaat met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -15942,7 +15763,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Groot digitalisering project voor Belastingdienst met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -15968,7 +15788,6 @@
       "organization": "Commando Dienstencentra (CDC)",
       "ministry": 5,
       "extra_info": "Groot digitalisering project voor Ministerie van Defensie met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -15994,7 +15813,6 @@
       "organization": "Rijksinstituut voor Volksgezondheid en Milieu (RIVM)",
       "ministry": 14,
       "extra_info": "Groot digitalisering project voor Ministerie van Volksgezondheid, Welzijn en Sport met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16020,7 +15838,6 @@
       "organization": "Directie Financi\u00eble Markten",
       "ministry": 7,
       "extra_info": "Groot digitalisering project voor Ministerie van Financi\u00ebn met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16046,7 +15863,6 @@
       "organization": "Dienst Uitvoering Onderwijs",
       "ministry": 12,
       "extra_info": "Groot digitalisering project voor Dienst Uitvoering Onderwijs met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16072,7 +15888,6 @@
       "organization": "Agentschap van de Generale Thesaurie",
       "ministry": 7,
       "extra_info": "Groot digitalisering project voor Ministerie van Financi\u00ebn met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16098,7 +15913,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Groot digitalisering project voor Logius met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16192,7 +16006,6 @@
       "organization": "Nederlandse Emissieautoriteit (NEa)",
       "ministry": 6,
       "extra_info": "Groot digitalisering project voor Ministerie van Economische Zaken en Klimaat met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16218,7 +16031,6 @@
       "organization": "De Nederlandsche Bank (DNB)",
       "ministry": 7,
       "extra_info": "Groot digitalisering project voor Ministerie van Financi\u00ebn met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16244,7 +16056,6 @@
       "organization": "Directie Digitale Overheid (BZK)",
       "ministry": 3,
       "extra_info": "Groot digitalisering project voor Ministerie van Binnenlandse Zaken en Koninkrijksrelaties met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16270,7 +16081,6 @@
       "organization": "Agentschap van de Generale Thesaurie",
       "ministry": 7,
       "extra_info": "Groot digitalisering project voor Ministerie van Financi\u00ebn met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16296,7 +16106,6 @@
       "organization": "Commando Dienstencentra (CDC)",
       "ministry": 5,
       "extra_info": "Groot digitalisering project voor Ministerie van Defensie met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16390,7 +16199,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "ministry": 3,
       "extra_info": "Groot digitalisering project voor Ministerie van Binnenlandse Zaken en Koninkrijksrelaties met focus op moderne technologie en gebruikservaring",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16416,7 +16224,6 @@
       "organization": "Directie Digitale Overheid (BZK)",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16442,7 +16249,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16468,7 +16274,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16483,7 +16288,6 @@
       "organization": "Directie Constitutionele Zaken en Wetgeving",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16509,7 +16313,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16535,7 +16338,6 @@
       "organization": "Directie Digitale Overheid (BZK)",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16561,7 +16363,6 @@
       "organization": "Directie Digitale Overheid (BZK)",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16587,7 +16388,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16613,7 +16413,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16639,7 +16438,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16665,7 +16463,6 @@
       "organization": "Directie Constitutionele Zaken en Wetgeving",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16691,7 +16488,6 @@
       "organization": "Directie Constitutionele Zaken en Wetgeving",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16717,7 +16513,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16798,7 +16593,6 @@
       "organization": "Directie Digitale Overheid (BZK)",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16824,7 +16618,6 @@
       "organization": "Directie Constitutionele Zaken en Wetgeving",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16850,7 +16643,6 @@
       "organization": "Directie Constitutionele Zaken en Wetgeving",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16876,7 +16668,6 @@
       "organization": "Directie Digitale Overheid (BZK)",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16902,7 +16693,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16928,7 +16718,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16954,7 +16743,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16980,7 +16768,6 @@
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -16995,7 +16782,6 @@
       "organization": "Directie Financi\u00eble Markten",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17010,7 +16796,6 @@
       "organization": "Directie Financi\u00eble Markten",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17126,7 +16911,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17152,7 +16936,6 @@
       "organization": "Agentschap van de Generale Thesaurie",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17178,7 +16961,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17237,7 +17019,6 @@
       "organization": "Agentschap van de Generale Thesaurie",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17263,7 +17044,6 @@
       "organization": "Directie Financi\u00eble Markten",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17355,7 +17135,6 @@
       "organization": "De Nederlandsche Bank (DNB)",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17381,7 +17160,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17407,7 +17185,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17422,7 +17199,6 @@
       "organization": "Agentschap van de Generale Thesaurie",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17437,7 +17213,6 @@
       "organization": "De Nederlandsche Bank (DNB)",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17476,7 +17251,6 @@
       "organization": "De Nederlandsche Bank (DNB)",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17491,7 +17265,6 @@
       "organization": "Rijksinstituut voor Volksgezondheid en Milieu (RIVM)",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17517,7 +17290,6 @@
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17543,7 +17315,6 @@
       "organization": "Rijksinstituut voor Volksgezondheid en Milieu (RIVM)",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17569,7 +17340,6 @@
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17584,7 +17354,6 @@
       "organization": "Rijksinstituut voor Volksgezondheid en Milieu (RIVM)",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17610,7 +17379,6 @@
       "organization": "Inspectie Gezondheidszorg en Jeugd (IGJ)",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17636,7 +17404,6 @@
       "organization": "Zorginstituut Nederland",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17662,7 +17429,6 @@
       "organization": "Inspectie Gezondheidszorg en Jeugd (IGJ)",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17688,7 +17454,6 @@
       "organization": "Zorginstituut Nederland",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17714,7 +17479,6 @@
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17740,7 +17504,6 @@
       "organization": "Zorginstituut Nederland",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17779,7 +17542,6 @@
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17805,7 +17567,6 @@
       "organization": "Zorginstituut Nederland",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17820,7 +17581,6 @@
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17879,7 +17639,6 @@
       "organization": "Rijksinstituut voor Volksgezondheid en Milieu (RIVM)",
       "ministry": 14,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Volksgezondheid, Welzijn en Sport",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17905,7 +17664,6 @@
       "organization": "Defensie Materieel Organisatie (DMO)",
       "ministry": 5,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Defensie",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17931,7 +17689,6 @@
       "organization": "Joint IV Commando",
       "ministry": 5,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Defensie",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17957,7 +17714,6 @@
       "organization": "Commando Dienstencentra (CDC)",
       "ministry": 5,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Defensie",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17983,7 +17739,6 @@
       "organization": "Joint IV Commando",
       "ministry": 5,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Defensie",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -17998,7 +17753,6 @@
       "organization": "Commando Dienstencentra (CDC)",
       "ministry": 5,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Defensie",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18024,7 +17778,6 @@
       "organization": "Defensie Materieel Organisatie (DMO)",
       "ministry": 5,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Defensie",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18050,7 +17803,6 @@
       "organization": "Defensie Materieel Organisatie (DMO)",
       "ministry": 5,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Defensie",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18065,7 +17817,6 @@
       "organization": "Agentschap Telecom",
       "ministry": 6,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18091,7 +17842,6 @@
       "organization": "Agentschap Telecom",
       "ministry": 6,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18117,7 +17867,6 @@
       "organization": "Directie Energiemarkt",
       "ministry": 6,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18143,7 +17892,6 @@
       "organization": "Agentschap Telecom",
       "ministry": 6,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18158,7 +17906,6 @@
       "organization": "Directie Energiemarkt",
       "ministry": 6,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18173,7 +17920,6 @@
       "organization": "Directie Energiemarkt",
       "ministry": 6,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18234,7 +17980,6 @@
       "organization": "Nederlandse Emissieautoriteit (NEa)",
       "ministry": 6,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18260,7 +18005,6 @@
       "organization": "Agentschap Telecom",
       "ministry": 6,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18286,7 +18030,6 @@
       "organization": "Rijksdienst voor Ondernemend Nederland (RVO)",
       "ministry": 6,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18312,7 +18055,6 @@
       "organization": "Rijksdienst voor Ondernemend Nederland (RVO)",
       "ministry": 6,
       "extra_info": "Strategisch digitalisering initiatief van Ministerie van Economische Zaken en Klimaat",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18338,7 +18080,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18364,7 +18105,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18390,7 +18130,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18416,7 +18155,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18431,7 +18169,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18446,7 +18183,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18472,7 +18208,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18498,7 +18233,6 @@
       "organization": "Belastingdienst",
       "ministry": 7,
       "extra_info": "Strategisch digitalisering initiatief van Belastingdienst",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18513,7 +18247,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18539,7 +18272,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18565,7 +18297,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18580,7 +18311,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18606,7 +18336,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18621,7 +18350,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -18647,7 +18375,6 @@
       "organization": "Logius",
       "ministry": 3,
       "extra_info": "Strategisch digitalisering initiatief van Logius",
-      "assignment_type": "GROUP",
       "owner": 1
     }
   },
@@ -25626,7 +25353,6 @@
       "status": "INGEVULD",
       "organization": "Logius",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 3,
       "owner": 1
     }
@@ -25641,7 +25367,6 @@
       "status": "INGEVULD",
       "organization": "Logius",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 3,
       "owner": 1
     }
@@ -25656,7 +25381,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 8,
       "owner": 1
     }
@@ -25671,7 +25395,6 @@
       "status": "INGEVULD",
       "organization": "Centraal Bureau voor de Statistiek",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 6,
       "owner": 1
     }
@@ -25686,7 +25409,6 @@
       "status": "INGEVULD",
       "organization": "Rijksinstituut voor Volksgezondheid en Milieu (RIVM)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 14,
       "owner": 1
     }
@@ -25701,7 +25423,6 @@
       "status": "INGEVULD",
       "organization": "DUO - Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 12,
       "owner": 1
     }
@@ -25716,7 +25437,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 8,
       "owner": 1
     }
@@ -25731,7 +25451,6 @@
       "status": "INGEVULD",
       "organization": "Zorginstituut Nederland",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 14,
       "owner": 1
     }
@@ -25746,7 +25465,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Emissieautoriteit (NEa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 6,
       "owner": 1
     }
@@ -25761,7 +25479,6 @@
       "status": "INGEVULD",
       "organization": "De Nederlandsche Bank (DNB)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 7,
       "owner": 1
     }
@@ -25776,7 +25493,6 @@
       "status": "INGEVULD",
       "organization": "Commando Dienstencentra (CDC)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 5,
       "owner": 1
     }
@@ -25791,7 +25507,6 @@
       "status": "INGEVULD",
       "organization": "Directie Constitutionele Zaken en Wetgeving",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 3,
       "owner": 1
     }
@@ -25806,7 +25521,6 @@
       "status": "INGEVULD",
       "organization": "Rijksinstituut voor Volksgezondheid en Milieu (RIVM)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 14,
       "owner": 1
     }
@@ -25821,7 +25535,6 @@
       "status": "INGEVULD",
       "organization": "Joint IV Commando",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 5,
       "owner": 1
     }
@@ -25836,7 +25549,6 @@
       "status": "INGEVULD",
       "organization": "Agentschap Telecom",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 6,
       "owner": 1
     }
@@ -25851,7 +25563,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 8,
       "owner": 1
     }
@@ -25866,7 +25577,6 @@
       "status": "INGEVULD",
       "organization": "Joint IV Commando",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 5,
       "owner": 1
     }
@@ -25881,7 +25591,6 @@
       "status": "INGEVULD",
       "organization": "Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 12,
       "owner": 1
     }
@@ -25896,7 +25605,6 @@
       "status": "INGEVULD",
       "organization": "Defensie Materieel Organisatie (DMO)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 5,
       "owner": 1
     }
@@ -25911,7 +25619,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 8,
       "owner": 1
     }
@@ -25926,7 +25633,6 @@
       "status": "INGEVULD",
       "organization": "Defensie Materieel Organisatie (DMO)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 5,
       "owner": 1
     }
@@ -25941,7 +25647,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 8,
       "owner": 1
     }
@@ -25956,7 +25661,6 @@
       "status": "INGEVULD",
       "organization": "Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 12,
       "owner": 1
     }
@@ -25971,7 +25675,6 @@
       "status": "INGEVULD",
       "organization": "Agentschap Telecom",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 6,
       "owner": 1
     }
@@ -25986,7 +25689,6 @@
       "status": "INGEVULD",
       "organization": "Centraal Bureau voor de Statistiek",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 6,
       "owner": 1
     }
@@ -26001,7 +25703,6 @@
       "status": "INGEVULD",
       "organization": "DUO - Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 12,
       "owner": 1
     }
@@ -26016,7 +25717,6 @@
       "status": "INGEVULD",
       "organization": "De Nederlandsche Bank (DNB)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 7,
       "owner": 1
     }
@@ -26031,7 +25731,6 @@
       "status": "INGEVULD",
       "organization": "Agentschap van de Generale Thesaurie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 7,
       "owner": 1
     }
@@ -26046,7 +25745,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 4,
       "owner": 1
     }
@@ -26061,7 +25759,6 @@
       "status": "INGEVULD",
       "organization": "Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 12,
       "owner": 1
     }
@@ -26076,7 +25773,6 @@
       "status": "INGEVULD",
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 3,
       "owner": 1
     }
@@ -26091,7 +25787,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 8,
       "owner": 1
     }
@@ -26106,7 +25801,6 @@
       "status": "INGEVULD",
       "organization": "Directie Constitutionele Zaken en Wetgeving",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 3,
       "owner": 1
     }
@@ -26121,7 +25815,6 @@
       "status": "INGEVULD",
       "organization": "Zorginstituut Nederland",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 14,
       "owner": 1
     }
@@ -26136,7 +25829,6 @@
       "status": "INGEVULD",
       "organization": "Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 12,
       "owner": 1
     }
@@ -26151,7 +25843,6 @@
       "status": "INGEVULD",
       "organization": "Commando Dienstencentra (CDC)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 5,
       "owner": 1
     }
@@ -26166,7 +25857,6 @@
       "status": "INGEVULD",
       "organization": "Joint IV Commando",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 5,
       "owner": 1
     }
@@ -26181,7 +25871,6 @@
       "status": "INGEVULD",
       "organization": "Agentschap Telecom",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 6,
       "owner": 1
     }
@@ -26196,7 +25885,6 @@
       "status": "INGEVULD",
       "organization": "Rijksdienst voor Ondernemend Nederland (RVO)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 6,
       "owner": 1
     }
@@ -26211,7 +25899,6 @@
       "status": "INGEVULD",
       "organization": "Directie Constitutionele Zaken en Wetgeving",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 3,
       "owner": 1
     }
@@ -26226,7 +25913,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 8,
       "owner": 1
     }
@@ -26241,7 +25927,6 @@
       "status": "INGEVULD",
       "organization": "DUO - Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 12,
       "owner": 1
     }
@@ -26256,7 +25941,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Overheid (BZK)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 3,
       "owner": 1
     }
@@ -26271,7 +25955,6 @@
       "status": "INGEVULD",
       "organization": "Belastingdienst",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 7,
       "owner": 1
     }
@@ -26286,7 +25969,6 @@
       "status": "INGEVULD",
       "organization": "Joint IV Commando",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 5,
       "owner": 1
     }
@@ -26301,7 +25983,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 14,
       "owner": 1
     }
@@ -26316,7 +25997,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Emissieautoriteit (NEa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 6,
       "owner": 1
     }
@@ -26331,7 +26011,6 @@
       "status": "INGEVULD",
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 3,
       "owner": 1
     }
@@ -26346,7 +26025,6 @@
       "status": "INGEVULD",
       "organization": "Rijksinstituut voor Volksgezondheid en Milieu (RIVM)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 14,
       "owner": 1
     }
@@ -26361,7 +26039,6 @@
       "status": "INGEVULD",
       "organization": "Agentschap van de Generale Thesaurie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 7,
       "owner": 1
     }
@@ -26376,7 +26053,6 @@
       "status": "INGEVULD",
       "organization": "Joint IV Commando",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 5,
       "owner": 1
     }
@@ -26391,7 +26067,6 @@
       "status": "INGEVULD",
       "organization": "DUO - Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 12,
       "owner": 1
     }
@@ -26406,7 +26081,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 14,
       "owner": 1
     }
@@ -26421,7 +26095,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 4,
       "owner": 1
     }
@@ -26436,7 +26109,6 @@
       "status": "INGEVULD",
       "organization": "DUO - Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 12,
       "owner": 1
     }
@@ -26451,7 +26123,6 @@
       "status": "INGEVULD",
       "organization": "Belastingdienst",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 7,
       "owner": 1
     }
@@ -26466,7 +26137,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 8,
       "owner": 1
     }
@@ -26481,7 +26151,6 @@
       "status": "INGEVULD",
       "organization": "Zorginstituut Nederland",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 14,
       "owner": 1
     }
@@ -26496,7 +26165,6 @@
       "status": "INGEVULD",
       "organization": "Directie Constitutionele Zaken en Wetgeving",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 3,
       "owner": 1
     }
@@ -26511,7 +26179,6 @@
       "status": "INGEVULD",
       "organization": "Agentschap Telecom",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 6,
       "owner": 1
     }
@@ -26526,7 +26193,6 @@
       "status": "INGEVULD",
       "organization": "Joint IV Commando",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 5,
       "owner": 1
     }
@@ -26541,7 +26207,6 @@
       "status": "INGEVULD",
       "organization": "Belastingdienst",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 7,
       "owner": 1
     }
@@ -26556,7 +26221,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Overheid (BZK)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 3,
       "owner": 1
     }
@@ -26571,7 +26235,6 @@
       "status": "INGEVULD",
       "organization": "Commando Dienstencentra (CDC)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 5,
       "owner": 1
     }
@@ -26586,7 +26249,6 @@
       "status": "INGEVULD",
       "organization": "Agentschap Telecom",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 6,
       "owner": 1
     }
@@ -26601,7 +26263,6 @@
       "status": "INGEVULD",
       "organization": "Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 12,
       "owner": 1
     }
@@ -26616,7 +26277,6 @@
       "status": "INGEVULD",
       "organization": "Rijksdienst voor Ondernemend Nederland (RVO)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 6,
       "owner": 1
     }
@@ -26631,7 +26291,6 @@
       "status": "INGEVULD",
       "organization": "Zorginstituut Nederland",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 14,
       "owner": 1
     }
@@ -26646,7 +26305,6 @@
       "status": "INGEVULD",
       "organization": "Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 12,
       "owner": 1
     }
@@ -26661,7 +26319,6 @@
       "status": "INGEVULD",
       "organization": "Centraal Bureau voor de Statistiek",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 6,
       "owner": 1
     }
@@ -26676,7 +26333,6 @@
       "status": "INGEVULD",
       "organization": "Joint IV Commando",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 5,
       "owner": 1
     }
@@ -26691,7 +26347,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 4,
       "owner": 1
     }
@@ -26706,7 +26361,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 4,
       "owner": 1
     }
@@ -26721,7 +26375,6 @@
       "status": "INGEVULD",
       "organization": "DUO - Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 12,
       "owner": 1
     }
@@ -26736,7 +26389,6 @@
       "status": "INGEVULD",
       "organization": "Defensie Materieel Organisatie (DMO)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 5,
       "owner": 1
     }
@@ -26751,7 +26403,6 @@
       "status": "INGEVULD",
       "organization": "Joint IV Commando",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 5,
       "owner": 1
     }
@@ -26766,7 +26417,6 @@
       "status": "INGEVULD",
       "organization": "Directie Constitutionele Zaken en Wetgeving",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 3,
       "owner": 1
     }
@@ -26781,7 +26431,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 8,
       "owner": 1
     }
@@ -26796,7 +26445,6 @@
       "status": "INGEVULD",
       "organization": "Joint IV Commando",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 5,
       "owner": 1
     }
@@ -26811,7 +26459,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 14,
       "owner": 1
     }
@@ -26826,7 +26473,6 @@
       "status": "INGEVULD",
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 3,
       "owner": 1
     }
@@ -26841,7 +26487,6 @@
       "status": "INGEVULD",
       "organization": "Centraal Bureau voor de Statistiek",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 6,
       "owner": 1
     }
@@ -26856,7 +26501,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 14,
       "owner": 1
     }
@@ -26871,7 +26515,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Emissieautoriteit (NEa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 6,
       "owner": 1
     }
@@ -26886,7 +26529,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 8,
       "owner": 1
     }
@@ -26901,7 +26543,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 14,
       "owner": 1
     }
@@ -26916,7 +26557,6 @@
       "status": "INGEVULD",
       "organization": "Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 12,
       "owner": 1
     }
@@ -26931,7 +26571,6 @@
       "status": "INGEVULD",
       "organization": "Centraal Bureau voor de Statistiek",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 6,
       "owner": 1
     }
@@ -26946,7 +26585,6 @@
       "status": "INGEVULD",
       "organization": "Zorginstituut Nederland",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 14,
       "owner": 1
     }
@@ -26961,7 +26599,6 @@
       "status": "INGEVULD",
       "organization": "Commando Dienstencentra (CDC)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 5,
       "owner": 1
     }
@@ -26976,7 +26613,6 @@
       "status": "INGEVULD",
       "organization": "Commando Dienstencentra (CDC)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 5,
       "owner": 1
     }
@@ -26991,7 +26627,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 8,
       "owner": 1
     }
@@ -27006,7 +26641,6 @@
       "status": "INGEVULD",
       "organization": "Zorginstituut Nederland",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 14,
       "owner": 1
     }
@@ -27021,7 +26655,6 @@
       "status": "INGEVULD",
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 3,
       "owner": 1
     }
@@ -27036,7 +26669,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 4,
       "owner": 1
     }
@@ -27051,7 +26683,6 @@
       "status": "INGEVULD",
       "organization": "Zorginstituut Nederland",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 14,
       "owner": 1
     }
@@ -27066,7 +26697,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 14,
       "owner": 1
     }
@@ -27081,7 +26711,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Overheid (BZK)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 3,
       "owner": 1
     }
@@ -27096,7 +26725,6 @@
       "status": "INGEVULD",
       "organization": "Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 12,
       "owner": 1
     }
@@ -27111,7 +26739,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 8,
       "owner": 1
     }
@@ -27126,7 +26753,6 @@
       "status": "INGEVULD",
       "organization": "Zorginstituut Nederland",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 14,
       "owner": 1
     }
@@ -27141,7 +26767,6 @@
       "status": "INGEVULD",
       "organization": "Defensie Materieel Organisatie (DMO)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 5,
       "owner": 1
     }
@@ -27156,7 +26781,6 @@
       "status": "INGEVULD",
       "organization": "De Nederlandsche Bank (DNB)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 7,
       "owner": 1
     }
@@ -27171,7 +26795,6 @@
       "status": "INGEVULD",
       "organization": "Rijksdienst voor Ondernemend Nederland (RVO)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 6,
       "owner": 1
     }
@@ -27186,7 +26809,6 @@
       "status": "INGEVULD",
       "organization": "Joint IV Commando",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 5,
       "owner": 1
     }
@@ -27201,7 +26823,6 @@
       "status": "INGEVULD",
       "organization": "Centraal Bureau voor de Statistiek",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 6,
       "owner": 1
     }
@@ -27216,7 +26837,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Emissieautoriteit (NEa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 6,
       "owner": 1
     }
@@ -27231,7 +26851,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 4,
       "owner": 1
     }
@@ -27246,7 +26865,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 4,
       "owner": 1
     }
@@ -27261,7 +26879,6 @@
       "status": "INGEVULD",
       "organization": "Commando Dienstencentra (CDC)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 5,
       "owner": 1
     }
@@ -27276,7 +26893,6 @@
       "status": "INGEVULD",
       "organization": "Joint IV Commando",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 5,
       "owner": 1
     }
@@ -27291,7 +26907,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 4,
       "owner": 1
     }
@@ -27306,7 +26921,6 @@
       "status": "INGEVULD",
       "organization": "Commando Dienstencentra (CDC)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 5,
       "owner": 1
     }
@@ -27321,7 +26935,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Overheid (BZK)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 3,
       "owner": 1
     }
@@ -27336,7 +26949,6 @@
       "status": "INGEVULD",
       "organization": "Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 12,
       "owner": 1
     }
@@ -27351,7 +26963,6 @@
       "status": "INGEVULD",
       "organization": "Commando Dienstencentra (CDC)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 5,
       "owner": 1
     }
@@ -27366,7 +26977,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Overheid (BZK)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 3,
       "owner": 1
     }
@@ -27381,7 +26991,6 @@
       "status": "INGEVULD",
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 3,
       "owner": 1
     }
@@ -27396,7 +27005,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Emissieautoriteit (NEa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 6,
       "owner": 1
     }
@@ -27411,7 +27019,6 @@
       "status": "INGEVULD",
       "organization": "Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 12,
       "owner": 1
     }
@@ -27426,7 +27033,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 4,
       "owner": 1
     }
@@ -27441,7 +27047,6 @@
       "status": "INGEVULD",
       "organization": "Directie Financi\u00eble Markten",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 7,
       "owner": 1
     }
@@ -27456,7 +27061,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 4,
       "owner": 1
     }
@@ -27471,7 +27075,6 @@
       "status": "INGEVULD",
       "organization": "Agentschap Telecom",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 6,
       "owner": 1
     }
@@ -27486,7 +27089,6 @@
       "status": "INGEVULD",
       "organization": "Directie Financi\u00eble Markten",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 7,
       "owner": 1
     }
@@ -27501,7 +27103,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 14,
       "owner": 1
     }
@@ -27516,7 +27117,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 14,
       "owner": 1
     }
@@ -27531,7 +27131,6 @@
       "status": "INGEVULD",
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 3,
       "owner": 1
     }
@@ -27546,7 +27145,6 @@
       "status": "INGEVULD",
       "organization": "Directie Constitutionele Zaken en Wetgeving",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 3,
       "owner": 1
     }
@@ -27561,7 +27159,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Zorgautoriteit (NZa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 14,
       "owner": 1
     }
@@ -27576,7 +27173,6 @@
       "status": "INGEVULD",
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 3,
       "owner": 1
     }
@@ -27591,7 +27187,6 @@
       "status": "INGEVULD",
       "organization": "Directie Financi\u00eble Markten",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 7,
       "owner": 1
     }
@@ -27606,7 +27201,6 @@
       "status": "INGEVULD",
       "organization": "Rijksdienst voor Ondernemend Nederland (RVO)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 6,
       "owner": 1
     }
@@ -27621,7 +27215,6 @@
       "status": "INGEVULD",
       "organization": "Directie Constitutionele Zaken en Wetgeving",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 3,
       "owner": 1
     }
@@ -27636,7 +27229,6 @@
       "status": "INGEVULD",
       "organization": "Rijksdienst voor Ondernemend Nederland (RVO)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 6,
       "owner": 1
     }
@@ -27651,7 +27243,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 4,
       "owner": 1
     }
@@ -27666,7 +27257,6 @@
       "status": "INGEVULD",
       "organization": "Agentschap Telecom",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 6,
       "owner": 1
     }
@@ -27681,7 +27271,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 4,
       "owner": 1
     }
@@ -27696,7 +27285,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 8,
       "owner": 1
     }
@@ -27711,7 +27299,6 @@
       "status": "INGEVULD",
       "organization": "Rijkswaterstaat - Directie Verkeersinformatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 8,
       "owner": 1
     }
@@ -27726,7 +27313,6 @@
       "status": "INGEVULD",
       "organization": "DUO - Dienst Uitvoering Onderwijs",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 12,
       "owner": 1
     }
@@ -27741,7 +27327,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 4,
       "owner": 1
     }
@@ -27756,7 +27341,6 @@
       "status": "INGEVULD",
       "organization": "Joint IV Commando",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 5,
       "owner": 1
     }
@@ -27771,7 +27355,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Diplomatie",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 4,
       "owner": 1
     }
@@ -27786,7 +27369,6 @@
       "status": "INGEVULD",
       "organization": "Rijksdienst voor Identiteitsgegevens (RvIG)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 3,
       "owner": 1
     }
@@ -27801,7 +27383,6 @@
       "status": "INGEVULD",
       "organization": "Directie Digitale Overheid (BZK)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 3,
       "owner": 1
     }
@@ -27816,7 +27397,6 @@
       "status": "INGEVULD",
       "organization": "Rijksinstituut voor Volksgezondheid en Milieu (RIVM)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 14,
       "owner": 1
     }
@@ -27831,7 +27411,6 @@
       "status": "INGEVULD",
       "organization": "Belastingdienst",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "PROJECTOPDRACHT",
       "ministry": 7,
       "owner": 1
     }
@@ -27846,7 +27425,6 @@
       "status": "INGEVULD",
       "organization": "Rijksinstituut voor Volksgezondheid en Milieu (RIVM)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 14,
       "owner": 1
     }
@@ -27861,7 +27439,6 @@
       "status": "INGEVULD",
       "organization": "Nederlandse Emissieautoriteit (NEa)",
       "extra_info": "Afgerond project uit voorgaande periode",
-      "assignment_type": "DETACHERING",
       "ministry": 6,
       "owner": 1
     }

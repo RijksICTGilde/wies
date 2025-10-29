@@ -248,7 +248,6 @@ class ColleagueDetail(DetailView):
             {
                 'name': placement.service.assignment.name,
                 'id': placement.service.assignment.id,
-                'assignment_type': placement.service.assignment.assignment_type,
             }
             for placement in self.object.placements.all()
         ]
