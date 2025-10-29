@@ -4,8 +4,6 @@ from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
 
-from .querysets import annotate_placement_dates
-
 
 ASSIGNMENT_STATUS = {
     'VACATURE': "VACATURE",

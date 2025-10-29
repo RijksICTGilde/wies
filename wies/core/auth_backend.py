@@ -16,7 +16,6 @@ class AuthBackend(BaseBackend):
             extra_fields = {}
 
         try:
-            # TODO: this does not handle if user data is updated after first login
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             user = User(username=username, email=email, **extra_fields)

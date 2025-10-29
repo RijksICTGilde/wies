@@ -18,7 +18,6 @@ def sync_all_otys_iir_records():
 
     Vacancy title format: "Assignment Name - Service Description"
     """
-    # TODO: removal from OTYS is not handled, they stay in wies. is that desired?
 
     OTYS_API_KEY = os.environ['OTYS_API_KEY']
     OTYS_URL = os.environ['OTYS_URL']
