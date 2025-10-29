@@ -70,7 +70,7 @@
           <td class="rvo-table-cell">
             <div class="rvo-tag rvo-tag--default">{{ placement.service.skill.name }}</div>
           </td>
-          <td class="rvo-table-cell">{{ placement.start_date }} - {{ placement.end_date }}</td>
+          <td class="rvo-table-cell">{{ placement.start_date if placement.start_date else "?" }} - {{ placement.end_date if placement.end_date else "?" }}</td>
         </tr>
         {% endfor %}
       </tbody>

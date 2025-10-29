@@ -55,9 +55,9 @@
         {% endif %}
       </dd>
       <dt>Startdatum</dt>
-      <dd>{{ object.start_date }}</dd>
+      <dd>{{ object.start_date if object.start_date else "?" }}</dd>
       <dt>Einddatum</dt>
-      <dd>{{ object.end_date }}</dd>
+      <dd>{{ object.end_date if object.end_date else "?" }}</dd>
       <dt>Extra info</dt>
       <dd>{{ object.extra_info }}</dd>
       <dt>Acties</dt>
@@ -93,7 +93,7 @@
             <div class="rvo-layout-column">
               <label class="rvo-label">Wanneer </label>
               <p class="utrecht-paragraph rvo-paragraph--no-margins">
-                {{ service.start_date.strftime("%-d %b %Y") }} - {{ service.end_date.strftime("%-d %b %Y") }}
+                {{ service.start_date.strftime("%-d %b %Y") if service.start_date else "?" }} - {{ service.end_date.strftime("%-d %b %Y") if service.end_date else "?" }}
               </p>
             </div>
         </div>
@@ -116,7 +116,7 @@
                 </div>
                 <div class="rvo-layout-column">
                   <label class="rvo-label">Periode</label>
-                  <span>{{ placement.start_date.strftime("%-d %b %Y") }} - {{ placement.end_date.strftime("%-d %b %Y") }}</span>
+                  <span>{{ placement.start_date.strftime("%-d %b %Y") if placement.start_date else "?" }} - {{ placement.end_date.strftime("%-d %b %Y") if placement.end_date else "?" }}</span>
                 </div>
                 <div class="rvo-layout-column">
                   <label class="rvo-label">Inzet </label>

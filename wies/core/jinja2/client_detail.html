@@ -40,8 +40,8 @@
             <td class="rvo-table-cell">
               <div class="rvo-tag rvo-tag--default">{{ assignment.status }}</div>
             </td>
-            <td class="rvo-table-cell">{{ assignment.start_date }}</td>
-            <td class="rvo-table-cell">{{ assignment.end_date }}</td>
+            <td class="rvo-table-cell">{{ assignment.start_date if assignment.start_date else "?" }}</td>
+            <td class="rvo-table-cell">{{ assignment.end_date if assignment.end_date else "?" }}</td>
           </tr>
           {% endfor %}
         </tbody>
