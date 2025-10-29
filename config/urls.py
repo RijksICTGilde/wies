@@ -18,11 +18,11 @@ from django.contrib import admin
 from django.urls import path
 from django.views.generic import RedirectView
 
-from wies.projects.views import client
-from wies.projects.views import AssignmentDetail, ColleagueDetail
-from wies.projects.views import PlacementTableView
-from wies.projects.views import MinistryDetailView
-from wies.projects.views import admin_db, login, logout, auth
+from wies.core.views import client
+from wies.core.views import AssignmentDetail, ColleagueDetail
+from wies.core.views import PlacementTableView
+from wies.core.views import MinistryDetailView
+from wies.core.views import admin_db, login, logout, auth
 
 urlpatterns = [
     path('admin/db/', admin_db, name='admin-db'),

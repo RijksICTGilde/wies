@@ -1,7 +1,7 @@
 import os
 
 from django.db import transaction
-from wies.projects.models import Colleague, Brand
+from wies.core.models import Colleague, Brand
 
 from .otys import OTYSAPI
 

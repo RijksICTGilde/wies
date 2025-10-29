@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class ProjectsConfig(AppConfig):
+class CoreConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'wies.projects'
+    name = 'wies.core'

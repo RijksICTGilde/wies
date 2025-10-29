@@ -10,7 +10,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
 from django.db.models import Q, Count
-from wies.projects.models import Assignment, Colleague, Ministry, Service, Placement
+from wies.core.models import Assignment, Colleague, Ministry, Service, Placement
 
 def test_global_search(search_query):
     """Test the global search functionality"""
