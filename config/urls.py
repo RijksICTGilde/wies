@@ -23,7 +23,6 @@ from wies.projects.views import AssignmentDetail, ColleagueDetail
 from wies.projects.views import PlacementTableView
 from wies.projects.views import MinistryCreateView, MinistryUpdateView, MinistryDeleteView, MinistryDetailView
 from wies.projects.views import admin_db, login, logout, auth
-from wies.projects.api import SkillsAPIView, SkillDetailAPIView, ExpertisesAPIView, ExpertiseDetailAPIView
 
 urlpatterns = [
     path('admin/db/', admin_db, name='admin-db'),
@@ -40,8 +39,4 @@ urlpatterns = [
     path('ministries/<int:pk>/', MinistryDetailView.as_view(), name='ministry-detail'),
     path('ministries/<int:pk>/update/', MinistryUpdateView.as_view(), name='ministry-update'),
     path('ministries/<int:pk>/delete/', MinistryDeleteView.as_view(), name='ministry-delete'),
-    path('api/skills/', SkillsAPIView.as_view(), name='api-skills'),
-    path('api/skills/<int:skill_id>/', SkillDetailAPIView.as_view(), name='api-skill-detail'),
-    path('api/expertises/', ExpertisesAPIView.as_view(), name='api-expertises'),
-    path('api/expertises/<int:expertise_id>/', ExpertiseDetailAPIView.as_view(), name='api-expertise-detail'),
 ]

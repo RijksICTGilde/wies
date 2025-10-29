@@ -40,22 +40,6 @@
           <span class="rvo-text--italic">Geen merk opgegeven</span>
         {% endif %}
       </dd>
-      <dt>ODI-expertise</dt>
-      <dd>
-        {% if object.expertises.all() %}
-          {% for expertise in object.expertises.all() %}
-            <div class="rvo-tag rvo-tag--default">{{ expertise.name }}</div>
-          {% endfor %}
-        {% else %}
-          <span class="rvo-text--italic">Geen expertise opgegeven</span>
-        {% endif %}
-      </dd>
-      <dt>Rollen</dt>
-      <dd>
-        {% for skill in object.skills.all() %}
-        <div class="rvo-tag rvo-tag--default">{{ skill.name }}</div>
-        {% endfor %}
-      </dd>
     </dl>
     
     <h2 class="utrecht-heading-2 rvo-heading--no-margins">Opdrachten</h2>

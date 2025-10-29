@@ -3,7 +3,6 @@ from django.views.generic import DetailView, CreateView, DeleteView, UpdateView
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Prefetch
-from django.http import JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate as auth_authenticate
@@ -16,7 +15,7 @@ from django.http import HttpResponse
 
 from authlib.integrations.django_client import OAuth
 
-from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, Expertise
+from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand
 from .services.sync import sync_colleagues_from_otys_iir
 from .services.placements import filter_placements_by_period
 

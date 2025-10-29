@@ -24,15 +24,6 @@ class Brand(models.Model):
     def __str__(self):
         return self.name
 
-class Expertise(models.Model):
-    name = models.CharField(max_length=100)
-    
-    class Meta:
-        ordering = ['name']
-        verbose_name_plural = 'expertises'
-    
-    def __str__(self):
-        return self.name
 
 class Ministry(models.Model):
     name = models.CharField(max_length=98)
@@ -59,7 +50,6 @@ class Colleague(models.Model):
     name = models.CharField(max_length=200)
     email = models.EmailField()
     brand = models.ForeignKey('Brand', models.SET_NULL, null=True, blank=False)
-    expertises = models.ManyToManyField('Expertise', blank=True)
     skills = models.ManyToManyField('Skill', blank=True)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='otys_iir')
     source_id = models.CharField(blank=True)

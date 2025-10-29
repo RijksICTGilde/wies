@@ -133,97 +133,6 @@
     }
   },
   {
-    "model": "projects.expertise",
-    "pk": 1,
-    "fields": {
-      "name": "Strategie, beleid, governance en compliance"
-    }
-  },
-  {
-    "model": "projects.expertise",
-    "pk": 2,
-    "fields": {
-      "name": "Architectuur en technologie"
-    }
-  },
-  {
-    "model": "projects.expertise",
-    "pk": 3,
-    "fields": {
-      "name": "Agile, project- programma- en portfoliomanagement"
-    }
-  },
-  {
-    "model": "projects.expertise",
-    "pk": 4,
-    "fields": {
-      "name": "Proces- en ketenmanagement"
-    }
-  },
-  {
-    "model": "projects.expertise",
-    "pk": 5,
-    "fields": {
-      "name": "Verander- en transformatiemanagement"
-    }
-  },
-  {
-    "model": "projects.expertise",
-    "pk": 6,
-    "fields": {
-      "name": "Interimmanagement en advies"
-    }
-  },
-  {
-    "model": "projects.expertise",
-    "pk": 7,
-    "fields": {
-      "name": "AI"
-    }
-  },
-  {
-    "model": "projects.expertise",
-    "pk": 8,
-    "fields": {
-      "name": "ICT"
-    }
-  },
-  {
-    "model": "projects.expertise",
-    "pk": 9,
-    "fields": {
-      "name": "Software en data engineering"
-    }
-  },
-  {
-    "model": "projects.expertise",
-    "pk": 10,
-    "fields": {
-      "name": "Cloud en platform technologie"
-    }
-  },
-  {
-    "model": "projects.expertise",
-    "pk": 11,
-    "fields": {
-      "name": "Security en privacy"
-    }
-  },
-  {
-    "model": "projects.expertise",
-    "pk": 12,
-    "fields": {
-      "name": "Opleiding, training en ontwikkeling"
-    }
-  },
-  {
-    "model": "projects.expertise",
-    "pk": 13,
-    "fields": {
-      "name": "Kennis- en innovatiemanagement"
-    }
-  },
-  {
     "model": "projects.brand",
     "pk": 1,
     "fields": {
@@ -257,10 +166,6 @@
     "fields": {
       "name": "Jan van der Berg",
       "brand": 1,
-      "expertises": [
-        8,
-        2
-      ],
       "skills": [
         1,
         9
@@ -275,10 +180,6 @@
     "fields": {
       "name": "Lisa Jansen",
       "brand": 2,
-      "expertises": [
-        9,
-        10
-      ],
       "skills": [
         2,
         4
@@ -293,10 +194,6 @@
     "fields": {
       "name": "Mohammed Ali",
       "brand": 1,
-      "expertises": [
-        7,
-        8
-      ],
       "skills": [
         5,
         8
@@ -311,10 +208,6 @@
     "fields": {
       "name": "Sarah de Vries",
       "brand": 3,
-      "expertises": [
-        3,
-        1
-      ],
       "skills": [
         3,
         6
@@ -329,9 +222,6 @@
     "fields": {
       "name": "Thomas Bakker",
       "brand": 4,
-      "expertises": [
-        6
-      ],
       "skills": [
         7,
         1
@@ -346,10 +236,6 @@
     "fields": {
       "name": "Emma Visser",
       "brand": 1,
-      "expertises": [
-        11,
-        10
-      ],
       "skills": [
         2,
         5
@@ -364,10 +250,6 @@
     "fields": {
       "name": "Pieter Smit",
       "brand": 2,
-      "expertises": [
-        10,
-        9
-      ],
       "skills": [
         8,
         9
@@ -382,10 +264,6 @@
     "fields": {
       "name": "Fatima Hassan",
       "brand": 3,
-      "expertises": [
-        1,
-        4
-      ],
       "skills": [
         4,
         3
@@ -400,10 +278,6 @@
     "fields": {
       "name": "Ruben de Jong",
       "brand": 4,
-      "expertises": [
-        5,
-        6
-      ],
       "skills": [
         6,
         7
@@ -418,10 +292,6 @@
     "fields": {
       "name": "Anna Mulder",
       "brand": 1,
-      "expertises": [
-        2,
-        8
-      ],
       "skills": [
         1,
         8
@@ -436,10 +306,6 @@
     "fields": {
       "name": "Kevin van Dijk",
       "brand": 2,
-      "expertises": [
-        13,
-        12
-      ],
       "skills": [
         2,
         9
@@ -454,10 +320,6 @@
     "fields": {
       "name": "Marloes Hendriks",
       "brand": 3,
-      "expertises": [
-        4,
-        5
-      ],
       "skills": [
         5,
         4
@@ -472,10 +334,6 @@
     "fields": {
       "name": "Ahmed Osman",
       "brand": 4,
-      "expertises": [
-        12,
-        13
-      ],
       "skills": [
         8,
         6
@@ -490,10 +348,6 @@
     "fields": {
       "name": "Sophie Brouwer",
       "brand": 1,
-      "expertises": [
-        8,
-        7
-      ],
       "skills": [
         3,
         7
@@ -508,10 +362,6 @@
     "fields": {
       "name": "Marco van Leeuwen",
       "brand": 2,
-      "expertises": [
-        3,
-        1
-      ],
       "skills": [
         1,
         5
@@ -526,10 +376,6 @@
     "fields": {
       "name": "Nadia Kowalski",
       "brand": 3,
-      "expertises": [
-        1,
-        3
-      ],
       "skills": [
         2,
         4
@@ -544,10 +390,6 @@
     "fields": {
       "name": "Jeroen Peters",
       "brand": 4,
-      "expertises": [
-        9,
-        10
-      ],
       "skills": [
         9,
         8
@@ -562,10 +404,6 @@
     "fields": {
       "name": "Yasmin El Hadj",
       "brand": 1,
-      "expertises": [
-        11,
-        8
-      ],
       "skills": [
         6,
         3
@@ -580,10 +418,6 @@
     "fields": {
       "name": "Daan Schouten",
       "brand": 2,
-      "expertises": [
-        10,
-        11
-      ],
       "skills": [
         7,
         1
@@ -598,10 +432,6 @@
     "fields": {
       "name": "Inge Vos",
       "brand": 3,
-      "expertises": [
-        2,
-        9
-      ],
       "skills": [
         5,
         2
@@ -616,10 +446,6 @@
     "fields": {
       "name": "Willem van der Berg",
       "brand": 4,
-      "expertises": [
-        6,
-        1
-      ],
       "skills": [
         10,
         13
@@ -634,10 +460,6 @@
     "fields": {
       "name": "Marieke Janssen",
       "brand": 1,
-      "expertises": [
-        4,
-        5
-      ],
       "skills": [
         11,
         16
@@ -652,10 +474,6 @@
     "fields": {
       "name": "Hassan Ahmed",
       "brand": 2,
-      "expertises": [
-        1,
-        3
-      ],
       "skills": [
         14,
         12
@@ -670,10 +488,6 @@
     "fields": {
       "name": "Laura van Dijk",
       "brand": 3,
-      "expertises": [
-        2,
-        8
-      ],
       "skills": [
         17,
         19
@@ -688,10 +502,6 @@
     "fields": {
       "name": "Michiel Bakker",
       "brand": 4,
-      "expertises": [
-        6,
-        5
-      ],
       "skills": [
         18,
         15
@@ -706,10 +516,6 @@
     "fields": {
       "name": "Aisha El Mansouri",
       "brand": 1,
-      "expertises": [
-        3,
-        4
-      ],
       "skills": [
         13,
         11
@@ -724,10 +530,6 @@
     "fields": {
       "name": "Rob Hendricks",
       "brand": 2,
-      "expertises": [
-        5,
-        1
-      ],
       "skills": [
         16,
         10
@@ -742,10 +544,6 @@
     "fields": {
       "name": "Priya Sharma",
       "brand": 3,
-      "expertises": [
-        1,
-        6
-      ],
       "skills": [
         14,
         18
@@ -760,10 +558,6 @@
     "fields": {
       "name": "Joris Mulder",
       "brand": 4,
-      "expertises": [
-        2,
-        8
-      ],
       "skills": [
         19,
         17
@@ -778,10 +572,6 @@
     "fields": {
       "name": "Samira Hassan",
       "brand": 1,
-      "expertises": [
-        4,
-        3
-      ],
       "skills": [
         12,
         15
@@ -1576,9 +1366,6 @@
     "fields": {
       "name": "Cas Dijkstra",
       "brand": 2,
-      "expertises": [
-        1
-      ],
       "skills": [
         1,
         20,
@@ -1594,10 +1381,6 @@
     "fields": {
       "name": "Lars Prins",
       "brand": 3,
-      "expertises": [
-        2,
-        9
-      ],
       "skills": [
         1
       ],
@@ -1611,11 +1394,6 @@
     "fields": {
       "name": "Evi van Hulst",
       "brand": 2,
-      "expertises": [
-        3,
-        11,
-        1
-      ],
       "skills": [
         16,
         22,
@@ -1632,11 +1410,6 @@
     "fields": {
       "name": "Isa Adriaansen",
       "brand": 1,
-      "expertises": [
-        7,
-        13,
-        6
-      ],
       "skills": [
         5
       ],
@@ -1650,10 +1423,6 @@
     "fields": {
       "name": "Mats Gerritsen",
       "brand": 1,
-      "expertises": [
-        6,
-        1
-      ],
       "skills": [
         18,
         2,
@@ -1669,10 +1438,6 @@
     "fields": {
       "name": "Femke Meijer",
       "brand": 3,
-      "expertises": [
-        8,
-        13
-      ],
       "skills": [
         1,
         18
@@ -1687,10 +1452,6 @@
     "fields": {
       "name": "Luca Willems",
       "brand": 1,
-      "expertises": [
-        8,
-        6
-      ],
       "skills": [
         2,
         3,
@@ -1707,11 +1468,6 @@
     "fields": {
       "name": "Finn van Wijk",
       "brand": 3,
-      "expertises": [
-        11,
-        5,
-        12
-      ],
       "skills": [
         27,
         1,
@@ -1727,10 +1483,6 @@
     "fields": {
       "name": "Julie de Groot",
       "brand": 4,
-      "expertises": [
-        8,
-        9
-      ],
       "skills": [
         2
       ],
@@ -1744,10 +1496,6 @@
     "fields": {
       "name": "Finn de Wit",
       "brand": 2,
-      "expertises": [
-        12,
-        6
-      ],
       "skills": [
         11,
         12,
@@ -1764,10 +1512,6 @@
     "fields": {
       "name": "Rick Vos",
       "brand": 2,
-      "expertises": [
-        3,
-        2
-      ],
       "skills": [
         28,
         9,
@@ -1784,10 +1528,6 @@
     "fields": {
       "name": "Stijn Hoekstra",
       "brand": 3,
-      "expertises": [
-        9,
-        7
-      ],
       "skills": [
         24
       ],
@@ -1801,9 +1541,6 @@
     "fields": {
       "name": "Mia Kramer",
       "brand": 3,
-      "expertises": [
-        5
-      ],
       "skills": [
         2,
         7,
@@ -1819,10 +1556,6 @@
     "fields": {
       "name": "Hugo Gerritsen",
       "brand": 3,
-      "expertises": [
-        9,
-        8
-      ],
       "skills": [
         2,
         25,
@@ -1839,11 +1572,6 @@
     "fields": {
       "name": "Noah Vermeulen",
       "brand": 1,
-      "expertises": [
-        13,
-        10,
-        12
-      ],
       "skills": [
         5,
         28,
@@ -1860,10 +1588,6 @@
     "fields": {
       "name": "Bram Brouwer",
       "brand": 2,
-      "expertises": [
-        3,
-        13
-      ],
       "skills": [
         1,
         19,
@@ -1880,10 +1604,6 @@
     "fields": {
       "name": "Emma de Graaf",
       "brand": 1,
-      "expertises": [
-        10,
-        8
-      ],
       "skills": [
         3,
         28,
@@ -1899,10 +1619,6 @@
     "fields": {
       "name": "Jesse Meijer",
       "brand": 3,
-      "expertises": [
-        6,
-        11
-      ],
       "skills": [
         17,
         2
@@ -1917,9 +1633,6 @@
     "fields": {
       "name": "Ruben Hofman",
       "brand": 4,
-      "expertises": [
-        1
-      ],
       "skills": [
         4,
         10
@@ -1934,9 +1647,6 @@
     "fields": {
       "name": "Bram van Hulst",
       "brand": 4,
-      "expertises": [
-        12
-      ],
       "skills": [
         12,
         8,
@@ -1952,10 +1662,6 @@
     "fields": {
       "name": "Tim van den Berg",
       "brand": 2,
-      "expertises": [
-        12,
-        11
-      ],
       "skills": [
         18,
         3,
@@ -1971,10 +1677,6 @@
     "fields": {
       "name": "Thomas Gerritsen",
       "brand": 2,
-      "expertises": [
-        6,
-        8
-      ],
       "skills": [
         28,
         6,
@@ -1991,11 +1693,6 @@
     "fields": {
       "name": "Levi Hofman",
       "brand": 1,
-      "expertises": [
-        9,
-        13,
-        3
-      ],
       "skills": [
         7,
         6,
@@ -2011,10 +1708,6 @@
     "fields": {
       "name": "Mia Vermeulen",
       "brand": 4,
-      "expertises": [
-        3,
-        10
-      ],
       "skills": [
         21
       ],
@@ -2028,10 +1721,6 @@
     "fields": {
       "name": "Mia Dijkstra",
       "brand": 4,
-      "expertises": [
-        13,
-        2
-      ],
       "skills": [
         17,
         1,
@@ -2047,9 +1736,6 @@
     "fields": {
       "name": "Eva van Dijk",
       "brand": 4,
-      "expertises": [
-        9
-      ],
       "skills": [
         15,
         25,
@@ -2065,11 +1751,6 @@
     "fields": {
       "name": "Sara van Dijk",
       "brand": 4,
-      "expertises": [
-        6,
-        1,
-        13
-      ],
       "skills": [
         17,
         19
@@ -2084,10 +1765,6 @@
     "fields": {
       "name": "Willem Janssen",
       "brand": 3,
-      "expertises": [
-        3,
-        5
-      ],
       "skills": [
         29
       ],
@@ -2101,11 +1778,6 @@
     "fields": {
       "name": "Fenne van Doorn",
       "brand": 1,
-      "expertises": [
-        8,
-        9,
-        10
-      ],
       "skills": [
         23,
         10,
@@ -2122,10 +1794,6 @@
     "fields": {
       "name": "Yara Smits",
       "brand": 2,
-      "expertises": [
-        9,
-        6
-      ],
       "skills": [
         19
       ],
@@ -2139,10 +1807,6 @@
     "fields": {
       "name": "Noa van der Laan",
       "brand": 2,
-      "expertises": [
-        11,
-        12
-      ],
       "skills": [
         2,
         28
@@ -2157,11 +1821,6 @@
     "fields": {
       "name": "Anna Wolters",
       "brand": 4,
-      "expertises": [
-        11,
-        1,
-        9
-      ],
       "skills": [
         18,
         10
@@ -2176,9 +1835,6 @@
     "fields": {
       "name": "Thomas Kuipers",
       "brand": 2,
-      "expertises": [
-        6
-      ],
       "skills": [
         19,
         12,
@@ -2195,9 +1851,6 @@
     "fields": {
       "name": "Stijn Dekker",
       "brand": 1,
-      "expertises": [
-        13
-      ],
       "skills": [
         29,
         23,
@@ -2213,10 +1866,6 @@
     "fields": {
       "name": "Lara van den Heuvel",
       "brand": 4,
-      "expertises": [
-        13,
-        4
-      ],
       "skills": [
         10,
         21,
@@ -2233,11 +1882,6 @@
     "fields": {
       "name": "Olivia Janssen",
       "brand": 2,
-      "expertises": [
-        10,
-        8,
-        7
-      ],
       "skills": [
         21,
         8
@@ -2252,10 +1896,6 @@
     "fields": {
       "name": "Levi Jansen",
       "brand": 3,
-      "expertises": [
-        13,
-        6
-      ],
       "skills": [
         5,
         11,
@@ -2272,9 +1912,6 @@
     "fields": {
       "name": "Amber van Wijk",
       "brand": 2,
-      "expertises": [
-        2
-      ],
       "skills": [
         1,
         15
@@ -2289,9 +1926,6 @@
     "fields": {
       "name": "Noah de Leeuw",
       "brand": 1,
-      "expertises": [
-        11
-      ],
       "skills": [
         15,
         16
@@ -2306,9 +1940,6 @@
     "fields": {
       "name": "Fenne de Koning",
       "brand": 1,
-      "expertises": [
-        12
-      ],
       "skills": [
         19,
         6,
@@ -2324,10 +1955,6 @@
     "fields": {
       "name": "Thijn van Leeuwen",
       "brand": 3,
-      "expertises": [
-        6,
-        2
-      ],
       "skills": [
         23
       ],
@@ -2341,9 +1968,6 @@
     "fields": {
       "name": "Vera Jansen",
       "brand": 1,
-      "expertises": [
-        4
-      ],
       "skills": [
         20,
         8
@@ -2358,9 +1982,6 @@
     "fields": {
       "name": "Gijs de Groot",
       "brand": 3,
-      "expertises": [
-        2
-      ],
       "skills": [
         9,
         22,
@@ -2377,9 +1998,6 @@
     "fields": {
       "name": "Jari Vos",
       "brand": 3,
-      "expertises": [
-        12
-      ],
       "skills": [
         16
       ],
@@ -2393,10 +2011,6 @@
     "fields": {
       "name": "Julie de Graaf",
       "brand": 4,
-      "expertises": [
-        6,
-        11
-      ],
       "skills": [
         21
       ],
@@ -2410,9 +2024,6 @@
     "fields": {
       "name": "Teun Martens",
       "brand": 2,
-      "expertises": [
-        12
-      ],
       "skills": [
         19
       ],
@@ -2426,10 +2037,6 @@
     "fields": {
       "name": "Thomas van der Laan",
       "brand": 4,
-      "expertises": [
-        5,
-        10
-      ],
       "skills": [
         7,
         28
@@ -2444,10 +2051,6 @@
     "fields": {
       "name": "Thijn Scholten",
       "brand": 3,
-      "expertises": [
-        13,
-        4
-      ],
       "skills": [
         18,
         27,
@@ -2464,10 +2067,6 @@
     "fields": {
       "name": "Jari van der Veen",
       "brand": 4,
-      "expertises": [
-        3,
-        8
-      ],
       "skills": [
         28
       ],
@@ -2481,9 +2080,6 @@
     "fields": {
       "name": "David van Beek",
       "brand": 2,
-      "expertises": [
-        3
-      ],
       "skills": [
         8,
         28,
@@ -2499,11 +2095,6 @@
     "fields": {
       "name": "Liv Meijer",
       "brand": 1,
-      "expertises": [
-        4,
-        7,
-        10
-      ],
       "skills": [
         8
       ],
@@ -2517,11 +2108,6 @@
     "fields": {
       "name": "Fleur Jansen",
       "brand": 1,
-      "expertises": [
-        7,
-        10,
-        13
-      ],
       "skills": [
         19,
         27,
@@ -2538,9 +2124,6 @@
     "fields": {
       "name": "Hugo de Groot",
       "brand": 2,
-      "expertises": [
-        9
-      ],
       "skills": [
         6,
         5
@@ -2555,11 +2138,6 @@
     "fields": {
       "name": "Jesse van Eck",
       "brand": 4,
-      "expertises": [
-        1,
-        3,
-        4
-      ],
       "skills": [
         25
       ],
@@ -2573,11 +2151,6 @@
     "fields": {
       "name": "Stijn van Hulst",
       "brand": 4,
-      "expertises": [
-        1,
-        2,
-        5
-      ],
       "skills": [
         22
       ],
@@ -2591,9 +2164,6 @@
     "fields": {
       "name": "Daan de Wit",
       "brand": 1,
-      "expertises": [
-        4
-      ],
       "skills": [
         22,
         9,
@@ -2609,11 +2179,6 @@
     "fields": {
       "name": "Olivia Adriaansen",
       "brand": 1,
-      "expertises": [
-        11,
-        7,
-        3
-      ],
       "skills": [
         6,
         20
@@ -2628,11 +2193,6 @@
     "fields": {
       "name": "Mia van Eck",
       "brand": 3,
-      "expertises": [
-        5,
-        9,
-        10
-      ],
       "skills": [
         23
       ],
@@ -2646,10 +2206,6 @@
     "fields": {
       "name": "Tim Klein",
       "brand": 2,
-      "expertises": [
-        6,
-        3
-      ],
       "skills": [
         6,
         22,
@@ -2666,10 +2222,6 @@
     "fields": {
       "name": "Emma Dijkstra",
       "brand": 3,
-      "expertises": [
-        1,
-        3
-      ],
       "skills": [
         19,
         1,
@@ -2686,9 +2238,6 @@
     "fields": {
       "name": "Femke van Doorn",
       "brand": 2,
-      "expertises": [
-        4
-      ],
       "skills": [
         28,
         8
@@ -2703,11 +2252,6 @@
     "fields": {
       "name": "Amy Klein",
       "brand": 2,
-      "expertises": [
-        11,
-        2,
-        4
-      ],
       "skills": [
         2,
         1
@@ -2722,9 +2266,6 @@
     "fields": {
       "name": "Noor van Hulst",
       "brand": 3,
-      "expertises": [
-        3
-      ],
       "skills": [
         28,
         21,
@@ -2740,11 +2281,6 @@
     "fields": {
       "name": "Ryan Janssen",
       "brand": 2,
-      "expertises": [
-        13,
-        1,
-        11
-      ],
       "skills": [
         2
       ],
@@ -2758,11 +2294,6 @@
     "fields": {
       "name": "Sophie Meijer",
       "brand": 2,
-      "expertises": [
-        1,
-        9,
-        4
-      ],
       "skills": [
         29
       ],
@@ -2776,11 +2307,6 @@
     "fields": {
       "name": "Jaap van Hulst",
       "brand": 4,
-      "expertises": [
-        2,
-        8,
-        1
-      ],
       "skills": [
         15,
         5,
@@ -2797,9 +2323,6 @@
     "fields": {
       "name": "Tom van Beek",
       "brand": 1,
-      "expertises": [
-        6
-      ],
       "skills": [
         8,
         12,
@@ -2816,9 +2339,6 @@
     "fields": {
       "name": "Sem van den Berg",
       "brand": 3,
-      "expertises": [
-        7
-      ],
       "skills": [
         28,
         17,
@@ -2834,10 +2354,6 @@
     "fields": {
       "name": "Lynn Huisman",
       "brand": 3,
-      "expertises": [
-        7,
-        6
-      ],
       "skills": [
         9,
         4,
@@ -2853,10 +2369,6 @@
     "fields": {
       "name": "Julie van Leeuwen",
       "brand": 3,
-      "expertises": [
-        2,
-        9
-      ],
       "skills": [
         29,
         1
@@ -2871,9 +2383,6 @@
     "fields": {
       "name": "Femke Bakker",
       "brand": 1,
-      "expertises": [
-        7
-      ],
       "skills": [
         1,
         4,
@@ -2889,10 +2398,6 @@
     "fields": {
       "name": "Julia van der Veen",
       "brand": 2,
-      "expertises": [
-        3,
-        11
-      ],
       "skills": [
         29,
         6,
@@ -2909,9 +2414,6 @@
     "fields": {
       "name": "Simon Martens",
       "brand": 2,
-      "expertises": [
-        9
-      ],
       "skills": [
         14,
         25,
@@ -2928,9 +2430,6 @@
     "fields": {
       "name": "Amber Maas",
       "brand": 3,
-      "expertises": [
-        6
-      ],
       "skills": [
         5,
         21,
@@ -2947,11 +2446,6 @@
     "fields": {
       "name": "Finn Peters",
       "brand": 4,
-      "expertises": [
-        11,
-        9,
-        2
-      ],
       "skills": [
         23
       ],
@@ -2965,11 +2459,6 @@
     "fields": {
       "name": "Ryan van der Veen",
       "brand": 4,
-      "expertises": [
-        13,
-        4,
-        10
-      ],
       "skills": [
         25,
         8
@@ -2984,9 +2473,6 @@
     "fields": {
       "name": "Tom Claassen",
       "brand": 2,
-      "expertises": [
-        3
-      ],
       "skills": [
         4
       ],
@@ -3000,10 +2486,6 @@
     "fields": {
       "name": "Nina Visser",
       "brand": 1,
-      "expertises": [
-        2,
-        3
-      ],
       "skills": [
         12,
         20
@@ -3018,11 +2500,6 @@
     "fields": {
       "name": "Isa de Jong",
       "brand": 3,
-      "expertises": [
-        9,
-        10,
-        12
-      ],
       "skills": [
         2,
         9,
@@ -3038,11 +2515,6 @@
     "fields": {
       "name": "Femke de Vries",
       "brand": 1,
-      "expertises": [
-        7,
-        5,
-        1
-      ],
       "skills": [
         3,
         25,
@@ -3059,9 +2531,6 @@
     "fields": {
       "name": "Noah van Leeuwen",
       "brand": 3,
-      "expertises": [
-        9
-      ],
       "skills": [
         15,
         12,
@@ -3078,10 +2547,6 @@
     "fields": {
       "name": "Siem Janssen",
       "brand": 4,
-      "expertises": [
-        9,
-        2
-      ],
       "skills": [
         11
       ],
@@ -3095,9 +2560,6 @@
     "fields": {
       "name": "Thijn Klein",
       "brand": 2,
-      "expertises": [
-        9
-      ],
       "skills": [
         10
       ],
@@ -3111,11 +2573,6 @@
     "fields": {
       "name": "Daan Claassen",
       "brand": 1,
-      "expertises": [
-        9,
-        5,
-        7
-      ],
       "skills": [
         25,
         12,
@@ -3131,11 +2588,6 @@
     "fields": {
       "name": "Hugo van der Laan",
       "brand": 4,
-      "expertises": [
-        9,
-        7,
-        3
-      ],
       "skills": [
         14,
         1
@@ -3150,9 +2602,6 @@
     "fields": {
       "name": "Jayden Huisman",
       "brand": 2,
-      "expertises": [
-        1
-      ],
       "skills": [
         5
       ],
@@ -3166,10 +2615,6 @@
     "fields": {
       "name": "Bram Smits",
       "brand": 3,
-      "expertises": [
-        8,
-        3
-      ],
       "skills": [
         29,
         10,
@@ -3186,11 +2631,6 @@
     "fields": {
       "name": "Zoe Kramer",
       "brand": 4,
-      "expertises": [
-        13,
-        7,
-        6
-      ],
       "skills": [
         27,
         24
@@ -3205,10 +2645,6 @@
     "fields": {
       "name": "Sem Martens",
       "brand": 4,
-      "expertises": [
-        1,
-        7
-      ],
       "skills": [
         23,
         16,
@@ -3224,10 +2660,6 @@
     "fields": {
       "name": "Luca Hoekstra",
       "brand": 3,
-      "expertises": [
-        1,
-        9
-      ],
       "skills": [
         12,
         4,
@@ -3244,11 +2676,6 @@
     "fields": {
       "name": "Owen Gerritsen",
       "brand": 4,
-      "expertises": [
-        1,
-        9,
-        3
-      ],
       "skills": [
         6
       ],
@@ -3262,10 +2689,6 @@
     "fields": {
       "name": "Rosa van Doorn",
       "brand": 2,
-      "expertises": [
-        12,
-        10
-      ],
       "skills": [
         3,
         21,
@@ -3281,11 +2704,6 @@
     "fields": {
       "name": "Joep van der Wal",
       "brand": 2,
-      "expertises": [
-        3,
-        2,
-        10
-      ],
       "skills": [
         28,
         8,
@@ -3302,9 +2720,6 @@
     "fields": {
       "name": "Joep Meijer",
       "brand": 1,
-      "expertises": [
-        7
-      ],
       "skills": [
         9
       ],
@@ -3318,11 +2733,6 @@
     "fields": {
       "name": "Fleur Peters",
       "brand": 3,
-      "expertises": [
-        13,
-        5,
-        12
-      ],
       "skills": [
         14
       ],
@@ -3336,10 +2746,6 @@
     "fields": {
       "name": "Liv van den Heuvel",
       "brand": 2,
-      "expertises": [
-        13,
-        2
-      ],
       "skills": [
         18,
         19
@@ -3354,9 +2760,6 @@
     "fields": {
       "name": "Gijs Dijkstra",
       "brand": 1,
-      "expertises": [
-        4
-      ],
       "skills": [
         10,
         9,
@@ -3373,10 +2776,6 @@
     "fields": {
       "name": "Milan Smits",
       "brand": 3,
-      "expertises": [
-        8,
-        3
-      ],
       "skills": [
         8,
         25
@@ -3391,10 +2790,6 @@
     "fields": {
       "name": "Finn Kramer",
       "brand": 1,
-      "expertises": [
-        8,
-        1
-      ],
       "skills": [
         25,
         9,
@@ -3411,10 +2806,6 @@
     "fields": {
       "name": "Joep Klein",
       "brand": 4,
-      "expertises": [
-        12,
-        1
-      ],
       "skills": [
         29,
         9,
@@ -3431,10 +2822,6 @@
     "fields": {
       "name": "Yara Adriaansen",
       "brand": 3,
-      "expertises": [
-        2,
-        9
-      ],
       "skills": [
         16
       ],
@@ -3448,9 +2835,6 @@
     "fields": {
       "name": "Isa Dijkstra",
       "brand": 4,
-      "expertises": [
-        3
-      ],
       "skills": [
         24,
         3
@@ -3465,10 +2849,6 @@
     "fields": {
       "name": "Sophie Vos",
       "brand": 1,
-      "expertises": [
-        9,
-        12
-      ],
       "skills": [
         18,
         24,
@@ -3485,11 +2865,6 @@
     "fields": {
       "name": "Owen van Beek",
       "brand": 1,
-      "expertises": [
-        12,
-        3,
-        4
-      ],
       "skills": [
         17
       ],
@@ -3503,11 +2878,6 @@
     "fields": {
       "name": "Daan de Graaf",
       "brand": 1,
-      "expertises": [
-        6,
-        5,
-        2
-      ],
       "skills": [
         21
       ],
@@ -3521,9 +2891,6 @@
     "fields": {
       "name": "Tess Hofman",
       "brand": 4,
-      "expertises": [
-        3
-      ],
       "skills": [
         10
       ],
@@ -3537,10 +2904,6 @@
     "fields": {
       "name": "Fleur Adriaansen",
       "brand": 4,
-      "expertises": [
-        11,
-        1
-      ],
       "skills": [
         22,
         28,
@@ -3556,10 +2919,6 @@
     "fields": {
       "name": "Cas van Hulst",
       "brand": 2,
-      "expertises": [
-        8,
-        10
-      ],
       "skills": [
         14,
         28
@@ -3574,9 +2933,6 @@
     "fields": {
       "name": "Anna van der Wal",
       "brand": 2,
-      "expertises": [
-        11
-      ],
       "skills": [
         9,
         23,
@@ -3592,10 +2948,6 @@
     "fields": {
       "name": "Femke Scholten",
       "brand": 1,
-      "expertises": [
-        8,
-        5
-      ],
       "skills": [
         14
       ],
@@ -3609,9 +2961,6 @@
     "fields": {
       "name": "Siem Claassen",
       "brand": 4,
-      "expertises": [
-        10
-      ],
       "skills": [
         11,
         10,
@@ -3628,10 +2977,6 @@
     "fields": {
       "name": "Nina van Dijk",
       "brand": 4,
-      "expertises": [
-        11,
-        5
-      ],
       "skills": [
         20,
         16,
@@ -3648,10 +2993,6 @@
     "fields": {
       "name": "Teun van Hulst",
       "brand": 4,
-      "expertises": [
-        9,
-        2
-      ],
       "skills": [
         20,
         9
@@ -3666,9 +3007,6 @@
     "fields": {
       "name": "Mia Adriaansen",
       "brand": 1,
-      "expertises": [
-        4
-      ],
       "skills": [
         16,
         18
@@ -3683,10 +3021,6 @@
     "fields": {
       "name": "Nina Kuipers",
       "brand": 4,
-      "expertises": [
-        1,
-        10
-      ],
       "skills": [
         28,
         8
@@ -3701,10 +3035,6 @@
     "fields": {
       "name": "Eva Noordam",
       "brand": 4,
-      "expertises": [
-        2,
-        9
-      ],
       "skills": [
         19
       ],
@@ -3718,11 +3048,6 @@
     "fields": {
       "name": "Isa Schmidt",
       "brand": 2,
-      "expertises": [
-        8,
-        1,
-        10
-      ],
       "skills": [
         4,
         14,
@@ -3739,11 +3064,6 @@
     "fields": {
       "name": "Max Prins",
       "brand": 3,
-      "expertises": [
-        12,
-        10,
-        9
-      ],
       "skills": [
         27,
         23
@@ -3758,9 +3078,6 @@
     "fields": {
       "name": "Hugo van Doorn",
       "brand": 1,
-      "expertises": [
-        5
-      ],
       "skills": [
         19,
         21,
@@ -3776,9 +3093,6 @@
     "fields": {
       "name": "Hugo Roos",
       "brand": 3,
-      "expertises": [
-        4
-      ],
       "skills": [
         9
       ],
@@ -3792,10 +3106,6 @@
     "fields": {
       "name": "Rick Jansen",
       "brand": 1,
-      "expertises": [
-        8,
-        4
-      ],
       "skills": [
         6
       ],
@@ -3809,9 +3119,6 @@
     "fields": {
       "name": "Mia Hofman",
       "brand": 3,
-      "expertises": [
-        2
-      ],
       "skills": [
         6,
         13
@@ -3826,9 +3133,6 @@
     "fields": {
       "name": "Tim Adriaansen",
       "brand": 4,
-      "expertises": [
-        11
-      ],
       "skills": [
         1,
         18
@@ -3843,9 +3147,6 @@
     "fields": {
       "name": "Lara Vermeulen",
       "brand": 1,
-      "expertises": [
-        12
-      ],
       "skills": [
         11,
         25
@@ -3860,9 +3161,6 @@
     "fields": {
       "name": "Amy Janssen",
       "brand": 1,
-      "expertises": [
-        11
-      ],
       "skills": [
         12,
         2,
@@ -3879,10 +3177,6 @@
     "fields": {
       "name": "Fleur Prins",
       "brand": 3,
-      "expertises": [
-        5,
-        11
-      ],
       "skills": [
         24,
         23
@@ -3897,11 +3191,6 @@
     "fields": {
       "name": "Jayden van der Wal",
       "brand": 1,
-      "expertises": [
-        7,
-        3,
-        9
-      ],
       "skills": [
         2,
         7,
@@ -3917,11 +3206,6 @@
     "fields": {
       "name": "Levi Post",
       "brand": 4,
-      "expertises": [
-        10,
-        13,
-        4
-      ],
       "skills": [
         21,
         24,
@@ -3938,10 +3222,6 @@
     "fields": {
       "name": "Sara Smit",
       "brand": 2,
-      "expertises": [
-        2,
-        5
-      ],
       "skills": [
         10,
         20,
@@ -3957,9 +3237,6 @@
     "fields": {
       "name": "Siem van Beek",
       "brand": 1,
-      "expertises": [
-        10
-      ],
       "skills": [
         28,
         9,
@@ -3975,11 +3252,6 @@
     "fields": {
       "name": "Luca Jansen",
       "brand": 4,
-      "expertises": [
-        1,
-        11,
-        4
-      ],
       "skills": [
         17,
         24
@@ -3994,10 +3266,6 @@
     "fields": {
       "name": "Lisa Adriaansen",
       "brand": 3,
-      "expertises": [
-        10,
-        8
-      ],
       "skills": [
         27
       ],
@@ -4011,9 +3279,6 @@
     "fields": {
       "name": "Julia Smit",
       "brand": 2,
-      "expertises": [
-        1
-      ],
       "skills": [
         8,
         19
@@ -4028,11 +3293,6 @@
     "fields": {
       "name": "Joep van der Veen",
       "brand": 2,
-      "expertises": [
-        2,
-        11,
-        5
-      ],
       "skills": [
         21,
         17,
@@ -4048,9 +3308,6 @@
     "fields": {
       "name": "Lisa van Dijk",
       "brand": 2,
-      "expertises": [
-        4
-      ],
       "skills": [
         5,
         29,
@@ -4067,11 +3324,6 @@
     "fields": {
       "name": "Julia Groen",
       "brand": 1,
-      "expertises": [
-        11,
-        2,
-        9
-      ],
       "skills": [
         14,
         16
@@ -4086,9 +3338,6 @@
     "fields": {
       "name": "Lotte van Leeuwen",
       "brand": 3,
-      "expertises": [
-        8
-      ],
       "skills": [
         19,
         27
@@ -4103,11 +3352,6 @@
     "fields": {
       "name": "Olivia van Beek",
       "brand": 2,
-      "expertises": [
-        3,
-        4,
-        1
-      ],
       "skills": [
         18,
         24
@@ -4122,10 +3366,6 @@
     "fields": {
       "name": "Lisa van Eck",
       "brand": 1,
-      "expertises": [
-        13,
-        10
-      ],
       "skills": [
         5
       ],
@@ -4139,9 +3379,6 @@
     "fields": {
       "name": "Anna Kok",
       "brand": 2,
-      "expertises": [
-        7
-      ],
       "skills": [
         21,
         9,
@@ -4158,11 +3395,6 @@
     "fields": {
       "name": "Lucas de Groot",
       "brand": 2,
-      "expertises": [
-        12,
-        1,
-        9
-      ],
       "skills": [
         27,
         5,
@@ -4179,11 +3411,6 @@
     "fields": {
       "name": "Eva Jansen",
       "brand": 4,
-      "expertises": [
-        12,
-        3,
-        13
-      ],
       "skills": [
         19,
         28,
@@ -4200,10 +3427,6 @@
     "fields": {
       "name": "Bram van Leeuwen",
       "brand": 1,
-      "expertises": [
-        9,
-        8
-      ],
       "skills": [
         2,
         11,
@@ -4219,9 +3442,6 @@
     "fields": {
       "name": "Noor van Doorn",
       "brand": 3,
-      "expertises": [
-        10
-      ],
       "skills": [
         24,
         19,
@@ -4237,11 +3457,6 @@
     "fields": {
       "name": "Olivia Smit",
       "brand": 3,
-      "expertises": [
-        4,
-        9,
-        12
-      ],
       "skills": [
         16,
         19,
@@ -4258,11 +3473,6 @@
     "fields": {
       "name": "Jari Peters",
       "brand": 4,
-      "expertises": [
-        3,
-        11,
-        2
-      ],
       "skills": [
         27
       ],
@@ -4276,10 +3486,6 @@
     "fields": {
       "name": "Thijn Pieters",
       "brand": 4,
-      "expertises": [
-        12,
-        13
-      ],
       "skills": [
         8
       ],
@@ -4293,11 +3499,6 @@
     "fields": {
       "name": "Noah Hoekstra",
       "brand": 2,
-      "expertises": [
-        2,
-        10,
-        8
-      ],
       "skills": [
         29,
         1,
@@ -4314,11 +3515,6 @@
     "fields": {
       "name": "Evi Dijkstra",
       "brand": 1,
-      "expertises": [
-        5,
-        12,
-        4
-      ],
       "skills": [
         15,
         1
@@ -4333,10 +3529,6 @@
     "fields": {
       "name": "Fenne Maas",
       "brand": 2,
-      "expertises": [
-        2,
-        3
-      ],
       "skills": [
         8,
         9,
@@ -4352,9 +3544,6 @@
     "fields": {
       "name": "Olivia Vos",
       "brand": 4,
-      "expertises": [
-        9
-      ],
       "skills": [
         18,
         13,
@@ -4371,9 +3560,6 @@
     "fields": {
       "name": "Adam Klein",
       "brand": 1,
-      "expertises": [
-        1
-      ],
       "skills": [
         11,
         7
@@ -4388,9 +3574,6 @@
     "fields": {
       "name": "Max Claassen",
       "brand": 3,
-      "expertises": [
-        8
-      ],
       "skills": [
         4,
         5
@@ -4405,9 +3588,6 @@
     "fields": {
       "name": "Zoe Jansen",
       "brand": 1,
-      "expertises": [
-        11
-      ],
       "skills": [
         22,
         29,
@@ -4424,10 +3604,6 @@
     "fields": {
       "name": "Yara Bos",
       "brand": 3,
-      "expertises": [
-        13,
-        8
-      ],
       "skills": [
         18
       ],
@@ -4441,9 +3617,6 @@
     "fields": {
       "name": "Sophie van Leeuwen",
       "brand": 3,
-      "expertises": [
-        13
-      ],
       "skills": [
         10,
         19,
@@ -4459,10 +3632,6 @@
     "fields": {
       "name": "Isa Blom",
       "brand": 2,
-      "expertises": [
-        1,
-        8
-      ],
       "skills": [
         29,
         16
@@ -4477,11 +3646,6 @@
     "fields": {
       "name": "Vera Noordam",
       "brand": 3,
-      "expertises": [
-        9,
-        12,
-        7
-      ],
       "skills": [
         24,
         19,
@@ -4497,10 +3661,6 @@
     "fields": {
       "name": "Hugo Jansen",
       "brand": 4,
-      "expertises": [
-        8,
-        5
-      ],
       "skills": [
         3,
         19
@@ -4515,9 +3675,6 @@
     "fields": {
       "name": "Lars van Leeuwen",
       "brand": 2,
-      "expertises": [
-        5
-      ],
       "skills": [
         4
       ],
@@ -4531,10 +3688,6 @@
     "fields": {
       "name": "Cas van den Berg",
       "brand": 1,
-      "expertises": [
-        6,
-        8
-      ],
       "skills": [
         13,
         9,
@@ -4551,11 +3704,6 @@
     "fields": {
       "name": "Jari van Eck",
       "brand": 2,
-      "expertises": [
-        1,
-        2,
-        11
-      ],
       "skills": [
         28,
         4,
@@ -4572,9 +3720,6 @@
     "fields": {
       "name": "Isa van Dijk",
       "brand": 3,
-      "expertises": [
-        13
-      ],
       "skills": [
         19,
         4,
@@ -4591,11 +3736,6 @@
     "fields": {
       "name": "Jayden Peters",
       "brand": 4,
-      "expertises": [
-        4,
-        5,
-        8
-      ],
       "skills": [
         10,
         18
@@ -4610,10 +3750,6 @@
     "fields": {
       "name": "Lisa Donders",
       "brand": 2,
-      "expertises": [
-        12,
-        1
-      ],
       "skills": [
         1,
         22
@@ -4628,10 +3764,6 @@
     "fields": {
       "name": "Fenne Brouwer",
       "brand": 2,
-      "expertises": [
-        12,
-        6
-      ],
       "skills": [
         25,
         19,
@@ -4648,11 +3780,6 @@
     "fields": {
       "name": "David de Leeuw",
       "brand": 1,
-      "expertises": [
-        6,
-        7,
-        5
-      ],
       "skills": [
         28,
         20
@@ -4667,10 +3794,6 @@
     "fields": {
       "name": "Noah Claassen",
       "brand": 4,
-      "expertises": [
-        12,
-        2
-      ],
       "skills": [
         5,
         14
@@ -4685,9 +3808,6 @@
     "fields": {
       "name": "Bram Visser",
       "brand": 1,
-      "expertises": [
-        5
-      ],
       "skills": [
         4,
         14,
@@ -4703,9 +3823,6 @@
     "fields": {
       "name": "Maud Dekker",
       "brand": 3,
-      "expertises": [
-        8
-      ],
       "skills": [
         20,
         21,
@@ -4722,10 +3839,6 @@
     "fields": {
       "name": "Simon Mulder",
       "brand": 4,
-      "expertises": [
-        2,
-        6
-      ],
       "skills": [
         19,
         27
@@ -4740,11 +3853,6 @@
     "fields": {
       "name": "Mia Vos",
       "brand": 4,
-      "expertises": [
-        8,
-        2,
-        10
-      ],
       "skills": [
         25,
         19,
@@ -4761,10 +3869,6 @@
     "fields": {
       "name": "Simon van Leeuwen",
       "brand": 4,
-      "expertises": [
-        10,
-        4
-      ],
       "skills": [
         29,
         4,
@@ -4781,11 +3885,6 @@
     "fields": {
       "name": "Noah Kok",
       "brand": 3,
-      "expertises": [
-        1,
-        11,
-        5
-      ],
       "skills": [
         20,
         8,
@@ -4802,10 +3901,6 @@
     "fields": {
       "name": "Evi de Groot",
       "brand": 4,
-      "expertises": [
-        6,
-        7
-      ],
       "skills": [
         10,
         25,
@@ -4821,10 +3916,6 @@
     "fields": {
       "name": "Ruben de Koning",
       "brand": 4,
-      "expertises": [
-        13,
-        10
-      ],
       "skills": [
         19,
         18
@@ -4839,9 +3930,6 @@
     "fields": {
       "name": "Julia Roos",
       "brand": 1,
-      "expertises": [
-        9
-      ],
       "skills": [
         3,
         25
@@ -4856,10 +3944,6 @@
     "fields": {
       "name": "Mia Roos",
       "brand": 4,
-      "expertises": [
-        10,
-        13
-      ],
       "skills": [
         12,
         6,
@@ -4876,10 +3960,6 @@
     "fields": {
       "name": "Thijn Kok",
       "brand": 4,
-      "expertises": [
-        12,
-        2
-      ],
       "skills": [
         25
       ],
@@ -4893,9 +3973,6 @@
     "fields": {
       "name": "Gijs Kramer",
       "brand": 2,
-      "expertises": [
-        10
-      ],
       "skills": [
         21,
         1,
@@ -4911,10 +3988,6 @@
     "fields": {
       "name": "Finn Scholten",
       "brand": 3,
-      "expertises": [
-        9,
-        10
-      ],
       "skills": [
         23,
         16,
@@ -4930,9 +4003,6 @@
     "fields": {
       "name": "David Martens",
       "brand": 4,
-      "expertises": [
-        9
-      ],
       "skills": [
         6,
         8,
@@ -4949,11 +4019,6 @@
     "fields": {
       "name": "Ryan Pieters",
       "brand": 4,
-      "expertises": [
-        4,
-        5,
-        11
-      ],
       "skills": [
         12,
         24,
@@ -4969,11 +4034,6 @@
     "fields": {
       "name": "Vera Groen",
       "brand": 1,
-      "expertises": [
-        11,
-        4,
-        13
-      ],
       "skills": [
         21,
         3
@@ -4988,9 +4048,6 @@
     "fields": {
       "name": "Siem Wolters",
       "brand": 2,
-      "expertises": [
-        1
-      ],
       "skills": [
         6,
         19,
@@ -5007,9 +4064,6 @@
     "fields": {
       "name": "Iris de Koning",
       "brand": 1,
-      "expertises": [
-        12
-      ],
       "skills": [
         6,
         8,
@@ -5025,11 +4079,6 @@
     "fields": {
       "name": "Tim Bakker",
       "brand": 2,
-      "expertises": [
-        12,
-        2,
-        7
-      ],
       "skills": [
         13,
         24
@@ -5044,9 +4093,6 @@
     "fields": {
       "name": "Roos Gerritsen",
       "brand": 1,
-      "expertises": [
-        10
-      ],
       "skills": [
         15,
         11,
@@ -5062,10 +4108,6 @@
     "fields": {
       "name": "Nina Janssen",
       "brand": 4,
-      "expertises": [
-        7,
-        2
-      ],
       "skills": [
         10,
         8,
@@ -5082,9 +4124,6 @@
     "fields": {
       "name": "Milan Dijkstra",
       "brand": 2,
-      "expertises": [
-        7
-      ],
       "skills": [
         8,
         23,
@@ -5101,9 +4140,6 @@
     "fields": {
       "name": "Daan de Vries",
       "brand": 2,
-      "expertises": [
-        4
-      ],
       "skills": [
         23,
         29,
@@ -5120,9 +4156,6 @@
     "fields": {
       "name": "Cas Wolters",
       "brand": 4,
-      "expertises": [
-        12
-      ],
       "skills": [
         8,
         4,
@@ -5139,10 +4172,6 @@
     "fields": {
       "name": "Lisa de Vries",
       "brand": 3,
-      "expertises": [
-        4,
-        5
-      ],
       "skills": [
         14
       ],
@@ -5156,10 +4185,6 @@
     "fields": {
       "name": "Anna Willems",
       "brand": 2,
-      "expertises": [
-        6,
-        9
-      ],
       "skills": [
         7
       ],
@@ -5173,10 +4198,6 @@
     "fields": {
       "name": "Joep Hendriks",
       "brand": 1,
-      "expertises": [
-        11,
-        4
-      ],
       "skills": [
         8
       ],
@@ -5190,9 +4211,6 @@
     "fields": {
       "name": "Saar Hofman",
       "brand": 2,
-      "expertises": [
-        1
-      ],
       "skills": [
         10
       ],
@@ -5206,10 +4224,6 @@
     "fields": {
       "name": "Sem van der Laan",
       "brand": 3,
-      "expertises": [
-        4,
-        1
-      ],
       "skills": [
         7,
         18,
@@ -5226,11 +4240,6 @@
     "fields": {
       "name": "Teun Claassen",
       "brand": 4,
-      "expertises": [
-        8,
-        3,
-        4
-      ],
       "skills": [
         22,
         15
@@ -5245,9 +4254,6 @@
     "fields": {
       "name": "Julia Blom",
       "brand": 4,
-      "expertises": [
-        12
-      ],
       "skills": [
         11,
         6
@@ -5262,10 +4268,6 @@
     "fields": {
       "name": "Teun Smits",
       "brand": 2,
-      "expertises": [
-        2,
-        8
-      ],
       "skills": [
         18,
         15,
@@ -5281,10 +4283,6 @@
     "fields": {
       "name": "Emma van Dijk",
       "brand": 3,
-      "expertises": [
-        8,
-        10
-      ],
       "skills": [
         18,
         11
@@ -5299,11 +4297,6 @@
     "fields": {
       "name": "Levi Dijkstra",
       "brand": 1,
-      "expertises": [
-        4,
-        5,
-        6
-      ],
       "skills": [
         19,
         17,
@@ -5319,10 +4312,6 @@
     "fields": {
       "name": "Nina Groen",
       "brand": 1,
-      "expertises": [
-        10,
-        11
-      ],
       "skills": [
         17,
         3,
@@ -5338,9 +4327,6 @@
     "fields": {
       "name": "Willem Vermeulen",
       "brand": 1,
-      "expertises": [
-        10
-      ],
       "skills": [
         14,
         1,
@@ -5356,11 +4342,6 @@
     "fields": {
       "name": "Ryan Smits",
       "brand": 1,
-      "expertises": [
-        7,
-        13,
-        9
-      ],
       "skills": [
         12,
         13
@@ -5375,11 +4356,6 @@
     "fields": {
       "name": "Noor Kramer",
       "brand": 3,
-      "expertises": [
-        11,
-        2,
-        1
-      ],
       "skills": [
         5,
         4,
@@ -5396,11 +4372,6 @@
     "fields": {
       "name": "Mats Prins",
       "brand": 3,
-      "expertises": [
-        8,
-        6,
-        13
-      ],
       "skills": [
         22,
         20,
@@ -5417,11 +4388,6 @@
     "fields": {
       "name": "Sem van Beek",
       "brand": 3,
-      "expertises": [
-        10,
-        8,
-        1
-      ],
       "skills": [
         19,
         4
@@ -5436,11 +4402,6 @@
     "fields": {
       "name": "Milan Klein",
       "brand": 1,
-      "expertises": [
-        8,
-        5,
-        12
-      ],
       "skills": [
         22,
         1,
@@ -5457,9 +4418,6 @@
     "fields": {
       "name": "Noa Dijkstra",
       "brand": 4,
-      "expertises": [
-        10
-      ],
       "skills": [
         29,
         3,
@@ -5475,10 +4433,6 @@
     "fields": {
       "name": "Bram van der Wal",
       "brand": 2,
-      "expertises": [
-        11,
-        3
-      ],
       "skills": [
         15,
         9
@@ -5493,11 +4447,6 @@
     "fields": {
       "name": "Noor Prins",
       "brand": 2,
-      "expertises": [
-        9,
-        11,
-        7
-      ],
       "skills": [
         19
       ],
@@ -5511,10 +4460,6 @@
     "fields": {
       "name": "Amy van der Meer",
       "brand": 3,
-      "expertises": [
-        4,
-        1
-      ],
       "skills": [
         16,
         13,
@@ -5530,11 +4475,6 @@
     "fields": {
       "name": "Amy van den Heuvel",
       "brand": 1,
-      "expertises": [
-        13,
-        6,
-        4
-      ],
       "skills": [
         3,
         8,
@@ -5550,11 +4490,6 @@
     "fields": {
       "name": "Evi Meijer",
       "brand": 1,
-      "expertises": [
-        5,
-        1,
-        6
-      ],
       "skills": [
         20,
         9,
@@ -5570,9 +4505,6 @@
     "fields": {
       "name": "Liv van Beek",
       "brand": 4,
-      "expertises": [
-        5
-      ],
       "skills": [
         28
       ],
@@ -5586,10 +4518,6 @@
     "fields": {
       "name": "Luca Klein",
       "brand": 3,
-      "expertises": [
-        9,
-        1
-      ],
       "skills": [
         23,
         17,
@@ -5606,11 +4534,6 @@
     "fields": {
       "name": "Yara van der Meer",
       "brand": 2,
-      "expertises": [
-        7,
-        5,
-        12
-      ],
       "skills": [
         11,
         27,
@@ -5627,9 +4550,6 @@
     "fields": {
       "name": "Jesse Hendriks",
       "brand": 1,
-      "expertises": [
-        6
-      ],
       "skills": [
         10,
         20,
@@ -5646,9 +4566,6 @@
     "fields": {
       "name": "Willem Donders",
       "brand": 4,
-      "expertises": [
-        13
-      ],
       "skills": [
         28,
         8
@@ -5663,11 +4580,6 @@
     "fields": {
       "name": "Noah de Jong",
       "brand": 1,
-      "expertises": [
-        7,
-        3,
-        8
-      ],
       "skills": [
         3,
         19,
@@ -5683,11 +4595,6 @@
     "fields": {
       "name": "Luca van den Heuvel",
       "brand": 3,
-      "expertises": [
-        11,
-        5,
-        4
-      ],
       "skills": [
         17,
         24,
@@ -5704,11 +4611,6 @@
     "fields": {
       "name": "Femke Mulder",
       "brand": 3,
-      "expertises": [
-        13,
-        2,
-        8
-      ],
       "skills": [
         5,
         23
@@ -5723,10 +4625,6 @@
     "fields": {
       "name": "Rosa Mulder",
       "brand": 3,
-      "expertises": [
-        6,
-        9
-      ],
       "skills": [
         23,
         7
@@ -5741,11 +4639,6 @@
     "fields": {
       "name": "Thijn Roos",
       "brand": 2,
-      "expertises": [
-        8,
-        13,
-        7
-      ],
       "skills": [
         8
       ],
@@ -5759,10 +4652,6 @@
     "fields": {
       "name": "Emma Hendriks",
       "brand": 2,
-      "expertises": [
-        1,
-        3
-      ],
       "skills": [
         15,
         7,
@@ -5778,9 +4667,6 @@
     "fields": {
       "name": "Daan Noordam",
       "brand": 1,
-      "expertises": [
-        3
-      ],
       "skills": [
         7,
         4,
@@ -5796,11 +4682,6 @@
     "fields": {
       "name": "Levi Bakker",
       "brand": 1,
-      "expertises": [
-        5,
-        6,
-        9
-      ],
       "skills": [
         7,
         11,
@@ -5817,11 +4698,6 @@
     "fields": {
       "name": "Vera van Doorn",
       "brand": 2,
-      "expertises": [
-        12,
-        5,
-        8
-      ],
       "skills": [
         16,
         27,
@@ -5837,11 +4713,6 @@
     "fields": {
       "name": "Iris Noordam",
       "brand": 2,
-      "expertises": [
-        9,
-        5,
-        13
-      ],
       "skills": [
         17,
         4
@@ -5856,11 +4727,6 @@
     "fields": {
       "name": "Rosa Hoekstra",
       "brand": 2,
-      "expertises": [
-        13,
-        11,
-        12
-      ],
       "skills": [
         16
       ],
@@ -5874,11 +4740,6 @@
     "fields": {
       "name": "Eva Hendriks",
       "brand": 2,
-      "expertises": [
-        12,
-        8,
-        10
-      ],
       "skills": [
         2,
         29,
@@ -5895,9 +4756,6 @@
     "fields": {
       "name": "Noor Dijkstra",
       "brand": 1,
-      "expertises": [
-        8
-      ],
       "skills": [
         18
       ],
@@ -5911,9 +4769,6 @@
     "fields": {
       "name": "Julia van der Wal",
       "brand": 1,
-      "expertises": [
-        1
-      ],
       "skills": [
         27,
         4,
@@ -5929,10 +4784,6 @@
     "fields": {
       "name": "Amy Kuipers",
       "brand": 3,
-      "expertises": [
-        6,
-        1
-      ],
       "skills": [
         27
       ],
@@ -5946,11 +4797,6 @@
     "fields": {
       "name": "Iris Bos",
       "brand": 2,
-      "expertises": [
-        10,
-        8,
-        13
-      ],
       "skills": [
         21,
         22,
@@ -5967,10 +4813,6 @@
     "fields": {
       "name": "Roos Vermeulen",
       "brand": 2,
-      "expertises": [
-        4,
-        10
-      ],
       "skills": [
         2,
         1
@@ -5985,9 +4827,6 @@
     "fields": {
       "name": "Iris Donders",
       "brand": 4,
-      "expertises": [
-        8
-      ],
       "skills": [
         5,
         24,
@@ -6004,9 +4843,6 @@
     "fields": {
       "name": "Thomas Prins",
       "brand": 1,
-      "expertises": [
-        11
-      ],
       "skills": [
         24,
         1
@@ -6021,9 +4857,6 @@
     "fields": {
       "name": "Lars Pieters",
       "brand": 4,
-      "expertises": [
-        10
-      ],
       "skills": [
         8,
         13
@@ -6038,9 +4871,6 @@
     "fields": {
       "name": "Roos Donders",
       "brand": 4,
-      "expertises": [
-        5
-      ],
       "skills": [
         10
       ],
@@ -6054,11 +4884,6 @@
     "fields": {
       "name": "Ruben Vos",
       "brand": 3,
-      "expertises": [
-        2,
-        11,
-        5
-      ],
       "skills": [
         11,
         14
@@ -6073,9 +4898,6 @@
     "fields": {
       "name": "Isa Klein",
       "brand": 2,
-      "expertises": [
-        13
-      ],
       "skills": [
         6,
         23,
@@ -6091,10 +4913,6 @@
     "fields": {
       "name": "Noor Brouwer",
       "brand": 4,
-      "expertises": [
-        10,
-        13
-      ],
       "skills": [
         28,
         14
@@ -6109,11 +4927,6 @@
     "fields": {
       "name": "Cas Jansen",
       "brand": 1,
-      "expertises": [
-        10,
-        1,
-        4
-      ],
       "skills": [
         8,
         24
@@ -6128,9 +4941,6 @@
     "fields": {
       "name": "Siem Jansen",
       "brand": 3,
-      "expertises": [
-        3
-      ],
       "skills": [
         19
       ],
@@ -6144,11 +4954,6 @@
     "fields": {
       "name": "Mats Pieters",
       "brand": 3,
-      "expertises": [
-        12,
-        8,
-        4
-      ],
       "skills": [
         22,
         16,
@@ -6164,11 +4969,6 @@
     "fields": {
       "name": "Lisa de Koning",
       "brand": 1,
-      "expertises": [
-        13,
-        5,
-        8
-      ],
       "skills": [
         4,
         8,
@@ -6185,11 +4985,6 @@
     "fields": {
       "name": "Bram Meijer",
       "brand": 3,
-      "expertises": [
-        9,
-        3,
-        8
-      ],
       "skills": [
         11,
         21,
@@ -6206,10 +5001,6 @@
     "fields": {
       "name": "Evi Jansen",
       "brand": 2,
-      "expertises": [
-        12,
-        9
-      ],
       "skills": [
         12,
         17,
@@ -6225,11 +5016,6 @@
     "fields": {
       "name": "Willem Kramer",
       "brand": 2,
-      "expertises": [
-        2,
-        11,
-        8
-      ],
       "skills": [
         3,
         6,
@@ -6245,9 +5031,6 @@
     "fields": {
       "name": "Iris Kuipers",
       "brand": 4,
-      "expertises": [
-        9
-      ],
       "skills": [
         11,
         5
@@ -6262,10 +5045,6 @@
     "fields": {
       "name": "Teun Visser",
       "brand": 3,
-      "expertises": [
-        12,
-        7
-      ],
       "skills": [
         15
       ],
@@ -6279,9 +5058,6 @@
     "fields": {
       "name": "Liv van Hulst",
       "brand": 1,
-      "expertises": [
-        5
-      ],
       "skills": [
         4,
         6,
@@ -6297,11 +5073,6 @@
     "fields": {
       "name": "Roos de Graaf",
       "brand": 2,
-      "expertises": [
-        5,
-        10,
-        3
-      ],
       "skills": [
         28
       ],
@@ -6315,9 +5086,6 @@
     "fields": {
       "name": "Tim de Wit",
       "brand": 2,
-      "expertises": [
-        7
-      ],
       "skills": [
         20,
         22,
@@ -6333,9 +5101,6 @@
     "fields": {
       "name": "Noor de Groot",
       "brand": 3,
-      "expertises": [
-        7
-      ],
       "skills": [
         19,
         28,
@@ -6352,10 +5117,6 @@
     "fields": {
       "name": "Yara de Wit",
       "brand": 2,
-      "expertises": [
-        7,
-        13
-      ],
       "skills": [
         10,
         4
@@ -6370,11 +5131,6 @@
     "fields": {
       "name": "Sophie Hoekstra",
       "brand": 1,
-      "expertises": [
-        8,
-        9,
-        2
-      ],
       "skills": [
         3,
         13,
@@ -6390,9 +5146,6 @@
     "fields": {
       "name": "Amy Meijer",
       "brand": 2,
-      "expertises": [
-        6
-      ],
       "skills": [
         7,
         24,
@@ -6409,10 +5162,6 @@
     "fields": {
       "name": "Owen de Groot",
       "brand": 2,
-      "expertises": [
-        2,
-        11
-      ],
       "skills": [
         19,
         27
@@ -6427,9 +5176,6 @@
     "fields": {
       "name": "Evi Gerritsen",
       "brand": 3,
-      "expertises": [
-        13
-      ],
       "skills": [
         19,
         7,
@@ -6446,11 +5192,6 @@
     "fields": {
       "name": "Gijs Wolters",
       "brand": 2,
-      "expertises": [
-        8,
-        3,
-        5
-      ],
       "skills": [
         15
       ],
@@ -6464,10 +5205,6 @@
     "fields": {
       "name": "Noah Groen",
       "brand": 1,
-      "expertises": [
-        9,
-        12
-      ],
       "skills": [
         24,
         7,
@@ -6483,9 +5220,6 @@
     "fields": {
       "name": "Milan de Jong",
       "brand": 2,
-      "expertises": [
-        9
-      ],
       "skills": [
         17,
         15
@@ -6500,11 +5234,6 @@
     "fields": {
       "name": "Fenne Roos",
       "brand": 4,
-      "expertises": [
-        2,
-        8,
-        7
-      ],
       "skills": [
         9,
         25,
@@ -6521,10 +5250,6 @@
     "fields": {
       "name": "Julie van Dijk",
       "brand": 2,
-      "expertises": [
-        4,
-        13
-      ],
       "skills": [
         4,
         6
@@ -6539,10 +5264,6 @@
     "fields": {
       "name": "Jaap Donders",
       "brand": 1,
-      "expertises": [
-        11,
-        3
-      ],
       "skills": [
         7,
         15
@@ -6557,11 +5278,6 @@
     "fields": {
       "name": "Zoe Kuipers",
       "brand": 1,
-      "expertises": [
-        12,
-        3,
-        5
-      ],
       "skills": [
         20,
         18
@@ -6576,10 +5292,6 @@
     "fields": {
       "name": "Anna Schmidt",
       "brand": 2,
-      "expertises": [
-        8,
-        4
-      ],
       "skills": [
         25,
         8
@@ -6594,10 +5306,6 @@
     "fields": {
       "name": "Gijs Mulder",
       "brand": 4,
-      "expertises": [
-        1,
-        3
-      ],
       "skills": [
         18
       ],
@@ -6611,11 +5319,6 @@
     "fields": {
       "name": "Willem Smit",
       "brand": 4,
-      "expertises": [
-        5,
-        9,
-        11
-      ],
       "skills": [
         21,
         3,
@@ -6631,9 +5334,6 @@
     "fields": {
       "name": "Noor Peters",
       "brand": 2,
-      "expertises": [
-        13
-      ],
       "skills": [
         2
       ],
@@ -6647,10 +5347,6 @@
     "fields": {
       "name": "Max van der Veen",
       "brand": 3,
-      "expertises": [
-        13,
-        6
-      ],
       "skills": [
         1,
         25
@@ -6665,10 +5361,6 @@
     "fields": {
       "name": "Saar Huisman",
       "brand": 2,
-      "expertises": [
-        5,
-        9
-      ],
       "skills": [
         8,
         1,
@@ -6685,10 +5377,6 @@
     "fields": {
       "name": "Sem van den Heuvel",
       "brand": 1,
-      "expertises": [
-        7,
-        9
-      ],
       "skills": [
         2,
         3,
@@ -6705,9 +5393,6 @@
     "fields": {
       "name": "Maud Meijer",
       "brand": 1,
-      "expertises": [
-        13
-      ],
       "skills": [
         3,
         18,
@@ -6723,10 +5408,6 @@
     "fields": {
       "name": "Siem van Doorn",
       "brand": 4,
-      "expertises": [
-        9,
-        5
-      ],
       "skills": [
         15,
         2
@@ -6741,10 +5422,6 @@
     "fields": {
       "name": "Sem de Graaf",
       "brand": 3,
-      "expertises": [
-        7,
-        1
-      ],
       "skills": [
         28
       ],
@@ -6758,11 +5435,6 @@
     "fields": {
       "name": "Siem Pieters",
       "brand": 2,
-      "expertises": [
-        3,
-        10,
-        8
-      ],
       "skills": [
         12,
         17,
@@ -6778,10 +5450,6 @@
     "fields": {
       "name": "Roos van Leeuwen",
       "brand": 4,
-      "expertises": [
-        9,
-        8
-      ],
       "skills": [
         2
       ],
@@ -6795,10 +5463,6 @@
     "fields": {
       "name": "Mats Claassen",
       "brand": 3,
-      "expertises": [
-        3,
-        10
-      ],
       "skills": [
         16,
         5
@@ -6813,10 +5477,6 @@
     "fields": {
       "name": "Sara Kok",
       "brand": 4,
-      "expertises": [
-        2,
-        9
-      ],
       "skills": [
         23,
         16,
@@ -6833,11 +5493,6 @@
     "fields": {
       "name": "Lars Smit",
       "brand": 3,
-      "expertises": [
-        11,
-        6,
-        8
-      ],
       "skills": [
         19,
         19
@@ -6852,11 +5507,6 @@
     "fields": {
       "name": "Lara Prins",
       "brand": 3,
-      "expertises": [
-        2,
-        3,
-        11
-      ],
       "skills": [
         1,
         23
@@ -6871,9 +5521,6 @@
     "fields": {
       "name": "Lynn Hoekstra",
       "brand": 3,
-      "expertises": [
-        10
-      ],
       "skills": [
         21,
         27,
@@ -6890,9 +5537,6 @@
     "fields": {
       "name": "Finn Noordam",
       "brand": 1,
-      "expertises": [
-        13
-      ],
       "skills": [
         10,
         7,
@@ -6908,11 +5552,6 @@
     "fields": {
       "name": "Lucas Gerritsen",
       "brand": 2,
-      "expertises": [
-        6,
-        11,
-        2
-      ],
       "skills": [
         1,
         3,
@@ -6928,9 +5567,6 @@
     "fields": {
       "name": "Femke Jansen",
       "brand": 4,
-      "expertises": [
-        10
-      ],
       "skills": [
         19,
         16,
@@ -6946,9 +5582,6 @@
     "fields": {
       "name": "Fenne Hoekstra",
       "brand": 2,
-      "expertises": [
-        12
-      ],
       "skills": [
         5,
         16,
@@ -6965,10 +5598,6 @@
     "fields": {
       "name": "Joep Dekker",
       "brand": 3,
-      "expertises": [
-        6,
-        10
-      ],
       "skills": [
         21,
         11,
@@ -6984,10 +5613,6 @@
     "fields": {
       "name": "Rosa Roos",
       "brand": 2,
-      "expertises": [
-        11,
-        6
-      ],
       "skills": [
         10,
         28,
@@ -7003,11 +5628,6 @@
     "fields": {
       "name": "Levi Martens",
       "brand": 4,
-      "expertises": [
-        7,
-        2,
-        9
-      ],
       "skills": [
         25
       ],
@@ -7021,11 +5641,6 @@
     "fields": {
       "name": "Hugo van Dijk",
       "brand": 4,
-      "expertises": [
-        5,
-        12,
-        9
-      ],
       "skills": [
         5
       ],
@@ -7039,11 +5654,6 @@
     "fields": {
       "name": "Levi de Vries",
       "brand": 3,
-      "expertises": [
-        8,
-        2,
-        9
-      ],
       "skills": [
         8
       ],
@@ -7057,10 +5667,6 @@
     "fields": {
       "name": "Daan Huisman",
       "brand": 3,
-      "expertises": [
-        10,
-        6
-      ],
       "skills": [
         1,
         17
@@ -7075,9 +5681,6 @@
     "fields": {
       "name": "Emma Wolters",
       "brand": 2,
-      "expertises": [
-        13
-      ],
       "skills": [
         5,
         18,
@@ -7094,9 +5697,6 @@
     "fields": {
       "name": "Ruben van der Laan",
       "brand": 1,
-      "expertises": [
-        12
-      ],
       "skills": [
         14,
         20,
@@ -7113,11 +5713,6 @@
     "fields": {
       "name": "Maud de Graaf",
       "brand": 3,
-      "expertises": [
-        10,
-        7,
-        4
-      ],
       "skills": [
         5,
         9,
@@ -7133,10 +5728,6 @@
     "fields": {
       "name": "Simon Klein",
       "brand": 1,
-      "expertises": [
-        9,
-        8
-      ],
       "skills": [
         5,
         24
@@ -7151,10 +5742,6 @@
     "fields": {
       "name": "Adam Bos",
       "brand": 3,
-      "expertises": [
-        7,
-        11
-      ],
       "skills": [
         11,
         28
@@ -7169,10 +5756,6 @@
     "fields": {
       "name": "Jesse Bakker",
       "brand": 4,
-      "expertises": [
-        13,
-        7
-      ],
       "skills": [
         9,
         16,
@@ -7188,10 +5771,6 @@
     "fields": {
       "name": "Tom Post",
       "brand": 2,
-      "expertises": [
-        7,
-        6
-      ],
       "skills": [
         5,
         9
@@ -7206,9 +5785,6 @@
     "fields": {
       "name": "David de Koning",
       "brand": 1,
-      "expertises": [
-        7
-      ],
       "skills": [
         4,
         8
@@ -7223,10 +5799,6 @@
     "fields": {
       "name": "Vera Dekker",
       "brand": 1,
-      "expertises": [
-        10,
-        7
-      ],
       "skills": [
         1,
         19
@@ -7241,11 +5813,6 @@
     "fields": {
       "name": "Sara Adriaansen",
       "brand": 4,
-      "expertises": [
-        11,
-        6,
-        5
-      ],
       "skills": [
         23
       ],
@@ -7259,10 +5826,6 @@
     "fields": {
       "name": "Evi Brouwer",
       "brand": 1,
-      "expertises": [
-        10,
-        5
-      ],
       "skills": [
         11,
         18
@@ -7277,9 +5840,6 @@
     "fields": {
       "name": "Tess Brouwer",
       "brand": 4,
-      "expertises": [
-        4
-      ],
       "skills": [
         16,
         23
@@ -7294,10 +5854,6 @@
     "fields": {
       "name": "Ruben van Eck",
       "brand": 1,
-      "expertises": [
-        11,
-        3
-      ],
       "skills": [
         6,
         4
@@ -7312,9 +5868,6 @@
     "fields": {
       "name": "Vera van den Berg",
       "brand": 3,
-      "expertises": [
-        6
-      ],
       "skills": [
         11
       ],
@@ -7328,11 +5881,6 @@
     "fields": {
       "name": "Lisa van Doorn",
       "brand": 3,
-      "expertises": [
-        4,
-        2,
-        10
-      ],
       "skills": [
         17,
         13
@@ -7347,11 +5895,6 @@
     "fields": {
       "name": "Noa van Eck",
       "brand": 4,
-      "expertises": [
-        11,
-        13,
-        9
-      ],
       "skills": [
         2
       ],
@@ -7365,9 +5908,6 @@
     "fields": {
       "name": "Zoe van der Veen",
       "brand": 2,
-      "expertises": [
-        3
-      ],
       "skills": [
         18,
         1
@@ -7382,10 +5922,6 @@
     "fields": {
       "name": "Joep de Wit",
       "brand": 4,
-      "expertises": [
-        7,
-        5
-      ],
       "skills": [
         12
       ],
@@ -7399,10 +5935,6 @@
     "fields": {
       "name": "Lynn Peters",
       "brand": 2,
-      "expertises": [
-        4,
-        5
-      ],
       "skills": [
         10,
         23,
@@ -7419,11 +5951,6 @@
     "fields": {
       "name": "Luca Claassen",
       "brand": 1,
-      "expertises": [
-        13,
-        5,
-        10
-      ],
       "skills": [
         19,
         19,
@@ -7439,11 +5966,6 @@
     "fields": {
       "name": "Lara de Leeuw",
       "brand": 4,
-      "expertises": [
-        12,
-        11,
-        10
-      ],
       "skills": [
         18,
         15,
@@ -7459,9 +5981,6 @@
     "fields": {
       "name": "Thomas Bos",
       "brand": 1,
-      "expertises": [
-        8
-      ],
       "skills": [
         5,
         9
@@ -7476,10 +5995,6 @@
     "fields": {
       "name": "Simon de Jong",
       "brand": 2,
-      "expertises": [
-        1,
-        11
-      ],
       "skills": [
         20
       ],
@@ -7493,9 +6008,6 @@
     "fields": {
       "name": "Olivia Blom",
       "brand": 3,
-      "expertises": [
-        2
-      ],
       "skills": [
         14,
         12,
@@ -7511,11 +6023,6 @@
     "fields": {
       "name": "Maud de Groot",
       "brand": 4,
-      "expertises": [
-        8,
-        10,
-        13
-      ],
       "skills": [
         15,
         19,
@@ -7532,10 +6039,6 @@
     "fields": {
       "name": "Evi Klein",
       "brand": 1,
-      "expertises": [
-        10,
-        11
-      ],
       "skills": [
         8,
         13,
@@ -7551,9 +6054,6 @@
     "fields": {
       "name": "Owen van Leeuwen",
       "brand": 1,
-      "expertises": [
-        6
-      ],
       "skills": [
         6
       ],
@@ -7567,11 +6067,6 @@
     "fields": {
       "name": "Lotte Vermeulen",
       "brand": 4,
-      "expertises": [
-        11,
-        13,
-        1
-      ],
       "skills": [
         29,
         16,
@@ -7587,11 +6082,6 @@
     "fields": {
       "name": "Jaap de Boer",
       "brand": 3,
-      "expertises": [
-        5,
-        3,
-        9
-      ],
       "skills": [
         16,
         19,
@@ -7608,11 +6098,6 @@
     "fields": {
       "name": "Isa de Boer",
       "brand": 3,
-      "expertises": [
-        3,
-        9,
-        11
-      ],
       "skills": [
         7,
         1,
@@ -7629,9 +6114,6 @@
     "fields": {
       "name": "Iris van der Meer",
       "brand": 1,
-      "expertises": [
-        12
-      ],
       "skills": [
         13,
         29
@@ -7646,11 +6128,6 @@
     "fields": {
       "name": "Rick Dekker",
       "brand": 4,
-      "expertises": [
-        4,
-        10,
-        12
-      ],
       "skills": [
         3
       ],
@@ -7664,11 +6141,6 @@
     "fields": {
       "name": "Siem Groen",
       "brand": 4,
-      "expertises": [
-        7,
-        13,
-        12
-      ],
       "skills": [
         1,
         9,
@@ -7684,9 +6156,6 @@
     "fields": {
       "name": "Isa de Koning",
       "brand": 3,
-      "expertises": [
-        8
-      ],
       "skills": [
         6,
         14,
@@ -7703,11 +6172,6 @@
     "fields": {
       "name": "Noor van der Laan",
       "brand": 3,
-      "expertises": [
-        13,
-        7,
-        5
-      ],
       "skills": [
         9
       ],
@@ -7721,10 +6185,6 @@
     "fields": {
       "name": "Jari de Boer",
       "brand": 1,
-      "expertises": [
-        4,
-        1
-      ],
       "skills": [
         7,
         5,
@@ -7740,9 +6200,6 @@
     "fields": {
       "name": "Noa van Doorn",
       "brand": 4,
-      "expertises": [
-        7
-      ],
       "skills": [
         12,
         24
@@ -7757,9 +6214,6 @@
     "fields": {
       "name": "Tom Vermeulen",
       "brand": 4,
-      "expertises": [
-        13
-      ],
       "skills": [
         18,
         23,
@@ -7776,10 +6230,6 @@
     "fields": {
       "name": "Noor Bakker",
       "brand": 4,
-      "expertises": [
-        11,
-        1
-      ],
       "skills": [
         19,
         12,
@@ -7796,11 +6246,6 @@
     "fields": {
       "name": "Daan Bos",
       "brand": 4,
-      "expertises": [
-        4,
-        3,
-        8
-      ],
       "skills": [
         2
       ],
@@ -7814,11 +6259,6 @@
     "fields": {
       "name": "Nina Willems",
       "brand": 3,
-      "expertises": [
-        12,
-        2,
-        5
-      ],
       "skills": [
         25,
         27
@@ -7833,10 +6273,6 @@
     "fields": {
       "name": "Lotte Blom",
       "brand": 2,
-      "expertises": [
-        10,
-        8
-      ],
       "skills": [
         17,
         14,
@@ -7852,9 +6288,6 @@
     "fields": {
       "name": "Olivia Willems",
       "brand": 3,
-      "expertises": [
-        9
-      ],
       "skills": [
         12,
         11,
@@ -7870,11 +6303,6 @@
     "fields": {
       "name": "Jari Smits",
       "brand": 3,
-      "expertises": [
-        12,
-        5,
-        4
-      ],
       "skills": [
         17
       ],
@@ -7888,10 +6316,6 @@
     "fields": {
       "name": "Siem Scholten",
       "brand": 1,
-      "expertises": [
-        3,
-        5
-      ],
       "skills": [
         19,
         6,
@@ -7907,10 +6331,6 @@
     "fields": {
       "name": "Lotte Hofman",
       "brand": 2,
-      "expertises": [
-        5,
-        6
-      ],
       "skills": [
         13,
         25,
@@ -7927,11 +6347,6 @@
     "fields": {
       "name": "Rick de Koning",
       "brand": 3,
-      "expertises": [
-        5,
-        13,
-        1
-      ],
       "skills": [
         24,
         27
@@ -7946,10 +6361,6 @@
     "fields": {
       "name": "David van Wijk",
       "brand": 3,
-      "expertises": [
-        7,
-        4
-      ],
       "skills": [
         13,
         20,
@@ -7965,9 +6376,6 @@
     "fields": {
       "name": "Roos van Eck",
       "brand": 3,
-      "expertises": [
-        4
-      ],
       "skills": [
         17,
         25,
@@ -7984,10 +6392,6 @@
     "fields": {
       "name": "Lars de Groot",
       "brand": 3,
-      "expertises": [
-        8,
-        12
-      ],
       "skills": [
         29,
         3
@@ -8002,11 +6406,6 @@
     "fields": {
       "name": "Bram Janssen",
       "brand": 2,
-      "expertises": [
-        2,
-        11,
-        12
-      ],
       "skills": [
         28,
         4,
@@ -8023,10 +6422,6 @@
     "fields": {
       "name": "Lars van Beek",
       "brand": 4,
-      "expertises": [
-        11,
-        4
-      ],
       "skills": [
         1,
         25,
@@ -8042,11 +6437,6 @@
     "fields": {
       "name": "Rick Blom",
       "brand": 1,
-      "expertises": [
-        8,
-        10,
-        4
-      ],
       "skills": [
         14,
         19,
@@ -8062,11 +6452,6 @@
     "fields": {
       "name": "Simon Visser",
       "brand": 4,
-      "expertises": [
-        10,
-        8,
-        9
-      ],
       "skills": [
         13,
         12
@@ -8081,11 +6466,6 @@
     "fields": {
       "name": "Amy Mulder",
       "brand": 3,
-      "expertises": [
-        11,
-        2,
-        12
-      ],
       "skills": [
         24
       ],
@@ -8099,11 +6479,6 @@
     "fields": {
       "name": "Fenne Huisman",
       "brand": 1,
-      "expertises": [
-        7,
-        10,
-        6
-      ],
       "skills": [
         29,
         24
@@ -8118,10 +6493,6 @@
     "fields": {
       "name": "Zoe Smits",
       "brand": 2,
-      "expertises": [
-        11,
-        4
-      ],
       "skills": [
         18,
         17
@@ -8136,11 +6507,6 @@
     "fields": {
       "name": "Stijn van Leeuwen",
       "brand": 3,
-      "expertises": [
-        7,
-        2,
-        1
-      ],
       "skills": [
         8,
         3
@@ -8155,10 +6521,6 @@
     "fields": {
       "name": "Liv van der Laan",
       "brand": 3,
-      "expertises": [
-        3,
-        13
-      ],
       "skills": [
         11,
         4
@@ -8173,10 +6535,6 @@
     "fields": {
       "name": "Tim Martens",
       "brand": 1,
-      "expertises": [
-        13,
-        11
-      ],
       "skills": [
         27,
         19,
@@ -8193,9 +6551,6 @@
     "fields": {
       "name": "Stijn Janssen",
       "brand": 3,
-      "expertises": [
-        11
-      ],
       "skills": [
         12,
         16,
@@ -8211,9 +6566,6 @@
     "fields": {
       "name": "Lisa Huisman",
       "brand": 4,
-      "expertises": [
-        1
-      ],
       "skills": [
         8,
         6,
@@ -8230,11 +6582,6 @@
     "fields": {
       "name": "Rick Scholten",
       "brand": 2,
-      "expertises": [
-        7,
-        4,
-        8
-      ],
       "skills": [
         29,
         28
@@ -8249,9 +6596,6 @@
     "fields": {
       "name": "Lisa Wolters",
       "brand": 4,
-      "expertises": [
-        5
-      ],
       "skills": [
         15,
         28,
@@ -8267,9 +6611,6 @@
     "fields": {
       "name": "David Peters",
       "brand": 2,
-      "expertises": [
-        8
-      ],
       "skills": [
         21,
         20
@@ -8284,10 +6625,6 @@
     "fields": {
       "name": "Fenne van Eck",
       "brand": 4,
-      "expertises": [
-        13,
-        8
-      ],
       "skills": [
         3,
         14,
@@ -8303,11 +6640,6 @@
     "fields": {
       "name": "Lisa Peters",
       "brand": 2,
-      "expertises": [
-        11,
-        1,
-        8
-      ],
       "skills": [
         19,
         4,
@@ -8324,10 +6656,6 @@
     "fields": {
       "name": "Julie Martens",
       "brand": 1,
-      "expertises": [
-        9,
-        10
-      ],
       "skills": [
         10
       ],
@@ -8341,10 +6669,6 @@
     "fields": {
       "name": "Rosa de Vries",
       "brand": 1,
-      "expertises": [
-        4,
-        12
-      ],
       "skills": [
         21,
         7,
@@ -8360,11 +6684,6 @@
     "fields": {
       "name": "Thijn van der Veen",
       "brand": 2,
-      "expertises": [
-        13,
-        10,
-        12
-      ],
       "skills": [
         9,
         21,
@@ -8381,9 +6700,6 @@
     "fields": {
       "name": "Sophie Smits",
       "brand": 4,
-      "expertises": [
-        2
-      ],
       "skills": [
         19,
         11
@@ -8398,10 +6714,6 @@
     "fields": {
       "name": "Owen van Eck",
       "brand": 3,
-      "expertises": [
-        3,
-        11
-      ],
       "skills": [
         27
       ],
@@ -8415,10 +6727,6 @@
     "fields": {
       "name": "Saar Hoekstra",
       "brand": 1,
-      "expertises": [
-        8,
-        4
-      ],
       "skills": [
         19,
         10
@@ -8433,11 +6741,6 @@
     "fields": {
       "name": "Thomas van der Veen",
       "brand": 2,
-      "expertises": [
-        1,
-        13,
-        8
-      ],
       "skills": [
         2,
         5,
@@ -8453,9 +6756,6 @@
     "fields": {
       "name": "Noa Scholten",
       "brand": 3,
-      "expertises": [
-        3
-      ],
       "skills": [
         12
       ],
@@ -8469,10 +6769,6 @@
     "fields": {
       "name": "Evi van der Wal",
       "brand": 4,
-      "expertises": [
-        9,
-        7
-      ],
       "skills": [
         23,
         27,
@@ -8489,10 +6785,6 @@
     "fields": {
       "name": "Mia van der Wal",
       "brand": 2,
-      "expertises": [
-        5,
-        9
-      ],
       "skills": [
         4,
         27,
@@ -8509,10 +6801,6 @@
     "fields": {
       "name": "Bram Claassen",
       "brand": 2,
-      "expertises": [
-        6,
-        3
-      ],
       "skills": [
         22,
         17,
@@ -8528,11 +6816,6 @@
     "fields": {
       "name": "Daan van den Heuvel",
       "brand": 2,
-      "expertises": [
-        5,
-        11,
-        6
-      ],
       "skills": [
         19,
         18,
@@ -8548,11 +6831,6 @@
     "fields": {
       "name": "Lisa Bakker",
       "brand": 3,
-      "expertises": [
-        4,
-        13,
-        2
-      ],
       "skills": [
         11,
         12,
@@ -8568,9 +6846,6 @@
     "fields": {
       "name": "Noah Smit",
       "brand": 1,
-      "expertises": [
-        10
-      ],
       "skills": [
         22,
         19
@@ -8585,10 +6860,6 @@
     "fields": {
       "name": "Isa Maas",
       "brand": 4,
-      "expertises": [
-        10,
-        1
-      ],
       "skills": [
         27,
         7,
@@ -8604,10 +6875,6 @@
     "fields": {
       "name": "Lucas Blom",
       "brand": 3,
-      "expertises": [
-        13,
-        10
-      ],
       "skills": [
         8,
         28,
@@ -8624,10 +6891,6 @@
     "fields": {
       "name": "Olivia Roos",
       "brand": 3,
-      "expertises": [
-        7,
-        5
-      ],
       "skills": [
         27,
         18
@@ -8642,11 +6905,6 @@
     "fields": {
       "name": "Jesse Blom",
       "brand": 2,
-      "expertises": [
-        10,
-        8,
-        2
-      ],
       "skills": [
         14,
         9,
@@ -8662,10 +6920,6 @@
     "fields": {
       "name": "Jari Hofman",
       "brand": 3,
-      "expertises": [
-        6,
-        5
-      ],
       "skills": [
         17
       ],
@@ -8679,11 +6933,6 @@
     "fields": {
       "name": "Owen Roos",
       "brand": 3,
-      "expertises": [
-        9,
-        7,
-        8
-      ],
       "skills": [
         28,
         3,
@@ -8699,10 +6948,6 @@
     "fields": {
       "name": "Noor Huisman",
       "brand": 4,
-      "expertises": [
-        5,
-        2
-      ],
       "skills": [
         19,
         29,
@@ -8718,11 +6963,6 @@
     "fields": {
       "name": "Nina Hendriks",
       "brand": 2,
-      "expertises": [
-        8,
-        13,
-        10
-      ],
       "skills": [
         3,
         16,
@@ -8738,9 +6978,6 @@
     "fields": {
       "name": "Stijn Kuipers",
       "brand": 2,
-      "expertises": [
-        1
-      ],
       "skills": [
         5,
         24,
@@ -8756,10 +6993,6 @@
     "fields": {
       "name": "Simon Brouwer",
       "brand": 3,
-      "expertises": [
-        1,
-        12
-      ],
       "skills": [
         7
       ],
@@ -8773,10 +7006,6 @@
     "fields": {
       "name": "Jaap Hofman",
       "brand": 1,
-      "expertises": [
-        10,
-        2
-      ],
       "skills": [
         1,
         29,
@@ -8792,9 +7021,6 @@
     "fields": {
       "name": "Jari Brouwer",
       "brand": 3,
-      "expertises": [
-        10
-      ],
       "skills": [
         19,
         12
@@ -8809,11 +7035,6 @@
     "fields": {
       "name": "Noa Huisman",
       "brand": 4,
-      "expertises": [
-        13,
-        4,
-        2
-      ],
       "skills": [
         9,
         16
@@ -8828,9 +7049,6 @@
     "fields": {
       "name": "Stijn Scholten",
       "brand": 2,
-      "expertises": [
-        8
-      ],
       "skills": [
         19,
         15,
@@ -8846,9 +7064,6 @@
     "fields": {
       "name": "Lynn van Hulst",
       "brand": 1,
-      "expertises": [
-        10
-      ],
       "skills": [
         7
       ],
@@ -8862,9 +7077,6 @@
     "fields": {
       "name": "Simon Kok",
       "brand": 4,
-      "expertises": [
-        7
-      ],
       "skills": [
         7,
         27,
@@ -8881,11 +7093,6 @@
     "fields": {
       "name": "Fleur Noordam",
       "brand": 1,
-      "expertises": [
-        6,
-        5,
-        7
-      ],
       "skills": [
         5,
         13,
@@ -8902,11 +7109,6 @@
     "fields": {
       "name": "Liv Adriaansen",
       "brand": 2,
-      "expertises": [
-        6,
-        2,
-        4
-      ],
       "skills": [
         9
       ],
@@ -8920,10 +7122,6 @@
     "fields": {
       "name": "Sara van Hulst",
       "brand": 1,
-      "expertises": [
-        9,
-        13
-      ],
       "skills": [
         17,
         11
@@ -8938,10 +7136,6 @@
     "fields": {
       "name": "Nina Dijkstra",
       "brand": 3,
-      "expertises": [
-        8,
-        7
-      ],
       "skills": [
         22
       ],
@@ -8955,9 +7149,6 @@
     "fields": {
       "name": "Simon Hoekstra",
       "brand": 4,
-      "expertises": [
-        7
-      ],
       "skills": [
         17,
         9,
@@ -8974,9 +7165,6 @@
     "fields": {
       "name": "Lars Claassen",
       "brand": 4,
-      "expertises": [
-        1
-      ],
       "skills": [
         6,
         12,
@@ -8992,10 +7180,6 @@
     "fields": {
       "name": "Tess Schmidt",
       "brand": 3,
-      "expertises": [
-        3,
-        9
-      ],
       "skills": [
         10,
         25,
@@ -9011,9 +7195,6 @@
     "fields": {
       "name": "Vera van Hulst",
       "brand": 2,
-      "expertises": [
-        11
-      ],
       "skills": [
         4
       ],
@@ -9027,11 +7208,6 @@
     "fields": {
       "name": "Milan Smit",
       "brand": 2,
-      "expertises": [
-        9,
-        2,
-        1
-      ],
       "skills": [
         25
       ],
@@ -9045,11 +7221,6 @@
     "fields": {
       "name": "Femke Noordam",
       "brand": 4,
-      "expertises": [
-        9,
-        4,
-        1
-      ],
       "skills": [
         20,
         14,
@@ -9065,9 +7236,6 @@
     "fields": {
       "name": "Yara Maas",
       "brand": 3,
-      "expertises": [
-        6
-      ],
       "skills": [
         23,
         18,
@@ -9083,9 +7251,6 @@
     "fields": {
       "name": "Fleur van Beek",
       "brand": 1,
-      "expertises": [
-        7
-      ],
       "skills": [
         27,
         3,
@@ -9101,9 +7266,6 @@
     "fields": {
       "name": "Noah van Hulst",
       "brand": 4,
-      "expertises": [
-        4
-      ],
       "skills": [
         4
       ],
@@ -9117,9 +7279,6 @@
     "fields": {
       "name": "Siem Brouwer",
       "brand": 4,
-      "expertises": [
-        11
-      ],
       "skills": [
         4,
         28
@@ -9134,10 +7293,6 @@
     "fields": {
       "name": "Gijs Hendriks",
       "brand": 4,
-      "expertises": [
-        11,
-        3
-      ],
       "skills": [
         17,
         21,
@@ -9153,10 +7308,6 @@
     "fields": {
       "name": "Ruben Jansen",
       "brand": 3,
-      "expertises": [
-        10,
-        11
-      ],
       "skills": [
         11
       ],
@@ -9170,11 +7321,6 @@
     "fields": {
       "name": "Willem Smits",
       "brand": 3,
-      "expertises": [
-        8,
-        6,
-        12
-      ],
       "skills": [
         2,
         3
@@ -9189,10 +7335,6 @@
     "fields": {
       "name": "Levi Claassen",
       "brand": 4,
-      "expertises": [
-        5,
-        6
-      ],
       "skills": [
         4,
         28
@@ -9207,10 +7349,6 @@
     "fields": {
       "name": "Jayden de Graaf",
       "brand": 2,
-      "expertises": [
-        9,
-        7
-      ],
       "skills": [
         4,
         21,
@@ -9227,11 +7365,6 @@
     "fields": {
       "name": "Amber Wolters",
       "brand": 2,
-      "expertises": [
-        1,
-        12,
-        11
-      ],
       "skills": [
         14,
         27,
@@ -9248,10 +7381,6 @@
     "fields": {
       "name": "Hugo de Koning",
       "brand": 4,
-      "expertises": [
-        1,
-        3
-      ],
       "skills": [
         10
       ],
@@ -9265,11 +7394,6 @@
     "fields": {
       "name": "Adam Brouwer",
       "brand": 3,
-      "expertises": [
-        2,
-        6,
-        4
-      ],
       "skills": [
         1,
         13
@@ -9284,10 +7408,6 @@
     "fields": {
       "name": "Milan Adriaansen",
       "brand": 3,
-      "expertises": [
-        9,
-        13
-      ],
       "skills": [
         1
       ],
@@ -9301,9 +7421,6 @@
     "fields": {
       "name": "Sara Peters",
       "brand": 3,
-      "expertises": [
-        9
-      ],
       "skills": [
         20,
         24,
@@ -9319,11 +7436,6 @@
     "fields": {
       "name": "Bram van der Laan",
       "brand": 1,
-      "expertises": [
-        6,
-        11,
-        10
-      ],
       "skills": [
         14,
         9,
@@ -9339,9 +7451,6 @@
     "fields": {
       "name": "Fleur van der Laan",
       "brand": 1,
-      "expertises": [
-        11
-      ],
       "skills": [
         14,
         20,
@@ -9358,10 +7467,6 @@
     "fields": {
       "name": "Ryan van Hulst",
       "brand": 4,
-      "expertises": [
-        6,
-        10
-      ],
       "skills": [
         16,
         19,
@@ -9377,11 +7482,6 @@
     "fields": {
       "name": "Cas Kramer",
       "brand": 4,
-      "expertises": [
-        3,
-        7,
-        5
-      ],
       "skills": [
         18
       ],
@@ -9395,11 +7495,6 @@
     "fields": {
       "name": "Jari Wolters",
       "brand": 1,
-      "expertises": [
-        2,
-        11,
-        7
-      ],
       "skills": [
         29,
         20,
@@ -9416,10 +7511,6 @@
     "fields": {
       "name": "Jesse Visser",
       "brand": 3,
-      "expertises": [
-        11,
-        12
-      ],
       "skills": [
         19,
         8
@@ -9434,11 +7525,6 @@
     "fields": {
       "name": "Noa Post",
       "brand": 2,
-      "expertises": [
-        11,
-        7,
-        6
-      ],
       "skills": [
         3,
         9,
@@ -9455,11 +7541,6 @@
     "fields": {
       "name": "Thijn Jansen",
       "brand": 2,
-      "expertises": [
-        13,
-        6,
-        4
-      ],
       "skills": [
         3,
         16,
@@ -9475,11 +7556,6 @@
     "fields": {
       "name": "Lucas Dijkstra",
       "brand": 2,
-      "expertises": [
-        7,
-        11,
-        6
-      ],
       "skills": [
         18,
         12,
@@ -9495,9 +7571,6 @@
     "fields": {
       "name": "Joep Vos",
       "brand": 1,
-      "expertises": [
-        13
-      ],
       "skills": [
         11,
         29,
@@ -9514,11 +7587,6 @@
     "fields": {
       "name": "Noah Prins",
       "brand": 3,
-      "expertises": [
-        9,
-        11,
-        5
-      ],
       "skills": [
         24,
         14,
@@ -9535,11 +7603,6 @@
     "fields": {
       "name": "Olivia de Leeuw",
       "brand": 2,
-      "expertises": [
-        6,
-        12,
-        1
-      ],
       "skills": [
         25,
         16
@@ -9554,9 +7617,6 @@
     "fields": {
       "name": "Ryan van Dijk",
       "brand": 1,
-      "expertises": [
-        9
-      ],
       "skills": [
         13
       ],
@@ -9570,9 +7630,6 @@
     "fields": {
       "name": "Emma van Wijk",
       "brand": 3,
-      "expertises": [
-        1
-      ],
       "skills": [
         3,
         11
@@ -9587,11 +7644,6 @@
     "fields": {
       "name": "Finn Meijer",
       "brand": 4,
-      "expertises": [
-        3,
-        6,
-        1
-      ],
       "skills": [
         4
       ],
@@ -9605,10 +7657,6 @@
     "fields": {
       "name": "Ruben de Boer",
       "brand": 2,
-      "expertises": [
-        7,
-        11
-      ],
       "skills": [
         7,
         13,
@@ -9624,11 +7672,6 @@
     "fields": {
       "name": "Stijn Huisman",
       "brand": 2,
-      "expertises": [
-        2,
-        3,
-        1
-      ],
       "skills": [
         14,
         7
@@ -9643,11 +7686,6 @@
     "fields": {
       "name": "Yara Donders",
       "brand": 2,
-      "expertises": [
-        2,
-        13,
-        10
-      ],
       "skills": [
         15,
         13,
@@ -9663,11 +7701,6 @@
     "fields": {
       "name": "Lynn Bakker",
       "brand": 3,
-      "expertises": [
-        1,
-        5,
-        12
-      ],
       "skills": [
         6,
         2
@@ -9682,11 +7715,6 @@
     "fields": {
       "name": "Stijn Hofman",
       "brand": 2,
-      "expertises": [
-        8,
-        3,
-        1
-      ],
       "skills": [
         27,
         19,
@@ -9703,9 +7731,6 @@
     "fields": {
       "name": "Luna Vos",
       "brand": 4,
-      "expertises": [
-        4
-      ],
       "skills": [
         6,
         27,
@@ -9722,11 +7747,6 @@
     "fields": {
       "name": "Lotte Mulder",
       "brand": 2,
-      "expertises": [
-        6,
-        7,
-        2
-      ],
       "skills": [
         14,
         22,
@@ -9742,10 +7762,6 @@
     "fields": {
       "name": "Lars Dijkstra",
       "brand": 4,
-      "expertises": [
-        8,
-        5
-      ],
       "skills": [
         12
       ],
@@ -9759,9 +7775,6 @@
     "fields": {
       "name": "Thomas Hofman",
       "brand": 2,
-      "expertises": [
-        4
-      ],
       "skills": [
         16,
         8,
@@ -9777,9 +7790,6 @@
     "fields": {
       "name": "Thijn Maas",
       "brand": 2,
-      "expertises": [
-        6
-      ],
       "skills": [
         5,
         21,
@@ -9795,10 +7805,6 @@
     "fields": {
       "name": "Lars Hendriks",
       "brand": 2,
-      "expertises": [
-        12,
-        4
-      ],
       "skills": [
         5,
         27,
@@ -9814,10 +7820,6 @@
     "fields": {
       "name": "Iris Smits",
       "brand": 2,
-      "expertises": [
-        4,
-        3
-      ],
       "skills": [
         3
       ],
@@ -9831,9 +7833,6 @@
     "fields": {
       "name": "Simon van Wijk",
       "brand": 4,
-      "expertises": [
-        9
-      ],
       "skills": [
         28,
         19,
@@ -9849,10 +7848,6 @@
     "fields": {
       "name": "Thomas van Beek",
       "brand": 1,
-      "expertises": [
-        6,
-        7
-      ],
       "skills": [
         5,
         7,
@@ -9869,11 +7864,6 @@
     "fields": {
       "name": "Willem Hendriks",
       "brand": 2,
-      "expertises": [
-        13,
-        10,
-        1
-      ],
       "skills": [
         25,
         24
@@ -9888,10 +7878,6 @@
     "fields": {
       "name": "Luna Jansen",
       "brand": 2,
-      "expertises": [
-        7,
-        4
-      ],
       "skills": [
         15,
         10
@@ -9906,11 +7892,6 @@
     "fields": {
       "name": "Sophie Jansen",
       "brand": 1,
-      "expertises": [
-        9,
-        1,
-        13
-      ],
       "skills": [
         4,
         27,
@@ -9926,10 +7907,6 @@
     "fields": {
       "name": "Isa Noordam",
       "brand": 1,
-      "expertises": [
-        4,
-        9
-      ],
       "skills": [
         3,
         20,
@@ -9946,11 +7923,6 @@
     "fields": {
       "name": "Lotte Kuipers",
       "brand": 2,
-      "expertises": [
-        5,
-        8,
-        13
-      ],
       "skills": [
         12,
         25,
@@ -9966,10 +7938,6 @@
     "fields": {
       "name": "Owen Jansen",
       "brand": 3,
-      "expertises": [
-        5,
-        4
-      ],
       "skills": [
         15
       ],
@@ -9983,11 +7951,6 @@
     "fields": {
       "name": "Roos Janssen",
       "brand": 2,
-      "expertises": [
-        11,
-        2,
-        6
-      ],
       "skills": [
         9,
         11
@@ -10002,10 +7965,6 @@
     "fields": {
       "name": "Anna de Vries",
       "brand": 1,
-      "expertises": [
-        2,
-        5
-      ],
       "skills": [
         19,
         5,
@@ -10022,11 +7981,6 @@
     "fields": {
       "name": "Rick Post",
       "brand": 1,
-      "expertises": [
-        10,
-        13,
-        11
-      ],
       "skills": [
         24,
         25
@@ -10041,9 +7995,6 @@
     "fields": {
       "name": "Sara Donders",
       "brand": 3,
-      "expertises": [
-        1
-      ],
       "skills": [
         28,
         9,
@@ -10059,10 +8010,6 @@
     "fields": {
       "name": "Teun Donders",
       "brand": 1,
-      "expertises": [
-        12,
-        5
-      ],
       "skills": [
         15,
         20,
@@ -10079,11 +8026,6 @@
     "fields": {
       "name": "Tess Visser",
       "brand": 1,
-      "expertises": [
-        10,
-        5,
-        1
-      ],
       "skills": [
         11,
         23,
@@ -10100,10 +8042,6 @@
     "fields": {
       "name": "Bram de Jong",
       "brand": 4,
-      "expertises": [
-        3,
-        12
-      ],
       "skills": [
         23
       ],
@@ -10117,9 +8055,6 @@
     "fields": {
       "name": "Femke Dijkstra",
       "brand": 3,
-      "expertises": [
-        2
-      ],
       "skills": [
         2,
         13,
@@ -10136,9 +8071,6 @@
     "fields": {
       "name": "Owen Smits",
       "brand": 2,
-      "expertises": [
-        12
-      ],
       "skills": [
         9,
         8
@@ -10153,11 +8085,6 @@
     "fields": {
       "name": "Rosa Hofman",
       "brand": 1,
-      "expertises": [
-        10,
-        2,
-        13
-      ],
       "skills": [
         19,
         11
@@ -10172,9 +8099,6 @@
     "fields": {
       "name": "Yara Hoekstra",
       "brand": 4,
-      "expertises": [
-        13
-      ],
       "skills": [
         19,
         9,
@@ -10191,10 +8115,6 @@
     "fields": {
       "name": "Mats Brouwer",
       "brand": 4,
-      "expertises": [
-        8,
-        10
-      ],
       "skills": [
         20,
         14
@@ -10209,10 +8129,6 @@
     "fields": {
       "name": "Nina Kok",
       "brand": 1,
-      "expertises": [
-        10,
-        5
-      ],
       "skills": [
         17
       ],
@@ -10226,11 +8142,6 @@
     "fields": {
       "name": "Tom Prins",
       "brand": 1,
-      "expertises": [
-        6,
-        3,
-        10
-      ],
       "skills": [
         1,
         21,
@@ -10247,9 +8158,6 @@
     "fields": {
       "name": "Sem Klein",
       "brand": 2,
-      "expertises": [
-        4
-      ],
       "skills": [
         7,
         15,
@@ -10265,9 +8173,6 @@
     "fields": {
       "name": "Mats van Eck",
       "brand": 3,
-      "expertises": [
-        3
-      ],
       "skills": [
         12
       ],
@@ -10281,9 +8186,6 @@
     "fields": {
       "name": "Milan Pieters",
       "brand": 4,
-      "expertises": [
-        9
-      ],
       "skills": [
         19
       ],
@@ -10297,10 +8199,6 @@
     "fields": {
       "name": "Hugo Hoekstra",
       "brand": 1,
-      "expertises": [
-        4,
-        7
-      ],
       "skills": [
         19,
         13
@@ -10315,10 +8213,6 @@
     "fields": {
       "name": "Tom Kok",
       "brand": 1,
-      "expertises": [
-        13,
-        9
-      ],
       "skills": [
         19,
         27,
@@ -10334,11 +8228,6 @@
     "fields": {
       "name": "Hugo Dekker",
       "brand": 4,
-      "expertises": [
-        8,
-        13,
-        11
-      ],
       "skills": [
         29,
         20,
@@ -10355,10 +8244,6 @@
     "fields": {
       "name": "Adam Scholten",
       "brand": 2,
-      "expertises": [
-        2,
-        12
-      ],
       "skills": [
         1,
         8,
@@ -10375,10 +8260,6 @@
     "fields": {
       "name": "Lynn van der Laan",
       "brand": 4,
-      "expertises": [
-        2,
-        9
-      ],
       "skills": [
         19,
         20,
@@ -10394,11 +8275,6 @@
     "fields": {
       "name": "David Scholten",
       "brand": 1,
-      "expertises": [
-        10,
-        4,
-        5
-      ],
       "skills": [
         10,
         17,
@@ -10414,11 +8290,6 @@
     "fields": {
       "name": "Emma Hofman",
       "brand": 3,
-      "expertises": [
-        1,
-        8,
-        7
-      ],
       "skills": [
         3,
         6,
@@ -10435,10 +8306,6 @@
     "fields": {
       "name": "Jaap Dijkstra",
       "brand": 3,
-      "expertises": [
-        13,
-        4
-      ],
       "skills": [
         28
       ],
@@ -10452,10 +8319,6 @@
     "fields": {
       "name": "Mats van Doorn",
       "brand": 2,
-      "expertises": [
-        2,
-        5
-      ],
       "skills": [
         2,
         29,
@@ -10471,11 +8334,6 @@
     "fields": {
       "name": "Bram Pieters",
       "brand": 4,
-      "expertises": [
-        10,
-        11,
-        4
-      ],
       "skills": [
         17,
         14
@@ -10490,10 +8348,6 @@
     "fields": {
       "name": "Liv de Jong",
       "brand": 4,
-      "expertises": [
-        1,
-        13
-      ],
       "skills": [
         10,
         13,
@@ -10509,9 +8363,6 @@
     "fields": {
       "name": "Ruben Maas",
       "brand": 4,
-      "expertises": [
-        9
-      ],
       "skills": [
         20,
         3,
@@ -10527,11 +8378,6 @@
     "fields": {
       "name": "Julia Mulder",
       "brand": 4,
-      "expertises": [
-        8,
-        2,
-        3
-      ],
       "skills": [
         7,
         25
@@ -10546,11 +8392,6 @@
     "fields": {
       "name": "Daan Pieters",
       "brand": 3,
-      "expertises": [
-        10,
-        1,
-        8
-      ],
       "skills": [
         2,
         6,
@@ -10566,11 +8407,6 @@
     "fields": {
       "name": "Eva Blom",
       "brand": 2,
-      "expertises": [
-        4,
-        8,
-        10
-      ],
       "skills": [
         20,
         28,
@@ -10586,11 +8422,6 @@
     "fields": {
       "name": "Anna van den Heuvel",
       "brand": 2,
-      "expertises": [
-        8,
-        1,
-        3
-      ],
       "skills": [
         16,
         2,
@@ -10606,11 +8437,6 @@
     "fields": {
       "name": "Lara Mulder",
       "brand": 2,
-      "expertises": [
-        4,
-        6,
-        11
-      ],
       "skills": [
         20,
         4,
@@ -10627,9 +8453,6 @@
     "fields": {
       "name": "Luca Noordam",
       "brand": 1,
-      "expertises": [
-        8
-      ],
       "skills": [
         18,
         24,
@@ -10646,11 +8469,6 @@
     "fields": {
       "name": "Zoe Prins",
       "brand": 3,
-      "expertises": [
-        3,
-        1,
-        4
-      ],
       "skills": [
         24,
         14
@@ -10665,11 +8483,6 @@
     "fields": {
       "name": "Teun van der Laan",
       "brand": 4,
-      "expertises": [
-        13,
-        12,
-        11
-      ],
       "skills": [
         13,
         17,
@@ -10686,9 +8499,6 @@
     "fields": {
       "name": "Adam Peters",
       "brand": 4,
-      "expertises": [
-        9
-      ],
       "skills": [
         19,
         11
@@ -10703,10 +8513,6 @@
     "fields": {
       "name": "Olivia van der Wal",
       "brand": 1,
-      "expertises": [
-        4,
-        5
-      ],
       "skills": [
         25
       ],
@@ -10720,11 +8526,6 @@
     "fields": {
       "name": "Liv Claassen",
       "brand": 2,
-      "expertises": [
-        11,
-        2,
-        5
-      ],
       "skills": [
         18,
         25
@@ -10739,11 +8540,6 @@
     "fields": {
       "name": "Gijs Bakker",
       "brand": 2,
-      "expertises": [
-        7,
-        11,
-        8
-      ],
       "skills": [
         16
       ],
@@ -10757,10 +8553,6 @@
     "fields": {
       "name": "Thijn Hofman",
       "brand": 1,
-      "expertises": [
-        8,
-        6
-      ],
       "skills": [
         24
       ],
@@ -10774,10 +8566,6 @@
     "fields": {
       "name": "Eva Adriaansen",
       "brand": 1,
-      "expertises": [
-        13,
-        4
-      ],
       "skills": [
         19,
         9,
@@ -10794,11 +8582,6 @@
     "fields": {
       "name": "Luca van der Wal",
       "brand": 2,
-      "expertises": [
-        9,
-        8,
-        7
-      ],
       "skills": [
         23
       ],
@@ -10812,9 +8595,6 @@
     "fields": {
       "name": "Gijs Huisman",
       "brand": 2,
-      "expertises": [
-        4
-      ],
       "skills": [
         9,
         7,
@@ -10830,11 +8610,6 @@
     "fields": {
       "name": "Bram Schmidt",
       "brand": 3,
-      "expertises": [
-        10,
-        2,
-        11
-      ],
       "skills": [
         25,
         23,
@@ -10850,9 +8625,6 @@
     "fields": {
       "name": "Teun Bakker",
       "brand": 2,
-      "expertises": [
-        5
-      ],
       "skills": [
         24,
         20,
@@ -10868,9 +8640,6 @@
     "fields": {
       "name": "Olivia Dijkstra",
       "brand": 1,
-      "expertises": [
-        13
-      ],
       "skills": [
         4,
         7
@@ -10885,9 +8654,6 @@
     "fields": {
       "name": "Sem van der Meer",
       "brand": 2,
-      "expertises": [
-        3
-      ],
       "skills": [
         8,
         25,
@@ -10904,11 +8670,6 @@
     "fields": {
       "name": "Fenne van den Heuvel",
       "brand": 1,
-      "expertises": [
-        7,
-        2,
-        4
-      ],
       "skills": [
         11,
         10,
@@ -10924,10 +8685,6 @@
     "fields": {
       "name": "Jesse van der Laan",
       "brand": 1,
-      "expertises": [
-        7,
-        8
-      ],
       "skills": [
         23,
         6,
@@ -10944,11 +8701,6 @@
     "fields": {
       "name": "Jesse Vos",
       "brand": 4,
-      "expertises": [
-        12,
-        2,
-        7
-      ],
       "skills": [
         12,
         11
@@ -10963,11 +8715,6 @@
     "fields": {
       "name": "Maud Groen",
       "brand": 4,
-      "expertises": [
-        1,
-        2,
-        3
-      ],
       "skills": [
         8,
         25,
@@ -10983,10 +8730,6 @@
     "fields": {
       "name": "Teun Blom",
       "brand": 4,
-      "expertises": [
-        10,
-        12
-      ],
       "skills": [
         21,
         5,
@@ -11002,11 +8745,6 @@
     "fields": {
       "name": "Fenne Klein",
       "brand": 3,
-      "expertises": [
-        1,
-        4,
-        3
-      ],
       "skills": [
         7,
         2,
@@ -11023,10 +8761,6 @@
     "fields": {
       "name": "Tim Kok",
       "brand": 4,
-      "expertises": [
-        5,
-        9
-      ],
       "skills": [
         17,
         9,
@@ -11042,10 +8776,6 @@
     "fields": {
       "name": "Lisa de Groot",
       "brand": 4,
-      "expertises": [
-        13,
-        8
-      ],
       "skills": [
         19
       ],
@@ -11059,11 +8789,6 @@
     "fields": {
       "name": "Fleur Bakker",
       "brand": 3,
-      "expertises": [
-        7,
-        2,
-        10
-      ],
       "skills": [
         18,
         12,
@@ -11080,9 +8805,6 @@
     "fields": {
       "name": "Amber de Koning",
       "brand": 4,
-      "expertises": [
-        2
-      ],
       "skills": [
         9,
         11,
@@ -11098,10 +8820,6 @@
     "fields": {
       "name": "Noa Wolters",
       "brand": 2,
-      "expertises": [
-        1,
-        12
-      ],
       "skills": [
         2,
         13
@@ -11116,11 +8834,6 @@
     "fields": {
       "name": "Luca Huisman",
       "brand": 4,
-      "expertises": [
-        11,
-        12,
-        9
-      ],
       "skills": [
         19,
         24,
@@ -11137,11 +8850,6 @@
     "fields": {
       "name": "Fenne van der Wal",
       "brand": 3,
-      "expertises": [
-        13,
-        7,
-        8
-      ],
       "skills": [
         20
       ],
@@ -11155,10 +8863,6 @@
     "fields": {
       "name": "Hugo Groen",
       "brand": 4,
-      "expertises": [
-        10,
-        12
-      ],
       "skills": [
         4,
         28
@@ -11173,10 +8877,6 @@
     "fields": {
       "name": "Lotte de Wit",
       "brand": 2,
-      "expertises": [
-        9,
-        2
-      ],
       "skills": [
         12
       ],
@@ -11190,11 +8890,6 @@
     "fields": {
       "name": "Maud van den Heuvel",
       "brand": 1,
-      "expertises": [
-        3,
-        1,
-        6
-      ],
       "skills": [
         9,
         24
@@ -11209,9 +8904,6 @@
     "fields": {
       "name": "Amy Post",
       "brand": 2,
-      "expertises": [
-        11
-      ],
       "skills": [
         14,
         16,
@@ -11228,9 +8920,6 @@
     "fields": {
       "name": "Sophie Kramer",
       "brand": 4,
-      "expertises": [
-        7
-      ],
       "skills": [
         16,
         19,
@@ -11247,11 +8936,6 @@
     "fields": {
       "name": "Milan Maas",
       "brand": 3,
-      "expertises": [
-        9,
-        8,
-        12
-      ],
       "skills": [
         4,
         6,
@@ -11268,9 +8952,6 @@
     "fields": {
       "name": "Noah van Wijk",
       "brand": 2,
-      "expertises": [
-        2
-      ],
       "skills": [
         23,
         8,
