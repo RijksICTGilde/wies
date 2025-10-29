@@ -4,6 +4,8 @@ from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import User
 
+from .querysets import annotate_placement_dates
+
 
 ASSIGNMENT_STATUS = {
     'VACATURE': "VACATURE",
@@ -56,40 +58,6 @@ class Colleague(models.Model):
     source_url = models.URLField(null=True, blank=True)
     # placements via reversed relation
 
-    @property
-    def end_date(self):
-        """
-        Max end_date of current placements.
-        This property has N+1 query issues.
-        Use get_colleague_end_date_efficient() from statistics module instead for batch operations.
-        """
-        from .querysets import annotate_placement_dates
-
-        end_date = None
-        today_date = datetime.datetime.today().date()
-
-        # Use optimized query with select_related and annotations
-        placements = annotate_placement_dates(
-            self.placements.select_related('service__assignment')
-        )
-
-        for placement in placements:
-            # Use annotated fields instead of properties
-            placement_start = placement.actual_start_date
-            placement_end = placement.actual_end_date
-
-            # filtering out ill-formed placements and historical and future placements
-            if (placement_end is None
-                or placement_start is None
-                or placement_start > today_date
-                or placement_end < today_date):
-                # todo: probably should make end-date required when someone is assigned (on placement?)
-                # this otherwise leads to difficult to interpret results
-                continue
-            if end_date is None or placement_end > end_date:
-                end_date = placement_end
-        return end_date
-
     def get_absolute_url(self):
         return reverse("colleague-detail", kwargs={"pk": self.pk})
 
@@ -99,8 +67,8 @@ class Colleague(models.Model):
 # Create your models here.
 class Assignment(models.Model):
     name = models.CharField(max_length=200)
-    start_date = models.DateField(blank=True, null=True)  #TODO: timezone aware?
-    end_date = models.DateField(null=True, blank=True)  #TODO: timezone aware?
+    start_date = models.DateField(blank=True, null=True)
+    end_date = models.DateField(null=True, blank=True)
     # placements through foreignkey on Placement
     # services through foreignkey on Service
     status = models.CharField(max_length=20, choices=ASSIGNMENT_STATUS, default='LEAD')
@@ -139,7 +107,7 @@ class Placement(models.Model):
         PLACEMENT: "Specifiek voor inzet"
     }
     
-    colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='placements', null=True, blank=True) # TODO: removal of colleague triggers removal of placement, probably undesirable
+    colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='placements', null=True, blank=True)
     service = models.ForeignKey('Service', models.CASCADE, related_name='placements')
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=SERVICE)
     specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
@@ -152,14 +120,21 @@ class Placement(models.Model):
 
     @property
     def start_date(self):
-        # TODO: can this be sped-up by using annotated column with prefetch_related?
+        """
+        This property has N+1 query issues.
+        Use `core.querysets.annotate_placement_dates` instead for batch operations.
+        """
         if self.period_source == 'SERVICE':
             return self.service.start_date
         else:
             return self.specific_start_date
-        
+
     @property
     def end_date(self):
+        """
+        This property has N+1 query issues.
+        Use `core.querysets.annotate_placement_dates` instead for batch operations.
+        """
         if self.period_source == 'SERVICE':
             return self.service.end_date
         else:
@@ -198,6 +173,10 @@ class Service(models.Model):
 
     @property
     def start_date(self):
+        """
+        This does not scale well on batch operations
+        consider a dedicated function similar to `core.querysets.annotate_placement_dates`
+        """
         if self.period_source == 'ASSIGNMENT':
             return self.assignment.start_date
         else:
@@ -205,6 +184,10 @@ class Service(models.Model):
         
     @property
     def end_date(self):
+        """
+        This does not scale well on batch operations
+        consider a dedicated function similar to `core.querysets.annotate_placement_dates`
+        """
         if self.period_source == 'ASSIGNMENT':
             return self.assignment.end_date
         else:

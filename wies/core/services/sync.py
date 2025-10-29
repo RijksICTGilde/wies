@@ -53,11 +53,18 @@ def sync_all_otys_iir_records():
         # Sync candidates (colleagues)
         logger.info(f"Syncing {len(otys_candidates)} candidates...")
         for otys_candidate in otys_candidates:
+            print('person:', otys_candidate.get('Person'))
             uid = otys_candidate['uid']
             firstname = otys_candidate.get('Person', {}).get('firstName', '')
             lastname = otys_candidate.get('Person', {}).get('lastName', '')
+            infix = otys_candidate.get('Person', {}).get('infix', '')
             email = otys_candidate.get('Person', {}).get('emailPrimary', '')
-            name = f'{firstname} {lastname}'.strip()  #TODO: tussenvoegsel?
+
+            name=f'{firstname}'  # wrong whitespace if done like f'{firstname} {infix} {lastname}
+            if infix:
+                name = name + f' {infix}'
+            if lastname:
+                name = name + f' {lastname}'
 
             if not name:
                 logger.warning(f"Skipping candidate {uid} - missing name")
