@@ -1,123 +1,145 @@
-
-// Filter Modal Functions
-function openFilterModal() {
+// Wait for DOM to be ready
+document.addEventListener('DOMContentLoaded', function() {
   const modal = document.getElementById('filterModal');
-  modal.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
+  const filterButton = document.querySelector('.filter-button');
+  const closeButton = document.querySelector('.filter-modal-close');
+  const closeModalButton = document.querySelector('.close-modal-button');
+  const clearFiltersButton = document.querySelector('.clear-filters-button');
+  const form = document.querySelector('.rvo-form');
 
-function closeFilterModal() {
-  const modal = document.getElementById('filterModal');
-  modal.style.display = 'none';
-  document.body.style.overflow = 'auto';
-}
+  if (!modal || !form) return;
 
-function applyFiltersInstant() {
-  const form = document.getElementById('modalFilterForm');
-  const mainForm = document.querySelector('.rvo-form');
+  // Open modal
+  if (filterButton) {
+    filterButton.addEventListener('click', function() {
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    });
+  }
 
-  // Copy values from modal form to main form
-  const modalInputs = form.querySelectorAll('select, input');
-  modalInputs.forEach(input => {
-    const requireBoth = input.dataset.requireBoth === 'true';
-    const combinedName = input.dataset.combinedName;
+  // Close modal function
+  function closeFilterModal() {
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
 
-    let hiddenName;
-    let hiddenValue;
-    if (requireBoth && combinedName) {
-      // Handle date range inputs that require both dates
-      
-      const fromInput = form.querySelector(`input[name="${combinedName}_from"]`);
-      const toInput = form.querySelector(`input[name="${combinedName}_to"]`);
-      const validationMessage = document.getElementById(`${combinedName}-validation-message`);
+  // Close button handlers
+  if (closeButton) {
+    closeButton.addEventListener('click', closeFilterModal);
+  }
+  if (closeModalButton) {
+    closeModalButton.addEventListener('click', closeFilterModal);
+  }
 
-      const fromValue = fromInput ? fromInput.value : '';
-      const toValue = toInput ? toInput.value : '';
+  // Close modal when clicking outside
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      closeFilterModal();
+    }
+  });
 
-      if (validationMessage) {
+  // Close modal with escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.style.display === 'flex') {
+      closeFilterModal();
+    }
+  });
+
+  // Handle date range validation and combined parameter submission
+  const dateRangeInputs = document.querySelectorAll('.date-range-input');
+
+  dateRangeInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      const requireBoth = input.dataset.requireBoth === 'true';
+      const combinedName = input.dataset.combinedName;
+      const pairId = input.dataset.pairId;
+
+      if (requireBoth && combinedName && pairId) {
+        const pairInput = document.getElementById(pairId);
+        const validationMessage = document.getElementById(`${combinedName}-validation-message`);
+        const hiddenOutput = form.querySelector(`input[name="${combinedName}"]`);
+
+        if (!pairInput || !hiddenOutput) return;
+
+        const fromInput = input.id.includes('-from') ? input : pairInput;
+        const toInput = input.id.includes('-to') ? input : pairInput;
+
+        const fromValue = fromInput.value;
+        const toValue = toInput.value;
+
         // Show/hide validation message
-        if ((fromValue && !toValue) || (!fromValue && toValue)) {
-          validationMessage.style.display = 'block';
-        } else {
-          validationMessage.style.display = 'none';
+        if (validationMessage) {
+          if ((fromValue && !toValue) || (!fromValue && toValue)) {
+            validationMessage.style.display = 'block';
+          } else {
+            validationMessage.style.display = 'none';
+          }
         }
 
-        // If both dates are provided, create combined parameter
-        let combinedValue
+        // Update hidden output field
         if (fromValue && toValue) {
-          combinedValue = `${fromValue}_${toValue}`;        
+          // Both dates provided - set combined value
+          hiddenOutput.value = `${fromValue}_${toValue}`;
         } else {
-          combinedValue = ''
+          // Clear value (but keep name attribute)
+          hiddenOutput.value = '';
         }
-
-        hiddenName = combinedName
-        hiddenValue = combinedValue  
       }
-    } else {
-      // single value
-      hiddenName = input.name
-      hiddenValue = input.value
-    }
-
-    if (hiddenValue) {
-      // Create or update hidden input for this filter
-      let hiddenInput = mainForm.querySelector(`input[name="${hiddenName}"]`);
-      if (!hiddenInput) {
-        hiddenInput = document.createElement('input');
-        hiddenInput.type = 'hidden';
-        hiddenInput.name = hiddenName;
-        mainForm.appendChild(hiddenInput);
-      }
-      hiddenInput.value = hiddenValue;
-    } else {
-      // Remove hidden input if value is empty
-      const hiddenInput = mainForm.querySelector(`input[name="${hiddenName}"]`);
-      if (hiddenInput && hiddenInput.type === 'hidden') {
-        hiddenInput.remove();
-      }
-    }
+    });
   });
 
-  // Trigger HTMX request without closing modal
-  htmx.trigger(mainForm, 'change');
+  // Clear all filters
+  if (clearFiltersButton) {
+    clearFiltersButton.addEventListener('click', function() {
+      // Clear all filter inputs
+      form.querySelectorAll('[data-filter-input]').forEach(input => {
+        if (input.tagName === 'SELECT') {
+          input.selectedIndex = 0;
+        } else if (input.type === 'hidden') {
+          input.value = '';
+        }
+      });
 
-  // Update filter indicator immediately
-  setTimeout(updateFilterIndicator, 100);
-}
+      // Clear date range inputs
+      form.querySelectorAll('.date-range-input').forEach(input => {
+        input.value = '';
+      });
 
+      // Clear search field
+      const searchInput = form.querySelector('#search');
+      if (searchInput) {
+        searchInput.value = '';
+      }
 
-function clearAllFilters() {
-  const form = document.getElementById('modalFilterForm');
-  const mainForm = document.querySelector('.rvo-form');
-  
-  // Clear modal form
-  form.querySelectorAll('select, input[type="date"]').forEach(input => {
-    input.value = '';
-  });
-  
-  // Remove all hidden filter inputs from main form
-  mainForm.querySelectorAll('input[type="hidden"]').forEach(input => {
-    input.remove();
-  });
-  
-  // Trigger HTMX request
-  htmx.trigger(mainForm, 'change');
-  
-  closeFilterModal();
-}
+      // Clear validation messages
+      document.querySelectorAll('.date-range-validation-message').forEach(msg => {
+        msg.style.display = 'none';
+      });
 
-// Update filter indicator
-function updateFilterIndicator() {
-  const filterButton = document.querySelector('.filter-button-container button');
-  const filterText = document.querySelector('.filter-text');
-  const mainForm = document.querySelector('.rvo-form');
-  
-  if (filterButton && filterText && mainForm) {
-    // Count active filters from modal form inputs
-    const activeFilters = Array.from(mainForm.querySelectorAll('input[type="hidden"]'))
-      .length;
-    
-    // Update only the text span, keeping the icon intact
+      // Trigger form submission via HTMX
+      htmx.trigger(form, 'change');
+
+      closeFilterModal();
+    });
+  }
+
+  // Update filter count indicator
+  function updateFilterIndicator() {
+    if (!filterButton) return;
+
+    const filterText = filterButton.querySelector('.filter-text');
+    if (!filterText) return;
+
+    let activeFilters = 0;
+
+    // Count active filters
+    form.querySelectorAll('[data-filter-input]').forEach(input => {
+      if (input.value !== '') {
+        activeFilters++;
+      }
+    });
+
+    // Update button text and state
     if (activeFilters > 0) {
       filterText.textContent = `Filters (${activeFilters})`;
       filterButton.classList.add('utrecht-button--active');
@@ -126,23 +148,11 @@ function updateFilterIndicator() {
       filterButton.classList.remove('utrecht-button--active');
     }
   }
-}
 
-// Global HTMX event listener to update filter indicator
-document.body.addEventListener('htmx:afterRequest', function(event) {
+  // Update filter indicator after HTMX requests
+  document.body.addEventListener('htmx:afterSwap', updateFilterIndicator);
+  document.body.addEventListener('htmx:afterSettle', updateFilterIndicator);
+
+  // Initial update
   updateFilterIndicator();
-});
-
-// Close modal with escape key
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape' && document.getElementById('filterModal').style.display === 'flex') {
-    closeFilterModal();
-  }
-});
-
-// Close modal when clicking outside
-document.getElementById('filterModal').addEventListener('click', function(e) {
-  if (e.target === this) {
-    closeFilterModal();
-  }
 });
