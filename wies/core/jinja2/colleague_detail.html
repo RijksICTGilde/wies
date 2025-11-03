@@ -40,6 +40,17 @@
           <span class="rvo-text--italic">Geen merk opgegeven</span>
         {% endif %}
       </dd>
+      <dt>Acties</dt>
+      <dd>
+        <div class="rvo-layout-row rvo-layout-gap--sm">
+          <button class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display() }}">
+            Collega bewerken
+          </button>
+          <button class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display() }}">
+            Collega verwijderen
+          </button>
+        </div>
+      </dd>
     </dl>
     
     <h2 class="utrecht-heading-2 rvo-heading--no-margins">Opdrachten</h2>
@@ -76,14 +87,6 @@
       </tbody>
     </table>
 
-    <div class="rvo-layout-row rvo-layout-gap--md">
-      <button class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display() }}">
-        Collega bewerken
-      </button>
-      <button class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display() }}">
-        Collega verwijderen
-      </button>
-    </div>
   </div>
 </div>
 {% endblock content %}
