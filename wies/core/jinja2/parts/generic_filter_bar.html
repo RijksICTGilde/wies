@@ -9,145 +9,141 @@ Usage:
 <link rel="stylesheet" href="{{ static('css/filter.css') }}">
 
 <!-- Generic Compact Filters Section -->
-<div class="wies-filter-section">
-  <form class="rvo-form"
-    hx-get="{{ url(url_name) }}"
-    hx-target="{{ target_selector }}"
-    hx-push-url="true"
-    hx-trigger="change,input delay:500ms from:input"
-    hx-include="[data-filter-input]">
+<form class="rvo-form filter-bar"
+  hx-get="{{ url(url_name) }}"
+  hx-target="{{ target_selector }}"
+  hx-push-url="true"
+  hx-trigger="change,input delay:500ms from:input"
+  hx-include="[data-filter-input]">
 
-    <!-- Compact filter bar -->
-    <div class="wies-compact-filter-bar">
+  <!-- Compact filter bar -->
+  <div class="filter-bar-bar">
 
-      <!-- Search Field -->
-      <div role="group" aria-labelledby="search-field-label" class="utrecht-form-field utrecht-form-field--text">
-        <span class="utrecht-icon rvo-icon rvo-icon-zoek rvo-icon--lg wies-search-icon"
-              role="img" aria-label="Zoeken"></span>
-        <input
-          id="search"
-          name="{{ search_field|default('search') }}"
-          placeholder="{{ search_placeholder|default('Zoeken...') }}"
-          type="text"
-          class="utrecht-textbox utrecht-textbox--html-input rvo-input"
-          value="{% if search_filter %}{{ search_filter }}{% endif %}"
-          aria-label="{{ search_placeholder|default('Zoeken') }}"
-        />
-      </div>
-
-      <!-- Filters Button with indicator -->
-      <div class="filter-button-container">
-        {% if filter_groups %}
-        <button type="button"
-                class="filter-button utrecht-button utrecht-button--secondary-action{% if active_filter_count > 0 %} utrecht-button--active{% endif %} utrecht-button--rvo-md utrecht-button--icon-before rvo-button">
-          <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before" role="img" aria-label="Trechter"></span>
-          <span class="filter-text">Filters{% if active_filter_count > 0 %} ({{ active_filter_count }}){% endif %}</span>
-        </button>
-        {% endif %}
-      </div>
-
+    <!-- Search Field -->
+    <div role="group" aria-labelledby="search-field-label" class="utrecht-form-field utrecht-form-field--text">
+      <span class="utrecht-icon rvo-icon rvo-icon-zoek rvo-icon--lg search-icon"
+            role="img" aria-label="Zoeken"></span>
+      <input
+        id="search"
+        name="{{ search_field|default('search') }}"
+        placeholder="{{ search_placeholder|default('Zoeken...') }}"
+        type="text"
+        class="utrecht-textbox utrecht-textbox--html-input rvo-input"
+        value="{% if search_filter %}{{ search_filter }}{% endif %}"
+        aria-label="{{ search_placeholder|default('Zoeken') }}"
+      />
     </div>
 
-    <!-- Filter inputs inside modal -->
-    <div id="filterModal" class="filter-modal">
-      <div class="filter-modal-content">
-        <!-- Modal Header -->
-        <div class="filter-modal-header">
-          <h2 class="utrecht-heading-2">Filters</h2>
-          <button type="button" class="filter-modal-close">&times;</button>
-        </div>
+    <!-- Filters Button with indicator -->
+    <div class="filter-button-container">
+      {% if filter_groups %}
+      <button type="button"
+              class="filter-button utrecht-button utrecht-button--secondary-action{% if active_filter_count > 0 %} utrecht-button--active{% endif %} utrecht-button--rvo-md utrecht-button--icon-before rvo-button">
+        <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before" role="img" aria-label="Trechter"></span>
+        <span class="filter-text">Filters{% if active_filter_count > 0 %} ({{ active_filter_count }}){% endif %}</span>
+      </button>
+      {% endif %}
+    </div>
 
-        <div class="filter-modal-body">
-          <div class="rvo-layout-column rvo-layout-gap--md">
+  </div>
 
-            {% for filter_group in filter_groups %}
-            {% if filter_group.type == 'select' %}
+  <!-- Filter inputs inside modal -->
+  <div id="filterModal" class="filter-modal">
+    <div class="filter-modal-content">
+      <!-- Modal Header -->
+      <div class="filter-modal-header">
+        <h2 class="utrecht-heading-2">Filters</h2>
+        <button type="button" class="filter-modal-close">&times;</button>
+      </div>
+
+      <div class="filter-modal-body">
+        <div class="rvo-layout-column rvo-layout-gap--md">
+
+          {% for filter_group in filter_groups %}
+          {% if filter_group.type == 'select' %}
+          <div class="utrecht-form-field">
+            <div class="rvo-form-field__label">
+              <label class="rvo-label" for="filter-{{ filter_group.name }}">{{ filter_group.label }}</label>
+            </div>
+            <div class="rvo-select-wrapper">
+              <select
+                name="{{ filter_group.name }}"
+                id="filter-{{ filter_group.name }}"
+                class="utrecht-select utrecht-select--html-select rvo-select"
+                data-filter-input>
+                <option value="">{{ filter_group.placeholder }}</option>
+                {% for option in filter_group.options %}
+                  <option value="{{ option.value }}" {% if option.get('selected') %} selected {% endif %}>
+                    {{ option.label }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          {% elif filter_group.type == 'date_range' %}
+          <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
             <div class="utrecht-form-field">
               <div class="rvo-form-field__label">
-                <label class="rvo-label" for="filter-{{ filter_group.name }}">{{ filter_group.label }}</label>
+                <label class="rvo-label" for="filter-{{ filter_group.name }}-from">{{ filter_group.from_label }}</label>
               </div>
-              <div class="rvo-select-wrapper">
-                <select
-                  name="{{ filter_group.name }}"
-                  id="filter-{{ filter_group.name }}"
-                  class="utrecht-select utrecht-select--html-select rvo-select"
-                  data-filter-input>
-                  <option value="">{{ filter_group.placeholder }}</option>
-                  {% for option in filter_group.options %}
-                    <option value="{{ option.value }}" {% if option.get('selected') %} selected {% endif %}>
-                      {{ option.label }}
-                    </option>
-                  {% endfor %}
-                </select>
-              </div>
+              <input
+                type="date"
+                id="filter-{{ filter_group.name }}-from"
+                class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
+                {% if filter_group.require_both %}
+                data-require-both="true"
+                data-combined-name="{{ filter_group.name }}"
+                data-pair-id="filter-{{ filter_group.name }}-to"
+                {% endif %}
+                value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from }}{% endif %}"
+              />
             </div>
-            {% elif filter_group.type == 'date_range' %}
-            <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
-              <div class="utrecht-form-field">
-                <div class="rvo-form-field__label">
-                  <label class="rvo-label" for="filter-{{ filter_group.name }}-from">{{ filter_group.from_label }}</label>
-                </div>
-                <input
-                  type="date"
-                  id="filter-{{ filter_group.name }}-from"
-                  class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
-                  {% if filter_group.require_both %}
-                  data-require-both="true"
-                  data-combined-name="{{ filter_group.name }}"
-                  data-pair-id="filter-{{ filter_group.name }}-to"
-                  {% endif %}
-                  value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from }}{% endif %}"
-                />
+            <div class="utrecht-form-field">
+              <div class="rvo-form-field__label">
+                <label class="rvo-label" for="filter-{{ filter_group.name }}-to">{{ filter_group.to_label }}</label>
               </div>
-              <div class="utrecht-form-field">
-                <div class="rvo-form-field__label">
-                  <label class="rvo-label" for="filter-{{ filter_group.name }}-to">{{ filter_group.to_label }}</label>
-                </div>
-                <input
-                  type="date"
-                  id="filter-{{ filter_group.name }}-to"
-                  class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
-                  {% if filter_group.require_both %}
-                  data-require-both="true"
-                  data-combined-name="{{ filter_group.name }}"
-                  data-pair-id="filter-{{ filter_group.name }}-from"
-                  {% endif %}
-                  value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to }}{% endif %}"
-                />
-              </div>
-            </div>
-            {% if filter_group.require_both %}
-            <!-- Hidden input managed by JS - only submitted when both dates are filled -->
-            <input
-              type="hidden"
-              id="filter-{{ filter_group.name }}-combined"
-              name="{{ filter_group.name }}"
-              data-filter-input
-            />
-            <div id="{{ filter_group.name }}-validation-message" class="date-range-validation-message" style="display: none; color: #e17000; font-size: 0.875rem; margin-top: 0.25rem;">
-              Beide datums zijn vereist voor een geldige periode filter.
-            </div>
-            {% endif %}
-            {% endif %}
-            {% endfor %}
-
-          </div>
-
-          <!-- Modal Footer -->
-          <div class="filter-modal-footer">
-            <button type="button" class="clear-filters-button utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md rvo-button">
-              Wis alle filters
-            </button>
-            <div class="filter-modal-footer-buttons">
-              <button type="button" class="close-modal-button utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button">
-                Naar resultaten
-              </button>
+              <input
+                type="date"
+                id="filter-{{ filter_group.name }}-to"
+                class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
+                {% if filter_group.require_both %}
+                data-require-both="true"
+                data-combined-name="{{ filter_group.name }}"
+                data-pair-id="filter-{{ filter_group.name }}-from"
+                {% endif %}
+                value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to }}{% endif %}"
+              />
             </div>
           </div>
+          {% if filter_group.require_both %}
+          <!-- Hidden input managed by JS - only submitted when both dates are filled -->
+          <input
+            type="hidden"
+            id="filter-{{ filter_group.name }}-combined"
+            name="{{ filter_group.name }}"
+            data-filter-input
+          />
+          <div id="{{ filter_group.name }}-validation-message" class="date-range-validation-message" style="display: none; color: #e17000; font-size: 0.875rem; margin-top: 0.25rem;">
+            Beide datums zijn vereist voor een geldige periode filter.
+          </div>
+          {% endif %}
+          {% endif %}
+          {% endfor %}
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="filter-modal-footer">
+          <button type="button" class="clear-filters-button utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-md rvo-button">
+            Wis alle filters
+          </button>
+          <button type="button" class="close-modal-button utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button">
+            Naar resultaten
+          </button>
         </div>
       </div>
     </div>
-  </form>
-</div>
+  </div>
+</form>
 
 <script src="{{ static('js/generic_filter.js') }}"></script>

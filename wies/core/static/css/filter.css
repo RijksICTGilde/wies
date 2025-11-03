@@ -1,16 +1,9 @@
-/* Vertical layout styling */
-.wies-filter-section {
+.filter-bar {
   width: 100%;
   margin-bottom: 0;
 }
 
-.wies-results {
-  width: 100%;
-  max-width: none;
-}
-
-/* Compact filter bar styling */
-.wies-compact-filter-bar {
+.filter-bar-bar {
   display: flex;
   gap: 0.75rem;
   align-items: stretch;
@@ -18,15 +11,8 @@
   width: 100%;
 }
 
-/* Primary filter (when present) - fixed width */
-.wies-compact-filter-bar > .utrecht-form-field:first-child:has(select) {
-  flex: 0 0 200px;
-  min-width: 200px;
-  max-width: 200px;
-}
-
-/* Search field - wider but not full width */
-.wies-compact-filter-bar > .utrecht-form-field:has(input[type="text"]) {
+/* Search field*/
+.filter-bar-bar > .utrecht-form-field:has(input[type="text"]) {
   flex: 1 1 500px;
   min-width: 300px;
   max-width: 600px;
@@ -34,31 +20,29 @@
 }
 
 /* Filter button container - fixed width */
-.wies-compact-filter-bar > .filter-button-container {
+.filter-bar-bar > .filter-button-container {
   flex: 0 0 auto;
 }
 
 /* Primary action container - fixed width */
-.wies-compact-filter-bar > div:last-child {
+.filter-bar-bar > div:last-child {
   flex: 0 0 auto;
 }
 
-.wies-compact-filter-bar .utrecht-select,
-.wies-compact-filter-bar .utrecht-textbox,
-.wies-compact-filter-bar .utrecht-button {
+.filter-bar-bar .utrecht-select,
+.filter-bar-bar .utrecht-textbox,
+.filter-bar-bar .utrecht-button {
   height: 3rem;
 }
 
-.wies-compact-filter-bar .utrecht-textbox {
+.filter-bar-bar .utrecht-textbox {
   padding-left: 2.5rem;
 }
 
-.wies-compact-filter-bar .utrecht-button {
-  min-width: 110px;
-}
+
 
 /* Search icon styling */
-.wies-search-icon {
+.filter-bar-bar .search-icon {
   position: absolute;
   left: 12px;
   top: 50%;
@@ -66,6 +50,11 @@
   z-index: 1;
   color: #154273;
   pointer-events: none;
+}
+
+.filter-bar-bar .utrecht-button {
+  min-width: 110px;
+  position: relative;
 }
 
 /* Filter modal styling */
@@ -92,6 +81,15 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
+.filter-modal-close {
+  background: none;
+  border: none;
+  font-size: var(--rvo-font-size-2xl);
+  font-family: var(--rvo-font-sans-serif-font-family), var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
+  cursor: pointer;
+  color: var(--rvo-color-grijs-600);
+}
+
 .filter-modal-header {
   padding: 1.5rem;
   border-bottom: 1px solid #e6e6e6;
@@ -102,15 +100,6 @@
 
 .filter-modal-header h2 {
   margin: 0;
-}
-
-.filter-modal-close {
-  background: none;
-  border: none;
-  font-size: var(--rvo-font-size-2xl);
-  font-family: var(--rvo-font-sans-serif-font-family), var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
-  cursor: pointer;
-  color: var(--rvo-color-grijs-600);
 }
 
 .filter-modal-body {
@@ -124,14 +113,4 @@
   display: flex;
   gap: 1rem;
   justify-content: space-between;
-}
-
-.filter-modal-footer-buttons {
-  display: flex;
-  gap: 0.75rem;
-}
-
-/* Filter button container */
-.filter-button-container {
-  position: relative;
 }
