@@ -106,13 +106,6 @@ function clearAllFilters() {
   closeFilterModal();
 }
 
-// Close modal when clicking outside
-document.getElementById('filterModal').addEventListener('click', function(e) {
-  if (e.target === this) {
-    closeFilterModal();
-  }
-});
-
 // Update filter indicator
 function updateFilterIndicator() {
   const filterButton = document.querySelector('.filter-button-container button');
@@ -122,7 +115,6 @@ function updateFilterIndicator() {
   if (filterButton && filterText && mainForm) {
     // Count active filters from modal form inputs
     const activeFilters = Array.from(mainForm.querySelectorAll('input[type="hidden"]'))
-      .filter(input => input.value && input.name !== 'tab' && !input.name.includes('search'))
       .length;
     
     // Update only the text span, keeping the icon intact
@@ -144,6 +136,13 @@ document.body.addEventListener('htmx:afterRequest', function(event) {
 // Close modal with escape key
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape' && document.getElementById('filterModal').style.display === 'flex') {
+    closeFilterModal();
+  }
+});
+
+// Close modal when clicking outside
+document.getElementById('filterModal').addEventListener('click', function(e) {
+  if (e.target === this) {
     closeFilterModal();
   }
 });
