@@ -22,6 +22,8 @@ function applyFiltersInstant() {
     const requireBoth = input.dataset.requireBoth === 'true';
     const combinedName = input.dataset.combinedName;
 
+    let hiddenName;
+    let hiddenValue;
     if (requireBoth && combinedName) {
       // Handle date range inputs that require both dates
       
@@ -41,6 +43,7 @@ function applyFiltersInstant() {
         }
 
         // If both dates are provided, create combined parameter
+        let combinedValue
         if (fromValue && toValue) {
           combinedValue = `${fromValue}_${toValue}`;        
         } else {
@@ -82,11 +85,6 @@ function applyFiltersInstant() {
   setTimeout(updateFilterIndicator, 100);
 }
 
-function applyFilters() {
-  applyFiltersInstant();
-  closeFilterModal();
-}
-
 
 function clearAllFilters() {
   const form = document.getElementById('modalFilterForm');
@@ -102,13 +100,8 @@ function clearAllFilters() {
     input.remove();
   });
   
-  // Clear visible inputs in main form
-  mainForm.querySelectorAll('select, input[type="text"]').forEach(input => {
-    input.value = '';
-  });
-  
-  // Submit form to update the page
-  mainForm.submit();
+  // Trigger HTMX request
+  htmx.trigger(mainForm, 'change');
   
   closeFilterModal();
 }

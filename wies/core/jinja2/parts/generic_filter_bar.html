@@ -10,16 +10,15 @@ Usage:
 
 <!-- Generic Compact Filters Section -->
 <div class="wies-filter-section">
-  <form class="rvo-form" hx-get="{{ url(url_name) }}" hx-target="{{ target_selector|default('#content') }}" hx-push-url="true" hx-trigger="change,input delay:500ms from:input">
-    {% if tab_param %}
-      <input type="hidden" name="tab" value="{{ tab_param }}">
-    {% endif %}
+  <form class="rvo-form"
+    hx-get="{{ url(url_name) }}" 
+    hx-target="{{ target_selector }}"
+    hx-push-url="true"
+    hx-trigger="change,input delay:500ms from:input">
     
     <!-- Preserve existing filter parameters -->
-    {% for param, value in request.GET.items() %}
-      {% if param != (primary_filter.name if primary_filter is defined else '') and param != search_field|default('search') and param != 'tab' %}
+    {% for param, value in active_filters.items() %}
         <input type="hidden" name="{{ param }}" value="{{ value }}">
-      {% endif %}
     {% endfor %}
     
     <!-- Compact filter bar -->
@@ -35,14 +34,14 @@ Usage:
           placeholder="{{ search_placeholder|default('Zoeken...') }}" 
           type="text" 
           class="utrecht-textbox utrecht-textbox--html-input rvo-input" 
-          value="{% if search_field and request.GET.get(search_field) %}{{ request.GET.get(search_field) }}{% else %}{% endif %}" 
+          value="{% if search_filter %}{{ search_filter }}{% endif %}" 
           aria-label="{{ search_placeholder|default('Zoeken') }}"
         />
       </div>
 
       <!-- Filters Button with indicator -->
       <div class="filter-button-container">
-        <!-- somehow moving the iff to the div above does not work, it hides the search icon -->
+        <!-- somehow moving the if to the div above does not work, it hides the search icon -->
         {% if filter_groups %}  
         <button type="button" 
                 class="utrecht-button utrecht-button--secondary-action{% if active_filter_count > 0 %} utrecht-button--active{% endif %} utrecht-button--rvo-md utrecht-button--icon-before rvo-button" 
@@ -81,7 +80,7 @@ Usage:
             <select name="{{ filter_group.name }}" id="modal-{{ filter_group.name }}" class="utrecht-select utrecht-select--html-select rvo-select" onchange="applyFiltersInstant()">
               <option value="">{{ filter_group.placeholder }}</option>
               {% for option in filter_group.options %}
-                <option value="{{ option.value }}" {% if request.GET.get(filter_group.name) == option.value|string %}selected{% endif %}>
+                <option value="{{ option.value }}" {% if option.get('selected') %} selected {% endif %}>
                   {{ option.label }}
                 </option>
               {% endfor %}
@@ -102,7 +101,7 @@ Usage:
               class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
               data-require-both="{{ 'true' if filter_group.require_both else 'false' }}"
               data-combined-name="{{ filter_group.name }}"
-              value="{% if request.GET.get(filter_group.name) and '_' in request.GET.get(filter_group.name) %}{{ request.GET.get(filter_group.name)[:10] }}{% endif %}"
+              value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from }}{% endif %}"
               onchange="applyFiltersInstant()"
             />
           </div>
@@ -117,7 +116,7 @@ Usage:
               class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
               data-require-both="{{ 'true' if filter_group.require_both else 'false' }}"
               data-combined-name="{{ filter_group.name }}"
-              value="{% if request.GET.get(filter_group.name) and '_' in request.GET.get(filter_group.name) %}{{ request.GET.get(filter_group.name)[11:] }}{% endif %}"
+              value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to }}{% endif %}"
               onchange="applyFiltersInstant()"
             />
           </div>

@@ -158,48 +158,88 @@ class PlacementTableView(ListView):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
 
-        context['skills'] = Skill.objects.order_by('name')
-        context['brands'] = Brand.objects.order_by('name')
-        context['clients'] = [
+        clients = [
             {'id': org, 'name': org}
             for org in Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').order_by('organization')
         ]
-        context['ministries'] = Ministry.objects.order_by('name')
+        ministries = Ministry.objects.order_by('name')
 
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
+        context['search_filter'] = self.request.GET.get('search')
 
-        modal_filter_params = ['brand', 'skill', 'client', 'ministry', 'period']
-        context['active_filter_count'] = sum(1 for param in modal_filter_params if self.request.GET.get(param))
+        # TODO: perform validation on filters
+        active_filters = {}  # key: val
+        for filter_param in ['brand', 'skill', 'client', 'ministry', 'period']:
+            val = self.request.GET.get(filter_param)
+            if val:
+                active_filters[filter_param] = val
 
+        if active_filters.get('period'):
+            period_from, period_to = active_filters['period'].split('_')
+            active_filters['period'] = {
+                'from': period_from,
+                'to': period_to,
+            }
+
+        brand_options = []
+        for brand in Brand.objects.order_by('name'):
+            brand_options.append({'value': brand.id, 'label': brand.name})
+            if active_filters.get('brand') == str(brand.id):
+                brand_options[-1]['selected'] = True
+
+        skill_options = []
+        for skill in Skill.objects.order_by('name'):
+            skill_options.append({'value': skill.id, 'label': skill.name})
+            if active_filters.get('skill') == str(skill.id):
+                skill_options[-1]['selected'] = True
+
+        client_options = []
+        for client in clients:
+            client_options.append({'value': client['id'], 'label': client['name']})
+            if active_filters.get('client') == str(client['id']):
+                client_options[-1]['selected'] = True
+
+        ministry_options = []
+        for ministry in ministries:
+            ministry_options.append({'value': ministry.id, 'label': ministry.name})
+            if active_filters.get('ministry') == str(ministry.id):
+                ministry_options[-1]['selected'] = True
+
+        context['active_filters'] = active_filters
+        context['active_filter_count'] = len(active_filters)
+
+        # TODO: this can be become an object to help defining correctly and performing extra preprocessing on context
         context['filter_groups'] = [
             {
                 'type': 'select',
                 'name': 'brand',
                 'label': 'Merk',
                 'placeholder': 'Alle merken',
-                'options': [{'value': brand.id, 'label': brand.name} for brand in context.get('brands', [])]
+                'options': brand_options,
+                'value_key': 'id',
+                'label_ley': 'name',
             },
             {
                 'type': 'select',
                 'name': 'skill',
                 'label': 'Rollen',
                 'placeholder': 'Alle rollen',
-                'options': [{'value': skill.id, 'label': skill.name} for skill in context.get('skills', [])]
+                'options': skill_options,
             },
             {
                 'type': 'select',
                 'name': 'client',
                 'label': 'Opdrachtgever',
                 'placeholder': 'Alle opdrachtgevers',
-                'options': [{'value': client['id'], 'label': client['name']} for client in context.get('clients', [])]
+                'options': client_options,
             },
             {
                 'type': 'select',
                 'name': 'ministry',
                 'label': 'Ministerie',
                 'placeholder': 'Alle ministeries',
-                'options': [{'value': ministry.id, 'label': ministry.name} for ministry in context.get('ministries', [])]
+                'options': ministry_options,
             },
             {
                 'type': 'date_range',
@@ -207,7 +247,7 @@ class PlacementTableView(ListView):
                 'label': 'Periode',
                 'from_label': 'Van',
                 'to_label': 'Tot',
-                'require_both': True
+                'require_both': True,
             },
         ]
 
