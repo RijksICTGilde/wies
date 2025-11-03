@@ -11,8 +11,8 @@
   width: 100%;
 }
 
-/* Search field*/
-.filter-bar-bar > .utrecht-form-field:has(input[type="text"]) {
+/* Search field */
+.filter-bar-bar > .search-field-wrapper {
   flex: 1 1 500px;
   min-width: 300px;
   max-width: 600px;
@@ -21,11 +21,6 @@
 
 /* Filter button container - fixed width */
 .filter-bar-bar > .filter-button-container {
-  flex: 0 0 auto;
-}
-
-/* Primary action container - fixed width */
-.filter-bar-bar > div:last-child {
   flex: 0 0 auto;
 }
 
@@ -38,8 +33,6 @@
 .filter-bar-bar .utrecht-textbox {
   padding-left: 2.5rem;
 }
-
-
 
 /* Search icon styling */
 .filter-bar-bar .search-icon {
