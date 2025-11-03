@@ -1,64 +1,12 @@
-/* Filter and search functionality CSS */
-
-/* Compact filter styling */
-.wies-filter .utrecht-form-field {
-  margin-bottom: 0.75rem;
-}
-
-.wies-filter .rvo-form-field__label {
-  margin-bottom: 0.25rem;
-}
-
-.wies-filter .utrecht-textbox,
-.wies-filter .utrecht-select {
-  padding: 0.375rem 0.5rem;
-  font-size: var(--rvo-font-size-sm);
-  font-family: var(--rvo-font-sans-serif-font-family), var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
-}
-
-.wies-filter .rvo-layout-row {
-  margin-bottom: 0.5rem;
-}
-
-.wies-filter .rvo-layout-gap--xs {
-  gap: 0.5rem;
-}
-
 /* Vertical layout styling */
 .wies-filter-section {
   width: 100%;
   margin-bottom: 0;
 }
 
-.rvo-filter-section .rvo-form {
-  width: 100%;
-}
-
 .wies-results {
   width: 100%;
   max-width: none;
-}
-
-/* Filter grid styling */
-.rvo-layout-grid-columns--three > div {
-  flex: 1;
-  min-width: 0;
-}
-
-.rvo-layout-grid-columns--four > div {
-  flex: 1;
-  min-width: 0;
-}
-
-/* Active filters styling - use rvo-text--sm rvo-text--subtle in template instead */
-
-/* Hide default details arrow */
-.wies-collapsible-filter > summary {
-  list-style: none;
-}
-
-.wies-collapsible-filter > summary::-webkit-details-marker {
-  display: none;
 }
 
 /* Compact filter bar styling */
