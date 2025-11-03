@@ -105,7 +105,7 @@ class Placement(models.Model):
         PLACEMENT: "Specifiek voor inzet"
     }
     
-    colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='placements')
+    colleague = models.ForeignKey('Colleague', models.CASCADE, related_name='placements')  # if we implement anonymization, this should maybe be changed
     service = models.ForeignKey('Service', models.CASCADE, related_name='placements')
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=SERVICE)
     specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
