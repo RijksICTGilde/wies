@@ -166,17 +166,10 @@ class PlacementTableView(ListView):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
 
-        clients = [
-            {'id': org, 'name': org}
-            for org in Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').order_by('organization')
-        ]
-        ministries = Ministry.objects.order_by('name')
-
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
         context['search_filter'] = self.request.GET.get('search')
 
-        # TODO: perform validation on filters
         active_filters = {}  # key: val
         for filter_param in ['brand', 'skill', 'client', 'ministry', 'period']:
             val = self.request.GET.get(filter_param)
@@ -202,6 +195,11 @@ class PlacementTableView(ListView):
             if active_filters.get('skill') == str(skill.id):
                 skill_options[-1]['selected'] = True
 
+        clients = [
+            {'id': org, 'name': org}
+            for org in Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').order_by('organization')
+        ]
+
         client_options = []
         for client in clients:
             client_options.append({'value': client['id'], 'label': client['name']})
@@ -209,7 +207,7 @@ class PlacementTableView(ListView):
                 client_options[-1]['selected'] = True
 
         ministry_options = []
-        for ministry in ministries:
+        for ministry in Ministry.objects.order_by('name'):
             ministry_options.append({'value': ministry.id, 'label': ministry.name})
             if active_filters.get('ministry') == str(ministry.id):
                 ministry_options[-1]['selected'] = True
