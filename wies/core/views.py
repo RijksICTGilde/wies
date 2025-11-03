@@ -121,9 +121,17 @@ class PlacementTableView(ListView):
                 Q(service__assignment__ministry__abbreviation__icontains=search_filter)
             )
 
-        ordering = self.request.GET.get('order')
-        if ordering:
-            qs = qs.order_by(ordering)
+        order_mapping = {
+            'name': 'colleague__name',
+            'assignment': 'service__assignment__name',
+            'skill': 'service__skill__name',
+        }
+
+        order_param = self.request.GET.get('order')
+        if order_param:
+            order_by = order_mapping.get(order_param)
+            if order_by:
+                qs = qs.order_by(order_by)
 
         filters = {
             'skill': 'service__skill__id',

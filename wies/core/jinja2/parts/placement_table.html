@@ -2,13 +2,13 @@
   <table class="rvo-table">
     <thead class="rvo-table-head">
       <tr class="rvo-table-row">
-        {% with field='colleague__name', label='Naam', target='#placement_table' %}
+        {% with field='name', label='Naam', target='#placement_table', sort_state=get_sort_state(request, 'name') %}
           {% include 'parts/generic_sortable_header.html' %}
         {% endwith %}
-        {% with field='service__assignment__name', label='Opdracht', target='#placement_table' %}
+        {% with field='assignment', label='Opdracht', target='#placement_table', sort_state=get_sort_state(request, 'assignment') %}
           {% include 'parts/generic_sortable_header.html' %}
         {% endwith %}
-        {% with field='service__skill__name', label='Rol', target='#placement_table' %}
+        {% with field='skill', label='Rol', target='#placement_table', sort_state=get_sort_state(request, 'skill') %}
           {% include 'parts/generic_sortable_header.html' %}
         {% endwith %}
         <th class="rvo-table-header">Periode</th>
