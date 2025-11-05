@@ -15,13 +15,14 @@ setup:
   docker compose run --rm django python manage.py dropdb --noinput
   docker compose run --rm django python manage.py migrate
   docker compose run --rm django python manage.py loaddata dummy_data.json
-  docker compose run --rm django python manage.py loaddata exact_dummy_data.json  
   docker-compose run --rm django python manage.py createsuperuser --noinput
-  docker compose run --rm django python manage.py loaddata dummy_data.json
 
 # Start up container
 up:
   docker compose up
+
+up-jrc-m:
+  docker compose run -v /Users/matthijs/jinja-roos-components:/app/jinja-roos-components --service-ports django sh -c "uv pip install -e ./jinja-roos-components && python manage.py runserver 0.0.0.0:8000"
 
 # setup-production:
 #  docker build . -t wies
@@ -39,10 +40,8 @@ up:
 rebuild-db:
   echo "removing db, migrations and building up again from scratch"
   docker compose run --rm django python manage.py dropdb --noinput
-  rm -r wies/projects/migrations/*
-  rm -r wies/exact/migrations/*
-  touch wies/projects/migrations/__init__.py
-  touch wies/exact/migrations/__init__.py
+  rm -r wies/core/migrations/*
+  touch wies/core/migrations/__init__.py
   docker compose run --rm django python manage.py makemigrations
 
 # Executes `manage.py` command.

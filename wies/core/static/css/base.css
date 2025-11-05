@@ -1,0 +1,28 @@
+/* Table row styling with RVO design system */
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clickable-row:hover{
+  background-color: var(--rvo-color-hemelblauw-150) !important;
+  cursor: pointer;
+}
+
+/* Page header styling */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  margin-top: 1rem;
+}
+
+.page-header h1 {
+  margin: 0;
+}
+
+.alert-text {
+  font-size: var(--rvo-font-size-2xs);
+  font-family: var(--rvo-font-sans-serif-font-family);
+}

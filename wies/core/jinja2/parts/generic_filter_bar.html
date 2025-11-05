@@ -1,0 +1,152 @@
+{#  
+Usage:
+{% with url_name='placements', target_selector='#placement-content' %}
+  {% include 'parts/generic_filter_bar.html' %}
+{% endwith %}
+ #}
+
+
+<link rel="stylesheet" href="{{ static('css/generic_filter_bar.css') }}">
+
+<!-- Generic Compact Filters Section -->
+<form class="rvo-form filter-bar"
+  hx-get="{{ url(url_name) }}"
+  hx-target="{{ target_selector }}"
+  hx-push-url="true"
+  hx-trigger="change,input delay:500ms from:input"
+  hx-include="[data-filter-input]">
+
+  <!-- Compact filter bar -->
+  <div class="filter-bar-bar">
+
+    <!-- Search Field -->
+    <div role="group" aria-labelledby="search-field-label" class="utrecht-form-field utrecht-form-field--text search-field-wrapper">
+      <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon"/>
+      <!-- TODO jrc: cannot replace one below with jrc equivalent because unsupported aria-label -->
+      <input
+        id="search"
+        name="{{ search_field|default('search') }}"
+        placeholder="{{ search_placeholder|default('Zoeken...') }}"
+        type="text"
+        class="utrecht-textbox utrecht-textbox--html-input rvo-input"
+        value="{% if search_filter %}{{ search_filter }}{% endif %}"
+        aria-label="{{ search_placeholder|default('Zoeken') }}"
+      />
+    </div>
+
+    <!-- Filters Button with indicator -->
+    <!-- TODO jrc: below button cannot be changed into c-button, because it is manipulated by javascript, which only sees the raw css -->
+    <div class="filter-button-container">
+      {% if filter_groups %}
+      <button type="button"
+              class="filter-button utrecht-button utrecht-button--secondary-action{% if active_filter_count > 0 %} utrecht-button--active{% endif %} utrecht-button--rvo-md utrecht-button--icon-before rvo-button">
+        <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before" role="img" aria-label="Trechter"></span>
+        <span class="filter-text">Filters{% if active_filter_count > 0 %} ({{ active_filter_count }}){% endif %}</span>
+      </button>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- Filter inputs inside modal -->
+  <div id="filterModal" class="filter-modal">
+    <div class="filter-modal-content">
+      <!-- Modal Header -->
+      <div class="filter-modal-header">
+        <h2 class="utrecht-heading-2">Filters</h2>
+        <button type="button" class="filter-modal-close">&times;</button>
+      </div>
+
+      <div class="filter-modal-body">
+        <div class="rvo-layout-column rvo-layout-gap--md">
+
+          {% for filter_group in filter_groups %}
+          {% if filter_group.type == 'select' %}
+          <!-- TODO jrc: below cannot be replaced by c-select-field due to data-* being blocked -->
+          <div class="utrecht-form-field">
+            <div class="rvo-form-field__label">
+              <label class="rvo-label" for="filter-{{ filter_group.name }}">{{ filter_group.label }}</label>
+            </div>
+            <div class="rvo-select-wrapper">
+              <select
+                name="{{ filter_group.name }}"
+                id="filter-{{ filter_group.name }}"
+                class="utrecht-select utrecht-select--html-select rvo-select"
+                data-filter-input>
+                <option value="">{{ filter_group.placeholder }}</option>
+                {% for option in filter_group.options %}
+                  <option value="{{ option.value }}" {% if option.get('selected') %} selected {% endif %}>
+                    {{ option.label }}
+                  </option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          {% elif filter_group.type == 'date_range' %}
+          <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
+            <!-- TODO JRC below inputs cannot be replaced by c-date-field because data-* attributes are not supported -->
+            <div class="utrecht-form-field">
+              <div class="rvo-form-field__label">
+                <label class="rvo-label" for="filter-{{ filter_group.name }}-from">{{ filter_group.from_label }}</label>
+              </div>
+              <input
+                type="date"
+                id="filter-{{ filter_group.name }}-from"
+                class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
+                {% if filter_group.require_both %}
+                data-require-both="true"
+                data-combined-name="{{ filter_group.name }}"
+                data-pair-id="filter-{{ filter_group.name }}-to"
+                {% endif %}
+                value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from }}{% endif %}"
+              />
+            </div>
+            <div class="utrecht-form-field">
+              <div class="rvo-form-field__label">
+                <label class="rvo-label" for="filter-{{ filter_group.name }}-to">{{ filter_group.to_label }}</label>
+              </div>
+              <input
+                type="date"
+                id="filter-{{ filter_group.name }}-to"
+                class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
+                {% if filter_group.require_both %}
+                data-require-both="true"
+                data-combined-name="{{ filter_group.name }}"
+                data-pair-id="filter-{{ filter_group.name }}-from"
+                {% endif %}
+                value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to }}{% endif %}"
+              />
+            </div>
+          </div>
+          {% if filter_group.require_both %}
+          <!-- Hidden input managed by JS - only submitted when both dates are filled -->
+          <input
+            type="hidden"
+            id="filter-{{ filter_group.name }}-combined"
+            name="{{ filter_group.name }}"
+            data-filter-input
+          />
+          <div id="{{ filter_group.name }}-validation-message" class="date-range-validation-message" style="display: none; color: #e17000; font-size: 0.875rem; margin-top: 0.25rem;">
+            Beide datums zijn vereist voor een geldige periode filter.
+          </div>
+          {% endif %}
+          {% endif %}
+          {% endfor %}
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="filter-modal-footer">
+          <c-button class="clear-filters-button" kind="warning-subtle">
+            Wis alle filters
+          </c-button>
+          <c-button class="close-modal-button" kind="primary">
+            Naar resultaten
+          </c-button>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+
+<script src="{{ static('js/generic_filter_bar.js') }}"></script>

@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="rvo-layout-column rvo-layout-gap--xl">
+  <div>
+        <!-- Breadcrumbs -->
+        <ol class="rvo-breadcrumbs rvo-breadcrumbs--sm">
+          <li class="rvo-breadcrumbs-item">
+            Collega's
+          </li>
+          <li class="rvo-breadcrumbs-item">
+            <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw" role="img" aria-label="Delta naar rechts"></span>
+            <span class="rvo-breadcrumb-current-page">{{ object.name }}</span>
+          </li>
+        </ol>
+    <c-h1 noMargins="true">{{ object.name }}</c-h1>
+  </div>
+  
+  <div class="rvo-layout-column rvo-layout-gap--lg">
+
+    <!-- TODO jrc: same as disabled: annoying that you have to give in explicit "true"? -->
+    <c-h2 noMargins="true">Collega gegevens</c-h2>
+    
+    <dl class="rvo-data-list">
+      <dt>Naam</dt>
+      <dd>{{ object.name }}</dd>
+      <dt>E-mail</dt>
+      <dd>{{ object.email }}</dd>
+      <dt>Bron</dt>
+      <dd>
+        {% if object.source_url %}
+          <a href="{{ object.source_url }}" target="_blank" class="rvo-link">{{ object.get_source_display() }} <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs" role="img" aria-label="Externe link"></span></a>
+        {% else %}
+          {{ object.get_source_display() }}
+        {% endif %}
+      </dd>
+      <dt>Merk</dt>
+      <dd>
+        {% if object.brand %}
+          {{ object.brand.name }}
+        {% else %}
+          <span class="rvo-text--italic">Geen merk opgegeven</span>
+        {% endif %}
+      </dd>
+      <dt>Acties</dt>
+      <dd>
+        <div class="rvo-layout-row rvo-layout-gap--sm">
+          <button class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display() }}">
+            Collega bewerken
+          </button>
+          <button class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display() }}">
+            Collega verwijderen
+          </button>
+        </div>
+      </dd>
+    </dl>
+    
+    <c-h2 noMargins="true">Opdrachten</c-h2>
+    <table class="rvo-table">
+      <thead class="rvo-table-head">
+        <tr class="rvo-table-row">
+          <th class="rvo-table-header">Opdracht</th>
+          <th class="rvo-table-header">Status</th>
+          <th class="rvo-table-header">Opdrachtgever</th>
+          <th class="rvo-table-header">Rol</th>
+          <th class="rvo-table-header">Periode</th>
+        </tr>
+      </thead>
+      <tbody class="rvo-table-body">
+        {% for placement in object.placements.all() %}
+        <tr class="rvo-table-row clickable-row" style="cursor: pointer;" onclick="window.location='/assignments/{{ placement.service.assignment.id }}/'">
+          <td class="rvo-table-cell">{{ placement.service.assignment.name }}</td>
+          <td class="rvo-table-cell">
+            <div class="rvo-tag rvo-tag--default">{{ placement.service.assignment.status }}</div>
+          </td>
+          <td class="rvo-table-cell">
+            <div>{{ placement.service.assignment.organization }}</div>
+            {% if placement.service.assignment.ministry %}
+              <div style="font-size: 0.875em; color: var(--rvo-color-grijs-600); margin-top: 0.25rem;">{{ placement.service.assignment.ministry.abbreviation }}</div>
+            {% endif %}
+          </td>
+          <td class="rvo-table-cell">
+            <div class="rvo-tag rvo-tag--default">{{ placement.service.skill.name }}</div>
+          </td>
+          <td class="rvo-table-cell">{{ placement.start_date if placement.start_date else "?" }} - {{ placement.end_date if placement.end_date else "?" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+  </div>
+</div>
+{% endblock content %}

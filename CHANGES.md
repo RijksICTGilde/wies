@@ -2,12 +2,7 @@
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
-- bump authlib for security patches
-- fix that assignment row clickable again
-- (backwards incompatible) remove cost part of assignment
-- (backwards incompatible) add assignment owner
-- convert to jinja templating
-- add `jinja_roos_components` library for roos components
+- (backwards incompatible) clean slate - start over with only essential 4W functionality
 
 ## 2025-10-09
 - add period filter to placement page

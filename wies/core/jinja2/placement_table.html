@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{{ static('css/placements.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="rvo-layout-column rvo-layout-gap--md">
+
+  <c-h1>Wie zit waar?</c-h1>
+
+  {% with url_name='placements', target_selector='#placement_table' %}
+    {% include 'parts/generic_filter_bar.html' %}
+  {% endwith %}
+
+  <!-- Content -->
+  <div id="placement_table" class="rvo-table-container">
+    {% include 'parts/placement_table.html' %}
+  </div>
+
+</div>
+
+{% endblock %}

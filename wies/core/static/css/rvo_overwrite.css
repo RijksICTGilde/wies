@@ -1,0 +1,44 @@
+.rvo-table {
+  width: 100%;
+}
+
+.rvo-table-header {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.rvo-table-header--active-sort {
+  background-color: var(--rvo-color-hemelblauw-150) !important;
+  color: var(--rvo-color-hemelblauw-750) !important;
+}
+
+.rvo-table-header__sortable-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.rvo--table-header__sorting-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.rvo-table-row:hover,
+.rvo-table-row.clickable-row:hover {
+  background-color: var(--rvo-color-hemelblauw-150) !important;
+  cursor: pointer;
+}
+
+/* Compact header styling */
+.rvo-alert--padding-sm {
+  padding: 0.25rem 1rem;
+}
+
+/* Custom select chevron fix */
+.rvo-select-wrapper::after {
+  background-color: white;
+  -webkit-mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
+  mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
+}
