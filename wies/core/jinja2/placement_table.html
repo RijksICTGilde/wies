@@ -7,14 +7,11 @@
 {% block content %}
 <div class="rvo-layout-column rvo-layout-gap--md">
 
-<!-- Header with title -->
-<div class="page-header">
-  <h1>Wie zit waar?</h1>
-</div>
+  <c-h1>Wie zit waar?</c-h1>
 
-{% with url_name='placements', target_selector='#placement_table' %}
-  {% include 'parts/generic_filter_bar.html' %}
-{% endwith %}
+  {% with url_name='placements', target_selector='#placement_table' %}
+    {% include 'parts/generic_filter_bar.html' %}
+  {% endwith %}
 
   <!-- Content -->
   <div id="placement_table" class="rvo-table-container">

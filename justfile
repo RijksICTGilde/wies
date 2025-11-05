@@ -21,6 +21,9 @@ setup:
 up:
   docker compose up
 
+up-jrc-m:
+  docker compose run -v /Users/matthijs/jinja-roos-components:/app/jinja-roos-components --service-ports django sh -c "uv pip install -e ./jinja-roos-components && python manage.py runserver 0.0.0.0:8000"
+
 # setup-production:
 #  docker build . -t wies
 #   # optionally: remove db-sqlite file

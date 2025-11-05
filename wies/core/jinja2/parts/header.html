@@ -33,14 +33,10 @@
           <ul class="rvo-menubar__group--flex">
             <li class="rvo-menubar__item">
               {% if user.is_authenticated and user.colleague %}
-                <a href="/colleagues/{{ user.colleague.id }}" class="rvo-link rvo-menubar__link rvo-link--logoblauw">
-                  <span
-                    class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--wit"
-                    role="img"
-                    aria-label="User"
-                  ></span>
+                <!-- TODO jrc: ideally you dont have to specify the showIcon, color and icon for obvious case -->
+                <c-link href="/colleagues/{{ user.colleague.id }}" icon="user" showIcon="before" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw">
                   {{ user.get_full_name() }}
-                </a>
+                </c-link>
               {% else %}
               {% endif %}
             </li>

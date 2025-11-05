@@ -15,14 +15,15 @@
       </li>
     </ol>
 
-    <h1 class="utrecht-heading-1 rvo-heading--no-margins">{{ object.name }}</h1>
+    <c-h1 noMargins="true">{{ object.name }}</c-h1>
   </div>
   
   <div class="rvo-layout-column rvo-layout-gap--lg">
-    <h2 class="utrecht-heading-2 rvo-heading--no-margins">Opdrachten</h2>
+    <c-h2 noMargins="true">Opdrachten</c-h2>
     
     {% if assignments %}
       <div class="rvo-table--responsive">
+        <!-- TODO jrc: can this be changed in jrc equivalent? -->
         <table class="rvo-table">
           <thead class="rvo-table-head">
             <tr class="rvo-table-row">
