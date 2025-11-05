@@ -251,6 +251,33 @@ def placements_url_with_filters(context, url_name):
     else:
         return reverse(url_name)
 
+@register.simple_tag(takes_context=True)
+def colleagues_url_with_filters(context, url_name):
+    """
+    Build colleagues URL with preserved query parameters
+    
+    Args:
+        context: Template context containing request
+        url_name: URL name (e.g., 'colleagues', 'colleagues-availability')
+    
+    Returns:
+        URL with preserved filters
+    """
+    
+    request = context['request']
+    params = {}
+    
+    # Preserve existing query parameters
+    for param in ['search', 'brand', 'skill', 'client', 'period', 'order']:
+        value = request.GET.get(param)
+        if value:
+            params[param] = value
+    
+    if params:
+        return f"{reverse(url_name)}?{urlencode(params)}"
+    else:
+        return reverse(url_name)
+
 
 @register.simple_tag(takes_context=True)
 def placements_url_with_tab(context, tab_key):
@@ -322,11 +349,18 @@ class AssignmentTabsView(ListView):
         return qs
     
     def get_queryset(self):
-        """Get queryset for vacatures only"""
-        base_qs = self.get_base_queryset()
+        """Get services from assignments with vacature status"""
+        from .models import Service
         
-        # Only show vacatures
-        return base_qs.filter(status='VACATURE')
+        # Get assignments with VACATURE status
+        base_assignments = self.get_base_queryset().filter(status='VACATURE')
+        
+        # Get services from these assignments
+        services = Service.objects.filter(
+            assignment__in=base_assignments
+        ).select_related('assignment', 'assignment__ministry', 'skill').order_by('-assignment__start_date')
+        
+        return services
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -661,7 +695,7 @@ class PlacementTableView(ListView):
 class AvailabilityView(ListView):
     """View for colleague availability (timeline view)"""
     model = Colleague
-    template_name = 'placement_availability.html'
+    template_name = 'colleague_availability.html'
 
     def get_queryset(self):
         """Apply filters to colleagues queryset"""
@@ -688,7 +722,7 @@ class AvailabilityView(ListView):
         """Return appropriate template based on request type"""
         if 'HX-Request' in self.request.headers:
             return ['parts/placement_timeline.html']
-        return ['placement_availability.html']
+        return ['colleague_availability.html']
 
     def get_context_data(self, **kwargs):
         """Add dynamic filter options and timeline data"""

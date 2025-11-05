@@ -28,11 +28,16 @@
             {% for assignment in assignments_by_status.LEAD %}
             <div class="wies-kanban-card" draggable="true" data-type="assignment" data-id="{{ assignment.id }}" onclick="openAssignment({{ assignment.id }})">
                 <c-card title="{{ assignment.name }}">
-                    <div class="wies-card-subtitle">{{ assignment.ministry.name }}</div>
+                    <div class="wies-card-subtitle">
+                        <span class="utrecht-icon rvo-icon rvo-icon-basis-kantoorgebouw rvo-icon--sm" role="img" aria-label="ministerie"></span>
+                        {{ assignment.ministry.name }}
+                    </div>
                     <div class="wies-card-meta">
-                        {% if assignment.owner %}Eigenaar: {{ assignment.owner.name }}<br>{% endif %}
-                        {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
-                        {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
+                        <div class="wies-card-dates">
+                            <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm" role="img" aria-label="periode"></span>
+                            {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
+                            {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
+                        </div>
                     </div>
                 </c-card>
             </div>
@@ -55,11 +60,16 @@
             {% for assignment in assignments_by_status.VACATURE %}
             <div class="wies-kanban-card" draggable="true" data-type="assignment" data-id="{{ assignment.id }}" onclick="openAssignment({{ assignment.id }})">
                 <c-card title="{{ assignment.name }}">
-                    <div class="wies-card-subtitle">{{ assignment.ministry.name }}</div>
+                    <div class="wies-card-subtitle">
+                        <span class="utrecht-icon rvo-icon rvo-icon-basis-kantoorgebouw rvo-icon--sm" role="img" aria-label="ministerie"></span>
+                        {{ assignment.ministry.name }}
+                    </div>
                     <div class="wies-card-meta">
-                        {% if assignment.owner %}Eigenaar: {{ assignment.owner.name }}<br>{% endif %}
-                        {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
-                        {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
+                        <div class="wies-card-dates">
+                            <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm" role="img" aria-label="periode"></span>
+                            {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
+                            {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
+                        </div>
                     </div>
                 </c-card>
             </div>
@@ -82,11 +92,16 @@
             {% for assignment in assignments_by_status.INGEVULD %}
             <div class="wies-kanban-card" draggable="true" data-type="assignment" data-id="{{ assignment.id }}" onclick="openAssignment({{ assignment.id }})">
                 <c-card title="{{ assignment.name }}">
-                    <div class="wies-card-subtitle">{{ assignment.ministry.name }}</div>
+                    <div class="wies-card-subtitle">
+                        <span class="utrecht-icon rvo-icon rvo-icon-basis-kantoorgebouw rvo-icon--sm" role="img" aria-label="ministerie"></span>
+                        {{ assignment.ministry.name }}
+                    </div>
                     <div class="wies-card-meta">
-                        {% if assignment.owner %}Eigenaar: {{ assignment.owner.name }}<br>{% endif %}
-                        {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
-                        {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
+                        <div class="wies-card-dates">
+                            <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm" role="img" aria-label="periode"></span>
+                            {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
+                            {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
+                        </div>
                     </div>
                 </c-card>
             </div>
@@ -109,11 +124,16 @@
             {% for assignment in assignments_by_status.AFGEWEZEN %}
             <div class="wies-kanban-card" draggable="true" data-type="assignment" data-id="{{ assignment.id }}" onclick="openAssignment({{ assignment.id }})">
                 <c-card title="{{ assignment.name }}">
-                    <div class="wies-card-subtitle">{{ assignment.ministry.name }}</div>
+                    <div class="wies-card-subtitle">
+                        <span class="utrecht-icon rvo-icon rvo-icon-basis-kantoorgebouw rvo-icon--sm" role="img" aria-label="ministerie"></span>
+                        {{ assignment.ministry.name }}
+                    </div>
                     <div class="wies-card-meta">
-                        {% if assignment.owner %}Eigenaar: {{ assignment.owner.name }}<br>{% endif %}
-                        {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
-                        {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
+                        <div class="wies-card-dates">
+                            <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm" role="img" aria-label="periode"></span>
+                            {% if assignment.start_date %}{{ assignment.start_date.strftime('%d %b %Y') }}{% endif %}
+                            {% if assignment.end_date %} - {{ assignment.end_date.strftime('%d %b %Y') }}{% endif %}
+                        </div>
                     </div>
                 </c-card>
             </div>

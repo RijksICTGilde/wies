@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{{ static('css/assignments.css') }}">
+{% endblock %}
+
 {% block content %}
 
 <!-- Header with title -->
@@ -13,8 +17,8 @@
   {% include 'parts/generic_filter_bar.html' %}
 {% endwith %}
 
-  <!-- Assignment Tabs Content -->
-  <div id="assignment-tabs-section" class="rvo-table-container">
+  <!-- Assignment Cards Content -->
+  <div id="assignment-tabs-section" class="wies-assignments-container">
     {% include 'parts/assignment_tabs_section.html' %}
   </div>
 

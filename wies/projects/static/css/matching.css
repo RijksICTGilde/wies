@@ -113,6 +113,9 @@ div[data-type="assignment"].wies-kanban-card.dragging {
     color: var(--rvo-color-grijs-600);
     font-size: var(--rvo-font-size-xs);
     margin-bottom: var(--rvo-space-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--rvo-space-xs);
 }
 
 .wies-card-meta {
@@ -121,6 +124,23 @@ div[data-type="assignment"].wies-kanban-card.dragging {
     margin-top: var(--rvo-space-sm);
     padding-top: var(--rvo-space-sm);
     border-top: 1px solid var(--rvo-color-grijs-200);
+}
+
+/* Smaller avatar for kanban cards */
+.wies-kanban-avatar {
+    width: 24px !important;
+    height: 24px !important;
+    font-size: var(--rvo-font-size-xs) !important;
+}
+
+.wies-card-owner {
+    margin-bottom: var(--rvo-space-xs);
+}
+
+.wies-card-dates {
+    display: flex;
+    align-items: center;
+    gap: var(--rvo-space-xs);
 }
 
 /* Responsive */

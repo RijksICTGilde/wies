@@ -1,5 +1,12 @@
 {% extends "base.html" %}
 
+{% block header %}
+{{ super() }}
+{% with active_page='list' %}
+  {% include 'parts/colleagues_navigation.html' %}
+{% endwith %}
+{% endblock %}
+
 {% block content %}
 
 <div class="page-header">

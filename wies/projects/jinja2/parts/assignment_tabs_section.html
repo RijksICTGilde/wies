@@ -1,39 +1,31 @@
-<div class="rvo-table--responsive" id="assignment-tabs-section">
-  <table class="rvo-table">
-    <thead class="rvo-table-head">
-      <tr class="rvo-table-row">
-        {% with field='name', label='Naam', target='#assignment-tabs-section' %}
-  {% include 'parts/generic_sortable_header.html' %}
-{% endwith %}
-        {% with field='organization', label='Opdrachtgever', target='#assignment-tabs-section' %}
-  {% include 'parts/generic_sortable_header.html' %}
-{% endwith %}
-        <th class="rvo-table-header">Periode</th>
-      </tr>
-    </thead>
-    <tbody class="rvo-table-body">
-      {% for assignment in active_assignments %}
-      <tr class="rvo-table-row clickable-row" onclick="window.location.href='/assignments/{{ assignment.pk }}/'">
-        <td class="rvo-table-cell">{{ assignment.name }}</td>
-        <td class="rvo-table-cell">
-          <div>{{ assignment.organization }}</div>
-          {% if assignment.ministry %}
-            <div style="font-size: 0.875em; color: var(--rvo-color-grijs-600); margin-top: 0.25rem;">{{ assignment.ministry.abbreviation }}</div>
-          {% endif %}
-        </td>
-        <td class="rvo-table-cell">
-          <span class="assignment-period">
-            {{ assignment.start_date.strftime("%b %y")|default("-") }} - {{ assignment.end_date.strftime("%b %y")|default("-") }}
-          </span>
-        </td>
-      </tr>
-      {% else %}
-      <tr class="rvo-table-row">
-        <td class="rvo-table-cell" colspan="3" style="text-align: center; padding: 2rem; color: var(--rvo-color-grijs-600);">
-          <span class="rvo-text--italic">Geen opdrachten gevonden voor deze categorie.</span>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+<!-- Card Grid Container -->
+<div id="assignment-tabs-section">
+  <!-- Assignment Cards Grid -->
+  <div class="wies-cards-grid">
+    {% for service in active_assignments %}
+    <div class="wies-kanban-card" data-type="service" data-id="{{ service.id }}" onclick="window.location.href='/assignments/{{ service.assignment.pk }}/'">
+      <div class="wies-card-header">
+        <div class="rvo-tag rvo-tag--default rvo-tag--xs">{{ service.skill.name }}</div>
+        <div class="wies-card-date">
+          <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm" role="img" aria-label="periode"></span>
+          {{ service.assignment.start_date.strftime("%b %y")|default("-") }} - {{ service.assignment.end_date.strftime("%b %y")|default("-") }}
+        </div>
+      </div>
+      <div class="wies-card-title">{{ service.assignment.name }}</div>
+      <div class="wies-card-organization">
+        <span class="utrecht-icon rvo-icon rvo-icon-basis-kantoorgebouw rvo-icon--sm" role="img" aria-label="opdrachtgever"></span>
+        <div class="wies-card-subtitle">
+          <span class="wies-card-organization-name">{{ service.assignment.organization }}</span>{% if service.assignment.ministry %}<span class="wies-card-ministry-name"> - {{ service.assignment.ministry.name }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="wies-empty-state">
+      <div class="rvo-text rvo-text--subtle rvo-text--center">
+        <span class="utrecht-icon rvo-icon rvo-icon-zoeken rvo-icon--lg rvo-margin-bottom--sm" role="img" aria-label="geen resultaten"></span>
+        <div>Geen rollen gevonden voor deze categorie.</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
 </div>

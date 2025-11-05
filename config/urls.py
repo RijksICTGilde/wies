@@ -55,7 +55,7 @@ urlpatterns = [
     path('colleagues/<int:pk>/update', ColleagueUpdateView.as_view(), name='colleague-update'),
     path('placements/', PlacementTableView.as_view(), name='placements'),
     path('placements/table/', PlacementTableView.as_view(), name='placements-table'),
-    path('placements/availability/', AvailabilityView.as_view(), name='placements-availability'),
+    path('colleagues/availability/', AvailabilityView.as_view(), name='colleagues-availability'),
     path('placements/<int:pk>/', PlacementDetailView.as_view(), name='placement-detail'),
     path('placements/<int:pk>/update', PlacementUpdateView.as_view()),
     path('placements/<int:pk>/delete', PlacementDeleteView.as_view()),
