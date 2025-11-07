@@ -22,7 +22,7 @@ Usage:
     <!-- Search Field -->
     <div role="group" aria-labelledby="search-field-label" class="utrecht-form-field utrecht-form-field--text search-field-wrapper">
       <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon"/>
-      <!-- TODO jrc: cannot replace one below with jrc equivalent because unsupported aria-label -->
+      <!-- TODO jrc: cannot replace one below with jrc equivalent because unsupported aria-label and different sizing -->
       <input
         id="search"
         name="{{ search_field|default('search') }}"
@@ -53,7 +53,7 @@ Usage:
     <div class="filter-modal-content">
       <!-- Modal Header -->
       <div class="filter-modal-header">
-        <h2 class="utrecht-heading-2">Filters</h2>
+        <c-h2 noMargins>Filters</c-h2>
         <button type="button" class="filter-modal-close">&times;</button>
       </div>
 
@@ -62,33 +62,33 @@ Usage:
 
           {% for filter_group in filter_groups %}
           {% if filter_group.type == 'select' %}
-          <!-- TODO jrc: below cannot be replaced by c-select-field due to data-* being blocked -->
+          <!-- TODO jrc: cannot move to select-field because data-filter-input attribute will be put on div, not on select -->
           <div class="utrecht-form-field">
             <div class="rvo-form-field__label">
               <label class="rvo-label" for="filter-{{ filter_group.name }}">{{ filter_group.label }}</label>
             </div>
-            <div class="rvo-select-wrapper">
-              <select
+            <!-- TODO jrc: data-filter-input needs explicit true, otherwise empty string and js breaks. what is expected? -->
+            <!-- TODO jrc: option argument with selected does not work. dont know why? -->
+            <c-select
                 name="{{ filter_group.name }}"
                 id="filter-{{ filter_group.name }}"
-                class="utrecht-select utrecht-select--html-select rvo-select"
-                data-filter-input>
+                data-filter-input="true">
                 <option value="">{{ filter_group.placeholder }}</option>
                 {% for option in filter_group.options %}
                   <option value="{{ option.value }}" {% if option.get('selected') %} selected {% endif %}>
                     {{ option.label }}
                   </option>
                 {% endfor %}
-              </select>
-            </div>
+              </c-select>
           </div>
           {% elif filter_group.type == 'date_range' %}
           <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
-            <!-- TODO JRC below inputs cannot be replaced by c-date-field because data-* attributes are not supported -->
+            <!-- TODO jrc: cannot move to date-field because data-filter-input attribute will be put on div, not on date input -->
             <div class="utrecht-form-field">
               <div class="rvo-form-field__label">
                 <label class="rvo-label" for="filter-{{ filter_group.name }}-from">{{ filter_group.from_label }}</label>
               </div>
+              <!-- TODO jrc: support separate date field -->
               <input
                 type="date"
                 id="filter-{{ filter_group.name }}-from"
