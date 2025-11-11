@@ -32,9 +32,9 @@
           </ul>
           <ul class="rvo-menubar__group--flex">
             <li class="rvo-menubar__item">
-              {% if user.is_authenticated and user.colleague %}
+              {% if user.is_authenticated %}
                 <!-- TODO jrc: ideally you dont have to specify the showIcon, color and icon for obvious case -->
-                <c-link href="/colleagues/{{ user.colleague.id }}" icon="user" showIcon="before" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw">
+                <c-link href="/colleagues/{{ user.id }}" icon="user" showIcon="before" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw">
                   {{ user.get_full_name() }}
                 </c-link>
               {% else %}
