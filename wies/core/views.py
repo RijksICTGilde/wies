@@ -66,8 +66,9 @@ def no_access(request):
     return render(request, 'no_access.html')
 
 
+@login_not_required  # logout should be accessible without login
 def logout(request):
-    if request.user:
+    if request.user and request.user.is_authenticated:
         auth_logout(request)
     return redirect('/')
 

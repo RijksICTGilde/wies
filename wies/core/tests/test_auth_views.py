@@ -1,0 +1,171 @@
+from django.test import TestCase, Client, override_settings
+from django.urls import reverse
+from unittest.mock import patch, MagicMock
+
+from wies.core.models import Colleague, Brand
+
+
+@override_settings(
+    # Use simple static files storage for tests (avoid collectstatic requirement)
+    STORAGES={
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    },
+    # Enable OIDC authentication for tests
+    OIDC_CLIENT_ID='test-client-id',
+    OIDC_CLIENT_SECRET='test-client-secret',
+    OIDC_DISCOVERY_URL='https://test.example.com/.well-known/openid-configuration',
+    # Ensure LoginRequiredMiddleware is active
+    MIDDLEWARE=[
+        'django.middleware.security.SecurityMiddleware',
+        'whitenoise.middleware.WhiteNoiseMiddleware',
+        'django.contrib.sessions.middleware.SessionMiddleware',
+        'django.middleware.common.CommonMiddleware',
+        'django.middleware.csrf.CsrfViewMiddleware',
+        'django.contrib.auth.middleware.AuthenticationMiddleware',
+        'django.contrib.auth.middleware.LoginRequiredMiddleware',
+        'django.contrib.messages.middleware.MessageMiddleware',
+        'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    ],
+)
+class AuthViewsTest(TestCase):
+    """Integration tests for authentication flow views"""
+
+    def setUp(self):
+        """Create test data"""
+        self.client = Client()
+        self.brand = Brand.objects.create(name="Test Brand")
+        self.colleague = Colleague.objects.create(
+            username="test_sso_user",
+            email="test@example.com",
+            first_name="Test",
+            last_name="User",
+            brand=self.brand
+        )
+
+    @patch('wies.core.views.oauth.oidc.authorize_access_token')
+    def test_auth_endpoint_success_whitelisted_user(self, mock_authorize):
+        """Test successful SSO login for whitelisted Colleague"""
+        # Mock OIDC response for whitelisted user
+        mock_authorize.return_value = {
+            'userinfo': {
+                'sub': 'test_sso_user',
+                'given_name': 'Test',
+                'family_name': 'User',
+                'email': 'test@example.com'
+            }
+        }
+
+        response = self.client.get(reverse('auth'))
+
+        # Should redirect to home
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, f"http://testserver{reverse('home')}")
+
+        # Should create session
+        self.assertIn('_auth_user_id', self.client.session)
+
+        # Should be logged in as the colleague
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.colleague.pk)
+
+    @patch('wies.core.views.oauth.oidc.authorize_access_token')
+    def test_auth_endpoint_failure_non_whitelisted_user(self, mock_authorize):
+        """Test SSO login for non-whitelisted user redirects to no-access"""
+        # Mock OIDC response for non-whitelisted user
+        mock_authorize.return_value = {
+            'userinfo': {
+                'sub': 'unknown_user',
+                'given_name': 'Unknown',
+                'family_name': 'Person',
+                'email': 'unknown@example.com'
+            }
+        }
+
+        response = self.client.get(reverse('auth'))
+
+        # Should redirect to no-access page
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/no-access/')
+
+        # Should NOT create session
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+    @patch('wies.core.views.oauth.oidc.authorize_access_token')
+    def test_auth_endpoint_session_creation(self, mock_authorize):
+        """Test that successful auth creates proper session"""
+        mock_authorize.return_value = {
+            'userinfo': {
+                'sub': 'test_sso_user',
+                'given_name': 'Test',
+                'family_name': 'User',
+                'email': 'test@example.com'
+            }
+        }
+
+        # Verify no session before auth
+        self.assertNotIn('_auth_user_id', self.client.session)
+
+        self.client.get(reverse('auth'))
+
+        # Verify session exists after auth
+        self.assertIn('_auth_user_id', self.client.session)
+        self.assertTrue(self.client.session.get('_auth_user_id'))
+
+    def test_logout_clears_session(self):
+        """Test that logout clears the session"""
+        # Login the user first
+        self.client.force_login(self.colleague)
+        self.assertIn('_auth_user_id', self.client.session)
+
+        # Logout
+        response = self.client.get(reverse('logout'))
+
+        # Should redirect to home/login
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/')
+
+        # Session should be cleared (new session will be created but without user)
+        # Accessing a protected page should now redirect to login
+        protected_response = self.client.get(reverse('placements'))
+        self.assertEqual(protected_response.status_code, 302)
+        self.assertTrue(protected_response.url.startswith('/login/'))
+
+    def test_logout_when_not_logged_in(self):
+        """Test logout works gracefully when user is not logged in"""
+        response = self.client.get(reverse('logout'))
+
+        # Should redirect to home without error (no login requirement)
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.url, '/')
+        # Verify it doesn't redirect to login page
+        self.assertNotIn('/login/', response.url)
+
+    def test_login_page_accessible_without_auth(self):
+        """Test that login page is accessible without authentication"""
+        response = self.client.get(reverse('login'))
+
+        self.assertEqual(response.status_code, 200)
+
+    def test_no_access_page_accessible_without_auth(self):
+        """Test that no-access page is accessible without authentication"""
+        response = self.client.get('/no-access/')
+
+        self.assertEqual(response.status_code, 200)
+
+    @patch('wies.core.views.oauth.oidc.authorize_redirect')
+    def test_login_post_initiates_oidc_flow(self, mock_authorize_redirect):
+        """Test POST to login initiates OIDC authorization flow"""
+        from django.http import HttpResponse
+        # Return a proper HttpResponse instead of MagicMock
+        mock_authorize_redirect.return_value = HttpResponse(status=302)
+
+        response = self.client.post(reverse('login'))
+
+        # Should call OIDC authorization
+        mock_authorize_redirect.assert_called_once()
+
+        # Verify redirect_uri parameter includes auth callback
+        call_args = mock_authorize_redirect.call_args
+        redirect_uri = call_args[0][1]  # Second positional argument
+        self.assertIn('/auth/', redirect_uri)
