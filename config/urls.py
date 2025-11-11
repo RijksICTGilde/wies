@@ -19,7 +19,7 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from wies.core.views import client
-from wies.core.views import AssignmentDetail, ColleagueDetail
+from wies.core.views import AssignmentDetailView, ColleagueDetailView
 from wies.core.views import PlacementTableView
 from wies.core.views import MinistryDetailView
 from wies.core.views import admin_db, login, logout, auth
@@ -31,8 +31,8 @@ urlpatterns = [
     path('login/', login, name='login'),
     path('logout/', logout, name='logout'),
     path('auth/', auth, name='auth'),
-    path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
-    path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
+    path('assignments/<int:pk>/', AssignmentDetailView.as_view(), name='assignment-detail'),
+    path('colleagues/<int:pk>/', ColleagueDetailView.as_view(), name='colleague-detail'),
     path('placements/', PlacementTableView.as_view(), name='placements'),
     path('clients/<str:name>', client),
     path('ministries/<int:pk>/', MinistryDetailView.as_view(), name='ministry-detail'),

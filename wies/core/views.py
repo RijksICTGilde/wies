@@ -76,9 +76,9 @@ def admin_db(request):
     if request.method == 'POST':
         action = request.POST.get('action')
         if action == 'clear_data':
-            # not using flush, since that would clear users
+            # not using flush, since that would clear all Colleagues
+            Colleague.objects.exclude(username='admin').delete()
             Assignment.objects.all().delete()
-            Colleague.objects.all().delete()
             Skill.objects.all().delete()
             Placement.objects.all().delete()
             Service.objects.all().delete()
@@ -272,12 +272,12 @@ class PlacementTableView(ListView):
         return context
 
 
-class AssignmentDetail(DetailView):
+class AssignmentDetailView(DetailView):
     model = Assignment
     template_name = 'assignment_detail.html'
 
 
-class ColleagueDetail(DetailView):
+class ColleagueDetailView(DetailView):
     model = Colleague
     template_name = 'colleague_detail.html'
 

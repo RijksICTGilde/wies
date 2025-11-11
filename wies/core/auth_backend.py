@@ -16,27 +16,15 @@ class AuthBackend(BaseBackend):
             extra_fields = {}
 
         try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            user = User(username=username, email=email, **extra_fields)
+            user = Colleague.objects.get(email=email)
+        except Colleague.DoesNotExist:
+            user = Colleague(username=username, email=email, **extra_fields)
             user.save()
-
-        # Link or create Colleague profile
-        name = f"{user.first_name} {user.last_name}".strip()
-        colleague, _ = Colleague.objects.get_or_create(
-            email=email,
-            defaults={'name': name}
-        )
-        
-        # if not yet linked, link
-        if not colleague.user:
-            colleague.user = user
-            colleague.save()
 
         return user 
     
     def get_user(self, user_id):
         try:
-            return User.objects.get(pk=user_id)
-        except User.DoesNotExist:
+            return Colleague.objects.get(pk=user_id)
+        except Colleague.DoesNotExist:
             return None

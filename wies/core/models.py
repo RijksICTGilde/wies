@@ -2,7 +2,7 @@ import datetime
 
 from django.db import models
 from django.urls import reverse
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 
 
 ASSIGNMENT_STATUS = {
@@ -45,16 +45,17 @@ class Skill(models.Model):
     def __str__(self):
         return self.name
 
-class Colleague(models.Model):
-    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='colleague')
-    name = models.CharField(max_length=200)
-    email = models.EmailField()
+class Colleague(AbstractUser):
     brand = models.ForeignKey('Brand', models.SET_NULL, null=True, blank=False)
     skills = models.ManyToManyField('Skill', blank=True)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='otys_iir')
     source_id = models.CharField(blank=True)
     source_url = models.URLField(null=True, blank=True)
     # placements via reversed relation
+
+    @property
+    def name(self):
+        return f"{self.first_name} {self.last_name}".strip()
 
     def get_absolute_url(self):
         return reverse("colleague-detail", kwargs={"pk": self.pk})
