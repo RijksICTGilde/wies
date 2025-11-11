@@ -8,6 +8,7 @@ This files lists the changes during the lifetime of this project.
 - Add authentication tests
 - Remove login requirement from logout endpoint
 - Remove possibility to switch off authentication
+- Developer is added as colleague from env vars during setup
 
 ## 2025-10-09
 - add period filter to placement page

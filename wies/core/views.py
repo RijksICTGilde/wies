@@ -92,6 +92,9 @@ def admin_db(request):
         elif action == 'load_data':
             management.call_command('loaddata', 'dummy_data.json')
             messages.success(request, 'Data loaded successfully from dummy_data.json')
+        elif action == 'add_dev_colleague':
+            management.call_command('add_development_colleague')
+            messages.success(request, 'Development colleague added')
         elif action == 'sync_all_otys_records':
             sync_all_otys_iir_records()
             messages.success(request, 'All records synced successfully from OTYS IIR')

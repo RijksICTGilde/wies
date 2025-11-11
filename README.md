@@ -12,7 +12,9 @@ Interne tool voor overzicht wie, waar, wat, wanneer
 Setting up the system. Can also be used to clean up current state.
 - installs dependencies
 - sets up database from scratch, including source data
-- creates example .env file if non-existent (make sure to add OIDC credentials yourself)
+- creates example .env file if non-existent
+  - correct the OIDC credentials
+  - correct the DEV firstname, lastname and email (yourself) 
 
 ```
 just setup

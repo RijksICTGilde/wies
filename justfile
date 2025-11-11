@@ -16,6 +16,7 @@ setup:
   docker compose run --rm django python manage.py migrate
   docker compose run --rm django python manage.py loaddata dummy_data.json
   docker-compose run --rm django python manage.py createsuperuser --noinput
+  docker-compose run --rm django python manage.py add_development_colleague
 
 # Start up container
 up:
