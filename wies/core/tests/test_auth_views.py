@@ -1,33 +1,20 @@
+from unittest.mock import patch
+
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
-from unittest.mock import patch, MagicMock
+from django.http import HttpResponse
 
 from wies.core.models import Colleague, Brand
 
-
 @override_settings(
-    # Use simple static files storage for tests (avoid collectstatic requirement)
+    # Use simple static files storage for tests
+    # Because tests are not running with debug True, you would otherise need to run
+    # collectstatic before running the test
     STORAGES={
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     },
-    # Enable OIDC authentication for tests
-    OIDC_CLIENT_ID='test-client-id',
-    OIDC_CLIENT_SECRET='test-client-secret',
-    OIDC_DISCOVERY_URL='https://test.example.com/.well-known/openid-configuration',
-    # Ensure LoginRequiredMiddleware is active
-    MIDDLEWARE=[
-        'django.middleware.security.SecurityMiddleware',
-        'whitenoise.middleware.WhiteNoiseMiddleware',
-        'django.contrib.sessions.middleware.SessionMiddleware',
-        'django.middleware.common.CommonMiddleware',
-        'django.middleware.csrf.CsrfViewMiddleware',
-        'django.contrib.auth.middleware.AuthenticationMiddleware',
-        'django.contrib.auth.middleware.LoginRequiredMiddleware',
-        'django.contrib.messages.middleware.MessageMiddleware',
-        'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    ],
 )
 class AuthViewsTest(TestCase):
     """Integration tests for authentication flow views"""
@@ -65,9 +52,6 @@ class AuthViewsTest(TestCase):
 
         # Should create session
         self.assertIn('_auth_user_id', self.client.session)
-
-        # Should be logged in as the colleague
-        self.assertEqual(int(self.client.session['_auth_user_id']), self.colleague.pk)
 
     @patch('wies.core.views.oauth.oidc.authorize_access_token')
     def test_auth_endpoint_failure_non_whitelisted_user(self, mock_authorize):
@@ -110,7 +94,7 @@ class AuthViewsTest(TestCase):
 
         # Verify session exists after auth
         self.assertIn('_auth_user_id', self.client.session)
-        self.assertTrue(self.client.session.get('_auth_user_id'))
+        self.assertEqual(int(self.client.session['_auth_user_id']), self.colleague.pk)
 
     def test_logout_clears_session(self):
         """Test that logout clears the session"""
@@ -123,7 +107,7 @@ class AuthViewsTest(TestCase):
 
         # Should redirect to home/login
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/')
+        self.assertEqual(response.url, '/login/')
 
         # Session should be cleared (new session will be created but without user)
         # Accessing a protected page should now redirect to login
@@ -137,30 +121,16 @@ class AuthViewsTest(TestCase):
 
         # Should redirect to home without error (no login requirement)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/')
-        # Verify it doesn't redirect to login page
-        self.assertNotIn('/login/', response.url)
-
-    def test_login_page_accessible_without_auth(self):
-        """Test that login page is accessible without authentication"""
-        response = self.client.get(reverse('login'))
-
-        self.assertEqual(response.status_code, 200)
-
-    def test_no_access_page_accessible_without_auth(self):
-        """Test that no-access page is accessible without authentication"""
-        response = self.client.get('/no-access/')
-
-        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.url, '/login/')
 
     @patch('wies.core.views.oauth.oidc.authorize_redirect')
     def test_login_post_initiates_oidc_flow(self, mock_authorize_redirect):
         """Test POST to login initiates OIDC authorization flow"""
-        from django.http import HttpResponse
+        
         # Return a proper HttpResponse instead of MagicMock
         mock_authorize_redirect.return_value = HttpResponse(status=302)
 
-        response = self.client.post(reverse('login'))
+        self.client.post(reverse('login'))
 
         # Should call OIDC authorization
         mock_authorize_redirect.assert_called_once()

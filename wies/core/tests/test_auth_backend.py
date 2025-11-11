@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.contrib.auth import authenticate
 
 from wies.core.models import Colleague, Brand
-
+from wies.core.auth_backend import AuthBackend
 
 class AuthBackendTest(TestCase):
     """Tests for custom authentication backend"""
@@ -30,7 +30,6 @@ class AuthBackendTest(TestCase):
             }
         )
 
-        self.assertIsNotNone(user)
         self.assertEqual(user.email, "test@example.com")
         self.assertEqual(user.username, "test_user")
         self.assertEqual(user.first_name, "Test")
@@ -52,21 +51,16 @@ class AuthBackendTest(TestCase):
 
     def test_get_user_existing(self):
         """Test that get_user returns existing Colleague by ID"""
-        from wies.core.auth_backend import AuthBackend
         backend = AuthBackend()
-
         user = backend.get_user(self.colleague.pk)
 
-        self.assertIsNotNone(user)
         self.assertEqual(user.pk, self.colleague.pk)
         self.assertEqual(user.email, "test@example.com")
 
     def test_get_user_non_existent(self):
         """Test that get_user returns None for non-existent ID"""
-        from wies.core.auth_backend import AuthBackend
         backend = AuthBackend()
-
-        user = backend.get_user(99999)
+        user = backend.get_user(0)
 
         self.assertIsNone(user)
 
@@ -132,8 +126,8 @@ class AuthBackendTest(TestCase):
 
     def test_authenticate_uses_email_for_lookup(self):
         """Test that authentication uses email (not username) for Colleague lookup"""
-        # Create colleague with different username but same email
-        different_username_colleague = Colleague.objects.create(
+        # Create base colleague
+        colleague = Colleague.objects.create(
             username="original_username",
             email="lookup@example.com",
             first_name="Lookup",
@@ -153,7 +147,6 @@ class AuthBackendTest(TestCase):
         )
 
         # Should find the colleague by email, not username
-        self.assertIsNotNone(user)
-        self.assertEqual(user.pk, different_username_colleague.pk)
+        self.assertEqual(user.pk, colleague.pk)
         self.assertEqual(user.email, "lookup@example.com")
         self.assertEqual(user.username, "original_username")  # Original username preserved

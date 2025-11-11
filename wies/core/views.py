@@ -11,7 +11,6 @@ from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_not_required
 from django.core import management
 from django.conf import settings
-from django.http import HttpResponse
 
 from authlib.integrations.django_client import OAuth
 
@@ -70,7 +69,7 @@ def no_access(request):
 def logout(request):
     if request.user and request.user.is_authenticated:
         auth_logout(request)
-    return redirect('/')
+    return redirect(reverse('login'))
 
 
 @user_passes_test(lambda u: u.is_superuser and u.is_authenticated, login_url='/admin/login/')

@@ -7,6 +7,7 @@ This files lists the changes during the lifetime of this project.
 - Change login to only pass when user is in database
 - Add authentication tests
 - Remove login requirement from logout endpoint
+- Remove possibility to switch off authentication
 
 ## 2025-10-09
 - add period filter to placement page
