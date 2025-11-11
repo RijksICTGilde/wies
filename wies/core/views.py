@@ -58,7 +58,12 @@ def auth(request):
     if user:
         auth_login(request, user)
         return redirect(request.build_absolute_uri(reverse("home")))
-    return HttpResponse(status=400)
+    return redirect('/no-access/')
+
+
+@login_not_required  # page cannot require login because you land on this after unsuccesful login
+def no_access(request):
+    return render(request, 'no_access.html')
 
 
 def logout(request):

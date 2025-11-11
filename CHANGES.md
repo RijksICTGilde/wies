@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 - (backwards incompatible) clean slate - start over with only essential 4W functionality
 - (backwards incompatible) merge User and Colleague model
+- Change login to only pass when user is in database
+- Add first tests
 
 ## 2025-10-09
 - add period filter to placement page

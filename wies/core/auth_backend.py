@@ -18,8 +18,8 @@ class AuthBackend(BaseBackend):
         try:
             user = Colleague.objects.get(email=email)
         except Colleague.DoesNotExist:
-            user = Colleague(username=username, email=email, **extra_fields)
-            user.save()
+            # do not authenticate if Colleage record does not exist
+            return None
 
         return user 
     

@@ -22,13 +22,14 @@ from wies.core.views import client
 from wies.core.views import AssignmentDetailView, ColleagueDetailView
 from wies.core.views import PlacementTableView
 from wies.core.views import MinistryDetailView
-from wies.core.views import admin_db, login, logout, auth
+from wies.core.views import admin_db, login, no_access, logout, auth
 
 urlpatterns = [
     path('admin/db/', admin_db, name='admin-db'),
     path('admin/', admin.site.urls),
     path('', RedirectView.as_view(pattern_name='placements', permanent=False), name='home'),
     path('login/', login, name='login'),
+    path('no-access/', no_access),
     path('logout/', logout, name='logout'),
     path('auth/', auth, name='auth'),
     path('assignments/<int:pk>/', AssignmentDetailView.as_view(), name='assignment-detail'),
