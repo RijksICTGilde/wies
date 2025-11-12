@@ -46,7 +46,7 @@ class Skill(models.Model):
         return self.name
 
 class User(AbstractUser):
-    pass
+    brand = models.ForeignKey('Brand', models.SET_NULL, null=True, blank=True, related_name='users')
 
 
 class Colleague(models.Model):
