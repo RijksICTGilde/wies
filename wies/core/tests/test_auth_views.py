@@ -4,7 +4,7 @@ from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.http import HttpResponse
 
-from wies.core.models import Colleague, Brand
+from wies.core.models import User
 
 @override_settings(
     # Use simple static files storage for tests
@@ -22,13 +22,11 @@ class AuthViewsTest(TestCase):
     def setUp(self):
         """Create test data"""
         self.client = Client()
-        self.brand = Brand.objects.create(name="Test Brand")
-        self.colleague = Colleague.objects.create(
+        self.colleague = User.objects.create(
             username="test_sso_user",
             email="test@example.com",
             first_name="Test",
             last_name="User",
-            brand=self.brand
         )
 
     @patch('wies.core.views.oauth.oidc.authorize_access_token')

@@ -1,7 +1,7 @@
 from django.test import TestCase, Client, override_settings
 from django.conf import settings
 
-from wies.core.models import Colleague, Brand
+from wies.core.models import User
 
 
 @override_settings(
@@ -20,13 +20,11 @@ class AccessControlTest(TestCase):
     def setUp(self):
         """Create test data"""
         self.client = Client()
-        self.brand = Brand.objects.create(name="Test Brand")
-        self.colleague = Colleague.objects.create(
+        self.test_user = User.objects.create(
             username="test_user",
             email="test@example.com",
             first_name="Test",
             last_name="User",
-            brand=self.brand
         )
 
     def test_endpoints_accessible_without_login(self):
@@ -68,12 +66,11 @@ class AccessControlTest(TestCase):
 
     def test_superuser_can_access_admin_db(self):
         """Test that superuser can access /admin/db/ view"""
-        superuser = Colleague.objects.create(
+        superuser = User.objects.create(
             username="admin",
             email="admin@example.com",
             first_name="Admin",
             last_name="User",
-            brand=self.brand,
             is_superuser=True,
             is_staff=True
         )
@@ -85,7 +82,7 @@ class AccessControlTest(TestCase):
 
     def test_non_superuser_cannot_access_admin_db(self):
         """Test that non-superuser cannot access /admin/db/ view"""
-        self.client.force_login(self.colleague)
+        self.client.force_login(self.test_user)
 
         response = self.client.get('/admin/db/', follow=False)
 

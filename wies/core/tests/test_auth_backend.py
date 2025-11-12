@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import authenticate
 
-from wies.core.models import Colleague, Brand
+from wies.core.models import User
 from wies.core.auth_backend import AuthBackend
 
 class AuthBackendTest(TestCase):
@@ -9,13 +9,11 @@ class AuthBackendTest(TestCase):
 
     def setUp(self):
         """Create test data"""
-        self.brand = Brand.objects.create(name="Test Brand")
-        self.colleague = Colleague.objects.create(
+        self.test_user = User.objects.create(
             username="test_user",
             email="test@example.com",
             first_name="Test",
             last_name="User",
-            brand=self.brand
         )
 
     def test_authenticate_existing_colleague(self):
@@ -52,9 +50,9 @@ class AuthBackendTest(TestCase):
     def test_get_user_existing(self):
         """Test that get_user returns existing Colleague by ID"""
         backend = AuthBackend()
-        user = backend.get_user(self.colleague.pk)
+        user = backend.get_user(self.test_user.pk)
 
-        self.assertEqual(user.pk, self.colleague.pk)
+        self.assertEqual(user.pk, self.test_user.pk)
         self.assertEqual(user.email, "test@example.com")
 
     def test_get_user_non_existent(self):
@@ -127,12 +125,11 @@ class AuthBackendTest(TestCase):
     def test_authenticate_uses_email_for_lookup(self):
         """Test that authentication uses email (not username) for Colleague lookup"""
         # Create base colleague
-        colleague = Colleague.objects.create(
+        colleague = User.objects.create(
             username="original_username",
             email="lookup@example.com",
             first_name="Lookup",
             last_name="Test",
-            brand=self.brand
         )
 
         # Authenticate with different username but same email

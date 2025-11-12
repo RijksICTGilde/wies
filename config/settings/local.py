@@ -22,5 +22,3 @@ if (OIDC_CLIENT_ID == 'default-client-id' or
     OIDC_CLIENT_SECRET == 'default-client-secret' or
     OIDC_DISCOVERY_URL == 'https://test.example.com/.well-known/openid-configuration'):
     logger.warning('One of the OIDC envs is not set')
-
-WHITENOISE_MANIFEST_STRICT = True

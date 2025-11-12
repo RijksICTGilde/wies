@@ -7,6 +7,9 @@ from .models import Assignment, Colleague, Ministry, Brand, Placement, Service, 
 class AssignmentAdmin(admin.ModelAdmin):
     pass
 
+class ColleagueAdmin(admin.ModelAdmin):
+    pass
+
 class SkillAdmin(admin.ModelAdmin):
     pass
 
@@ -25,7 +28,7 @@ class ServiceAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Assignment, AssignmentAdmin)
-admin.site.register(Colleague, UserAdmin)
+admin.site.register(Colleague, ColleagueAdmin)
 admin.site.register(Skill, SkillAdmin)
 admin.site.register(Ministry, MinistryAdmin)
 admin.site.register(Brand, BrandAdmin)

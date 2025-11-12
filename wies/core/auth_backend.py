@@ -1,6 +1,6 @@
 from django.contrib.auth.backends import BaseBackend
 
-from .models import Colleague
+from .models import Colleague, User
 
 
 class AuthBackend(BaseBackend):
@@ -15,15 +15,25 @@ class AuthBackend(BaseBackend):
             extra_fields = {}
 
         try:
-            user = Colleague.objects.get(email=email)
-        except Colleague.DoesNotExist:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
             # do not authenticate if Colleage record does not exist
             return None
 
+        # Link colleague if match on email
+        try:
+            matching_colleague = Colleague.objects.get(email=email)
+            matching_colleague.user = user
+            matching_colleague.save()
+        except Colleague.DoesNotExist:
+            pass
+
         return user 
     
+    # TODO: update tests on this, now returning colleage instead of user
+
     def get_user(self, user_id):
         try:
-            return Colleague.objects.get(pk=user_id)
-        except Colleague.DoesNotExist:
+            return User.objects.get(pk=user_id)
+        except User.DoesNotExist:
             return None
