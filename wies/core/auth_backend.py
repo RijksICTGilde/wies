@@ -30,8 +30,6 @@ class AuthBackend(BaseBackend):
 
         return user 
     
-    # TODO: update tests on this, now returning colleage instead of user
-
     def get_user(self, user_id):
         try:
             return User.objects.get(pk=user_id)

@@ -1,6 +1,4 @@
 from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin
-
 from .models import Assignment, Colleague, Ministry, Brand, Placement, Service, Skill
 
 
@@ -34,3 +32,4 @@ admin.site.register(Ministry, MinistryAdmin)
 admin.site.register(Brand, BrandAdmin)
 admin.site.register(Placement, PlacementAdmin)
 admin.site.register(Service, ServiceAdmin)
+

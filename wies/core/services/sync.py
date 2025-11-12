@@ -54,32 +54,37 @@ def sync_all_otys_iir_records():
         for otys_candidate in otys_candidates:
             uid = otys_candidate['uid']
             firstname = otys_candidate.get('Person', {}).get('firstName', '')
-            infix = otys_candidate.get('Person', {}).get('infix', '')
             lastname = otys_candidate.get('Person', {}).get('lastName', '')
+            infix = otys_candidate.get('Person', {}).get('infix', '')
             email = otys_candidate.get('Person', {}).get('emailPrimary', '')
 
+            name=f'{firstname}'  # wrong whitespace if done like f'{firstname} {infix} {lastname}
             if infix:
-                lastname = f'{infix} {lastname}'
+                name = name + f' {infix}'
+            if lastname:
+                name = name + f' {lastname}'
+
+            if not name:
+                logger.warning(f"Skipping candidate {uid} - missing name")
+                continue
 
             # Prepare colleague data
             colleague_data = {
-                'first_name': firstname,
-                'last_name': lastname,
+                'name': name,
                 'brand': brand,
                 'source_url': f'{OTYS_URL}/us/modular.html#/candidates/{uid}',
                 'email': email or '',
-                'username': str(uid),
             }
 
             # Update or create colleague based on source and source_id
             colleague, created = Colleague.objects.update_or_create(
                 source_id=str(uid),
                 source='otys_iir',
-                defaults=colleague_data,
+                defaults=colleague_data
             )
 
             action = "Created" if created else "Updated"
-            logger.debug(f"{action} colleague: {firstname} {lastname} (uid: {uid})")
+            logger.debug(f"{action} colleague: {name} (uid: {uid})")
 
         # Sync vacancies (assignments + services)
         logger.info(f"Syncing {len(otys_vacancies)} vacancies...")
