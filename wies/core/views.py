@@ -2,7 +2,8 @@ from django.views.generic.list import ListView
 from django.views.generic import DetailView
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse_lazy, reverse
-from django.db.models import Q, Prefetch
+from django.db.models import Q, Prefetch, Value
+from django.db.models.functions import Concat
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth import authenticate as auth_authenticate
@@ -107,7 +108,7 @@ def admin_db(request):
     return render(request, 'admin_db.html', context)
 
 
-class PlacementTableView(ListView):
+class PlacementListView(ListView):
     """View for placements table view with infinite scroll pagination"""
     model = Placement
     template_name = 'placement_table.html'
@@ -396,7 +397,10 @@ class UserListView(ListView):
 
         search_filter = self.request.GET.get('search')
         if search_filter:
-            qs = qs.filter(
+            qs = qs.annotate(
+                full_name=Concat('first_name', Value(' '), 'last_name'),
+            ).filter(
+                Q(full_name__icontains=search_filter) |
                 Q(first_name__icontains=search_filter) |
                 Q(last_name__icontains=search_filter) |
                 Q(email__icontains=search_filter)

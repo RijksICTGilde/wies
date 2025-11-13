@@ -110,6 +110,16 @@ class UserViewsTest(TestCase):
         self.assertIn(self.user2.email, content)
         self.assertNotIn(self.user1.email, content)
 
+    def test_user_list_search_full_name(self):
+        """Test searching users by full name (first and last name together)"""
+        self.client.force_login(self.auth_user)
+
+        # Search by full name "John Doe" - this should find user1 but currently doesn't
+        response = self.client.get(reverse('users'), {'search': 'John Doe'})
+        content = response.content.decode()
+        self.assertIn(self.user1.email, content)
+        self.assertNotIn(self.user2.email, content)
+
     def test_user_create_get_returns_form(self):
         """Test that GET to user-create returns the form modal"""
         self.client.force_login(self.auth_user)
