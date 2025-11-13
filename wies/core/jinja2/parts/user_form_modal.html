@@ -1,0 +1,89 @@
+<div class="modal-overlay" style="display: flex;" id="user-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="utrecht-heading-2">Nieuwe gebruiker</h2>
+      <button type="button" class="modal-close" onclick="document.getElementById('userFormModal').innerHTML=''; document.body.style.overflow='auto';">&times;</button>
+    </div>
+
+    <form method="post" action="{{ url('user-create') }}" hx-post="{{ url('user-create') }}" hx-target="#userFormModal">
+      {{ get_csrf_hidden_input(request) }}
+
+      <div class="modal-body">
+        <div class="rvo-layout-column rvo-layout-gap--md">
+
+          <!-- First Name -->
+          <div class="utrecht-form-field">
+            <div class="rvo-form-field__label">
+              <label class="rvo-label" for="id_first_name">{{ form.first_name.label }}</label>
+            </div>
+            {{ form.first_name }}
+            {% if form.first_name.errors %}
+              <div class="rvo-form-field__error">
+                {% for error in form.first_name.errors %}
+                  <span class="rvo-text--error">{{ error }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Last Name -->
+          <div class="utrecht-form-field">
+            <div class="rvo-form-field__label">
+              <label class="rvo-label" for="id_last_name">{{ form.last_name.label }}</label>
+            </div>
+            {{ form.last_name }}
+            {% if form.last_name.errors %}
+              <div class="rvo-form-field__error">
+                {% for error in form.last_name.errors %}
+                  <span class="rvo-text--error">{{ error }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Email -->
+          <div class="utrecht-form-field">
+            <div class="rvo-form-field__label">
+              <label class="rvo-label" for="id_email">{{ form.email.label }}</label>
+            </div>
+            {{ form.email }}
+            {% if form.email.errors %}
+              <div class="rvo-form-field__error">
+                {% for error in form.email.errors %}
+                  <span class="rvo-text--error">{{ error }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+          <!-- Brand -->
+          <div class="utrecht-form-field">
+            <div class="rvo-form-field__label">
+              <label class="rvo-label" for="id_brand">{{ form.brand.label }}</label>
+            </div>
+            <div class="rvo-select-wrapper">
+              {{ form.brand }}
+            </div>
+            {% if form.brand.errors %}
+              <div class="rvo-form-field__error">
+                {% for error in form.brand.errors %}
+                  <span class="rvo-text--error">{{ error }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" onclick="document.getElementById('userFormModal').innerHTML=''; document.body.style.overflow='auto';" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md rvo-button">
+          Annuleren
+        </button>
+        <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button">
+          Opslaan
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

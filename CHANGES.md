@@ -8,6 +8,8 @@ This files lists the changes during the lifetime of this project.
 - Remove login requirement from logout endpoint
 - Remove possibility to switch off authentication
 - Developer is added as colleague from env vars during setup
+- Generalized modal css from filter bar
+- Introduced users page (only accessible through URL) with filtering, search, create and delete
 
 ## 2025-10-09
 - add period filter to placement page

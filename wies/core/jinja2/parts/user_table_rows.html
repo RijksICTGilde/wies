@@ -1,0 +1,52 @@
+{% for user in object_list %}
+  <tr class="rvo-table-row">
+    <td class="rvo-table-cell">
+      <div class="user-table-cell">
+        <div class="user-avatar">
+          {{ user.first_name|first|upper if user.first_name else user.email|first|upper }}
+        </div>
+        <div class="user-info">
+          <div class="rvo-text rvo-text--bold">
+            {{ user.first_name }} {{ user.last_name }}
+          </div>
+          <div class="rvo-text rvo-text--sm rvo-text--subtle">
+            {% if user.brand %}
+              {{ user.brand.name }}
+            {% else %}
+              Geen merk
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </td>
+    <td class="rvo-table-cell">
+      <span class="rvo-text">{{ user.email }}</span>
+    </td>
+    <td class="rvo-table-cell">
+      <form method="post" action="{{ url('user-delete', args=[user.id]) }}" style="display: inline;" onsubmit="return confirm('Weet je zeker dat je {{ user.first_name }} {{ user.last_name }} wilt verwijderen?');">
+        {{ get_csrf_hidden_input(request) }}
+        <button type="submit" class="utrecht-button utrecht-button--subtle-button utrecht-button--warning-action utrecht-button--rvo-sm rvo-button">
+          Verwijderen
+        </button>
+      </form>
+    </td>
+  </tr>
+{% else %}
+  <tr class="rvo-table-row">
+    <td class="rvo-table-cell" colspan="3">
+      <span class="rvo-text--italic">Geen gebruikers gevonden.</span>
+    </td>
+  </tr>
+{% endfor %}
+
+{% if next_page_url %}
+<tr hx-get="{{ next_page_url }}"
+    hx-trigger="revealed"
+    hx-swap="outerHTML">
+  <td colspan="3" class="rvo-table-cell">
+    <div style="text-align: center; padding: 1rem;">
+      <span class="rvo-text--subtle">Meer laden...</span>
+    </div>
+  </td>
+</tr>
+{% endif %}

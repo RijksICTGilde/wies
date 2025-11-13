@@ -1,0 +1,21 @@
+/* User list specific CSS */
+
+/* Make sure the user table container uses full width */
+#user_table {
+  width: 100%;
+  max-width: none;
+}
+
+/* Column width optimization for user table */
+#user_table .rvo-table th:nth-child(1), #user_table .rvo-table td:nth-child(1) {
+  width: 45%; /* Naam column - more space for avatar + info */
+}
+
+#user_table .rvo-table th:nth-child(2), #user_table .rvo-table td:nth-child(2) {
+  width: 35%; /* Email column */
+}
+
+#user_table .rvo-table th:nth-child(3), #user_table .rvo-table td:nth-child(3) {
+  width: 20%; /* Acties column */
+  white-space: nowrap;
+}

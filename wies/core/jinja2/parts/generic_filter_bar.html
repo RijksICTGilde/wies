@@ -49,15 +49,15 @@ Usage:
   </div>
 
   <!-- Filter inputs inside modal -->
-  <div id="filterModal" class="filter-modal">
-    <div class="filter-modal-content">
+  <div id="filterModal" class="modal-overlay">
+    <div class="modal-content">
       <!-- Modal Header -->
-      <div class="filter-modal-header">
+      <div class="modal-header">
         <h2 class="utrecht-heading-2">Filters</h2>
-        <button type="button" class="filter-modal-close">&times;</button>
+        <button type="button" class="modal-close">&times;</button>
       </div>
 
-      <div class="filter-modal-body">
+      <div class="modal-body">
         <div class="rvo-layout-column rvo-layout-gap--md">
 
           {% for filter_group in filter_groups %}
@@ -134,16 +134,16 @@ Usage:
           {% endfor %}
 
         </div>
+      </div>
 
-        <!-- Modal Footer -->
-        <div class="filter-modal-footer">
-          <c-button class="clear-filters-button" kind="warning-subtle">
-            Wis alle filters
-          </c-button>
-          <c-button class="close-modal-button" kind="primary">
-            Naar resultaten
-          </c-button>
-        </div>
+      <!-- Modal Footer -->
+      <div class="modal-footer">
+        <c-button class="clear-filters-button" kind="warning-subtle">
+          Wis alle filters
+        </c-button>
+        <c-button class="close-modal-button" kind="primary">
+          Naar resultaten
+        </c-button>
       </div>
     </div>
   </div>
