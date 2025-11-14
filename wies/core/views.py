@@ -21,7 +21,7 @@ from authlib.integrations.django_client import OAuth
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, User
 from .services.sync import sync_all_otys_iir_records
 from .services.placements import filter_placements_by_period
-from .services.users import create_user
+from .services.users import create_user, update_user
 from .forms import UserForm
 
 oauth = OAuth()
@@ -498,10 +498,14 @@ class UserListView(PermissionRequiredMixin, ListView):
 @permission_required('core.add_user', raise_exception=True)
 def user_create(request):
     """Handle user creation - GET returns form modal, POST processes creation"""
+    
+    form_post_url = reverse('user-create')
+    modal_title = 'Nieuwe gebruiker'
+    
     if request.method == 'GET':
         # Return modal HTML with empty UserForm
         form = UserForm()
-        return render(request, 'parts/user_form_modal.html', {'form': form})
+        return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title})
     elif request.method == 'POST':
         form = UserForm(request.POST)
         if form.is_valid():
@@ -522,7 +526,43 @@ def user_create(request):
                 return redirect('users')
         else:
             # Re-render form with errors (stays in modal with HTMX)
-            return render(request, 'parts/user_form_modal.html', {'form': form})
+            return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title})
+    return HttpResponse(status=405)
+
+
+@permission_required('core.change_user', raise_exception=True)
+def user_edit(request, pk):
+    """Handle user editing - GET returns form modal with user data, POST processes update"""
+    editing_user = get_object_or_404(User, pk=pk, is_superuser=False)
+    form_post_url = reverse('user-edit', args=[editing_user.id])
+    modal_title = 'Gebruiker bewerken'
+
+    if request.method == 'GET':
+        # Return modal HTML with UserForm populated with user data
+        form = UserForm(instance=editing_user)
+        return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title})
+    elif request.method == 'POST':
+        form = UserForm(request.POST, instance=editing_user)
+        if form.is_valid():
+            update_user(
+                user=editing_user,
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name'],
+                email=form.cleaned_data['email'],
+                brand=form.cleaned_data.get('brand'),
+                groups=form.cleaned_data.get('groups')
+            )
+            # For HTMX requests, use HX-Redirect header to force full page redirect
+            # For standard form posts, use normal redirect
+            if 'HX-Request' in request.headers:
+                response = HttpResponse(status=200)
+                response['HX-Redirect'] = reverse('users')
+                return response
+            else:
+                return redirect('users')
+        else:
+            # Re-render form with errors (stays in modal with HTMX)
+            return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title})
     return HttpResponse(status=405)
 
 

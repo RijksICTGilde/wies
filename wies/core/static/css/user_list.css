@@ -12,14 +12,11 @@
 }
 
 #user_table .rvo-table th:nth-child(2), #user_table .rvo-table td:nth-child(2) {
-  width: 30%; /* Email column */
+  width: 40%; /* Rollen column */
 }
 
 #user_table .rvo-table th:nth-child(3), #user_table .rvo-table td:nth-child(3) {
-  width: 25%; /* Rollen column */
-}
-
-#user_table .rvo-table th:nth-child(4), #user_table .rvo-table td:nth-child(4) {
-  width: 15%; /* Acties column */
+  width: 30%; /* Acties column - wider to fit both buttons */
   white-space: nowrap;
+  min-width: 220px; /* Ensure minimum width for buttons */
 }

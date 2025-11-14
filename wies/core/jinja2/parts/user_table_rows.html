@@ -20,9 +20,6 @@
       </div>
     </td>
     <td class="rvo-table-cell">
-      <span class="rvo-text">{{ user.email }}</span>
-    </td>
-    <td class="rvo-table-cell">
       <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
         {% for group in user.groups.all() %}
           <span class="rvo-text rvo-text--sm" style="background-color: #e6f0ff; color: #154273; padding: 0.125rem 0.5rem; border-radius: 0.25rem; white-space: nowrap;">
@@ -34,12 +31,20 @@
       </div>
     </td>
     <td class="rvo-table-cell">
-      <form method="post" action="{{ url('user-delete', args=[user.id]) }}" style="display: inline;" onsubmit="return confirm('Weet je zeker dat je {{ user.first_name }} {{ user.last_name }} wilt verwijderen?');">
-        {{ get_csrf_hidden_input(request) }}
-        <button type="submit" class="utrecht-button utrecht-button--subtle-button utrecht-button--warning-action utrecht-button--rvo-sm rvo-button">
-          Verwijderen
+      <div style="display: flex; gap: 0.5rem;">
+        <button type="button"
+                class="utrecht-button utrecht-button--subtle-button utrecht-button--rvo-sm rvo-button"
+                hx-get="{{ url('user-edit', args=[user.id]) }}"
+                hx-target="#userFormModal">
+          Bewerken
         </button>
-      </form>
+        <form method="post" action="{{ url('user-delete', args=[user.id]) }}" style="display: inline;" onsubmit="return confirm('Weet je zeker dat je {{ user.first_name }} {{ user.last_name }} wilt verwijderen?');">
+          {{ get_csrf_hidden_input(request) }}
+          <button type="submit" class="utrecht-button utrecht-button--subtle-button utrecht-button--warning-action utrecht-button--rvo-sm rvo-button">
+            Verwijderen
+          </button>
+        </form>
+      </div>
     </td>
   </tr>
 {% else %}
