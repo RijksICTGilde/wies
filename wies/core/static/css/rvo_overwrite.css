@@ -25,10 +25,10 @@
   flex-shrink: 0;
 }
 
+/* enforce that row is colored also when no clickable */
 .rvo-table-row:hover,
 .rvo-table-row.clickable-row:hover {
   background-color: var(--rvo-color-hemelblauw-150) !important;
-  cursor: pointer;
 }
 
 /* Compact header styling */
