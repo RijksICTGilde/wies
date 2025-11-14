@@ -1,5 +1,6 @@
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
+from django.contrib.auth.models import Permission
 
 from wies.core.models import User, Brand
 
@@ -26,6 +27,12 @@ class UserViewsTest(TestCase):
             first_name="Auth",
             last_name="User",
         )
+
+        # Grant all user permissions to auth_user for existing tests
+        view_permission = Permission.objects.get(codename='view_user')
+        add_permission = Permission.objects.get(codename='add_user')
+        delete_permission = Permission.objects.get(codename='delete_user')
+        self.auth_user.user_permissions.add(view_permission, add_permission, delete_permission)
 
         # Create a superuser (should be excluded from list)
         self.superuser = User.objects.create_superuser(
@@ -243,3 +250,93 @@ class UserViewsTest(TestCase):
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.url.startswith('/login/'))
+
+    # Permission tests
+    def test_user_list_requires_view_permission(self):
+        """Test that user list returns 403 without view_user permission"""
+        # Create user without view_user permission
+        user_no_perms = User.objects.create(
+            username="no_perms",
+            email="noperms@example.com",
+            first_name="No",
+            last_name="Perms",
+        )
+        self.client.force_login(user_no_perms)
+
+        response = self.client.get(reverse('users'))
+        self.assertEqual(response.status_code, 403)
+
+    def test_user_list_allows_with_view_permission(self):
+        """Test that user list works with view_user permission"""
+        user_with_perms = User.objects.create(
+            username="with_perms",
+            email="withperms@example.com",
+            first_name="With",
+            last_name="Perms",
+        )
+        view_permission = Permission.objects.get(codename='view_user')
+        user_with_perms.user_permissions.add(view_permission)
+        self.client.force_login(user_with_perms)
+
+        response = self.client.get(reverse('users'))
+        self.assertEqual(response.status_code, 200)
+
+    def test_user_create_requires_add_permission(self):
+        """Test that user creation returns 403 without add_user permission"""
+        # Create user with only view permission
+        user_view_only = User.objects.create(
+            username="view_only",
+            email="viewonly@example.com",
+            first_name="View",
+            last_name="Only",
+        )
+        view_permission = Permission.objects.get(codename='view_user')
+        user_view_only.user_permissions.add(view_permission)
+        self.client.force_login(user_view_only)
+
+        # Try to create user
+        response = self.client.post(reverse('user-create'), {
+            'first_name': 'New',
+            'last_name': 'User',
+            'email': 'newuser@example.com',
+        })
+        self.assertEqual(response.status_code, 403)
+
+        # User should not be created
+        self.assertFalse(User.objects.filter(email='newuser@example.com').exists())
+
+    def test_user_create_get_requires_add_permission(self):
+        """Test that getting the user creation form returns 403 without add_user permission"""
+        user_no_add = User.objects.create(
+            username="no_add",
+            email="noadd@example.com",
+            first_name="No",
+            last_name="Add",
+        )
+        self.client.force_login(user_no_add)
+
+        response = self.client.get(reverse('user-create'))
+        self.assertEqual(response.status_code, 403)
+
+    def test_user_delete_requires_delete_permission(self):
+        """Test that user deletion returns 403 without delete_user permission"""
+        # Create user with only view permission
+        user_view_only = User.objects.create(
+            username="view_only2",
+            email="viewonly2@example.com",
+            first_name="View",
+            last_name="Only2",
+        )
+        view_permission = Permission.objects.get(codename='view_user')
+        user_view_only.user_permissions.add(view_permission)
+        self.client.force_login(user_view_only)
+
+        initial_count = User.objects.count()
+
+        # Try to delete user
+        response = self.client.post(reverse('user-delete', args=[self.user1.id]))
+        self.assertEqual(response.status_code, 403)
+
+        # User should not be deleted
+        self.assertEqual(User.objects.count(), initial_count)
+        self.assertTrue(User.objects.filter(id=self.user1.id).exists())

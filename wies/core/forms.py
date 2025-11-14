@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.models import Group
 
 from .models import User, Brand
 
@@ -40,6 +41,13 @@ class UserForm(forms.ModelForm):
         }),
     )
 
+    groups = forms.ModelMultipleChoiceField(
+        label='Rollen',
+        queryset=Group.objects.filter(name__in=['Administrator', 'Consultant', 'BDM']),
+        required=False,
+        widget=forms.CheckboxSelectMultiple(),
+    )
+
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'email', 'brand']
+        fields = ['first_name', 'last_name', 'email', 'brand', 'groups']

@@ -5,11 +5,13 @@ from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Prefetch, Value
 from django.db.models.functions import Concat
 from django.contrib import messages
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, permission_required
 from django.contrib.auth import authenticate as auth_authenticate
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_not_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.models import Group
 from django.core import management
 from django.conf import settings
 from django.http import HttpResponse
@@ -383,15 +385,16 @@ class MinistryDetailView(DetailView):
         return context
 
 
-class UserListView(ListView):
+class UserListView(PermissionRequiredMixin, ListView):
     """View for user list with filtering and infinite scroll pagination"""
     model = User
     template_name = 'user_list.html'
     paginate_by = 50
+    permission_required = 'core.view_user'
 
     def get_queryset(self):
         """Apply filters to users queryset - exclude superusers"""
-        qs = User.objects.select_related('brand').filter(
+        qs = User.objects.select_related('brand').prefetch_related('groups').filter(
             is_superuser=False
         ).order_by('last_name', 'first_name')
 
@@ -410,6 +413,11 @@ class UserListView(ListView):
         brand_filter = self.request.GET.get('brand')
         if brand_filter:
             qs = qs.filter(brand__id=brand_filter)
+
+        # Role filter
+        role_filter = self.request.GET.get('role')
+        if role_filter:
+            qs = qs.filter(groups__id=role_filter)
 
         return qs.distinct()
 
@@ -436,11 +444,21 @@ class UserListView(ListView):
         if brand_filter:
             active_filters['brand'] = brand_filter
 
+        role_filter = self.request.GET.get('role')
+        if role_filter:
+            active_filters['role'] = role_filter
+
         brand_options = []
         for brand in Brand.objects.order_by('name'):
             brand_options.append({'value': brand.id, 'label': brand.name})
             if active_filters.get('brand') == str(brand.id):
                 brand_options[-1]['selected'] = True
+
+        role_options = []
+        for group in Group.objects.all().order_by('name'):
+            role_options.append({'value': group.id, 'label': group.name})
+            if active_filters.get('role') == str(group.id):
+                role_options[-1]['selected'] = True
 
         context['active_filters'] = active_filters
         context['active_filter_count'] = len(active_filters)
@@ -452,6 +470,13 @@ class UserListView(ListView):
                 'label': 'Merk',
                 'placeholder': 'Alle merken',
                 'options': brand_options,
+            },
+            {
+                'type': 'select',
+                'name': 'role',
+                'label': 'Rol',
+                'placeholder': 'Alle rollen',
+                'options': role_options,
             },
         ]
 
@@ -470,6 +495,7 @@ class UserListView(ListView):
         return context
 
 
+@permission_required('core.add_user', raise_exception=True)
 def user_create(request):
     """Handle user creation - GET returns form modal, POST processes creation"""
     if request.method == 'GET':
@@ -483,7 +509,8 @@ def user_create(request):
                 first_name=form.cleaned_data['first_name'],
                 last_name=form.cleaned_data['last_name'],
                 email=form.cleaned_data['email'],
-                brand=form.cleaned_data.get('brand')
+                brand=form.cleaned_data.get('brand'),
+                groups=form.cleaned_data.get('groups')
             )
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect
@@ -499,6 +526,7 @@ def user_create(request):
     return HttpResponse(status=405)
 
 
+@permission_required('core.delete_user', raise_exception=True)
 def user_delete(request, pk):
     """Handle user deletion"""
     if request.method == 'POST':

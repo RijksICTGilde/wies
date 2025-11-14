@@ -2,6 +2,7 @@ import os
 import logging
 
 from django.core.management.base import BaseCommand
+from django.contrib.auth.models import Group
 
 from wies.core.services.users import create_user
 
@@ -22,5 +23,7 @@ class Command(BaseCommand):
             logger.warning('Developer user not added: missing DEV_FIRSTNAME, DEV_LASTNAME or DEV_EMAIL')
             return
         
-        create_user(first_name, last_name, email)
+        user = create_user(first_name, last_name, email)
+        admin_group = Group.objects.get(name='Administrator')
+        user.groups.add(admin_group)
         logger.info("Successfully added developer user")

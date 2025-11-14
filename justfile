@@ -14,6 +14,7 @@ setup:
   docker compose build
   docker compose run --rm django python manage.py dropdb --noinput
   docker compose run --rm django python manage.py migrate
+  docker compose run --rm django python manage.py setup
   docker compose run --rm django python manage.py loaddata dummy_data.json
   docker-compose run --rm django python manage.py createsuperuser --noinput
   docker-compose run --rm django python manage.py add_developer_user

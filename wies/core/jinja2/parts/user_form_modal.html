@@ -73,6 +73,29 @@
             {% endif %}
           </div>
 
+          <!-- Groups/Roles -->
+          <div class="utrecht-form-field">
+            <div class="rvo-form-field__label">
+              <label class="rvo-label">{{ form.groups.label }}</label>
+            </div>
+            <div class="rvo-layout-column rvo-layout-gap--sm rvo-checkbox__group">
+              {% for value, label in form.groups.field.choices %}
+                <label class="rvo-checkbox">
+                  <input type="checkbox" name="groups" value="{{ value }}" class="rvo-checkbox__input"
+                    {% if form.groups.value() and value in form.groups.value() %}checked{% endif %}>
+                  <span class="rvo-text">{{ label }}</span>
+                </label>
+              {% endfor %}
+            </div>
+            {% if form.groups.errors %}
+              <div class="rvo-form-field__error">
+                {% for error in form.groups.errors %}
+                  <span class="rvo-text--error">{{ error }}</span>
+                {% endfor %}
+              </div>
+            {% endif %}
+          </div>
+
         </div>
       </div>
 

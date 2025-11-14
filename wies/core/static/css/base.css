@@ -111,3 +111,8 @@
 .modal-footer button {
   flex: 0 0 auto; /* Prevents buttons from stretching */
 }
+
+.menu-item--active{
+  font-weight: 600;
+  text-decoration: underline !important;
+}
