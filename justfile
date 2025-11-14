@@ -49,3 +49,6 @@ rebuild-db:
 # Executes `manage.py` command.
 manage *args="--help":
   docker compose run --rm django python manage.py {{args}}
+
+test:
+  docker compose run --rm django python manage.py test wies

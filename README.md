@@ -52,5 +52,11 @@ The following URLs are not linked through the UI
 ### Testing
 Run all tests
 ```
-just manage test wies
+just test
+```
+
+For running specific tests;
+
+```
+just manage test wies.core.tests.test_roles
 ```
