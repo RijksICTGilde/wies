@@ -82,12 +82,12 @@ class UserViewsTest(TestCase):
         content = response.content.decode()
 
         # Regular users should be in the list
-        self.assertIn(self.user1.email, content)
-        self.assertIn(self.user2.email, content)
-        self.assertIn(self.auth_user.email, content)
+        self.assertIn(self.user1.get_full_name(), content)
+        self.assertIn(self.user2.get_full_name(), content)
+        self.assertIn(self.auth_user.get_full_name(), content)
 
         # Superuser should NOT be in the list
-        self.assertNotIn(self.superuser.email, content)
+        self.assertNotIn(self.superuser.get_full_name(), content)
 
     def test_user_list_brand_filter(self):
         """Test filtering users by brand"""
@@ -98,9 +98,9 @@ class UserViewsTest(TestCase):
         content = response.content.decode()
 
         # user1 should be in results
-        self.assertIn(self.user1.email, content)
+        self.assertIn(self.user1.get_full_name(), content)
         # user2 should not be in results
-        self.assertNotIn(self.user2.email, content)
+        self.assertNotIn(self.user2.get_full_name(), content)
 
     def test_user_list_search(self):
         """Test searching users by name or email"""
@@ -109,14 +109,14 @@ class UserViewsTest(TestCase):
         # Search by first name
         response = self.client.get(reverse('users'), {'search': 'John'})
         content = response.content.decode()
-        self.assertIn(self.user1.email, content)
-        self.assertNotIn(self.user2.email, content)
+        self.assertIn(self.user1.get_full_name(), content)
+        self.assertNotIn(self.user2.get_full_name(), content)
 
         # Search by email
         response = self.client.get(reverse('users'), {'search': 'jane'})
         content = response.content.decode()
-        self.assertIn(self.user2.email, content)
-        self.assertNotIn(self.user1.email, content)
+        self.assertIn(self.user2.get_full_name(), content)
+        self.assertNotIn(self.user1.get_full_name(), content)
 
     def test_user_list_search_full_name(self):
         """Test searching users by full name (first and last name together)"""
@@ -125,8 +125,8 @@ class UserViewsTest(TestCase):
         # Search by full name "John Doe" - this should find user1 but currently doesn't
         response = self.client.get(reverse('users'), {'search': 'John Doe'})
         content = response.content.decode()
-        self.assertIn(self.user1.email, content)
-        self.assertNotIn(self.user2.email, content)
+        self.assertIn(self.user1.get_full_name(), content)
+        self.assertNotIn(self.user2.get_full_name(), content)
 
     def test_user_create_get_returns_form(self):
         """Test that GET to user-create returns the form modal"""
