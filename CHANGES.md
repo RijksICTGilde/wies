@@ -10,7 +10,7 @@ This files lists the changes during the lifetime of this project.
 - Developer is added as colleague from env vars during setup
 - Generalized modal css from filter bar
 - Introduced users page (only accessible through URL) with filtering, search, create and delete
-- Add permissions on user list, user create and user delete
+- Add permissions on user list, user create, user edit and user delete
 - Introduce roles (groups) Administrator, Consultant, BDM
 
 ## 2025-10-09
