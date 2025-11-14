@@ -480,6 +480,15 @@ class UserListView(PermissionRequiredMixin, ListView):
             },
         ]
 
+        context['primary_button'] = {
+            'button_text': 'Nieuwe gebruiker',
+            'attrs': {
+                'hx-get': reverse('user-create'),
+                'hx-target': '#userFormModal',
+                'hx-push-url': 'false',  # necessary because nested in htmx powered form
+            }
+        }
+
         # Build next page URL with all current filters
         if context.get('page_obj') and context['page_obj'].has_next():
             filter_params = []

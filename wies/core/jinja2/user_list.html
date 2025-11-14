@@ -7,15 +7,7 @@
 {% block content %}
 <div class="rvo-layout-column rvo-layout-gap--md">
 
-  <div class="page-header">
-    <c-h1>Gebruikers</c-h1>
-    <button
-      hx-get="{{ url('user-create') }}"
-      hx-target="#userFormModal"
-      class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button">
-      Nieuwe gebruiker
-    </button>
-  </div>
+  <c-h1>Gebruikers</c-h1>
 
   {% with url_name='users', target_selector='#user_table' %}
     {% include 'parts/generic_filter_bar.html' %}
