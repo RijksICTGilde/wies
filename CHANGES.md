@@ -4,14 +4,13 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 - (backwards incompatible) clean slate - start over with only essential 4W functionality
 - Change login to only pass when user is in database
-- Add authentication tests
 - Remove login requirement from logout endpoint
 - Remove possibility to switch off authentication
-- Developer is added as colleague from env vars during setup
+- Developer is added as user from env vars during setup
 - Generalized modal css from filter bar
-- Introduced users page (only accessible through URL) with filtering, search, create and delete
-- Add permissions on user list, user create, user edit and user delete
 - Introduce roles (groups) Administrator, Consultant, BDM
+- Users page with filtering, search, create, edit and delete (only admins)
+- Add tests for authentication and user views
 
 ## 2025-10-09
 - add period filter to placement page
