@@ -47,6 +47,8 @@ class AccessControlTest(TestCase):
         """Specific test for placements view (main landing page)"""
         response = self.client.get('/placements/', follow=False)
 
+        assert False
+
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.url.startswith(settings.LOGIN_URL))
 
