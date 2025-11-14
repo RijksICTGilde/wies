@@ -1,5 +1,5 @@
 {% for placement in object_list %}
-  <tr class="rvo-table-row clickable-row">
+  <tr class="rvo-table-row clickable-row" onclick="{% if placement.colleague %}window.location.href='{{ url('colleague-detail', args=[placement.colleague.id]) }}'{% endif %}">
     <td class="rvo-table-cell">
       <div class="user-table-cell">
         <div class="user-avatar">
