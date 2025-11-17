@@ -62,21 +62,19 @@ Usage:
 
           {% for filter_group in filter_groups %}
           {% if filter_group.type == 'select' %}
-          <!-- TODO jrc: cannot move to select-field because data-filter-input attribute will be put on div, not on select -->
-          <div class="utrecht-form-field">
-            <div class="rvo-form-field__label">
-              <label class="rvo-label" for="filter-{{ filter_group.name }}">{{ filter_group.label }}</label>
-            </div>
-            <!-- TODO jrc: data-filter-input needs explicit true, otherwise empty string and js breaks. what is expected? -->
-            <c-select
-                name="{{ filter_group.name }}"
-                id="filter-{{ filter_group.name }}"
-                data-filter-input="true"
-                :options="filter_group.options"
-                value="{{ filter_group.value }}"
-            />
-          </div>
+
+          <!-- TODO jrc: data-filter-input needs explicit true, otherwise empty string and js breaks. what is expected? -->
+          <c-select-field
+            label="{{ filter_group.label }}"
+            name="{{ filter_group.name }}"
+            id="filter-{{ filter_group.name }}"
+            data-filter-input="true"
+            :options="filter_group.options"
+            value="{{ filter_group.value }}"
+          />
+
           {% elif filter_group.type == 'date_range' %}
+          
           <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
             <!-- TODO jrc label "for" only specified when id is given in. maybe better generate random id that id is also given? -->
             <!-- TODO jrc: helpertext should be empty by default? -->
