@@ -68,18 +68,13 @@ Usage:
               <label class="rvo-label" for="filter-{{ filter_group.name }}">{{ filter_group.label }}</label>
             </div>
             <!-- TODO jrc: data-filter-input needs explicit true, otherwise empty string and js breaks. what is expected? -->
-            <!-- TODO jrc: option argument with selected does not work. dont know why? -->
             <c-select
                 name="{{ filter_group.name }}"
                 id="filter-{{ filter_group.name }}"
-                data-filter-input="true">
-                <option value="">{{ filter_group.placeholder }}</option>
-                {% for option in filter_group.options %}
-                  <option value="{{ option.value }}" {% if option.get('selected') %} selected {% endif %}>
-                    {{ option.label }}
-                  </option>
-                {% endfor %}
-              </c-select>
+                data-filter-input="true"
+                :options="filter_group.options"
+                value="{{ filter_group.value }}"
+            />
           </div>
           {% elif filter_group.type == 'date_range' %}
           <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
