@@ -46,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // Handle date range validation and combined parameter submission
-  const dateRangeInputs = document.querySelectorAll('.date-range-input');
+  const dateRangeInputs = document.querySelectorAll('input[type="date"]');
 
   dateRangeInputs.forEach(input => {
     input.addEventListener('change', function() {

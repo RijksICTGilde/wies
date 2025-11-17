@@ -191,8 +191,8 @@ wheels = [
 
 [[package]]
 name = "jinja-roos-components"
-version = "0.1"
-source = { git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=0.1#6ed877c1b8ea3f0eb4571ab154ce871f9ea4c1ac" }
+version = "0.2"
+source = { git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=0.2#476e09fdcfcc2b1332856f7d81f8813a491853ea" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "jinja2" },
@@ -447,7 +447,7 @@ requires-dist = [
     { name = "django", specifier = "==5.2.8" },
     { name = "django-extensions", specifier = "==4.1" },
     { name = "gunicorn", specifier = "==23.0.0" },
-    { name = "jinja-roos-components", git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=0.1" },
+    { name = "jinja-roos-components", git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=0.2" },
     { name = "jinja2", specifier = "==3.1.6" },
     { name = "requests", specifier = "==2.32.5" },
     { name = "whitenoise", specifier = "==6.11.0" },

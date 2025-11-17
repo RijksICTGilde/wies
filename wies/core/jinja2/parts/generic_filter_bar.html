@@ -20,17 +20,17 @@ Usage:
   <div class="filter-bar-bar">
 
     <!-- Search Field -->
-    <div role="group" aria-labelledby="search-field-label" class="utrecht-form-field utrecht-form-field--text search-field-wrapper">
+    <!-- TODO jrc: could we standardize on a search bar? -->
+    <div role="group" aria-labelledby="search-field-label" class="search-field-wrapper">
       <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon"/>
-      <!-- TODO jrc: cannot replace one below with jrc equivalent because unsupported aria-label -->
-      <input
+      <!-- TODO jrc: size attribute without value necessary to leave out sizing css -->
+      <c-input
         id="search"
         name="{{ search_field|default('search') }}"
         placeholder="{{ search_placeholder|default('Zoeken...') }}"
-        type="text"
-        class="utrecht-textbox utrecht-textbox--html-input rvo-input"
         value="{% if search_filter %}{{ search_filter }}{% endif %}"
         aria-label="{{ search_placeholder|default('Zoeken') }}"
+        size
       />
     </div>
 
@@ -53,7 +53,7 @@ Usage:
     <div class="filter-modal-content">
       <!-- Modal Header -->
       <div class="filter-modal-header">
-        <h2 class="utrecht-heading-2">Filters</h2>
+        <c-h2 noMargins>Filters</c-h2>
         <button type="button" class="filter-modal-close">&times;</button>
       </div>
 
@@ -62,61 +62,44 @@ Usage:
 
           {% for filter_group in filter_groups %}
           {% if filter_group.type == 'select' %}
-          <!-- TODO jrc: below cannot be replaced by c-select-field due to data-* being blocked -->
-          <div class="utrecht-form-field">
-            <div class="rvo-form-field__label">
-              <label class="rvo-label" for="filter-{{ filter_group.name }}">{{ filter_group.label }}</label>
-            </div>
-            <div class="rvo-select-wrapper">
-              <select
-                name="{{ filter_group.name }}"
-                id="filter-{{ filter_group.name }}"
-                class="utrecht-select utrecht-select--html-select rvo-select"
-                data-filter-input>
-                <option value="">{{ filter_group.placeholder }}</option>
-                {% for option in filter_group.options %}
-                  <option value="{{ option.value }}" {% if option.get('selected') %} selected {% endif %}>
-                    {{ option.label }}
-                  </option>
-                {% endfor %}
-              </select>
-            </div>
-          </div>
+
+          <c-select-field
+            label="{{ filter_group.label }}"
+            name="{{ filter_group.name }}"
+            id="filter-{{ filter_group.name }}"
+            data-filter-input
+            :options="filter_group.options"
+            value="{{ filter_group.value }}"
+          />
+
           {% elif filter_group.type == 'date_range' %}
+
+          <!-- TODO jrc: c-date-range-field would be very nice -->
           <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
-            <!-- TODO JRC below inputs cannot be replaced by c-date-field because data-* attributes are not supported -->
-            <div class="utrecht-form-field">
-              <div class="rvo-form-field__label">
-                <label class="rvo-label" for="filter-{{ filter_group.name }}-from">{{ filter_group.from_label }}</label>
-              </div>
-              <input
-                type="date"
-                id="filter-{{ filter_group.name }}-from"
-                class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
-                {% if filter_group.require_both %}
-                data-require-both="true"
-                data-combined-name="{{ filter_group.name }}"
-                data-pair-id="filter-{{ filter_group.name }}-to"
-                {% endif %}
-                value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from }}{% endif %}"
-              />
-            </div>
-            <div class="utrecht-form-field">
-              <div class="rvo-form-field__label">
-                <label class="rvo-label" for="filter-{{ filter_group.name }}-to">{{ filter_group.to_label }}</label>
-              </div>
-              <input
-                type="date"
-                id="filter-{{ filter_group.name }}-to"
-                class="utrecht-textbox utrecht-textbox--html-input rvo-input{% if filter_group.require_both %} date-range-input{% endif %}"
-                {% if filter_group.require_both %}
-                data-require-both="true"
-                data-combined-name="{{ filter_group.name }}"
-                data-pair-id="filter-{{ filter_group.name }}-from"
-                {% endif %}
-                value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to }}{% endif %}"
-              />
-            </div>
+            <!-- TODO jrc label "for" only specified when id is given in. maybe better generate random id that id is also given? -->
+            <!-- TODO jrc: helpertext should be empty by default? -->
+            <!-- TODO JRC: setting size without attribute necessary to leave out sizing css -->
+            <c-date-input-field 
+              id="filter-{{ filter_group.name }}-from"
+              label="{{ filter_group.from_label }}" 
+              helperText=""
+              data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
+              data-combined-name="{{ filter_group.name }}"
+              data-pair-id="filter-{{ filter_group.name }}-to"
+              size
+              value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from }}{% endif %}"
+            />
+
+            <c-date-input-field 
+              id="filter-{{ filter_group.name }}-to"
+              label="{{ filter_group.to_label }}" 
+              helperText=""
+              data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
+              data-combined-name="{{ filter_group.name }}"
+              data-pair-id="filter-{{ filter_group.name }}-from"
+              size
+              value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to }}{% endif %}"
+            />
           </div>
           {% if filter_group.require_both %}
           <!-- Hidden input managed by JS - only submitted when both dates are filled -->
