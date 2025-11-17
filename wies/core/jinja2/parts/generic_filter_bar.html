@@ -63,18 +63,17 @@ Usage:
           {% for filter_group in filter_groups %}
           {% if filter_group.type == 'select' %}
 
-          <!-- TODO jrc: data-filter-input needs explicit true, otherwise empty string and js breaks. what is expected? -->
           <c-select-field
             label="{{ filter_group.label }}"
             name="{{ filter_group.name }}"
             id="filter-{{ filter_group.name }}"
-            data-filter-input="true"
+            data-filter-input
             :options="filter_group.options"
             value="{{ filter_group.value }}"
           />
 
           {% elif filter_group.type == 'date_range' %}
-          
+
           <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
             <!-- TODO jrc label "for" only specified when id is given in. maybe better generate random id that id is also given? -->
             <!-- TODO jrc: helpertext should be empty by default? -->
