@@ -197,15 +197,19 @@ class PlacementListView(ListView):
                 'to': period_to,
             }
 
-        brand_options = []
+        brand_options = [
+            {'value': '', 'label': 'Alle merken'}
+        ]
         for brand in Brand.objects.order_by('name'):
-            brand_options.append({'value': brand.id, 'label': brand.name})
+            brand_options.append({'value': str(brand.id), 'label': brand.name})
             if active_filters.get('brand') == str(brand.id):
                 brand_options[-1]['selected'] = True
 
-        skill_options = []
+        skill_options = [
+            {'value': '', 'label': 'Alle rollen'}
+        ]
         for skill in Skill.objects.order_by('name'):
-            skill_options.append({'value': skill.id, 'label': skill.name})
+            skill_options.append({'value': str(skill.id), 'label': skill.name})
             if active_filters.get('skill') == str(skill.id):
                 skill_options[-1]['selected'] = True
 
@@ -214,15 +218,19 @@ class PlacementListView(ListView):
             for org in Assignment.objects.values_list('organization', flat=True).distinct().exclude(organization='').order_by('organization')
         ]
 
-        client_options = []
+        client_options = [
+            {'value': '', 'label': 'Alle opdrachtgevers'},
+        ]
         for client in clients:
             client_options.append({'value': client['id'], 'label': client['name']})
             if active_filters.get('client') == str(client['id']):
                 client_options[-1]['selected'] = True
 
-        ministry_options = []
+        ministry_options = [
+            {'value': '', 'label': 'Alle ministeries'},
+        ]
         for ministry in Ministry.objects.order_by('name'):
-            ministry_options.append({'value': ministry.id, 'label': ministry.name})
+            ministry_options.append({'value': str(ministry.id), 'label': ministry.name})
             if active_filters.get('ministry') == str(ministry.id):
                 ministry_options[-1]['selected'] = True
 
@@ -230,36 +238,35 @@ class PlacementListView(ListView):
         context['active_filter_count'] = len(active_filters)
 
         # TODO: this can be become an object to help defining correctly and performing extra preprocessing on context
+        # introduce value_key, label_key:
         context['filter_groups'] = [
             {
                 'type': 'select',
                 'name': 'brand',
                 'label': 'Merk',
-                'placeholder': 'Alle merken',
                 'options': brand_options,
-                'value_key': 'id',
-                'label_ley': 'name',
+                'value': active_filters.get('brand', ''),
             },
             {
                 'type': 'select',
                 'name': 'skill',
                 'label': 'Rollen',
-                'placeholder': 'Alle rollen',
                 'options': skill_options,
+                'value': active_filters.get('skill', ''),
             },
             {
                 'type': 'select',
                 'name': 'client',
                 'label': 'Opdrachtgever',
-                'placeholder': 'Alle opdrachtgevers',
                 'options': client_options,
+                'value': active_filters.get('client', ''),
             },
             {
                 'type': 'select',
                 'name': 'ministry',
                 'label': 'Ministerie',
-                'placeholder': 'Alle ministeries',
                 'options': ministry_options,
+                'value': active_filters.get('ministry', ''),
             },
             {
                 'type': 'date_range',
