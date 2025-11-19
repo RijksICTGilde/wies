@@ -455,13 +455,17 @@ class UserListView(PermissionRequiredMixin, ListView):
         if role_filter:
             active_filters['role'] = role_filter
 
-        brand_options = []
+        brand_options = [
+            {'value': '', 'label': 'Alle merken'},
+        ]
         for brand in Brand.objects.order_by('name'):
             brand_options.append({'value': brand.id, 'label': brand.name})
             if active_filters.get('brand') == str(brand.id):
                 brand_options[-1]['selected'] = True
 
-        role_options = []
+        role_options = [
+            {'value': '', 'label': 'Alle rollen'},
+        ]
         for group in Group.objects.all().order_by('name'):
             role_options.append({'value': group.id, 'label': group.name})
             if active_filters.get('role') == str(group.id):
@@ -475,14 +479,12 @@ class UserListView(PermissionRequiredMixin, ListView):
                 'type': 'select',
                 'name': 'brand',
                 'label': 'Merk',
-                'placeholder': 'Alle merken',
                 'options': brand_options,
             },
             {
                 'type': 'select',
                 'name': 'role',
                 'label': 'Rol',
-                'placeholder': 'Alle rollen',
                 'options': role_options,
             },
         ]
