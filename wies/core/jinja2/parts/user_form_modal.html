@@ -13,12 +13,12 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" onclick="document.getElementById('userFormModal').innerHTML=''; document.body.style.overflow='auto';" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md rvo-button">
+        <c-button kind="secondary" type="button" @click="document.getElementById('userFormModal').innerHTML=''; document.body.style.overflow='auto';">
           Annuleren
-        </button>
-        <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button">
+        </c-button>
+        <c-button kind="primary" type="submit">
           {{ form_button_label }}
-        </button>
+        </c-button>
       </div>
     </form>
   </div>

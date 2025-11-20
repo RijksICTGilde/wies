@@ -32,17 +32,16 @@
     </td>
     <td class="rvo-table-cell">
       <div style="display: flex; gap: 0.5rem;">
-        <button type="button"
-                class="utrecht-button utrecht-button--subtle-button utrecht-button--rvo-sm rvo-button"
+        <c-button kind="subtle" size="sm" type="button"
                 hx-get="{{ url('user-edit', args=[user.id]) }}"
                 hx-target="#userFormModal">
           Bewerken
-        </button>
+        </c-button>
         <form method="post" action="{{ url('user-delete', args=[user.id]) }}" style="display: inline;" onsubmit="return confirm('Weet je zeker dat je {{ user.first_name }} {{ user.last_name }} wilt verwijderen?');">
           {{ get_csrf_hidden_input(request) }}
-          <button type="submit" class="utrecht-button utrecht-button--subtle-button utrecht-button--warning-action utrecht-button--rvo-sm rvo-button">
+          <c-button kind="warning-subtle" size="sm" type="submit">
             Verwijderen
-          </button>
+          </c-button>
         </form>
       </div>
     </td>
