@@ -1,0 +1,107 @@
+<div class="modal-overlay" style="display: flex;" id="user-import-result-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="utrecht-heading-2">Importresultaat</h2>
+      <button type="button" class="modal-close" onclick="closeResultModal()">&times;</button>
+    </div>
+
+    <div class="modal-body">
+      <div class="rvo-layout-column rvo-layout-gap--md">
+
+        {% if success %}
+          <!-- Success alert -->
+          <div class="rvo-alert rvo-alert--success rvo-alert--padding-sm">
+            <div class="alert-text">
+              <strong>Import geslaagd!</strong>
+            </div>
+          </div>
+
+          <!-- Success details -->
+          <div class="rvo-layout-column rvo-layout-gap--sm">
+            <p class="rvo-text">
+              <strong>{{ users_created }}</strong> gebruiker(s) geïmporteerd
+            </p>
+            {% if brands_created > 0 %}
+              <p class="rvo-text">
+                <strong>{{ brands_created }}</strong> nieuw(e) merk(en) aangemaakt:
+              </p>
+              <ul class="rvo-list">
+                {% for brand_name in created_brands %}
+                  <li>{{ brand_name }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </div>
+
+          <!-- Warnings if any -->
+          {% if errors and errors|length > 0 %}
+            <div class="rvo-alert rvo-alert--warning rvo-alert--padding-sm">
+              <div class="alert-text">
+                <strong>Waarschuwingen:</strong>
+              </div>
+            </div>
+            <ul class="rvo-list">
+              {% for error in errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+
+        {% else %}
+          <!-- Error alert -->
+          <div class="rvo-alert rvo-alert--error rvo-alert--padding-sm">
+            <div class="alert-text">
+              <strong>Import mislukt</strong>
+            </div>
+          </div>
+
+          <!-- Error details -->
+          {% if errors and errors|length > 0 %}
+            <p class="rvo-text">De volgende fouten zijn gevonden:</p>
+            <ul class="rvo-list">
+              {% for error in errors %}
+                <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endif %}
+
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      {% if success %}
+        <button type="button" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button" onclick="redirectToUsers()">
+          Sluiten
+        </button>
+      {% else %}
+        <button type="button" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md rvo-button" onclick="closeResultModal()">
+          Annuleren
+        </button>
+        <button type="button" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button" onclick="retryImport()">
+          Opnieuw proberen
+        </button>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+function closeResultModal() {
+  const modal = document.getElementById('user-import-result-modal');
+  if (modal) {
+    modal.remove();
+  }
+}
+
+function redirectToUsers() {
+  window.location.href = '{{ url("users") }}';
+}
+
+function retryImport() {
+  // Close result modal and reopen import modal
+  closeResultModal();
+  // Use HTMX to load the import form
+  htmx.ajax('GET', '{{ url("user-import-csv") }}', {target: '#userImportModal'});
+}
+</script>

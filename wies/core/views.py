@@ -21,7 +21,7 @@ from authlib.integrations.django_client import OAuth
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, User
 from .services.sync import sync_all_otys_iir_records
 from .services.placements import filter_placements_by_period
-from .services.users import create_user, update_user
+from .services.users import create_user, update_user, import_users_from_csv
 from .forms import UserForm
 
 oauth = OAuth()
@@ -592,4 +592,58 @@ def user_delete(request, pk):
         user.delete()
         # Redirect to users list - page reload resets filters
         return redirect('users')
+    return HttpResponse(status=405)
+
+
+@permission_required('core.add_user', raise_exception=True)
+def user_import_csv(request):
+    """
+    Import users from a CSV file.
+
+    GET: Display the import form modal
+    POST: Process the uploaded CSV file and create users
+
+    Expected CSV format with columns:
+    - first_name (required)
+    - last_name (required)
+    - email (required)
+    - brand (optional)
+    - Administrator (optional, "y" or "n")
+    - Consultant (optional, "y" or "n")
+    - BDM (optional, "y" or "n")
+    """
+    if request.method == 'GET':
+        # Show the import form modal
+        return render(request, 'parts/user_import_modal.html')
+
+    if request.method == 'POST':
+        # Check if file was uploaded
+        if 'csv_file' not in request.FILES:
+            return render(request, 'parts/user_import_result.html', {
+                'success': False,
+                'errors': ['Geen bestand geüpload. Upload een CSV-bestand.']
+            })
+
+        csv_file = request.FILES['csv_file']
+
+        # Validate file type
+        if not csv_file.name.endswith('.csv'):
+            return render(request, 'parts/user_import_result.html', {
+                'success': False,
+                'errors': ['Ongeldig bestandstype. Upload een CSV-bestand.']
+            })
+
+        # Process the CSV file
+        result = import_users_from_csv(csv_file)
+
+        # Add success message if successful
+        if result['success']:
+            message_parts = [f"{result['users_created']} gebruiker(s) geïmporteerd"]
+            if result['brands_created'] > 0:
+                message_parts.append(f"{result['brands_created']} merk(en) aangemaakt")
+            messages.success(request, '. '.join(message_parts) + '.')
+
+        # Return result modal
+        return render(request, 'parts/user_import_result.html', result)
+
     return HttpResponse(status=405)

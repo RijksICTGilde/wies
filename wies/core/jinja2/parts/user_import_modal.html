@@ -1,0 +1,90 @@
+<div class="modal-overlay" style="display: flex;" id="user-import-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="utrecht-heading-2">Gebruikers importeren</h2>
+      <button type="button" class="modal-close" onclick="closeModal('user-import-modal')">&times;</button>
+    </div>
+
+    <form method="post" action="{{ url('user-import-csv') }}" enctype="multipart/form-data" hx-post="{{ url('user-import-csv') }}" hx-target="#userImportModal" hx-encoding="multipart/form-data">
+      {{ get_csrf_hidden_input(request) }}
+
+      <div class="modal-body">
+        <div class="rvo-layout-column rvo-layout-gap--md">
+
+          <!-- Info alert -->
+          <div class="rvo-alert rvo-alert--info rvo-alert--padding-sm">
+            <div class="alert-text">
+              Upload een CSV-bestand met gebruikersgegevens. Download het voorbeeldbestand om het juiste formaat te zien.
+            </div>
+          </div>
+
+          <!-- File upload field -->
+          <div class="utrecht-form-field">
+            <div class="rvo-form-field__label">
+              <label class="rvo-label" for="csv_file">CSV-bestand</label>
+            </div>
+            <input
+              type="file"
+              id="csv_file"
+              name="csv_file"
+              accept=".csv"
+              class="utrecht-textbox utrecht-textbox--html-input rvo-input"
+              required
+            />
+          </div>
+
+          <!-- Download sample CSV button -->
+          <div>
+            <a
+              href="{{ url('user-import-sample-csv') }}"
+              download="voorbeeld_gebruikers_import.csv"
+              class="utrecht-button utrecht-button--subtle-button utrecht-button--rvo-sm rvo-button"
+            >
+              <svg class="rvo-icon rvo-icon--md rvo-icon--hemelblauw" aria-hidden="true">
+                <use href="/static/css/icons.svg#download"></use>
+              </svg>
+              Download voorbeeldbestand
+            </a>
+          </div>
+
+          <!-- CSV format info -->
+          <details class="rvo-details">
+            <summary class="rvo-details__summary">
+              <span class="rvo-details__summary-text">Verwachte CSV-kolommen</span>
+            </summary>
+            <div class="rvo-details__content">
+              <ul class="rvo-list rvo-list--no-margin">
+                <li><strong>first_name</strong> (verplicht): Voornaam</li>
+                <li><strong>last_name</strong> (verplicht): Achternaam</li>
+                <li><strong>email</strong> (verplicht): E-mailadres</li>
+                <li><strong>brand</strong> (optioneel): Merknaam</li>
+                <li><strong>Administrator</strong> (optioneel): "y" of "n"</li>
+                <li><strong>Consultant</strong> (optioneel): "y" of "n"</li>
+                <li><strong>BDM</strong> (optioneel): "y" of "n"</li>
+              </ul>
+            </div>
+          </details>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md rvo-button" onclick="closeModal('user-import-modal')">
+          Annuleren
+        </button>
+        <button type="submit" class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button">
+          Importeren
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (modal) {
+    modal.remove();
+  }
+}
+</script>

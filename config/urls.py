@@ -17,13 +17,16 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import RedirectView
+from django.views.static import serve
+from django.conf import settings
+import os
 
 from wies.core.views import client
 from wies.core.views import AssignmentDetailView, ColleagueDetailView
 from wies.core.views import PlacementListView
 from wies.core.views import MinistryDetailView
 from wies.core.views import admin_db, login, no_access, logout, auth
-from wies.core.views import UserListView, user_create, user_edit, user_delete
+from wies.core.views import UserListView, user_create, user_edit, user_delete, user_import_csv
 
 urlpatterns = [
     path('admin/db/', admin_db, name='admin-db'),
@@ -42,4 +45,9 @@ urlpatterns = [
     path('users/create/', user_create, name='user-create'),
     path('users/<int:pk>/edit/', user_edit, name='user-edit'),
     path('users/<int:pk>/delete/', user_delete, name='user-delete'),
+    path('users/import/', user_import_csv, name='user-import-csv'),
+    path('users/import/sample.csv',
+         lambda request: serve(request, 'csv/example_users_import.csv',
+                              document_root=os.path.join(settings.BASE_DIR, 'wies/core/static')),
+         name='user-import-sample-csv'),
 ]
