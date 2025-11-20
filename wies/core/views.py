@@ -523,7 +523,7 @@ def user_create(request):
     if request.method == 'GET':
         # Return modal HTML with empty UserForm
         form = UserForm()
-        return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title})
+        return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Toevoegen'})
     elif request.method == 'POST':
         form = UserForm(request.POST)
         if form.is_valid():
@@ -544,7 +544,7 @@ def user_create(request):
                 return redirect('users')
         else:
             # Re-render form with errors (stays in modal with HTMX)
-            return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title})
+            return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Toevoegen'})
     return HttpResponse(status=405)
 
 
@@ -558,7 +558,7 @@ def user_edit(request, pk):
     if request.method == 'GET':
         # Return modal HTML with UserForm populated with user data
         form = UserForm(instance=editing_user)
-        return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title})
+        return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Opslaan'})
     elif request.method == 'POST':
         form = UserForm(request.POST, instance=editing_user)
         if form.is_valid():
@@ -580,7 +580,7 @@ def user_edit(request, pk):
                 return redirect('users')
         else:
             # Re-render form with errors (stays in modal with HTMX)
-            return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title})
+            return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Opslaan'})
     return HttpResponse(status=405)
 
 
