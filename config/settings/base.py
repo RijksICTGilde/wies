@@ -154,3 +154,5 @@ AUTHENTICATION_BACKENDS = [
     'wies.core.auth_backend.AuthBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
+
+AUTH_USER_MODEL = 'core.User'

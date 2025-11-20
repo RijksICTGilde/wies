@@ -27,17 +27,28 @@
         <li class="rvo-menubar__list">
           <ul class="rvo-menubar__group--flex">
             <li class="rvo-menubar__item">
-              <a href="/placements/" class="rvo-link rvo-menubar__link rvo-link--logoblauw {% if '/placements/' in request.path %}wies-menu-item--active{% endif %}">Wie zit waar?</a>
+              <a href="/placements/" class="rvo-link rvo-menubar__link rvo-link--logoblauw {% if '/placements/' in request.path %}menu-item--active{% endif %}">Wie zit waar?</a>
             </li>
+            {% if user.has_perms(['core.view_user']) %}
+            <li class="rvo-menubar__item">
+              <a href="/users/" class="rvo-link rvo-menubar__link rvo-link--logoblauw {% if '/users/' in request.path %}menu-item--active{% endif %}">Gebruikers</a>
+            </li>
+            {% endif %}
           </ul>
           <ul class="rvo-menubar__group--flex">
             <li class="rvo-menubar__item">
-              {% if user.is_authenticated and user.colleague %}
-                <!-- TODO jrc: ideally you dont have to specify the showIcon, color and icon for obvious case -->
-                <c-link href="/colleagues/{{ user.colleague.id }}" icon="user" showIcon="before" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw">
-                  {{ user.get_full_name() }}
-                </c-link>
-              {% else %}
+              {% if user.is_authenticated %}
+
+                {% if user.colleague %}
+                  <!-- TODO jrc: ideally you dont have to specify the showIcon, color and icon for obvious case -->
+                  <c-link href="/colleagues/271" icon="user" showIcon="before" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw">
+                    {{ user.get_full_name() }}
+                  </c-link>
+                {% else %}
+                  <c-link href="#" icon="user" showIcon="before" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw">
+                    {{ user.get_full_name() }}
+                  </c-link>
+                {% endif %}
               {% endif %}
             </li>
           </ul>

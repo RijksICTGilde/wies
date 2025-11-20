@@ -52,7 +52,6 @@ def sync_all_otys_iir_records():
         # Sync candidates (colleagues)
         logger.info(f"Syncing {len(otys_candidates)} candidates...")
         for otys_candidate in otys_candidates:
-            print('person:', otys_candidate.get('Person'))
             uid = otys_candidate['uid']
             firstname = otys_candidate.get('Person', {}).get('firstName', '')
             lastname = otys_candidate.get('Person', {}).get('lastName', '')

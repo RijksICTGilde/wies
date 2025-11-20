@@ -2,7 +2,7 @@ import datetime
 
 from django.db import models
 from django.urls import reverse
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractUser
 
 
 ASSIGNMENT_STATUS = {
@@ -44,6 +44,10 @@ class Skill(models.Model):
     
     def __str__(self):
         return self.name
+
+class User(AbstractUser):
+    brand = models.ForeignKey('Brand', models.SET_NULL, null=True, blank=True, related_name='users')
+
 
 class Colleague(models.Model):
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='colleague')

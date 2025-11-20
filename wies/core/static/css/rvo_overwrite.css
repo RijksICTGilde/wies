@@ -2,11 +2,6 @@
   width: 100%;
 }
 
-.rvo-table-header {
-  cursor: pointer;
-  transition: background-color 0.2s ease;
-}
-
 .rvo-table-header--active-sort {
   background-color: var(--rvo-color-hemelblauw-150) !important;
   color: var(--rvo-color-hemelblauw-750) !important;
@@ -25,10 +20,10 @@
   flex-shrink: 0;
 }
 
+/* enforce that row is colored also when not clickable */
 .rvo-table-row:hover,
 .rvo-table-row.clickable-row:hover {
   background-color: var(--rvo-color-hemelblauw-150) !important;
-  cursor: pointer;
 }
 
 /* Compact header styling */
@@ -36,7 +31,7 @@
   padding: 0.25rem 1rem;
 }
 
-/* Custom select chevron fix */
+/* Select chevron fix */
 .rvo-select-wrapper::after {
   background-color: white;
   -webkit-mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");

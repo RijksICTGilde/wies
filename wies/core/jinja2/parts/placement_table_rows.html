@@ -1,15 +1,15 @@
 {% for placement in object_list %}
   <tr class="rvo-table-row clickable-row" onclick="{% if placement.colleague %}window.location.href='{{ url('colleague-detail', args=[placement.colleague.id]) }}'{% endif %}">
     <td class="rvo-table-cell">
-      <div class="placement-avatar-container">
-        <div class="placement-avatar">
+      <div class="user-table-cell">
+        <div class="user-avatar">
           {% if placement.colleague %}
             {{ placement.colleague.name|first|upper }}
           {% else %}
             ?
           {% endif %}
         </div>
-        <div class="placement-info">
+        <div class="user-info">
           <div class="rvo-text rvo-text--bold">
             {% if placement.colleague %}
               {{ placement.colleague.name }}

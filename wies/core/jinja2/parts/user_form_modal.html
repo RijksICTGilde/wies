@@ -1,0 +1,25 @@
+<div class="modal-overlay" style="display: flex;" id="user-modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="utrecht-heading-2">{{ modal_title }}</h2>
+      <button type="button" class="modal-close" onclick="document.getElementById('userFormModal').innerHTML=''; document.body.style.overflow='auto';">&times;</button>
+    </div>
+
+    <form method="post" action="{{ form_post_url }}" hx-post="{{ form_post_url }}" hx-target="#userFormModal">
+      {{ get_csrf_hidden_input(request) }}
+
+      <div class="modal-body">
+        {{ form }}
+      </div>
+
+      <div class="modal-footer">
+        <c-button kind="secondary" type="button" @click="document.getElementById('userFormModal').innerHTML=''; document.body.style.overflow='auto';">
+          Annuleren
+        </c-button>
+        <c-button kind="primary" type="submit">
+          {{ form_button_label }}
+        </c-button>
+      </div>
+    </form>
+  </div>
+</div>

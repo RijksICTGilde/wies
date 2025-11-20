@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   const modal = document.getElementById('filterModal');
   const filterButton = document.querySelector('.filter-button');
-  const closeButton = document.querySelector('.filter-modal-close');
+  const closeButton = document.querySelector('.modal-close');
   const closeModalButton = document.querySelector('.close-modal-button');
   const clearFiltersButton = document.querySelector('.clear-filters-button');
   const form = document.querySelector('.rvo-form');

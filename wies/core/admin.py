@@ -1,11 +1,14 @@
 from django.contrib import admin
-from .models import Assignment, Colleague, Ministry, Brand, Placement, Service, Skill
+from .models import Assignment, Colleague, Ministry, Brand, Placement, Service, Skill, User
 
 
 class AssignmentAdmin(admin.ModelAdmin):
     pass
 
 class ColleagueAdmin(admin.ModelAdmin):
+    pass
+
+class UserAdmin(admin.ModelAdmin):
     pass
 
 class SkillAdmin(admin.ModelAdmin):
@@ -27,6 +30,7 @@ class ServiceAdmin(admin.ModelAdmin):
 
 admin.site.register(Assignment, AssignmentAdmin)
 admin.site.register(Colleague, ColleagueAdmin)
+admin.site.register(User, UserAdmin)
 admin.site.register(Skill, SkillAdmin)
 admin.site.register(Ministry, MinistryAdmin)
 admin.site.register(Brand, BrandAdmin)

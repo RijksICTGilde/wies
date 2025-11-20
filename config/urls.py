@@ -19,21 +19,27 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from wies.core.views import client
-from wies.core.views import AssignmentDetail, ColleagueDetail
-from wies.core.views import PlacementTableView
+from wies.core.views import AssignmentDetailView, ColleagueDetailView
+from wies.core.views import PlacementListView
 from wies.core.views import MinistryDetailView
-from wies.core.views import admin_db, login, logout, auth
+from wies.core.views import admin_db, login, no_access, logout, auth
+from wies.core.views import UserListView, user_create, user_edit, user_delete
 
 urlpatterns = [
     path('admin/db/', admin_db, name='admin-db'),
     path('admin/', admin.site.urls),
     path('', RedirectView.as_view(pattern_name='placements', permanent=False), name='home'),
     path('login/', login, name='login'),
+    path('no-access/', no_access),
     path('logout/', logout, name='logout'),
     path('auth/', auth, name='auth'),
-    path('assignments/<int:pk>/', AssignmentDetail.as_view(), name='assignment-detail'),
-    path('colleagues/<int:pk>/', ColleagueDetail.as_view(), name='colleague-detail'),
-    path('placements/', PlacementTableView.as_view(), name='placements'),
+    path('assignments/<int:pk>/', AssignmentDetailView.as_view(), name='assignment-detail'),
+    path('colleagues/<int:pk>/', ColleagueDetailView.as_view(), name='colleague-detail'),
+    path('placements/', PlacementListView.as_view(), name='placements'),
     path('clients/<str:name>', client),
     path('ministries/<int:pk>/', MinistryDetailView.as_view(), name='ministry-detail'),
+    path('users/', UserListView.as_view(), name='users'),
+    path('users/create/', user_create, name='user-create'),
+    path('users/<int:pk>/edit/', user_edit, name='user-edit'),
+    path('users/<int:pk>/delete/', user_delete, name='user-delete'),
 ]

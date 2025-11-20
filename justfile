@@ -14,8 +14,10 @@ setup:
   docker compose build
   docker compose run --rm django python manage.py dropdb --noinput
   docker compose run --rm django python manage.py migrate
+  docker compose run --rm django python manage.py setup
   docker compose run --rm django python manage.py loaddata dummy_data.json
   docker-compose run --rm django python manage.py createsuperuser --noinput
+  docker-compose run --rm django python manage.py add_developer_user
 
 # Start up container
 up:
@@ -47,3 +49,6 @@ rebuild-db:
 # Executes `manage.py` command.
 manage *args="--help":
   docker compose run --rm django python manage.py {{args}}
+
+test:
+  docker compose run --rm django python manage.py test wies

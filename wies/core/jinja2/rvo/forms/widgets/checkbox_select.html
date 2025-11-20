@@ -1,0 +1,8 @@
+<div class="rvo-layout-column rvo-layout-gap--sm rvo-checkbox__group">{% for group, options, index in widget.optgroups %}{% if group %}
+  <div><label>{{ group }}</label>{% endif %}{% for option_widget in options %}
+  <label class="rvo-checkbox">
+    <input type="checkbox" name="{{ option_widget.name }}" value="{{ option_widget.value }}" class="rvo-checkbox__input"{% if option_widget.selected %} checked{% endif %}{% if option_widget.attrs %} {% for name, value in option_widget.attrs.items() %}{% if value is not sameas False and name != 'id' %}{{ name }}{% if value is not sameas True %}="{{ value }}"{% endif %}{% endif %}{% endfor %}{% endif %}>
+    <span class="rvo-text">{{ option_widget.label }}</span>
+  </label>{% endfor %}{% if group %}
+  </div>{% endif %}{% endfor %}
+</div>

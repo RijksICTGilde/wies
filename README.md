@@ -12,7 +12,9 @@ Interne tool voor overzicht wie, waar, wat, wanneer
 Setting up the system. Can also be used to clean up current state.
 - installs dependencies
 - sets up database from scratch, including source data
-- creates minimal .env file if non-existent
+- creates example .env file if non-existent
+  - correct the OIDC credentials
+  - correct the DEV firstname, lastname and email (yourself) 
 
 ```
 just setup
@@ -46,3 +48,15 @@ The following URLs are not linked through the UI
 - tag with date using "yyyy-mm-dd": e.g. `git tag -a 2025-08-18 -m "2025-08-18"`
 - push tag: `git push --tags`
 - (CI produces image)
+
+### Testing
+Run all tests
+```
+just test
+```
+
+For running specific tests;
+
+```
+just manage test wies.core.tests.test_roles
+```

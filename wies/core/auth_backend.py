@@ -1,7 +1,6 @@
 from django.contrib.auth.backends import BaseBackend
-from django.contrib.auth.models import User
 
-from .models import Colleague
+from .models import Colleague, User
 
 
 class AuthBackend(BaseBackend):
@@ -18,20 +17,16 @@ class AuthBackend(BaseBackend):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            user = User(username=username, email=email, **extra_fields)
-            user.save()
+            # do not authenticate if Colleage record does not exist
+            return None
 
-        # Link or create Colleague profile
-        name = f"{user.first_name} {user.last_name}".strip()
-        colleague, _ = Colleague.objects.get_or_create(
-            email=email,
-            defaults={'name': name}
-        )
-        
-        # if not yet linked, link
-        if not colleague.user:
-            colleague.user = user
-            colleague.save()
+        # Link colleague if match on email
+        try:
+            matching_colleague = Colleague.objects.get(email=email)
+            matching_colleague.user = user
+            matching_colleague.save()
+        except Colleague.DoesNotExist:
+            pass
 
         return user 
     

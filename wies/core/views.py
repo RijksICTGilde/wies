@@ -1,23 +1,28 @@
 from django.views.generic.list import ListView
 from django.views.generic import DetailView
-from django.shortcuts import redirect, render
+from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse_lazy, reverse
-from django.db.models import Q, Prefetch
+from django.db.models import Q, Prefetch, Value
+from django.db.models.functions import Concat
 from django.contrib import messages
-from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import user_passes_test, permission_required
 from django.contrib.auth import authenticate as auth_authenticate
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_not_required
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.models import Group
 from django.core import management
 from django.conf import settings
 from django.http import HttpResponse
 
 from authlib.integrations.django_client import OAuth
 
-from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand
+from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, User
 from .services.sync import sync_all_otys_iir_records
 from .services.placements import filter_placements_by_period
+from .services.users import create_user, update_user
+from .forms import UserForm
 
 oauth = OAuth()
 oauth.register(
@@ -58,13 +63,19 @@ def auth(request):
     if user:
         auth_login(request, user)
         return redirect(request.build_absolute_uri(reverse("home")))
-    return HttpResponse(status=400)
+    return redirect('/no-access/')
 
 
+@login_not_required  # page cannot require login because you land on this after unsuccesful login
+def no_access(request):
+    return render(request, 'no_access.html')
+
+
+@login_not_required  # logout should be accessible without login
 def logout(request):
-    if request.user:
+    if request.user and request.user.is_authenticated:
         auth_logout(request)
-    return redirect('/')
+    return redirect(reverse('login'))
 
 
 @user_passes_test(lambda u: u.is_superuser and u.is_authenticated, login_url='/admin/login/')
@@ -87,6 +98,9 @@ def admin_db(request):
         elif action == 'load_data':
             management.call_command('loaddata', 'dummy_data.json')
             messages.success(request, 'Data loaded successfully from dummy_data.json')
+        elif action == 'add_dev_user':
+            management.call_command('add_developer_user')
+            messages.success(request, 'Developer user added')
         elif action == 'sync_all_otys_records':
             sync_all_otys_iir_records()
             messages.success(request, 'All records synced successfully from OTYS IIR')
@@ -96,7 +110,7 @@ def admin_db(request):
     return render(request, 'admin_db.html', context)
 
 
-class PlacementTableView(ListView):
+class PlacementListView(ListView):
     """View for placements table view with infinite scroll pagination"""
     model = Placement
     template_name = 'placement_table.html'
@@ -279,12 +293,12 @@ class PlacementTableView(ListView):
         return context
 
 
-class AssignmentDetail(DetailView):
+class AssignmentDetailView(DetailView):
     model = Assignment
     template_name = 'assignment_detail.html'
 
 
-class ColleagueDetail(DetailView):
+class ColleagueDetailView(DetailView):
     model = Colleague
     template_name = 'colleague_detail.html'
 
@@ -376,3 +390,206 @@ class MinistryDetailView(DetailView):
 
         context['assignments'] = assignments_data
         return context
+
+
+class UserListView(PermissionRequiredMixin, ListView):
+    """View for user list with filtering and infinite scroll pagination"""
+    model = User
+    template_name = 'user_list.html'
+    paginate_by = 50
+    permission_required = 'core.view_user'
+
+    def get_queryset(self):
+        """Apply filters to users queryset - exclude superusers"""
+        qs = User.objects.select_related('brand').prefetch_related('groups').filter(
+            is_superuser=False
+        ).order_by('last_name', 'first_name')
+
+        search_filter = self.request.GET.get('search')
+        if search_filter:
+            qs = qs.annotate(
+                full_name=Concat('first_name', Value(' '), 'last_name'),
+            ).filter(
+                Q(full_name__icontains=search_filter) |
+                Q(first_name__icontains=search_filter) |
+                Q(last_name__icontains=search_filter) |
+                Q(email__icontains=search_filter)
+            )
+
+        # Brand filter
+        brand_filter = self.request.GET.get('brand')
+        if brand_filter:
+            qs = qs.filter(brand__id=brand_filter)
+
+        # Role filter
+        role_filter = self.request.GET.get('role')
+        if role_filter:
+            qs = qs.filter(groups__id=role_filter)
+
+        return qs.distinct()
+
+    def get_template_names(self):
+        """Return appropriate template based on request type"""
+        if 'HX-Request' in self.request.headers:
+            # If paginating, return only rows
+            if self.request.GET.get('page'):
+                return ['parts/user_table_rows.html']
+            # Otherwise, return full table (for filter changes)
+            return ['parts/user_table.html']
+        return ['user_list.html']
+
+    def get_context_data(self, **kwargs):
+        """Add dynamic filter options"""
+        context = super().get_context_data(**kwargs)
+
+        context['search_field'] = 'search'
+        context['search_placeholder'] = 'Zoek op naam of email...'
+        context['search_filter'] = self.request.GET.get('search')
+
+        active_filters = {}
+        brand_filter = self.request.GET.get('brand')
+        if brand_filter:
+            active_filters['brand'] = brand_filter
+
+        role_filter = self.request.GET.get('role')
+        if role_filter:
+            active_filters['role'] = role_filter
+
+        brand_options = [
+            {'value': '', 'label': 'Alle merken'},
+        ]
+        for brand in Brand.objects.order_by('name'):
+            brand_options.append({'value': brand.id, 'label': brand.name})
+            if active_filters.get('brand') == str(brand.id):
+                brand_options[-1]['selected'] = True
+
+        role_options = [
+            {'value': '', 'label': 'Alle rollen'},
+        ]
+        for group in Group.objects.all().order_by('name'):
+            role_options.append({'value': group.id, 'label': group.name})
+            if active_filters.get('role') == str(group.id):
+                role_options[-1]['selected'] = True
+
+        context['active_filters'] = active_filters
+        context['active_filter_count'] = len(active_filters)
+
+        context['filter_groups'] = [
+            {
+                'type': 'select',
+                'name': 'brand',
+                'label': 'Merk',
+                'options': brand_options,
+            },
+            {
+                'type': 'select',
+                'name': 'role',
+                'label': 'Rol',
+                'options': role_options,
+            },
+        ]
+
+        context['primary_button'] = {
+            'button_text': 'Nieuwe gebruiker',
+            'attrs': {
+                'hx-get': reverse('user-create'),
+                'hx-target': '#userFormModal',
+                'hx-push-url': 'false',  # necessary because nested in htmx powered form
+            }
+        }
+
+        # Build next page URL with all current filters
+        if context.get('page_obj') and context['page_obj'].has_next():
+            filter_params = []
+            for key, value in self.request.GET.items():
+                if key != 'page':
+                    filter_params.append(f'{key}={value}')
+            params_str = '&'.join(filter_params)
+            next_page = context['page_obj'].next_page_number()
+            context['next_page_url'] = f'?page={next_page}' + (f'&{params_str}' if params_str else '')
+        else:
+            context['next_page_url'] = None
+
+        return context
+
+
+@permission_required('core.add_user', raise_exception=True)
+def user_create(request):
+    """Handle user creation - GET returns form modal, POST processes creation"""
+    
+    form_post_url = reverse('user-create')
+    modal_title = 'Nieuwe gebruiker'
+    
+    if request.method == 'GET':
+        # Return modal HTML with empty UserForm
+        form = UserForm()
+        return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Toevoegen'})
+    elif request.method == 'POST':
+        form = UserForm(request.POST)
+        if form.is_valid():
+            create_user(
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name'],
+                email=form.cleaned_data['email'],
+                brand=form.cleaned_data.get('brand'),
+                groups=form.cleaned_data.get('groups')
+            )
+            # For HTMX requests, use HX-Redirect header to force full page redirect
+            # For standard form posts, use normal redirect
+            if 'HX-Request' in request.headers:
+                response = HttpResponse(status=200)
+                response['HX-Redirect'] = reverse('users')
+                return response
+            else:
+                return redirect('users')
+        else:
+            # Re-render form with errors (stays in modal with HTMX)
+            return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Toevoegen'})
+    return HttpResponse(status=405)
+
+
+@permission_required('core.change_user', raise_exception=True)
+def user_edit(request, pk):
+    """Handle user editing - GET returns form modal with user data, POST processes update"""
+    editing_user = get_object_or_404(User, pk=pk, is_superuser=False)
+    form_post_url = reverse('user-edit', args=[editing_user.id])
+    modal_title = 'Gebruiker bewerken'
+
+    if request.method == 'GET':
+        # Return modal HTML with UserForm populated with user data
+        form = UserForm(instance=editing_user)
+        return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Opslaan'})
+    elif request.method == 'POST':
+        form = UserForm(request.POST, instance=editing_user)
+        if form.is_valid():
+            update_user(
+                user=editing_user,
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name'],
+                email=form.cleaned_data['email'],
+                brand=form.cleaned_data.get('brand'),
+                groups=form.cleaned_data.get('groups')
+            )
+            # For HTMX requests, use HX-Redirect header to force full page redirect
+            # For standard form posts, use normal redirect
+            if 'HX-Request' in request.headers:
+                response = HttpResponse(status=200)
+                response['HX-Redirect'] = reverse('users')
+                return response
+            else:
+                return redirect('users')
+        else:
+            # Re-render form with errors (stays in modal with HTMX)
+            return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Opslaan'})
+    return HttpResponse(status=405)
+
+
+@permission_required('core.delete_user', raise_exception=True)
+def user_delete(request, pk):
+    """Handle user deletion"""
+    if request.method == 'POST':
+        user = get_object_or_404(User, pk=pk, is_superuser=False)
+        user.delete()
+        # Redirect to users list - page reload resets filters
+        return redirect('users')
+    return HttpResponse(status=405)

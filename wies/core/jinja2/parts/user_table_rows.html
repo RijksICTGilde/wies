@@ -1,0 +1,71 @@
+{% for user in object_list %}
+  <tr class="rvo-table-row">
+    <td class="rvo-table-cell">
+      <div class="user-table-cell">
+        <div class="user-avatar">
+          {{ user.first_name|first|upper if user.first_name else user.email|first|upper }}
+        </div>
+        <div class="user-info">
+          <div class="rvo-text rvo-text--bold">
+            {{ user.first_name }} {{ user.last_name }}
+          </div>
+          <div class="rvo-text rvo-text--sm rvo-text--subtle">
+            {% if user.brand %}
+              {{ user.brand.name }}
+            {% else %}
+              Geen merk
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </td>
+    <td class="rvo-table-cell">
+      <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+        {% for group in user.groups.all() %}
+          <span class="rvo-text rvo-text--sm" style="background-color: #e6f0ff; color: #154273; padding: 0.125rem 0.5rem; border-radius: 0.25rem; white-space: nowrap;">
+            {% if group.name == 'Business Development Manager' %}
+            BDM
+            {% else %}
+            {{ group.name }}
+            {% endif %}
+          </span>
+        {% else %}
+          <span class="rvo-text rvo-text--sm rvo-text--subtle">-</span>
+        {% endfor %}
+      </div>
+    </td>
+    <td class="rvo-table-cell">
+      <div style="display: flex; gap: 0.5rem;">
+        <c-button kind="subtle" size="sm" type="button"
+                hx-get="{{ url('user-edit', args=[user.id]) }}"
+                hx-target="#userFormModal">
+          Bewerken
+        </c-button>
+        <form method="post" action="{{ url('user-delete', args=[user.id]) }}" style="display: inline;" onsubmit="return confirm('Weet je zeker dat je {{ user.first_name }} {{ user.last_name }} wilt verwijderen?');">
+          {{ get_csrf_hidden_input(request) }}
+          <c-button kind="warning-subtle" size="sm" type="submit">
+            Verwijderen
+          </c-button>
+        </form>
+      </div>
+    </td>
+  </tr>
+{% else %}
+  <tr class="rvo-table-row">
+    <td class="rvo-table-cell" colspan="4">
+      <span class="rvo-text--italic">Geen gebruikers gevonden.</span>
+    </td>
+  </tr>
+{% endfor %}
+
+{% if next_page_url %}
+<tr hx-get="{{ next_page_url }}"
+    hx-trigger="revealed"
+    hx-swap="outerHTML">
+  <td colspan="4" class="rvo-table-cell">
+    <div style="text-align: center; padding: 1rem;">
+      <span class="rvo-text--subtle">Meer laden...</span>
+    </div>
+  </td>
+</tr>
+{% endif %}

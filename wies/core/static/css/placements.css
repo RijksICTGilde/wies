@@ -1,30 +1,6 @@
 /* Placement-specific CSS */
 
 /* Placement table styling */
-.placement-avatar-container {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.placement-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: var(--rvo-color-hemelblauw-150);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: var(--rvo-font-weight-semibold);
-  color: var(--rvo-color-logoblauw);
-  font-family: var(--rvo-font-sans-serif-font-family), var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
-}
-
-.placement-info {
-  display: flex;
-  flex-direction: column;
-}
-
 .placement-ministry {
   font-size: var(--rvo-font-size-xs);
   color: var(--rvo-color-grijs-600);
