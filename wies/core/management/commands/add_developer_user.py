@@ -24,6 +24,6 @@ class Command(BaseCommand):
             return
         
         user = create_user(first_name, last_name, email)
-        admin_group = Group.objects.get(name='Administrator')
+        admin_group = Group.objects.get(name='Beheerder')
         user.groups.add(admin_group)
         logger.info("Successfully added developer user")

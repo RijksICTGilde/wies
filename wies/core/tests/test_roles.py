@@ -16,39 +16,39 @@ from wies.core.roles import setup_roles
 class RBACSetupTest(TestCase):
     """Integration tests for RBAC role setup"""
 
-    def test_setup_roles_creates_administrator_group(self):
-        """Test that setup_roles creates the Administrator group"""
+    def test_setup_roles_creates_beheerder_group(self):
+        """Test that setup_roles creates the Beheerder group"""
         setup_roles()
 
-        # Administrator group should exist
-        self.assertTrue(Group.objects.filter(name='Administrator').exists())
+        # Beheerder group should exist
+        self.assertTrue(Group.objects.filter(name='Beheerder').exists())
 
     def test_setup_roles_grants_user_permissions(self):
-        """Test that Administrator group has all user management permissions"""
+        """Test that Beheerder group has all user management permissions"""
         setup_roles()
 
-        admin_group = Group.objects.get(name='Administrator')
+        admin_group = Group.objects.get(name='Beheerder')
 
         # Check all expected permissions
         expected_permissions = ['view_user', 'add_user', 'delete_user', 'change_user']
         for codename in expected_permissions:
             self.assertTrue(
                 admin_group.permissions.filter(codename=codename).exists(),
-                f"Administrator group missing {codename} permission"
+                f"Beheerder group missing {codename} permission"
             )
 
-    def test_administrator_group_user_can_access_views(self):
-        """Test that a user in Administrator group can access all user management views"""
+    def test_beheerder_group_user_can_access_views(self):
+        """Test that a user in Beheerder group can access all user management views"""
         setup_roles()
 
-        # Create user and add to Administrator group
+        # Create user and add to Beheerder group
         admin_user = User.objects.create(
             username="admin_user",
             email="admin@example.com",
             first_name="Admin",
             last_name="User",
         )
-        admin_group = Group.objects.get(name='Administrator')
+        admin_group = Group.objects.get(name='Beheerder')
         admin_user.groups.add(admin_group)
 
         client = Client()

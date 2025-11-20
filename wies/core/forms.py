@@ -76,7 +76,7 @@ class UserForm(RvoFormMixin, forms.ModelForm):
     )
     groups = forms.ModelMultipleChoiceField(
         label='Rollen',
-        queryset=Group.objects.filter(name__in=['Administrator', 'Consultant', 'BDM']),
+        queryset=Group.objects.filter(),
         required=False,
         widget=forms.CheckboxSelectMultiple(),
     )

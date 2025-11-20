@@ -8,7 +8,7 @@ This files lists the changes during the lifetime of this project.
 - Remove possibility to switch off authentication
 - Developer is added as user from env vars during setup
 - Generalized modal css from filter bar
-- Introduce roles (groups) Administrator, Consultant, BDM
+- Introduce roles (groups) Beheerder, Consultant, Business Development Manager
 - Users page with filtering, search, create, edit and delete (only admins)
 - Add tests for authentication and user views
 - Introduce forms.py/RVOMixin to enable style the form with roos

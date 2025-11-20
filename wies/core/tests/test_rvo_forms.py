@@ -26,9 +26,9 @@ class RvoFormMixinTest(TestCase):
         self.brand_b = Brand.objects.create(name="Brand B")
 
         # Create test groups for checkbox rendering
-        self.admin_group = Group.objects.create(name="Administrator")
+        self.admin_group = Group.objects.create(name="Beheerder")
         self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name="BDM")
+        self.bdm_group = Group.objects.create(name="Business Development Manager")
 
     def test_form_renders_with_rvo_classes(self):
         """Test that forms using RvoFormMixin render with RVO design system classes"""

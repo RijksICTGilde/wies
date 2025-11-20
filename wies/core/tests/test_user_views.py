@@ -49,9 +49,9 @@ class UserViewsTest(TestCase):
         self.brand_b = Brand.objects.create(name="Brand B")
 
         # Create test groups for form testing
-        self.admin_group = Group.objects.create(name="Administrator")
+        self.admin_group = Group.objects.create(name="Beheerder")
         self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name="BDM")
+        self.bdm_group = Group.objects.create(name="Business Development Manager")
 
         # Create test users
         self.user1 = User.objects.create(

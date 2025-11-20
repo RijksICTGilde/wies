@@ -6,11 +6,11 @@ from wies.core.models import User
 def setup_roles():
     # Define roles
     roles = {
-        "Administrator": [
+        "Beheerder": [
             (User, ["view_user", "add_user", "delete_user", "change_user"]),
         ],
         "Consultant": [],
-        "BDM": [],
+        "Business Development Manager": [],
     }
 
     with transaction.atomic():
