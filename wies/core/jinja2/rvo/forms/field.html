@@ -1,0 +1,14 @@
+<!-- TODO jrc: can this use jrc components? -->
+<div class="utrecht-form-field">
+  <div class="rvo-form-field__label">
+    {% if field.label %}
+      <label class="rvo-label{% if field.field.required %} rvo-label--required{% endif %}"{% if field.auto_id %} for="{{ field.auto_id }}"{% endif %}>
+        {{ field.label }}
+      </label>
+    {% endif %}
+  </div>
+  {{ field }}
+  {% if field.errors %}
+    {{ field.errors }}
+  {% endif %}
+</div>

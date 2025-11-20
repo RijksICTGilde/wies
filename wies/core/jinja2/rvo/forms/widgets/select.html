@@ -1,0 +1,7 @@
+<div class="rvo-select-wrapper">
+  <select name="{{ widget.name }}" class="utrecht-select utrecht-select--html-select rvo-select"{% include "rvo/forms/widgets/attrs.html" %}>{% for group_name, group_choices, group_index in widget.optgroups %}{% if group_name %}
+    <optgroup label="{{ group_name }}">{% endif %}{% for option_widget in group_choices %}
+    <option value="{{ option_widget.value }}"{% if option_widget.selected %} selected{% endif %}{% if option_widget.attrs %} {% for name, value in option_widget.attrs.items() %}{% if value is not sameas False %}{{ name }}{% if value is not sameas True %}="{{ value }}"{% endif %}{% endif %}{% endfor %}{% endif %}>{{ option_widget.label }}</option>{% endfor %}{% if group_name %}
+    </optgroup>{% endif %}{% endfor %}
+  </select>
+</div>

@@ -1,6 +1,6 @@
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Permission, Group
 
 from wies.core.models import User, Brand
 
@@ -47,6 +47,11 @@ class UserViewsTest(TestCase):
         # Create test brands
         self.brand_a = Brand.objects.create(name="Brand A")
         self.brand_b = Brand.objects.create(name="Brand B")
+
+        # Create test groups for form testing
+        self.admin_group = Group.objects.create(name="Administrator")
+        self.consultant_group = Group.objects.create(name="Consultant")
+        self.bdm_group = Group.objects.create(name="BDM")
 
         # Create test users
         self.user1 = User.objects.create(
@@ -471,3 +476,15 @@ class UserViewsTest(TestCase):
 
         response = self.client.get(reverse('user-edit', args=[self.user1.id]))
         self.assertEqual(response.status_code, 403)
+
+    def test_user_create_uses_rvo_styling(self):
+        """Test that user create/edit views use RVO design system styling"""
+        self.client.force_login(self.auth_user)
+        response = self.client.get(reverse('user-create'))
+
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+
+        # Simple integration test - verify RVO classes are present
+        self.assertIn('rvo-label', content)
+        self.assertIn('utrecht-form-field', content)
