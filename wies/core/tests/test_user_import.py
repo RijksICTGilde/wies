@@ -22,9 +22,9 @@ class UserImportTest(TestCase):
         self.import_url = reverse('user-import-csv')
 
         # Create test groups
-        self.admin_group = Group.objects.create(name='Administrator')
+        self.admin_group = Group.objects.create(name='Beheerder')
         self.consultant_group = Group.objects.create(name='Consultant')
-        self.bdm_group = Group.objects.create(name='BDM')
+        self.bdm_group = Group.objects.create(name='Business Development Manager')
 
         # Create test brand
         self.existing_brand = Brand.objects.create(name='Existing Brand')
@@ -74,7 +74,6 @@ class UserImportTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn('user-import-modal', content)
         self.assertIn('Gebruikers importeren', content)
         self.assertIn('csv_file', content)
 
@@ -108,7 +107,7 @@ class UserImportTest(TestCase):
     def test_import_valid_csv_creates_users(self):
         """Test successful import of valid CSV with users"""
         self.client.force_login(self.auth_user)
-        csv_content = """first_name,last_name,email,brand,Administrator,Consultant,BDM
+        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
 John,Doe,john.doe@example.com,Brand A,y,n,n
 Jane,Smith,jane.smith@example.com,Brand B,n,y,n"""
         csv_file = self._create_csv_file(csv_content)
@@ -130,13 +129,13 @@ Jane,Smith,jane.smith@example.com,Brand B,n,y,n"""
         self.assertEqual(john.first_name, 'John')
         self.assertEqual(john.last_name, 'Doe')
         self.assertEqual(john.brand.name, 'Brand A')
-        self.assertTrue(john.groups.filter(name='Administrator').exists())
+        self.assertTrue(john.groups.filter(name='Beheerder').exists())
         self.assertFalse(john.groups.filter(name='Consultant').exists())
 
         jane = User.objects.get(email='jane.smith@example.com')
         self.assertEqual(jane.first_name, 'Jane')
         self.assertTrue(jane.groups.filter(name='Consultant').exists())
-        self.assertFalse(jane.groups.filter(name='Administrator').exists())
+        self.assertFalse(jane.groups.filter(name='Beheerder').exists())
 
     def test_import_reuses_existing_brands(self):
         """Test that import reuses existing brands instead of creating duplicates"""
@@ -219,7 +218,7 @@ Jane,Smith,also-invalid"""
     def test_import_validates_group_values(self):
         """Test that import validates group columns have 'y' or 'n' values"""
         self.client.force_login(self.auth_user)
-        csv_content = """first_name,last_name,email,brand,Administrator,Consultant,BDM
+        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
 John,Doe,john@example.com,Brand A,yes,n,n
 Jane,Smith,jane@example.com,Brand B,y,maybe,n"""
         csv_file = self._create_csv_file(csv_content)
@@ -232,7 +231,7 @@ Jane,Smith,jane@example.com,Brand B,y,maybe,n"""
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn('Import mislukt', content)
-        self.assertIn('Administrator', content)
+        self.assertIn('Beheerder', content)
         self.assertIn('must be', content)
         self.assertIn('Consultant', content)
 
@@ -308,7 +307,7 @@ John,Doe,john@example.com"""
     def test_import_with_multiple_groups(self):
         """Test user assigned to multiple groups"""
         self.client.force_login(self.auth_user)
-        csv_content = """first_name,last_name,email,brand,Administrator,Consultant,BDM
+        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
 John,Doe,john@example.com,Brand A,y,y,y"""
         csv_file = self._create_csv_file(csv_content)
 
@@ -323,9 +322,9 @@ John,Doe,john@example.com,Brand A,y,y,y"""
 
         john = User.objects.get(email='john@example.com')
         self.assertEqual(john.groups.count(), 3)
-        self.assertTrue(john.groups.filter(name='Administrator').exists())
+        self.assertTrue(john.groups.filter(name='Beheerder').exists())
         self.assertTrue(john.groups.filter(name='Consultant').exists())
-        self.assertTrue(john.groups.filter(name='BDM').exists())
+        self.assertTrue(john.groups.filter(name='Business Development Manager').exists())
 
     def test_import_empty_csv(self):
         """Test import with empty CSV file"""
@@ -383,7 +382,7 @@ Jane,Smith,invalid-email"""
     def test_import_handles_whitespace_in_fields(self):
         """Test that import properly trims whitespace from fields"""
         self.client.force_login(self.auth_user)
-        csv_content = """first_name,last_name,email,brand,Administrator,Consultant,BDM
+        csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
   John  ,  Doe  ,  john@example.com  ,  Brand A  , y , n , n """
         csv_file = self._create_csv_file(csv_content)
 

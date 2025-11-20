@@ -1,0 +1,6 @@
+first_name,last_name,email,brand,Beheerder,Consultant,BDM
+John,Doe,john.doe@example.com,I-Interim Rijk,y,n,n
+Jane,Smith,jane.smith@example.com,Rijks I-Traineeship,n,y,n
+Bob,Johnson,bob.johnson@example.com,Rijks ICT Gilde,n,n,y
+Alice,Williams,alice.williams@example.com,Rijksconsultants,n,y,y
+Charlie,Brown,charlie.brown@example.com,Rijksconsultants,y,n,n

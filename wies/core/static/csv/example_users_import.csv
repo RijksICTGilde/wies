@@ -1,6 +1,0 @@
-first_name,last_name,email,brand,Administrator,Consultant,BDM
-John,Doe,john.doe@example.com,Brand A,y,n,n
-Jane,Smith,jane.smith@example.com,Brand B,n,y,n
-Bob,Johnson,bob.johnson@example.com,Brand A,n,n,y
-Alice,Williams,alice.williams@example.com,Brand C,n,y,y
-Charlie,Brown,charlie.brown@example.com,,y,n,n

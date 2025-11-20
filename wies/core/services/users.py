@@ -1,6 +1,7 @@
 import csv
 import uuid
 from io import StringIO
+
 from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group
@@ -42,7 +43,7 @@ def import_users_from_csv(csv_file):
     - last_name (required)
     - email (required)
     - brand (optional, brand name)
-    - Administrator (optional, "y" or "n")
+    - Beheerder (optional, "y" or "n")
     - Consultant (optional, "y" or "n")
     - BDM (optional, "y" or "n")
 
@@ -70,8 +71,6 @@ def import_users_from_csv(csv_file):
 
     # Validate required columns
     required_columns = {'first_name', 'last_name', 'email'}
-    optional_columns = {'brand', 'Administrator', 'Consultant', 'BDM'}
-    all_valid_columns = required_columns | optional_columns
 
     if not csv_reader.fieldnames:
         return {
@@ -97,7 +96,7 @@ def import_users_from_csv(csv_file):
     # Read all rows and validate
     rows = []
     errors = []
-    valid_group_values = {'y', 'n', ''}
+    emails_found = set()
 
     for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 (1 is header)
         row_errors = []
@@ -119,20 +118,20 @@ def import_users_from_csv(csv_file):
                 row_errors.append(f"Row {row_num}: invalid email format '{email}'")
 
         # Validate group columns
-        for group_name in ['Administrator', 'Consultant', 'BDM']:
+        for group_name in ['Beheerder', 'Consultant', 'BDM']:
             if group_name in row:
                 value = row[group_name].strip().lower()
-                if value not in valid_group_values:
+                if value not in {'y', 'n', ''}:
                     row_errors.append(
                         f"Row {row_num}: {group_name} must be 'y' or 'n', got '{row[group_name]}'"
                     )
 
         # Check for duplicate emails in this CSV
         if email:
-            for existing_row in rows:
-                if existing_row.get('email', '').strip().lower() == email.lower():
-                    row_errors.append(f"Row {row_num}: duplicate email '{email}' in CSV")
-                    break
+            if email in emails_found:
+                row_errors.append(f"Row {row_num}: duplicate email '{email}' in CSV")
+            else:
+                emails_found.add(email)
 
         if row_errors:
             errors.extend(row_errors)
@@ -156,12 +155,13 @@ def import_users_from_csv(csv_file):
 
     # Get all groups once
     groups_dict = {
-        'Administrator': Group.objects.filter(name='Administrator').first(),
-        'Consultant': Group.objects.filter(name='Consultant').first(),
-        'BDM': Group.objects.filter(name='BDM').first(),
+        'Beheerder': Group.objects.get(name='Beheerder'),
+        'Consultant': Group.objects.get(name='Consultant'),
+        'BDM': Group.objects.get(name='Business Development Manager'),
     }
 
     for row in rows:
+        print('row', row)
         first_name = row['first_name'].strip()
         last_name = row['last_name'].strip()
         email = row['email'].strip()
@@ -184,7 +184,7 @@ def import_users_from_csv(csv_file):
 
         # Determine which groups to assign
         groups_to_assign = []
-        for group_name in ['Administrator', 'Consultant', 'BDM']:
+        for group_name in ['Beheerder', 'Consultant', 'BDM']:
             if row.get(group_name, '').strip().lower() == 'y':
                 group = groups_dict.get(group_name)
                 if group:
@@ -212,5 +212,5 @@ def import_users_from_csv(csv_file):
         'users_created': users_created,
         'brands_created': len(created_brands),
         'created_brands': created_brands,
-        'errors': errors  # May contain warnings about existing users
+        'errors': errors  # May contain warnings when success is True
     }

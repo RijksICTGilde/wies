@@ -17,9 +17,6 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import RedirectView
-from django.views.static import serve
-from django.conf import settings
-import os
 
 from wies.core.views import client
 from wies.core.views import AssignmentDetailView, ColleagueDetailView
@@ -46,8 +43,4 @@ urlpatterns = [
     path('users/<int:pk>/edit/', user_edit, name='user-edit'),
     path('users/<int:pk>/delete/', user_delete, name='user-delete'),
     path('users/import/', user_import_csv, name='user-import-csv'),
-    path('users/import/sample.csv',
-         lambda request: serve(request, 'csv/example_users_import.csv',
-                              document_root=os.path.join(settings.BASE_DIR, 'wies/core/static')),
-         name='user-import-sample-csv'),
 ]

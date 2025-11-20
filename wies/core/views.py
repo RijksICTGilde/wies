@@ -600,7 +600,7 @@ def user_import_csv(request):
     """
     Import users from a CSV file.
 
-    GET: Display the import form modal
+    GET: Display the import main form
     POST: Process the uploaded CSV file and create users
 
     Expected CSV format with columns:
@@ -608,42 +608,34 @@ def user_import_csv(request):
     - last_name (required)
     - email (required)
     - brand (optional)
-    - Administrator (optional, "y" or "n")
+    - Beheerder (optional, "y" or "n")
     - Consultant (optional, "y" or "n")
     - BDM (optional, "y" or "n")
     """
     if request.method == 'GET':
-        # Show the import form modal
-        return render(request, 'parts/user_import_modal.html')
-
-    if request.method == 'POST':
-        # Check if file was uploaded
+        return render(request, 'user_import.html')
+    elif request.method == 'POST':
         if 'csv_file' not in request.FILES:
-            return render(request, 'parts/user_import_result.html', {
-                'success': False,
-                'errors': ['Geen bestand geüpload. Upload een CSV-bestand.']
+            return render(request, 'user_import.html', {
+                'result': {
+                    'success': False,
+                    'errors': ['Geen bestand geüpload. Upload een CSV-bestand.']
+                }
             })
 
         csv_file = request.FILES['csv_file']
 
-        # Validate file type
         if not csv_file.name.endswith('.csv'):
-            return render(request, 'parts/user_import_result.html', {
-                'success': False,
-                'errors': ['Ongeldig bestandstype. Upload een CSV-bestand.']
+            return render(request, 'user_import.html', {
+                'result': {
+                    'success': False,
+                    'errors': ['Ongeldig bestandstype. Upload een CSV-bestand.']
+                }
             })
 
-        # Process the CSV file
         result = import_users_from_csv(csv_file)
-
-        # Add success message if successful
-        if result['success']:
-            message_parts = [f"{result['users_created']} gebruiker(s) geïmporteerd"]
-            if result['brands_created'] > 0:
-                message_parts.append(f"{result['brands_created']} merk(en) aangemaakt")
-            messages.success(request, '. '.join(message_parts) + '.')
-
-        # Return result modal
-        return render(request, 'parts/user_import_result.html', result)
-
-    return HttpResponse(status=405)
+            
+        # Return results in the form
+        return render(request, 'user_import.html', {'result': result})
+    else:
+        return HttpResponse(status=405)
