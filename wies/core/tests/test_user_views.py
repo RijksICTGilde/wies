@@ -2,7 +2,7 @@ from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import Permission, Group
 
-from wies.core.models import User, Brand
+from wies.core.models import User, Brand, EmailAlias
 
 
 @override_settings(
@@ -129,6 +129,15 @@ class UserViewsTest(TestCase):
 
         # Search by full name "John Doe" - this should find user1 but currently doesn't
         response = self.client.get(reverse('users'), {'search': 'John Doe'})
+        content = response.content.decode()
+        self.assertIn(self.user1.get_full_name(), content)
+        self.assertNotIn(self.user2.get_full_name(), content)
+
+    def test_user_list_search_by_email_alias(self):
+        """Test searching users by email alias"""
+        EmailAlias.objects.create(user=self.user1, email="alias@example.com")
+        self.client.force_login(self.auth_user)
+        response = self.client.get(reverse('users'), {'search': 'alias@example'})
         content = response.content.decode()
         self.assertIn(self.user1.get_full_name(), content)
         self.assertNotIn(self.user2.get_full_name(), content)
@@ -488,3 +497,18 @@ class UserViewsTest(TestCase):
         # Simple integration test - verify RVO classes are present
         self.assertIn('rvo-label', content)
         self.assertIn('utrecht-form-field', content)
+
+    def test_user_edit_rejects_primary_matching_other_user_alias(self):
+        """View rejects primary email matching another user's alias"""
+        self.client.force_login(self.auth_user)
+        EmailAlias.objects.create(user=self.user2, email="alias@example.com")
+        url = reverse('user-edit', args=[self.user1.id])
+        response = self.client.post(url, {
+            'first_name': 'Test',
+            'last_name': 'User',
+            'email': 'alias@example.com',  # This is user2's alias
+        })
+        # Should return form with errors (not redirect to success)
+        self.assertEqual(response.status_code, 200, f"Got redirect to {response.get('Location', 'N/A')}")
+        # Check error message appears in response
+        self.assertIn('alias@example.com is al in gebruik', response.content.decode())
