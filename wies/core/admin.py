@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Assignment, Colleague, Ministry, Brand, Placement, Service, Skill, User
+from .models import Assignment, Colleague, EmailAlias, Ministry, Brand, Placement, Service, Skill, User
 
 
 class AssignmentAdmin(admin.ModelAdmin):
@@ -8,8 +8,12 @@ class AssignmentAdmin(admin.ModelAdmin):
 class ColleagueAdmin(admin.ModelAdmin):
     pass
 
+class EmailAliasInline(admin.TabularInline):
+    model = EmailAlias
+    extra = 1
+
 class UserAdmin(admin.ModelAdmin):
-    pass
+    inlines = [EmailAliasInline]
 
 class SkillAdmin(admin.ModelAdmin):
     pass

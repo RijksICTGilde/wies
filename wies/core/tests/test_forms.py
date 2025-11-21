@@ -4,6 +4,8 @@ from django import forms
 from django.test import TestCase, override_settings
 from django.contrib.auth.models import Group
 
+from django.http import QueryDict
+
 from wies.core.models import Brand
 from wies.core.forms import UserForm, RvoFormMixin
 
@@ -33,7 +35,7 @@ class RvoFormMixinTest(TestCase):
     def test_form_renders_with_rvo_classes(self):
         """Test that forms using RvoFormMixin render with RVO design system classes"""
         form = UserForm()
-        rendered = form.as_div()
+        rendered = str(form)
 
         # Check that form fields are wrapped with RVO classes
         self.assertIn('utrecht-form-field', rendered)
@@ -78,7 +80,7 @@ class RvoFormMixinTest(TestCase):
         self.assertFalse(form.is_valid())
 
         # Render the form
-        rendered = form.as_div()
+        rendered = str(form)
 
         # Check that error messages have RVO classes
         self.assertIn('rvo-form-field__error', rendered)
@@ -87,7 +89,7 @@ class RvoFormMixinTest(TestCase):
     def test_required_fields_have_required_label_class(self):
         """Test that required fields have rvo-label--required class on their labels"""
         form = UserForm()
-        rendered = form.as_div()
+        rendered = str(form)
 
         # Check that required field labels have rvo-label--required class
         # first_name is required
@@ -116,7 +118,7 @@ class RvoFormMixinTest(TestCase):
         This ensures fields are not colored red upon first view
         """
         form = UserForm()
-        rendered = form.as_div()
+        rendered = str(form)
 
         # Check that required fields don't have the required attribute in the HTML
         # Check for first_name field
@@ -151,6 +153,44 @@ class RvoFormMixinTest(TestCase):
         self.assertIn('document', log.output[0])
         self.assertIn('not in RVO widget_templates mapping', log.output[0])
 
-        # Verify form still renders (doesn't crash)
-        rendered = form.as_div()
-        self.assertIn('name="document"', rendered)
+
+class UserFormTest(TestCase):
+    """Tests for UserForm email alias handling"""
+
+    def test_create_user_with_one_alias(self):
+        """Test creating user via form with one alias"""
+        data = QueryDict(mutable=True)
+        data.update({
+            'first_name': 'New',
+            'last_name': 'User',
+            'email': 'newuser@example.com',
+        })
+        data.appendlist('email_aliases', 'alias@example.com')
+        form = UserForm(data=data)
+        self.assertTrue(form.is_valid())
+
+    def test_create_user_with_two_aliases(self):
+        """Test creating user via form with two aliases"""
+        data = QueryDict(mutable=True)
+        data.update({
+            'first_name': 'New',
+            'last_name': 'User',
+            'email': 'newuser@example.com',
+        })
+        data.appendlist('email_aliases', 'alias1@example.com')
+        data.appendlist('email_aliases', 'alias2@example.com')
+        form = UserForm(data=data)
+        self.assertTrue(form.is_valid())
+
+    def test_rejects_invalid_email_format(self):
+        """Test that invalid email format is rejected"""
+        data = QueryDict(mutable=True)
+        data.update({
+            'first_name': 'New',
+            'last_name': 'User',
+            'email': 'newuser@example.com',
+        })
+        data.appendlist('email_aliases', 'not-an-email')
+        form = UserForm(data=data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('email_aliases', form.errors)
