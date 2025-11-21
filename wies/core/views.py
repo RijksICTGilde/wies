@@ -21,7 +21,7 @@ from authlib.integrations.django_client import OAuth
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, User
 from .services.sync import sync_all_otys_iir_records
 from .services.placements import filter_placements_by_period
-from .services.errors import EmailNotAvailableError
+from .errors import EmailNotAvailableError
 from .services.users import create_user, update_user
 from .forms import UserForm
 
@@ -606,7 +606,6 @@ def user_delete(request, pk):
     return HttpResponse(status=405)
 
 
-@login_required
 @permission_required('core.change_user', raise_exception=True)
 def widget_email_row(request):
     """Return a single empty email row for the multi-email widget (HTMX)"""

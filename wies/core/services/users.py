@@ -1,7 +1,7 @@
 import uuid
 
 from wies.core.models import EmailAlias, User
-from wies.core.services.errors import EmailNotAvailableError
+from wies.core.errors import EmailNotAvailableError
 
 
 def get_user_by_email(email):
