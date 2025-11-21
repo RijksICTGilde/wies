@@ -161,7 +161,6 @@ def import_users_from_csv(csv_file):
     }
 
     for row in rows:
-        print('row', row)
         first_name = row['first_name'].strip()
         last_name = row['last_name'].strip()
         email = row['email'].strip()

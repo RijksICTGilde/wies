@@ -215,7 +215,6 @@ class OTYSAPI:
 
         response = requests.request("POST", self.url, headers=headers, json=payload)
         self._raise_for_status(response)
-        print(response.json())
 
     def get_vacancy_list(self, limit=25, offset=0, condition=None, what=None, sort=None):
         """docs: https://ows.otys.nl/info/detail.php?service=Otys.Services.VacancyService"""
