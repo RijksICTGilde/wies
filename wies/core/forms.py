@@ -4,10 +4,20 @@ from django import forms
 from django.contrib.auth.models import Group
 from django.forms.renderers import Jinja2
 from django.forms.utils import ErrorList
+from django.template import engines
 
 from .models import User, Brand
+from .widgets import MultiEmailField
+
 
 logger = logging.getLogger(__name__)
+
+
+class RvoJinja2Renderer(Jinja2):
+    """Custom renderer that uses Django's configured Jinja2 environment with all globals."""
+    @property
+    def engine(self):
+        return engines['jinja2']
 
 
 class RvoErrorList(ErrorList):
@@ -28,7 +38,7 @@ class RvoFormMixin:
     This Mixin also disables client-side required checks on fields.
     """
     template_name = 'rvo/forms/form.html'
-    default_renderer = Jinja2()
+    default_renderer = RvoJinja2Renderer()
 
     # Widget type to template mapping (only includes widgets with existing templates)
     widget_templates = {
@@ -36,6 +46,7 @@ class RvoFormMixin:
         'EmailInput': 'rvo/forms/widgets/email.html',
         'Select': 'rvo/forms/widgets/select.html',
         'CheckboxSelectMultiple': 'rvo/forms/widgets/checkbox_select.html',
+        'MultiEmailWidget': 'rvo/forms/widgets/multi_email.html',
     }
 
     def __init__(self, *args, **kwargs):
@@ -67,7 +78,8 @@ class UserForm(RvoFormMixin, forms.ModelForm):
 
     first_name = forms.CharField(label='Voornaam', required=True)
     last_name = forms.CharField(label='Achternaam', required=True)
-    email = forms.EmailField(label='Email', required=True)
+    email = forms.EmailField(label='Email (ODI)', required=True)
+    email_aliases = MultiEmailField(label='Extra email adressen', required=False)
     brand = forms.ModelChoiceField(
         label='Merk',
         queryset=Brand.objects.all(),
@@ -84,3 +96,11 @@ class UserForm(RvoFormMixin, forms.ModelForm):
     class Meta:
         model = User
         fields = ['first_name', 'last_name', 'email', 'brand', 'groups']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            # Load existing aliases as list
+            aliases = list(self.instance.email_aliases.values_list('email', flat=True))
+            self.fields['email_aliases'].initial = aliases
+

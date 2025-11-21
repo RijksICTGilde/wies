@@ -18,6 +18,8 @@ This files lists the changes during the lifetime of this project.
 - Introduce "wies" as extra source on records
 - Developer user during setup now gets all roles
 - Add /placements/import csv upload for sourcing RIG placement list 
+- Add email aliases: users can have multiple email addresses for authentication (requires migration)
+- Restructure tests by layer: test_user_services.py for service layer, test_user_views.py for views, test_forms.py for form logic
 
 ## 2025-10-09
 - add period filter to placement page

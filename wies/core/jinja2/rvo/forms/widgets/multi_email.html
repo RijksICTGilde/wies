@@ -1,0 +1,15 @@
+<div class="multi-email-container">
+    {% for email in widget.emails %}
+    {% with name=widget.name, email=email %}
+    {% include "rvo/forms/widgets/_email_row.html" %}
+    {% endwith %}
+    {% endfor %}
+    <button type="button"
+            hx-get="{{ url('widget-email-row') }}?name={{ widget.name }}"
+            hx-target="this"
+            hx-swap="beforebegin"
+            class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md">
+        <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before" role="img" aria-label="Toevoegen"></span>
+        Voeg emailadres toe
+    </button>
+</div>

@@ -1,0 +1,6 @@
+<div class="multi-email-row rvo-layout-row rvo-layout-gap--sm rvo-layout-align-items--center" style="margin-bottom: 0.5rem;">
+    <input type="email" name="{{ name }}" value="{{ email|default('') }}" class="utrecht-textbox utrecht-textbox--html-input rvo-input" style="flex: 1;">
+    <button type="button" class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md" aria-label="Verwijderen" onclick="this.closest('.multi-email-row').remove()">
+        <span class="utrecht-icon rvo-icon rvo-icon-verwijderen rvo-icon--md" role="img" aria-label="Verwijderen"></span>
+    </button>
+</div>

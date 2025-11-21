@@ -5,7 +5,7 @@ from django.urls import reverse_lazy, reverse
 from django.db.models import Q, Prefetch, Value
 from django.db.models.functions import Concat
 from django.contrib import messages
-from django.contrib.auth.decorators import user_passes_test, permission_required
+from django.contrib.auth.decorators import user_passes_test, permission_required, login_required
 from django.contrib.auth import authenticate as auth_authenticate
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
@@ -20,8 +20,8 @@ from authlib.integrations.django_client import OAuth
 
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, User
 from .services.sync import sync_all_otys_iir_records
-from .services.placements import filter_placements_by_period, create_placements_from_csv
-from .services.users import create_user, update_user, create_users_from_csv
+from .services.placements import filter_placements_by_period
+from .services.users import create_user, update_user
 from .forms import UserForm
 
 oauth = OAuth()
@@ -527,13 +527,18 @@ def user_create(request):
     elif request.method == 'POST':
         form = UserForm(request.POST)
         if form.is_valid():
-            create_user(
-                first_name=form.cleaned_data['first_name'],
-                last_name=form.cleaned_data['last_name'],
-                email=form.cleaned_data['email'],
-                brand=form.cleaned_data.get('brand'),
-                groups=form.cleaned_data.get('groups')
-            )
+            try:
+                create_user(
+                    first_name=form.cleaned_data['first_name'],
+                    last_name=form.cleaned_data['last_name'],
+                    email=form.cleaned_data['email'],
+                    brand=form.cleaned_data.get('brand'),
+                    groups=form.cleaned_data.get('groups'),
+                    email_aliases=form.cleaned_data.get('email_aliases')
+                )
+            except EmailNotAvailableError as e:
+                form.add_error(e.field, str(e))
+                return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Toevoegen'})
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect
             if 'HX-Request' in request.headers:
@@ -562,14 +567,19 @@ def user_edit(request, pk):
     elif request.method == 'POST':
         form = UserForm(request.POST, instance=editing_user)
         if form.is_valid():
-            update_user(
-                user=editing_user,
-                first_name=form.cleaned_data['first_name'],
-                last_name=form.cleaned_data['last_name'],
-                email=form.cleaned_data['email'],
-                brand=form.cleaned_data.get('brand'),
-                groups=form.cleaned_data.get('groups')
-            )
+            try:
+                update_user(
+                    user=editing_user,
+                    first_name=form.cleaned_data['first_name'],
+                    last_name=form.cleaned_data['last_name'],
+                    email=form.cleaned_data['email'],
+                    brand=form.cleaned_data.get('brand'),
+                    groups=form.cleaned_data.get('groups'),
+                    email_aliases=form.cleaned_data.get('email_aliases')
+                )
+            except EmailNotAvailableError as e:
+                form.add_error(e.field, str(e))
+                return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Opslaan'})
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect
             if 'HX-Request' in request.headers:
@@ -695,3 +705,11 @@ def placement_import_csv(request):
         return render(request, 'placement_import.html', {'result': result})
     else:
         return HttpResponse(status=405)
+
+
+@login_required
+@permission_required('core.change_user', raise_exception=True)
+def widget_email_row(request):
+    """Return a single empty email row for the multi-email widget (HTMX)"""
+    name = request.GET.get('name', 'email')
+    return render(request, 'rvo/forms/widgets/_email_row.html', {'name': name, 'email': ''})

@@ -4,7 +4,7 @@ from django.contrib.auth.models import Permission, Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 
-from wies.core.models import User, Brand
+from wies.core.models import User, Brand, EmailAlias
 
 
 @override_settings(
@@ -490,6 +490,21 @@ class UserViewsTest(TestCase):
         # Simple integration test - verify RVO classes are present
         self.assertIn('rvo-label', content)
         self.assertIn('utrecht-form-field', content)
+
+    def test_user_edit_rejects_primary_matching_other_user_alias(self):
+        """View rejects primary email matching another user's alias"""
+        self.client.force_login(self.auth_user)
+        EmailAlias.objects.create(user=self.user2, email="alias@example.com")
+        url = reverse('user-edit', args=[self.user1.id])
+        response = self.client.post(url, {
+            'first_name': 'Test',
+            'last_name': 'User',
+            'email': 'alias@example.com',  # This is user2's alias
+        })
+        # Should return form with errors (not redirect to success)
+        self.assertEqual(response.status_code, 200, f"Got redirect to {response.get('Location', 'N/A')}")
+        # Check error message appears in response
+        self.assertIn('alias@example.com is al in gebruik', response.content.decode())
 
 
 @override_settings(

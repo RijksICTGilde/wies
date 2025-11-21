@@ -1,6 +1,7 @@
 from django.contrib.auth.backends import BaseBackend
 
 from .models import Colleague, User
+from .services.users import get_user_by_email
 
 
 class AuthBackend(BaseBackend):
@@ -14,15 +15,15 @@ class AuthBackend(BaseBackend):
         if extra_fields is None:
             extra_fields = {}
 
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            # do not authenticate if Colleage record does not exist
+        # Try to find user by primary email or alias
+        user = get_user_by_email(email)
+        if not user:
             return None
 
         # Link colleague if match on email
         try:
-            matching_colleague = Colleague.objects.get(email=email)
+            # this makes sure its matched on ODI email
+            matching_colleague = Colleague.objects.get(email=user.email)
             matching_colleague.user = user
             matching_colleague.save()
         except Colleague.DoesNotExist:

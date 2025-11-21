@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.contrib.auth import authenticate
 
-from wies.core.models import User
+from wies.core.models import Brand, Colleague, EmailAlias, User
 from wies.core.auth_backend import AuthBackend
 
 class AuthBackendTest(TestCase):
@@ -147,3 +147,92 @@ class AuthBackendTest(TestCase):
         self.assertEqual(user.pk, colleague.pk)
         self.assertEqual(user.email, "lookup@example.com")
         self.assertEqual(user.username, "original_username")  # Original username preserved
+
+    def test_authenticate_with_email_alias(self):
+        """Test that authentication works with email alias"""
+        EmailAlias.objects.create(user=self.test_user, email="alias@example.com")
+
+        user = authenticate(
+            request=None,
+            username="any_username",
+            email="alias@example.com",
+            extra_fields={}
+        )
+
+        self.assertIsNotNone(user)
+        self.assertEqual(user.pk, self.test_user.pk)
+        self.assertEqual(user.email, "test@example.com")  # Primary email
+
+    def test_colleague_matched_on_primary_email_not_alias(self):
+        """Test that Colleague is matched on primary ODI email, not login alias"""
+        # User with primary ODI email and an alias
+        user = User.objects.create(
+            username="odi_user",
+            email="odi@example.com",
+            first_name="ODI",
+            last_name="User",
+        )
+        EmailAlias.objects.create(user=user, email="alias@example.com")
+
+        # Colleague with ODI email (should match on primary email)
+        brand = Brand.objects.create(name="Test Brand")
+        colleague = Colleague.objects.create(
+            name="ODI User",
+            email="odi@example.com",
+            brand=brand,
+        )
+
+        # Login with alias email
+        authenticate(
+            request=None,
+            username="odi_user",
+            email="alias@example.com",
+            extra_fields={}
+        )
+
+        colleague.refresh_from_db()
+        self.assertEqual(colleague.user, user)
+
+    def test_colleague_not_matched_on_alias_email(self):
+        """Test that Colleague with alias email is NOT matched (only ODI email matches)"""
+        # User with primary ODI email
+        user = User.objects.create(
+            username="odi_user",
+            email="odi@example.com",
+            first_name="ODI",
+            last_name="User",
+        )
+        EmailAlias.objects.create(user=user, email="alias@example.com")
+
+        # Colleague with alias email (should NOT match)
+        brand = Brand.objects.create(name="Test Brand")
+        colleague = Colleague.objects.create(
+            name="Alias Colleague",
+            email="alias@example.com",
+            brand=brand,
+        )
+
+        # Login with alias email
+        authenticate(
+            request=None,
+            username="odi_user",
+            email="alias@example.com",
+            extra_fields={}
+        )
+
+        colleague.refresh_from_db()
+        self.assertIsNone(colleague.user)  # Should NOT be linked
+
+    def test_authenticate_primary_email_takes_precedence(self):
+        """Test that primary email lookup works even if alias exists"""
+        EmailAlias.objects.create(user=self.test_user, email="alias@example.com")
+
+        user = authenticate(
+            request=None,
+            username="any_username",
+            email="test@example.com",
+            extra_fields={}
+        )
+
+        self.assertIsNotNone(user)
+        self.assertEqual(user.pk, self.test_user.pk)
