@@ -135,6 +135,15 @@ class UserViewsTest(TestCase):
         self.assertIn(self.user1.get_full_name(), content)
         self.assertNotIn(self.user2.get_full_name(), content)
 
+    def test_user_list_search_by_email_alias(self):
+        """Test searching users by email alias"""
+        EmailAlias.objects.create(user=self.user1, email="alias@example.com")
+        self.client.force_login(self.auth_user)
+        response = self.client.get(reverse('users'), {'search': 'alias@example'})
+        content = response.content.decode()
+        self.assertIn(self.user1.get_full_name(), content)
+        self.assertNotIn(self.user2.get_full_name(), content)
+
     def test_user_create_get_returns_form(self):
         """Test that GET to user-create returns the form modal"""
         self.client.force_login(self.auth_user)

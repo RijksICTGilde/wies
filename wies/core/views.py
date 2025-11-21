@@ -414,8 +414,9 @@ class UserListView(PermissionRequiredMixin, ListView):
                 Q(full_name__icontains=search_filter) |
                 Q(first_name__icontains=search_filter) |
                 Q(last_name__icontains=search_filter) |
-                Q(email__icontains=search_filter)
-            )
+                Q(email__icontains=search_filter) |
+                Q(email_aliases__email__icontains=search_filter)
+            ).distinct()
 
         # Brand filter
         brand_filter = self.request.GET.get('brand')
