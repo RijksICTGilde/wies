@@ -6,8 +6,8 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group
 
-from wies.core.models import User, Brand, EmailAlias, User
-from wies.core.services.errors import EmailNotAvailableError
+from wies.core.models import EmailAlias, User, Brand
+from wies.core.errors import EmailNotAvailableError
 
 
 def get_user_by_email(email):

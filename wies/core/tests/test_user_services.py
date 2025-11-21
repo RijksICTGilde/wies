@@ -2,7 +2,7 @@ from django.db import IntegrityError
 from django.test import TestCase
 
 from wies.core.models import EmailAlias, User
-from wies.core.services.errors import EmailNotAvailableError
+from wies.core.errors import EmailNotAvailableError
 from wies.core.services.users import create_user, get_user_by_email, update_user
 
 

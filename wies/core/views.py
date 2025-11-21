@@ -21,6 +21,7 @@ from authlib.integrations.django_client import OAuth
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, User
 from .services.sync import sync_all_otys_iir_records
 from .services.placements import filter_placements_by_period
+from .errors import EmailNotAvailableError
 from .services.users import create_user, update_user
 from .forms import UserForm
 
@@ -707,7 +708,108 @@ def placement_import_csv(request):
         return HttpResponse(status=405)
 
 
-@login_required
+@permission_required('core.add_user', raise_exception=True)
+def user_import_csv(request):
+    """
+    Import users from a CSV file.
+
+    GET: Display the import main form
+    POST: Process the uploaded CSV file and create users
+
+    For expected CSV format, see create_users_from_csv function
+    """
+    if request.method == 'GET':
+        return render(request, 'user_import.html')
+    elif request.method == 'POST':
+        if 'csv_file' not in request.FILES:
+            return render(request, 'user_import.html', {
+                'result': {
+                    'success': False,
+                    'errors': ['Geen bestand geüpload. Upload een CSV-bestand.']
+                }
+            })
+
+        csv_file = request.FILES['csv_file']
+
+        if not csv_file.name.endswith('.csv'):
+            return render(request, 'user_import.html', {
+                'result': {
+                    'success': False,
+                    'errors': ['Ongeldig bestandstype. Upload een CSV-bestand.']
+                }
+            })
+        
+        try:
+            csv_content = csv_file.read().decode('utf-8')
+        except UnicodeDecodeError:
+            return {
+                'success': False,
+                'errors': ['Invalid CSV file encoding. Please use UTF-8.']
+            }
+
+        result = create_users_from_csv(csv_content)
+
+        # Return results in the form
+        return render(request, 'user_import.html', {'result': result})
+    else:
+        return HttpResponse(status=405)
+
+
+@permission_required([
+    'core.add_assignment', 
+    'core.add_service', 
+    'core.add_placement', 
+    'core.add_colleague',
+    'core.add_ministry',
+    ], raise_exception=True)
+def placement_import_csv(request):
+    """
+    Import placements from a CSV file.
+
+    GET: Display the import form
+    POST: Process the uploaded CSV file and create placements (with related assignments, services, colleagues, and skills)
+
+    For expected CSV format, see create_placements_from_csv function
+    """
+    if request.method == 'GET':
+        return render(request, 'placement_import.html')
+    elif request.method == 'POST':
+        if 'csv_file' not in request.FILES:
+            return render(request, 'placement_import.html', {
+                'result': {
+                    'success': False,
+                    'errors': ['Geen bestand geüpload. Upload een CSV-bestand.']
+                }
+            })
+
+        csv_file = request.FILES['csv_file']
+
+        if not csv_file.name.endswith('.csv'):
+            return render(request, 'placement_import.html', {
+                'result': {
+                    'success': False,
+                    'errors': ['Ongeldig bestandstype. Upload een CSV-bestand.']
+                }
+            })
+
+        try:
+            csv_content = csv_file.read().decode('utf-8')
+        except UnicodeDecodeError:
+            return render(request, 'placement_import.html', {
+                'result': {
+                    'success': False,
+                    'errors': ['Invalid CSV file encoding. Please use UTF-8.']
+                }
+            })
+
+        result = create_placements_from_csv(csv_content)
+
+        # Return results in the form
+        return render(request, 'placement_import.html', {'result': result})
+    else:
+        return HttpResponse(status=405)
+
+
 @permission_required('core.change_user', raise_exception=True)
 def widget_email_row(request):
     """Return a single empty email row for the multi-email widget (HTMX)"""
