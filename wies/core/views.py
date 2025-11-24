@@ -21,7 +21,7 @@ from authlib.integrations.django_client import OAuth
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, User
 from .services.sync import sync_all_otys_iir_records
 from .services.placements import filter_placements_by_period
-from .services.users import create_user, update_user, import_users_from_csv
+from .services.users import create_user, update_user, create_users_from_csv
 from .forms import UserForm
 
 oauth = OAuth()
@@ -632,8 +632,16 @@ def user_import_csv(request):
                     'errors': ['Ongeldig bestandstype. Upload een CSV-bestand.']
                 }
             })
+        
+        try:
+            csv_content = csv_file.read().decode('utf-8')
+        except UnicodeDecodeError:
+            return {
+                'success': False,
+                'errors': ['Invalid CSV file encoding. Please use UTF-8.']
+            }
 
-        result = import_users_from_csv(csv_file)
+        result = create_users_from_csv(csv_content)
             
         # Return results in the form
         return render(request, 'user_import.html', {'result': result})

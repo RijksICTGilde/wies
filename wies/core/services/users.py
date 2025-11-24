@@ -34,9 +34,9 @@ def update_user(user, first_name, last_name, email, brand=None, groups=None):
     return user
 
 
-def import_users_from_csv(csv_file):
+def create_users_from_csv(csv_content: str):
     """
-    Import users from a CSV file.
+    Create users from a CSV file.
 
     Expected CSV columns:
     - first_name (required)
@@ -54,19 +54,7 @@ def import_users_from_csv(csv_file):
     - created_brands: List of brand names that were created
     - errors: List of validation error messages (empty if success=True)
     """
-    # Read and decode CSV file
-    try:
-        csv_content = csv_file.read().decode('utf-8')
-    except UnicodeDecodeError:
-        return {
-            'success': False,
-            'users_created': 0,
-            'brands_created': 0,
-            'created_brands': [],
-            'errors': ['Invalid CSV file encoding. Please use UTF-8.']
-        }
 
-    # Parse CSV
     csv_reader = csv.DictReader(StringIO(csv_content))
 
     # Validate required columns
@@ -101,7 +89,6 @@ def import_users_from_csv(csv_file):
     for row_num, row in enumerate(csv_reader, start=2):  # Start at 2 (1 is header)
         row_errors = []
 
-        # Validate required fields
         if not row.get('first_name', '').strip():
             row_errors.append(f"Row {row_num}: first_name is required")
         if not row.get('last_name', '').strip():
@@ -109,7 +96,6 @@ def import_users_from_csv(csv_file):
         if not row.get('email', '').strip():
             row_errors.append(f"Row {row_num}: email is required")
 
-        # Validate email format
         email = row.get('email', '').strip()
         if email:
             try:
@@ -117,7 +103,6 @@ def import_users_from_csv(csv_file):
             except ValidationError:
                 row_errors.append(f"Row {row_num}: invalid email format '{email}'")
 
-        # Validate group columns
         for group_name in ['Beheerder', 'Consultant', 'BDM']:
             if group_name in row:
                 value = row[group_name].strip().lower()
@@ -126,7 +111,6 @@ def import_users_from_csv(csv_file):
                         f"Row {row_num}: {group_name} must be 'y' or 'n', got '{row[group_name]}'"
                     )
 
-        # Check for duplicate emails in this CSV
         if email:
             if email in emails_found:
                 row_errors.append(f"Row {row_num}: duplicate email '{email}' in CSV")
@@ -138,7 +122,6 @@ def import_users_from_csv(csv_file):
         else:
             rows.append(row)
 
-    # If validation errors, return them
     if errors:
         return {
             'success': False,
@@ -148,7 +131,6 @@ def import_users_from_csv(csv_file):
             'errors': errors
         }
 
-    # All validation passed, now create users
     users_created = 0
     created_brands = []
     brand_cache = {}  # Cache to avoid duplicate DB queries
@@ -169,11 +151,9 @@ def import_users_from_csv(csv_file):
         # Handle brand
         brand = None
         if brand_name:
-            # Check cache first
             if brand_name in brand_cache:
                 brand = brand_cache[brand_name]
             else:
-                # Try to get existing brand
                 brand = Brand.objects.filter(name=brand_name).first()
                 if not brand:
                     # Create new brand
@@ -181,7 +161,6 @@ def import_users_from_csv(csv_file):
                     created_brands.append(brand_name)
                 brand_cache[brand_name] = brand
 
-        # Determine which groups to assign
         groups_to_assign = []
         for group_name in ['Beheerder', 'Consultant', 'BDM']:
             if row.get(group_name, '').strip().lower() == 'y':
@@ -189,14 +168,12 @@ def import_users_from_csv(csv_file):
                 if group:
                     groups_to_assign.append(group)
 
-        # Check if user with this email already exists
         existing_user = User.objects.filter(email=email).first()
         if existing_user:
             # Skip existing users
             errors.append(f"User with email '{email}' already exists, skipped")
             continue
 
-        # Create user
         create_user(
             first_name=first_name,
             last_name=last_name,
