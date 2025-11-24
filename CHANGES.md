@@ -12,6 +12,7 @@ This files lists the changes during the lifetime of this project.
 - Users page with filtering, search, create, edit and delete (only admins)
 - Add tests for authentication and user views
 - Introduce forms.py/RVOMixin to enable style the form with roos
+- Add /users/import csv upload for sourcing starting userlist 
 
 ## 2025-10-09
 - add period filter to placement page

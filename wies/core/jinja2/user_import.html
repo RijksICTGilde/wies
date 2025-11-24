@@ -12,8 +12,8 @@
     <c-alert>Upload een CSV-bestand met gebruikersgegevens. <c-link href="{{ static('example_users_import.csv') }}">Download het voorbeeldbestand</c-link> om het juiste formaat te zien.</c-alert>
     <br>
 
-    <!-- TODO JRC: required put red border around field. how does this work at react? seems to be own attribute -->
-    <c-file-input-field accept=".csv" label="CSV-bestand" name="csv_file" required/>
+    <!-- TODO JRC: required attribute puts red border around field, which is poor UX on first load. this seems to be different for the react component -->
+    <c-file-input-field accept=".csv" label="CSV-bestand" name="csv_file"/>
     <br>
     {% if result and result.success %}
       <c-alert kind="success">Import geslaagd!</c-alert>
