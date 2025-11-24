@@ -14,6 +14,8 @@ This files lists the changes during the lifetime of this project.
 - Introduce forms.py/RVOMixin to enable style the form with roos
 - Add /users/import csv upload for sourcing starting userlist 
 - Upgrade to jrc 0.3
+- Remove actions menu on assignment
+- Introduce "wies" as extra source on records
 
 ## 2025-10-09
 - add period filter to placement page

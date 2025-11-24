@@ -44,6 +44,7 @@
       <dd>
         <div class="rvo-tag rvo-tag--default">{{ object.status }}</div>
       </dd>
+      {% if object.source != 'wies' %}
       <dt>Bron</dt>
       <dd>
         {% if object.source_url %}
@@ -54,24 +55,13 @@
           {{ object.get_source_display() }}
         {% endif %}
       </dd>
+      {% endif %}
       <dt>Startdatum</dt>
       <dd>{{ object.start_date if object.start_date else "?" }}</dd>
       <dt>Einddatum</dt>
       <dd>{{ object.end_date if object.end_date else "?" }}</dd>
       <dt>Extra info</dt>
       <dd>{{ object.extra_info }}</dd>
-      <dt>Acties</dt>
-      <dd>
-        <div class="rvo-layout-row rvo-layout-gap--sm">
-            <!-- TODO jrc: buttons can not be replaced because title is not supported and disabled needs explicit "true"  -->
-          <button class="utrecht-button utrecht-button--subtle utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display() }}">
-            Opdracht bewerken
-          </button>
-          <button class="utrecht-button utrecht-button--subtle utrecht-button--warning utrecht-button--rvo-xs" disabled title="Wijzigingen moeten worden doorgevoerd in {{ object.get_source_display() }}">
-            Opdracht verwijderen
-          </button>
-        </div>
-      </dd>
     </dl>
 
     <!-- Tab Content -->
