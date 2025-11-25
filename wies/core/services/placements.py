@@ -3,6 +3,8 @@ import csv
 from io import StringIO
 
 from django.db import transaction
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 
 from wies.core.querysets import annotate_placement_dates, filter_by_date_overlap
 from wies.core.models import Assignment, Colleague, Service, Placement, Ministry, Skill
@@ -82,24 +84,25 @@ def create_placements_from_csv(csv_content: str):
         with transaction.atomic():
             colleagues_created = 0
             assignments_created = 0
+            services_created = 0
             placements_created = 0
             skills_created = 0
             for _, row in enumerate(csv_reader, start=2):  # Start at 2 (1 is header)
 
-                # TODO: check if works with broken email
                 assignment_owner_email = row['assignment_owner_email']
-                if Colleague.objects.filter(email=assignment_owner_email).exists():
-                    owner = Colleague.objects.get(email=assignment_owner_email)
-                else:
-                    if assignment_owner_email != "":
+                if assignment_owner_email != "":
+                    validate_email(assignment_owner_email)
+                    if Colleague.objects.filter(email=assignment_owner_email).exists():
+                        owner = Colleague.objects.get(email=assignment_owner_email)
+                    else:
                         owner = Colleague.objects.create(
                             name=row['assignment_owner'],
                             email=assignment_owner_email,
                             source='wies',
                         )
                         colleagues_created += 1
-                    else:
-                        owner = None
+                else:
+                    owner = None
 
                 ministry_name = row['assignment_ministry']
                 if ministry_name != '':
@@ -144,17 +147,21 @@ def create_placements_from_csv(csv_content: str):
 
                     if created:
                         skills_created += 1
-                    
+                else:
+                    skill = None
+
                 service = Service.objects.create(
                     assignment=assignment,
                     skill=skill,
                     source='wies',
                 )
+                services_created += 1
 
-                
+
                 colleague_email = row['placement_colleague_email']
+                validate_email(colleague_email)
                 if Colleague.objects.filter(email=colleague_email).exists():
-                    owner = Colleague.objects.get(email=colleague_email)
+                    colleague = Colleague.objects.get(email=colleague_email)
                 else:
                     colleague = Colleague.objects.create(
                         name=row['placement_colleague_name'],
@@ -174,6 +181,7 @@ def create_placements_from_csv(csv_content: str):
             'success': True,
             'colleagues_created': colleagues_created,
             'assignments_created': assignments_created,
+            'services_created': services_created,
             'skills_created': skills_created,
             'placements_created': placements_created,
             'errors': [],
@@ -183,5 +191,20 @@ def create_placements_from_csv(csv_content: str):
         return {
             'success': False,
             'errors': ['Unknown ministry']
+        }
+    except ValueError as e:
+        return {
+            'success': False,
+            'errors': [str(e)]
+        }
+    except ValidationError as e:
+        return {
+            'success': False,
+            'errors': [str(e)]
+        }
+    except Exception as e:
+        return {
+            'success': False,
+            'errors': ['something unexpected went wrong']
         }
 
