@@ -647,6 +647,7 @@ def user_import_csv(request):
     'core.add_service', 
     'core.add_placement', 
     'core.add_colleague',
+    'core.add_ministry',
     ], raise_exception=True)
 def placement_import_csv(request):
     """

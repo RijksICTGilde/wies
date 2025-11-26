@@ -39,11 +39,13 @@ class PlacementImportTest(TestCase):
         add_service_perm = Permission.objects.get(codename='add_service')
         add_placement_perm = Permission.objects.get(codename='add_placement')
         add_colleague_perm = Permission.objects.get(codename='add_colleague')
+        add_ministry_perm = Permission.objects.get(codename='add_ministry')
         self.auth_user.user_permissions.add(
             add_assignment_perm,
             add_service_perm,
             add_placement_perm,
-            add_colleague_perm
+            add_colleague_perm,
+            add_ministry_perm
         )
 
         # Create user without permissions
@@ -54,7 +56,7 @@ class PlacementImportTest(TestCase):
             last_name="Permission",
         )
 
-        # Create user with only some permissions (missing add_service)
+        # Create user with only some permissions (missing add_service and add_ministry)
         self.partial_perm_user = User.objects.create(
             username="partialuser",
             email="partial@example.com",
@@ -82,7 +84,7 @@ class PlacementImportTest(TestCase):
         self.assertTrue(response.url.startswith('/login/'))
 
     def test_import_requires_all_permissions(self):
-        """Test that import requires all four add permissions"""
+        """Test that import requires all five add permissions (assignment, service, placement, colleague, ministry)"""
         # Test with no permissions
         self.client.force_login(self.no_perm_user)
         response = self.client.get(self.import_url)
