@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
 from wies.core.querysets import annotate_placement_dates, filter_by_date_overlap
-from wies.core.models import Assignment, Colleague, Service, Placement, Ministry, Skill
+from wies.core.models import Assignment, Colleague, Service, Placement, Ministry, Skill, Brand
 
 
 def filter_placements_by_period(queryset, period):
@@ -82,6 +82,9 @@ def create_placements_from_csv(csv_content: str):
 
     try:
         with transaction.atomic():
+            # Get or create the 'Rijks ICT Gilde' brand for newly created colleagues
+            rijks_ict_gilde_brand, _ = Brand.objects.get_or_create(name='Rijks ICT Gilde')
+
             colleagues_created = 0
             assignments_created = 0
             services_created = 0
@@ -99,6 +102,7 @@ def create_placements_from_csv(csv_content: str):
                             name=row['assignment_owner'],
                             email=assignment_owner_email,
                             source='wies',
+                            brand=rijks_ict_gilde_brand,
                         )
                         colleagues_created += 1
                 else:
@@ -168,6 +172,7 @@ def create_placements_from_csv(csv_content: str):
                         name=row['placement_colleague_name'],
                         email=colleague_email,
                         source='wies',
+                        brand=rijks_ict_gilde_brand,
                     )
                     colleagues_created += 1
                 
