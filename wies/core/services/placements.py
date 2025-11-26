@@ -155,12 +155,13 @@ def create_placements_from_csv(csv_content: str):
                 else:
                     skill = None
 
-                service = Service.objects.create(
+                service, created = Service.objects.get_or_create(
                     assignment=assignment,
                     skill=skill,
                     source='wies',
                 )
-                services_created += 1
+                if created:
+                    services_created += 1
 
 
                 colleague_email = row['placement_colleague_email']
@@ -176,12 +177,13 @@ def create_placements_from_csv(csv_content: str):
                     )
                     colleagues_created += 1
                 
-                Placement.objects.create(
+                _, created = Placement.objects.get_or_create(
                     colleague=colleague,
                     service=service,
                     source='wies',
                 )
-                placements_created += 1
+                if created:
+                    placements_created += 1
 
         return {
             'success': True,
