@@ -40,12 +40,11 @@
               {% if user.is_authenticated %}
 
                 {% if user.colleague %}
-                  <!-- TODO jrc: ideally you dont have to specify the showIcon, color and icon for obvious case -->
-                  <c-link href="/colleagues/271" icon="user" showIcon="before" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw">
+                  <c-link href="/colleagues/271" icon="user" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw">
                     {{ user.get_full_name() }}
                   </c-link>
                 {% else %}
-                  <c-link href="#" icon="user" showIcon="before" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw">
+                  <c-link href="#" icon="user" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw">
                     {{ user.get_full_name() }}
                   </c-link>
                 {% endif %}

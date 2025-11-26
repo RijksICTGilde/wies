@@ -21,7 +21,7 @@ from authlib.integrations.django_client import OAuth
 from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, User
 from .services.sync import sync_all_otys_iir_records
 from .services.placements import filter_placements_by_period
-from .services.users import create_user, update_user
+from .services.users import create_user, update_user, create_users_from_csv
 from .forms import UserForm
 
 oauth = OAuth()
@@ -593,3 +593,57 @@ def user_delete(request, pk):
         # Redirect to users list - page reload resets filters
         return redirect('users')
     return HttpResponse(status=405)
+
+
+@permission_required('core.add_user', raise_exception=True)
+def user_import_csv(request):
+    """
+    Import users from a CSV file.
+
+    GET: Display the import main form
+    POST: Process the uploaded CSV file and create users
+
+    Expected CSV format with columns:
+    - first_name (required)
+    - last_name (required)
+    - email (required)
+    - brand (optional)
+    - Beheerder (optional, "y" or "n")
+    - Consultant (optional, "y" or "n")
+    - BDM (optional, "y" or "n")
+    """
+    if request.method == 'GET':
+        return render(request, 'user_import.html')
+    elif request.method == 'POST':
+        if 'csv_file' not in request.FILES:
+            return render(request, 'user_import.html', {
+                'result': {
+                    'success': False,
+                    'errors': ['Geen bestand geüpload. Upload een CSV-bestand.']
+                }
+            })
+
+        csv_file = request.FILES['csv_file']
+
+        if not csv_file.name.endswith('.csv'):
+            return render(request, 'user_import.html', {
+                'result': {
+                    'success': False,
+                    'errors': ['Ongeldig bestandstype. Upload een CSV-bestand.']
+                }
+            })
+        
+        try:
+            csv_content = csv_file.read().decode('utf-8')
+        except UnicodeDecodeError:
+            return {
+                'success': False,
+                'errors': ['Invalid CSV file encoding. Please use UTF-8.']
+            }
+
+        result = create_users_from_csv(csv_content)
+            
+        # Return results in the form
+        return render(request, 'user_import.html', {'result': result})
+    else:
+        return HttpResponse(status=405)
