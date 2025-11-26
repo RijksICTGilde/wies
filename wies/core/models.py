@@ -12,6 +12,7 @@ ASSIGNMENT_STATUS = {
 
 SOURCE_CHOICES = {
     'otys_iir': 'OTYS IIR',
+    'wies': 'Wies',
 }
 
 
@@ -55,7 +56,7 @@ class Colleague(models.Model):
     email = models.EmailField()
     brand = models.ForeignKey('Brand', models.SET_NULL, null=True, blank=False)
     skills = models.ManyToManyField('Skill', blank=True)
-    source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='otys_iir')
+    source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(null=True, blank=True)
     # placements via reversed relation
@@ -78,7 +79,7 @@ class Assignment(models.Model):
     ministry = models.ForeignKey('Ministry', models.SET_NULL, null=True, blank=False)
     owner = models.ForeignKey('Colleague', models.SET_NULL, null=True, blank=False, related_name='owned_assignments')
     extra_info = models.TextField(blank=True)
-    source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='otys_iir')
+    source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(null=True, blank=True)
 
@@ -116,7 +117,7 @@ class Placement(models.Model):
     specific_end_date = models.DateField(null=True, blank=True) # do not use, use properties below
     hours_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=SERVICE)
     specific_hours_per_week = models.IntegerField(null=True, blank=True)
-    source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='otys_iir')
+    source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(null=True, blank=True)  # only for non wies
 
@@ -169,7 +170,7 @@ class Service(models.Model):
     specific_start_date = models.DateField(null=True, blank=True) # do not use directly, see property below
     specific_end_date = models.DateField(null=True, blank=True) # do not use directly, see property below
     # placements via reverse relation
-    source = models.CharField(max_length=10, choices=SOURCE_CHOICES, default='otys_iir')
+    source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(null=True, blank=True)  # only for non wies
 
