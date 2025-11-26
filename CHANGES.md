@@ -16,6 +16,8 @@ This files lists the changes during the lifetime of this project.
 - Upgrade to jrc 0.3
 - Remove actions menu on assignment
 - Introduce "wies" as extra source on records
+- Developer user during setup now gets all roles
+- Add /placements/import csv upload for sourcing RIG placement list 
 
 ## 2025-10-09
 - add period filter to placement page

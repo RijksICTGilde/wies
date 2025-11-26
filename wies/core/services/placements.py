@@ -70,14 +70,14 @@ def create_placements_from_csv(csv_content: str):
     if not csv_reader.fieldnames:
         return {
             'success': False,
-            'errors': ['CSV file is empty or has no headers.']
+            'errors': ['CSV file is leeg of heeft geen headers.']
         }
     
     missing_columns = required_columns - set(csv_reader.fieldnames)
     if missing_columns:
         return {
             'success': False,
-            'errors': [f'CSV misses columns: {", ".join(missing_columns)}.']
+            'errors': [f'CSV mist kolommen: {", ".join(missing_columns)}.']
         }
 
     try:
@@ -133,6 +133,7 @@ def create_placements_from_csv(csv_content: str):
                         'owner': owner,
                         'organization': row['assignment_organization'],
                         'ministry': ministry,
+                        'status': 'INGEVULD',
                     }
                 )
 
@@ -190,7 +191,7 @@ def create_placements_from_csv(csv_content: str):
     except Ministry.DoesNotExist:
         return {
             'success': False,
-            'errors': ['Unknown ministry']
+            'errors': ['Onbekend ministerie']
         }
     except ValueError as e:
         return {
@@ -205,6 +206,6 @@ def create_placements_from_csv(csv_content: str):
     except Exception as e:
         return {
             'success': False,
-            'errors': ['something unexpected went wrong']
+            'errors': ['Er is iets onverwachts misgegaan']
         }
 

@@ -225,3 +225,14 @@ Test Assignment,Description,Owner Name,owner@test.com,Test Org,BZK,01-01-2025,28
         # Verify Placement -> Colleague relationship
         self.assertIsNotNone(placement.colleague)
         self.assertEqual(placement.colleague.email, 'john@test.com')
+
+    def test_assignment_status_is_ingevuld(self):
+        """Test that assignments created from CSV have status INGEVULD since they have placements"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
+Test Assignment,Description,Owner Name,owner@test.com,Test Org,BZK,01-01-2025,28-02-2025,Python,John Doe,john@test.com"""
+
+        result = create_placements_from_csv(csv_content)
+        self.assertTrue(result['success'])
+
+        assignment = Assignment.objects.get(name='Test Assignment', source='wies')
+        self.assertEqual(assignment.status, 'INGEVULD')
