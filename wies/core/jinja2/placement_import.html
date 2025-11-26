@@ -20,23 +20,25 @@
 
       <!-- Success details -->
       <div class="rvo-layout-column rvo-layout-gap--sm">
-        <p class="rvo-text">
-          <strong>{{ result.placements_created }}</strong> plaatsing(en) geïmporteerd
-        </p>
-        <p class="rvo-text">
-          <strong>{{ result.colleagues_created }}</strong> nieuwe collega('s) aangemaakt
-        </p>
-        <p class="rvo-text">
-          <strong>{{ result.assignments_created }}</strong> nieuwe opdracht(en) aangemaakt
-        </p>
-        <p class="rvo-text">
-          <strong>{{ result.services_created }}</strong> nieuwe dienst(en) aangemaakt
-        </p>
-        {% if result.skills_created > 0 %}
-          <p class="rvo-text">
-            <strong>{{ result.skills_created }}</strong> nieuwe vaardighe(i)d(en) aangemaakt
-          </p>
-        {% endif %}
+
+        <ul class="rvo-list">
+          <li class="rvo-text">
+            <strong>{{ result.placements_created }}</strong> plaatsingen geïmporteerd
+          </li>
+          <li class="rvo-text">
+            <strong>{{ result.colleagues_created }}</strong> nieuwe collega's aangemaakt
+          </li>
+          <li class="rvo-text">
+            <strong>{{ result.assignments_created }}</strong> nieuwe opdrachten aangemaakt
+          </li>
+          <li class="rvo-text">
+            <strong>{{ result.services_created }}</strong> nieuwe diensten aangemaakt
+          </li>
+          <li class="rvo-text">
+            <strong>{{ result.skills_created }}</strong> nieuwe rollen aangemaakt
+          </li>
+        </ul>
+        
       </div>
 
       <!-- Warnings if any -->
