@@ -19,7 +19,7 @@ class CreateFromCSVTest(TestCase):
 
     @classmethod
     def setUpTestData(cls):
-        Ministry.objects.create(name='Ministerie van Binnenlandse Zaken', abbreviation='BZK')
+        Ministry.objects.create(name='Ministerie van Binnenlandse Zaken en Koninkrijksrelaties', abbreviation='BZK')
 
     def test_sample_csv_success(self):
         sample_csv_path = Path(__file__).parent.parent / 'static' / 'example_placement_import.csv'
@@ -33,7 +33,7 @@ class CreateFromCSVTest(TestCase):
     def test_invalid_date_format(self):
         """Test that invalid date format causes ValueError"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Description,Owner Name,owner@test.com,Test Org,BZK,2025-01-01,28-02-2025,Python,John Doe,john@test.com"""
+Test Assignment,Description,Owner Name,owner@test.com,Test Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,2025-01-01,28-02-2025,Python,John Doe,john@test.com"""
 
         result = create_placements_from_csv(csv_content)
         self.assertFalse(result['success'])
@@ -51,7 +51,7 @@ Test,Description,John Doe"""
         result = create_placements_from_csv(csv_content)
         self.assertFalse(result['success'])
         self.assertGreater(len(result['errors']), 0)
-        self.assertIn('CSV misses columns:', result['errors'][0])
+        self.assertIn('CSV mist kolommen:', result['errors'][0])
 
     def test_empty_csv_no_data_rows(self):
         """Test that CSV with only headers succeeds with zero creates"""
@@ -66,27 +66,30 @@ Test,Description,John Doe"""
     def test_invalid_email_format(self):
         """Test that invalid email format fails on model validation"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Description,Owner,owner@test.com,Org,BZK,01-01-2025,28-02-2025,Python,John,invalid-email-no-at"""
+Test Assignment,Description,Owner,owner@test.com,Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,01-01-2025,28-02-2025,Python,John,invalid-email-no-at"""
 
         result = create_placements_from_csv(csv_content)
         self.assertFalse(result['success'])
         self.assertGreater(len(result['errors']), 0)
 
     def test_non_existent_ministry(self):
-        """Test that non-existent ministry abbreviation fails"""
+        """Test that non-existent ministry name is created automatically"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Description,Owner,owner@test.com,Org,NONEXISTENT,01-01-2025,28-02-2025,Python,John,john@test.com"""
+Test Assignment,Description,Owner,owner@test.com,Org,Ministerie van Test,01-01-2025,28-02-2025,Python,John,john@test.com"""
 
         result = create_placements_from_csv(csv_content)
-        self.assertFalse(result['success'])
-        self.assertGreater(len(result['errors']), 0)
+        self.assertTrue(result['success'])
+        self.assertEqual(result['ministries_created'], 1)
+        # Verify ministry was created with name as both name and abbreviation
+        ministry = Ministry.objects.get(name='Ministerie van Test')
+        self.assertEqual(ministry.abbreviation, 'Ministerie van Test')
 
     # Business Logic Tests
     def test_multiple_services_per_assignment(self):
         """Test that multiple rows with same assignment name create multiple services"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Same Assignment,Description,Owner,owner@test.com,Org,BZK,01-01-2025,28-02-2025,Python,John,john@test.com
-Same Assignment,Description,Owner,owner@test.com,Org,BZK,01-01-2025,28-02-2025,Java,Jane,jane@test.com"""
+Same Assignment,Description,Owner,owner@test.com,Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,01-01-2025,28-02-2025,Python,John,john@test.com
+Same Assignment,Description,Owner,owner@test.com,Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,01-01-2025,28-02-2025,Java,Jane,jane@test.com"""
 
         result = create_placements_from_csv(csv_content)
         self.assertTrue(result['success'])
@@ -97,8 +100,8 @@ Same Assignment,Description,Owner,owner@test.com,Org,BZK,01-01-2025,28-02-2025,J
     def test_colleague_email_reuse(self):
         """Test that same colleague email across rows reuses the Colleague object"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Assignment 1,Description,Owner,owner@test.com,Org,BZK,01-01-2025,28-02-2025,Python,John Doe,john@test.com
-Assignment 2,Description,Owner,owner@test.com,Org,BZK,01-01-2025,28-02-2025,Java,John Doe,john@test.com"""
+Assignment 1,Description,Owner,owner@test.com,Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,01-01-2025,28-02-2025,Python,John Doe,john@test.com
+Assignment 2,Description,Owner,owner@test.com,Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,01-01-2025,28-02-2025,Java,John Doe,john@test.com"""
 
         result = create_placements_from_csv(csv_content)
         self.assertTrue(result['success'])
@@ -109,8 +112,8 @@ Assignment 2,Description,Owner,owner@test.com,Org,BZK,01-01-2025,28-02-2025,Java
     def test_assignment_name_reuse(self):
         """Test that same assignment name reuses assignment but creates new services"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Shared Assignment,First description,Owner A,ownerA@test.com,Org A,BZK,01-01-2025,28-02-2025,Python,John,john@test.com
-Shared Assignment,Different description,Owner B,ownerB@test.com,Org B,BZK,01-03-2025,30-04-2025,Java,Jane,jane@test.com"""
+Shared Assignment,First description,Owner A,ownerA@test.com,Org A,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,01-01-2025,28-02-2025,Python,John,john@test.com
+Shared Assignment,Different description,Owner B,ownerB@test.com,Org B,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,01-03-2025,30-04-2025,Java,Jane,jane@test.com"""
 
         result = create_placements_from_csv(csv_content)
         self.assertTrue(result['success'])
@@ -123,7 +126,7 @@ Shared Assignment,Different description,Owner B,ownerB@test.com,Org B,BZK,01-03-
     def test_owner_equals_placement_colleague(self):
         """Test that same email for owner and colleague creates one Colleague for both roles"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Description,John Doe,john@test.com,Org,BZK,01-01-2025,28-02-2025,Python,John Doe,john@test.com"""
+Test Assignment,Description,John Doe,john@test.com,Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,01-01-2025,28-02-2025,Python,John Doe,john@test.com"""
 
         result = create_placements_from_csv(csv_content)
         self.assertTrue(result['success'])
@@ -152,9 +155,9 @@ Test Assignment,Description,Owner Name,,Org,,,,,John Doe,john@test.com"""
     def test_skill_case_and_whitespace_sensitivity(self):
         """Test that skills with different case/whitespace create different Skill objects"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Assignment 1,Description,Owner,owner@test.com,Org,BZK,,,Python,John,john@test.com
-Assignment 2,Description,Owner,owner@test.com,Org,BZK,,, Python ,Jane,jane@test.com
-Assignment 3,Description,Owner,owner@test.com,Org,BZK,,,python,Bob,bob@test.com"""
+Assignment 1,Description,Owner,owner@test.com,Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,,,Python,John,john@test.com
+Assignment 2,Description,Owner,owner@test.com,Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,,, Python ,Jane,jane@test.com
+Assignment 3,Description,Owner,owner@test.com,Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,,,python,Bob,bob@test.com"""
 
         result = create_placements_from_csv(csv_content)
         self.assertTrue(result['success'])
@@ -165,7 +168,7 @@ Assignment 3,Description,Owner,owner@test.com,Org,BZK,,,python,Bob,bob@test.com"
     def test_date_validation_start_after_end(self):
         """Test that dates where start is after end are not validated (business logic issue)"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Description,Owner,owner@test.com,Org,BZK,31-12-2025,01-01-2025,Python,John,john@test.com"""
+Test Assignment,Description,Owner,owner@test.com,Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,31-12-2025,01-01-2025,Python,John,john@test.com"""
 
         result = create_placements_from_csv(csv_content)
         # Currently no validation - this should succeed but creates invalid data
@@ -178,8 +181,8 @@ Test Assignment,Description,Owner,owner@test.com,Org,BZK,31-12-2025,01-01-2025,P
     def test_verify_return_counts_match_database(self):
         """Test that returned counts match actual objects created in database"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Assignment 1,Description,Owner,owner@test.com,Org,BZK,01-01-2025,28-02-2025,Python,John,john@test.com
-Assignment 2,Description,Owner,owner@test.com,Org,BZK,01-01-2025,28-02-2025,Java,Jane,jane@test.com"""
+Assignment 1,Description,Owner,owner@test.com,Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,01-01-2025,28-02-2025,Python,John,john@test.com
+Assignment 2,Description,Owner,owner@test.com,Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,01-01-2025,28-02-2025,Java,Jane,jane@test.com"""
 
         result = create_placements_from_csv(csv_content)
         self.assertTrue(result['success'])
@@ -196,7 +199,7 @@ Assignment 2,Description,Owner,owner@test.com,Org,BZK,01-01-2025,28-02-2025,Java
     def test_verify_relationships_established(self):
         """Test that all relationships between objects are correctly established"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Description,Owner Name,owner@test.com,Test Org,BZK,01-01-2025,28-02-2025,Python Developer,John Doe,john@test.com"""
+Test Assignment,Description,Owner Name,owner@test.com,Test Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,01-01-2025,28-02-2025,Python Developer,John Doe,john@test.com"""
 
         result = create_placements_from_csv(csv_content)
         self.assertTrue(result['success'])
@@ -208,7 +211,7 @@ Test Assignment,Description,Owner Name,owner@test.com,Test Org,BZK,01-01-2025,28
 
         # Verify Assignment -> Ministry relationship
         self.assertIsNotNone(assignment.ministry)
-        self.assertEqual(assignment.ministry.abbreviation, 'BZK')
+        self.assertEqual(assignment.ministry.name, 'Ministerie van Binnenlandse Zaken en Koninkrijksrelaties')
 
         # Verify Service -> Assignment relationship
         service = Service.objects.get(assignment=assignment)
@@ -229,7 +232,7 @@ Test Assignment,Description,Owner Name,owner@test.com,Test Org,BZK,01-01-2025,28
     def test_assignment_status_is_ingevuld(self):
         """Test that assignments created from CSV have status INGEVULD since they have placements"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Description,Owner Name,owner@test.com,Test Org,BZK,01-01-2025,28-02-2025,Python,John Doe,john@test.com"""
+Test Assignment,Description,Owner Name,owner@test.com,Test Org,Ministerie van Binnenlandse Zaken en Koninkrijksrelaties,01-01-2025,28-02-2025,Python,John Doe,john@test.com"""
 
         result = create_placements_from_csv(csv_content)
         self.assertTrue(result['success'])

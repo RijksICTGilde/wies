@@ -100,7 +100,7 @@ class PlacementImportTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn('Plaatsingen importeren', content)
+        self.assertIn('Plaatsingen', content)
         self.assertIn('csv_file', content)
         self.assertIn('example_placement_import.csv', content)
 

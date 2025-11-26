@@ -90,6 +90,7 @@ def create_placements_from_csv(csv_content: str):
             services_created = 0
             placements_created = 0
             skills_created = 0
+            ministries_created = 0
             for _, row in enumerate(csv_reader, start=2):  # Start at 2 (1 is header)
 
                 assignment_owner_email = row['assignment_owner_email']
@@ -110,7 +111,12 @@ def create_placements_from_csv(csv_content: str):
 
                 ministry_name = row['assignment_ministry']
                 if ministry_name != '':
-                    ministry = Ministry.objects.get(abbreviation=ministry_name)
+                    ministry, created = Ministry.objects.get_or_create(
+                        name=ministry_name,
+                        defaults={'abbreviation': ministry_name}
+                    )
+                    if created:
+                        ministries_created += 1
                 else:
                     ministry = None
 
@@ -191,15 +197,11 @@ def create_placements_from_csv(csv_content: str):
             'assignments_created': assignments_created,
             'services_created': services_created,
             'skills_created': skills_created,
+            'ministries_created': ministries_created,
             'placements_created': placements_created,
             'errors': [],
         }
 
-    except Ministry.DoesNotExist:
-        return {
-            'success': False,
-            'errors': ['Onbekend ministerie']
-        }
     except ValueError as e:
         return {
             'success': False,
