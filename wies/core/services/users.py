@@ -7,10 +7,15 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group
 
 from wies.core.models import User, Brand
+from wies.core.errors import EmailNotAvailableError
 
 
 def create_user(first_name, last_name, email, brand=None, groups=None):
     random_username = uuid.uuid4()
+
+    if User.objects.filter(email=email).exists():
+        raise EmailNotAvailableError(email)
+
     user = User.objects.create(
         username=random_username,
         email=email,
@@ -24,6 +29,14 @@ def create_user(first_name, last_name, email, brand=None, groups=None):
 
 
 def update_user(user, first_name, last_name, email, brand=None, groups=None):
+
+    try:
+        user_with_email = User.objects.get(email=email)
+        if user_with_email.id != user.id:
+            raise EmailNotAvailableError(email)
+    except User.DoesNotExist:
+        pass
+
     user.first_name = first_name
     user.last_name = last_name
     user.email = email

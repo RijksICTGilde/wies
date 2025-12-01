@@ -47,6 +47,7 @@ class Skill(models.Model):
         return self.name
 
 class User(AbstractUser):
+    email = models.EmailField(unique=True)
     brand = models.ForeignKey('Brand', models.SET_NULL, null=True, blank=True, related_name='users')
 
 

@@ -17,7 +17,7 @@ class AuthBackend(BaseBackend):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            # do not authenticate if Colleage record does not exist
+            # do not authenticate if User record does not exist
             return None
 
         # Link colleague if match on email
