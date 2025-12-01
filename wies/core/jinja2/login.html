@@ -13,15 +13,18 @@
             <div class="rvo-layout-column rvo-layout-gap--lg rvo-layout-align-items--center">
                 <div class="rvo-layout-column rvo-layout-gap--md rvo-layout-align-items--center">
                     <c-h2>Inloggen bij Wies</c-h2>
-                    <p class="rvo-text rvo-text--subtle">
-                        Log in met SSO Rijk om verder te gaan.
-                    </p>
+
+                    <c-alert kind="info">Login met je ODI e-mail adres, niet dat van een eventuele opdrachtgever.</c-alert>
+
+                    
                 </div>
+
+                
                 
                 <form method="post" action="/login/">
                     {{ get_csrf_hidden_input(request) }}
                     <c-button kind="primary" type="submit">
-                        Inloggen
+                        Inloggen SSO Rijk
                     </c-button>
                 </form>
             </div>
