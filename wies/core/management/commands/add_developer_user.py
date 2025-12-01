@@ -24,6 +24,8 @@ class Command(BaseCommand):
             return
         
         user = create_user(first_name, last_name, email)
-        admin_group = Group.objects.get(name='Beheerder')
-        user.groups.add(admin_group)
+
+        # Add user to all groups, thereby inheriting all permissions
+        for group in Group.objects.all():
+            user.groups.add(group)        
         logger.info("Successfully added developer user")

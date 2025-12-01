@@ -1,7 +1,7 @@
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from wies.core.models import User
+from wies.core.models import User, Assignment, Service, Placement, Colleague, Ministry
 
 def setup_roles():
     # Define roles
@@ -10,7 +10,13 @@ def setup_roles():
             (User, ["view_user", "add_user", "delete_user", "change_user"]),
         ],
         "Consultant": [],
-        "Business Development Manager": [],
+        "Business Development Manager": [
+            (Assignment, ["add_assignment"]),
+            (Service, ["add_service"]),
+            (Placement, ["add_placement"]),
+            (Colleague, ["add_colleague"]),
+            (Ministry, ["add_ministry"])
+        ],
     }
 
     with transaction.atomic():

@@ -24,6 +24,7 @@ from wies.core.views import PlacementListView
 from wies.core.views import MinistryDetailView
 from wies.core.views import admin_db, login, no_access, logout, auth
 from wies.core.views import UserListView, user_create, user_edit, user_delete, user_import_csv
+from wies.core.views import placement_import_csv
 
 urlpatterns = [
     path('admin/db/', admin_db, name='admin-db'),
@@ -36,6 +37,7 @@ urlpatterns = [
     path('assignments/<int:pk>/', AssignmentDetailView.as_view(), name='assignment-detail'),
     path('colleagues/<int:pk>/', ColleagueDetailView.as_view(), name='colleague-detail'),
     path('placements/', PlacementListView.as_view(), name='placements'),
+    path('placements/import/', placement_import_csv, name='placement-import-csv'),
     path('clients/<str:name>', client),
     path('ministries/<int:pk>/', MinistryDetailView.as_view(), name='ministry-detail'),
     path('users/', UserListView.as_view(), name='users'),
