@@ -19,6 +19,7 @@ This files lists the changes during the lifetime of this project.
 - Developer user during setup now gets all roles
 - Add /placements/import csv upload for sourcing RIG placement list 
 - Upgrade to django 5.2.9 for security patch
+- Remove hours_per_week on service and placement
 
 ## 2025-10-09
 - add period filter to placement page

@@ -109,10 +109,6 @@
                   <label class="rvo-label">Periode</label>
                   <span>{{ placement.start_date.strftime("%-d %b %Y") if placement.start_date else "?" }} - {{ placement.end_date.strftime("%-d %b %Y") if placement.end_date else "?" }}</span>
                 </div>
-                <div class="rvo-layout-column">
-                  <label class="rvo-label">Inzet </label>
-                  <span>{% if placement.hours_per_week %}{{ placement.hours_per_week }} u/week{% else %}-{% endif %} </span>
-                </div>
               </div>
             </div>
             {% endfor %}
