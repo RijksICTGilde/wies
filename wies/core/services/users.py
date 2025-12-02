@@ -8,9 +8,17 @@ from django.contrib.auth.models import Group
 
 from wies.core.models import User, Label, LabelCategory, DEFAULT_LABELS
 from wies.core.errors import EmailNotAvailableError
+from wies.core.services.events import create_event
 
 
-def create_user(first_name, last_name, email, labels=None, groups=None):
+def create_user(creator: User, first_name, last_name, email, labels=None, groups=None):
+    """
+    :param creator: can be None when user create is triggered from system itself
+    """
+
+    if groups is None:
+        groups = []
+
     random_username = uuid.uuid4()
 
     if User.objects.filter(email=email).exists():
@@ -26,10 +34,30 @@ def create_user(first_name, last_name, email, labels=None, groups=None):
         user.labels.set(labels)
     if groups:
         user.groups.set(groups)
+
+    creator_user_id = creator.id if creator is not None else 0
+    context = {
+        'created_id': user.id,
+        'username': str(random_username),  # casting uuid to str
+        'email': email,
+        'first_name': first_name,
+        'last_name': last_name,
+        'brand_name': brand.name if brand is not None else '',
+        "group_names": [group.name for group in groups],
+    }
+    create_event(creator_user_id, 'User.create', context=context)
+
     return user
 
 
-def update_user(user, first_name, last_name, email, labels=None, groups=None):
+def update_user(updater, user, first_name, last_name, email, labels=None, groups=None):
+    """
+    :param updater: user that performs the update action. Can be None if done by system
+    """
+
+    if groups is None:
+        groups=[]
+
 
     try:
         user_with_email = User.objects.get(email=email)
@@ -44,12 +72,23 @@ def update_user(user, first_name, last_name, email, labels=None, groups=None):
     if labels is not None:
         user.labels.set(labels)
     user.save()
-    if groups is not None:
+    if groups:
         user.groups.set(groups)
+
+    updater_user_id = updater.id if updater is not None else 0
+    context = {
+        'updated_id': user.id,
+        'firstname': first_name,
+        'last_name': last_name,
+        'email': email,
+        'brand_name': brand.name if brand is not None else '',
+        'group_names': [group.name for group in groups]
+    }
+    create_event(updater_user_id, 'User.update', context=context)
     return user
 
 
-def create_users_from_csv(csv_content: str):
+def create_users_from_csv(creator, csv_content: str):
     """
     Create users from a CSV file.
 
@@ -197,6 +236,7 @@ def create_users_from_csv(csv_content: str):
             continue
 
         create_user(
+            creator,
             first_name=first_name,
             last_name=last_name,
             email=email,

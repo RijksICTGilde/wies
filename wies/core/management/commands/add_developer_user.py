@@ -24,7 +24,7 @@ class Command(BaseCommand):
             logger.warning('Developer user not added: missing DEV_FIRSTNAME, DEV_LASTNAME or DEV_EMAIL')
             return
         
-        user = create_user(first_name, last_name, email)
+        user = create_user(None, first_name, last_name, email)
 
         # Add user to all groups, thereby inheriting all permissions
         for group in Group.objects.all():

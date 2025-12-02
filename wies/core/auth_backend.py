@@ -1,6 +1,11 @@
+import logging
+
 from django.contrib.auth.backends import BaseBackend
 
 from .models import Colleague, User
+
+
+logger = logging.getLogger(__name__)
 
 
 class AuthBackend(BaseBackend):
@@ -18,6 +23,7 @@ class AuthBackend(BaseBackend):
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             # do not authenticate if User record does not exist
+            logging.info("User not authenticated")
             return None
 
         # Link colleague if match on email
@@ -28,6 +34,7 @@ class AuthBackend(BaseBackend):
         except Colleague.DoesNotExist:
             pass
 
+        logging.info("user successfully authenticated")
         return user 
     
     def get_user(self, user_id):
