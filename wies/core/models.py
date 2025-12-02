@@ -201,3 +201,10 @@ class Service(models.Model):
 
     def get_absolute_url(self):
         return reverse("service-detail", kwargs={"pk": self.pk})
+
+
+class Event(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True)
+    user_id = models.IntegerField()  # deliberately no foreignkey, because of cascading/nulling. this should be append-only. could no longer exist. 0 used for system creation
+    name = models.CharField(max_length=32)
+    context = models.JSONField(default=dict)

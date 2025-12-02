@@ -4,7 +4,7 @@ from django.contrib.auth.models import Permission, Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 
-from wies.core.models import User, Brand
+from wies.core.models import User, Brand, Event
 
 
 @override_settings(
@@ -150,6 +150,7 @@ class UserViewsTest(TestCase):
         self.client.force_login(self.auth_user)
 
         initial_count = User.objects.filter(is_superuser=False).count()
+        initial_event_count = Event.objects.count()
 
         response = self.client.post(reverse('user-create'), {
             'first_name': 'New',
@@ -171,6 +172,12 @@ class UserViewsTest(TestCase):
         self.assertEqual(new_user.last_name, 'User')
         self.assertEqual(new_user.brand, self.brand_a)
         self.assertFalse(new_user.is_superuser)
+
+        # Event should be created
+        self.assertEqual(Event.objects.count(), initial_event_count + 1)
+        created_event = Event.objects.last()
+        self.assertEqual(created_event.name, 'User.create')
+        self.assertEqual(created_event.context['email'], 'newuser@example.com')
 
     def test_user_create_without_brand(self):
         """Test user creation without brand (optional field)"""
@@ -221,8 +228,9 @@ class UserViewsTest(TestCase):
         self.client.force_login(self.auth_user)
 
         initial_count = User.objects.count()
-        user_id = self.user1.id
+        initial_event_count = Event.objects.count()
 
+        user_id = self.user1.id
         response = self.client.post(reverse('user-delete', args=[user_id]))
 
         # Should redirect to users list
@@ -232,6 +240,12 @@ class UserViewsTest(TestCase):
         # User should be deleted
         self.assertEqual(User.objects.count(), initial_count - 1)
         self.assertFalse(User.objects.filter(id=user_id).exists())
+
+        # Event should be created
+        self.assertEqual(Event.objects.count(), initial_event_count+1)
+        created_event = Event.objects.last()
+        self.assertEqual(created_event.context['id'], user_id)
+        self.assertEqual(created_event.context['email'], self.user1.email)
 
     def test_user_delete_prevents_superuser_deletion(self):
         """Test that superusers cannot be deleted via this endpoint"""
@@ -367,6 +381,8 @@ class UserViewsTest(TestCase):
         """Test successful user editing"""
         self.client.force_login(self.auth_user)
 
+        initial_count_events = Event.objects.count()
+
         response = self.client.post(reverse('user-edit', args=[self.user1.id]), {
             'first_name': 'Updated',
             'last_name': 'Name',
@@ -384,6 +400,12 @@ class UserViewsTest(TestCase):
         self.assertEqual(self.user1.last_name, 'Name')
         self.assertEqual(self.user1.email, 'updated@example.com')
         self.assertEqual(self.user1.brand, self.brand_b)
+
+        # Event should be created
+        self.assertEqual(Event.objects.count(), initial_count_events + 1)
+        created_event = Event.objects.last()
+        self.assertEqual(created_event.name, "User.update")
+        self.assertEqual(created_event.context['email'], 'updated@example.com')
 
     def test_user_edit_validation_errors(self):
         """Test user editing with validation errors"""
