@@ -18,6 +18,7 @@ This files lists the changes during the lifetime of this project.
 - Introduce "wies" as extra source on records
 - Developer user during setup now gets all roles
 - Add /placements/import csv upload for sourcing RIG placement list 
+- Upgrade to django 5.2.9 for security patch
 
 ## 2025-10-09
 - add period filter to placement page
