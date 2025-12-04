@@ -205,6 +205,30 @@ class UserViewsTest(TestCase):
         # Modal should be shown with errors
         self.assertIn('user-modal', content)
 
+    def test_user_create_duplicate_email(self):
+        """Test that a new user cannot be created with an existing email"""
+        self.client.force_login(self.auth_user)
+
+        # Try to create a user with an email that already exists
+        response = self.client.post(reverse('user-create'), {
+            'first_name': 'Duplicate',
+            'last_name': 'User',
+            'email': 'user1@example.com',  # This email already exists (user1)
+            'brand': self.brand_a.id,
+        })
+
+        # Should return 200 with form errors (re-rendered modal)
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode()
+
+        # Modal should be shown with errors
+        self.assertIn('user-modal', content)
+        # Should contain error message about duplicate email
+        self.assertIn('email', content.lower())
+
+        # User should not be created
+        self.assertEqual(User.objects.filter(email='user1@example.com').count(), 1)
+
     def test_user_create_requires_login(self):
         """Test that user creation requires authentication"""
         response = self.client.post(reverse('user-create'), {

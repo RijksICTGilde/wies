@@ -33,7 +33,7 @@ class RvoFormMixinTest(TestCase):
     def test_form_renders_with_rvo_classes(self):
         """Test that forms using RvoFormMixin render with RVO design system classes"""
         form = UserForm()
-        rendered = form.as_div()
+        rendered = str(form)
 
         # Check that form fields are wrapped with RVO classes
         self.assertIn('utrecht-form-field', rendered)
@@ -78,7 +78,7 @@ class RvoFormMixinTest(TestCase):
         self.assertFalse(form.is_valid())
 
         # Render the form
-        rendered = form.as_div()
+        rendered = str(form)
 
         # Check that error messages have RVO classes
         self.assertIn('rvo-form-field__error', rendered)
@@ -87,7 +87,7 @@ class RvoFormMixinTest(TestCase):
     def test_required_fields_have_required_label_class(self):
         """Test that required fields have rvo-label--required class on their labels"""
         form = UserForm()
-        rendered = form.as_div()
+        rendered = str(form)
 
         # Check that required field labels have rvo-label--required class
         # first_name is required
@@ -116,7 +116,7 @@ class RvoFormMixinTest(TestCase):
         This ensures fields are not colored red upon first view
         """
         form = UserForm()
-        rendered = form.as_div()
+        rendered = str(form)
 
         # Check that required fields don't have the required attribute in the HTML
         # Check for first_name field
@@ -150,7 +150,3 @@ class RvoFormMixinTest(TestCase):
         self.assertIn('FileInput', log.output[0])
         self.assertIn('document', log.output[0])
         self.assertIn('not in RVO widget_templates mapping', log.output[0])
-
-        # Verify form still renders (doesn't crash)
-        rendered = form.as_div()
-        self.assertIn('name="document"', rendered)

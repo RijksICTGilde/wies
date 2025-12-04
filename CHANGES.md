@@ -20,6 +20,8 @@ This files lists the changes during the lifetime of this project.
 - Add /placements/import csv upload for sourcing RIG placement list 
 - Upgrade to django 5.2.9 for security patch
 - (migration) Remove hours_per_week on service and placement
+- (migration) Make email unique in db
+- Fix that RVOMixin uses proper jinja environment (enabling components and other functions)
 
 ## 2025-10-09
 - add period filter to placement page

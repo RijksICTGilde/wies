@@ -4,10 +4,18 @@ from django import forms
 from django.contrib.auth.models import Group
 from django.forms.renderers import Jinja2
 from django.forms.utils import ErrorList
+from django.template import engines
 
 from .models import User, Brand
 
 logger = logging.getLogger(__name__)
+
+
+class RvoJinja2Renderer(Jinja2):
+    """Custom renderer that uses Django's configured Jinja2 environment with all globals."""
+    @property
+    def engine(self):
+        return engines['jinja2']
 
 
 class RvoErrorList(ErrorList):
@@ -28,7 +36,7 @@ class RvoFormMixin:
     This Mixin also disables client-side required checks on fields.
     """
     template_name = 'rvo/forms/form.html'
-    default_renderer = Jinja2()
+    default_renderer = RvoJinja2Renderer()
 
     # Widget type to template mapping (only includes widgets with existing templates)
     widget_templates = {
@@ -67,7 +75,7 @@ class UserForm(RvoFormMixin, forms.ModelForm):
 
     first_name = forms.CharField(label='Voornaam', required=True)
     last_name = forms.CharField(label='Achternaam', required=True)
-    email = forms.EmailField(label='Email', required=True)
+    email = forms.EmailField(label='Email (ODI)', required=True)
     brand = forms.ModelChoiceField(
         label='Merk',
         queryset=Brand.objects.all(),
