@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0002_alter_assignment_source_alter_colleague_source_and_more'),
+        ('core', '0003_remove_placement_hours_source_and_more'),
     ]
 
     operations = [
