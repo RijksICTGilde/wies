@@ -115,8 +115,6 @@ class Placement(models.Model):
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=SERVICE)
     specific_start_date = models.DateField(null=True, blank=True) # do not use, use properties below
     specific_end_date = models.DateField(null=True, blank=True) # do not use, use properties below
-    hours_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=SERVICE)
-    specific_hours_per_week = models.IntegerField(null=True, blank=True)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(null=True, blank=True)  # only for non wies
@@ -143,13 +141,6 @@ class Placement(models.Model):
         else:
             return self.specific_end_date
 
-    @property
-    def hours_per_week(self):
-        if self.hours_source == 'SERVICE':
-            return self.service.hours_per_week
-        else:
-            return self.specific_hours_per_week
-
     def get_absolute_url(self):
         return reverse("placement-detail", kwargs={"pk": self.pk})
 
@@ -165,7 +156,6 @@ class Service(models.Model):
     assignment = models.ForeignKey('Assignment', models.CASCADE, related_name='services')
     description = models.CharField(max_length=500)
     skill = models.ForeignKey('Skill', models.SET_NULL, related_name='services', null=True, blank=True)
-    hours_per_week = models.IntegerField(null=True, blank=True)
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=ASSIGNMENT)
     specific_start_date = models.DateField(null=True, blank=True) # do not use directly, see property below
     specific_end_date = models.DateField(null=True, blank=True) # do not use directly, see property below
