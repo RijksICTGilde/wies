@@ -29,18 +29,13 @@
             <li class="rvo-menubar__item">
               <a href="/placements/" class="rvo-link rvo-menubar__link rvo-link--logoblauw {% if '/placements/' in request.path %}menu-item--active{% endif %}">Wie zit waar?</a>
             </li>
-            {% if user.has_perms(['core.view_user']) %}
-            <li class="rvo-menubar__item">
-              <a href="/users/" class="rvo-link rvo-menubar__link rvo-link--logoblauw {% if '/users/' in request.path %}menu-item--active{% endif %}">Gebruikers</a>
-            </li>
-            {% endif %}
           </ul>
           <ul class="rvo-menubar__group--flex">
             <li class="rvo-menubar__item">
               {% if user.is_authenticated %}
 
                 {% if user.colleague %}
-                  <c-link href="/colleagues/271" icon="user" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw">
+                  <c-link href="/placements/?colleague={{ user.colleague.id }}" icon="user" iconColor="logoblauw" iconSize="md">
                     {{ user.get_full_name() }}
                   </c-link>
                 {% else %}
@@ -50,6 +45,13 @@
                 {% endif %}
               {% endif %}
             </li>
+            {% if user.has_perms(['core.view_user', 'core.view_labelcategory']) %}
+            <li class="rvo-menubar__item">
+                <c-link href="/admin/" icon="instellingen" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw {% if '/admin/' in request.path %}menu-item--active{% endif %}" >
+                  Instellingen
+                </c-link>
+            </li>
+            {% endif %}
           </ul>
         </li>
       </ul>

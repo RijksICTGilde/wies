@@ -49,6 +49,7 @@ Usage:
     <div>
       {% if primary_button %}
       <button
+      type="button"
       class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button"
       {% for attr_label, attr_value  in primary_button.attrs.items() %}
       {{ attr_label }}="{{ attr_value }}"

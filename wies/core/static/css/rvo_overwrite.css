@@ -37,3 +37,7 @@
   -webkit-mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
   mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
 }
+
+.rvo-sidebar-layout {
+  grid-template-columns: 200px 1fr;
+}

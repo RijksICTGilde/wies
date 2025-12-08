@@ -2,7 +2,7 @@ from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.contrib.auth.models import Group
 
-from wies.core.models import User, Brand
+from wies.core.models import User, LabelCategory, Label
 from wies.core.roles import setup_roles
 
 
@@ -55,7 +55,7 @@ class RBACSetupTest(TestCase):
         client.force_login(admin_user)
 
         # Test user list access
-        response = client.get(reverse('users'))
+        response = client.get(reverse('admin-users'))
         self.assertEqual(response.status_code, 200)
 
         # Test user create form access
@@ -63,12 +63,13 @@ class RBACSetupTest(TestCase):
         self.assertEqual(response.status_code, 200)
 
         # Test user creation
-        brand = Brand.objects.create(name="Test Brand")
+        category, _ = LabelCategory.objects.get_or_create(name='Merk', defaults={'color': '#0066CC'})
+        label = Label.objects.create(name="Test Brand", category=category)
         response = client.post(reverse('user-create'), {
             'first_name': 'New',
             'last_name': 'User',
             'email': 'newuser@example.com',
-            'brand': brand.id,
+            'labels': [label.id],
         })
         self.assertEqual(response.status_code, 302)
         self.assertTrue(User.objects.filter(email='newuser@example.com').exists())

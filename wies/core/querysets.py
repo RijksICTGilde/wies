@@ -6,7 +6,10 @@ that cascade from Assignment -> Service -> Placement hierarchy.
 """
 
 from datetime import date
-from django.db.models import Case, When, F, Q, Max
+from django.db.models import Case, When, F, Q, Max, Count, Prefetch
+from django.db.models.functions import Lower
+
+from wies.core.models import Label, LabelCategory
 
 
 def annotate_placement_dates(queryset):
@@ -74,4 +77,17 @@ def filter_by_date_overlap(queryset, start_date, end_date, start_field='actual_s
         Q(**{f'{end_field}__gte': start_date}) &
         Q(**{f'{start_field}__isnull': False}) &
         Q(**{f'{end_field}__isnull': False})
+    )
+
+def annotate_usage_counts(queryset):
+    """
+    Annotate LabelCategory queryset with usage counts on labels
+    """
+
+    labels_with_usage = Label.objects.order_by(Lower('name')).annotate(
+        usage_count=Count('users', distinct=True) + Count('colleagues', distinct=True)
+    )
+
+    return queryset.prefetch_related(
+        Prefetch('labels', queryset=labels_with_usage)
     )

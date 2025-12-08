@@ -1,0 +1,77 @@
+<div class="category-section" id="category-{{ category.name|lower }}">
+  <div class="category-header">
+    <c-h2 style="margin: 0;">{{ category.name }}</c-h2>
+    <button
+        class="rvo-button rvo-button--subtle rvo-button--icon-only"
+        hx-get="{{ url('label-category-edit', kwargs={'pk': category.pk}) }}"
+        hx-target="#labelFormModal"
+        hx-swap="innerHTML"
+        title="Bewerk label">
+        <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Bewerken"></span>
+    </button>
+    <button
+        class="rvo-button rvo-button--subtle rvo-button--icon-only"
+        hx-get="{{ url('label-category-delete', kwargs={'pk': category.pk}) }}"
+        hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+        hx-target="#labelFormModal"
+        title="Verwijder label">
+        <span class="utrecht-icon rvo-icon rvo-icon-verwijderen rvo-icon--md" style="color: #e73636;" role="img" aria-label="Verwijderen"></span>
+    </button>
+  </div>
+</div>
+
+{% if category.labels.all() %}
+<div class="rvo-table--responsive">
+    <table class="rvo-table">
+    <thead class="rvo-table__head">
+        <tr class="rvo-table-row">
+            <th scope="col" class="rvo-table-header rvo-table-header--md">Naam</th>
+            <th scope="col" class="rvo-table-header rvo-table-header--md">Aantal keer toegepast</th>
+            <th scope="col" class="rvo-table-header rvo-table-header--md">x</th>
+        </tr>
+    </thead>
+    <tbody class="rvo-table-body">
+        {% for label in category.labels.all() %}
+        <tr class="rvo-table-row">
+            <td class="rvo-table-cell"><span class="rvo-badge" style="background-color: {{ label.category.color }}; padding: 0.25rem 0.5rem; border-radius: 3px;"">{{ label.name }}</span></td>
+            <td class="rvo-table-cell">{{ label.usage_count|default(0) }}</td>
+            <td class="rvo-table-cell">
+            <div class="rvo-layout-row rvo-layout-gap--sm">
+                <button
+                class="rvo-button rvo-button--subtle rvo-button--icon-only"
+                hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}"
+                hx-target="#labelFormModal"
+                hx-swap="innerHTML"
+                title="Bewerk label">
+                <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Bewerken"></span>
+                </button>
+                <button
+                class="rvo-button rvo-button--subtle rvo-button--icon-only"
+                hx-get="{{ url('label-delete', kwargs={'pk': label.pk}) }}"
+                hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+                hx-target="#labelFormModal"
+                title="Verwijder label">
+                <span class="utrecht-icon rvo-icon rvo-icon-verwijderen rvo-icon--md" style="color: #e73636;" role="img" aria-label="Verwijderen"></span>
+                </button>
+            </div>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+</div>
+{% else %}
+<p style="margin-top: 1rem; color: #666;">Geen labels in deze categorie</p>
+{% endif %}
+
+<form hx-post="/admin/labels/category/{{ category.id }}/labels/create/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
+    <c-input name="name"/>
+    <c-button kind="secondary"  type="submit">
+        Label toevoegen
+    </c-button>
+    <br>
+    {% if errors and errors.name%}
+        {{ errors.name }}
+    {% endif %}
+</form>
+

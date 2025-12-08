@@ -1,13 +1,15 @@
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from wies.core.models import User, Assignment, Service, Placement, Colleague, Ministry
+from wies.core.models import User, Assignment, Service, Placement, Colleague, Ministry, LabelCategory, Label
 
 def setup_roles():
     # Define roles
     roles = {
         "Beheerder": [
             (User, ["view_user", "add_user", "delete_user", "change_user"]),
+            (LabelCategory, ["view_labelcategory", "add_labelcategory", "change_labelcategory", "delete_labelcategory"]),
+            (Label, ["view_label", "add_label", "change_label", "delete_label"]),
         ],
         "Consultant": [],
         "Business Development Manager": [

@@ -3,7 +3,7 @@ import logging
 import time
 
 from django.db import transaction
-from wies.core.models import Colleague, Brand, Assignment, Service, Placement
+from wies.core.models import Colleague, Label, LabelCategory, Assignment, Service, Placement, DEFAULT_LABELS
 
 from .otys import OTYSAPI
 
@@ -45,7 +45,15 @@ def sync_all_otys_iir_records():
                 vacancy_procedures[vacancy_uid] = []
 
     with transaction.atomic():
-        brand, created = Brand.objects.get_or_create(name='I-Interim Rijk')
+        # Get or create the 'I-Interim Rijk' label for OTYS-synced colleagues
+        merken_category, _ = LabelCategory.objects.get_or_create(
+            name='Merk',
+            defaults={'color': DEFAULT_LABELS['Merk']['color']}
+        )
+        i_interim_rijk_label, _ = Label.objects.get_or_create(
+            name='I-Interim Rijk',
+            category=merken_category
+        )
 
         placements_synced = 0
 
@@ -71,7 +79,6 @@ def sync_all_otys_iir_records():
             # Prepare colleague data
             colleague_data = {
                 'name': name,
-                'brand': brand,
                 'source_url': f'{OTYS_URL}/us/modular.html#/candidates/{uid}',
                 'email': email or '',
             }
@@ -82,6 +89,10 @@ def sync_all_otys_iir_records():
                 source='otys_iir',
                 defaults=colleague_data
             )
+
+            # Assign 'I-Interim Rijk' label to all OTYS-synced colleagues
+            if not colleague.labels.filter(id=i_interim_rijk_label.id).exists():
+                colleague.labels.add(i_interim_rijk_label)
 
             action = "Created" if created else "Updated"
             logger.debug(f"{action} colleague: {name} (uid: {uid})")
