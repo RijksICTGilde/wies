@@ -4,7 +4,7 @@ from django.contrib.auth.models import Permission, Group
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 
-from wies.core.models import User, Brand
+from wies.core.models import User, LabelCategory, Label
 
 
 @override_settings(
@@ -46,9 +46,10 @@ class UserViewsTest(TestCase):
             last_name="User",
         )
 
-        # Create test brands
-        self.brand_a = Brand.objects.create(name="Brand A")
-        self.brand_b = Brand.objects.create(name="Brand B")
+        # Create test labels
+        self.category, _ = LabelCategory.objects.get_or_create(name='Merk', defaults={'color': '#0066CC'})
+        self.label_a = Label.objects.create(name="Brand A", category=self.category)
+        self.label_b = Label.objects.create(name="Brand B", category=self.category)
 
         # Create test groups for form testing
         self.admin_group = Group.objects.create(name="Beheerder")
@@ -61,27 +62,27 @@ class UserViewsTest(TestCase):
             email="user1@example.com",
             first_name="John",
             last_name="Doe",
-            brand=self.brand_a,
         )
+        self.user1.labels.add(self.label_a)
 
         self.user2 = User.objects.create(
             username="user2",
             email="user2@example.com",
             first_name="Jane",
             last_name="Smith",
-            brand=self.brand_b,
         )
+        self.user2.labels.add(self.label_b)
 
     def test_user_list_requires_login(self):
         """Test that user list requires authentication"""
-        response = self.client.get(reverse('users'), follow=False)
+        response = self.client.get(reverse('admin-users'), follow=False)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.url.startswith('/login/'))
 
     def test_user_list_excludes_superusers(self):
         """Test that superusers are excluded from user list"""
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse('users'))
+        response = self.client.get(reverse('admin-users'))
 
         self.assertEqual(response.status_code, 200)
 
@@ -96,12 +97,12 @@ class UserViewsTest(TestCase):
         # Superuser should NOT be in the list
         self.assertNotIn(self.superuser.get_full_name(), content)
 
-    def test_user_list_brand_filter(self):
-        """Test filtering users by brand"""
+    def test_user_list_label_filter(self):
+        """Test filtering users by label"""
         self.client.force_login(self.auth_user)
 
-        # Filter by brand A
-        response = self.client.get(reverse('users'), {'brand': self.brand_a.id})
+        # Filter by label A
+        response = self.client.get(reverse('admin-users'), {'label': self.label_a.id})
         content = response.content.decode()
 
         # user1 should be in results
@@ -114,13 +115,13 @@ class UserViewsTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Search by first name
-        response = self.client.get(reverse('users'), {'search': 'John'})
+        response = self.client.get(reverse('admin-users'), {'search': 'John'})
         content = response.content.decode()
         self.assertIn(self.user1.get_full_name(), content)
         self.assertNotIn(self.user2.get_full_name(), content)
 
         # Search by email
-        response = self.client.get(reverse('users'), {'search': 'jane'})
+        response = self.client.get(reverse('admin-users'), {'search': 'jane'})
         content = response.content.decode()
         self.assertIn(self.user2.get_full_name(), content)
         self.assertNotIn(self.user1.get_full_name(), content)
@@ -130,7 +131,7 @@ class UserViewsTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Search by full name "John Doe" - this should find user1 but currently doesn't
-        response = self.client.get(reverse('users'), {'search': 'John Doe'})
+        response = self.client.get(reverse('admin-users'), {'search': 'John Doe'})
         content = response.content.decode()
         self.assertIn(self.user1.get_full_name(), content)
         self.assertNotIn(self.user2.get_full_name(), content)
@@ -142,7 +143,7 @@ class UserViewsTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn('user-modal', content)
+        self.assertIn('modal-content', content)
         self.assertIn('Nieuwe gebruiker', content)
 
     def test_user_create_success(self):
@@ -155,12 +156,12 @@ class UserViewsTest(TestCase):
             'first_name': 'New',
             'last_name': 'User',
             'email': 'newuser@example.com',
-            'brand': self.brand_a.id,
+            'category_Merk': self.label_a.id,
         })
 
         # Should redirect to users list
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('users'))
+        self.assertEqual(response.url, reverse('admin-users'))
 
         # User should be created
         self.assertEqual(User.objects.filter(is_superuser=False).count(), initial_count + 1)
@@ -169,25 +170,25 @@ class UserViewsTest(TestCase):
         new_user = User.objects.get(email='newuser@example.com')
         self.assertEqual(new_user.first_name, 'New')
         self.assertEqual(new_user.last_name, 'User')
-        self.assertEqual(new_user.brand, self.brand_a)
+        self.assertTrue(new_user.labels.filter(id=self.label_a.id).exists())
         self.assertFalse(new_user.is_superuser)
 
-    def test_user_create_without_brand(self):
-        """Test user creation without brand (optional field)"""
+    def test_user_create_without_labels(self):
+        """Test user creation without labels (optional field)"""
         self.client.force_login(self.auth_user)
 
         response = self.client.post(reverse('user-create'), {
             'first_name': 'No',
-            'last_name': 'Brand',
-            'email': 'nobrand@example.com',
+            'last_name': 'Labels',
+            'email': 'nolabels@example.com',
         })
 
         # Should redirect to users list
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('users'))
+        self.assertEqual(response.url, reverse('admin-users'))
 
-        new_user = User.objects.get(email='nobrand@example.com')
-        self.assertIsNone(new_user.brand)
+        new_user = User.objects.get(email='nolabels@example.com')
+        self.assertEqual(new_user.labels.count(), 0)
 
     def test_user_create_validation_errors(self):
         """Test user creation with validation errors"""
@@ -203,7 +204,7 @@ class UserViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         # Modal should be shown with errors
-        self.assertIn('user-modal', content)
+        self.assertIn('modal-content', content)
 
     def test_user_create_duplicate_email(self):
         """Test that a new user cannot be created with an existing email"""
@@ -214,7 +215,6 @@ class UserViewsTest(TestCase):
             'first_name': 'Duplicate',
             'last_name': 'User',
             'email': 'user1@example.com',  # This email already exists (user1)
-            'brand': self.brand_a.id,
         })
 
         # Should return 200 with form errors (re-rendered modal)
@@ -222,7 +222,7 @@ class UserViewsTest(TestCase):
         content = response.content.decode()
 
         # Modal should be shown with errors
-        self.assertIn('user-modal', content)
+        self.assertIn('modal-content', content)
         # Should contain error message about duplicate email
         self.assertIn('email', content.lower())
 
@@ -251,7 +251,7 @@ class UserViewsTest(TestCase):
 
         # Should redirect to users list
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('users'))
+        self.assertEqual(response.url, reverse('admin-users'))
 
         # User should be deleted
         self.assertEqual(User.objects.count(), initial_count - 1)
@@ -295,7 +295,7 @@ class UserViewsTest(TestCase):
         )
         self.client.force_login(user_no_perms)
 
-        response = self.client.get(reverse('users'))
+        response = self.client.get(reverse('admin-users'))
         self.assertEqual(response.status_code, 403)
 
     def test_user_list_allows_with_view_permission(self):
@@ -310,7 +310,7 @@ class UserViewsTest(TestCase):
         user_with_perms.user_permissions.add(view_permission)
         self.client.force_login(user_with_perms)
 
-        response = self.client.get(reverse('users'))
+        response = self.client.get(reverse('admin-users'))
         self.assertEqual(response.status_code, 200)
 
     def test_user_create_requires_add_permission(self):
@@ -380,7 +380,7 @@ class UserViewsTest(TestCase):
 
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
-        self.assertIn('user-modal', content)
+        self.assertIn('modal-content', content)
         self.assertIn('Gebruiker bewerken', content)
         # Check that form is pre-populated
         self.assertIn(self.user1.first_name, content)
@@ -395,19 +395,17 @@ class UserViewsTest(TestCase):
             'first_name': 'Updated',
             'last_name': 'Name',
             'email': 'updated@example.com',
-            'brand': self.brand_b.id,
         })
 
         # Should redirect to users list
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('users'))
+        self.assertEqual(response.url, reverse('admin-users'))
 
         # User should be updated
         self.user1.refresh_from_db()
         self.assertEqual(self.user1.first_name, 'Updated')
         self.assertEqual(self.user1.last_name, 'Name')
         self.assertEqual(self.user1.email, 'updated@example.com')
-        self.assertEqual(self.user1.brand, self.brand_b)
 
     def test_user_edit_validation_errors(self):
         """Test user editing with validation errors"""
@@ -423,7 +421,7 @@ class UserViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         # Modal should be shown with errors
-        self.assertIn('user-modal', content)
+        self.assertIn('modal-content', content)
         self.assertIn('Gebruiker bewerken', content)
 
         # User should not be updated
@@ -536,8 +534,9 @@ class UserImportTest(TestCase):
         self.consultant_group = Group.objects.create(name='Consultant')
         self.bdm_group = Group.objects.create(name='Business Development Manager')
 
-        # Create test brand
-        self.existing_brand = Brand.objects.create(name='Existing Brand')
+        # Create test label
+        category, _ = LabelCategory.objects.get_or_create(name='Merk', defaults={'color': '#0066CC'})
+        self.existing_label = Label.objects.create(name='Existing Brand', category=category)
 
         # Create authenticated user with add_user permission
         self.auth_user = User.objects.create(
@@ -638,7 +637,8 @@ Jane,Smith,jane.smith@example.com,Brand B,n,y,n"""
         john = User.objects.get(email='john.doe@example.com')
         self.assertEqual(john.first_name, 'John')
         self.assertEqual(john.last_name, 'Doe')
-        self.assertEqual(john.brand.name, 'Brand A')
+        # Verify label was assigned (Brand A should be created as label)
+        self.assertTrue(john.labels.filter(name='Brand A').exists())
         self.assertTrue(john.groups.filter(name='Beheerder').exists())
         self.assertFalse(john.groups.filter(name='Consultant').exists())
 
@@ -647,14 +647,14 @@ Jane,Smith,jane.smith@example.com,Brand B,n,y,n"""
         self.assertTrue(jane.groups.filter(name='Consultant').exists())
         self.assertFalse(jane.groups.filter(name='Beheerder').exists())
 
-    def test_import_reuses_existing_brands(self):
-        """Test that import reuses existing brands instead of creating duplicates"""
+    def test_import_reuses_existing_labels(self):
+        """Test that import reuses existing labels instead of creating duplicates"""
         self.client.force_login(self.auth_user)
         csv_content = f"""first_name,last_name,email,brand,Administrator,Consultant,BDM
-John,Doe,john.doe@example.com,{self.existing_brand.name},n,n,n"""
+John,Doe,john.doe@example.com,{self.existing_label.name},n,n,n"""
         csv_file = self._create_csv_file(csv_content)
 
-        brand_count_before = Brand.objects.count()
+        label_count_before = Label.objects.count()
 
         response = self.client.post(
             self.import_url,
@@ -664,10 +664,10 @@ John,Doe,john.doe@example.com,{self.existing_brand.name},n,n,n"""
         self.assertEqual(response.status_code, 200)
         content = response.content.decode()
         self.assertIn('Import geslaagd', content)
-        self.assertEqual(Brand.objects.count(), brand_count_before)
+        self.assertEqual(Label.objects.count(), label_count_before)
 
         john = User.objects.get(email='john.doe@example.com')
-        self.assertEqual(john.brand, self.existing_brand)
+        self.assertTrue(john.labels.filter(id=self.existing_label.id).exists())
 
     def test_import_validates_missing_required_columns(self):
         """Test that import validates required columns are present"""
@@ -811,7 +811,7 @@ John,Doe,john@example.com"""
         self.assertIn('Import geslaagd', content)
 
         john = User.objects.get(email='john@example.com')
-        self.assertIsNone(john.brand)
+        self.assertEqual(john.labels.count(), 0)
         self.assertEqual(john.groups.count(), 0)
 
     def test_import_with_multiple_groups(self):
@@ -908,4 +908,4 @@ Jane,Smith,invalid-email"""
         john = User.objects.get(email='john@example.com')
         self.assertEqual(john.first_name, 'John')
         self.assertEqual(john.last_name, 'Doe')
-        self.assertEqual(john.brand.name, 'Brand A')
+        self.assertTrue(john.labels.filter(name='Brand A').exists())

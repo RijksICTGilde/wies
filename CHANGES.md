@@ -26,6 +26,11 @@ This files lists the changes during the lifetime of this project.
 - 114: Add support for combining panel & filter URLs 
 - 114: Remove legacy detail pages
 - 114: Add filtering for clients and ministries from panel
+- 113: replace brand table with label system for more flexibility
+- 113: dedicated admin page for user and label management
+- 113: move django admin panel to `/djadmin/`
+- 113: fix enter press in user search does not trigger user create
+- 113: generalized user_form_modal -> generic_form_modal
 
 ## 2025-10-09
 - add period filter to placement page

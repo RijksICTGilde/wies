@@ -32,7 +32,7 @@ class AccessControlTest(TestCase):
 
         LOGIN_NOT_REQUIRED_PATHS = [
             '/login/',
-            '/admin/login/',
+            '/djadmin/login/',
             '/no-access/',
             # '/auth/',  # /auth/ requires OIDC state and will raise an error without it. this path is tested in test_auth_views.py with proper mocking
             # '/logout/',  # logout redirects to login. tested in test_auth_view in detail
@@ -53,8 +53,8 @@ class AccessControlTest(TestCase):
     def test_admin_views_require_authentication(self):
         """Test that admin views require authentication"""
         admin_paths = [
-            '/admin/',
-            '/admin/db/',
+            '/djadmin/',
+            '/djadmin/db/',
         ]
 
         for path in admin_paths:
@@ -62,10 +62,10 @@ class AccessControlTest(TestCase):
                 response = self.client.get(path, follow=False)
 
                 self.assertEqual(response.status_code, 302)
-                self.assertTrue(response.url.startswith('/admin/login/'))
+                self.assertTrue(response.url.startswith('/djadmin/login/'))
 
     def test_superuser_can_access_admin_db(self):
-        """Test that superuser can access /admin/db/ view"""
+        """Test that superuser can access /djadmin/db/ view"""
         superuser = User.objects.create(
             username="admin",
             email="admin@example.com",
@@ -76,15 +76,15 @@ class AccessControlTest(TestCase):
         )
         self.client.force_login(superuser)
 
-        response = self.client.get('/admin/db/')
+        response = self.client.get('/djadmin/db/')
 
         self.assertEqual(response.status_code, 200)
 
     def test_non_superuser_cannot_access_admin_db(self):
-        """Test that non-superuser cannot access /admin/db/ view"""
+        """Test that non-superuser cannot access /djadmin/db/ view"""
         self.client.force_login(self.test_user)
 
-        response = self.client.get('/admin/db/', follow=False)
+        response = self.client.get('/djadmin/db/', follow=False)
 
         # Should redirect (either to admin login or show access denied)
         self.assertEqual(response.status_code, 302)
