@@ -1,0 +1,12 @@
+<svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background rectangle with RVO hemelblauw-150 color -->
+  <rect width="60" height="60" rx="4" fill="#E6F2FF"/>
+  
+  <!-- Person icon in RVO logoblauw color -->
+  <g transform="translate(18, 16)">
+    <!-- Head -->
+    <circle cx="12" cy="8" r="6" fill="#01689B"/>
+    <!-- Body -->
+    <path d="M2 28C2 22.4772 6.47715 18 12 18C17.5228 18 22 22.4772 22 28V28H2V28Z" fill="#01689B"/>
+  </g>
+</svg>

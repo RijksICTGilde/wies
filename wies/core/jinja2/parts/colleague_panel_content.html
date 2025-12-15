@@ -1,0 +1,56 @@
+<div class="rvo-layout-column rvo-layout-gap--lg">
+
+  <section>    
+    <div class="rvo-card rvo-card--with-image rvo-card--with-image-sm rvo-card--outline rvo-card--padding--sm">
+      <div class="rvo-card__image-container">
+        <img alt="Profielfoto van {{ colleague.name }}" 
+             class="rvo-card__image rvo-card-img--sm" 
+             src="{{ static('img/placeholder-avatar.svg') }}" />
+      </div>
+      <div class="rvo-card__content">
+        <div class="rvo-layout-column rvo-layout-gap--sm">
+          <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin rvo-heading--gap-xs">{{ colleague.name }}</h3>
+          <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
+            <span class="utrecht-icon rvo-icon rvo-icon-mail rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="E-mail"></span>
+            <a href="mailto:{{ colleague.email }}" class="rvo-link">{{ colleague.email }}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <section>
+    <h2>Opdrachten</h2>
+    
+    {% if assignment_list %}
+      <div class="rvo-layout-column rvo-layout-gap--sm">
+        {% for assignment in assignment_list %}
+          <div class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row"
+               hx-get="/placements/?{% for key, value in request.GET.items() %}{% if key not in ['colleague', 'assignment'] %}{{ key }}={{ value }}&{% endif %}{% endfor %}colleague={{ assignment.placement_id }}&assignment={{ assignment.id }}"
+               hx-target="#sidepanel-container"
+               hx-push-url="true">
+            <div class="rvo-card__content">
+              <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin">
+                {{ assignment.name }}
+              </h3>
+              <div class="rvo-text">{{ assignment.organization }}</div>
+              {% if assignment.skill %}
+              <div class="assignment-skill-tag">
+                <span class="rvo-tag rvo-tag--default">{{ assignment.skill }}</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="rvo-card rvo-card--outline rvo-card--padding--md">
+        <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center">
+          <span class="utrecht-icon rvo-icon rvo-icon-info rvo-icon--xs" role="img" aria-label="Informatie"></span>
+          <span class="rvo-text--italic rvo-text--subtle">Geen opdrachten gevonden voor deze collega.</span>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+
+</div>

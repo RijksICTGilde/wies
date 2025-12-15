@@ -1,0 +1,92 @@
+<div class="rvo-layout-column rvo-layout-gap--lg">
+
+  <section>
+    <h2>Opdracht gegevens</h2>
+    
+    <dl class="rvo-data-list">
+      <dt>Opdracht naam</dt>
+      <dd>{{ assignment.name }}</dd>
+      
+      <dt>Opdrachtgever</dt>
+      <dd>{{ assignment.organization }}</dd>
+      
+      <dt>Ministerie</dt>
+      <dd>
+        {% if assignment.ministry %}
+          {{ assignment.ministry.name }}
+        {% else %}
+          <span class="rvo-text--italic rvo-text--subtle">Geen ministerie opgegeven</span>
+        {% endif %}
+      </dd>
+      
+      <dt>Periode</dt>
+      <dd>
+        {% if assignment.start_date or assignment.end_date %}
+          {{ assignment.start_date.strftime("%-d %b %Y") if assignment.start_date else "?" }} - {{ assignment.end_date.strftime("%-d %b %Y") if assignment.end_date else "?" }}
+        {% else %}
+          <span class="rvo-text--italic rvo-text--subtle">Geen periode opgegeven</span>
+        {% endif %}
+      </dd>
+      
+      {% if assignment.extra_info %}
+      <dt>Extra informatie</dt>
+      <dd>{{ assignment.extra_info }}</dd>
+      {% endif %}
+      
+      {% if assignment.source != 'wies' %}
+      <dt>Externe bron</dt>
+      <dd>
+        {% if assignment.source_url %}
+          <a href="{{ assignment.source_url }}" target="_blank" class="rvo-link">
+            {{ assignment.get_source_display() }}
+            <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs" role="img" aria-label="Externe link"></span>
+          </a>
+        {% else %}
+          {{ assignment.get_source_display() }}
+        {% endif %}
+      </dd>
+      {% endif %}
+    </dl>
+  </section>
+
+  <section>
+    <h2>Team</h2>
+    
+    {% if placements %}
+      <div class="rvo-item-list">
+        {% for placement in placements %}
+          <div class="rvo-item-list__item clickable-row"
+               hx-get="/placements/?colleague={{ placement.id }}"
+               hx-target="#sidepanel-container"
+               hx-push-url="?{% for key, value in request.GET.items() %}{% if key not in ['colleague', 'assignment'] %}{{ key }}={{ value }}&{% endif %}{% endfor %}colleague={{ placement.id }}"
+               title="Bekijk {{ placement.colleague.name }}">
+            <div class="placement-details-header">
+              <div class="user-table-cell">
+                <div class="user-avatar">
+                  {{ placement.colleague.name|first|upper }}
+                </div>
+                <div class="user-info">
+                  <strong>{{ placement.colleague.name }}</strong>
+                </div>
+              </div>
+              <div>
+                {% if placement.service.skill %}
+                  <span class="rvo-tag rvo-tag--default">{{ placement.service.skill.name }}</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="rvo-card rvo-card--outline rvo-card--padding-md">
+        <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center">
+          <span class="utrecht-icon rvo-icon rvo-icon-info rvo-icon--xs" role="img" aria-label="Informatie"></span>
+          <span class="rvo-text--italic rvo-text--subtle">Geen team leden gevonden voor deze opdracht.</span>
+        </div>
+      </div>
+    {% endif %}
+  </section>
+
+
+</div>

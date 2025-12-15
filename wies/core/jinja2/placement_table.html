@@ -2,6 +2,8 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ static('css/placements.css') }}">
+<link rel="stylesheet" href="{{ static('css/sidepanel.css') }}">
+<script src="{{ static('js/sidepanel.js') }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -18,6 +20,11 @@
     {% include 'parts/placement_table.html' %}
   </div>
 
+</div>
+
+<!-- Side Panel Container -->
+<div id="sidepanel-container" 
+     hx-on:htmx:afterSwap="if(document.getElementById('sidepanel')) { document.body.classList.add('panel-open') } else { document.body.classList.remove('panel-open') }">
 </div>
 
 {% endblock %}

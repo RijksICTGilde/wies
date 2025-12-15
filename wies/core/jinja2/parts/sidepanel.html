@@ -1,0 +1,48 @@
+<div class="rvo-dialog__background" id="sidepanel-overlay">
+  <dialog class="rvo-dialog rvo-dialog--wit rvo-dialog--inset-inline-end"
+          aria-expanded="true"
+          aria-label="{{ panel_title }}"
+          id="sidepanel"
+          open>
+    
+    <div class="rvo-dialog__close">
+      <button class="utrecht-button utrecht-button--subtle rvo-dialog__close-button utrecht-button--rvo-md"
+              type="button"
+              onclick="closeSidepanel('{{ close_url }}')">
+        <span class="utrecht-icon rvo-icon rvo-icon-kruis rvo-icon--md rvo-icon--hemelblauw rvo-dialog__close-icon" 
+              role="img" 
+              aria-label="Kruis"></span>
+        Sluiten
+      </button>
+    </div>
+    
+    <div class="rvo-dialog__content">
+      {% if breadcrumb_items %}
+      <ol class="rvo-breadcrumbs rvo-breadcrumbs--lg">
+        {% for item in breadcrumb_items %}
+          <li class="rvo-breadcrumbs-item">
+            {% if not loop.first %}
+              <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw"
+                    role="img"
+                    aria-label="Delta naar rechts"></span>
+            {% endif %}
+            {% if loop.last %}
+              <span class="rvo-breadcrumb-current-page">{{ item.text }}</span>
+            {% else %}
+              <button class="rvo-link rvo-link--no-underline rvo-breadcrumb-button"
+                      type="button"
+                      hx-get="{{ item.url }}"
+                      hx-target="#sidepanel-container"
+                      hx-push-url="true">
+                {{ item.text }}
+              </button>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+      {% endif %}
+            
+      {% include panel_content_template %}
+    </div>
+  </dialog>
+</div>
