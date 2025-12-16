@@ -24,12 +24,8 @@ This files lists the changes during the lifetime of this project.
 - Fix that RVOMixin uses proper jinja environment (enabling components and other functions)
 - 114: Implement right-side panel with colleague and assignment details
 - 114: Add deep-linking support for panel URLs (/placements// and /placements assignment_id/)
-- 114: Use RVO design system components and proper styling
-- 114: Add HTMX integration for dynamic loading
-- 114: Support browser back/forward navigation
-- 114: Include proper focus management and keyboard accessibility
-- 114: Extract CSS and JS to separate files for maintainability
-
+- 114: Add HTMX integration for dynamic loading panels
+- 114: Remove legacy detail pages
 
 ## 2025-10-09
 - add period filter to placement page
