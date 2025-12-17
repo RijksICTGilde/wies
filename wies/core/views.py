@@ -168,12 +168,17 @@ class PlacementListView(ListView):
 
     def get_template_names(self):
         """Return appropriate template based on request type"""
+        print(f"DEBUG: HX-Request header: {'HX-Request' in self.request.headers}")
+        print(f"DEBUG: Request headers: {dict(self.request.headers)}")
         if 'HX-Request' in self.request.headers:
             # If paginating, return only rows
             if self.request.GET.get('page'):
+                print("DEBUG: Returning table rows template")
                 return ['parts/placement_table_rows.html']
             # Otherwise, return full table (for filter changes)
+            print("DEBUG: Returning partial table template")
             return ['parts/placement_table.html']
+        print("DEBUG: Returning full page template")
         return ['placement_table.html']
     
     def get(self, request, *args, **kwargs):

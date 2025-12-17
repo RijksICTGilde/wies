@@ -3,7 +3,6 @@
 {% block extra_head %}
 <link rel="stylesheet" href="{{ static('css/placements.css') }}">
 <link rel="stylesheet" href="{{ static('css/panel.css') }}">
-<script src="{{ static('js/sidepanel.js') }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -38,6 +37,15 @@
     {% include 'parts/sidepanel.html' %}
     <script>
       document.body.classList.add('panel-open');
+      // ESC key handler for closing panel
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          const closeButton = document.querySelector('#sidepanel-overlay .rvo-dialog__close-button');
+          if (closeButton) {
+            closeButton.click();
+          }
+        }
+      });
     </script>
   {% endif %}
 </div>
