@@ -168,17 +168,12 @@ class PlacementListView(ListView):
 
     def get_template_names(self):
         """Return appropriate template based on request type"""
-        print(f"DEBUG: HX-Request header: {'HX-Request' in self.request.headers}")
-        print(f"DEBUG: Request headers: {dict(self.request.headers)}")
         if 'HX-Request' in self.request.headers:
             # If paginating, return only rows
             if self.request.GET.get('page'):
-                print("DEBUG: Returning table rows template")
                 return ['parts/placement_table_rows.html']
             # Otherwise, return full table (for filter changes)
-            print("DEBUG: Returning partial table template")
             return ['parts/placement_table.html']
-        print("DEBUG: Returning full page template")
         return ['placement_table.html']
     
     def get(self, request, *args, **kwargs):
@@ -280,7 +275,7 @@ class PlacementListView(ListView):
                     {'text': colleague.name, 'url': colleague_url},
                     {'text': assignment.name, 'url': None}
                 ]
-            except:
+            except (Placement.DoesNotExist, AttributeError):
                 pass
         
         return render(request, 'parts/sidepanel.html', {
@@ -479,16 +474,11 @@ class PlacementListView(ListView):
                 try:
                     if colleague_id and not assignment_id:
                         context['panel_data'] = self._get_colleague_panel_data(colleague_id)
-                        print(f"DEBUG: Added colleague panel data for {colleague_id}")
                     elif assignment_id:
                         context['panel_data'] = self._get_assignment_panel_data(assignment_id, colleague_id)
-                        print(f"DEBUG: Added assignment panel data for {assignment_id}")
                 except (Placement.DoesNotExist, Assignment.DoesNotExist):
                     # Invalid panel parameters - ignore
-                    print(f"DEBUG: Invalid panel parameters: colleague={colleague_id}, assignment={assignment_id}")
                     pass
-        else:
-            print("DEBUG: HTMX request, not adding panel data")
 
         return context
 
