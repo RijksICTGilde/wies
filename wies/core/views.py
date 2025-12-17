@@ -287,6 +287,69 @@ class PlacementListView(ListView):
             'placements': placements,
         })
 
+    def _get_colleague_panel_data(self, colleague_id):
+        """Get colleague panel data for server-side rendering"""
+        placement = get_object_or_404(
+            Placement.objects.select_related('colleague', 'colleague__brand'),
+            pk=colleague_id
+        )
+        
+        colleague_assignments = self._get_colleague_assignments(placement.colleague)
+        assignment_list = [
+            {
+                'name': item['service__assignment__name'],
+                'id': item['service__assignment__id'],
+                'placement_id': item['id'],
+                'organization': item['service__assignment__organization'],
+                'ministry': {'name': item['service__assignment__ministry__name']} if item['service__assignment__ministry__name'] else None,
+                'start_date': item['service__assignment__start_date'],
+                'end_date': item['service__assignment__end_date'],
+                'skill': item['service__skill__name'],
+            }
+            for item in colleague_assignments
+        ]
+        
+        return {
+            'panel_content_template': 'parts/colleague_panel_content.html',
+            'panel_title': placement.colleague.name,
+            'breadcrumb_items': None,
+            'close_url': self._build_close_url(self.request),
+            'placement': placement,
+            'colleague': placement.colleague,
+            'assignment_list': assignment_list,
+        }
+
+    def _get_assignment_panel_data(self, assignment_id, colleague_id=None):
+        """Get assignment panel data for server-side rendering"""
+        assignment = get_object_or_404(Assignment, pk=assignment_id)
+        placements = self._get_assignment_placements(assignment)
+        
+        # Build breadcrumb items - only show if we came from colleague panel
+        breadcrumb_items = None
+        if colleague_id:
+            try:
+                colleague = get_object_or_404(Placement, pk=colleague_id).colleague
+                params = QueryDict(mutable=True)
+                params.update(self.request.GET)
+                params.pop('assignment', None)
+                colleague_url = f"/placements/?{params.urlencode()}"
+                
+                breadcrumb_items = [
+                    {'text': colleague.name, 'url': colleague_url},
+                    {'text': assignment.name, 'url': None}
+                ]
+            except (Placement.DoesNotExist, AttributeError):
+                pass
+        
+        return {
+            'panel_content_template': 'parts/assignment_panel_content.html',
+            'panel_title': assignment.name,
+            'breadcrumb_items': breadcrumb_items,
+            'close_url': self._build_close_url(self.request),
+            'assignment': assignment,
+            'placements': placements,
+        }
+
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
@@ -401,7 +464,21 @@ class PlacementListView(ListView):
         else:
             context['next_page_url'] = None
 
-        # Panel state is now handled by HTMX in get() method
+        # Server-side panel rendering
+        colleague_id = self.request.GET.get('colleague')
+        assignment_id = self.request.GET.get('assignment')
+        
+        # Only add panel data for non-HTMX requests (server-side rendering)
+        if not 'HX-Request' in self.request.headers:
+            if colleague_id or assignment_id:
+                try:
+                    if colleague_id and not assignment_id:
+                        context['panel_data'] = self._get_colleague_panel_data(colleague_id)
+                    elif assignment_id:
+                        context['panel_data'] = self._get_assignment_panel_data(assignment_id, colleague_id)
+                except (Placement.DoesNotExist, Assignment.DoesNotExist):
+                    # Invalid panel parameters - ignore
+                    pass
 
         return context
 

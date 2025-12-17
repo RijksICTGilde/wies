@@ -24,10 +24,13 @@
     history.pushState(null, '', newUrl);
   };
   
-  // Close panel on ESC
+  // Close panel on ESC - works with server-side rendering
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
-      document.querySelector('#sidepanel-overlay .rvo-dialog__close-button')?.click();
+      const closeButton = document.querySelector('#sidepanel-overlay .rvo-dialog__close-button');
+      if (closeButton) {
+        closeButton.click();
+      }
     }
   });
   

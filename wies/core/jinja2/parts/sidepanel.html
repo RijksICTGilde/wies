@@ -8,7 +8,7 @@
     <div class="rvo-dialog__close">
       <button class="utrecht-button utrecht-button--subtle rvo-dialog__close-button utrecht-button--rvo-md"
               type="button"
-              onclick="closeSidepanel('{{ close_url }}')">
+              onclick="window.location.href='{{ close_url|safe }}'">
         <span class="utrecht-icon rvo-icon rvo-icon-kruis rvo-icon--md rvo-icon--hemelblauw rvo-dialog__close-icon" 
               role="img" 
               aria-label="Kruis"></span>
@@ -29,13 +29,10 @@
             {% if loop.last %}
               <span class="rvo-breadcrumb-current-page">{{ item.text }}</span>
             {% else %}
-              <button class="rvo-link rvo-link--no-underline rvo-breadcrumb-button"
-                      type="button"
-                      hx-get="{{ item.url }}"
-                      hx-target="#sidepanel-container"
-                      hx-push-url="true">
+              <a class="rvo-link rvo-link--no-underline rvo-breadcrumb-button"
+                 href="{{ item.url|safe }}">
                 {{ item.text }}
-              </button>
+              </a>
             {% endif %}
           </li>
         {% endfor %}

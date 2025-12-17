@@ -1,0 +1,93 @@
+/* RVO Dialog CSS for sidepanel - missing from CDN version */
+.rvo-dialog--inset-inline-end {
+  position: fixed !important;
+  top: 0 !important;
+  right: 0 !important;
+  left: auto !important;
+  height: 100vh !important;
+  width: 600px !important;
+  max-width: 700px !important;
+  min-width: 500px !important;
+  margin: 0 !important;
+  border: none !important;
+  z-index: 999 !important;
+}
+
+.rvo-dialog__background::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+}
+
+.rvo-dialog__close {
+  display: flex;
+  justify-content: flex-end;
+  padding: var(--rvo-space-md);
+}
+
+.rvo-dialog__content {
+  padding: var(--rvo-space-md);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .rvo-dialog--inset-inline-end {
+    width: 100vw;
+    left: 0;
+    right: 0;
+    max-width: none;
+    min-width: none;
+  }
+  
+  .rvo-dialog__background::before {
+    display: none;
+  }
+  
+  .rvo-dialog__close {
+    width: 100%;
+    box-sizing: border-box;
+    background: white;
+  }
+  
+  .rvo-dialog__content {
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+  }
+}
+
+/* Fix RVO card padding being overridden in dialogs - MUST be after dialog CSS */
+.rvo-dialog .rvo-card--padding--md {
+  padding: var(--rvo-space-md) !important;
+}
+
+/* Ensure colleague panel assignment cards have proper padding */
+.rvo-dialog .rvo-layout-column .rvo-card--padding--md {
+  padding: var(--rvo-space-md) !important;
+}
+
+.rvo-dialog .rvo-card--padding--sm {
+  padding: var(--rvo-space-sm) !important;
+}
+
+/* Sidepanel data list styling */
+.rvo-dialog .rvo-data-list {
+  grid-template-columns: 200px 1fr !important;
+}
+
+/* Sidepanel breadcrumbs */
+.rvo-dialog .rvo-breadcrumbs {
+  margin-bottom: var(--rvo-space-md);
+}
+
+/* Breadcrumb button styling */
+.rvo-dialog .rvo-breadcrumb-button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}

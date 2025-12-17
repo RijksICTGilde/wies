@@ -56,9 +56,8 @@
       <div class="rvo-item-list">
         {% for placement in placements %}
           <div class="rvo-item-list__item clickable-row"
-               hx-get="/placements/?colleague={{ placement.id }}"
-               hx-target="#sidepanel-container"
-               hx-push-url="?{% for key, value in request.GET.items() %}{% if key not in ['colleague', 'assignment'] %}{{ key }}={{ value }}&{% endif %}{% endfor %}colleague={{ placement.id }}"
+               onclick="window.location.href='/placements/?{% for key, value in request.GET.items() %}{% if key not in ['colleague', 'assignment'] %}{{ key }}={{ value }}&{% endif %}{% endfor %}colleague={{ placement.id }}'"
+               style="cursor: pointer;"
                title="Bekijk {{ placement.colleague.name }}">
             <div class="placement-details-header">
               <div class="user-table-cell">

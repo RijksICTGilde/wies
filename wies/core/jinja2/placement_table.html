@@ -2,7 +2,7 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ static('css/placements.css') }}">
-<link rel="stylesheet" href="{{ static('css/sidepanel.css') }}">
+<link rel="stylesheet" href="{{ static('css/panel.css') }}">
 <script src="{{ static('js/sidepanel.js') }}"></script>
 {% endblock %}
 
@@ -25,6 +25,14 @@
 <!-- Side Panel Container -->
 <div id="sidepanel-container" 
      hx-on:htmx:afterSwap="if(document.getElementById('sidepanel')) { document.body.classList.add('panel-open') } else { document.body.classList.remove('panel-open') }">
+  {% if panel_data %}
+    {% with panel_data.panel_content_template as panel_content_template, panel_data.panel_title as panel_title, panel_data.breadcrumb_items as breadcrumb_items, panel_data.close_url as close_url, panel_data.placement as placement, panel_data.colleague as colleague, panel_data.assignment_list as assignment_list, panel_data.assignment as assignment, panel_data.placements as placements %}
+      {% include 'parts/sidepanel.html' %}
+    {% endwith %}
+    <script>
+      document.body.classList.add('panel-open');
+    </script>
+  {% endif %}
 </div>
 
 {% endblock %}
