@@ -474,11 +474,16 @@ class PlacementListView(ListView):
                 try:
                     if colleague_id and not assignment_id:
                         context['panel_data'] = self._get_colleague_panel_data(colleague_id)
+                        print(f"DEBUG: Added colleague panel data for {colleague_id}")
                     elif assignment_id:
                         context['panel_data'] = self._get_assignment_panel_data(assignment_id, colleague_id)
+                        print(f"DEBUG: Added assignment panel data for {assignment_id}")
                 except (Placement.DoesNotExist, Assignment.DoesNotExist):
                     # Invalid panel parameters - ignore
+                    print(f"DEBUG: Invalid panel parameters: colleague={colleague_id}, assignment={assignment_id}")
                     pass
+        else:
+            print("DEBUG: HTMX request, not adding panel data")
 
         return context
 

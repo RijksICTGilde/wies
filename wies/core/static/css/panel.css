@@ -13,15 +13,17 @@
   z-index: 999 !important;
 }
 
-.rvo-dialog__background::before {
+/* Only show overlay when panel is actually present */
+#sidepanel-container:not(:empty) .rvo-dialog__background::before {
   content: "";
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
+  width: calc(100vw - 600px);
   height: 100vh;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 998;
+  background-color: rgba(0, 0, 0, 0.3);
+  z-index: 1;
+  pointer-events: none;
 }
 
 .rvo-dialog__close {
