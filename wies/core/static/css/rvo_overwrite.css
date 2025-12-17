@@ -8,17 +8,6 @@
   cursor: pointer;
 }
 
-/* Placement details header */
-.placement-details-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* Assignment skill tag spacing */
-.assignment-skill-tag {
-  margin-top: 8px;
-}
 
 
 .rvo-table-header--active-sort {

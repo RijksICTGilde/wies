@@ -93,3 +93,15 @@
   cursor: pointer;
   padding: 0;
 }
+
+/* Placement details header - used in sidepanel */
+.placement-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Assignment skill tag spacing - used in sidepanel */
+.assignment-skill-tag {
+  margin-top: 8px;
+}
