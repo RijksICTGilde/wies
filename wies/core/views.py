@@ -169,29 +169,22 @@ class PlacementListView(ListView):
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if 'HX-Request' in self.request.headers:
-            # If paginating, return only rows
             if self.request.GET.get('page'):
                 return ['parts/placement_table_rows.html']
-            # Otherwise, return full table (for filter changes)
             return ['parts/placement_table.html']
         return ['placement_table.html']
     
     def get(self, request, *args, **kwargs):
         """Handle GET requests including panel requests via query parameters"""
-        # Check for panel requests via query parameters
         colleague_id = request.GET.get('colleague')
         assignment_id = request.GET.get('assignment')
         
         if 'HX-Request' in request.headers:
-            # Handle colleague panel
             if colleague_id and not assignment_id:
                 return self._render_colleague_panel(request, colleague_id)
                 
-            # Handle assignment panel (with optional colleague context)
             if assignment_id:
                 return self._render_assignment_panel(request, assignment_id, colleague_id)
-                
-            # This is a filter request - fall through to normal ListView handling
                 
         return super().get(request, *args, **kwargs)
 
@@ -464,11 +457,9 @@ class PlacementListView(ListView):
         else:
             context['next_page_url'] = None
 
-        # Server-side panel rendering
         colleague_id = self.request.GET.get('colleague')
         assignment_id = self.request.GET.get('assignment')
         
-        # Only add panel data for non-HTMX requests (server-side rendering)
         if not 'HX-Request' in self.request.headers:
             if colleague_id or assignment_id:
                 try:
@@ -477,7 +468,6 @@ class PlacementListView(ListView):
                     elif assignment_id:
                         context['panel_data'] = self._get_assignment_panel_data(assignment_id, colleague_id)
                 except (Placement.DoesNotExist, Assignment.DoesNotExist):
-                    # Invalid panel parameters - ignore
                     pass
 
         return context
