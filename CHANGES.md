@@ -23,8 +23,7 @@ This files lists the changes during the lifetime of this project.
 - (migration) Make email unique in db
 - Fix that RVOMixin uses proper jinja environment (enabling components and other functions)
 - 114: Implement right-side panel with colleague and assignment details
-- 114: Add deep-linking support for panel URLs (/placements// and /placements assignment_id/)
-- 114: Add HTMX integration for dynamic loading panels
+- 114: Add support for combining panel & filter URLs 
 - 114: Remove legacy detail pages
 
 ## 2025-10-09
