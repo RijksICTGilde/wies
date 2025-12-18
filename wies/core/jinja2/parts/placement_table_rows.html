@@ -1,6 +1,6 @@
 {% for placement in object_list %}
   <tr class="rvo-table-row clickable-row" 
-      onclick="window.location.href='/placements/?{% for key, value in request.GET.items() %}{% if key not in ['colleague', 'assignment'] %}{{ key }}={{ value }}&{% endif %}{% endfor %}colleague={{ placement.id }}'"
+      onclick="window.location.href='/placements/?{% for key, value in request.GET.items() %}{% if key not in ['colleague', 'assignment'] %}{{ key }}={{ value }}&{% endif %}{% endfor %}colleague={{ placement.colleague.id }}'"
       style="cursor: pointer;">
     <td class="rvo-table-cell">
       <div class="user-table-cell">

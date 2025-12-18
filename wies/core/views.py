@@ -213,17 +213,16 @@ class PlacementListView(ListView):
 
     def _render_colleague_panel(self, request, colleague_id):
         """Render colleague panel via HTMX"""
-        placement = get_object_or_404(
-            Placement.objects.select_related('colleague', 'colleague__brand'),
+        colleague = get_object_or_404(
+            Colleague.objects.select_related('brand'),
             pk=colleague_id
         )
         
-        colleague_assignments = self._get_colleague_assignments(placement.colleague)
+        colleague_assignments = self._get_colleague_assignments(colleague)
         assignment_list = [
             {
                 'name': item['service__assignment__name'],
                 'id': item['service__assignment__id'],
-                'placement_id': item['id'],
                 'organization': item['service__assignment__organization'],
                 'ministry': {'name': item['service__assignment__ministry__name']} if item['service__assignment__ministry__name'] else None,
                 'start_date': item['service__assignment__start_date'],
@@ -235,11 +234,10 @@ class PlacementListView(ListView):
         
         return render(request, 'parts/sidepanel.html', {
             'panel_content_template': 'parts/colleague_panel_content.html',
-            'panel_title': placement.colleague.name,
+            'panel_title': colleague.name,
             'breadcrumb_items': None,
             'close_url': self._build_close_url(request),
-            'placement': placement,
-            'colleague': placement.colleague,
+            'colleague': colleague,
             'assignment_list': assignment_list,
         })
 
@@ -258,7 +256,7 @@ class PlacementListView(ListView):
         breadcrumb_items = None
         if colleague_id:
             try:
-                colleague = get_object_or_404(Placement, pk=colleague_id).colleague
+                colleague = Colleague.objects.get(pk=colleague_id)
                 params = QueryDict(mutable=True)
                 params.update(request.GET)
                 params.pop('assignment', None)
@@ -268,7 +266,8 @@ class PlacementListView(ListView):
                     {'text': colleague.name, 'url': colleague_url},
                     {'text': assignment.name, 'url': None}
                 ]
-            except (Placement.DoesNotExist, AttributeError):
+            except Colleague.DoesNotExist:
+                # Skip breadcrumbs but show assignment panel
                 pass
         
         return render(request, 'parts/sidepanel.html', {
@@ -282,17 +281,16 @@ class PlacementListView(ListView):
 
     def _get_colleague_panel_data(self, colleague_id):
         """Get colleague panel data for server-side rendering"""
-        placement = get_object_or_404(
-            Placement.objects.select_related('colleague', 'colleague__brand'),
+        colleague = get_object_or_404(
+            Colleague.objects.select_related('brand'),
             pk=colleague_id
         )
         
-        colleague_assignments = self._get_colleague_assignments(placement.colleague)
+        colleague_assignments = self._get_colleague_assignments(colleague)
         assignment_list = [
             {
                 'name': item['service__assignment__name'],
                 'id': item['service__assignment__id'],
-                'placement_id': item['id'],
                 'organization': item['service__assignment__organization'],
                 'ministry': {'name': item['service__assignment__ministry__name']} if item['service__assignment__ministry__name'] else None,
                 'start_date': item['service__assignment__start_date'],
@@ -304,11 +302,10 @@ class PlacementListView(ListView):
         
         return {
             'panel_content_template': 'parts/colleague_panel_content.html',
-            'panel_title': placement.colleague.name,
+            'panel_title': colleague.name,
             'breadcrumb_items': None,
             'close_url': self._build_close_url(self.request),
-            'placement': placement,
-            'colleague': placement.colleague,
+            'colleague': colleague,
             'assignment_list': assignment_list,
         }
 
@@ -321,7 +318,7 @@ class PlacementListView(ListView):
         breadcrumb_items = None
         if colleague_id:
             try:
-                colleague = get_object_or_404(Placement, pk=colleague_id).colleague
+                colleague = Colleague.objects.get(pk=colleague_id)
                 params = QueryDict(mutable=True)
                 params.update(self.request.GET)
                 params.pop('assignment', None)
@@ -331,7 +328,8 @@ class PlacementListView(ListView):
                     {'text': colleague.name, 'url': colleague_url},
                     {'text': assignment.name, 'url': None}
                 ]
-            except (Placement.DoesNotExist, AttributeError):
+            except Colleague.DoesNotExist:
+                # Skip breadcrumbs but show assignment panel
                 pass
         
         return {
@@ -467,7 +465,8 @@ class PlacementListView(ListView):
                         context['panel_data'] = self._get_colleague_panel_data(colleague_id)
                     elif assignment_id:
                         context['panel_data'] = self._get_assignment_panel_data(assignment_id, colleague_id)
-                except (Placement.DoesNotExist, Assignment.DoesNotExist):
+                except (Colleague.DoesNotExist, Assignment.DoesNotExist):
+                    # Invalid panel parameters - ignore
                     pass
 
         return context
