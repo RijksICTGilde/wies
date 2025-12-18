@@ -8,12 +8,18 @@
       <dd>{{ assignment.name }}</dd>
       
       <dt>Opdrachtgever</dt>
-      <dd>{{ assignment.organization }}</dd>
+      <dd>
+        <a href="/placements/?client={{ assignment.organization|urlencode }}" class="rvo-link" title="Filter op {{ assignment.organization }}">
+          {{ assignment.organization }}
+        </a>
+      </dd>
       
       <dt>Ministerie</dt>
       <dd>
         {% if assignment.ministry %}
-          {{ assignment.ministry.name }}
+          <a href="/placements/?ministry={{ assignment.ministry.id }}" class="rvo-link" title="Filter op {{ assignment.ministry.name }}">
+            {{ assignment.ministry.name }}
+          </a>
         {% else %}
           <span class="rvo-text--italic rvo-text--subtle">Geen ministerie opgegeven</span>
         {% endif %}
