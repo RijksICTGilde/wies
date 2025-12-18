@@ -156,8 +156,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initial update
   updateFilterIndicator();
 
-  // Handle back button navigation - refresh page when URL changes via back button
+  // Handle back button navigation - simple page reload for filter sync
   window.addEventListener('popstate', function(event) {
-    window.location.reload();
+    window.location.href = window.location.href;
   });
 });
