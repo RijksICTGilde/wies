@@ -14,7 +14,14 @@ Usage:
   hx-target="{{ target_selector }}"
   hx-push-url="false"
   hx-trigger="change,input delay:500ms from:input"
-  hx-include="[data-filter-input]">
+  hx-include="[data-filter-input]"
+  hx-on:htmx:after-request="
+    // Update URL with history entry for back button support
+    const formData = new FormData(this);
+    const params = new URLSearchParams(formData);
+    const newUrl = window.location.pathname + '?' + params.toString();
+    history.pushState(null, '', newUrl);
+  ">
 
   <!-- Compact filter bar -->
   <div class="filter-bar-bar">
