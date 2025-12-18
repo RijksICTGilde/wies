@@ -25,6 +25,7 @@ This files lists the changes during the lifetime of this project.
 - 114: Implement right-side panel with colleague and assignment details
 - 114: Add support for combining panel & filter URLs 
 - 114: Remove legacy detail pages
+- 114: Add filtering for clients from panel
 
 ## 2025-10-09
 - add period filter to placement page
