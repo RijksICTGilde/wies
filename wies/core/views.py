@@ -191,6 +191,27 @@ class PlacementListView(ListView):
         params['assignment'] = assignment_id
         return f"/placements/?{params.urlencode()}"
 
+    def _build_client_url(self, client_name):
+        """Build client filter URL"""
+        params = QueryDict(mutable=True)
+        params['client'] = client_name
+        return f"/placements/?{params.urlencode()}"
+
+    def _build_ministry_url(self, ministry_id):
+        """Build ministry filter URL"""
+        params = QueryDict(mutable=True)
+        params['ministry'] = ministry_id
+        return f"/placements/?{params.urlencode()}"
+
+    def _build_colleague_url(self, colleague_id):
+        """Build colleague panel URL preserving current filters"""
+        params = QueryDict(mutable=True)
+        params.update(self.request.GET)
+        params.pop('colleague', None)
+        params.pop('assignment', None)
+        params['colleague'] = colleague_id
+        return f"/placements/?{params.urlencode()}"
+
     def _get_colleague_assignments(self, colleague):
         """Get assignments for a colleague"""
         return Placement.objects.filter(
@@ -219,6 +240,7 @@ class PlacementListView(ListView):
                 'start_date': item['service__assignment__start_date'],
                 'end_date': item['service__assignment__end_date'],
                 'skill': item['service__skill__name'],
+                'assignment_url': self._build_assignment_url(self.request, item['service__assignment__id']),
             }
             for item in colleague_assignments
         ]
@@ -234,9 +256,15 @@ class PlacementListView(ListView):
 
     def _get_assignment_panel_data(self, assignment, colleague=None):
         """Get assignment panel data for server-side rendering"""
-        placements = Placement.objects.filter(
+        placements_qs = Placement.objects.filter(
             service__assignment=assignment
         ).select_related('colleague', 'colleague__brand', 'service__skill')
+        
+        # Add colleague URLs to placements
+        placements = []
+        for placement in placements_qs:
+            placement.colleague_url = self._build_colleague_url(placement.colleague.id)
+            placements.append(placement)
         
         # Build breadcrumb items - only show if we came from colleague panel
         breadcrumb_items = None
@@ -258,6 +286,8 @@ class PlacementListView(ListView):
             'close_url': self._build_close_url(self.request),
             'assignment': assignment,
             'placements': placements,
+            'client_url': self._build_client_url(assignment.organization),
+            'ministry_url': self._build_ministry_url(assignment.ministry.id) if assignment.ministry else None,
         }
 
     def get_context_data(self, **kwargs):

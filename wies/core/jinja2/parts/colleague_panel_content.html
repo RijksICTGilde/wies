@@ -9,6 +9,7 @@
       </div>
       <div class="rvo-card__content">
         <div class="rvo-layout-column rvo-layout-gap--sm">
+<!-- To do: switch to components c-h3 -->
           <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin rvo-heading--gap-xs">{{ colleague.name }}</h3>
           <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
             <span class="utrecht-icon rvo-icon rvo-icon-mail rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="E-mail"></span>
@@ -25,9 +26,7 @@
     {% if panel_data.assignment_list %}
       <div class="rvo-layout-column rvo-layout-gap--sm">
         {% for assignment in panel_data.assignment_list %}
-          <div class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row"
-               onclick="window.location.href='/placements/?{% for key, value in request.GET.items() %}{% if key not in ['colleague', 'assignment'] %}{{ key }}={{ value }}&{% endif %}{% endfor %}colleague={{ colleague.id }}&assignment={{ assignment.id }}'"
-               style="cursor: pointer;">
+          <a href="{{ assignment.assignment_url }}" class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row" style="text-decoration: none; color: inherit;">
             <div class="rvo-card__content">
               <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin">
                 {{ assignment.name }}
@@ -39,7 +38,7 @@
               </div>
               {% endif %}
             </div>
-          </div>
+          </a>
         {% endfor %}
       </div>
     {% else %}

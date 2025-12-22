@@ -1,4 +1,4 @@
-/* RVO Dialog CSS for sidepanel - missing from CDN version */
+/* RVO Dialog CSS for side panel - missing from CDN version */
 .rvo-dialog--inset-inline-end {
   position: fixed !important;
   top: 0 !important;
@@ -14,7 +14,7 @@
 }
 
 /* Only show overlay when panel is actually present */
-#sidepanel-container:not(:empty) .rvo-dialog__background::before {
+#side_panel-container:not(:empty) .rvo-dialog__background::before {
   content: "";
   position: fixed;
   top: 0;
@@ -95,14 +95,26 @@
   padding: 0;
 }
 
-/* Placement details header - used in sidepanel */
+/* Placement details header - used in side panel */
 .placement-details-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-/* Assignment skill tag spacing - used in sidepanel */
+/* Ensure item list links don't break the layout */
+.rvo-item-list__item {
+  display: block;
+  width: 100%;
+}
+
+.rvo-item-list__item .placement-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Assignment skill tag spacing - used in side panel */
 .assignment-skill-tag {
   margin-top: 8px;
 }

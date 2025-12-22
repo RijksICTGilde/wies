@@ -134,10 +134,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Count active filters
     form.querySelectorAll('[data-filter-input]').forEach(input => {
-      if (input.value !== '') {
+      if (input.value !== '' && input.value !== '0') {
         activeFilters++;
       }
     });
+
+    // Also count search field
+    const searchField = form.querySelector('#search');
+    if (searchField && searchField.value !== '') {
+      activeFilters++;
+    }
 
     // Update button text and state
     if (activeFilters > 0) {

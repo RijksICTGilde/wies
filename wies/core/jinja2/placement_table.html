@@ -2,7 +2,7 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ static('css/placements.css') }}">
-<link rel="stylesheet" href="{{ static('css/panel.css') }}">
+<link rel="stylesheet" href="{{ static('css/side_panel.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -22,26 +22,32 @@
 </div>
 
 <!-- Side Panel Container -->
-<div id="sidepanel-container">
+<div id="side_panel-container">
   {% if panel_data %}
     {% set colleague = panel_data.colleague %}
     {% set assignment = panel_data.assignment %}
-    {% include 'parts/sidepanel.html' %}
+    {% include 'parts/side_panel.html' %}
 
     <script>
-      // ESC key handler - navigate to close URL (server-side)
+      // ESC key handler - click the close button
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
           console.log('Escape key pressed - closing side panel');
-          window.location.href = '{{ panel_data.close_url|safe }}';
+          const closeBtn = document.querySelector('#side_panel .rvo-dialog__close a');
+          if (closeBtn) {
+            closeBtn.click();
+          }
         }
       });
       
       // Click outside panel to close
-      document.getElementById('sidepanel-overlay').addEventListener('click', function(e) {
+      document.getElementById('side_panel-overlay').addEventListener('click', function(e) {
         // Only close if clicked on the overlay itself, not on dialog content
         if (e.target === this) {
-          window.location.href = '{{ panel_data.close_url|safe }}';
+          const closeBtn = document.querySelector('#side_panel .rvo-dialog__close a');
+          if (closeBtn) {
+            closeBtn.click();
+          }
         }
       });
     </script>
