@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', function() {
       if (panel) {
         const closeBtn = panel.querySelector('.rvo-dialog__close a');
         if (closeBtn) {
-          window.location.href = closeBtn.href;
+          closeBtn.click();
         }
       }
     }
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (e.target.classList.contains('rvo-dialog__background')) {
       const closeBtn = e.target.querySelector('.rvo-dialog__close a');
       if (closeBtn) {
-        window.location.href = closeBtn.href;
+        closeBtn.click();
       }
     }
   });
