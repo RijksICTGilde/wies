@@ -22,21 +22,12 @@
 </div>
 
 <!-- Side Panel Container -->
-<div id="sidepanel-container" 
-     hx-on:htmx:afterSwap="if(document.getElementById('sidepanel')) { document.body.classList.add('panel-open') } else { document.body.classList.remove('panel-open') }">
+<div id="sidepanel-container">
   {% if panel_data %}
-    {% set panel_content_template = panel_data.panel_content_template %}
-    {% set panel_title = panel_data.panel_title %}
-    {% set breadcrumb_items = panel_data.breadcrumb_items %}
-    {% set close_url = panel_data.close_url %}
-    {% set placement = panel_data.placement %}
     {% set colleague = panel_data.colleague %}
-    {% set assignment_list = panel_data.assignment_list %}
     {% set assignment = panel_data.assignment %}
-    {% set placements = panel_data.placements %}
     {% include 'parts/sidepanel.html' %}
     <script>
-      document.body.classList.add('panel-open');
       // ESC key handler - navigate to close URL (server-side)
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {

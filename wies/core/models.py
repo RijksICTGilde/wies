@@ -62,13 +62,6 @@ class Colleague(models.Model):
     source_url = models.URLField(null=True, blank=True)
     # placements via reversed relation
 
-    def get_absolute_url(self):
-        # Find a placement for this colleague to use in the sidepanel URL
-        placement = self.placements.first()
-        if placement:
-            return f"{reverse('placements')}?colleague={placement.pk}"
-        return reverse("placements")
-
     def __str__(self):
         return self.name
 
@@ -100,9 +93,6 @@ class Assignment(models.Model):
             return "completed"
         else:
             return "active"
-
-    def get_absolute_url(self):
-        return f"{reverse('placements')}?assignment={self.pk}"
 
     def __str__(self):
         return self.name
@@ -145,9 +135,6 @@ class Placement(models.Model):
             return self.service.end_date
         else:
             return self.specific_end_date
-
-    def get_absolute_url(self):
-        return reverse("placement-detail", kwargs={"pk": self.pk})
 
 
 class Service(models.Model):
@@ -193,6 +180,3 @@ class Service(models.Model):
 
     def __str__(self):
         return f"{self.description} "
-
-    def get_absolute_url(self):
-        return reverse("service-detail", kwargs={"pk": self.pk})

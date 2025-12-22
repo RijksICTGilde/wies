@@ -22,9 +22,9 @@
   <section>
     <h2>Opdrachten</h2>
     
-    {% if assignment_list %}
+    {% if panel_data.assignment_list %}
       <div class="rvo-layout-column rvo-layout-gap--sm">
-        {% for assignment in assignment_list %}
+        {% for assignment in panel_data.assignment_list %}
           <div class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row"
                onclick="window.location.href='/placements/?{% for key, value in request.GET.items() %}{% if key not in ['colleague', 'assignment'] %}{{ key }}={{ value }}&{% endif %}{% endfor %}colleague={{ colleague.id }}&assignment={{ assignment.id }}'"
                style="cursor: pointer;">

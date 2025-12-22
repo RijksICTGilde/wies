@@ -1,14 +1,14 @@
 <div class="rvo-dialog__background" id="sidepanel-overlay">
   <dialog class="rvo-dialog rvo-dialog--wit rvo-dialog--inset-inline-end"
           aria-expanded="true"
-          aria-label="{{ panel_title }}"
+          aria-label="{{ panel_data.panel_title }}"
           id="sidepanel"
           open>
     
     <div class="rvo-dialog__close">
       <button class="utrecht-button utrecht-button--subtle rvo-dialog__close-button utrecht-button--rvo-md"
               type="button"
-              onclick="window.location.href='{{ close_url|safe }}'">
+              onclick="window.location.href='{{ panel_data.close_url }}'">
         <span class="utrecht-icon rvo-icon rvo-icon-kruis rvo-icon--md rvo-icon--hemelblauw rvo-dialog__close-icon" 
               role="img" 
               aria-label="Kruis"></span>
@@ -17,9 +17,9 @@
     </div>
     
     <div class="rvo-dialog__content">
-      {% if breadcrumb_items %}
+      {% if panel_data.breadcrumb_items %}
       <ol class="rvo-breadcrumbs rvo-breadcrumbs--lg">
-        {% for item in breadcrumb_items %}
+        {% for item in panel_data.breadcrumb_items %}
           <li class="rvo-breadcrumbs-item">
             {% if not loop.first %}
               <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw"
@@ -39,7 +39,7 @@
       </ol>
       {% endif %}
             
-      {% include panel_content_template %}
+      {% include panel_data.panel_content_template %}
     </div>
   </dialog>
 </div>

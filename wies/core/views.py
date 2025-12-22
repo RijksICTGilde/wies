@@ -173,20 +173,6 @@ class PlacementListView(ListView):
                 return ['parts/placement_table_rows.html']
             return ['parts/placement_table.html']
         return ['placement_table.html']
-    
-    def get(self, request, *args, **kwargs):
-        """Handle GET requests including panel requests via query parameters"""
-        colleague_id = request.GET.get('colleague')
-        assignment_id = request.GET.get('assignment')
-        
-        if 'HX-Request' in request.headers:
-            if colleague_id and not assignment_id:
-                return self._render_colleague_panel(request, colleague_id)
-                
-            if assignment_id:
-                return self._render_assignment_panel(request, assignment_id, colleague_id)
-                
-        return super().get(request, *args, **kwargs)
 
     def _build_close_url(self, request):
         """Build close URL preserving current filters"""
@@ -211,80 +197,8 @@ class PlacementListView(ListView):
             'service__skill__name'
         ).distinct()
 
-    def _render_colleague_panel(self, request, colleague_id):
-        """Render colleague panel via HTMX"""
-        colleague = get_object_or_404(
-            Colleague.objects.select_related('brand'),
-            pk=colleague_id
-        )
-        
-        colleague_assignments = self._get_colleague_assignments(colleague)
-        assignment_list = [
-            {
-                'name': item['service__assignment__name'],
-                'id': item['service__assignment__id'],
-                'organization': item['service__assignment__organization'],
-                'ministry': {'name': item['service__assignment__ministry__name']} if item['service__assignment__ministry__name'] else None,
-                'start_date': item['service__assignment__start_date'],
-                'end_date': item['service__assignment__end_date'],
-                'skill': item['service__skill__name'],
-            }
-            for item in colleague_assignments
-        ]
-        
-        return render(request, 'parts/sidepanel.html', {
-            'panel_content_template': 'parts/colleague_panel_content.html',
-            'panel_title': colleague.name,
-            'breadcrumb_items': None,
-            'close_url': self._build_close_url(request),
-            'colleague': colleague,
-            'assignment_list': assignment_list,
-        })
-
-    def _get_assignment_placements(self, assignment):
-        """Get placements for an assignment"""
-        return Placement.objects.filter(
-            service__assignment=assignment
-        ).select_related('colleague', 'colleague__brand', 'service__skill')
-
-    def _render_assignment_panel(self, request, assignment_id, colleague_id=None):
-        """Render assignment panel via HTMX"""
-        assignment = get_object_or_404(Assignment, pk=assignment_id)
-        placements = self._get_assignment_placements(assignment)
-        
-        # Build breadcrumb items - only show if we came from colleague panel
-        breadcrumb_items = None
-        if colleague_id:
-            try:
-                colleague = Colleague.objects.get(pk=colleague_id)
-                params = QueryDict(mutable=True)
-                params.update(request.GET)
-                params.pop('assignment', None)
-                colleague_url = f"/placements/?{params.urlencode()}"
-                
-                breadcrumb_items = [
-                    {'text': colleague.name, 'url': colleague_url},
-                    {'text': assignment.name, 'url': None}
-                ]
-            except Colleague.DoesNotExist:
-                # Skip breadcrumbs but show assignment panel
-                pass
-        
-        return render(request, 'parts/sidepanel.html', {
-            'panel_content_template': 'parts/assignment_panel_content.html',
-            'panel_title': assignment.name,
-            'breadcrumb_items': breadcrumb_items,
-            'close_url': self._build_close_url(request),
-            'assignment': assignment,
-            'placements': placements,
-        })
-
-    def _get_colleague_panel_data(self, colleague_id):
+    def _get_colleague_panel_data(self, colleague):
         """Get colleague panel data for server-side rendering"""
-        colleague = get_object_or_404(
-            Colleague.objects.select_related('brand'),
-            pk=colleague_id
-        )
         
         colleague_assignments = self._get_colleague_assignments(colleague)
         assignment_list = [
@@ -309,28 +223,24 @@ class PlacementListView(ListView):
             'assignment_list': assignment_list,
         }
 
-    def _get_assignment_panel_data(self, assignment_id, colleague_id=None):
+    def _get_assignment_panel_data(self, assignment, colleague=None):
         """Get assignment panel data for server-side rendering"""
-        assignment = get_object_or_404(Assignment, pk=assignment_id)
-        placements = self._get_assignment_placements(assignment)
+        placements = Placement.objects.filter(
+            service__assignment=assignment
+        ).select_related('colleague', 'colleague__brand', 'service__skill')
         
         # Build breadcrumb items - only show if we came from colleague panel
         breadcrumb_items = None
-        if colleague_id:
-            try:
-                colleague = Colleague.objects.get(pk=colleague_id)
-                params = QueryDict(mutable=True)
-                params.update(self.request.GET)
-                params.pop('assignment', None)
-                colleague_url = f"/placements/?{params.urlencode()}"
-                
-                breadcrumb_items = [
-                    {'text': colleague.name, 'url': colleague_url},
-                    {'text': assignment.name, 'url': None}
-                ]
-            except Colleague.DoesNotExist:
-                # Skip breadcrumbs but show assignment panel
-                pass
+        if colleague:
+            params = QueryDict(mutable=True)
+            params.update(self.request.GET)
+            params.pop('assignment', None)
+            colleague_url = f"/placements/?{params.urlencode()}"
+            
+            breadcrumb_items = [
+                {'text': colleague.name, 'url': colleague_url},
+                {'text': assignment.name, 'url': None}
+            ]
         
         return {
             'panel_content_template': 'parts/assignment_panel_content.html',
@@ -457,23 +367,29 @@ class PlacementListView(ListView):
 
         colleague_id = self.request.GET.get('colleague')
         assignment_id = self.request.GET.get('assignment')
-        
-        if not 'HX-Request' in self.request.headers:
-            if colleague_id or assignment_id:
-                try:
-                    if colleague_id and not assignment_id:
-                        context['panel_data'] = self._get_colleague_panel_data(colleague_id)
-                    elif assignment_id:
-                        context['panel_data'] = self._get_assignment_panel_data(assignment_id, colleague_id)
-                except (Colleague.DoesNotExist, Assignment.DoesNotExist):
-                    # Invalid panel parameters - ignore
-                    pass
+
+        # if one or both of the ids are invalid, the panel_data is skipped
+        if colleague_id and not assignment_id:
+            try:
+                colleague = Colleague.objects.get(id=colleague_id)
+                context['panel_data'] = self._get_colleague_panel_data(colleague)
+            except Colleague.DoesNotExist:
+                pass
+        elif colleague_id and assignment_id:
+            try:
+                colleague = Colleague.objects.get(id=colleague_id)
+                assignment = Assignment.objects.get(id=assignment_id)
+                context['panel_data'] = self._get_assignment_panel_data(assignment, colleague)
+            except (Colleague.DoesNotExist, Assignment.DoesNotExist):
+                pass
+        elif not colleague_id and assignment_id:
+            try:
+                assignment = Assignment.objects.get(id=assignment_id)
+                context['panel_data'] = self._get_assignment_panel_data(assignment)
+            except Assignment.DoesNotExist:
+                pass
 
         return context
-
-
-
-
 
 
 class UserListView(PermissionRequiredMixin, ListView):

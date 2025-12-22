@@ -2,14 +2,6 @@
   width: 100%;
 }
 
-
-/* Clickable card styling */
-.clickable-row {
-  cursor: pointer;
-}
-
-
-
 .rvo-table-header--active-sort {
   background-color: var(--rvo-color-hemelblauw-150) !important;
   color: var(--rvo-color-hemelblauw-750) !important;
@@ -45,7 +37,3 @@
   -webkit-mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
   mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
 }
-
-
-
-
