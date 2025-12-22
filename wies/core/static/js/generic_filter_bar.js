@@ -139,12 +139,6 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
 
-    // Also count search field
-    const searchField = form.querySelector('#search');
-    if (searchField && searchField.value !== '') {
-      activeFilters++;
-    }
-
     // Update button text and state
     if (activeFilters > 0) {
       filterText.textContent = `Filters (${activeFilters})`;
