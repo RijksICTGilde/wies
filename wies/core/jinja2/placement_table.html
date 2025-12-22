@@ -27,11 +27,21 @@
     {% set colleague = panel_data.colleague %}
     {% set assignment = panel_data.assignment %}
     {% include 'parts/sidepanel.html' %}
+
     <script>
       // ESC key handler - navigate to close URL (server-side)
       document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
-          window.location.href = '{{ close_url|safe }}';
+          console.log('Escape key pressed - closing side panel');
+          window.location.href = '{{ panel_data.close_url|safe }}';
+        }
+      });
+      
+      // Click outside panel to close
+      document.getElementById('sidepanel-overlay').addEventListener('click', function(e) {
+        // Only close if clicked on the overlay itself, not on dialog content
+        if (e.target === this) {
+          window.location.href = '{{ panel_data.close_url|safe }}';
         }
       });
     </script>

@@ -1,8 +1,10 @@
-<div class="rvo-dialog__background" id="sidepanel-overlay">
+<div class="rvo-dialog__background" 
+     id="sidepanel-overlay">
   <dialog class="rvo-dialog rvo-dialog--wit rvo-dialog--inset-inline-end"
           aria-expanded="true"
           aria-label="{{ panel_data.panel_title }}"
           id="sidepanel"
+          onclick="event.stopPropagation()"
           open>
     
     <div class="rvo-dialog__close">

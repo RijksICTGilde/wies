@@ -182,6 +182,15 @@ class PlacementListView(ListView):
         params.pop('assignment', None)
         return f"/placements/?{params.urlencode()}" if params else "/placements/"
 
+    def _build_assignment_url(self, request, assignment_id):
+        """Build assignment panel URL preserving current filters"""
+        params = QueryDict(mutable=True)
+        params.update(request.GET)
+        params.pop('colleague', None)
+        params.pop('assignment', None)
+        params['assignment'] = assignment_id
+        return f"/placements/?{params.urlencode()}"
+
     def _get_colleague_assignments(self, colleague):
         """Get assignments for a colleague"""
         return Placement.objects.filter(
@@ -254,6 +263,10 @@ class PlacementListView(ListView):
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
+        
+        # Add assignment URLs to placement objects
+        for placement in context['object_list']:
+            placement.assignment_url = self._build_assignment_url(self.request, placement.service.assignment.id)
 
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
