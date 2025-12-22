@@ -26,14 +26,6 @@
   pointer-events: auto;
 }
 
-/* Prevent body scroll when panel is open */
-#side_panel-container:not(:empty) ~ * {
-  overflow: hidden;
-}
-
-body:has(#side_panel-container:not(:empty)) {
-  overflow: hidden;
-}
 
 .rvo-dialog__close {
   display: flex;
