@@ -186,7 +186,6 @@ class PlacementListView(ListView):
         """Build assignment panel URL preserving current filters"""
         params = QueryDict(mutable=True)
         params.update(request.GET)
-        params.pop('colleague', None)
         params.pop('assignment', None)
         params['assignment'] = assignment_id
         return f"/placements/?{params.urlencode()}"
