@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Handle ESC key to close panel
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
+      e.preventDefault();
+      e.stopPropagation();
       const panel = document.getElementById('side_panel-overlay');
       if (panel) {
         const closeBtn = panel.querySelector('.rvo-dialog__close a');
