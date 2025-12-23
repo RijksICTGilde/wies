@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="{{ static('js/dialog.js') }}"></script>
+  <title>Document</title>
+</head>
+<body>
+  <h1> Hello page</h1>
+  <p> Content</p>
+
+    <a href="?col=1">to col</a>
+
+  <dialog closedby="any">
+
+    {% if col %}
+    <div id="dialogContent">
+        <h2><code>closedby="any"</code></h2>
+        <p>
+        This is text, controlled by query param. Col = {{ col }}
+        </p>
+    </div>
+    {% endif %}
+    
+    <button class="close">Close</button>
+  </dialog>
+  
+</body>
+</html>

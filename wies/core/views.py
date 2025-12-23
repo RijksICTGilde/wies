@@ -34,6 +34,14 @@ oauth.register(
 )
 
 
+def dialog(request):
+
+    context = {}
+    if "col" in request.GET:
+        context["col"] = request.GET["col"]
+
+    return render(request, 'dialog.html', context=context)
+
 @login_not_required  # login page cannot require login
 def login(request):
     """Display login page or handle login action"""
