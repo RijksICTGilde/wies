@@ -1,7 +1,3 @@
-.rvo-table {
-  width: 100%;
-}
-
 .rvo-table-header--active-sort {
   background-color: var(--rvo-color-hemelblauw-150) !important;
   color: var(--rvo-color-hemelblauw-750) !important;

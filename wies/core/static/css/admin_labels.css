@@ -1,0 +1,4 @@
+/* make sure label names take enough space */
+.rvo-table {
+    table-layout: auto;
+}
