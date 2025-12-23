@@ -31,6 +31,7 @@ This files lists the changes during the lifetime of this project.
 - 113: move django admin panel to `/djadmin/`
 - 113: fix enter press in user search does not trigger user create
 - 113: generalized user_form_modal -> generic_form_modal
+- add wies email adress to no-access page
 
 ## 2025-10-09
 - add period filter to placement page
