@@ -17,6 +17,7 @@ from django.conf import settings
 from django.http import HttpResponse, QueryDict
 from django.utils.safestring import mark_safe
 from django.db.models.functions import Lower
+from django.http import HttpResponseNotFound
 
 
 from authlib.integrations.django_client import OAuth
@@ -957,13 +958,13 @@ def label_create(request, pk):
     if request.method == 'POST':
         category = get_object_or_404(LabelCategory, pk=pk)
         form = LabelForm(request.POST, category_id=category.id)
-
         if form.is_valid(): 
             new_instance = form.save(commit=False)
             new_instance.category = category
             new_instance.save()
 
-            # TODO: the category misses the usage counts on the labels here (see label_category_list)
+            category_qs = LabelCategory.objects.filter(id=category.id)
+            category = annotate_usage_counts(category_qs).get()
 
             return render(request, 'parts/label_category.html', {
                 'category': category
@@ -1005,6 +1006,10 @@ def label_edit(request, pk):
         form = LabelForm(request.POST, instance=label)
         if form.is_valid():
             form.save()
+
+            category_qs = LabelCategory.objects.filter(id=category.id)
+            category = annotate_usage_counts(category_qs).get()
+
             response = render(request, 'parts/label_category.html', {
                 'category': category
             })
@@ -1046,6 +1051,10 @@ def label_delete(request, pk):
         })
     elif request.method == 'POST':
         label.delete()
+
+        category_qs = LabelCategory.objects.filter(id=category.id)
+        category = annotate_usage_counts(category_qs).get()
+
         return render(request, 'parts/label_category.html', {
             'category': category,
         })
