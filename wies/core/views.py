@@ -14,7 +14,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
 from django.conf import settings
-from django.http import HttpResponse
+from django.http import HttpResponse, QueryDict
 
 from authlib.integrations.django_client import OAuth
 
@@ -169,16 +169,133 @@ class PlacementListView(ListView):
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if 'HX-Request' in self.request.headers:
-            # If paginating, return only rows
             if self.request.GET.get('page'):
                 return ['parts/placement_table_rows.html']
-            # Otherwise, return full table (for filter changes)
             return ['parts/placement_table.html']
         return ['placement_table.html']
+
+    def _build_close_url(self, request):
+        """Build close URL preserving current filters"""
+        params = QueryDict(mutable=True)
+        params.update(request.GET)
+        params.pop('colleague', None)
+        params.pop('assignment', None)
+        return f"/placements/?{params.urlencode()}" if params else "/placements/"
+
+    def _build_assignment_url(self, request, assignment_id):
+        """Build assignment panel URL preserving current filters"""
+        params = QueryDict(mutable=True)
+        params.update(request.GET)
+        params.pop('assignment', None)
+        params['assignment'] = assignment_id
+        return f"/placements/?{params.urlencode()}"
+
+    def _build_client_url(self, client_name):
+        """Build client filter URL"""
+        params = QueryDict(mutable=True)
+        params['client'] = client_name
+        return f"/placements/?{params.urlencode()}"
+
+    def _build_ministry_url(self, ministry_id):
+        """Build ministry filter URL"""
+        params = QueryDict(mutable=True)
+        params['ministry'] = ministry_id
+        return f"/placements/?{params.urlencode()}"
+
+    def _build_colleague_url(self, colleague_id):
+        """Build colleague panel URL preserving current filters"""
+        params = QueryDict(mutable=True)
+        params.update(self.request.GET)
+        params.pop('colleague', None)
+        params.pop('assignment', None)
+        params['colleague'] = colleague_id
+        return f"/placements/?{params.urlencode()}"
+
+    def _get_colleague_assignments(self, colleague):
+        """Get assignments for a colleague"""
+        return Placement.objects.filter(
+            colleague=colleague
+        ).select_related(
+            'service__assignment',
+            'service__assignment__ministry',
+            'service__skill'
+        ).values(
+            'id', 'service__assignment__id', 'service__assignment__name',
+            'service__assignment__organization', 'service__assignment__ministry__name',
+            'service__assignment__start_date', 'service__assignment__end_date',
+            'service__skill__name'
+        ).distinct()
+
+    def _get_colleague_panel_data(self, colleague):
+        """Get colleague panel data for server-side rendering"""
+        
+        colleague_assignments = self._get_colleague_assignments(colleague)
+        assignment_list = [
+            {
+                'name': item['service__assignment__name'],
+                'id': item['service__assignment__id'],
+                'organization': item['service__assignment__organization'],
+                'ministry': {'name': item['service__assignment__ministry__name']} if item['service__assignment__ministry__name'] else None,
+                'start_date': item['service__assignment__start_date'],
+                'end_date': item['service__assignment__end_date'],
+                'skill': item['service__skill__name'],
+                'assignment_url': self._build_assignment_url(self.request, item['service__assignment__id']),
+            }
+            for item in colleague_assignments
+        ]
+        
+        return {
+            'panel_content_template': 'parts/colleague_panel_content.html',
+            'panel_title': colleague.name,
+            'breadcrumb_items': None,
+            'close_url': self._build_close_url(self.request),
+            'colleague': colleague,
+            'assignment_list': assignment_list,
+        }
+
+    def _get_assignment_panel_data(self, assignment, colleague=None):
+        """Get assignment panel data for server-side rendering"""
+        placements_qs = Placement.objects.filter(
+            service__assignment=assignment
+        ).select_related('colleague', 'colleague__brand', 'service__skill')
+        
+        # Add colleague URLs to placements
+        placements = []
+        for placement in placements_qs:
+            placement.colleague_url = self._build_colleague_url(placement.colleague.id)
+            placements.append(placement)
+        
+        # Build breadcrumb items - only show if we came from colleague panel
+        breadcrumb_items = None
+        if colleague:
+            params = QueryDict(mutable=True)
+            params.update(self.request.GET)
+            params.pop('assignment', None)
+            colleague_url = f"/placements/?{params.urlencode()}"
+            
+            breadcrumb_items = [
+                {'text': colleague.name, 'url': colleague_url},
+                {'text': assignment.name, 'url': None}
+            ]
+        
+        return {
+            'panel_content_template': 'parts/assignment_panel_content.html',
+            'panel_title': assignment.name,
+            'breadcrumb_items': breadcrumb_items,
+            'close_url': self._build_close_url(self.request),
+            'assignment': assignment,
+            'placements': placements,
+            'client_url': self._build_client_url(assignment.organization),
+            'ministry_url': self._build_ministry_url(assignment.ministry.id) if assignment.ministry else None,
+        }
 
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
+        
+        # Add assignment URLs to placement objects
+        for placement in context['object_list']:
+            placement.assignment_url = self._build_assignment_url(self.request, placement.service.assignment.id)
 
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
@@ -290,105 +407,30 @@ class PlacementListView(ListView):
         else:
             context['next_page_url'] = None
 
-        return context
+        colleague_id = self.request.GET.get('colleague')
+        assignment_id = self.request.GET.get('assignment')
 
+        # if one or both of the ids are invalid, the panel_data is skipped
+        if colleague_id and not assignment_id:
+            try:
+                colleague = Colleague.objects.get(id=colleague_id)
+                context['panel_data'] = self._get_colleague_panel_data(colleague)
+            except Colleague.DoesNotExist:
+                pass
+        elif colleague_id and assignment_id:
+            try:
+                colleague = Colleague.objects.get(id=colleague_id)
+                assignment = Assignment.objects.get(id=assignment_id)
+                context['panel_data'] = self._get_assignment_panel_data(assignment, colleague)
+            except (Colleague.DoesNotExist, Assignment.DoesNotExist):
+                pass
+        elif not colleague_id and assignment_id:
+            try:
+                assignment = Assignment.objects.get(id=assignment_id)
+                context['panel_data'] = self._get_assignment_panel_data(assignment)
+            except Assignment.DoesNotExist:
+                pass
 
-class AssignmentDetailView(DetailView):
-    model = Assignment
-    template_name = 'assignment_detail.html'
-
-
-class ColleagueDetailView(DetailView):
-    model = Colleague
-    template_name = 'colleague_detail.html'
-
-    def get_queryset(self):
-        return Colleague.objects.prefetch_related(
-            Prefetch('placements', queryset=Placement.objects.select_related(
-                'service__assignment'
-            ))
-        )
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        assignment_list = [
-            {
-                'name': placement.service.assignment.name,
-                'id': placement.service.assignment.id,
-            }
-            for placement in self.object.placements.all()
-        ]
-        context["assignment_list"] = assignment_list
-        return context
-
-
-def client(request, name):
-    assignments = Assignment.objects.filter(
-        organization=name
-    ).prefetch_related(
-        Prefetch('services', queryset=Service.objects.prefetch_related(
-            Prefetch('placements', queryset=Placement.objects.select_related('colleague'))
-        ))
-    )
-    assignments_data = []
-
-    for assignment in assignments:
-        colleagues = [
-            {'id': placement.colleague.pk, 'name': placement.colleague.name}
-            for service in assignment.services.all()
-            for placement in service.placements.all()
-            if placement.colleague
-        ]
-
-        assignments_data.append({
-            'id': assignment.pk,
-            'name': assignment.name,
-            'start_date': assignment.start_date,
-            'end_date': assignment.end_date,
-            'colleagues': colleagues,
-            'status': assignment.status,
-        })
-
-    return render(request, template_name='client_detail.html', context={
-        'client_name': name,
-        'assignments': assignments_data
-    })
-
-
-class MinistryDetailView(DetailView):
-    model = Ministry
-    template_name = 'ministry_detail.html'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        assignments = Assignment.objects.filter(
-            ministry=self.object
-        ).prefetch_related(
-            Prefetch('services', queryset=Service.objects.prefetch_related(
-                Prefetch('placements', queryset=Placement.objects.select_related('colleague'))
-            ))
-        )
-
-        assignments_data = []
-        for assignment in assignments:
-            colleagues = [
-                {'id': placement.colleague.pk, 'name': placement.colleague.name}
-                for service in assignment.services.all()
-                for placement in service.placements.all()
-                if placement.colleague
-            ]
-
-            assignments_data.append({
-                'id': assignment.pk,
-                'name': assignment.name,
-                'start_date': assignment.start_date,
-                'end_date': assignment.end_date,
-                'organization': assignment.organization,
-                'colleagues': colleagues,
-                'status': assignment.status,
-            })
-
-        context['assignments'] = assignments_data
         return context
 
 
@@ -695,3 +737,5 @@ def placement_import_csv(request):
         return render(request, 'placement_import.html', {'result': result})
     else:
         return HttpResponse(status=405)
+
+

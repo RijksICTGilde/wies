@@ -1,21 +1,15 @@
 {% for placement in object_list %}
-  <tr class="rvo-table-row clickable-row" onclick="{% if placement.colleague %}window.location.href='{{ url('colleague-detail', args=[placement.colleague.id]) }}'{% endif %}">
+  <tr class="rvo-table-row clickable-row" 
+      onclick="window.location.href='/placements/?{% for key, value in request.GET.items() %}{% if key not in ['colleague', 'assignment'] %}{{ key }}={{ value }}&{% endif %}{% endfor %}colleague={{ placement.colleague.id }}'"
+      style="cursor: pointer;">
     <td class="rvo-table-cell">
       <div class="user-table-cell">
         <div class="user-avatar">
-          {% if placement.colleague %}
-            {{ placement.colleague.name|first|upper }}
-          {% else %}
-            ?
-          {% endif %}
+          {{ placement.colleague.name|first|upper }}
         </div>
         <div class="user-info">
           <div class="rvo-text rvo-text--bold">
-            {% if placement.colleague %}
-              {{ placement.colleague.name }}
-            {% else %}
-              Niet toegewezen
-            {% endif %}
+            {{ placement.colleague.name }}
           </div>
           <div class="rvo-text rvo-text--sm rvo-text--subtle">
             {% if placement.colleague.brand %}
@@ -29,8 +23,8 @@
     </td>
     <td class="rvo-table-cell">
       <div class="placement-assignment">
-        <a href="{{ url('assignment-detail', args=[placement.service.assignment.id]) }}"
-           class="rvo-link rvo-text--bold"
+        <a class="rvo-link rvo-text--bold"
+           href="{{ placement.assignment_url }}"
            onclick="event.stopPropagation()">
           {{ placement.service.assignment.name }}
         </a>

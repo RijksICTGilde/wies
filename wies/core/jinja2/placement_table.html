@@ -2,10 +2,12 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ static('css/placements.css') }}">
+<link rel="stylesheet" href="{{ static('css/side_panel.css') }}">
+<script src="{{ static('js/side_panel.js') }}"></script>
 {% endblock %}
 
 {% block content %}
-<div class="rvo-layout-column rvo-layout-gap--md">
+<div id="placement_content" class="rvo-layout-column rvo-layout-gap--md">
 
   <c-h1>Wie zit waar?</c-h1>
 
@@ -18,6 +20,16 @@
     {% include 'parts/placement_table.html' %}
   </div>
 
+</div>
+
+<!-- Side Panel Container -->
+<div id="side_panel-container">
+  {% if panel_data %}
+    {% set colleague = panel_data.colleague %}
+    {% set assignment = panel_data.assignment %}
+    {% include 'parts/side_panel.html' %}
+
+  {% endif %}
 </div>
 
 {% endblock %}

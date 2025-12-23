@@ -1,0 +1,45 @@
+<div class="rvo-dialog__background" 
+     id="side_panel-overlay">
+  <dialog class="rvo-dialog rvo-dialog--wit rvo-dialog--inset-inline-end"
+          aria-expanded="true"
+          aria-label="{{ panel_data.panel_title }}"
+          id="side_panel"
+          onclick="event.stopPropagation()"
+          open>
+    
+    <div class="rvo-dialog__close">
+      <a href="{{ panel_data.close_url }}" class="utrecht-button utrecht-button--subtle rvo-dialog__close-button utrecht-button--rvo-md" style="text-decoration: none;">
+        <span class="utrecht-icon rvo-icon rvo-icon-kruis rvo-icon--md rvo-icon--hemelblauw rvo-dialog__close-icon" 
+              role="img" 
+              aria-label="Kruis"></span>
+        Sluiten
+      </a>
+    </div>
+    
+    <div class="rvo-dialog__content">
+      {% if panel_data.breadcrumb_items %}
+      <ol class="rvo-breadcrumbs rvo-breadcrumbs--lg">
+        {% for item in panel_data.breadcrumb_items %}
+          <li class="rvo-breadcrumbs-item">
+            {% if not loop.first %}
+              <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw"
+                    role="img"
+                    aria-label="Delta naar rechts"></span>
+            {% endif %}
+            {% if loop.last %}
+              <span class="rvo-breadcrumb-current-page">{{ item.text }}</span>
+            {% else %}
+              <a class="rvo-link rvo-link--no-underline rvo-breadcrumb-button"
+                 href="{{ item.url }}">
+                {{ item.text }}
+              </a>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ol>
+      {% endif %}
+            
+      {% include panel_data.panel_content_template %}
+    </div>
+  </dialog>
+</div>

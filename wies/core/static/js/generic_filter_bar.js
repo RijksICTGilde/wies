@@ -134,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Count active filters
     form.querySelectorAll('[data-filter-input]').forEach(input => {
-      if (input.value !== '') {
+      if (input.value !== '' && input.value !== '0') {
         activeFilters++;
       }
     });
@@ -155,4 +155,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Initial update
   updateFilterIndicator();
+
+  // Handle back button navigation - simple page reload for filter sync
+  window.addEventListener('popstate', function(event) {
+    window.location.href = window.location.href;
+  });
 });
