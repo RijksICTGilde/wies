@@ -37,6 +37,4 @@ class Command(BaseCommand):
             email=email
         )
 
-        print('colleague created id=', c.id)
-
         logger.info("Successfully added developer colleague")

@@ -152,7 +152,7 @@ class LabelManagementIntegrationTest(TestCase):
         self.client.force_login(self.regular_user)
 
         # Attempt to view label list
-        response = self.client.get(reverse('label-categories'))
+        response = self.client.get(reverse('label-admin'))
         self.assertEqual(response.status_code, 403)
 
         # Attempt to create category

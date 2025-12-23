@@ -831,11 +831,10 @@ def placement_import_csv(request):
 
 
 @permission_required('core.view_labelcategory', raise_exception=True)
-def label_category_list(request):
-    """List all label categories with their labels"""
-    # Annotate labels with usage count (sum of users and colleagues using this label)
+def label_admin(request):
+    """Main label admin pag"""
     categories = annotate_usage_counts(LabelCategory.objects.all())
-    return render(request, 'label_category_list.html', {'categories': categories})
+    return render(request, 'label_admin.html', {'categories': categories})
 
 
 @permission_required('core.change_labelcategory', raise_exception=True)
@@ -866,7 +865,7 @@ def label_category_create(request):
             saved_instance = form.save()
             messages.success(request, f"Categorie '{form.cleaned_data['name']}' succesvol aangemaakt")
             response = HttpResponse(status=200)
-            hx_redirect = reverse('label-categories')
+            hx_redirect = reverse('label-admin')
             # redirecting to part of the page does using anchor does not seem to work yet
             response['HX-Redirect'] = hx_redirect
             return response
@@ -909,7 +908,7 @@ def label_category_edit(request, pk):
         if form.is_valid():
             form.save()
             response = HttpResponse(status=200)
-            response['HX-Redirect'] = reverse('label-categories')
+            response['HX-Redirect'] = reverse('label-admin')
             return response
 
         else:
@@ -944,7 +943,7 @@ def label_category_delete(request, pk):
         category.delete()
         messages.success(request, f"Categorie '{category.name}' succesvol verwijderd")
         response = HttpResponse(status=200)
-        response['HX-Redirect'] = reverse('label-categories')
+        response['HX-Redirect'] = reverse('label-admin')
         return response
     return HttpResponse(status=405)
 
