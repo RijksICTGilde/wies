@@ -2,7 +2,7 @@ from django.views.generic.list import ListView
 from django.views.generic import DetailView
 from django.shortcuts import redirect, render, get_object_or_404
 from django.urls import reverse_lazy, reverse
-from django.db.models import Q, Prefetch, Value
+from django.db.models import Q, Prefetch, Value, Count
 from django.db.models.functions import Concat
 from django.contrib import messages
 from django.contrib.auth.decorators import user_passes_test, permission_required
@@ -15,14 +15,19 @@ from django.contrib.auth.models import Group
 from django.core import management
 from django.conf import settings
 from django.http import HttpResponse, QueryDict
+from django.utils.safestring import mark_safe
+from django.db.models.functions import Lower
+from django.http import HttpResponseNotFound
+
 
 from authlib.integrations.django_client import OAuth
 
-from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, Brand, User
+from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, LabelCategory, Label, User
 from .services.sync import sync_all_otys_iir_records
 from .services.placements import filter_placements_by_period, create_placements_from_csv
 from .services.users import create_user, update_user, create_users_from_csv
-from .forms import UserForm
+from .forms import UserForm, LabelCategoryForm, LabelForm
+from .querysets import annotate_usage_counts
 
 oauth = OAuth()
 oauth.register(
@@ -78,7 +83,7 @@ def logout(request):
     return redirect(reverse('login'))
 
 
-@user_passes_test(lambda u: u.is_superuser and u.is_authenticated, login_url='/admin/login/')
+@user_passes_test(lambda u: u.is_superuser and u.is_authenticated, login_url='/djadmin/login/')
 def admin_db(request):
     context = {
         'assignment_count': Assignment.objects.count(),
@@ -94,7 +99,8 @@ def admin_db(request):
             Placement.objects.all().delete()
             Service.objects.all().delete()
             Ministry.objects.all().delete()
-            Brand.objects.all().delete()
+            LabelCategory.objects.all().delete()
+            Label.objects.all().delete()
         elif action == 'load_data':
             management.call_command('loaddata', 'dummy_data.json')
             messages.success(request, 'Data loaded successfully from dummy_data.json')
@@ -104,7 +110,7 @@ def admin_db(request):
         elif action == 'sync_all_otys_records':
             sync_all_otys_iir_records()
             messages.success(request, 'All records synced successfully from OTYS IIR')
-        return redirect('admin-db')
+        return redirect('djadmin-db')
 
     
     return render(request, 'admin_db.html', context)
@@ -119,8 +125,8 @@ class PlacementListView(ListView):
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
         qs = Placement.objects.select_related(
-            'colleague', 'colleague__brand', 'service', 'service__skill', 'service__assignment__ministry'
-        ).filter(
+            'colleague', 'service', 'service__skill', 'service__assignment__ministry'
+        ).prefetch_related('colleague__labels').filter(
             service__assignment__status='INGEVULD'
         ).order_by('-service__assignment__start_date')
 
@@ -147,17 +153,22 @@ class PlacementListView(ListView):
             if order_by:
                 qs = qs.order_by(order_by)
 
-        filters = {
-            'skill': 'service__skill__id',
-            'brand': 'colleague__brand__id',
-            'client': 'service__assignment__organization',
-            'ministry': 'service__assignment__ministry__id'
-        }
 
-        for param, lookup in filters.items():
-            value = self.request.GET.get(param)
-            if value:
-                qs = qs.filter(**{lookup: value})
+        # Filtering
+
+        if self.request.GET.get('skill'):
+            qs = qs.filter(service__skill__id=self.request.GET['skill'])
+        
+        if self.request.GET.get('client'):
+            qs = qs.filter(service__assignment__organization=self.request.GET['client'])
+
+        if self.request.GET.get('ministry'):
+            qs = qs.filter(service__assignment__ministry__id=self.request.GET['ministry'])
+
+        # Label filter support multiselect
+        for l in self.request.GET.getlist('label'):
+            if l != '':  
+                 qs = qs.filter(colleague__labels__id__contains=l)
 
         # Apply period filtering for overlapping periods
         period = self.request.GET.get('period')
@@ -257,7 +268,7 @@ class PlacementListView(ListView):
         """Get assignment panel data for server-side rendering"""
         placements_qs = Placement.objects.filter(
             service__assignment=assignment
-        ).select_related('colleague', 'colleague__brand', 'service__skill')
+        ).select_related('colleague', 'service__skill')
         
         # Add colleague URLs to placements
         placements = []
@@ -302,10 +313,18 @@ class PlacementListView(ListView):
         context['search_filter'] = self.request.GET.get('search')
 
         active_filters = {}  # key: val
-        for filter_param in ['brand', 'skill', 'client', 'ministry', 'period']:
+        for filter_param in ['skill', 'client', 'ministry', 'period']:
             val = self.request.GET.get(filter_param)
             if val:
                 active_filters[filter_param] = val
+
+        # label filter supports multi-select
+        label_filter = set()
+        for l in self.request.GET.getlist('label'):
+            if l != '':
+                label_filter.add(l)
+        if len(label_filter) > 0:
+            active_filters['label'] = label_filter
 
         if active_filters.get('period'):
             period_from, period_to = active_filters['period'].split('_')
@@ -314,21 +333,43 @@ class PlacementListView(ListView):
                 'to': period_to,
             }
 
-        brand_options = [
-            {'value': '', 'label': 'Alle merken'}
-        ]
-        for brand in Brand.objects.order_by('name'):
-            brand_options.append({'value': str(brand.id), 'label': brand.name})
-            if active_filters.get('brand') == str(brand.id):
-                brand_options[-1]['selected'] = True
+        label_filter_groups = []
+        for category in LabelCategory.objects.all():
+
+            select_label = category.name
+            options = [
+                {'value': '', 'label': 'Allemaal'},
+            ]
+            value = ''
+            for label in Label.objects.filter(category=category):
+                options.append({
+                    'value': str(label.id),
+                    'label': f"{label.name}"
+                })
+                if str(label.id) in active_filters.get('label', set()):
+                    options[-1]['selected'] = True
+                    value = str(label.id)
+            
+            filter_group = {
+                'type': 'select',
+                'name': 'label',
+                'label': select_label,
+                'options': options,
+                'value': value,
+            }
+
+            label_filter_groups.append(filter_group)
+
 
         skill_options = [
             {'value': '', 'label': 'Alle rollen'}
         ]
+        skill_value = ''
         for skill in Skill.objects.order_by('name'):
             skill_options.append({'value': str(skill.id), 'label': skill.name})
             if active_filters.get('skill') == str(skill.id):
                 skill_options[-1]['selected'] = True
+                skill_value = str(skill.id)
 
         clients = [
             {'id': org, 'name': org}
@@ -338,18 +379,22 @@ class PlacementListView(ListView):
         client_options = [
             {'value': '', 'label': 'Alle opdrachtgevers'},
         ]
+        client_value = ''
         for client in clients:
             client_options.append({'value': client['id'], 'label': client['name']})
             if active_filters.get('client') == str(client['id']):
                 client_options[-1]['selected'] = True
+                client_value = str(client['id'])
 
         ministry_options = [
             {'value': '', 'label': 'Alle ministeries'},
         ]
+        ministry_value = ''
         for ministry in Ministry.objects.order_by('name'):
             ministry_options.append({'value': str(ministry.id), 'label': ministry.name})
             if active_filters.get('ministry') == str(ministry.id):
                 ministry_options[-1]['selected'] = True
+                ministry_value = str(ministry.id)
 
         context['active_filters'] = active_filters
         context['active_filter_count'] = len(active_filters)
@@ -357,33 +402,27 @@ class PlacementListView(ListView):
         # TODO: this can be become an object to help defining correctly and performing extra preprocessing on context
         # introduce value_key, label_key:
         context['filter_groups'] = [
-            {
-                'type': 'select',
-                'name': 'brand',
-                'label': 'Merk',
-                'options': brand_options,
-                'value': active_filters.get('brand', ''),
-            },
+            *label_filter_groups,
             {
                 'type': 'select',
                 'name': 'skill',
                 'label': 'Rollen',
                 'options': skill_options,
-                'value': active_filters.get('skill', ''),
+                'value': skill_value,
             },
             {
                 'type': 'select',
                 'name': 'client',
                 'label': 'Opdrachtgever',
                 'options': client_options,
-                'value': active_filters.get('client', ''),
+                'value': client_value,
             },
             {
                 'type': 'select',
                 'name': 'ministry',
                 'label': 'Ministerie',
                 'options': ministry_options,
-                'value': active_filters.get('ministry', ''),
+                'value': ministry_value,
             },
             {
                 'type': 'date_range',
@@ -443,7 +482,7 @@ class UserListView(PermissionRequiredMixin, ListView):
 
     def get_queryset(self):
         """Apply filters to users queryset - exclude superusers"""
-        qs = User.objects.select_related('brand').prefetch_related('groups').filter(
+        qs = User.objects.prefetch_related('groups', 'labels__category').filter(
             is_superuser=False
         ).order_by('last_name', 'first_name')
 
@@ -458,11 +497,11 @@ class UserListView(PermissionRequiredMixin, ListView):
                 Q(email__icontains=search_filter)
             )
 
-        # Brand filter
-        brand_filter = self.request.GET.get('brand')
-        if brand_filter:
-            qs = qs.filter(brand__id=brand_filter)
-
+        # Label filter support multiselect
+        for l in self.request.GET.getlist('label'):
+            if l != '':
+                 qs = qs.filter(labels__id__contains=l)
+           
         # Role filter
         role_filter = self.request.GET.get('role')
         if role_filter:
@@ -489,29 +528,55 @@ class UserListView(PermissionRequiredMixin, ListView):
         context['search_filter'] = self.request.GET.get('search')
 
         active_filters = {}
-        brand_filter = self.request.GET.get('brand')
-        if brand_filter:
-            active_filters['brand'] = brand_filter
+
+        # label filter supports multi-select
+        label_filter = set()
+        for l in self.request.GET.getlist('label'):
+            if l != '':
+                label_filter.add(l)
+        if len(label_filter) > 0:
+            active_filters['label'] = label_filter
 
         role_filter = self.request.GET.get('role')
         if role_filter:
             active_filters['role'] = role_filter
 
-        brand_options = [
-            {'value': '', 'label': 'Alle merken'},
-        ]
-        for brand in Brand.objects.order_by('name'):
-            brand_options.append({'value': brand.id, 'label': brand.name})
-            if active_filters.get('brand') == str(brand.id):
-                brand_options[-1]['selected'] = True
+        label_filter_groups = []
+        for category in LabelCategory.objects.all():
 
+            select_label = category.name
+            options = [
+                {'value': '', 'label': 'Allemaal'},
+            ]
+            value = ''
+            for label in Label.objects.filter(category=category):
+                options.append({
+                    'value': str(label.id),
+                    'label': f"{label.name}"
+                })
+                if str(label.id) in active_filters.get('label', set()):
+                    options[-1]['selected'] = True
+                    value = str(label.id)
+            
+            filter_group = {
+                'type': 'select',
+                'name': 'label',
+                'label': select_label,
+                'options': options,
+                'value': value,
+            }
+
+            label_filter_groups.append(filter_group)
+            
         role_options = [
             {'value': '', 'label': 'Alle rollen'},
         ]
+        role_value = ''
         for group in Group.objects.all().order_by('name'):
-            role_options.append({'value': group.id, 'label': group.name})
+            role_options.append({'value': str(group.id), 'label': group.name})
             if active_filters.get('role') == str(group.id):
                 role_options[-1]['selected'] = True
+                role_value = str(group.id)
 
         context['active_filters'] = active_filters
         context['active_filter_count'] = len(active_filters)
@@ -519,18 +584,14 @@ class UserListView(PermissionRequiredMixin, ListView):
         context['filter_groups'] = [
             {
                 'type': 'select',
-                'name': 'brand',
-                'label': 'Merk',
-                'options': brand_options,
-            },
-            {
-                'type': 'select',
                 'name': 'role',
                 'label': 'Rol',
                 'options': role_options,
+                'value': role_value,
             },
+            *label_filter_groups
         ]
-
+        
         context['primary_button'] = {
             'button_text': 'Nieuwe gebruiker',
             'attrs': {
@@ -561,11 +622,19 @@ def user_create(request):
     
     form_post_url = reverse('user-create')
     modal_title = 'Nieuwe gebruiker'
+    element_id = 'userFormModal'
     
     if request.method == 'GET':
         # Return modal HTML with empty UserForm
         form = UserForm()
-        return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Toevoegen'})
+        return render(request, 'parts/generic_form_modal.html', {
+            'content': form, 
+            'form_post_url': form_post_url, 
+            'modal_title': modal_title, 
+            'form_button_label': 'Toevoegen',
+            'modal_element_id': element_id,
+            'target_element_id': element_id,
+        })
     elif request.method == 'POST':
         form = UserForm(request.POST)
         if form.is_valid():
@@ -573,20 +642,27 @@ def user_create(request):
                 first_name=form.cleaned_data['first_name'],
                 last_name=form.cleaned_data['last_name'],
                 email=form.cleaned_data['email'],
-                brand=form.cleaned_data.get('brand'),
+                labels=form.cleaned_data.get('labels'),
                 groups=form.cleaned_data.get('groups')
             )
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect
             if 'HX-Request' in request.headers:
                 response = HttpResponse(status=200)
-                response['HX-Redirect'] = reverse('users')
+                response['HX-Redirect'] = reverse('admin-users')
                 return response
             else:
-                return redirect('users')
+                return redirect('admin-users')
         else:
             # Re-render form with errors (stays in modal with HTMX)
-            return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Toevoegen'})
+            return render(request, 'parts/generic_form_modal.html', {
+                'content': form, 
+                'form_post_url': form_post_url, 
+                'modal_title': modal_title, 
+                'form_button_label': 'Toevoegen',
+                'modal_element_id': element_id,
+                'target_element_id': element_id,
+            })
     return HttpResponse(status=405)
 
 
@@ -596,11 +672,19 @@ def user_edit(request, pk):
     editing_user = get_object_or_404(User, pk=pk, is_superuser=False)
     form_post_url = reverse('user-edit', args=[editing_user.id])
     modal_title = 'Gebruiker bewerken'
+    element_id = 'userFormModal'
 
     if request.method == 'GET':
         # Return modal HTML with UserForm populated with user data
         form = UserForm(instance=editing_user)
-        return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Opslaan'})
+        return render(request, 'parts/generic_form_modal.html', {
+            'content': form, 
+            'form_post_url': form_post_url, 
+            'modal_title': modal_title, 
+            'form_button_label': 'Opslaan',
+            'modal_element_id': element_id,
+            'target_element_id': element_id,
+        })
     elif request.method == 'POST':
         form = UserForm(request.POST, instance=editing_user)
         if form.is_valid():
@@ -609,20 +693,27 @@ def user_edit(request, pk):
                 first_name=form.cleaned_data['first_name'],
                 last_name=form.cleaned_data['last_name'],
                 email=form.cleaned_data['email'],
-                brand=form.cleaned_data.get('brand'),
+                labels=form.cleaned_data.get('labels'),
                 groups=form.cleaned_data.get('groups')
             )
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect
             if 'HX-Request' in request.headers:
                 response = HttpResponse(status=200)
-                response['HX-Redirect'] = reverse('users')
+                response['HX-Redirect'] = reverse('admin-users')
                 return response
             else:
-                return redirect('users')
+                return redirect('admin-users')
         else:
             # Re-render form with errors (stays in modal with HTMX)
-            return render(request, 'parts/user_form_modal.html', {'form': form, 'form_post_url': form_post_url, 'modal_title': modal_title, 'form_button_label': 'Opslaan'})
+            return render(request, 'parts/generic_form_modal.html', {
+                'content': form, 
+                'form_post_url': form_post_url, 
+                'modal_title': modal_title, 
+                'form_button_label': 'Opslaan',
+                'modal_element_id': element_id,
+                'target_element_id': element_id,
+            })
     return HttpResponse(status=405)
 
 
@@ -633,7 +724,7 @@ def user_delete(request, pk):
         user = get_object_or_404(User, pk=pk, is_superuser=False)
         user.delete()
         # Redirect to users list - page reload resets filters
-        return redirect('users')
+        return redirect('admin-users')
     return HttpResponse(status=405)
 
 
@@ -739,3 +830,231 @@ def placement_import_csv(request):
         return HttpResponse(status=405)
 
 
+@permission_required('core.view_labelcategory', raise_exception=True)
+def label_admin(request):
+    """Main label admin pag"""
+    categories = annotate_usage_counts(LabelCategory.objects.all())
+    return render(request, 'label_admin.html', {'categories': categories})
+
+
+@permission_required('core.change_labelcategory', raise_exception=True)
+def label_category_create(request):
+    """
+    Returns a partial html page, to be used with htmx
+    """
+
+    """Create a new label category"""
+    form_post_url = reverse('label-category-create')
+    modal_title = 'Nieuwe categorie'
+    element_id = 'labelFormModal'
+    form_button_label = 'Toevoegen'
+
+    if request.method == 'GET':
+        form = LabelCategoryForm()
+        return render(request, 'parts/generic_form_modal.html', {
+            'content': form,
+            'form_post_url': form_post_url,
+            'modal_title': modal_title,
+            'form_button_label': form_button_label,
+            'modal_element_id': element_id,
+            'target_element_id': element_id,
+        })
+    elif request.method == 'POST':
+        form = LabelCategoryForm(request.POST)
+        if form.is_valid():
+            saved_instance = form.save()
+            messages.success(request, f"Categorie '{form.cleaned_data['name']}' succesvol aangemaakt")
+            response = HttpResponse(status=200)
+            hx_redirect = reverse('label-admin')
+            # redirecting to part of the page does using anchor does not seem to work yet
+            response['HX-Redirect'] = hx_redirect
+            return response
+        else:
+            return render(request, 'parts/generic_form_modal.html', {
+                'content': form,
+                'form_post_url': form_post_url,
+                'modal_title': modal_title,
+                'form_button_label': form_button_label,
+                'modal_element_id': element_id,
+                'target_element_id': element_id,
+            })
+
+
+@permission_required('core.change_labelcategory', raise_exception=True)
+def label_category_edit(request, pk):
+    """
+    Edit a label category
+    Returns a partial html page, to be used with htmx
+    """
+    
+    category = get_object_or_404(LabelCategory, pk=pk)
+    form_post_url = reverse('label-category-edit', kwargs={'pk': pk})
+    modal_title = f'Bewerk categorie: {category.name}'
+    form_button_label = 'Opslaan'
+    element_id = 'labelFormModal'
+
+    if request.method == 'GET':
+        form = LabelCategoryForm(instance=category)
+        return render(request, 'parts/generic_form_modal.html', {
+            'content': form,
+            'form_post_url': form_post_url,
+            'modal_title': modal_title,
+            'form_button_label': form_button_label,
+            'modal_element_id': element_id,
+            'target_element_id': element_id,
+        })
+    elif request.method == 'POST':
+        form = LabelCategoryForm(request.POST, instance=category)
+        if form.is_valid():
+            form.save()
+            response = HttpResponse(status=200)
+            response['HX-Redirect'] = reverse('label-admin')
+            return response
+
+        else:
+            return render(request, 'parts/generic_form_modal.html', {
+                'content': form,
+                'form_post_url': form_post_url,
+                'modal_title': modal_title,
+                'form_button_label': form_button_label,
+                'modal_element_id': element_id,
+                'target_element_id': element_id,
+            })
+
+
+@permission_required('core.delete_labelcategory', raise_exception=True)
+def label_category_delete(request, pk):
+    """
+    To be used with htmx
+    """
+    category = get_object_or_404(LabelCategory, pk=pk)
+    if request.method == 'GET':
+        form_post_url = reverse('label-category-delete', kwargs={'pk': pk})
+        return render(request, 'parts/generic_form_modal.html', {
+            'form_post_url': form_post_url, 
+            'modal_title': f"Verwijder categorie: {category.name}", 
+            'form_button_label': 'Verwijderen',
+            'warning_modal': True,
+            'modal_element_id': "labelFormModal",
+            "content": mark_safe(f"<p>Weet je zeker dat deze categorie wil verwijderen?</p><p>Dit verwijdert ook alle <b>{category.labels.count()}</b> labels</p>"),
+            'target_element_id': f"labelFormModal",
+        })
+    elif request.method == 'POST':
+        category.delete()
+        messages.success(request, f"Categorie '{category.name}' succesvol verwijderd")
+        response = HttpResponse(status=200)
+        response['HX-Redirect'] = reverse('label-admin')
+        return response
+    return HttpResponse(status=405)
+
+
+@permission_required('core.add_label', raise_exception=True)
+def label_create(request, pk):
+    """
+    Returns a partial html page, to be used with htmx
+    """
+
+    if request.method == 'POST':
+        category = get_object_or_404(LabelCategory, pk=pk)
+        form = LabelForm(request.POST, category_id=category.id)
+        if form.is_valid(): 
+            new_instance = form.save(commit=False)
+            new_instance.category = category
+            new_instance.save()
+
+            category_qs = LabelCategory.objects.filter(id=category.id)
+            category = annotate_usage_counts(category_qs).get()
+
+            return render(request, 'parts/label_category.html', {
+                'category': category
+            })
+        else:
+            errors = {}
+            for field, error in form.errors.items():
+                errors[field] = error
+            return render(request, 'parts/label_category.html', {
+                'category': category,
+                'errors': errors,
+            })
+    return HttpResponse(status=405)
+
+
+@permission_required('core.change_label', raise_exception=True)
+def label_edit(request, pk):
+    """
+    Returns a partial html page, to be used with htmx
+    """
+    label = get_object_or_404(Label, pk=pk)
+    category = label.category
+    form_post_url = reverse('label-edit', kwargs={'pk': pk})
+    modal_title = f'Bewerk label: {label.name}'
+    form_button_label = 'Opslaan'
+    element_id = 'labelFormModal'
+
+    if request.method == 'GET':
+        form = LabelForm(instance=label, category_id=category.id)
+        return render(request, 'parts/generic_form_modal.html', {
+            'content': form,
+            'form_post_url': form_post_url,
+            'modal_title': modal_title,
+            'form_button_label': form_button_label,
+            'modal_element_id': element_id,
+            'target_element_id': element_id,
+        })
+    elif request.method == 'POST':
+        form = LabelForm(request.POST, instance=label)
+        if form.is_valid():
+            form.save()
+
+            category_qs = LabelCategory.objects.filter(id=category.id)
+            category = annotate_usage_counts(category_qs).get()
+
+            response = render(request, 'parts/label_category.html', {
+                'category': category
+            })
+            response['HX-Retarget'] = f"#label_category_{category.id}"
+            response['HX-Trigger'] = 'closeModal'
+            return response
+        else:
+            return render(request, 'parts/generic_form_modal.html', {
+                'content': form,
+                'form_post_url': form_post_url,
+                'modal_title': modal_title,
+                'form_button_label': form_button_label,
+                'modal_element_id': element_id,
+                'target_element_id': element_id,
+            })
+
+
+@permission_required('core.delete_label', raise_exception=True)
+def label_delete(request, pk):
+    """
+    To be used with htmx
+    """
+
+    label = get_object_or_404(Label, pk=pk)
+    category = label.category
+
+    label_use_count = label.users.count() + label.colleagues.count()
+    
+    if request.method == 'GET':
+        form_post_url = reverse('label-delete', kwargs={'pk': pk})
+        return render(request, 'parts/generic_form_modal.html', {
+            'form_post_url': form_post_url, 
+            'modal_title': f"Verwijder label: {label.name}", 
+            'form_button_label': 'Verwijderen',
+            'warning_modal': True,
+            'modal_element_id': "labelFormModal",
+            "content": mark_safe(f"<p>Weet je zeker dat dit label wil verwijderen?</p><p>Het wordt gebruikt op <b>{label_use_count}</b> plekken</p>"),
+            'target_element_id': f"label_category_{category.id}",
+        })
+    elif request.method == 'POST':
+        label.delete()
+
+        category_qs = LabelCategory.objects.filter(id=category.id)
+        category = annotate_usage_counts(category_qs).get()
+
+        return render(request, 'parts/label_category.html', {
+            'category': category,
+        })
+    return HttpResponse(status=405)

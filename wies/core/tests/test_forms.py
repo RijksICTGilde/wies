@@ -4,7 +4,7 @@ from django import forms
 from django.test import TestCase, override_settings
 from django.contrib.auth.models import Group
 
-from wies.core.models import Brand
+from wies.core.models import LabelCategory, Label
 from wies.core.forms import UserForm, RvoFormMixin
 
 
@@ -21,9 +21,10 @@ class RvoFormMixinTest(TestCase):
 
     def setUp(self):
         """Create test data"""
-        # Create test brands
-        self.brand_a = Brand.objects.create(name="Brand A")
-        self.brand_b = Brand.objects.create(name="Brand B")
+        # Create test labels
+        self.category, _ = LabelCategory.objects.get_or_create(name='Merk', defaults={'color': '#0066CC'})
+        self.label_a = Label.objects.create(name="Brand A", category=self.category)
+        self.label_b = Label.objects.create(name="Brand B", category=self.category)
 
         # Create test groups for checkbox rendering
         self.admin_group = Group.objects.create(name="Beheerder")
@@ -55,12 +56,7 @@ class RvoFormMixinTest(TestCase):
         self.assertIn('rvo-input', email_input)
 
         # Check that select has RVO classes and wrapper
-        self.assertIn('rvo-select-wrapper', rendered)
-        brand_select_match = re.search(r'<select[^>]*name="brand"[^>]*>', rendered)
-        self.assertIsNotNone(brand_select_match)
-        brand_select = brand_select_match.group(0)
-        self.assertIn('utrecht-select', brand_select)
-        self.assertIn('rvo-select', brand_select)
+        # no longer select. TODO: decide on multi-select or fix single select
 
         # Check that checkbox group has RVO classes
         self.assertIn('rvo-checkbox__group', rendered)
@@ -104,9 +100,9 @@ class RvoFormMixinTest(TestCase):
         self.assertIn('rvo-label--required', email_label)
 
         # brand is optional - should NOT have rvo-label--required
-        brand_label_match = re.search(r'<label[^>]*for="id_brand"[^>]*>(.*?)</label>', rendered, re.DOTALL)
-        self.assertIsNotNone(brand_label_match)
-        brand_label = brand_label_match.group(0)
+        groups_label_match = re.search(r'<label[^>]*for="id_groups"[^>]*>(.*?)</label>', rendered, re.DOTALL)
+        self.assertIsNotNone(groups_label_match)
+        brand_label = groups_label_match.group(0)
         self.assertNotIn('rvo-label--required', brand_label)
         self.assertIn('rvo-label', brand_label)  # Should still have base class
 

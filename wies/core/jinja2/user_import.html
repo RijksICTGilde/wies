@@ -23,13 +23,13 @@
         <p class="rvo-text">
           <strong>{{ result.users_created }}</strong> gebruiker(s) geïmporteerd
         </p>
-        {% if result.brands_created > 0 %}
+        {% if result.labels_created > 0 %}
           <p class="rvo-text">
-            <strong>{{ result.brands_created }}</strong> nieuw(e) merk(en) aangemaakt:
+            <strong>{{ result.labels_created }}</strong> nieuw(e) label(s) aangemaakt:
           </p>
           <ul class="rvo-list">
-            {% for brand_name in result.created_brands %}
-              <li>{{ brand_name }}</li>
+            {% for label_name in result.created_labels %}
+              <li>{{ label_name }}</li>
             {% endfor %}
           </ul>
         {% endif %}

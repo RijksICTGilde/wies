@@ -3,7 +3,7 @@ import datetime
 from django.db import models
 from django.urls import reverse
 from django.contrib.auth.models import AbstractUser
-
+from django.db.models.functions import Lower
 
 ASSIGNMENT_STATUS = {
     'VACATURE': "VACATURE",
@@ -16,14 +16,73 @@ SOURCE_CHOICES = {
 }
 
 
-class Brand(models.Model):
-    name = models.CharField(max_length=50)
-    
-    class Meta:
-        ordering = ['name']
-    
+DEFAULT_LABELS = {
+    'Merk': {
+        'color': "#DCE3EA",
+        'labels': {
+            'Rijksconsultants',
+            'I-Interim Rijk',
+            'Rijks ICT Gilde',
+            'Rijks I-Traineeship',
+            'Innoveren met Impact',
+            'RADIO',
+            'Leer en ontwikkel campus',
+            'Intercoach',
+            'Mindful Rijk',
+            'Gateway review',
+            'Delta review',
+            'Mindful Rijk',
+        }
+    },
+    'Expertise': {
+        'color': "#B3D7EE",
+        'labels': {
+            'Strategie, beleid, governance en compliance',
+            'Architectuur en technologie',
+            'Agile, project- programma- en portfoliomanagement',
+            'Proces- en ketenmanagement',
+            'Verander- en transformatiemanagement',
+            'Interimmanagement en advies',
+            'AI',
+            'ICT',
+            'Software en data engineering',
+            'Cloud en platform technologie',
+            'Security en privacy',
+            'Opleiding, training en ontwikkeling',
+            'Kennis- en innovatiemanagement',
+        }
+    },
+    "Thema": {
+        'color': "#FFE9B8",
+        'labels': {
+            'Digitale weerbaarheid',
+            'Artificiële intelligentie',
+            'Netwerksamenwerking',
+            'Ambtelijk en digitaal vakmanschap',
+            'Innovatieve en lerende overheid'
+        }
+    }
+}
+
+
+class LabelCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    color = models.CharField(max_length=7)  # Hex color like #FF5733
+
     def __str__(self):
         return self.name
+
+
+class Label(models.Model):
+    name = models.CharField(max_length=100)
+    category = models.ForeignKey('LabelCategory', models.CASCADE, related_name='labels')
+
+    class Meta:
+        ordering = [Lower('name')]
+        unique_together = [['name', 'category']]
+
+    def __str__(self):
+        return f"{self.name}"
 
 
 class Ministry(models.Model):
@@ -48,15 +107,15 @@ class Skill(models.Model):
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
-    brand = models.ForeignKey('Brand', models.SET_NULL, null=True, blank=True, related_name='users')
+    labels = models.ManyToManyField('Label', related_name='users', blank=True)
 
 
 class Colleague(models.Model):
     user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='colleague')
     name = models.CharField(max_length=200)
     email = models.EmailField()
-    brand = models.ForeignKey('Brand', models.SET_NULL, null=True, blank=False)
     skills = models.ManyToManyField('Skill', blank=True)
+    labels = models.ManyToManyField('Label', related_name='colleagues', blank=True)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(null=True, blank=True)

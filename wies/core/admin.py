@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Assignment, Colleague, Ministry, Brand, Placement, Service, Skill, User
+from .models import Assignment, Colleague, Ministry, LabelCategory, Label, Placement, Service, Skill, User
 
 
 class AssignmentAdmin(admin.ModelAdmin):
@@ -17,7 +17,10 @@ class SkillAdmin(admin.ModelAdmin):
 class MinistryAdmin(admin.ModelAdmin):
     pass
 
-class BrandAdmin(admin.ModelAdmin):
+class LabelCategoryAdmin(admin.ModelAdmin):
+    pass
+
+class LabelAdmin(admin.ModelAdmin):
     pass
 
 
@@ -33,7 +36,8 @@ admin.site.register(Colleague, ColleagueAdmin)
 admin.site.register(User, UserAdmin)
 admin.site.register(Skill, SkillAdmin)
 admin.site.register(Ministry, MinistryAdmin)
-admin.site.register(Brand, BrandAdmin)
+admin.site.register(LabelCategory, LabelCategoryAdmin)
+admin.site.register(Label, LabelAdmin)
 admin.site.register(Placement, PlacementAdmin)
 admin.site.register(Service, ServiceAdmin)
 

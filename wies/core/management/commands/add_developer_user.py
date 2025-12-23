@@ -5,6 +5,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth.models import Group
 
 from wies.core.services.users import create_user
+from wies.core.models import Colleague
 
 
 logger = logging.getLogger(__name__)
@@ -29,3 +30,11 @@ class Command(BaseCommand):
         for group in Group.objects.all():
             user.groups.add(group)        
         logger.info("Successfully added developer user")
+
+        c = Colleague.objects.create(
+            name=f'{first_name} {last_name}',
+            source='wies',
+            email=email
+        )
+
+        logger.info("Successfully added developer colleague")

@@ -6,11 +6,11 @@ from django.core.validators import validate_email
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import Group
 
-from wies.core.models import User, Brand
+from wies.core.models import User, Label, LabelCategory, DEFAULT_LABELS
 from wies.core.errors import EmailNotAvailableError
 
 
-def create_user(first_name, last_name, email, brand=None, groups=None):
+def create_user(first_name, last_name, email, labels=None, groups=None):
     random_username = uuid.uuid4()
 
     if User.objects.filter(email=email).exists():
@@ -21,14 +21,15 @@ def create_user(first_name, last_name, email, brand=None, groups=None):
         email=email,
         first_name=first_name,
         last_name=last_name,
-        brand=brand
     )
+    if labels:
+        user.labels.set(labels)
     if groups:
         user.groups.set(groups)
     return user
 
 
-def update_user(user, first_name, last_name, email, brand=None, groups=None):
+def update_user(user, first_name, last_name, email, labels=None, groups=None):
 
     try:
         user_with_email = User.objects.get(email=email)
@@ -40,7 +41,8 @@ def update_user(user, first_name, last_name, email, brand=None, groups=None):
     user.first_name = first_name
     user.last_name = last_name
     user.email = email
-    user.brand = brand
+    if labels is not None:
+        user.labels.set(labels)
     user.save()
     if groups is not None:
         user.groups.set(groups)
@@ -55,7 +57,7 @@ def create_users_from_csv(csv_content: str):
     - first_name (required)
     - last_name (required)
     - email (required)
-    - brand (optional, brand name)
+    - brand (optional, label name - will be assigned from "Merk" category, auto-created if needed)
     - Beheerder (optional, "y" or "n")
     - Consultant (optional, "y" or "n")
     - BDM (optional, "y" or "n")
@@ -63,8 +65,8 @@ def create_users_from_csv(csv_content: str):
     Returns a dictionary with:
     - success: True if all users imported, False if validation errors
     - users_created: Number of users created
-    - brands_created: Number of new brands created
-    - created_brands: List of brand names that were created
+    - labels_created: Number of new labels created
+    - created_labels: List of label names that were created
     - errors: List of validation error messages (empty if success=True)
     """
 
@@ -139,14 +141,19 @@ def create_users_from_csv(csv_content: str):
         return {
             'success': False,
             'users_created': 0,
-            'brands_created': 0,
-            'created_brands': [],
+            'labels_created': 0,
+            'created_labels': [],
             'errors': errors
         }
 
     users_created = 0
-    created_brands = []
-    brand_cache = {}  # Cache to avoid duplicate DB queries
+    created_labels = []
+    label_mapping = {}  # mapping from str to Label, to avoid many DB queries
+
+    merken_category, _ = LabelCategory.objects.get_or_create(
+        name="Merk",
+        defaults={'color': DEFAULT_LABELS['Merk']['color']}
+    )
 
     # Get all groups once
     groups_dict = {
@@ -161,18 +168,20 @@ def create_users_from_csv(csv_content: str):
         email = row['email'].strip()
         brand_name = row.get('brand', '').strip()
 
-        # Handle brand
-        brand = None
+        # Handle label assignment from brand column
+        labels_to_assign = []
         if brand_name:
-            if brand_name in brand_cache:
-                brand = brand_cache[brand_name]
+            if brand_name in label_mapping:
+                label = label_mapping[brand_name]
             else:
-                brand = Brand.objects.filter(name=brand_name).first()
-                if not brand:
-                    # Create new brand
-                    brand = Brand.objects.create(name=brand_name)
-                    created_brands.append(brand_name)
-                brand_cache[brand_name] = brand
+                label, created = Label.objects.get_or_create(
+                    name=brand_name,
+                    category=merken_category
+                )
+                label_mapping[brand_name] = label
+                if created:
+                    created_labels.append(brand_name)
+            labels_to_assign.append(label)
 
         groups_to_assign = []
         for group_name in ['Beheerder', 'Consultant', 'BDM']:
@@ -191,7 +200,7 @@ def create_users_from_csv(csv_content: str):
             first_name=first_name,
             last_name=last_name,
             email=email,
-            brand=brand,
+            labels=labels_to_assign,
             groups=groups_to_assign
         )
         users_created += 1
@@ -199,7 +208,7 @@ def create_users_from_csv(csv_content: str):
     return {
         'success': True,
         'users_created': users_created,
-        'brands_created': len(created_brands),
-        'created_brands': created_brands,
+        'labels_created': len(created_labels),
+        'created_labels': created_labels,
         'errors': errors  # May contain warnings when success is True
     }

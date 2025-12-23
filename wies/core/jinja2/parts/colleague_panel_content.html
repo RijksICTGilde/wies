@@ -19,6 +19,24 @@
       </div>
     </div>
   </section>
+
+  {% if colleague.user and colleague.user.labels.all()|length > 0 %}
+    {% set labels = colleague.user.labels.all() %}
+    {% else %}
+    {% set labels = colleague.labels.all() %}
+  {% endif %}
+
+  {% if labels %}
+    <div class="rvo-layout-row rvo-layout-gap--sm" style="flex-wrap: wrap;">
+      {% for label in labels %}
+        <span class="rvo-badge" style="background-color: {{ label.category.color }}; padding: 0.25rem 0.5rem; border-radius: 3px;">
+          {{ label.name }}
+        </span>
+      {% endfor %}
+    </div>
+  {% else %}
+    <span class="rvo-text--italic">Geen labels toegewezen</span>
+  {% endif %}
   
   <section>
     <h2>Opdrachten</h2>

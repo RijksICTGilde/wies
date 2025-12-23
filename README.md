@@ -39,8 +39,8 @@ just manage [...]
 
 ### Special URLs
 The following URLs are not linked through the UI
-- /admin/
-- /admin/db/: for dropping db and loading dummy data
+- /djadmin/
+- /djadmin/db/: for dropping db and loading dummy data
 
 ### Release
 - everything in main

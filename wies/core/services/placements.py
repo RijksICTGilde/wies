@@ -7,7 +7,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
 from wies.core.querysets import annotate_placement_dates, filter_by_date_overlap
-from wies.core.models import Assignment, Colleague, Service, Placement, Ministry, Skill, Brand
+from wies.core.models import Assignment, Colleague, Service, Placement, Ministry, Skill, Label, LabelCategory, DEFAULT_LABELS
 
 
 def filter_placements_by_period(queryset, period):
@@ -82,8 +82,15 @@ def create_placements_from_csv(csv_content: str):
 
     try:
         with transaction.atomic():
-            # Get or create the 'Rijks ICT Gilde' brand for newly created colleagues
-            rijks_ict_gilde_brand, _ = Brand.objects.get_or_create(name='Rijks ICT Gilde')
+            # Get or create the 'Rijks ICT Gilde' label for newly created colleagues
+            merken_category, _ = LabelCategory.objects.get_or_create(
+                name='Merk',
+                defaults={'color': DEFAULT_LABELS['Merk']['color']}
+            )
+            rijks_ict_gilde_label, _ = Label.objects.get_or_create(
+                name='Rijks ICT Gilde',
+                category=merken_category
+            )
 
             colleagues_created = 0
             assignments_created = 0
@@ -103,8 +110,8 @@ def create_placements_from_csv(csv_content: str):
                             name=row['assignment_owner'],
                             email=assignment_owner_email,
                             source='wies',
-                            brand=rijks_ict_gilde_brand,
                         )
+                        owner.labels.add(rijks_ict_gilde_label)
                         colleagues_created += 1
                 else:
                     owner = None
@@ -179,8 +186,8 @@ def create_placements_from_csv(csv_content: str):
                         name=row['placement_colleague_name'],
                         email=colleague_email,
                         source='wies',
-                        brand=rijks_ict_gilde_brand,
                     )
+                    colleague.labels.add(rijks_ict_gilde_label)
                     colleagues_created += 1
                 
                 _, created = Placement.objects.get_or_create(

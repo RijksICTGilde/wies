@@ -9,13 +9,7 @@
           <div class="rvo-text rvo-text--bold">
             {{ user.first_name }} {{ user.last_name }}
           </div>
-          <div class="rvo-text rvo-text--sm rvo-text--subtle">
-            {% if user.brand %}
-              {{ user.brand.name }}
-            {% else %}
-              Geen merk
-            {% endif %}
-          </div>
+
         </div>
       </div>
     </td>
@@ -36,16 +30,22 @@
     </td>
     <td class="rvo-table-cell">
       <div style="display: flex; gap: 0.5rem;">
-        <c-button kind="subtle" size="sm" type="button"
-                hx-get="{{ url('user-edit', args=[user.id]) }}"
-                hx-target="#userFormModal">
-          Bewerken
-        </c-button>
+        <button
+          class="rvo-button rvo-button--subtle rvo-button--icon-only"
+          hx-get="{{ url('user-edit', args=[user.id]) }}"
+          hx-target="#userFormModal"
+          hx-swap="innerHTML"
+          title="Bewerk gebruiker">
+          <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Bewerken"></span>
+        </button>
         <form method="post" action="{{ url('user-delete', args=[user.id]) }}" style="display: inline;" onsubmit="return confirm('Weet je zeker dat je {{ user.first_name }} {{ user.last_name }} wilt verwijderen?');">
           {{ get_csrf_hidden_input(request) }}
-          <c-button kind="warning-subtle" size="sm" type="submit">
-            Verwijderen
-          </c-button>
+          <button
+            class="rvo-button rvo-button--subtle rvo-button--icon-only"
+            type="submit"
+            title="Verwijder gebruiker">
+            <span class="utrecht-icon rvo-icon rvo-icon-verwijderen rvo-icon--md" style="color: #e73636;" role="img" aria-label="Verwijderen"></span>
+          </button>
         </form>
       </div>
     </td>
