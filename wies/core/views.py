@@ -75,7 +75,7 @@ def auth(request):
     if user:
         auth_login(request, user)
         logger.info('login successful, access granted')
-        create_event(user.id, 'Login.success')
+        create_event(user.email, 'Login.success')
         return redirect(request.build_absolute_uri(reverse("home")))
 
     logger.info('login not successful, access denied')
@@ -747,7 +747,7 @@ def user_delete(request, pk):
         }
         user.delete()
         
-        create_event(request.user.id, 'User.delete', context)
+        create_event(request.user.email, 'User.delete', context)
         # Redirect to users list - page reload resets filters
         return redirect('admin-users')
     return HttpResponse(status=405)

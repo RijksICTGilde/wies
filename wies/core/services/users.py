@@ -38,7 +38,7 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
     if groups:
         user.groups.set(groups)
 
-    creator_user_id = creator.id if creator is not None else 0
+    creator_user_email = creator.email if creator is not None else ""
     context = {
         'created_id': user.id,
         'username': str(random_username),  # casting uuid to str to have serializable json
@@ -48,7 +48,7 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
         "label_names": label_names,
         "group_names": [group.name for group in groups],
     }
-    create_event(creator_user_id, 'User.create', context=context)
+    create_event(creator_user_email, 'User.create', context=context)
 
     return user
 
@@ -82,16 +82,16 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
     if groups:
         user.groups.set(groups)
 
-    updater_user_id = updater.id if updater is not None else 0
+    updater_user_email = updater.email if updater is not None else ""
     context = {
         'updated_id': user.id,
-        'firstname': first_name,
+        'first_name': first_name,
         'last_name': last_name,
         'email': email,
         'label_names': label_names,
         'group_names': [group.name for group in groups]
     }
-    create_event(updater_user_id, 'User.update', context=context)
+    create_event(updater_user_email, 'User.update', context=context)
     return user
 
 

@@ -8,11 +8,11 @@ SUPPORTED_EVENT_NAMES = {
     'Login.success'
 }
 
-def create_event(user_id, name, context: dict = None):
+def create_event(user_email, name, context: dict = None):
 
     if not name in SUPPORTED_EVENT_NAMES:
         raise ValueError(f"Unsupported event name: {name}")
 
     if not context:
         context = {}
-    Event.objects.create(user_id=user_id, name=name, context=context)
+    Event.objects.create(user_email=user_email, name=name, context=context)

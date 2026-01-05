@@ -27,7 +27,7 @@ class CreateUserServiceTest(TestCase):
         # Verify that event was created
         event = Event.objects.filter(name='User.create', context__created_id=user.id).first()
         self.assertIsNotNone(event)
-        self.assertEqual(event.user_id, 0)  # System-created (creator is None)
+        self.assertEqual(event.user_email, "")  # System-created (creator is None)
         self.assertEqual(event.context['email'], 'newuser@example.com')
         self.assertEqual(event.context['first_name'], 'New')
         self.assertEqual(event.context['last_name'], 'User')
@@ -42,7 +42,7 @@ class CreateUserServiceTest(TestCase):
         # Verify that event is created and creator user is logged
         event2 = Event.objects.filter(name='User.create', context__created_id=user2.id).first()
         self.assertIsNotNone(event2)
-        self.assertEqual(event2.user_id, user.id)  # Creator is user
+        self.assertEqual(event2.user_email, user.email)  # Creator is user
         self.assertEqual(event2.context['email'], 'newuser2@example.com')
         self.assertEqual(event2.context['first_name'], 'New2')
         self.assertEqual(event2.context['last_name'], 'User2')
@@ -102,9 +102,9 @@ class UpdateUserServiceTest(TestCase):
         # Verify that event was created
         event = Event.objects.filter(name='User.update', context__updated_id=user.id).first()
         self.assertIsNotNone(event)
-        self.assertEqual(event.user_id, 0)  # Updater is None (system)
+        self.assertEqual(event.user_email, "")  # Updater is None (system)
         self.assertEqual(event.context['email'], 'updated@example.com')
-        self.assertEqual(event.context['firstname'], 'Updated')
+        self.assertEqual(event.context['first_name'], 'Updated')
         self.assertEqual(event.context['last_name'], 'NewName')
 
         # Verify changes were persisted
