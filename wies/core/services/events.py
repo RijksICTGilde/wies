@@ -1,7 +1,4 @@
-from enum import Enum
-
 from wies.core.models import Event
-
 
 
 SUPPORTED_EVENT_NAMES = {

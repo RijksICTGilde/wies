@@ -11,6 +11,7 @@ class CreateUserServiceTest(TestCase):
     def test_create_user(self):
         """Test creating user"""
         user = create_user(
+            None,
             first_name="New",
             last_name="User",
             email="newuser@example.com",
@@ -23,10 +24,23 @@ class CreateUserServiceTest(TestCase):
         self.assertIsNotNone(user.username)  # UUID should be generated
         self.assertTrue(User.objects.filter(email="newuser@example.com").exists())
 
+        # TODO: test that event is created
+
+        user2 = create_user(
+            user,
+            first_name="New2",
+            last_name="User2",
+            email="newuser2@example.com",
+        )
+
+        # TODO: verify that event is created and that user2 is logged
+
+
     def test_create_user_duplicate_email(self):
         """Test that creating user with duplicate email raises EmailNotAvailableError"""
         # Create first user
         create_user(
+            None,
             first_name="First",
             last_name="User",
             email="duplicate@example.com",
@@ -35,6 +49,7 @@ class CreateUserServiceTest(TestCase):
         # Try to create second user with same email
         with self.assertRaises(EmailNotAvailableError):
             create_user(
+                None,
                 first_name="Second",
                 last_name="User",
                 email="duplicate@example.com",
@@ -51,6 +66,7 @@ class UpdateUserServiceTest(TestCase):
         """Test updating user basic information"""
         # Create a user
         user = create_user(
+            None,
             first_name="Original",
             last_name="Name",
             email="original@example.com",
@@ -58,6 +74,7 @@ class UpdateUserServiceTest(TestCase):
 
         # Update the user
         updated_user = update_user(
+            None,
             user=user,
             first_name="Updated",
             last_name="NewName",
@@ -70,6 +87,8 @@ class UpdateUserServiceTest(TestCase):
         self.assertEqual(updated_user.last_name, "NewName")
         self.assertEqual(updated_user.email, "updated@example.com")
 
+        # TODO: test if event has been created
+
         # Verify changes were persisted
         user.refresh_from_db()
         self.assertEqual(user.first_name, "Updated")
@@ -79,11 +98,13 @@ class UpdateUserServiceTest(TestCase):
         """Test that updating user email to another user's email raises EmailNotAvailableError"""
         # Create two users
         user1 = create_user(
+            None,
             first_name="User",
             last_name="One",
             email="user1@example.com",
         )
         user2 = create_user(
+            None,
             first_name="User",
             last_name="Two",
             email="user2@example.com",
@@ -92,6 +113,7 @@ class UpdateUserServiceTest(TestCase):
         # Try to update user1's email to user2's email
         with self.assertRaises(EmailNotAvailableError):
             update_user(
+                None,
                 user=user1,
                 first_name="User",
                 last_name="One",

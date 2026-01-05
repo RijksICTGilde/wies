@@ -735,12 +735,14 @@ def user_delete(request, pk):
     """Handle user deletion"""
     if request.method == 'POST':
         user = get_object_or_404(User, pk=pk, is_superuser=False)
+
+        label_names = [label.name for label in user.labels.all()]
         context = {
             'id': pk,
             'email': user.email,
             'first_name': user.first_name,
             'last_name': user.last_name,
-            'brand_name': user.brand.name if user.brand is not None else '',
+            'label_names': label_names,
             'group_names': [g.name for g in user.groups.all()]
         }
         user.delete()
