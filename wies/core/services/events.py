@@ -5,7 +5,8 @@ SUPPORTED_EVENT_NAMES = {
     'User.create',
     'User.update',
     'User.delete',
-    'Login.success'
+    'Login.success',
+    'Login.fail',
 }
 
 def create_event(user_email, name, context: dict = None):

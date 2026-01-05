@@ -3,6 +3,7 @@ import logging
 from django.contrib.auth.backends import BaseBackend
 
 from .models import Colleague, User
+from .services.events import create_event
 
 
 logger = logging.getLogger(__name__)
@@ -23,7 +24,10 @@ class AuthBackend(BaseBackend):
             user = User.objects.get(email=email)
         except User.DoesNotExist:
             # do not authenticate if User record does not exist
-            logging.info("User not authenticated")
+            logging.info("User not authenticated, user not known.")
+            create_event(email, 'Login.fail', {
+                "reason": "Unknown user",
+            })
             return None
 
         # Link colleague if match on email
