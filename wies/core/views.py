@@ -684,6 +684,9 @@ def user_edit(request, pk):
             'form_button_label': 'Opslaan',
             'modal_element_id': element_id,
             'target_element_id': element_id,
+            'delete_url': reverse('user-delete', args=[editing_user.pk]),
+            'delete_confirm_message': f'Weet je zeker dat je {editing_user.first_name} {editing_user.last_name} wilt verwijderen?',
+            'delete_success_action': "window.location.href='/admin/users/'",
         })
     elif request.method == 'POST':
         form = UserForm(request.POST, instance=editing_user)
@@ -713,6 +716,9 @@ def user_edit(request, pk):
                 'form_button_label': 'Opslaan',
                 'modal_element_id': element_id,
                 'target_element_id': element_id,
+                'delete_url': reverse('user-delete', args=[editing_user.pk]),
+                'delete_confirm_message': f'Weet je zeker dat je {editing_user.first_name} {editing_user.last_name} wilt verwijderen?',
+                'delete_success_action': "window.location.href='/admin/users/'",
             })
     return HttpResponse(status=405)
 
@@ -902,6 +908,9 @@ def label_category_edit(request, pk):
             'form_button_label': form_button_label,
             'modal_element_id': element_id,
             'target_element_id': element_id,
+            'delete_url': reverse('label-category-delete', args=[category.pk]),
+            'delete_confirm_message': f"Weet je zeker dat je categorie '{category.name}' wilt verwijderen?",
+            'delete_success_action': "location.reload()",
         })
     elif request.method == 'POST':
         form = LabelCategoryForm(request.POST, instance=category)
@@ -919,6 +928,9 @@ def label_category_edit(request, pk):
                 'form_button_label': form_button_label,
                 'modal_element_id': element_id,
                 'target_element_id': element_id,
+                'delete_url': reverse('label-category-delete', args=[category.pk]),
+                'delete_confirm_message': f"Weet je zeker dat je categorie '{category.name}' wilt verwijderen?",
+                'delete_success_action': "location.reload()",
             })
 
 
@@ -1000,6 +1012,9 @@ def label_edit(request, pk):
             'form_button_label': form_button_label,
             'modal_element_id': element_id,
             'target_element_id': element_id,
+            'delete_url': reverse('label-delete', args=[label.pk]),
+            'delete_confirm_message': f"Weet je zeker dat je label '{label.name}' wilt verwijderen?",
+            'delete_success_action': 'location.reload()',
         })
     elif request.method == 'POST':
         form = LabelForm(request.POST, instance=label)
@@ -1023,6 +1038,9 @@ def label_edit(request, pk):
                 'form_button_label': form_button_label,
                 'modal_element_id': element_id,
                 'target_element_id': element_id,
+                'delete_url': reverse('label-delete', args=[label.pk]),
+                'delete_confirm_message': f"Weet je zeker dat je label '{label.name}' wilt verwijderen?",
+                'delete_success_action': 'location.reload()',
             })
 
 

@@ -13,9 +13,16 @@
       </div>
 
       <div class="modal-footer">
-        <c-button kind="{% if warning_modal %}warning-subtle{% else %}secondary{% endif %}" type="button" @click="document.getElementById('{{ modal_element_id }}').innerHTML=''; document.body.style.overflow='auto';">
-          Annuleren
-        </c-button>
+        <div style="display: flex; gap: 0.5rem;">
+          <c-button kind="{% if warning_modal %}warning-subtle{% else %}secondary{% endif %}" type="button" @click="document.getElementById('{{ modal_element_id }}').innerHTML=''; document.body.style.overflow='auto';">
+            Annuleren
+          </c-button>
+          {% if delete_url %}
+          <c-button kind="warning" type="button" id="delete-button" data-delete-url="{{ delete_url }}" data-confirm-message="{{ delete_confirm_message|default('Weet je zeker dat je dit wilt verwijderen?') }}" data-success-action="{{ delete_success_action|default('location.reload()') }}">
+            Verwijderen
+          </c-button>
+          {% endif %}
+        </div>
         <c-button kind="{% if warning_modal %}warning{% else %}primary{% endif %}" type="submit">
           {{ form_button_label }}
         </c-button>
@@ -23,3 +30,33 @@
     </form>
   </div>
 </div>
+
+<script>
+{% if delete_url %}
+document.getElementById('delete-button').addEventListener('click', function() {
+    const confirmMessage = this.dataset.confirmMessage;
+    const deleteUrl = this.dataset.deleteUrl;
+    const successAction = this.dataset.successAction;
+    
+    if (confirm(confirmMessage)) {
+        fetch(deleteUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ get_csrf_token(request) }}',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                eval(successAction);
+            } else {
+                alert('Er is een fout opgetreden bij het verwijderen.');
+            }
+        })
+        .catch(error => {
+            alert('Er is een fout opgetreden bij het verwijderen.');
+        });
+    }
+});
+{% endif %}
+</script>

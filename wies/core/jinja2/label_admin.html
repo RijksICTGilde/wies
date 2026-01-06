@@ -16,10 +16,12 @@
           <c-h1>Labels</c-h1>
           <c-button
             kind="primary"
+            icon="plus"
+            iconPlacement="before"
             hx-get="{{ url('label-category-create', args=()) }}"
             hx-target="#labelFormModal"
             hx-swap="innerHTML">
-            Nieuwe categorie
+            Categorie toevoegen
           </c-button>
         </div>
         <!-- Categories and Labels -->

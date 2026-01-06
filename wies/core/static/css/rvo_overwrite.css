@@ -42,3 +42,18 @@
 .rvo-sidebar-layout__sidebar {
   min-height: calc(100vh - 200px);
 }
+
+/* Clickable table rows */
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.clickable-row:hover {
+  background-color: var(--rvo-color-hemelblauw-150) !important;
+}
+
+/* Clickable category header */
+.category-header.clickable-row:hover {
+  background-color: var(--rvo-color-hemelblauw-150) !important;
+}
