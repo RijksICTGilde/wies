@@ -34,7 +34,11 @@
   mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
 }
 
-/* smaller sidebar */
-.rvo-sidebar-layout {
-  grid-template-columns: 200px 1fr;
+/* Admin sidebar full page height */
+.rvo-sidebar-layout__container {
+  min-height: calc(100vh - 200px);
+}
+
+.rvo-sidebar-layout__sidebar {
+  min-height: calc(100vh - 200px);
 }
