@@ -1,9 +1,8 @@
 {% for user in object_list %}
   <tr class="rvo-table-row clickable-row"
-      hx-get="{{ url('user-edit', args=[user.id]) }}"
-      hx-target="#userFormModal"
-      hx-swap="innerHTML"
-      title="Bewerk {{ user.first_name }} {{ user.last_name }}">
+      onclick="window.location.href='?edit={{ user.id }}'"
+      title="Bewerk {{ user.first_name }} {{ user.last_name }}"
+      style="cursor: pointer;">
     <td class="rvo-table-cell">
       <div class="user-table-cell">
         <div class="user-avatar">

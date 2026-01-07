@@ -24,8 +24,77 @@
           {% include 'parts/user_table.html' %}
         </div>
 
-        <!-- Modal container -->
-        <div id="userFormModal"></div>
+        <!-- User Edit Modal -->
+        <dialog id="userEditModal" class="modal-dialog" closedby="any">
+          {% if edit_user %}
+            <div class="modal-content">
+              <div class="modal-header">
+                <h2 class="utrecht-heading-2">Bewerk gebruiker: {{ edit_user.first_name }} {{ edit_user.last_name }}</h2>
+                <button type="button" class="close">&times;</button>
+              </div>
+
+              <form method="post" action="{{ url('user-edit', args=[edit_user.id]) }}">
+                {{ get_csrf_hidden_input(request) }}
+
+                <div class="modal-body">
+                  {% include 'parts/user_form_fields.html' with user=edit_user %}
+                </div>
+
+                <div class="modal-footer">
+                  <div class="modal-footer-buttons">
+                    <div class="close">
+                      <c-button kind="secondary" type="button">
+                        Annuleren
+                      </c-button>
+                    </div>
+                    <a href="?delete={{ edit_user.id }}">
+                      <c-button kind="warning-subtle" type="button">
+                        Verwijderen
+                      </c-button>
+                    </a>
+                  </div>
+                  <c-button kind="primary" type="submit">
+                    Opslaan
+                  </c-button>
+                </div>
+              </form>
+            </div>
+          {% endif %}
+          <button class="close">Close</button>
+        </dialog>
+
+        <!-- User Delete Modal -->
+        <dialog id="userDeleteModal" class="modal-dialog" closedby="any">
+          {% if delete_user %}
+            <div class="modal-content">
+              <div class="modal-header">
+                <h2 class="utrecht-heading-2">Gebruiker verwijderen</h2>
+                <button type="button" class="close">&times;</button>
+              </div>
+
+              <div class="modal-body">
+                <p>Weet je zeker dat je <strong>{{ delete_user.first_name }} {{ delete_user.last_name }}</strong> wilt verwijderen?</p>
+              </div>
+
+              <div class="modal-footer">
+                <div class="modal-footer-buttons">
+                  <div class="close">
+                    <c-button kind="secondary" type="button">
+                      Annuleren
+                    </c-button>
+                  </div>
+                </div>
+                <form method="post" action="{{ url('user-delete', args=[delete_user.id]) }}" style="display: inline;">
+                  {{ get_csrf_hidden_input(request) }}
+                  <c-button kind="warning" type="submit">
+                    Verwijderen
+                  </c-button>
+                </form>
+              </div>
+            </div>
+          {% endif %}
+          <button class="close">Close</button>
+        </dialog>
       </div>
     </div>
   </div>

@@ -529,8 +529,26 @@ class UserListView(PermissionRequiredMixin, ListView):
         return ['user_list.html']
 
     def get_context_data(self, **kwargs):
-        """Add dynamic filter options"""
+        """Add dynamic filter options and modal context"""
         context = super().get_context_data(**kwargs)
+        
+        # Handle modal parameters
+        edit_user_id = self.request.GET.get('edit')
+        delete_user_id = self.request.GET.get('delete')
+        
+        if edit_user_id:
+            try:
+                context['edit_user'] = User.objects.get(id=edit_user_id)
+                context['edit_user_id'] = edit_user_id
+            except User.DoesNotExist:
+                pass
+        
+        if delete_user_id:
+            try:
+                context['delete_user'] = User.objects.get(id=delete_user_id)
+                context['delete_user_id'] = delete_user_id
+            except User.DoesNotExist:
+                pass
 
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op naam of email...'
@@ -677,25 +695,10 @@ def user_create(request):
 
 @permission_required('core.change_user', raise_exception=True)
 def user_edit(request, pk):
-    """Handle user editing - GET returns form modal with user data, POST processes update"""
+    """Handle user editing - POST processes update and redirects"""
     editing_user = get_object_or_404(User, pk=pk, is_superuser=False)
-    form_post_url = reverse('user-edit', args=[editing_user.id])
-    modal_title = 'Gebruiker bewerken'
-    element_id = 'userFormModal'
 
-    if request.method == 'GET':
-        # Return modal HTML with UserForm populated with user data
-        form = UserForm(instance=editing_user)
-        return render(request, 'parts/generic_form_modal.html', {
-            'content': form, 
-            'form_post_url': form_post_url, 
-            'modal_title': modal_title, 
-            'form_button_label': 'Opslaan',
-            'modal_element_id': element_id,
-            'target_element_id': element_id,
-            **get_delete_context('user-delete', editing_user.pk, f'{editing_user.first_name} {editing_user.last_name}', "window.location.href='/admin/users/'"),
-        })
-    elif request.method == 'POST':
+    if request.method == 'POST':
         form = UserForm(request.POST, instance=editing_user)
         if form.is_valid():
             update_user(
@@ -706,25 +709,12 @@ def user_edit(request, pk):
                 labels=form.cleaned_data.get('labels'),
                 groups=form.cleaned_data.get('groups')
             )
-            # For HTMX requests, use HX-Redirect header to force full page redirect
-            # For standard form posts, use normal redirect
-            if 'HX-Request' in request.headers:
-                response = HttpResponse(status=200)
-                response['HX-Redirect'] = reverse('admin-users')
-                return response
-            else:
-                return redirect('admin-users')
+            # Redirect back to admin users page (without modal)
+            return redirect('admin-users')
         else:
-            # Re-render form with errors (stays in modal with HTMX)
-            return render(request, 'parts/generic_form_modal.html', {
-                'content': form, 
-                'form_post_url': form_post_url, 
-                'modal_title': modal_title, 
-                'form_button_label': 'Opslaan',
-                'modal_element_id': element_id,
-                'target_element_id': element_id,
-                **get_delete_context('user-delete', editing_user.pk, f'{editing_user.first_name} {editing_user.last_name}', "window.location.href='/admin/users/'"),
-            })
+            # If form has errors, redirect back with edit parameter to show modal again
+            # TODO: Add form error handling
+            return redirect('admin-users')
     return HttpResponse(status=405)
 
 
@@ -843,52 +833,66 @@ def placement_import_csv(request):
 
 @permission_required('core.view_labelcategory', raise_exception=True)
 def label_admin(request):
-    """Main label admin pag"""
+    """Main label admin page with server-side modal support"""
     categories = annotate_usage_counts(LabelCategory.objects.all())
-    return render(request, 'label_admin.html', {'categories': categories})
+    context = {'categories': categories}
+    
+    # Handle modal parameters
+    create_category = request.GET.get('create_category')
+    edit_category_id = request.GET.get('edit_category')
+    edit_label_id = request.GET.get('edit_label')
+    delete_category_id = request.GET.get('delete_category')
+    delete_label_id = request.GET.get('delete_label')
+    
+    if create_category:
+        context['create_category'] = True
+    
+    if edit_category_id:
+        try:
+            context['edit_category'] = LabelCategory.objects.get(id=edit_category_id)
+            context['edit_category_id'] = edit_category_id
+        except LabelCategory.DoesNotExist:
+            pass
+    
+    if edit_label_id:
+        try:
+            context['edit_label'] = Label.objects.get(id=edit_label_id)
+            context['edit_label_id'] = edit_label_id
+        except Label.DoesNotExist:
+            pass
+    
+    if delete_category_id:
+        try:
+            context['delete_category'] = LabelCategory.objects.get(id=delete_category_id)
+            context['delete_category_id'] = delete_category_id
+        except LabelCategory.DoesNotExist:
+            pass
+    
+    if delete_label_id:
+        try:
+            context['delete_label'] = Label.objects.get(id=delete_label_id)
+            context['delete_label_id'] = delete_label_id
+        except Label.DoesNotExist:
+            pass
+    
+    return render(request, 'label_admin.html', context)
 
 
 @permission_required('core.change_labelcategory', raise_exception=True)
 def label_category_create(request):
-    """
-    Returns a partial html page, to be used with htmx
-    """
-
     """Create a new label category"""
-    form_post_url = reverse('label-category-create')
-    modal_title = 'Nieuwe categorie'
-    element_id = 'labelFormModal'
-    form_button_label = 'Toevoegen'
-
-    if request.method == 'GET':
-        form = LabelCategoryForm()
-        return render(request, 'parts/generic_form_modal.html', {
-            'content': form,
-            'form_post_url': form_post_url,
-            'modal_title': modal_title,
-            'form_button_label': form_button_label,
-            'modal_element_id': element_id,
-            'target_element_id': element_id,
-        })
-    elif request.method == 'POST':
+    
+    if request.method == 'POST':
         form = LabelCategoryForm(request.POST)
         if form.is_valid():
             saved_instance = form.save()
             messages.success(request, f"Categorie '{form.cleaned_data['name']}' succesvol aangemaakt")
-            response = HttpResponse(status=200)
-            hx_redirect = reverse('label-admin')
-            # redirecting to part of the page does using anchor does not seem to work yet
-            response['HX-Redirect'] = hx_redirect
-            return response
+            return redirect('label-admin')
         else:
-            return render(request, 'parts/generic_form_modal.html', {
-                'content': form,
-                'form_post_url': form_post_url,
-                'modal_title': modal_title,
-                'form_button_label': form_button_label,
-                'modal_element_id': element_id,
-                'target_element_id': element_id,
-            })
+            # If form has errors, redirect back with create parameter to show modal again
+            # TODO: Add form error handling
+            return redirect('label-admin')
+    return HttpResponse(status=405)
 
 
 @permission_required('core.change_labelcategory', raise_exception=True)

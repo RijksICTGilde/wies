@@ -15,15 +15,14 @@
       <div class="rvo-layout-column rvo-layout-gap--xl">
         <div class="admin-header">
           <c-h1>Labels</c-h1>
-          <c-button
-            kind="primary"
-            icon="plus"
-            iconPlacement="before"
-            hx-get="{{ url('label-category-create', args=()) }}"
-            hx-target="#labelFormModal"
-            hx-swap="innerHTML">
-            Categorie toevoegen
-          </c-button>
+          <a href="?create_category=1">
+            <c-button
+              kind="primary"
+              icon="plus"
+              iconPlacement="before">
+              Categorie toevoegen
+            </c-button>
+          </a>
         </div>
         <!-- Categories and Labels -->
         {% if categories %}
@@ -36,8 +35,186 @@
           <p>Geen categorieën gevonden. Maak een nieuwe categorie aan om te beginnen.</p>
         {% endif %}
 
-        <!-- Modal container -->
-        <div id="labelFormModal"></div>
+        <!-- Create Category Modal -->
+        <dialog id="createCategoryModal" class="modal-dialog" closedby="any">
+          {% if create_category %}
+            <div class="modal-content">
+              <div class="modal-header">
+                <h2 class="utrecht-heading-2">Nieuwe categorie</h2>
+                <button type="button" class="close">&times;</button>
+              </div>
+
+              <form method="post" action="{{ url('label-category-create') }}">
+                {{ get_csrf_hidden_input(request) }}
+
+                <div class="modal-body">
+                  {% include 'parts/label_category_form_fields.html' %}
+                </div>
+
+                <div class="modal-footer">
+                  <div class="modal-footer-buttons">
+                    <div class="close">
+                      <c-button kind="secondary" type="button">
+                        Annuleren
+                      </c-button>
+                    </div>
+                  </div>
+                  <c-button kind="primary" type="submit">
+                    Toevoegen
+                  </c-button>
+                </div>
+              </form>
+            </div>
+          {% endif %}
+          <button class="close">Close</button>
+        </dialog>
+
+        <!-- Edit Category Modal -->
+        <dialog id="editCategoryModal" class="modal-dialog" closedby="any">
+          {% if edit_category %}
+            <div class="modal-content">
+              <div class="modal-header">
+                <h2 class="utrecht-heading-2">Bewerk categorie: {{ edit_category.name }}</h2>
+                <button type="button" class="close">&times;</button>
+              </div>
+
+              <form method="post" action="{{ url('label-category-edit', args=[edit_category.id]) }}">
+                {{ get_csrf_hidden_input(request) }}
+
+                <div class="modal-body">
+                  {% include 'parts/label_category_form_fields.html' with category=edit_category %}
+                </div>
+
+                <div class="modal-footer">
+                  <div class="modal-footer-buttons">
+                    <div class="close">
+                      <c-button kind="secondary" type="button">
+                        Annuleren
+                      </c-button>
+                    </div>
+                    <a href="?delete_category={{ edit_category.id }}">
+                      <c-button kind="warning-subtle" type="button">
+                        Verwijderen
+                      </c-button>
+                    </a>
+                  </div>
+                  <c-button kind="primary" type="submit">
+                    Opslaan
+                  </c-button>
+                </div>
+              </form>
+            </div>
+          {% endif %}
+          <button class="close">Close</button>
+        </dialog>
+
+        <!-- Edit Label Modal -->
+        <dialog id="editLabelModal" class="modal-dialog" closedby="any">
+          {% if edit_label %}
+            <div class="modal-content">
+              <div class="modal-header">
+                <h2 class="utrecht-heading-2">Bewerk label: {{ edit_label.name }}</h2>
+                <button type="button" class="close">&times;</button>
+              </div>
+
+              <form method="post" action="{{ url('label-edit', args=[edit_label.id]) }}">
+                {{ get_csrf_hidden_input(request) }}
+
+                <div class="modal-body">
+                  {% include 'parts/label_form_fields.html' with label=edit_label %}
+                </div>
+
+                <div class="modal-footer">
+                  <div class="modal-footer-buttons">
+                    <div class="close">
+                      <c-button kind="secondary" type="button">
+                        Annuleren
+                      </c-button>
+                    </div>
+                    <a href="?delete_label={{ edit_label.id }}">
+                      <c-button kind="warning-subtle" type="button">
+                        Verwijderen
+                      </c-button>
+                    </a>
+                  </div>
+                  <c-button kind="primary" type="submit">
+                    Opslaan
+                  </c-button>
+                </div>
+              </form>
+            </div>
+          {% endif %}
+          <button class="close">Close</button>
+        </dialog>
+
+        <!-- Delete Category Modal -->
+        <dialog id="deleteCategoryModal" class="modal-dialog" closedby="any">
+          {% if delete_category %}
+            <div class="modal-content">
+              <div class="modal-header">
+                <h2 class="utrecht-heading-2">Categorie verwijderen</h2>
+                <button type="button" class="close">&times;</button>
+              </div>
+
+              <div class="modal-body">
+                <p>Weet je zeker dat je categorie <strong>{{ delete_category.name }}</strong> wilt verwijderen?</p>
+                {% if delete_category.labels.all() %}
+                  <p class="rvo-text--warning">Let op: Deze categorie bevat {{ delete_category.labels.count() }} label(s) die ook verwijderd worden.</p>
+                {% endif %}
+              </div>
+
+              <div class="modal-footer">
+                <div class="modal-footer-buttons">
+                  <div class="close">
+                    <c-button kind="secondary" type="button">
+                      Annuleren
+                    </c-button>
+                  </div>
+                </div>
+                <form method="post" action="{{ url('label-category-delete', args=[delete_category.id]) }}" style="display: inline;">
+                  {{ get_csrf_hidden_input(request) }}
+                  <c-button kind="warning" type="submit">
+                    Verwijderen
+                  </c-button>
+                </form>
+              </div>
+            </div>
+          {% endif %}
+          <button class="close">Close</button>
+        </dialog>
+
+        <!-- Delete Label Modal -->
+        <dialog id="deleteLabelModal" class="modal-dialog" closedby="any">
+          {% if delete_label %}
+            <div class="modal-content">
+              <div class="modal-header">
+                <h2 class="utrecht-heading-2">Label verwijderen</h2>
+                <button type="button" class="close">&times;</button>
+              </div>
+
+              <div class="modal-body">
+                <p>Weet je zeker dat je label <strong>{{ delete_label.name }}</strong> wilt verwijderen?</p>
+              </div>
+
+              <div class="modal-footer">
+                <div class="modal-footer-buttons">
+                  <div class="close">
+                    <c-button kind="secondary" type="button">
+                      Annuleren
+                    </c-button>
+                  </div>
+                </div>
+                <form method="post" action="{{ url('label-delete', args=[delete_label.id]) }}" style="display: inline;">
+                  {{ get_csrf_hidden_input(request) }}
+                  <c-button kind="warning" type="submit">
+                    Verwijderen
+                  </c-button>
+                </form>
+              </div>
+            </div>
+          {% endif %}
+          <button class="close">Close</button>
+        </dialog>
       </div>
     </div>
   </div>

@@ -1,0 +1,25 @@
+{% set form = LabelForm(instance=label if label else None) %}
+
+<div class="rvo-form-field">
+  <label for="id_name" class="rvo-form-field-label">{{ form.name.label }}</label>
+  <input type="text" 
+         name="name" 
+         value="{{ label.name if label else '' }}" 
+         class="rvo-form-field-textbox" 
+         id="id_name" 
+         required>
+  {% if form.name.errors %}
+    <ul class="rvo-form-field-error-messages">
+      {% for error in form.name.errors %}
+        <li class="rvo-form-field-error-message">{{ error }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+
+{% if label %}
+<div class="rvo-form-field">
+  <label class="rvo-form-field-label">Categorie</label>
+  <p class="rvo-text">{{ label.category.name }}</p>
+</div>
+{% endif %}

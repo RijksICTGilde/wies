@@ -1,0 +1,111 @@
+{% set form = UserForm(instance=user) %}
+
+<div class="rvo-form-field">
+  <label for="id_first_name" class="rvo-form-field-label">{{ form.first_name.label }}</label>
+  <input type="text" 
+         name="first_name" 
+         value="{{ user.first_name or '' }}" 
+         class="rvo-form-field-textbox" 
+         id="id_first_name" 
+         required>
+  {% if form.first_name.errors %}
+    <ul class="rvo-form-field-error-messages">
+      {% for error in form.first_name.errors %}
+        <li class="rvo-form-field-error-message">{{ error }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+
+<div class="rvo-form-field">
+  <label for="id_last_name" class="rvo-form-field-label">{{ form.last_name.label }}</label>
+  <input type="text" 
+         name="last_name" 
+         value="{{ user.last_name or '' }}" 
+         class="rvo-form-field-textbox" 
+         id="id_last_name" 
+         required>
+  {% if form.last_name.errors %}
+    <ul class="rvo-form-field-error-messages">
+      {% for error in form.last_name.errors %}
+        <li class="rvo-form-field-error-message">{{ error }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+
+<div class="rvo-form-field">
+  <label for="id_email" class="rvo-form-field-label">{{ form.email.label }}</label>
+  <input type="email" 
+         name="email" 
+         value="{{ user.email or '' }}" 
+         class="rvo-form-field-textbox" 
+         id="id_email" 
+         required>
+  {% if form.email.errors %}
+    <ul class="rvo-form-field-error-messages">
+      {% for error in form.email.errors %}
+        <li class="rvo-form-field-error-message">{{ error }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+
+<div class="rvo-form-field">
+  <fieldset class="rvo-form-field-checkbox-group">
+    <legend class="rvo-form-field-label">{{ form.groups.label }}</legend>
+    {% for group in form.groups.queryset %}
+      <div class="rvo-form-field-checkbox">
+        <input type="checkbox" 
+               name="groups" 
+               value="{{ group.id }}" 
+               id="id_groups_{{ group.id }}"
+               class="rvo-form-field-checkbox__input"
+               {% if group in user.groups.all() %}checked{% endif %}>
+        <label for="id_groups_{{ group.id }}" class="rvo-form-field-checkbox__label">
+          {{ group.name }}
+        </label>
+      </div>
+    {% endfor %}
+    {% if form.groups.errors %}
+      <ul class="rvo-form-field-error-messages">
+        {% for error in form.groups.errors %}
+          <li class="rvo-form-field-error-message">{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </fieldset>
+</div>
+
+{# Label categories - dynamic fields created by UserForm #}
+{% for category in LabelCategory.objects.all() %}
+  {% set field_name = 'category_' + category.id|string %}
+  {% set field = form[field_name] %}
+  {% if field %}
+    <div class="rvo-form-field">
+      <fieldset class="rvo-form-field-checkbox-group">
+        <legend class="rvo-form-field-label">{{ field.label }}</legend>
+        {% for label in category.labels.all() %}
+          <div class="rvo-form-field-checkbox">
+            <input type="checkbox" 
+                   name="{{ field_name }}" 
+                   value="{{ label.id }}" 
+                   id="id_{{ field_name }}_{{ label.id }}"
+                   class="rvo-form-field-checkbox__input"
+                   {% if label in user.labels.all() %}checked{% endif %}>
+            <label for="id_{{ field_name }}_{{ label.id }}" class="rvo-form-field-checkbox__label">
+              {{ label.name }}
+            </label>
+          </div>
+        {% endfor %}
+        {% if field.errors %}
+          <ul class="rvo-form-field-error-messages">
+            {% for error in field.errors %}
+              <li class="rvo-form-field-error-message">{{ error }}</li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </fieldset>
+    </div>
+  {% endif %}
+{% endfor %}

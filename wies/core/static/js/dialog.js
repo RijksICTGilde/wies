@@ -1,5 +1,5 @@
-// Function to setup dialog event listeners
-function setupDialogListeners(container) {
+// Function to setup dialog auto-show
+function setupDialogs(container) {
     container = container || document;
     
     const dialogs = container.querySelectorAll('dialog[closedby="any"]');
@@ -10,10 +10,10 @@ function setupDialogListeners(container) {
             dialog.showModal();
         }
         
-        // Add close button listeners
-        const closeButtons = dialog.querySelectorAll('.modal-close');
-        closeButtons.forEach(function(button) {
-            button.addEventListener('click', function() {
+        // Add close button listeners for elements with close class
+        const closeElements = dialog.querySelectorAll('.close');
+        closeElements.forEach(function(element) {
+            element.addEventListener('click', function() {
                 dialog.close();
             });
         });
@@ -22,13 +22,13 @@ function setupDialogListeners(container) {
 
 // Setup dialogs on page load
 document.addEventListener('DOMContentLoaded', function() {
-    setupDialogListeners();
+    setupDialogs();
 });
 
 // Auto-open modal when HTMX loads content (for dynamic content)
 document.addEventListener('htmx:afterSwap', function(e) {
     // Setup dialogs in the swapped content
-    setupDialogListeners(e.detail.target);
+    setupDialogs(e.detail.target);
     
     // Close modals when category blocks are swapped
     if (e.detail.target.id && e.detail.target.id.startsWith('label_category_')) {

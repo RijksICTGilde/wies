@@ -1,0 +1,46 @@
+{% set form = LabelCategoryForm(instance=category if category else None) %}
+
+<div class="rvo-form-field">
+  <label for="id_name" class="rvo-form-field-label">{{ form.name.label }}</label>
+  <input type="text" 
+         name="name" 
+         value="{{ category.name if category else '' }}" 
+         class="rvo-form-field-textbox" 
+         id="id_name" 
+         required>
+  {% if form.name.errors %}
+    <ul class="rvo-form-field-error-messages">
+      {% for error in form.name.errors %}
+        <li class="rvo-form-field-error-message">{{ error }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</div>
+
+<div class="rvo-form-field">
+  <fieldset class="rvo-form-field-radio-group">
+    <legend class="rvo-form-field-label">{{ form.color.label }}</legend>
+    {% for choice_value, choice_label in form.color.choices %}
+      <div class="rvo-form-field-radio">
+        <input type="radio" 
+               name="color" 
+               value="{{ choice_value }}" 
+               id="id_color_{{ loop.index }}"
+               class="rvo-form-field-radio__input"
+               {% if category and category.color == choice_value %}checked{% endif %}
+               {% if not category and loop.first %}checked{% endif %}>
+        <label for="id_color_{{ loop.index }}" class="rvo-form-field-radio__label">
+          <span class="color-preview" style="background-color: {{ choice_value }}; display: inline-block; width: 20px; height: 20px; margin-right: 8px; border-radius: 3px; vertical-align: middle;"></span>
+          {{ choice_label }}
+        </label>
+      </div>
+    {% endfor %}
+    {% if form.color.errors %}
+      <ul class="rvo-form-field-error-messages">
+        {% for error in form.color.errors %}
+          <li class="rvo-form-field-error-message">{{ error }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </fieldset>
+</div>
