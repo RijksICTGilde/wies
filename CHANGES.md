@@ -32,6 +32,11 @@ This files lists the changes during the lifetime of this project.
 - 113: fix enter press in user search does not trigger user create
 - 113: generalized user_form_modal -> generic_form_modal
 - add wies email adress to no-access page
+- 123: Side menu instellingen pagina fully to left
+- 123: Styling navigation
+- 123: Delete functionality to modal
+- 123: Update behaviour gebruikers and labels table rows 
+- 123: Update showModal behaviour for closing
 
 ## 2025-10-09
 - add period filter to placement page
