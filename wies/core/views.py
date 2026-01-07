@@ -675,6 +675,7 @@ def user_create(request):
     return HttpResponse(status=405)
 
 
+@permission_required('core.change_user', raise_exception=True)
 def user_edit(request, pk):
     """Handle user editing - GET returns form modal with user data, POST processes update"""
     editing_user = get_object_or_404(User, pk=pk, is_superuser=False)
