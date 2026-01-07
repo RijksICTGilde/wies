@@ -2,7 +2,7 @@
   <div class="modal-content">
     <div class="modal-header">
       <h2 class="utrecht-heading-2">{{ modal_title }}</h2>
-      <button type="button" class="close">&times;</button>
+      <button type="button" class="close modal-close-button">&times;</button>
     </div>
 
     <form method="post" action="{{ form_post_url }}" hx-post="{{ form_post_url }}" hx-target="#{{ target_element_id }}">

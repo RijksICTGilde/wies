@@ -129,13 +129,31 @@
   margin: 0;
 }
 
-.modal-close {
+.modal-close-button {
   background: none;
   border: none;
-  font-size: var(--rvo-font-size-2xl);
-  font-family: var(--rvo-font-sans-serif-font-family), var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
+  font-size: 1.5rem;
+  line-height: 1;
   cursor: pointer;
   color: var(--rvo-color-grijs-600);
+  padding: 0.25rem;
+  border-radius: 4px;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close-button:hover {
+  background-color: var(--rvo-color-grijs-100);
+  color: var(--rvo-color-grijs-800);
+}
+
+.modal-close-button:focus {
+  outline: 2px solid var(--rvo-color-hemelblauw);
+  outline-offset: 2px;
 }
 
 .modal-body {
