@@ -2,3 +2,63 @@
 .rvo-table {
     table-layout: auto;
 }
+
+/* Clickable category header styling */
+.category-header.clickable-row:hover {
+  background-color: var(--rvo-color-hemelblauw-150) !important;
+}
+
+/* Category header layout */
+.category-header {
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between;
+}
+
+.category-header c-h2 {
+  margin: 0;
+}
+
+/* Label badge styling */
+.label-badge {
+  padding: 0.25rem 0.5rem; 
+  border-radius: 3px;
+}
+
+/* Table cell with actions */
+.table-cell-with-actions {
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between;
+}
+
+.edit-icon {
+  flex-shrink: 0;
+}
+
+/* Label form container */
+.label-form-container {
+  padding: 1rem 0.75rem 0 0.75rem;
+}
+
+.label-form {
+  display: flex; 
+  gap: 0.5rem; 
+  align-items: flex-start; 
+  max-width: 600px;
+}
+
+.label-form c-input {
+  flex: 1;
+}
+
+.form-error {
+  margin-top: 0.5rem; 
+  color: #e73636;
+}
+
+/* Empty category message */
+.empty-category-message {
+  margin-top: 1rem; 
+  color: #666;
+}

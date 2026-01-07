@@ -1,6 +1,6 @@
 <div class="category-section" id="category-{{ category.name|lower }}">
-  <div class="category-header" style="display: flex; align-items: center; justify-content: space-between;">
-    <c-h2 style="margin: 0;">{{ category.name }}</c-h2>
+  <div class="category-header">
+    <c-h2>{{ category.name }}</c-h2>
     <c-button kind="tertiary" 
               icon="bewerken"
               iconPlacement="after"
@@ -28,11 +28,11 @@
             hx-target="#labelFormModal"
             hx-swap="innerHTML"
             title="Bewerk {{ label.name }}">
-            <td class="rvo-table-cell"><span class="rvo-badge" style="background-color: {{ label.category.color }}; padding: 0.25rem 0.5rem; border-radius: 3px;"">{{ label.name }}</span></td>
+            <td class="rvo-table-cell"><span class="rvo-badge label-badge" style="background-color: {{ label.category.color }};">{{ label.name }}</span></td>
             <td class="rvo-table-cell">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
+                <div class="table-cell-with-actions">
                     <span>{{ label.usage_count|default(0) }}</span>
-                    <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Bewerken" style="flex-shrink: 0;"></span>
+                    <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw edit-icon" role="img" aria-label="Bewerken"></span>
                 </div>
             </td>
         </tr>
@@ -40,9 +40,9 @@
     </tbody>
     </table>
 </div>
-<div style="padding: 1rem 0.75rem 0 0.75rem;">
-    <form hx-post="/admin/labels/category/{{ category.id }}/labels/create/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}" style="display: flex; gap: 0.5rem; align-items: flex-start; max-width: 600px;">
-        <c-input name="name" style="flex: 1;"/>
+<div class="label-form-container">
+    <form class="label-form" hx-post="/admin/labels/category/{{ category.id }}/labels/create/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
+        <c-input name="name"/>
         <c-button kind="secondary" 
                   icon="plus"
                   iconPlacement="before"
@@ -51,14 +51,14 @@
         </c-button>
     </form>
     {% if errors and errors.name%}
-        <div style="margin-top: 0.5rem; color: #e73636;">{{ errors.name }}</div>
+        <div class="form-error">{{ errors.name }}</div>
     {% endif %}
 </div>
 {% else %}
-<p style="margin-top: 1rem; color: #666;">Geen labels in deze categorie</p>
-<div style="padding: 1rem 0.75rem 0 0.75rem;">
-    <form hx-post="/admin/labels/category/{{ category.id }}/labels/create/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}" style="display: flex; gap: 0.5rem; align-items: flex-start; max-width: 600px;">
-        <c-input name="name" style="flex: 1;"/>
+<p class="empty-category-message">Geen labels in deze categorie</p>
+<div class="label-form-container">
+    <form class="label-form" hx-post="/admin/labels/category/{{ category.id }}/labels/create/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
+        <c-input name="name"/>
         <c-button kind="secondary" 
                   icon="plus"
                   iconPlacement="before"
@@ -67,7 +67,7 @@
         </c-button>
     </form>
     {% if errors and errors.name%}
-        <div style="margin-top: 0.5rem; color: #e73636;">{{ errors.name }}</div>
+        <div class="form-error">{{ errors.name }}</div>
     {% endif %}
 </div>
 {% endif %}

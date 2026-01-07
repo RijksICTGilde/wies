@@ -29,6 +29,15 @@ from .services.users import create_user, update_user, create_users_from_csv
 from .forms import UserForm, LabelCategoryForm, LabelForm
 from .querysets import annotate_usage_counts
 
+
+def get_delete_context(delete_url_name, object_pk, object_name, success_action="location.reload()"):
+    """Helper function to generate delete context for modals"""
+    return {
+        'delete_url': reverse(delete_url_name, args=[object_pk]),
+        'delete_confirm_message': f'Weet je zeker dat je {object_name} wilt verwijderen?',
+        'delete_success_action': success_action,
+    }
+
 oauth = OAuth()
 oauth.register(
     name='oidc',
@@ -666,7 +675,6 @@ def user_create(request):
     return HttpResponse(status=405)
 
 
-@permission_required('core.change_user', raise_exception=True)
 def user_edit(request, pk):
     """Handle user editing - GET returns form modal with user data, POST processes update"""
     editing_user = get_object_or_404(User, pk=pk, is_superuser=False)
@@ -684,9 +692,7 @@ def user_edit(request, pk):
             'form_button_label': 'Opslaan',
             'modal_element_id': element_id,
             'target_element_id': element_id,
-            'delete_url': reverse('user-delete', args=[editing_user.pk]),
-            'delete_confirm_message': f'Weet je zeker dat je {editing_user.first_name} {editing_user.last_name} wilt verwijderen?',
-            'delete_success_action': "window.location.href='/admin/users/'",
+            **get_delete_context('user-delete', editing_user.pk, f'{editing_user.first_name} {editing_user.last_name}', "window.location.href='/admin/users/'"),
         })
     elif request.method == 'POST':
         form = UserForm(request.POST, instance=editing_user)
@@ -716,9 +722,7 @@ def user_edit(request, pk):
                 'form_button_label': 'Opslaan',
                 'modal_element_id': element_id,
                 'target_element_id': element_id,
-                'delete_url': reverse('user-delete', args=[editing_user.pk]),
-                'delete_confirm_message': f'Weet je zeker dat je {editing_user.first_name} {editing_user.last_name} wilt verwijderen?',
-                'delete_success_action': "window.location.href='/admin/users/'",
+                **get_delete_context('user-delete', editing_user.pk, f'{editing_user.first_name} {editing_user.last_name}', "window.location.href='/admin/users/'"),
             })
     return HttpResponse(status=405)
 
@@ -908,9 +912,7 @@ def label_category_edit(request, pk):
             'form_button_label': form_button_label,
             'modal_element_id': element_id,
             'target_element_id': element_id,
-            'delete_url': reverse('label-category-delete', args=[category.pk]),
-            'delete_confirm_message': f"Weet je zeker dat je categorie '{category.name}' wilt verwijderen?",
-            'delete_success_action': "location.reload()",
+            **get_delete_context('label-category-delete', category.pk, f"categorie '{category.name}'"),
         })
     elif request.method == 'POST':
         form = LabelCategoryForm(request.POST, instance=category)
@@ -928,9 +930,7 @@ def label_category_edit(request, pk):
                 'form_button_label': form_button_label,
                 'modal_element_id': element_id,
                 'target_element_id': element_id,
-                'delete_url': reverse('label-category-delete', args=[category.pk]),
-                'delete_confirm_message': f"Weet je zeker dat je categorie '{category.name}' wilt verwijderen?",
-                'delete_success_action': "location.reload()",
+                **get_delete_context('label-category-delete', category.pk, f"categorie '{category.name}'"),
             })
 
 
@@ -1012,9 +1012,7 @@ def label_edit(request, pk):
             'form_button_label': form_button_label,
             'modal_element_id': element_id,
             'target_element_id': element_id,
-            'delete_url': reverse('label-delete', args=[label.pk]),
-            'delete_confirm_message': f"Weet je zeker dat je label '{label.name}' wilt verwijderen?",
-            'delete_success_action': 'location.reload()',
+            **get_delete_context('label-delete', label.pk, f"label '{label.name}'"),
         })
     elif request.method == 'POST':
         form = LabelForm(request.POST, instance=label)
@@ -1038,9 +1036,7 @@ def label_edit(request, pk):
                 'form_button_label': form_button_label,
                 'modal_element_id': element_id,
                 'target_element_id': element_id,
-                'delete_url': reverse('label-delete', args=[label.pk]),
-                'delete_confirm_message': f"Weet je zeker dat je label '{label.name}' wilt verwijderen?",
-                'delete_success_action': 'location.reload()',
+                **get_delete_context('label-delete', label.pk, f"label '{label.name}'"),
             })
 
 

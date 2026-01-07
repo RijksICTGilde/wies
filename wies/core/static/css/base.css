@@ -1,4 +1,4 @@
-/* Table row styling with RVO design system */
+/* Table row styling - custom application classes */
 .clickable-row {
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -7,6 +7,48 @@
 .clickable-row:hover{
   background-color: var(--rvo-color-hemelblauw-150) !important;
   cursor: pointer;
+}
+
+/* Dialog modal styling */
+.modal-dialog {
+  border: none;
+  border-radius: 8px;
+  padding: 0;
+  max-width: 600px;
+  width: 90vw;
+  max-height: 90vh;
+  overflow: hidden;
+  background: white;
+}
+
+.modal-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Override old modal-content styling for dialog modals */
+.modal-dialog .modal-content {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  max-width: none;
+  width: 100%;
+  max-height: none;
+}
+
+/* Remove focus outline from close button */
+.modal-dialog .modal-close:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Modal footer button layout */
+.modal-footer-buttons {
+  display: flex; 
+  gap: 0.5rem;
+}
+
+.modal-footer-delete-form {
+  display: inline;
 }
 
 /* Page header styling */

@@ -1,8 +1,8 @@
-<div class="modal-overlay" style="display: flex;">
+<dialog id="{{ modal_element_id }}" class="modal-dialog">
   <div class="modal-content">
     <div class="modal-header">
       <h2 class="utrecht-heading-2">{{ modal_title }}</h2>
-      <button type="button" class="modal-close" onclick="document.getElementById('{{ modal_element_id }}').innerHTML=''; document.body.style.overflow='auto';">&times;</button>
+      <button type="button" class="modal-close" onclick="this.closest('dialog').close()">&times;</button>
     </div>
 
     <form method="post" action="{{ form_post_url }}" hx-post="{{ form_post_url }}" hx-target="#{{ target_element_id }}">
@@ -13,14 +13,19 @@
       </div>
 
       <div class="modal-footer">
-        <div style="display: flex; gap: 0.5rem;">
-          <c-button kind="{% if warning_modal %}warning-subtle{% else %}secondary{% endif %}" type="button" @click="document.getElementById('{{ modal_element_id }}').innerHTML=''; document.body.style.overflow='auto';">
-            Annuleren
-          </c-button>
+        <div class="modal-footer-buttons">
+          <div onclick="this.closest('dialog').close()">
+            <c-button kind="{% if warning_modal %}warning-subtle{% else %}secondary{% endif %}" type="button">
+              Annuleren
+            </c-button>
+          </div>
           {% if delete_url %}
-          <c-button kind="warning" type="button" id="delete-button" data-delete-url="{{ delete_url }}" data-confirm-message="{{ delete_confirm_message|default('Weet je zeker dat je dit wilt verwijderen?') }}" data-success-action="{{ delete_success_action|default('location.reload()') }}">
-            Verwijderen
-          </c-button>
+          <form class="modal-footer-delete-form" method="post" action="{{ delete_url }}" onsubmit="return confirm('{{ delete_confirm_message|default('Weet je zeker dat je dit wilt verwijderen?') }}');">
+            {{ get_csrf_hidden_input(request) }}
+            <c-button kind="warning-subtle" type="submit">
+              Verwijderen
+            </c-button>
+          </form>
           {% endif %}
         </div>
         <c-button kind="{% if warning_modal %}warning{% else %}primary{% endif %}" type="submit">
@@ -29,34 +34,5 @@
       </div>
     </form>
   </div>
-</div>
+</dialog>
 
-<script>
-{% if delete_url %}
-document.getElementById('delete-button').addEventListener('click', function() {
-    const confirmMessage = this.dataset.confirmMessage;
-    const deleteUrl = this.dataset.deleteUrl;
-    const successAction = this.dataset.successAction;
-    
-    if (confirm(confirmMessage)) {
-        fetch(deleteUrl, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ get_csrf_token(request) }}',
-                'Content-Type': 'application/x-www-form-urlencoded',
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                eval(successAction);
-            } else {
-                alert('Er is een fout opgetreden bij het verwijderen.');
-            }
-        })
-        .catch(error => {
-            alert('Er is een fout opgetreden bij het verwijderen.');
-        });
-    }
-});
-{% endif %}
-</script>
