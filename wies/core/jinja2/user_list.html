@@ -3,6 +3,7 @@
 {% block extra_head %}
 <link rel="stylesheet" href="{{ static('css/user_list.css') }}">
 <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
+<script src="{{ static('js/dialog.js') }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -29,17 +30,5 @@
     </div>
   </div>
 </main>
-
-<script>
-// Auto-open modal when HTMX loads content
-document.addEventListener('htmx:afterSwap', function(e) {
-  if (e.detail.target.id === 'userFormModal') {
-    const dialog = e.detail.target.querySelector('dialog');
-    if (dialog) {
-      dialog.showModal();
-    }
-  }
-});
-</script>
 
 {% endblock %}
