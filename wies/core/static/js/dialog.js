@@ -25,4 +25,12 @@ document.addEventListener('htmx:afterSwap', function(e) {
     if (dialog && dialog.innerHTML.trim()) {
         dialog.showModal();
     }
+    
+    // Close modals when category blocks are swapped
+    if (e.detail.target.id && e.detail.target.id.startsWith('label_category_')) {
+        const modal = document.getElementById("labelFormModal");
+        if (modal) {
+            modal.innerHTML = '';
+        }
+    }
 });

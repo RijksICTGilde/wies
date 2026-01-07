@@ -44,15 +44,4 @@
 </main>
 
 
-<script>
-//Make sure modal is closed if category blocks are swapped
-{% for category in categories %}
-  category_block = document.getElementById("label_category_{{ category.id }}");
-  category_block.addEventListener("htmx:afterSwap", function(e){
-    modal = document.getElementById("labelFormModal");
-    modal.innerHTML = '';
-  })
-{% endfor %}
-</script>
-
 {% endblock %}
