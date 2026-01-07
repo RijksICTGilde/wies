@@ -14,9 +14,11 @@
 
       <div class="modal-footer">
         <div class="modal-footer-buttons">
-          <c-button kind="{% if warning_modal %}warning-subtle{% else %}secondary{% endif %}" type="button" class="modal-close">
-            Annuleren
-          </c-button>
+          <div class="modal-close">
+            <c-button kind="{% if warning_modal %}warning-subtle{% else %}secondary{% endif %}" type="button">
+              Annuleren
+            </c-button>
+          </div>
           {% if delete_url %}
           <form class="modal-footer-delete-form" method="post" action="{{ delete_url }}" onsubmit="return confirm('{{ delete_confirm_message|default('Weet je zeker dat je dit wilt verwijderen?') }}');">
             {{ get_csrf_hidden_input(request) }}
