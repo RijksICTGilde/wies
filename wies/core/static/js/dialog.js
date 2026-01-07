@@ -1,7 +1,8 @@
-// Auto-show dialog functionality based on PR #116 pattern
-document.addEventListener('DOMContentLoaded', function() {
-    // Find all dialogs with closedby="any" attribute
-    const dialogs = document.querySelectorAll('dialog[closedby="any"]');
+// Function to setup dialog event listeners
+function setupDialogListeners(container) {
+    container = container || document;
+    
+    const dialogs = container.querySelectorAll('dialog[closedby="any"]');
     
     dialogs.forEach(function(dialog) {
         // If dialog has content, show it automatically
@@ -17,14 +18,17 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     });
+}
+
+// Setup dialogs on page load
+document.addEventListener('DOMContentLoaded', function() {
+    setupDialogListeners();
 });
 
 // Auto-open modal when HTMX loads content (for dynamic content)
 document.addEventListener('htmx:afterSwap', function(e) {
-    const dialog = e.detail.target.querySelector('dialog[closedby="any"]');
-    if (dialog && dialog.innerHTML.trim()) {
-        dialog.showModal();
-    }
+    // Setup dialogs in the swapped content
+    setupDialogListeners(e.detail.target);
     
     // Close modals when category blocks are swapped
     if (e.detail.target.id && e.detail.target.id.startsWith('label_category_')) {
