@@ -16,10 +16,12 @@
           <c-h1>Labels</c-h1>
           <c-button
             kind="primary"
+            icon="plus"
+            iconPlacement="before"
             hx-get="{{ url('label-category-create', args=()) }}"
             hx-target="#labelFormModal"
             hx-swap="innerHTML">
-            Nieuwe categorie
+            Categorie toevoegen
           </c-button>
         </div>
         <!-- Categories and Labels -->
@@ -42,16 +44,24 @@
 
 
 <script>
+// Auto-open modal when HTMX loads content
+document.addEventListener('htmx:afterSwap', function(e) {
+  if (e.detail.target.id === 'labelFormModal') {
+    const dialog = e.detail.target.querySelector('dialog');
+    if (dialog) {
+      dialog.showModal();
+    }
+  }
+});
 
-  //Make sure modal is closed if category blocks are swapped
-  {% for category in categories %}
-    category_block = document.getElementById("label_category_{{ category.id }}");
-    category_block.addEventListener("htmx:afterSwap", function(e){
-      modal = document.getElementById("labelFormModal");
-      modal.innerHTML = '';
-    })
-  {% endfor %}
-  
+//Make sure modal is closed if category blocks are swapped
+{% for category in categories %}
+  category_block = document.getElementById("label_category_{{ category.id }}");
+  category_block.addEventListener("htmx:afterSwap", function(e){
+    modal = document.getElementById("labelFormModal");
+    modal.innerHTML = '';
+  })
+{% endfor %}
 </script>
 
 {% endblock %}

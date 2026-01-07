@@ -1,22 +1,14 @@
 <div class="category-section" id="category-{{ category.name|lower }}">
   <div class="category-header">
-    <c-h2 style="margin: 0;">{{ category.name }}</c-h2>
-    <button
-        class="rvo-button rvo-button--subtle rvo-button--icon-only"
-        hx-get="{{ url('label-category-edit', kwargs={'pk': category.pk}) }}"
-        hx-target="#labelFormModal"
-        hx-swap="innerHTML"
-        title="Bewerk label">
-        <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Bewerken"></span>
-    </button>
-    <button
-        class="rvo-button rvo-button--subtle rvo-button--icon-only"
-        hx-get="{{ url('label-category-delete', kwargs={'pk': category.pk}) }}"
-        hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
-        hx-target="#labelFormModal"
-        title="Verwijder label">
-        <span class="utrecht-icon rvo-icon rvo-icon-verwijderen rvo-icon--md" style="color: #e73636;" role="img" aria-label="Verwijderen"></span>
-    </button>
+    <c-h2>{{ category.name }}</c-h2>
+    <c-button kind="tertiary" 
+              icon="bewerken"
+              iconPlacement="after"
+              hx-get="{{ url('label-category-edit', kwargs={'pk': category.pk}) }}"
+              hx-target="#labelFormModal"
+              hx-swap="innerHTML">
+      Bewerk categorie
+    </c-button>
   </div>
 </div>
 
@@ -27,51 +19,56 @@
         <tr class="rvo-table-row">
             <th scope="col" class="rvo-table-header">Naam</th>
             <th scope="col" class="rvo-table-header">Toegepast</th>
-            <th scope="col" class="rvo-table-header">Acties</th>
         </tr>
     </thead>
     <tbody class="rvo-table-body">
         {% for label in category.labels.all() %}
-        <tr class="rvo-table-row">
-            <td class="rvo-table-cell"><span class="rvo-badge" style="background-color: {{ label.category.color }}; padding: 0.25rem 0.5rem; border-radius: 3px;"">{{ label.name }}</span></td>
-            <td class="rvo-table-cell">{{ label.usage_count|default(0) }}</td>
+        <tr class="rvo-table-row clickable-row"
+            hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}"
+            hx-target="#labelFormModal"
+            hx-swap="innerHTML"
+            title="Bewerk {{ label.name }}">
+            <td class="rvo-table-cell"><span class="rvo-badge label-badge" style="background-color: {{ label.category.color }};">{{ label.name }}</span></td>
             <td class="rvo-table-cell">
-            <div class="rvo-layout-row rvo-layout-gap--sm">
-                <button
-                class="rvo-button rvo-button--subtle rvo-button--icon-only"
-                hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}"
-                hx-target="#labelFormModal"
-                hx-swap="innerHTML"
-                title="Bewerk label">
-                <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Bewerken"></span>
-                </button>
-                <button
-                class="rvo-button rvo-button--subtle rvo-button--icon-only"
-                hx-get="{{ url('label-delete', kwargs={'pk': label.pk}) }}"
-                hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
-                hx-target="#labelFormModal"
-                title="Verwijder label">
-                <span class="utrecht-icon rvo-icon rvo-icon-verwijderen rvo-icon--md" style="color: #e73636;" role="img" aria-label="Verwijderen"></span>
-                </button>
-            </div>
+                <div class="table-cell-with-actions">
+                    <span>{{ label.usage_count|default(0) }}</span>
+                    <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw edit-icon" role="img" aria-label="Bewerken"></span>
+                </div>
             </td>
         </tr>
         {% endfor %}
     </tbody>
     </table>
 </div>
-{% else %}
-<p style="margin-top: 1rem; color: #666;">Geen labels in deze categorie</p>
-{% endif %}
-
-<form hx-post="/admin/labels/category/{{ category.id }}/labels/create/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
-    <c-input name="name"/>
-    <c-button kind="secondary"  type="submit">
-        Label toevoegen
-    </c-button>
-    <br>
+<div class="label-form-container">
+    <form class="label-form" hx-post="/admin/labels/category/{{ category.id }}/labels/create/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
+        <c-input name="name"/>
+        <c-button kind="secondary" 
+                  icon="plus"
+                  iconPlacement="before"
+                  type="submit">
+            Label toevoegen
+        </c-button>
+    </form>
     {% if errors and errors.name%}
-        {{ errors.name }}
+        <div class="form-error">{{ errors.name }}</div>
     {% endif %}
-</form>
+</div>
+{% else %}
+<p class="empty-category-message">Geen labels in deze categorie</p>
+<div class="label-form-container">
+    <form class="label-form" hx-post="/admin/labels/category/{{ category.id }}/labels/create/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
+        <c-input name="name"/>
+        <c-button kind="secondary" 
+                  icon="plus"
+                  iconPlacement="before"
+                  type="submit">
+            Label toevoegen
+        </c-button>
+    </form>
+    {% if errors and errors.name%}
+        <div class="form-error">{{ errors.name }}</div>
+    {% endif %}
+</div>
+{% endif %}
 
