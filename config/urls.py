@@ -46,7 +46,7 @@ urlpatterns = [
     path('admin/labels/category/create/', label_category_create, name='label-category-create'),
     path('admin/labels/category/<int:pk>/edit/', label_category_edit, name='label-category-edit'),
     path('admin/labels/category/<int:pk>/delete/', label_category_delete, name='label-category-delete'),
-    path('admin/labels/category/<int:pk>/labels/create/', label_create),
+    path('admin/labels/create/', label_create, name='label-create'),
     path('admin/labels/<int:pk>/edit/', label_edit, name='label-edit'),
     path('admin/labels/<int:pk>/delete/', label_delete, name='label-delete'),
 ]

@@ -897,183 +897,81 @@ def label_category_create(request):
 
 @permission_required('core.change_labelcategory', raise_exception=True)
 def label_category_edit(request, pk):
-    """
-    Edit a label category
-    Returns a partial html page, to be used with htmx
-    """
+    """Edit a label category"""
     
     category = get_object_or_404(LabelCategory, pk=pk)
-    form_post_url = reverse('label-category-edit', kwargs={'pk': pk})
-    modal_title = f'Bewerk categorie: {category.name}'
-    form_button_label = 'Opslaan'
-    element_id = 'labelFormModal'
 
-    if request.method == 'GET':
-        form = LabelCategoryForm(instance=category)
-        return render(request, 'parts/generic_form_modal.html', {
-            'content': form,
-            'form_post_url': form_post_url,
-            'modal_title': modal_title,
-            'form_button_label': form_button_label,
-            'modal_element_id': element_id,
-            'target_element_id': element_id,
-            **get_delete_context('label-category-delete', category.pk, f"categorie '{category.name}'"),
-        })
-    elif request.method == 'POST':
+    if request.method == 'POST':
         form = LabelCategoryForm(request.POST, instance=category)
         if form.is_valid():
             form.save()
-            response = HttpResponse(status=200)
-            response['HX-Redirect'] = reverse('label-admin')
-            return response
-
+            return redirect('label-admin')
         else:
-            return render(request, 'parts/generic_form_modal.html', {
-                'content': form,
-                'form_post_url': form_post_url,
-                'modal_title': modal_title,
-                'form_button_label': form_button_label,
-                'modal_element_id': element_id,
-                'target_element_id': element_id,
-                **get_delete_context('label-category-delete', category.pk, f"categorie '{category.name}'"),
-            })
+            # If form has errors, redirect back with edit parameter to show modal again
+            # TODO: Add form error handling
+            return redirect('label-admin')
+    return HttpResponse(status=405)
 
 
 @permission_required('core.delete_labelcategory', raise_exception=True)
 def label_category_delete(request, pk):
-    """
-    To be used with htmx
-    """
-    category = get_object_or_404(LabelCategory, pk=pk)
-    if request.method == 'GET':
-        form_post_url = reverse('label-category-delete', kwargs={'pk': pk})
-        return render(request, 'parts/generic_form_modal.html', {
-            'form_post_url': form_post_url, 
-            'modal_title': f"Verwijder categorie: {category.name}", 
-            'form_button_label': 'Verwijderen',
-            'warning_modal': True,
-            'modal_element_id': "labelFormModal",
-            "content": mark_safe(f"<p>Weet je zeker dat deze categorie wil verwijderen?</p><p>Dit verwijdert ook alle <b>{category.labels.count()}</b> labels</p>"),
-            'target_element_id': f"labelFormModal",
-        })
-    elif request.method == 'POST':
+    """Delete a label category"""
+    
+    if request.method == 'POST':
+        category = get_object_or_404(LabelCategory, pk=pk)
+        category_name = category.name
         category.delete()
-        messages.success(request, f"Categorie '{category.name}' succesvol verwijderd")
-        response = HttpResponse(status=200)
-        response['HX-Redirect'] = reverse('label-admin')
-        return response
+        messages.success(request, f"Categorie '{category_name}' succesvol verwijderd")
+        return redirect('label-admin')
     return HttpResponse(status=405)
 
 
 @permission_required('core.add_label', raise_exception=True)
-def label_create(request, pk):
-    """
-    Returns a partial html page, to be used with htmx
-    """
-
+def label_create(request):
+    """Create a new label"""
+    
     if request.method == 'POST':
-        category = get_object_or_404(LabelCategory, pk=pk)
+        category_id = request.POST.get('category_id')
+        if not category_id:
+            return redirect('label-admin')
+            
+        category = get_object_or_404(LabelCategory, pk=category_id)
         form = LabelForm(request.POST, category_id=category.id)
         if form.is_valid(): 
             new_instance = form.save(commit=False)
             new_instance.category = category
             new_instance.save()
-
-            category_qs = LabelCategory.objects.filter(id=category.id)
-            category = annotate_usage_counts(category_qs).get()
-
-            return render(request, 'parts/label_category.html', {
-                'category': category
-            })
+            return redirect('label-admin')
         else:
-            errors = {}
-            for field, error in form.errors.items():
-                errors[field] = error
-            return render(request, 'parts/label_category.html', {
-                'category': category,
-                'errors': errors,
-            })
+            # If form has errors, redirect back 
+            # TODO: Add form error handling
+            return redirect('label-admin')
     return HttpResponse(status=405)
 
 
 @permission_required('core.change_label', raise_exception=True)
 def label_edit(request, pk):
-    """
-    Returns a partial html page, to be used with htmx
-    """
+    """Edit a label"""
     label = get_object_or_404(Label, pk=pk)
-    category = label.category
-    form_post_url = reverse('label-edit', kwargs={'pk': pk})
-    modal_title = f'Bewerk label: {label.name}'
-    form_button_label = 'Opslaan'
-    element_id = 'labelFormModal'
 
-    if request.method == 'GET':
-        form = LabelForm(instance=label, category_id=category.id)
-        return render(request, 'parts/generic_form_modal.html', {
-            'content': form,
-            'form_post_url': form_post_url,
-            'modal_title': modal_title,
-            'form_button_label': form_button_label,
-            'modal_element_id': element_id,
-            'target_element_id': element_id,
-            **get_delete_context('label-delete', label.pk, f"label '{label.name}'"),
-        })
-    elif request.method == 'POST':
+    if request.method == 'POST':
         form = LabelForm(request.POST, instance=label)
         if form.is_valid():
             form.save()
-
-            category_qs = LabelCategory.objects.filter(id=category.id)
-            category = annotate_usage_counts(category_qs).get()
-
-            response = render(request, 'parts/label_category.html', {
-                'category': category
-            })
-            response['HX-Retarget'] = f"#label_category_{category.id}"
-            response['HX-Trigger'] = 'closeModal'
-            return response
+            return redirect('label-admin')
         else:
-            return render(request, 'parts/generic_form_modal.html', {
-                'content': form,
-                'form_post_url': form_post_url,
-                'modal_title': modal_title,
-                'form_button_label': form_button_label,
-                'modal_element_id': element_id,
-                'target_element_id': element_id,
-                **get_delete_context('label-delete', label.pk, f"label '{label.name}'"),
-            })
+            # If form has errors, redirect back with edit parameter to show modal again
+            # TODO: Add form error handling
+            return redirect('label-admin')
+    return HttpResponse(status=405)
 
 
 @permission_required('core.delete_label', raise_exception=True)
 def label_delete(request, pk):
-    """
-    To be used with htmx
-    """
-
-    label = get_object_or_404(Label, pk=pk)
-    category = label.category
-
-    label_use_count = label.users.count() + label.colleagues.count()
+    """Delete a label"""
     
-    if request.method == 'GET':
-        form_post_url = reverse('label-delete', kwargs={'pk': pk})
-        return render(request, 'parts/generic_form_modal.html', {
-            'form_post_url': form_post_url, 
-            'modal_title': f"Verwijder label: {label.name}", 
-            'form_button_label': 'Verwijderen',
-            'warning_modal': True,
-            'modal_element_id': "labelFormModal",
-            "content": mark_safe(f"<p>Weet je zeker dat dit label wil verwijderen?</p><p>Het wordt gebruikt op <b>{label_use_count}</b> plekken</p>"),
-            'target_element_id': f"label_category_{category.id}",
-        })
-    elif request.method == 'POST':
+    if request.method == 'POST':
+        label = get_object_or_404(Label, pk=pk)
         label.delete()
-
-        category_qs = LabelCategory.objects.filter(id=category.id)
-        category = annotate_usage_counts(category_qs).get()
-
-        return render(request, 'parts/label_category.html', {
-            'category': category,
-        })
+        return redirect('label-admin')
     return HttpResponse(status=405)

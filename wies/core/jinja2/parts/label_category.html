@@ -1,14 +1,13 @@
 <div class="category-section" id="category-{{ category.name|lower }}">
   <div class="category-header">
     <c-h2>{{ category.name }}</c-h2>
-    <c-button kind="tertiary" 
-              icon="bewerken"
-              iconPlacement="after"
-              hx-get="{{ url('label-category-edit', kwargs={'pk': category.pk}) }}"
-              hx-target="#labelFormModal"
-              hx-swap="innerHTML">
-      Bewerk categorie
-    </c-button>
+    <a href="?edit_category={{ category.pk }}">
+      <c-button kind="tertiary" 
+                icon="bewerken"
+                iconPlacement="after">
+        Bewerk categorie
+      </c-button>
+    </a>
   </div>
 </div>
 
@@ -24,10 +23,9 @@
     <tbody class="rvo-table-body">
         {% for label in category.labels.all() %}
         <tr class="rvo-table-row clickable-row"
-            hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}"
-            hx-target="#labelFormModal"
-            hx-swap="innerHTML"
-            title="Bewerk {{ label.name }}">
+            onclick="window.location.href='?edit_label={{ label.pk }}'"
+            title="Bewerk {{ label.name }}"
+            style="cursor: pointer;">
             <td class="rvo-table-cell"><span class="rvo-badge label-badge" style="background-color: {{ label.category.color }};">{{ label.name }}</span></td>
             <td class="rvo-table-cell">
                 <div class="table-cell-with-actions">
@@ -41,8 +39,10 @@
     </table>
 </div>
 <div class="label-form-container">
-    <form class="label-form" hx-post="/admin/labels/category/{{ category.id }}/labels/create/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
-        <c-input name="name"/>
+    <form class="label-form" method="post" action="{{ url('label-create') }}">
+        {{ get_csrf_hidden_input(request) }}
+        <input type="hidden" name="category_id" value="{{ category.id }}">
+        <c-input name="name" placeholder="Label naam"/>
         <c-button kind="secondary" 
                   icon="plus"
                   iconPlacement="before"
@@ -50,15 +50,14 @@
             Label toevoegen
         </c-button>
     </form>
-    {% if errors and errors.name%}
-        <div class="form-error">{{ errors.name }}</div>
-    {% endif %}
 </div>
 {% else %}
 <p class="empty-category-message">Geen labels in deze categorie</p>
 <div class="label-form-container">
-    <form class="label-form" hx-post="/admin/labels/category/{{ category.id }}/labels/create/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
-        <c-input name="name"/>
+    <form class="label-form" method="post" action="{{ url('label-create') }}">
+        {{ get_csrf_hidden_input(request) }}
+        <input type="hidden" name="category_id" value="{{ category.id }}">
+        <c-input name="name" placeholder="Label naam"/>
         <c-button kind="secondary" 
                   icon="plus"
                   iconPlacement="before"
@@ -66,9 +65,6 @@
             Label toevoegen
         </c-button>
     </form>
-    {% if errors and errors.name%}
-        <div class="form-error">{{ errors.name }}</div>
-    {% endif %}
 </div>
 {% endif %}
 
