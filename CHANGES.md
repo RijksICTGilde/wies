@@ -37,6 +37,7 @@ This files lists the changes during the lifetime of this project.
 - 123: Delete functionality to modal
 - 123: Update behaviour gebruikers and labels table rows 
 - 123: Update showModal behaviour for closing
+- 123: Change layout user modal
 
 ## 2025-10-09
 - add period filter to placement page

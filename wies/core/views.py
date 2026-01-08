@@ -602,7 +602,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         ]
         
         context['primary_button'] = {
-            'button_text': 'Nieuwe gebruiker',
+            'button_text': 'Gebruiker toevoegen',
             'attrs': {
                 'hx-get': reverse('user-create'),
                 'hx-target': '#userFormModal',
