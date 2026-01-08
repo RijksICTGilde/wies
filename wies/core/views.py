@@ -636,7 +636,7 @@ def user_create(request):
     if request.method == 'GET':
         # Return modal HTML with empty UserForm
         form = UserForm()
-        return render(request, 'parts/generic_form_modal.html', {
+        return render(request, 'parts/user_form_modal.html', {
             'content': form, 
             'form_post_url': form_post_url, 
             'modal_title': modal_title, 
@@ -664,7 +664,7 @@ def user_create(request):
                 return redirect('admin-users')
         else:
             # Re-render form with errors (stays in modal with HTMX)
-            return render(request, 'parts/generic_form_modal.html', {
+            return render(request, 'parts/user_form_modal.html', {
                 'content': form, 
                 'form_post_url': form_post_url, 
                 'modal_title': modal_title, 
@@ -686,7 +686,7 @@ def user_edit(request, pk):
     if request.method == 'GET':
         # Return modal HTML with UserForm populated with user data
         form = UserForm(instance=editing_user)
-        return render(request, 'parts/generic_form_modal.html', {
+        return render(request, 'parts/user_form_modal.html', {
             'content': form, 
             'form_post_url': form_post_url, 
             'modal_title': modal_title, 
@@ -716,7 +716,7 @@ def user_edit(request, pk):
                 return redirect('admin-users')
         else:
             # Re-render form with errors (stays in modal with HTMX)
-            return render(request, 'parts/generic_form_modal.html', {
+            return render(request, 'parts/user_form_modal.html', {
                 'content': form, 
                 'form_post_url': form_post_url, 
                 'modal_title': modal_title, 
@@ -1054,7 +1054,7 @@ def label_delete(request, pk):
     
     if request.method == 'GET':
         form_post_url = reverse('label-delete', kwargs={'pk': pk})
-        return render(request, 'parts/generic_form_modal.html', {
+        return render(request, 'parts/user_form_modal.html', {
             'form_post_url': form_post_url, 
             'modal_title': f"Verwijder label: {label.name}", 
             'form_button_label': 'Verwijderen',

@@ -24,13 +24,7 @@
     {% endblock %}
     <div class="rvo-layout-column rvo-layout-gap--3x;">
       <div class="rvo-layout-column rvo-layout-gap--xl">
-        {% if not request.path.startswith('/admin/') %}
-        <main class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--md">
-        {% endif %}
-            {% block content %}{% endblock %}
-        {% if not request.path.startswith('/admin/') %}
-        </main>
-        {% endif %}
+        {% block content %}{% endblock %}
       </div>
     </div>
     {% block footer %}
