@@ -2,8 +2,6 @@
 document.addEventListener('DOMContentLoaded', function() {
   const modal = document.getElementById('filterModal');
   const filterButton = document.querySelector('.filter-button');
-  const closeButton = document.querySelector('.modal-close-button');
-  const closeModalButton = document.querySelector('.close');
   const clearFiltersButton = document.querySelector('.clear-filters-button');
   const form = document.querySelector('.rvo-form');
 
@@ -14,19 +12,6 @@ document.addEventListener('DOMContentLoaded', function() {
     filterButton.addEventListener('click', function() {
       modal.showModal();
     });
-  }
-
-  // Close modal function
-  function closeFilterModal() {
-    modal.close();
-  }
-
-  // Close button handlers
-  if (closeButton) {
-    closeButton.addEventListener('click', closeFilterModal);
-  }
-  if (closeModalButton) {
-    closeModalButton.addEventListener('click', closeFilterModal);
   }
 
   // Handle date range validation and combined parameter submission

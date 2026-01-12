@@ -28,3 +28,30 @@ document.addEventListener('htmx:afterSwap', function(e) {
     
 });
 
+// Handle static filter modal (not loaded via HTMX)
+document.addEventListener('DOMContentLoaded', function() {
+    const filterModal = document.getElementById('filterModal');
+    if (filterModal) {
+        // Add close button listeners for all buttons in filter modal
+        const closeButtons = filterModal.querySelectorAll('button, c-button');
+        closeButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                // Only close for close buttons (not form submit buttons)
+                if (button.classList.contains('modal-close-button') || 
+                    button.closest('.close')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    filterModal.close();
+                }
+            });
+        });
+        
+        // ESC key handler
+        filterModal.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                filterModal.close();
+            }
+        });
+    }
+});
+
