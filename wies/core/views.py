@@ -30,12 +30,11 @@ from .forms import UserForm, LabelCategoryForm, LabelForm
 from .querysets import annotate_usage_counts
 
 
-def get_delete_context(delete_url_name, object_pk, object_name, success_action="location.reload()"):
+def get_delete_context(delete_url_name, object_pk, object_name):
     """Helper function to generate delete context for modals"""
     return {
         'delete_url': reverse(delete_url_name, args=[object_pk]),
         'delete_confirm_message': f'Weet je zeker dat je {object_name} wilt verwijderen?',
-        'delete_success_action': success_action,
     }
 
 oauth = OAuth()
@@ -485,7 +484,7 @@ class PlacementListView(ListView):
 class UserListView(PermissionRequiredMixin, ListView):
     """View for user list with filtering and infinite scroll pagination"""
     model = User
-    template_name = 'user_list.html'
+    template_name = 'user_admin.html'
     paginate_by = 50
     permission_required = 'core.view_user'
 
@@ -526,7 +525,7 @@ class UserListView(PermissionRequiredMixin, ListView):
                 return ['parts/user_table_rows.html']
             # Otherwise, return full table (for filter changes)
             return ['parts/user_table.html']
-        return ['user_list.html']
+        return ['user_admin.html']
 
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
@@ -693,7 +692,7 @@ def user_edit(request, pk):
             'form_button_label': 'Opslaan',
             'modal_element_id': element_id,
             'target_element_id': element_id,
-            **get_delete_context('user-delete', editing_user.pk, f'{editing_user.first_name} {editing_user.last_name}', "window.location.href='/admin/users/'"),
+            **get_delete_context('user-delete', editing_user.pk, f'{editing_user.first_name} {editing_user.last_name}'),
         })
     elif request.method == 'POST':
         form = UserForm(request.POST, instance=editing_user)
@@ -723,7 +722,7 @@ def user_edit(request, pk):
                 'form_button_label': 'Opslaan',
                 'modal_element_id': element_id,
                 'target_element_id': element_id,
-                **get_delete_context('user-delete', editing_user.pk, f'{editing_user.first_name} {editing_user.last_name}', "window.location.href='/admin/users/'"),
+                **get_delete_context('user-delete', editing_user.pk, f'{editing_user.first_name} {editing_user.last_name}'),
             })
     return HttpResponse(status=405)
 
@@ -942,19 +941,19 @@ def label_category_delete(request, pk):
     """
     category = get_object_or_404(LabelCategory, pk=pk)
     if request.method == 'GET':
-        form_post_url = reverse('label-category-delete', kwargs={'pk': pk})
         return render(request, 'parts/generic_form_modal.html', {
-            'form_post_url': form_post_url, 
             'modal_title': f"Verwijder categorie: {category.name}", 
-            'form_button_label': 'Verwijderen',
             'warning_modal': True,
             'modal_element_id': "labelFormModal",
-            "content": mark_safe(f"<p>Weet je zeker dat deze categorie wil verwijderen?</p><p>Dit verwijdert ook alle <b>{category.labels.count()}</b> labels</p>"),
-            'target_element_id': f"labelFormModal",
+            'target_element_id': "labelFormModal",
+            'delete_warning': f"Weet je zeker dat je deze categorie wilt verwijderen? Dit verwijdert ook alle {category.labels.count()} labels.",
+            'form_post_url': reverse('label-category-delete', kwargs={'pk': pk}),
+            'form_button_label': 'Verwijderen',
         })
     elif request.method == 'POST':
+        category_name = category.name  # Store name before deleting
         category.delete()
-        messages.success(request, f"Categorie '{category.name}' succesvol verwijderd")
+        messages.success(request, f"Categorie '{category_name}' succesvol verwijderd")
         response = HttpResponse(status=200)
         response['HX-Redirect'] = reverse('label-admin')
         return response
@@ -1053,15 +1052,14 @@ def label_delete(request, pk):
     label_use_count = label.users.count() + label.colleagues.count()
     
     if request.method == 'GET':
-        form_post_url = reverse('label-delete', kwargs={'pk': pk})
         return render(request, 'parts/user_form_modal.html', {
-            'form_post_url': form_post_url, 
             'modal_title': f"Verwijder label: {label.name}", 
-            'form_button_label': 'Verwijderen',
             'warning_modal': True,
             'modal_element_id': "labelFormModal",
-            "content": mark_safe(f"<p>Weet je zeker dat dit label wil verwijderen?</p><p>Het wordt gebruikt op <b>{label_use_count}</b> plekken</p>"),
             'target_element_id': f"label_category_{category.id}",
+            'delete_warning': f"Weet je zeker dat je dit label wilt verwijderen? Het wordt gebruikt op {label_use_count} plekken.",
+            'form_post_url': reverse('label-delete', kwargs={'pk': pk}),
+            'form_button_label': 'Verwijderen',
         })
     elif request.method == 'POST':
         label.delete()

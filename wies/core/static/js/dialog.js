@@ -25,4 +25,6 @@ document.addEventListener('htmx:afterSwap', function(e) {
             modal.innerHTML = '';
         }
     }
+    
 });
+

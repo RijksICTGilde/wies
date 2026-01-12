@@ -9,7 +9,13 @@
       {{ get_csrf_hidden_input(request) }}
 
       <div class="modal-body">
-        {{ content }}
+        {% if delete_warning %}
+          <div style="padding: 1rem;">
+            <p class="rvo-text">{{ delete_warning }}</p>
+          </div>
+        {% else %}
+          {{ content }}
+        {% endif %}
       </div>
 
       <div class="modal-footer">
@@ -20,12 +26,12 @@
             </c-button>
           </div>
           {% if delete_url %}
-          <form class="modal-footer-delete-form" method="post" action="{{ delete_url }}" onsubmit="return confirm('{{ delete_confirm_message|default('Weet je zeker dat je dit wilt verwijderen?') }}');">
-            {{ get_csrf_hidden_input(request) }}
-            <c-button kind="warning-subtle" type="submit">
-              Verwijderen
-            </c-button>
-          </form>
+          <c-button kind="warning-subtle" 
+                    hx-get="{{ delete_url }}"
+                    hx-target="#{{ modal_element_id }}"
+                    hx-swap="innerHTML">
+            Verwijderen
+          </c-button>
           {% endif %}
         </div>
         <c-button kind="{% if warning_modal %}warning{% else %}primary{% endif %}" type="submit">

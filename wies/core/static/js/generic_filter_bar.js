@@ -2,8 +2,8 @@
 document.addEventListener('DOMContentLoaded', function() {
   const modal = document.getElementById('filterModal');
   const filterButton = document.querySelector('.filter-button');
-  const closeButton = document.querySelector('.modal-close');
-  const closeModalButton = document.querySelector('.close-modal-button');
+  const closeButton = document.querySelector('.modal-close-button');
+  const closeModalButton = document.querySelector('.close');
   const clearFiltersButton = document.querySelector('.clear-filters-button');
   const form = document.querySelector('.rvo-form');
 
@@ -12,15 +12,13 @@ document.addEventListener('DOMContentLoaded', function() {
   // Open modal
   if (filterButton) {
     filterButton.addEventListener('click', function() {
-      modal.style.display = 'flex';
-      document.body.style.overflow = 'hidden';
+      modal.showModal();
     });
   }
 
   // Close modal function
   function closeFilterModal() {
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
+    modal.close();
   }
 
   // Close button handlers
@@ -30,20 +28,6 @@ document.addEventListener('DOMContentLoaded', function() {
   if (closeModalButton) {
     closeModalButton.addEventListener('click', closeFilterModal);
   }
-
-  // Close modal when clicking outside
-  modal.addEventListener('click', function(e) {
-    if (e.target === modal) {
-      closeFilterModal();
-    }
-  });
-
-  // Close modal with escape key
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape' && modal.style.display === 'flex') {
-      closeFilterModal();
-    }
-  });
 
   // Handle date range validation and combined parameter submission
   const dateRangeInputs = document.querySelectorAll('input[type="date"]');

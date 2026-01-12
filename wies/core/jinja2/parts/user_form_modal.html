@@ -9,60 +9,66 @@
       {{ get_csrf_hidden_input(request) }}
 
       <div class="modal-body">
-        <div style="display: flex; gap: 2rem; align-items: flex-start;">
-          <!-- Left column: Basic user info -->
-          <div style="flex: 1;">
-            <h3 class="utrecht-heading-3" style="margin-bottom: 1rem;">Gebruikersgegevens</h3>
-            
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-              <div class="utrecht-form-field">
-                <div class="rvo-form-field__label">
-                  <label class="rvo-label rvo-label--required" for="{{ content.first_name.auto_id }}">{{ content.first_name.label }}</label>
-                </div>
-                {{ content.first_name }}
-              </div>
-              <div class="utrecht-form-field">
-                <div class="rvo-form-field__label">
-                  <label class="rvo-label rvo-label--required" for="{{ content.last_name.auto_id }}">{{ content.last_name.label }}</label>
-                </div>
-                {{ content.last_name }}
-              </div>
-              <div class="utrecht-form-field">
-                <div class="rvo-form-field__label">
-                  <label class="rvo-label rvo-label--required" for="{{ content.email.auto_id }}">{{ content.email.label }}</label>
-                </div>
-                {{ content.email }}
-              </div>
-              <div class="utrecht-form-field">
-                <div class="rvo-form-field__label">
-                  <label class="rvo-label" for="{{ content.groups.auto_id }}">{{ content.groups.label }}</label>
-                </div>
-                {{ content.groups }}
-              </div>
-            </div>
+        {% if delete_warning %}
+          <div style="padding: 1rem;">
+            <p class="rvo-text">{{ delete_warning }}</p>
           </div>
-          
-          <!-- Vertical divider -->
-          <div style="border-left: 1px solid #e6e6e6; height: auto; align-self: stretch;"></div>
-          
-          <!-- Right column: Labels -->
-          <div style="flex: 1;">
-            <h3 class="utrecht-heading-3" style="margin-bottom: 1rem;">Labels</h3>
-            
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-              {% for field in content %}
-                {% if field.name.startswith('category_') %}
-                  <div class="utrecht-form-field">
-                    <div class="rvo-form-field__label">
-                      <label class="rvo-label" for="{{ field.auto_id }}">{{ field.label }}</label>
-                    </div>
-                    {{ field }}
+        {% else %}
+          <div style="display: flex; gap: 2rem; align-items: flex-start;">
+            <!-- Left column: Basic user info -->
+            <div style="flex: 1;">
+              <h3 class="utrecht-heading-3" style="margin-bottom: 1rem;">Gebruikersgegevens</h3>
+              
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="utrecht-form-field">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label rvo-label--required" for="{{ content.first_name.auto_id }}">{{ content.first_name.label }}</label>
                   </div>
-                {% endif %}
-              {% endfor %}
+                  {{ content.first_name }}
+                </div>
+                <div class="utrecht-form-field">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label rvo-label--required" for="{{ content.last_name.auto_id }}">{{ content.last_name.label }}</label>
+                  </div>
+                  {{ content.last_name }}
+                </div>
+                <div class="utrecht-form-field">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label rvo-label--required" for="{{ content.email.auto_id }}">{{ content.email.label }}</label>
+                  </div>
+                  {{ content.email }}
+                </div>
+                <div class="utrecht-form-field">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label" for="{{ content.groups.auto_id }}">{{ content.groups.label }}</label>
+                  </div>
+                  {{ content.groups }}
+                </div>
+              </div>
+            </div>
+            
+            <!-- Vertical divider -->
+            <div style="border-left: 1px solid #e6e6e6; height: auto; align-self: stretch;"></div>
+            
+            <!-- Right column: Labels -->
+            <div style="flex: 1;">
+              <h3 class="utrecht-heading-3" style="margin-bottom: 1rem;">Labels</h3>
+              
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for field in content %}
+                  {% if field.name.startswith('category_') %}
+                    <div class="utrecht-form-field">
+                      <div class="rvo-form-field__label">
+                        <label class="rvo-label" for="{{ field.auto_id }}">{{ field.label }}</label>
+                      </div>
+                      {{ field }}
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              </div>
             </div>
           </div>
-        </div>
+        {% endif %}
       </div>
 
       <div class="modal-footer">
@@ -73,12 +79,12 @@
             </c-button>
           </div>
           {% if delete_url %}
-          <form class="modal-footer-delete-form" method="post" action="{{ delete_url }}" onsubmit="return confirm('{{ delete_confirm_message|default('Weet je zeker dat je dit wilt verwijderen?') }}');">
-            {{ get_csrf_hidden_input(request) }}
-            <c-button kind="warning-subtle" type="submit">
-              Verwijderen
-            </c-button>
-          </form>
+          <c-button kind="warning-subtle" 
+                    hx-get="{{ delete_url }}"
+                    hx-target="#{{ modal_element_id }}"
+                    hx-swap="innerHTML">
+            Verwijderen
+          </c-button>
           {% endif %}
         </div>
         <c-button kind="{% if warning_modal %}warning{% else %}primary{% endif %}" type="submit">

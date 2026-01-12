@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function() {
       e.stopPropagation();
       const panel = document.getElementById('side_panel-overlay');
       if (panel) {
-        const closeBtn = panel.querySelector('.rvo-dialog__close a');
+        const closeBtn = panel.querySelector('.rvo-dialog__close button');
         if (closeBtn) {
           closeBtn.click();
         }
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Handle background click to close panel (like RVO dialogs)
   document.addEventListener('click', function(e) {
     if (e.target.classList.contains('rvo-dialog__background')) {
-      const closeBtn = e.target.querySelector('.rvo-dialog__close a');
+      const closeBtn = e.target.querySelector('.rvo-dialog__close button');
       if (closeBtn) {
         closeBtn.click();
       }
