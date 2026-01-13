@@ -33,7 +33,7 @@ John,Doe,john@example.com,Rijks ICT Gilde,y,n,n
 Jane,Smith,jane@example.com,Rijksconsultants,n,y,n
 Bob,Johnson,bob@example.com,Rijks ICT Gilde,n,n,y"""
 
-        result = create_users_from_csv(csv_content)
+        result = create_users_from_csv(None, csv_content)
 
         # Verify import success
         self.assertTrue(result['success'])
@@ -65,7 +65,7 @@ Bob,Johnson,bob@example.com,Rijks ICT Gilde,n,n,y"""
 Alice,Wonder,alice@example.com,
 Charlie,Brown,charlie@example.com,"""
 
-        result = create_users_from_csv(csv_content)
+        result = create_users_from_csv(None,csv_content)
 
         self.assertTrue(result['success'])
         self.assertEqual(result['users_created'], 2)
@@ -92,7 +92,7 @@ User,One,user1@example.com,Pre-existing Brand
 User,Two,user2@example.com,Pre-existing Brand
 User,Three,user3@example.com,Pre-existing Brand"""
 
-        result = create_users_from_csv(csv_content)
+        result = create_users_from_csv(None, csv_content)
 
         self.assertTrue(result['success'])
         self.assertEqual(result['users_created'], 3)
@@ -117,7 +117,7 @@ User,Three,user3@example.com,Pre-existing Brand"""
         csv_content1 = """first_name,last_name,email,brand
 Original,Name,duplicate@example.com,Brand A"""
 
-        result1 = create_users_from_csv(csv_content1)
+        result1 = create_users_from_csv(None, csv_content1)
         self.assertTrue(result1['success'])
         self.assertEqual(result1['users_created'], 1)
 
@@ -125,7 +125,7 @@ Original,Name,duplicate@example.com,Brand A"""
         csv_content2 = """first_name,last_name,email,brand
 Different,Name,duplicate@example.com,Brand B"""
 
-        result2 = create_users_from_csv(csv_content2)
+        result2 = create_users_from_csv(None, csv_content2)
         self.assertTrue(result2['success'])
         self.assertEqual(result2['users_created'], 0)
         self.assertIn("duplicate@example.com", result2['errors'][0])
@@ -328,7 +328,7 @@ New Assignment,Description,,,Test Org,,01-01-2025,31-12-2025,Django,Existing Col
         csv_content = """first_name,last_name,email,brand
 Test,User,testuser@example.com,Test Brand"""
 
-        result = create_users_from_csv(csv_content)
+        result = create_users_from_csv(None, csv_content)
         self.assertTrue(result['success'])
 
         # Verify label was created in correct category

@@ -1,3 +1,5 @@
+import logging
+
 from django.views.generic.list import ListView
 from django.views.generic import DetailView
 from django.shortcuts import redirect, render, get_object_or_404
@@ -26,8 +28,13 @@ from .models import Assignment, Colleague, Skill, Placement, Service, Ministry, 
 from .services.sync import sync_all_otys_iir_records
 from .services.placements import filter_placements_by_period, create_placements_from_csv
 from .services.users import create_user, update_user, create_users_from_csv
+from .services.events import create_event
 from .forms import UserForm, LabelCategoryForm, LabelForm
 from .querysets import annotate_usage_counts
+
+
+logger = logging.getLogger(__name__)
+
 
 
 def get_delete_context(delete_url_name, object_pk, object_name):
@@ -75,7 +82,11 @@ def auth(request):
     )
     if user:
         auth_login(request, user)
+        logger.info('login successful, access granted')
+        create_event(user.email, 'Login.success')
         return redirect(request.build_absolute_uri(reverse("home")))
+
+    logger.info('login not successful, access denied')
     return redirect('/no-access/')
 
 
@@ -648,6 +659,7 @@ def user_create(request):
         form = UserForm(request.POST)
         if form.is_valid():
             create_user(
+                request.user,
                 first_name=form.cleaned_data['first_name'],
                 last_name=form.cleaned_data['last_name'],
                 email=form.cleaned_data['email'],
@@ -678,14 +690,14 @@ def user_create(request):
 @permission_required('core.change_user', raise_exception=True)
 def user_edit(request, pk):
     """Handle user editing - GET returns form modal with user data, POST processes update"""
-    editing_user = get_object_or_404(User, pk=pk, is_superuser=False)
-    form_post_url = reverse('user-edit', args=[editing_user.id])
+    edited_user = get_object_or_404(User, pk=pk, is_superuser=False)
+    form_post_url = reverse('user-edit', args=[edited_user.id])
     modal_title = 'Gebruiker bewerken'
     element_id = 'userFormModal'
 
     if request.method == 'GET':
         # Return modal HTML with UserForm populated with user data
-        form = UserForm(instance=editing_user)
+        form = UserForm(instance=edited_user)
         return render(request, 'parts/user_form_modal.html', {
             'content': form, 
             'form_post_url': form_post_url, 
@@ -696,10 +708,11 @@ def user_edit(request, pk):
             **get_delete_context('user-delete', editing_user.pk, f'{editing_user.first_name} {editing_user.last_name}'),
         })
     elif request.method == 'POST':
-        form = UserForm(request.POST, instance=editing_user)
+        form = UserForm(request.POST, instance=edited_user)
         if form.is_valid():
             update_user(
-                user=editing_user,
+                updater=request.user,
+                user=edited_user,
                 first_name=form.cleaned_data['first_name'],
                 last_name=form.cleaned_data['last_name'],
                 email=form.cleaned_data['email'],
@@ -745,7 +758,17 @@ def user_delete(request, pk):
             'form_button_label': 'Verwijderen',
         })
     elif request.method == 'POST':
+        label_names = [label.name for label in user.labels.all()]
+        context = {
+            'id': pk,
+            'email': user.email,
+            'first_name': user.first_name,
+            'last_name': user.last_name,
+            'label_names': label_names,
+            'group_names': [g.name for g in user.groups.all()]
+        }
         user.delete()
+        create_event(request.user.email, 'User.delete', context)
         response = HttpResponse(status=200)
         response['HX-Redirect'] = reverse('admin-users')
         return response
@@ -791,7 +814,7 @@ def user_import_csv(request):
                 'errors': ['Invalid CSV file encoding. Please use UTF-8.']
             }
 
-        result = create_users_from_csv(csv_content)
+        result = create_users_from_csv(request.user, csv_content)
 
         # Return results in the form
         return render(request, 'user_import.html', {'result': result})

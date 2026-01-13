@@ -239,3 +239,9 @@ class Service(models.Model):
 
     def __str__(self):
         return f"{self.description} "
+
+class Event(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
+    user_email = models.EmailField(max_length=255, blank=True, db_index=True)  # deliberately no foreignkey, because of cascading/nulling. this should be append-only. could no longer exist. empty string used for system creation
+    name = models.CharField(max_length=32, db_index=True)
+    context = models.JSONField(default=dict)
