@@ -19,6 +19,7 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
     if groups is None:
         groups = []
 
+    # django built in User model necessitates a username, this generates a random one
     random_username = uuid.uuid4()
 
     if User.objects.filter(email=email).exists():
