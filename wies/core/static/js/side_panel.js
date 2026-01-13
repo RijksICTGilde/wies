@@ -14,12 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
       panel.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
           e.preventDefault(); // Prevent default dialog close
-          // Get current URL and remove only colleague/assignment params, keep filters
-          const url = new URL(window.location);
-          url.searchParams.delete('colleague');
-          url.searchParams.delete('assignment');
-          // Navigate to URL without panel params but with all filters intact
-          window.location.href = url.toString();
+          closePanelWithFilters();
         }
       });
     }
@@ -29,15 +24,31 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
 
+  // Close panel with filter preservation
+  function closePanelWithFilters() {
+    const url = new URL(window.location);
+    url.searchParams.delete('colleague');
+    url.searchParams.delete('assignment');
+    window.location.href = url.toString();
+  }
+
+  // Handle close button clicks
+  const panel = document.getElementById('side_panel');
+  if (panel) {
+    const closeBtn = panel.querySelector('.modal-close-button');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        closePanelWithFilters();
+      });
+    }
+  }
+
   // Handle background click to close panel (dialog backdrop click)
   document.addEventListener('click', function(e) {
     const panel = document.getElementById('side_panel');
     if (panel && e.target === panel) {
-      // Clicked on dialog backdrop
-      const closeBtn = panel.querySelector('.modal-close-button');
-      if (closeBtn) {
-        closeBtn.click();
-      }
+      closePanelWithFilters();
     }
   });
 
