@@ -47,7 +47,7 @@ Usage:
     </div>
 
     <div>
-      {% if primary_button %}
+            {% if primary_button %}
       <button
       type="button"
       class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before rvo-button"
@@ -61,16 +61,15 @@ Usage:
       {% endif %}
     </div>
 
-
   </div>
 
   <!-- Filter inputs inside modal -->
-  <dialog id="filterModal" class="modal-dialog" closedby="any">
+  <div id="filterModal" class="modal-overlay">
     <div class="modal-content">
       <!-- Modal Header -->
       <div class="modal-header">
         <c-h2 noMargins>Filters</c-h2>
-        <button type="button" class="close modal-close-button">&times;</button>
+        <button type="button" class="modal-close">&times;</button>
       </div>
 
       <div class="modal-body">
@@ -140,14 +139,12 @@ Usage:
         <c-button class="clear-filters-button" kind="warning-subtle">
           Wis alle filters
         </c-button>
-        <div class="close">
-          <c-button kind="primary">
-            Naar resultaten
-          </c-button>
-        </div>
+        <c-button class="close-modal-button" kind="primary">
+          Naar resultaten
+        </c-button>
       </div>
     </div>
-  </dialog>
+  </div>
 </form>
 
 <script src="{{ static('js/generic_filter_bar.js') }}"></script>

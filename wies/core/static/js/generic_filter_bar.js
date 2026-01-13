@@ -2,6 +2,8 @@
 document.addEventListener('DOMContentLoaded', function() {
   const modal = document.getElementById('filterModal');
   const filterButton = document.querySelector('.filter-button');
+  const closeButton = document.querySelector('.modal-close');
+  const closeModalButton = document.querySelector('.close-modal-button');
   const clearFiltersButton = document.querySelector('.clear-filters-button');
   const form = document.querySelector('.rvo-form');
 
@@ -10,22 +12,37 @@ document.addEventListener('DOMContentLoaded', function() {
   // Open modal
   if (filterButton) {
     filterButton.addEventListener('click', function() {
-      modal.showModal();
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
     });
   }
 
-  // Handle close buttons for filter modal
-  const closeButtons = modal.querySelectorAll('button, c-button');
-  closeButtons.forEach(button => {
-    button.addEventListener('click', function(e) {
-      // Only close for close buttons (not form submit buttons)
-      if (button.classList.contains('modal-close-button') || 
-          button.closest('.close')) {
-        e.preventDefault();
-        e.stopPropagation();
-        modal.close();
-      }
-    });
+  // Close modal function
+  function closeFilterModal() {
+    modal.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+
+  // Close button handlers
+  if (closeButton) {
+    closeButton.addEventListener('click', closeFilterModal);
+  }
+  if (closeModalButton) {
+    closeModalButton.addEventListener('click', closeFilterModal);
+  }
+
+  // Close modal when clicking outside
+  modal.addEventListener('click', function(e) {
+    if (e.target === modal) {
+      closeFilterModal();
+    }
+  });
+
+  // Close modal with escape key
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && modal.style.display === 'flex') {
+      closeFilterModal();
+    }
   });
 
   // Handle date range validation and combined parameter submission
@@ -113,33 +130,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterText = filterButton.querySelector('.filter-text');
     if (!filterText) return;
 
-    // Count active filters from URL parameters instead of form inputs
-    const urlParams = new URLSearchParams(window.location.search);
     let activeFilters = 0;
 
-    console.log('Updating filter indicator, current URL:', window.location.search);
-    
-    // Count non-empty filter parameters (exclude search, colleague, assignment)
-    for (const [key, value] of urlParams) {
-      if (key !== 'search' && key !== 'colleague' && key !== 'assignment' && key !== 'page') {
-        if (value !== '' && value !== '0') {
-          activeFilters++;
-          console.log('Found active filter:', key, '=', value);
-        }
+    // Count active filters
+    form.querySelectorAll('[data-filter-input]').forEach(input => {
+      if (input.value !== '' && input.value !== '0') {
+        activeFilters++;
       }
-    }
-
-    console.log('Total active filters:', activeFilters);
+    });
 
     // Update button text and state
     if (activeFilters > 0) {
       filterText.textContent = `Filters (${activeFilters})`;
       filterButton.classList.add('utrecht-button--active');
-      console.log('Updated filter text to:', filterText.textContent);
     } else {
       filterText.textContent = 'Filters';
       filterButton.classList.remove('utrecht-button--active');
-      console.log('Updated filter text to: Filters');
     }
   }
 
@@ -149,9 +155,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Initial update
   updateFilterIndicator();
-  
-  // Update periodically to catch side panel changes
-  setInterval(updateFilterIndicator, 1000);
 
   // Handle back button navigation - simple page reload for filter sync
   window.addEventListener('popstate', function(event) {
