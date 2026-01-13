@@ -1080,7 +1080,10 @@ def label_delete(request, pk):
         category_qs = LabelCategory.objects.filter(id=category.id)
         category = annotate_usage_counts(category_qs).get()
 
-        return render(request, 'parts/label_category.html', {
+        response = render(request, 'parts/label_category.html', {
             'category': category,
         })
+        response['HX-Trigger'] = 'closeModal'
+        return response
+    
     return HttpResponse(status=405)

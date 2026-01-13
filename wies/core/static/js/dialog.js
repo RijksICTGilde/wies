@@ -18,16 +18,6 @@ document.addEventListener('htmx:afterSwap', function(e) {
         });
     });
     
-    // Close modals when category blocks are swapped (label admin specific)
-    if (e.detail.target.id && e.detail.target.id.startsWith('label_category_')) {
-        const modalContainer = document.getElementById("labelFormModal");
-        if (modalContainer) {
-            const dialog = modalContainer.querySelector('dialog');
-            if (dialog) {
-                dialog.close();
-            }
-        }
-    }
 });
 
 // Listen for closeModal trigger from server
@@ -44,5 +34,3 @@ document.addEventListener('closeModal', function() {
         }
     });
 });
-
-
