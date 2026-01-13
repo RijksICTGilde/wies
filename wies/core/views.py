@@ -315,6 +315,7 @@ class PlacementListView(ListView):
         # Add assignment and colleague URLs to placement objects
         for placement in context['object_list']:
             placement.assignment_url = self._build_assignment_url(self.request, placement.service.assignment.id)
+            placement.colleague_url = self._build_colleague_url(placement.colleague.id)
 
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
