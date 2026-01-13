@@ -1,0 +1,233 @@
+{#
+HTMX Swap Target: Placement filter sidebar and table container
+
+This template is returned when:
+- Filters change (skill, client, ministry, label, date range)
+- Sort headers are clicked
+- Search query changes
+
+Swapped into: #filter-and-table-container (replaces entire filter sidebar + table)
+
+Context required:
+- filter_groups: List of filter configurations
+- active_filters: Dict of currently active filters
+- search_filter: Current search query
+- object_list: Placements queryset
+- request: Request object for sort state
+#}
+
+<div id="filter-and-table-container">
+
+  <!-- Filter Sidebar and Main Content Wrapper -->
+  <div class="filter-layout-wrapper">
+
+    <!-- Filter Sidebar -->
+    <aside class="filter-sidebar" id="filterSidebar">
+
+      <!-- Collapsed State Toggle Button (only visible when collapsed) -->
+      <button type="button" class="filter-sidebar-collapsed-toggle" id="expandSidebarButton" aria-label="Toon filters">
+        <c-icon icon="trechter" color="grijs-700" size="md" class="collapsed-icon" />
+        <span class="filter-sidebar-collapsed-text">Filters</span>
+      </button>
+
+      <form class="rvo-form filter-sidebar-form"
+        hx-get="{{ url('placements') }}"
+        hx-target="#filter-and-table-container"
+        hx-push-url="true"
+        hx-trigger="change,input delay:500ms from:[data-filter-input]"
+        hx-include="[data-filter-input]">
+
+        <!-- Sidebar Header (hidden when collapsed) -->
+        <div class="filter-sidebar-header">
+          <c-h2 noMargins>Filters</c-h2>
+          <button type="button" class="filter-sidebar-toggle" id="collapseSidebarButton" aria-label="Verberg filters">
+            <c-icon icon="kruis" color="grijs-600" size="md" />
+          </button>
+        </div>
+
+        <!-- Active Filters Chips Section -->
+        <div class="filter-sidebar-active-filters">
+          <div class="active-filters-chips">
+
+            {# Search filter chip #}
+            {% if search_filter %}
+            <div class="filter-chip" data-filter-name="search" data-filter-type="search">
+              <span class="filter-chip-label">{{ search_filter }}</span>
+              <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="search">
+                <c-icon icon="kruis" color="grijs-700" size="sm" />
+              </button>
+            </div>
+            {% endif %}
+
+            {# Regular filters (skill, client, ministry) #}
+            {% for filter_group in filter_groups %}
+              {% if filter_group.type == 'select' %}
+                {% set filter_value = active_filters.get(filter_group.name) %}
+
+                {# For label filters (multi-select), show multiple chips #}
+                {% if filter_group.name == 'label' and filter_value %}
+                  {% for label_id in filter_value %}
+                    {% for option in filter_group.options %}
+                      {% if option.value == label_id %}
+                      <div class="filter-chip" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ label_id }}" data-filter-type="select-multi">
+                        <span class="filter-chip-label">{{ option.label }}</span>
+                        <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ label_id }}">
+                          <c-icon icon="kruis" color="grijs-700" size="sm" />
+                        </button>
+                      </div>
+                      {% endif %}
+                    {% endfor %}
+                  {% endfor %}
+
+                {# For single-select filters #}
+                {% elif filter_value and filter_group.name != 'label' %}
+                  {% for option in filter_group.options %}
+                    {% if option.value == filter_value %}
+                    <div class="filter-chip" data-filter-name="{{ filter_group.name }}" data-filter-type="select">
+                      <span class="filter-chip-label">{{ option.label }}</span>
+                      <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="{{ filter_group.name }}">
+                        <c-icon icon="kruis" color="grijs-700" size="sm" />
+                      </button>
+                    </div>
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+
+              {# Date range filter #}
+              {% elif filter_group.type == 'date_range' and active_filters.get(filter_group.name) %}
+                <div class="filter-chip" data-filter-name="{{ filter_group.name }}" data-filter-type="date_range">
+                  <span class="filter-chip-label">{{ active_filters.get(filter_group.name).from }} tm {{ active_filters.get(filter_group.name).to }}</span>
+                  <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="{{ filter_group.name }}">
+                    <c-icon icon="kruis" color="grijs-700" size="sm" />
+                  </button>
+                </div>
+              {% endif %}
+            {% endfor %}
+
+          </div>
+
+          {# Clear all filters link #}
+          {% if active_filters or search_filter %}
+          <a href="#" class="clear-all-filters-link">Alle filters wissen</a>
+          {% else %}
+          Geen filters actief
+          {% endif %}
+        </div>
+
+        <!-- Filter Fields -->
+        <div class="filter-sidebar-body">
+          <div class="rvo-layout-column rvo-layout-gap--md">
+
+            {% for filter_group in filter_groups %}
+            {% if filter_group.type == 'select' %}
+
+            <c-select-field
+              label="{{ filter_group.label }}"
+              name="{{ filter_group.name }}"
+              id="filter-{{ filter_group.name }}"
+              data-filter-input
+              :options="filter_group.options"
+              value="{{ filter_group.value }}"
+            />
+
+            {% elif filter_group.type == 'date_range' %}
+
+            <div class="filter-sidebar-date-range">
+              <label class="filter-sidebar-date-range-label">{{ filter_group.label }}</label>
+              <div class="rvo-layout-column rvo-layout-gap--sm">
+                <c-date-input-field
+                  id="filter-{{ filter_group.name }}-from"
+                  label="{{ filter_group.from_label }}"
+                  helperText=""
+                  data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
+                  data-combined-name="{{ filter_group.name }}"
+                  data-pair-id="filter-{{ filter_group.name }}-to"
+                  size
+                  value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from }}{% endif %}"
+                />
+
+                <c-date-input-field
+                  id="filter-{{ filter_group.name }}-to"
+                  label="{{ filter_group.to_label }}"
+                  helperText=""
+                  data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
+                  data-combined-name="{{ filter_group.name }}"
+                  data-pair-id="filter-{{ filter_group.name }}-from"
+                  size
+                  value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to }}{% endif %}"
+                />
+              </div>
+            </div>
+            {% if filter_group.require_both %}
+            <!-- Hidden input managed by JS - only submitted when both dates are filled -->
+            <input
+              type="hidden"
+              id="filter-{{ filter_group.name }}-combined"
+              name="{{ filter_group.name }}"
+              data-filter-input
+            />
+            <div id="{{ filter_group.name }}-validation-message" class="date-range-validation-message" style="display: none; color: #e17000; font-size: 0.875rem; margin-top: 0.25rem;">
+              Beide datums zijn vereist voor een geldige periode filter.
+            </div>
+            {% endif %}
+            {% endif %}
+            {% endfor %}
+
+          </div>
+        </div>
+
+      </form>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="filter-main-content">
+
+      <!-- Search Field -->
+      <form class="rvo-form filter-search-form"
+        hx-get="{{ url('placements') }}"
+        hx-target="#filter-and-table-container"
+        hx-push-url="true"
+        hx-trigger="change,input delay:500ms from:[data-filter-input]"
+        hx-include="[data-filter-input]">
+
+        <div role="group" aria-labelledby="search-field-label" class="search-field-wrapper">
+          <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon"/>
+          <c-input
+            id="search"
+            name="search"
+            placeholder="Zoeken..."
+            value="{% if search_filter %}{{ search_filter }}{% endif %}"
+            aria-label="Zoeken"
+            data-filter-input
+            size
+          />
+        </div>
+      </form>
+
+      <!-- Placement Table -->
+      <div class="rvo-table--responsive" id="placement_table">
+        <table class="rvo-table">
+          <thead class="rvo-table-head">
+            <tr class="rvo-table-row">
+              {% with field='name', label='Naam', target='#filter-and-table-container', sort_state=get_sort_state(request, 'name') %}
+                {% include 'parts/generic_sortable_header.html' %}
+              {% endwith %}
+              {% with field='assignment', label='Opdracht', target='#filter-and-table-container', sort_state=get_sort_state(request, 'assignment') %}
+                {% include 'parts/generic_sortable_header.html' %}
+              {% endwith %}
+              {% with field='skill', label='Rol', target='#filter-and-table-container', sort_state=get_sort_state(request, 'skill') %}
+                {% include 'parts/generic_sortable_header.html' %}
+              {% endwith %}
+              <th class="rvo-table-header">Periode</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% include 'parts/placement_table_rows.html' %}
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+</div>

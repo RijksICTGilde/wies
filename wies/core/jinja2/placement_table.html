@@ -2,7 +2,9 @@
 
 {% block extra_head %}
 <link rel="stylesheet" href="{{ static('css/placements.css') }}">
+<link rel="stylesheet" href="{{ static('css/placement_filter_sidebar.css') }}">
 <link rel="stylesheet" href="{{ static('css/side_panel.css') }}">
+<script src="{{ static('js/placement_filter_sidebar.js') }}"></script>
 <script src="{{ static('js/dialog.js') }}"></script>
 <script src="{{ static('js/side_panel.js') }}"></script>
 {% endblock %}
@@ -13,14 +15,7 @@
 
   <c-h1>Wie zit waar?</c-h1>
 
-  {% with url_name='placements', target_selector='#placement_table' %}
-    {% include 'parts/generic_filter_bar.html' %}
-  {% endwith %}
-
-  <!-- Content -->
-  <div id="placement_table" class="rvo-table-container">
-    {% include 'parts/placement_table.html' %}
-  </div>
+  {% include 'parts/filter_and_table_container.html' %}
 
 </div>
 
