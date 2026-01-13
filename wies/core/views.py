@@ -206,7 +206,6 @@ class PlacementListView(ListView):
         params = QueryDict(mutable=True)
         params.update(request.GET)
         params.pop('assignment', None)
-        params.pop('colleague', None)  # Also remove colleague param when switching to assignment
         params['assignment'] = assignment_id
         return f"/placements/?{params.urlencode()}"
 
@@ -316,7 +315,6 @@ class PlacementListView(ListView):
         # Add assignment and colleague URLs to placement objects
         for placement in context['object_list']:
             placement.assignment_url = self._build_assignment_url(self.request, placement.service.assignment.id)
-            placement.colleague_url = self._build_colleague_url(placement.colleague.id)
 
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
@@ -747,12 +745,8 @@ def user_delete(request, pk):
         })
     elif request.method == 'POST':
         user.delete()
-        # Return updated user table for HTMX
-        users = User.objects.prefetch_related('groups', 'labels__category').filter(
-            is_superuser=False
-        ).order_by('last_name', 'first_name')
-        response = render(request, 'parts/user_table.html', {'object_list': users})
-        response['HX-Trigger'] = 'closeModal'
+        response = HttpResponse(status=200)
+        response['HX-Redirect'] = reverse('admin-users')
         return response
     return HttpResponse(status=405)
 
