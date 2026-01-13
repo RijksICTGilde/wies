@@ -50,16 +50,16 @@ Usage:
       {% if primary_button %}
       <button
       type="button"
-      class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md rvo-button"
+      class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before rvo-button"
       {% for attr_label, attr_value  in primary_button.attrs.items() %}
       {{ attr_label }}="{{ attr_value }}"
       {% endfor %}
       >
+      <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before" role="img" aria-label="Plus"></span>
       {{ primary_button.button_text }}
       </button>
       {% endif %}
     </div>
-
 
   </div>
 

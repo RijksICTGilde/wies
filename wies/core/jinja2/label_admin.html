@@ -3,6 +3,7 @@
 {% block extra_head %}
 <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
 <link rel="stylesheet" href="{{ static('css/admin_labels.css') }}">
+<script src="{{ static('js/dialog.js') }}"></script>
 {% endblock %}
 
 {% block content %}
@@ -16,10 +17,12 @@
           <c-h1>Labels</c-h1>
           <c-button
             kind="primary"
+            icon="plus"
+            iconPlacement="before"
             hx-get="{{ url('label-category-create', args=()) }}"
             hx-target="#labelFormModal"
             hx-swap="innerHTML">
-            Nieuwe categorie
+            Categorie toevoegen
           </c-button>
         </div>
         <!-- Categories and Labels -->
@@ -40,18 +43,5 @@
   </div>
 </main>
 
-
-<script>
-
-  //Make sure modal is closed if category blocks are swapped
-  {% for category in categories %}
-    category_block = document.getElementById("label_category_{{ category.id }}");
-    category_block.addEventListener("htmx:afterSwap", function(e){
-      modal = document.getElementById("labelFormModal");
-      modal.innerHTML = '';
-    })
-  {% endfor %}
-  
-</script>
 
 {% endblock %}

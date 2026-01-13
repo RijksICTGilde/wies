@@ -82,5 +82,5 @@ class RBACSetupTest(TestCase):
             last_name="Me",
         )
         response = client.post(reverse('user-delete', args=[user_to_delete.id]))
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
         self.assertFalse(User.objects.filter(id=user_to_delete.id).exists())

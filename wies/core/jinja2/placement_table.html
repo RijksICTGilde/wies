@@ -3,10 +3,12 @@
 {% block extra_head %}
 <link rel="stylesheet" href="{{ static('css/placements.css') }}">
 <link rel="stylesheet" href="{{ static('css/side_panel.css') }}">
+<script src="{{ static('js/dialog.js') }}"></script>
 <script src="{{ static('js/side_panel.js') }}"></script>
 {% endblock %}
 
 {% block content %}
+<main class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--md">
 <div id="placement_content" class="rvo-layout-column rvo-layout-gap--md rvo-margin-block-start--md">
 
   <c-h1>Wie zit waar?</c-h1>
@@ -31,5 +33,5 @@
 
   {% endif %}
 </div>
-
+</main>
 {% endblock %}

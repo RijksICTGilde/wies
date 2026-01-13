@@ -1,25 +1,44 @@
-<div class="modal-overlay" style="display: flex;">
+<dialog id="{{ modal_element_id }}" class="modal-dialog" closedby="any">
   <div class="modal-content">
     <div class="modal-header">
       <h2 class="utrecht-heading-2">{{ modal_title }}</h2>
-      <button type="button" class="modal-close" onclick="document.getElementById('{{ modal_element_id }}').innerHTML=''; document.body.style.overflow='auto';">&times;</button>
+      <button type="button" class="close modal-close-button">&times;</button>
     </div>
 
     <form method="post" action="{{ form_post_url }}" hx-post="{{ form_post_url }}" hx-target="#{{ target_element_id }}">
       {{ get_csrf_hidden_input(request) }}
 
       <div class="modal-body">
-        {{ content }}
+        {% if delete_warning %}
+          <div style="padding: 1rem;">
+            <p class="rvo-text">{{ delete_warning }}</p>
+          </div>
+        {% else %}
+          {{ content }}
+        {% endif %}
       </div>
 
       <div class="modal-footer">
-        <c-button kind="{% if warning_modal %}warning-subtle{% else %}secondary{% endif %}" type="button" @click="document.getElementById('{{ modal_element_id }}').innerHTML=''; document.body.style.overflow='auto';">
-          Annuleren
-        </c-button>
+        <div class="modal-footer-buttons">
+          <div class="close">
+            <c-button kind="{% if warning_modal %}warning-subtle{% else %}secondary{% endif %}" type="button">
+              Annuleren
+            </c-button>
+          </div>
+          {% if delete_url %}
+          <c-button kind="warning-subtle" 
+                    hx-get="{{ delete_url }}"
+                    hx-target="#{{ modal_element_id }}"
+                    hx-swap="innerHTML">
+            Verwijderen
+          </c-button>
+          {% endif %}
+        </div>
         <c-button kind="{% if warning_modal %}warning{% else %}primary{% endif %}" type="submit">
           {{ form_button_label }}
         </c-button>
       </div>
     </form>
   </div>
-</div>
+</dialog>
+

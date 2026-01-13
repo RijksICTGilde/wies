@@ -1,19 +1,11 @@
-<div class="rvo-dialog__background" 
-     id="side_panel-overlay">
-  <dialog class="rvo-dialog rvo-dialog--wit rvo-dialog--inset-inline-end"
-          aria-expanded="true"
-          aria-label="{{ panel_data.panel_title }}"
-          id="side_panel"
-          onclick="event.stopPropagation()"
-          open>
+<dialog class="rvo-dialog rvo-dialog--wit rvo-dialog--inset-inline-end"
+        aria-label="{{ panel_data.panel_title }}"
+        id="side_panel">
     
     <div class="rvo-dialog__close">
-      <a href="{{ panel_data.close_url }}" class="utrecht-button utrecht-button--subtle rvo-dialog__close-button utrecht-button--rvo-md" style="text-decoration: none;">
-        <span class="utrecht-icon rvo-icon rvo-icon-kruis rvo-icon--md rvo-icon--hemelblauw rvo-dialog__close-icon" 
-              role="img" 
-              aria-label="Kruis"></span>
-        Sluiten
-      </a>
+      <button type="button" class="modal-close-button">
+        &times;
+      </button>
     </div>
     
     <div class="rvo-dialog__content">
@@ -42,4 +34,3 @@
       {% include panel_data.panel_content_template %}
     </div>
   </dialog>
-</div>

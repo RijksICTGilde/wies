@@ -1,30 +1,27 @@
-/* RVO Dialog CSS for side panel - missing from CDN version */
-.rvo-dialog--inset-inline-end {
+/* RVO Dialog CSS for side panel - force full height */
+dialog#side_panel {
   position: fixed !important;
-  top: 0 !important;
-  right: 0 !important;
-  left: auto !important;
+  inset: 0 0 0 auto !important;
   height: 100vh !important;
+  min-height: 100vh !important;
   width: 600px !important;
   max-width: 700px !important;
   min-width: 500px !important;
   margin: 0 !important;
   border: none !important;
-  z-index: 999 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  box-sizing: border-box !important;
+  transform: none !important;
+  max-height: none !important;
 }
 
-/* Only show overlay when panel is actually present */
-#side_panel-container:not(:empty) .rvo-dialog__background::before {
-  content: "";
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: calc(100vw - 600px);
-  height: 100vh;
+/* Dialog backdrop styling when using showModal() */
+dialog.rvo-dialog--inset-inline-end::backdrop {
   background-color: rgba(0, 0, 0, 0.3);
-  z-index: 1;
-  pointer-events: auto;
 }
+
+/* Remove old overlay system - now using ::backdrop */
 
 
 .rvo-dialog__close {

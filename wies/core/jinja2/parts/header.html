@@ -27,29 +27,33 @@
         <li class="rvo-menubar__list">
           <ul class="rvo-menubar__group--flex">
             <li class="rvo-menubar__item">
-              <a href="/placements/" class="rvo-link rvo-menubar__link rvo-link--logoblauw {% if '/placements/' in request.path %}menu-item--active{% endif %}">Wie zit waar?</a>
+              <a href="/placements/" class="rvo-link rvo-link--no-underline rvo-link--logoblauw {% if '/placements/' in request.path %}menu-item--active{% endif %}">
+                Wie zit waar?
+              </a>
             </li>
           </ul>
           <ul class="rvo-menubar__group--flex">
             <li class="rvo-menubar__item">
               {% if user.is_authenticated %}
-
                 {% if user.colleague %}
-                  <c-link href="/placements/?colleague={{ user.colleague.id }}" icon="user" iconColor="logoblauw" iconSize="md">
+                  <a href="/placements/?colleague={{ user.colleague.id }}" class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw">
+                    <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before" role="img" aria-label="User"></span>
                     {{ user.get_full_name() }}
-                  </c-link>
+                  </a>
                 {% else %}
-                  <c-link href="#" icon="user" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw">
+                  <a href="#" class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw">
+                    <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before" role="img" aria-label="User"></span>
                     {{ user.get_full_name() }}
-                  </c-link>
+                  </a>
                 {% endif %}
               {% endif %}
             </li>
             {% if user.has_perms(['core.view_user', 'core.view_labelcategory']) %}
             <li class="rvo-menubar__item">
-                <c-link href="/admin/" icon="instellingen" iconColor="logoblauw" iconSize="md" class="rvo-menubar__link rvo-link--logoblauw {% if '/admin/' in request.path %}menu-item--active{% endif %}" >
-                  Instellingen
-                </c-link>
+              <a href="/admin/" class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw {% if '/admin/' in request.path %}menu-item--active{% endif %}">
+                <span class="utrecht-icon rvo-icon rvo-icon-instellingen rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before" role="img" aria-label="Instellingen"></span>
+                Instellingen
+              </a>
             </li>
             {% endif %}
           </ul>

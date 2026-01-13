@@ -73,13 +73,13 @@ class UserViewsTest(TestCase):
         )
         self.user2.labels.add(self.label_b)
 
-    def test_user_list_requires_login(self):
+    def test_user_admin_requires_login(self):
         """Test that user list requires authentication"""
         response = self.client.get(reverse('admin-users'), follow=False)
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.url.startswith('/login/'))
 
-    def test_user_list_excludes_superusers(self):
+    def test_user_admin_excludes_superusers(self):
         """Test that superusers are excluded from user list"""
         self.client.force_login(self.auth_user)
         response = self.client.get(reverse('admin-users'))
@@ -97,7 +97,7 @@ class UserViewsTest(TestCase):
         # Superuser should NOT be in the list
         self.assertNotIn(self.superuser.get_full_name(), content)
 
-    def test_user_list_label_filter(self):
+    def test_user_admin_label_filter(self):
         """Test filtering users by label"""
         self.client.force_login(self.auth_user)
 
@@ -110,7 +110,7 @@ class UserViewsTest(TestCase):
         # user2 should not be in results
         self.assertNotIn(self.user2.get_full_name(), content)
 
-    def test_user_list_search(self):
+    def test_user_admin_search(self):
         """Test searching users by name or email"""
         self.client.force_login(self.auth_user)
 
@@ -126,7 +126,7 @@ class UserViewsTest(TestCase):
         self.assertIn(self.user2.get_full_name(), content)
         self.assertNotIn(self.user1.get_full_name(), content)
 
-    def test_user_list_search_full_name(self):
+    def test_user_admin_search_full_name(self):
         """Test searching users by full name (first and last name together)"""
         self.client.force_login(self.auth_user)
 
@@ -258,9 +258,9 @@ class UserViewsTest(TestCase):
         user_id = self.user1.id
         response = self.client.post(reverse('user-delete', args=[user_id]))
 
-        # Should redirect to users list
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('admin-users'))
+        # Should return updated table (HTMX response)
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue('HX-Redirect' in response)
 
         # User should be deleted
         self.assertEqual(User.objects.count(), initial_count - 1)
@@ -299,7 +299,7 @@ class UserViewsTest(TestCase):
         self.assertTrue(response.url.startswith('/login/'))
 
     # Permission tests
-    def test_user_list_requires_view_permission(self):
+    def test_user_admin_requires_view_permission(self):
         """Test that user list returns 403 without view_user permission"""
         # Create user without view_user permission
         user_no_perms = User.objects.create(
@@ -313,7 +313,7 @@ class UserViewsTest(TestCase):
         response = self.client.get(reverse('admin-users'))
         self.assertEqual(response.status_code, 403)
 
-    def test_user_list_allows_with_view_permission(self):
+    def test_user_admin_allows_with_view_permission(self):
         """Test that user list works with view_user permission"""
         user_with_perms = User.objects.create(
             username="with_perms",

@@ -1,0 +1,71 @@
+<dialog id="{{ modal_element_id }}" class="modal-dialog modal-dialog--wide" closedby="any">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="utrecht-heading-2">{{ modal_title }}</h2>
+      <button type="button" class="close modal-close-button">&times;</button>
+    </div>
+
+    <form method="post" action="{{ form_post_url }}" hx-post="{{ form_post_url }}" hx-target="#{{ target_element_id }}">
+      {{ get_csrf_hidden_input(request) }}
+
+      <div class="modal-body">
+        {% if delete_warning %}
+          <div style="padding: 1rem;">
+            <p class="rvo-text">{{ delete_warning }}</p>
+          </div>
+        {% else %}
+          <div style="display: flex; gap: 2rem; align-items: flex-start;">
+            <!-- Left column: Basic user info -->
+            <div style="flex: 1;">
+              <h3 class="utrecht-heading-3" style="margin-bottom: 1rem;">Gebruikersgegevens</h3>
+              
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {{ content.first_name.as_field_group() }}
+                {{ content.last_name.as_field_group() }}
+                {{ content.email.as_field_group() }}
+                {{ content.groups.as_field_group() }}
+              </div>
+            </div>
+            
+            <!-- Vertical divider -->
+            <div style="border-left: 1px solid #e6e6e6; height: auto; align-self: stretch;"></div>
+            
+            <!-- Right column: Labels -->
+            <div style="flex: 1;">
+              <h3 class="utrecht-heading-3" style="margin-bottom: 1rem;">Labels</h3>
+              
+              <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for field in content %}
+                  {% if field.name.startswith('category_') %}
+                    {{ field.as_field_group() }}
+                  {% endif %}
+                {% endfor %}
+              </div>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="modal-footer">
+        <div class="modal-footer-buttons">
+          <div class="close">
+            <c-button kind="{% if warning_modal %}warning-subtle{% else %}secondary{% endif %}" type="button">
+              Annuleren
+            </c-button>
+          </div>
+          {% if delete_url %}
+          <c-button kind="warning-subtle" 
+                    hx-get="{{ delete_url }}"
+                    hx-target="#{{ modal_element_id }}"
+                    hx-swap="innerHTML">
+            Verwijderen
+          </c-button>
+          {% endif %}
+        </div>
+        <c-button kind="{% if warning_modal %}warning{% else %}primary{% endif %}" type="submit">
+          {{ form_button_label }}
+        </c-button>
+      </div>
+    </form>
+  </div>
+</dialog>

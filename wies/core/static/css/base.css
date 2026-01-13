@@ -1,4 +1,4 @@
-/* Table row styling with RVO design system */
+/* Table row styling - custom application classes */
 .clickable-row {
   cursor: pointer;
   transition: background-color 0.2s ease;
@@ -7,6 +7,53 @@
 .clickable-row:hover{
   background-color: var(--rvo-color-hemelblauw-150) !important;
   cursor: pointer;
+}
+
+/* Dialog modal styling */
+.modal-dialog {
+  border: none;
+  border-radius: 8px;
+  padding: 0;
+  max-width: 600px;
+  width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: white;
+}
+
+/* Wider modal for user forms with two columns */
+.modal-dialog--wide {
+  max-width: 800px;
+}
+
+.modal-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Override old modal-content styling for dialog modals */
+.modal-dialog .modal-content {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  max-width: none;
+  width: 100%;
+  max-height: none;
+}
+
+/* Remove focus outline from close button */
+.modal-dialog .modal-close:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Modal footer button layout */
+.modal-footer-buttons {
+  display: flex; 
+  gap: 0.5rem;
+}
+
+.modal-footer-delete-form {
+  display: inline;
 }
 
 /* Page header styling */
@@ -87,13 +134,31 @@
   margin: 0;
 }
 
-.modal-close {
+.modal-close-button {
   background: none;
   border: none;
-  font-size: var(--rvo-font-size-2xl);
-  font-family: var(--rvo-font-sans-serif-font-family), var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
+  font-size: 1.5rem;
+  line-height: 1;
   cursor: pointer;
   color: var(--rvo-color-grijs-600);
+  padding: 0.25rem;
+  border-radius: 4px;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.modal-close-button:hover {
+  background-color: var(--rvo-color-grijs-100);
+  color: var(--rvo-color-grijs-800);
+}
+
+.modal-close-button:focus {
+  outline: 2px solid var(--rvo-color-hemelblauw);
+  outline-offset: 2px;
 }
 
 .modal-body {

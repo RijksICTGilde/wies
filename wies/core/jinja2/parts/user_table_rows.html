@@ -1,5 +1,9 @@
 {% for user in object_list %}
-  <tr class="rvo-table-row">
+  <tr class="rvo-table-row clickable-row"
+      hx-get="{{ url('user-edit', args=[user.id]) }}"
+      hx-target="#userFormModal"
+      hx-swap="innerHTML"
+      title="Bewerk {{ user.first_name }} {{ user.last_name }}">
     <td class="rvo-table-cell">
       <div class="user-table-cell">
         <div class="user-avatar">
@@ -14,45 +18,27 @@
       </div>
     </td>
     <td class="rvo-table-cell">
-      <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
-        {% for group in user.groups.all() %}
-          <span class="rvo-text rvo-text--sm" style="background-color: #e6f0ff; color: #154273; padding: 0.125rem 0.5rem; border-radius: 0.25rem; white-space: nowrap;">
-            {% if group.name == 'Business Development Manager' %}
-            BDM
-            {% else %}
-            {{ group.name }}
-            {% endif %}
-          </span>
-        {% else %}
-          <span class="rvo-text rvo-text--sm rvo-text--subtle">-</span>
-        {% endfor %}
-      </div>
-    </td>
-    <td class="rvo-table-cell">
-      <div style="display: flex; gap: 0.5rem;">
-        <button
-          class="rvo-button rvo-button--subtle rvo-button--icon-only"
-          hx-get="{{ url('user-edit', args=[user.id]) }}"
-          hx-target="#userFormModal"
-          hx-swap="innerHTML"
-          title="Bewerk gebruiker">
-          <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Bewerken"></span>
-        </button>
-        <form method="post" action="{{ url('user-delete', args=[user.id]) }}" style="display: inline;" onsubmit="return confirm('Weet je zeker dat je {{ user.first_name }} {{ user.last_name }} wilt verwijderen?');">
-          {{ get_csrf_hidden_input(request) }}
-          <button
-            class="rvo-button rvo-button--subtle rvo-button--icon-only"
-            type="submit"
-            title="Verwijder gebruiker">
-            <span class="utrecht-icon rvo-icon rvo-icon-verwijderen rvo-icon--md" style="color: #e73636;" role="img" aria-label="Verwijderen"></span>
-          </button>
-        </form>
+      <div style="display: flex; gap: 0.25rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
+        <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+          {% for group in user.groups.all() %}
+            <span class="rvo-text rvo-text--sm" style="background-color: #e6f0ff; color: #154273; padding: 0.125rem 0.5rem; border-radius: 0.25rem; white-space: nowrap;">
+              {% if group.name == 'Business Development Manager' %}
+              BDM
+              {% else %}
+              {{ group.name }}
+              {% endif %}
+            </span>
+          {% else %}
+            <span class="rvo-text rvo-text--sm rvo-text--subtle">-</span>
+          {% endfor %}
+        </div>
+        <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Bewerken" style="flex-shrink: 0;"></span>
       </div>
     </td>
   </tr>
 {% else %}
   <tr class="rvo-table-row">
-    <td class="rvo-table-cell" colspan="4">
+    <td class="rvo-table-cell" colspan="2">
       <span class="rvo-text--italic">Geen gebruikers gevonden.</span>
     </td>
   </tr>
@@ -62,7 +48,7 @@
 <tr hx-get="{{ next_page_url }}"
     hx-trigger="revealed"
     hx-swap="outerHTML">
-  <td colspan="4" class="rvo-table-cell">
+  <td colspan="2" class="rvo-table-cell">
     <div style="text-align: center; padding: 1rem;">
       <span class="rvo-text--subtle">Meer laden...</span>
     </div>

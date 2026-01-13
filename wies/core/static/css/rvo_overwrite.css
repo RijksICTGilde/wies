@@ -17,8 +17,7 @@
 }
 
 /* enforce that row is colored also when not clickable */
-.rvo-table-row:hover,
-.rvo-table-row.clickable-row:hover {
+.rvo-table-row:hover {
   background-color: var(--rvo-color-hemelblauw-150) !important;
 }
 
@@ -34,7 +33,11 @@
   mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
 }
 
-/* smaller sidebar */
-.rvo-sidebar-layout {
-  grid-template-columns: 200px 1fr;
+/* Sidebar full page height */
+.rvo-sidebar-layout__container {
+  min-height: calc(100vh - 200px);
+}
+
+.rvo-sidebar-layout__sidebar {
+  min-height: calc(100vh - 200px);
 }
