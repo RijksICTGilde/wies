@@ -4,25 +4,28 @@ document.addEventListener('DOMContentLoaded', function() {
   const panelContainer = document.getElementById('side_panel-container');
   if (panelContainer && panelContainer.innerHTML.trim()) {
     document.body.style.overflow = 'hidden';
+    
+    // Use showModal() for proper focus trapping (like other modals)
+    const panel = document.getElementById('side_panel');
+    if (panel) {
+      panel.showModal();
+      
+      // Handle ESC key to trigger proper close behavior (history.back)
+      panel.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          e.preventDefault(); // Prevent default dialog close
+          const closeBtn = panel.querySelector('.modal-close-button');
+          if (closeBtn) {
+            closeBtn.click(); // Trigger history.back()
+          }
+        }
+      });
+    }
   } else {
     // Reset overflow if no panel is present (important for back button)
     document.body.style.overflow = 'auto';
   }
 
-  // Handle ESC key to close panel
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      e.stopPropagation();
-      const panel = document.getElementById('side_panel-overlay');
-      if (panel) {
-        const closeBtn = panel.querySelector('.rvo-dialog__close button');
-        if (closeBtn) {
-          closeBtn.click();
-        }
-      }
-    }
-  });
 
   // Handle background click to close panel (like RVO dialogs)
   document.addEventListener('click', function(e) {
@@ -33,4 +36,5 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     }
   });
+
 });

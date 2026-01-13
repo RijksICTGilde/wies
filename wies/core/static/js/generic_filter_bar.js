@@ -14,6 +14,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 
+  // Handle close buttons for filter modal
+  const closeButtons = modal.querySelectorAll('button, c-button');
+  closeButtons.forEach(button => {
+    button.addEventListener('click', function(e) {
+      // Only close for close buttons (not form submit buttons)
+      if (button.classList.contains('modal-close-button') || 
+          button.closest('.close')) {
+        e.preventDefault();
+        e.stopPropagation();
+        modal.close();
+      }
+    });
+  });
+
   // Handle date range validation and combined parameter submission
   const dateRangeInputs = document.querySelectorAll('input[type="date"]');
 

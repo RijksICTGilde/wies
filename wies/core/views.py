@@ -1052,7 +1052,7 @@ def label_delete(request, pk):
     label_use_count = label.users.count() + label.colleagues.count()
     
     if request.method == 'GET':
-        return render(request, 'parts/user_form_modal.html', {
+        return render(request, 'parts/generic_form_modal.html', {
             'modal_title': f"Verwijder label: {label.name}", 
             'warning_modal': True,
             'modal_element_id': "labelFormModal",

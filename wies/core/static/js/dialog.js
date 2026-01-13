@@ -20,38 +20,25 @@ document.addEventListener('htmx:afterSwap', function(e) {
     
     // Close modals when category blocks are swapped (label admin specific)
     if (e.detail.target.id && e.detail.target.id.startsWith('label_category_')) {
-        const modal = document.getElementById("labelFormModal");
-        if (modal) {
-            modal.innerHTML = '';
+        const modalContainer = document.getElementById("labelFormModal");
+        if (modalContainer) {
+            const dialog = modalContainer.querySelector('dialog');
+            if (dialog) {
+                dialog.close();
+            }
         }
     }
-    
 });
 
-// Handle static filter modal (not loaded via HTMX)
-document.addEventListener('DOMContentLoaded', function() {
-    const filterModal = document.getElementById('filterModal');
-    if (filterModal) {
-        // Add close button listeners for all buttons in filter modal
-        const closeButtons = filterModal.querySelectorAll('button, c-button');
-        closeButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                // Only close for close buttons (not form submit buttons)
-                if (button.classList.contains('modal-close-button') || 
-                    button.closest('.close')) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    filterModal.close();
-                }
-            });
-        });
-        
-        // ESC key handler
-        filterModal.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                filterModal.close();
-            }
-        });
+// Listen for closeModal trigger from server
+document.addEventListener('closeModal', function() {
+    const modalContainer = document.getElementById("labelFormModal");
+    if (modalContainer) {
+        const dialog = modalContainer.querySelector('dialog');
+        if (dialog) {
+            dialog.close();
+        }
     }
 });
+
 
