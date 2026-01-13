@@ -32,6 +32,7 @@ This files lists the changes during the lifetime of this project.
 - 113: fix enter press in user search does not trigger user create
 - 113: generalized user_form_modal -> generic_form_modal
 - add wies email adress to no-access page
+- 102: Add Event model with events 'User.create', 'User.update', 'User.delete', 'Login.success', 'Login.fail'
 
 ## 2025-10-09
 - add period filter to placement page
