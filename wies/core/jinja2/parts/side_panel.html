@@ -1,9 +1,6 @@
-<div class="rvo-dialog__background" 
-     id="side_panel-overlay">
-  <dialog class="rvo-dialog rvo-dialog--wit rvo-dialog--inset-inline-end"
-          aria-label="{{ panel_data.panel_title }}"
-          id="side_panel"
-          onclick="event.stopPropagation()">
+<dialog class="rvo-dialog rvo-dialog--wit rvo-dialog--inset-inline-end"
+        aria-label="{{ panel_data.panel_title }}"
+        id="side_panel">
     
     <div class="rvo-dialog__close">
       <button type="button" class="modal-close-button" onclick="window.history.back();">
@@ -37,4 +34,3 @@
       {% include panel_data.panel_content_template %}
     </div>
   </dialog>
-</div>

@@ -27,7 +27,7 @@
           </div>
           {% if delete_url %}
           <c-button kind="warning-subtle" 
-                    hx-get="{{ delete_url }}"
+                    hx-post="{{ delete_url }}"
                     hx-target="#{{ modal_element_id }}"
                     hx-swap="innerHTML">
             Verwijderen

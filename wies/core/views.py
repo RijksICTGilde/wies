@@ -206,6 +206,7 @@ class PlacementListView(ListView):
         params = QueryDict(mutable=True)
         params.update(request.GET)
         params.pop('assignment', None)
+        params.pop('colleague', None)  # Also remove colleague param when switching to assignment
         params['assignment'] = assignment_id
         return f"/placements/?{params.urlencode()}"
 
@@ -312,9 +313,10 @@ class PlacementListView(ListView):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
         
-        # Add assignment URLs to placement objects
+        # Add assignment and colleague URLs to placement objects
         for placement in context['object_list']:
             placement.assignment_url = self._build_assignment_url(self.request, placement.service.assignment.id)
+            placement.colleague_url = self._build_colleague_url(placement.colleague.id)
 
         context['search_field'] = 'search'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
@@ -730,11 +732,28 @@ def user_edit(request, pk):
 @permission_required('core.delete_user', raise_exception=True)
 def user_delete(request, pk):
     """Handle user deletion"""
-    if request.method == 'POST':
-        user = get_object_or_404(User, pk=pk, is_superuser=False)
+    user = get_object_or_404(User, pk=pk, is_superuser=False)
+    
+    if request.method == 'GET':
+        # Show delete confirmation modal
+        return render(request, 'parts/generic_form_modal.html', {
+            'modal_title': f"Verwijder gebruiker: {user.first_name} {user.last_name}",
+            'warning_modal': True,
+            'modal_element_id': "userFormModal",
+            'target_element_id': "user_table",
+            'delete_warning': f'Weet je zeker dat je {user.first_name} {user.last_name} wilt verwijderen?',
+            'form_post_url': reverse('user-delete', kwargs={'pk': pk}),
+            'form_button_label': 'Verwijderen',
+        })
+    elif request.method == 'POST':
         user.delete()
-        # Redirect to users list - page reload resets filters
-        return redirect('admin-users')
+        # Return updated user table for HTMX
+        users = User.objects.prefetch_related('groups', 'labels__category').filter(
+            is_superuser=False
+        ).order_by('last_name', 'first_name')
+        response = render(request, 'parts/user_table.html', {'object_list': users})
+        response['HX-Trigger'] = 'closeModal'
+        return response
     return HttpResponse(status=405)
 
 

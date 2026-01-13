@@ -113,22 +113,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const filterText = filterButton.querySelector('.filter-text');
     if (!filterText) return;
 
+    // Count active filters from URL parameters instead of form inputs
+    const urlParams = new URLSearchParams(window.location.search);
     let activeFilters = 0;
 
-    // Count active filters
-    form.querySelectorAll('[data-filter-input]').forEach(input => {
-      if (input.value !== '' && input.value !== '0') {
-        activeFilters++;
+    console.log('Updating filter indicator, current URL:', window.location.search);
+    
+    // Count non-empty filter parameters (exclude search, colleague, assignment)
+    for (const [key, value] of urlParams) {
+      if (key !== 'search' && key !== 'colleague' && key !== 'assignment' && key !== 'page') {
+        if (value !== '' && value !== '0') {
+          activeFilters++;
+          console.log('Found active filter:', key, '=', value);
+        }
       }
-    });
+    }
+
+    console.log('Total active filters:', activeFilters);
 
     // Update button text and state
     if (activeFilters > 0) {
       filterText.textContent = `Filters (${activeFilters})`;
       filterButton.classList.add('utrecht-button--active');
+      console.log('Updated filter text to:', filterText.textContent);
     } else {
       filterText.textContent = 'Filters';
       filterButton.classList.remove('utrecht-button--active');
+      console.log('Updated filter text to: Filters');
     }
   }
 
@@ -138,6 +149,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Initial update
   updateFilterIndicator();
+  
+  // Update periodically to catch side panel changes
+  setInterval(updateFilterIndicator, 1000);
 
   // Handle back button navigation - simple page reload for filter sync
   window.addEventListener('popstate', function(event) {

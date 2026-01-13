@@ -32,13 +32,17 @@ document.addEventListener('htmx:afterSwap', function(e) {
 
 // Listen for closeModal trigger from server
 document.addEventListener('closeModal', function() {
-    const modalContainer = document.getElementById("labelFormModal");
-    if (modalContainer) {
-        const dialog = modalContainer.querySelector('dialog');
-        if (dialog) {
-            dialog.close();
+    // Close any open modal dialogs
+    const modalContainers = ['labelFormModal', 'userFormModal'];
+    modalContainers.forEach(modalId => {
+        const modalContainer = document.getElementById(modalId);
+        if (modalContainer) {
+            const dialog = modalContainer.querySelector('dialog');
+            if (dialog) {
+                dialog.close();
+            }
         }
-    }
+    });
 });
 
 

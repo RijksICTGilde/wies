@@ -5,19 +5,21 @@ document.addEventListener('DOMContentLoaded', function() {
   if (panelContainer && panelContainer.innerHTML.trim()) {
     document.body.style.overflow = 'hidden';
     
-    // Use showModal() for proper focus trapping (like other modals)
+    // Use showModal() for consistency with other modals
     const panel = document.getElementById('side_panel');
     if (panel) {
       panel.showModal();
       
-      // Handle ESC key to trigger proper close behavior (history.back)
+      // Handle ESC key to close panel completely
       panel.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
           e.preventDefault(); // Prevent default dialog close
-          const closeBtn = panel.querySelector('.modal-close-button');
-          if (closeBtn) {
-            closeBtn.click(); // Trigger history.back()
-          }
+          // Get current URL and remove only colleague/assignment params, keep filters
+          const url = new URL(window.location);
+          url.searchParams.delete('colleague');
+          url.searchParams.delete('assignment');
+          // Navigate to URL without panel params but with all filters intact
+          window.location.href = url.toString();
         }
       });
     }
@@ -27,10 +29,12 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
 
-  // Handle background click to close panel (like RVO dialogs)
+  // Handle background click to close panel (dialog backdrop click)
   document.addEventListener('click', function(e) {
-    if (e.target.classList.contains('rvo-dialog__background')) {
-      const closeBtn = e.target.querySelector('.rvo-dialog__close button');
+    const panel = document.getElementById('side_panel');
+    if (panel && e.target === panel) {
+      // Clicked on dialog backdrop
+      const closeBtn = panel.querySelector('.modal-close-button');
       if (closeBtn) {
         closeBtn.click();
       }
