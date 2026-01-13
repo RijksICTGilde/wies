@@ -251,7 +251,7 @@ class UserViewsTest(TestCase):
 
         # Should return updated table (HTMX response)
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response['HX-Trigger'], 'closeModal')
+        self.assertTrue('HX-Redirect' in response)
 
         # User should be deleted
         self.assertEqual(User.objects.count(), initial_count - 1)
