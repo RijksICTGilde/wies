@@ -705,7 +705,7 @@ def user_edit(request, pk):
             'form_button_label': 'Opslaan',
             'modal_element_id': element_id,
             'target_element_id': element_id,
-            **get_delete_context('user-delete', editing_user.pk, f'{editing_user.first_name} {editing_user.last_name}'),
+            **get_delete_context('user-delete', edited_user.pk, f'{edited_user.first_name} {edited_user.last_name}'),
         })
     elif request.method == 'POST':
         form = UserForm(request.POST, instance=edited_user)
@@ -736,7 +736,7 @@ def user_edit(request, pk):
                 'form_button_label': 'Opslaan',
                 'modal_element_id': element_id,
                 'target_element_id': element_id,
-                **get_delete_context('user-delete', editing_user.pk, f'{editing_user.first_name} {editing_user.last_name}'),
+                **get_delete_context('user-delete', edited_user.pk, f'{edited_user.first_name} {edited_user.last_name}'),
             })
     return HttpResponse(status=405)
 
