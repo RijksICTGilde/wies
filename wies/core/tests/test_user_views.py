@@ -249,9 +249,9 @@ class UserViewsTest(TestCase):
 
         response = self.client.post(reverse('user-delete', args=[user_id]))
 
-        # Should redirect to users list
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, reverse('admin-users'))
+        # Should return updated table (HTMX response)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['HX-Trigger'], 'closeModal')
 
         # User should be deleted
         self.assertEqual(User.objects.count(), initial_count - 1)
