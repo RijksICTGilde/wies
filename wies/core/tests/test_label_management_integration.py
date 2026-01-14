@@ -63,7 +63,7 @@ class LabelManagementIntegrationTest(TestCase):
 
         # Step 2: Create a label in that category
         response = self.client.post(
-            f'/admin/labels/category/{category.id}/labels/create/',
+            f'/instellingen/labels/categorie/{category.id}/labels/aanmaken/',
             {'name': 'Test Label'},
             follow=True
         )
@@ -217,7 +217,7 @@ class LabelManagementIntegrationTest(TestCase):
 
         # Attempt to create another label with same name in same category
         response = self.client.post(
-            f'/admin/labels/category/{category.id}/labels/create/',
+            f'/instellingen/labels/categorie/{category.id}/labels/aanmaken/',
             {'name': 'Duplicate Name'}
         )
 
@@ -237,14 +237,14 @@ class LabelManagementIntegrationTest(TestCase):
 
         # Create label with same name in both categories
         response1 = self.client.post(
-            f'/admin/labels/category/{category1.id}/labels/create/',
+            f'/instellingen/labels/categorie/{category1.id}/labels/aanmaken/',
             {'name': 'Common Name'},
         )
 
         self.assertEqual(response1.status_code, 200)
 
         response2 = self.client.post(
-            f'/admin/labels/category/{category2.id}/labels/create/',
+            f'/instellingen/labels/categorie/{category2.id}/labels/aanmaken/',
             {'name': 'Common Name'},
             follow=True
         )

@@ -41,7 +41,7 @@
     </table>
 </div>
 <div class="label-form-container">
-    <form class="label-form" hx-post="/admin/labels/category/{{ category.id }}/labels/create/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
+    <form class="label-form" hx-post="/instellingen/labels/categorie/{{ category.id }}/labels/aanmaken/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
         <c-input name="name"/>
         <c-button kind="secondary" 
                   icon="plus"
@@ -57,7 +57,7 @@
 {% else %}
 <p class="empty-category-message">Geen labels in deze categorie</p>
 <div class="label-form-container">
-    <form class="label-form" hx-post="/admin/labels/category/{{ category.id }}/labels/create/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
+    <form class="label-form" hx-post="/instellingen/labels/categorie/{{ category.id }}/labels/aanmaken/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
         <c-input name="name"/>
         <c-button kind="secondary" 
                   icon="plus"

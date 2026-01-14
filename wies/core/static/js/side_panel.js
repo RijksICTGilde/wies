@@ -27,8 +27,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Close panel with filter preservation
   function closePanelWithFilters() {
     const url = new URL(window.location);
-    url.searchParams.delete('colleague');
-    url.searchParams.delete('assignment');
+    url.searchParams.delete('collega');
+    url.searchParams.delete('opdracht');
     window.location.href = url.toString();
   }
 

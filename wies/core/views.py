@@ -87,7 +87,7 @@ def auth(request):
         return redirect(request.build_absolute_uri(reverse("home")))
 
     logger.info('login not successful, access denied')
-    return redirect('/no-access/')
+    return redirect('/geen-toegang/')
 
 
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
@@ -199,7 +199,7 @@ class PlacementListView(ListView):
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if 'HX-Request' in self.request.headers:
-            if self.request.GET.get('page'):
+            if self.request.GET.get('pagina'):
                 return ['parts/placement_table_rows.html']
             return ['parts/placement_table.html']
         return ['placement_table.html']
@@ -208,38 +208,38 @@ class PlacementListView(ListView):
         """Build close URL preserving current filters"""
         params = QueryDict(mutable=True)
         params.update(request.GET)
-        params.pop('colleague', None)
-        params.pop('assignment', None)
-        return f"/placements/?{params.urlencode()}" if params else "/placements/"
+        params.pop('collega', None)
+        params.pop('opdracht', None)
+        return f"/plaatsingen/?{params.urlencode()}" if params else "/plaatsingen/"
 
     def _build_assignment_url(self, request, assignment_id):
         """Build assignment panel URL preserving current filters"""
         params = QueryDict(mutable=True)
         params.update(request.GET)
-        params.pop('assignment', None)
-        params['assignment'] = assignment_id
-        return f"/placements/?{params.urlencode()}"
+        params.pop('opdracht', None)
+        params['opdracht'] = assignment_id
+        return f"/plaatsingen/?{params.urlencode()}"
 
     def _build_client_url(self, client_name):
         """Build client filter URL"""
         params = QueryDict(mutable=True)
         params['client'] = client_name
-        return f"/placements/?{params.urlencode()}"
+        return f"/plaatsingen/?{params.urlencode()}"
 
     def _build_ministry_url(self, ministry_id):
         """Build ministry filter URL"""
         params = QueryDict(mutable=True)
         params['ministry'] = ministry_id
-        return f"/placements/?{params.urlencode()}"
+        return f"/plaatsingen/?{params.urlencode()}"
 
     def _build_colleague_url(self, colleague_id):
         """Build colleague panel URL preserving current filters"""
         params = QueryDict(mutable=True)
         params.update(self.request.GET)
-        params.pop('colleague', None)
-        params.pop('assignment', None)
-        params['colleague'] = colleague_id
-        return f"/placements/?{params.urlencode()}"
+        params.pop('collega', None)
+        params.pop('opdracht', None)
+        params['collega'] = colleague_id
+        return f"/plaatsingen/?{params.urlencode()}"
 
     def _get_colleague_assignments(self, colleague):
         """Get assignments for a colleague"""
@@ -300,8 +300,8 @@ class PlacementListView(ListView):
         if colleague:
             params = QueryDict(mutable=True)
             params.update(self.request.GET)
-            params.pop('assignment', None)
-            colleague_url = f"/placements/?{params.urlencode()}"
+            params.pop('opdracht', None)
+            colleague_url = f"/plaatsingen/?{params.urlencode()}"
             
             breadcrumb_items = [
                 {'text': colleague.name, 'url': colleague_url},
@@ -458,16 +458,16 @@ class PlacementListView(ListView):
         if context.get('page_obj') and context['page_obj'].has_next():
             filter_params = []
             for key, value in self.request.GET.items():
-                if key != 'page':  # Exclude page param
+                if key != 'pagina':  # Exclude page param
                     filter_params.append(f'{key}={value}')
             params_str = '&'.join(filter_params)
             next_page = context['page_obj'].next_page_number()
-            context['next_page_url'] = f'?page={next_page}' + (f'&{params_str}' if params_str else '')
+            context['next_page_url'] = f'?pagina={next_page}' + (f'&{params_str}' if params_str else '')
         else:
             context['next_page_url'] = None
 
-        colleague_id = self.request.GET.get('colleague')
-        assignment_id = self.request.GET.get('assignment')
+        colleague_id = self.request.GET.get('collega')
+        assignment_id = self.request.GET.get('opdracht')
 
         # if one or both of the ids are invalid, the panel_data is skipped
         if colleague_id and not assignment_id:
@@ -533,7 +533,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         """Return appropriate template based on request type"""
         if 'HX-Request' in self.request.headers:
             # If paginating, return only rows
-            if self.request.GET.get('page'):
+            if self.request.GET.get('pagina'):
                 return ['parts/user_table_rows.html']
             # Otherwise, return full table (for filter changes)
             return ['parts/user_table.html']
@@ -625,11 +625,11 @@ class UserListView(PermissionRequiredMixin, ListView):
         if context.get('page_obj') and context['page_obj'].has_next():
             filter_params = []
             for key, value in self.request.GET.items():
-                if key != 'page':
+                if key != 'pagina':
                     filter_params.append(f'{key}={value}')
             params_str = '&'.join(filter_params)
             next_page = context['page_obj'].next_page_number()
-            context['next_page_url'] = f'?page={next_page}' + (f'&{params_str}' if params_str else '')
+            context['next_page_url'] = f'?pagina={next_page}' + (f'&{params_str}' if params_str else '')
         else:
             context['next_page_url'] = None
 

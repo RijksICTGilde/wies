@@ -77,7 +77,7 @@ class UserViewsTest(TestCase):
         """Test that user list requires authentication"""
         response = self.client.get(reverse('admin-users'), follow=False)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith('/login/'))
+        self.assertTrue(response.url.startswith('/inloggen/'))
 
     def test_user_admin_excludes_superusers(self):
         """Test that superusers are excluded from user list"""
@@ -246,7 +246,7 @@ class UserViewsTest(TestCase):
         })
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith('/login/'))
+        self.assertTrue(response.url.startswith('/inloggen/'))
 
     def test_user_delete_success(self):
         """Test successful user deletion"""
@@ -296,7 +296,7 @@ class UserViewsTest(TestCase):
         response = self.client.post(reverse('user-delete', args=[self.user1.id]))
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith('/login/'))
+        self.assertTrue(response.url.startswith('/inloggen/'))
 
     # Permission tests
     def test_user_admin_requires_view_permission(self):
@@ -484,7 +484,7 @@ class UserViewsTest(TestCase):
         })
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith('/login/'))
+        self.assertTrue(response.url.startswith('/inloggen/'))
 
     def test_user_edit_requires_change_permission(self):
         """Test that user editing returns 403 without change_user permission"""
@@ -591,7 +591,7 @@ class UserImportTest(TestCase):
         """Test that import endpoint requires authentication"""
         response = self.client.get(self.import_url)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith('/login/'))
+        self.assertTrue(response.url.startswith('/inloggen/'))
 
     def test_import_requires_add_permission(self):
         """Test that import requires add_user permission"""

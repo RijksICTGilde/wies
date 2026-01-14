@@ -276,7 +276,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         # Request first page with label filter
         response = self.client.get(
             reverse('admin-users'),
-            {'label': self.rig_label.id, 'page': 1}
+            {'label': self.rig_label.id, 'pagina': 1}
         )
         self.assertEqual(response.status_code, 200)
 
