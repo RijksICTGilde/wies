@@ -1,21 +1,3 @@
-{#
-HTMX Swap Target: Placement filter sidebar and table container
-
-This template is returned when:
-- Filters change (skill, client, ministry, label, date range)
-- Sort headers are clicked
-- Search query changes
-
-Swapped into: #filter-and-table-container (replaces entire filter sidebar + table)
-
-Context required:
-- filter_groups: List of filter configurations
-- active_filters: Dict of currently active filters
-- search_filter: Current search query
-- object_list: Placements queryset
-- request: Request object for sort state
-#}
-
 <div id="filter-and-table-container">
 
   <!-- Filter Sidebar and Main Content Wrapper -->
@@ -109,7 +91,7 @@ Context required:
       <!-- Filter Chips and Search Bar Container -->
       <div class="filter-chips-and-search-container">
 
-        <p class="result_count"></p> {{ page_obj.paginator.count }} resultaten
+        <p>{{ page_obj.paginator.count }} resultaten</p>
 
         <!-- Active Filter Chips -->
         <div class="active-filters-chips">

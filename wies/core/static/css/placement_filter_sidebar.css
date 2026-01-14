@@ -15,7 +15,7 @@
   flex-direction: column;
   overflow: hidden;
   align-self: stretch;
-  min-height: 100%;
+  min-height: calc(100vh - 176px);;
 }
 
 /* Sidebar Header */
@@ -31,13 +31,6 @@
 .filter-sidebar-header h2 {
   margin: 0;
   white-space: nowrap;
-}
-
-/* Active Filters Section (legacy - no longer used in sidebar) */
-.filter-sidebar-active-filters {
-  padding: 1rem 1.5rem;
-  border-bottom: 1px solid var(--rvo-color-grijs-300, #e6e6e6);
-  min-width: 280px;
 }
 
 /* Filter Chips and Search Container - Horizontal Layout */
@@ -99,20 +92,6 @@
 
 .filter-chip-remove:hover {
   background-color: rgba(0, 0, 0, 0.1);
-}
-
-/* Clear All Filters Link */
-.clear-all-filters-link {
-  display: inline-block;
-  font-size: var(--rvo-font-size-sm, 0.875rem);
-  color: var(--rvo-color-hemelblauw, #0077c8);
-  text-decoration: underline;
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.clear-all-filters-link:hover {
-  color: var(--rvo-color-donkerblauw, #154273);
 }
 
 /* Sidebar Body */

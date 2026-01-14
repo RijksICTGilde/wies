@@ -62,45 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
       removeFilter(filterName, filterType, filterValue);
     }
-    // Clear all filters link
-    else if (e.target.closest('.clear-all-filters-link')) {
-      e.preventDefault();
-      clearAllFilters();
-    }
   });
-
-  function clearAllFilters() {
-    const form = document.querySelector('.filter-sidebar-form');
-    const searchForm = document.querySelector('.filter-search-form');
-    if (!form) return;
-
-    // Clear all filter inputs
-    form.querySelectorAll('[data-filter-input]').forEach(input => {
-      if (input.tagName === 'SELECT') {
-        input.selectedIndex = 0;
-      } else if (input.type === 'hidden') {
-        input.value = '';
-      } else if (input.type === 'date') {
-        input.value = '';
-      }
-    });
-
-    // Clear search field
-    if (searchForm) {
-      const searchInput = searchForm.querySelector('#search');
-      if (searchInput) {
-        searchInput.value = '';
-      }
-    }
-
-    // Clear validation messages
-    document.querySelectorAll('.date-range-validation-message').forEach(msg => {
-      msg.style.display = 'none';
-    });
-
-    // Trigger form submission via HTMX
-    htmx.trigger(form, 'change');
-  }
 
   // ============================================================================
   // DATE RANGE VALIDATION AND SETUP
