@@ -201,7 +201,7 @@ class PlacementListView(ListView):
         if 'HX-Request' in self.request.headers:
             if self.request.GET.get('pagina'):
                 return ['parts/placement_table_rows.html']
-            return ['parts/placement_table.html']
+            return ['parts/filter_and_table_container.html']
         return ['placement_table.html']
 
     def _build_close_url(self, request):
@@ -358,13 +358,14 @@ class PlacementListView(ListView):
 
             select_label = category.name
             options = [
-                {'value': '', 'label': 'Allemaal'},
+                {'value': '', 'label': ''},
             ]
             value = ''
             for label in Label.objects.filter(category=category):
                 options.append({
                     'value': str(label.id),
-                    'label': f"{label.name}"
+                    'label': f"{label.name}",
+                    'category_color': category.color
                 })
                 if str(label.id) in active_filters.get('label', set()):
                     options[-1]['selected'] = True
@@ -382,7 +383,7 @@ class PlacementListView(ListView):
 
 
         skill_options = [
-            {'value': '', 'label': 'Alle rollen'}
+            {'value': '', 'label': ''}
         ]
         skill_value = ''
         for skill in Skill.objects.order_by('name'):
@@ -397,7 +398,7 @@ class PlacementListView(ListView):
         ]
 
         client_options = [
-            {'value': '', 'label': 'Alle opdrachtgevers'},
+            {'value': '', 'label': ''},
         ]
         client_value = ''
         for client in clients:
@@ -407,7 +408,7 @@ class PlacementListView(ListView):
                 client_value = str(client['id'])
 
         ministry_options = [
-            {'value': '', 'label': 'Alle ministeries'},
+            {'value': '', 'label': ''},
         ]
         ministry_value = ''
         for ministry in Ministry.objects.order_by('name'):

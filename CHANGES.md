@@ -2,7 +2,8 @@
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
-- ...
+- 127: move placement filter in page, with chips
+- 127: remove banner, remove jump in sidepanel, wider content
 
 ## 2026-01-14
 - (backwards incompatible) clean slate - start over with only essential 4W functionality
