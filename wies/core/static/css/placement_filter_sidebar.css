@@ -64,7 +64,7 @@
   display: none;
 }
 
-/* Active Filters Section */
+/* Active Filters Section (legacy - no longer used in sidebar) */
 .filter-sidebar-active-filters {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--rvo-color-grijs-300, #e6e6e6);
@@ -75,11 +75,21 @@
   display: none;
 }
 
+/* Filter Chips and Search Container - Horizontal Layout */
+.filter-chips-and-search-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3rem;
+}
+
 .active-filters-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  flex: 1 1 auto;
+  align-items: center;
 }
 
 /* Filter Chip - Base Styles */
@@ -214,13 +224,13 @@
 
 /* Search Form */
 .filter-search-form {
-  width: 100%;
+  flex: 0 0 auto;
+  width: 350px;
 }
 
 .search-field-wrapper {
   position: relative;
   width: 100%;
-  max-width: 600px;
 }
 
 .search-field-wrapper .search-icon {
