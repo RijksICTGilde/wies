@@ -91,16 +91,16 @@
       <!-- Filter Chips and Search Bar Container -->
       <div class="filter-chips-and-search-container">
 
-        <p>{{ page_obj.paginator.count }} resultaten</p>
+        <p><b>{{ page_obj.paginator.count }}</b> resultaten</p>
 
         <!-- Active Filter Chips -->
         <div class="active-filters-chips">
 
           {# Search filter chip #}
           {% if search_filter %}
-          <div class="filter-chip filter-chip--default" data-filter-name="search" data-filter-type="search">
+          <div class="filter-chip filter-chip--default" data-filter-name="zoek" data-filter-type="zoek">
             <span class="filter-chip-label">{{ search_filter }}</span>
-            <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="search">
+            <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="zoek">
               <c-icon icon="kruis" color="grijs-700" size="sm" />
             </button>
           </div>
@@ -112,7 +112,7 @@
               {% set filter_value = active_filters.get(filter_group.name) %}
 
               {# For label filters (multi-select), show multiple chips #}
-              {% if filter_group.name == 'label' and filter_value %}
+              {% if filter_group.name == 'labels' and filter_value %}
                 {% for label_id in filter_value %}
                   {% for option in filter_group.options %}
                     {% if option.value == label_id %}
@@ -165,7 +165,7 @@
             <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon"/>
             <c-input
               id="search"
-              name="search"
+              name="zoek"
               placeholder="Zoeken..."
               value="{% if search_filter %}{{ search_filter }}{% endif %}"
               aria-label="Zoeken"
