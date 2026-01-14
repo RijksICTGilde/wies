@@ -1,36 +1,6 @@
 // Wait for DOM to be ready
 document.addEventListener('DOMContentLoaded', function() {
   // ============================================================================
-  // SIDEBAR COLLAPSE/EXPAND FUNCTIONS
-  // ============================================================================
-
-  function collapseSidebar() {
-    const sidebar = document.getElementById('filterSidebar');
-    if (sidebar) {
-      sidebar.classList.add('collapsed');
-      sessionStorage.setItem('filterSidebarCollapsed', 'true');
-    }
-  }
-
-  function expandSidebar() {
-    const sidebar = document.getElementById('filterSidebar');
-    if (sidebar) {
-      sidebar.classList.remove('collapsed');
-      sessionStorage.setItem('filterSidebarCollapsed', 'false');
-    }
-  }
-
-  function restoreSidebarState() {
-    const sidebar = document.getElementById('filterSidebar');
-    if (!sidebar) return;
-
-    const sidebarCollapsed = sessionStorage.getItem('filterSidebarCollapsed') === 'true';
-    if (sidebarCollapsed) {
-      sidebar.classList.add('collapsed');
-    }
-  }
-
-  // ============================================================================
   // FILTER MANAGEMENT FUNCTIONS
   // ============================================================================
 
@@ -81,18 +51,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // ============================================================================
 
   document.addEventListener('click', function(e) {
-    // Collapse sidebar button
-    if (e.target.closest('#collapseSidebarButton')) {
-      e.preventDefault();
-      collapseSidebar();
-    }
-    // Expand sidebar button
-    else if (e.target.closest('#expandSidebarButton')) {
-      e.preventDefault();
-      expandSidebar();
-    }
     // Filter chip removal
-    else if (e.target.closest('.filter-chip-remove')) {
+    if (e.target.closest('.filter-chip-remove')) {
       e.preventDefault();
       const button = e.target.closest('.filter-chip-remove');
       const filterName = button.dataset.filterName;
@@ -201,9 +161,6 @@ document.addEventListener('DOMContentLoaded', function() {
   // INITIALIZATION AND HTMX INTEGRATION
   // ============================================================================
 
-  // Restore sidebar state on initial load
-  restoreSidebarState();
-
   // Setup date range listeners on initial load
   setupDateRangeListeners();
 
@@ -211,9 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
   document.body.addEventListener('htmx:afterSwap', function(event) {
     // Only restore if the swap target was the filter container
     if (event.detail.target.id === 'filter-and-table-container') {
-      restoreSidebarState();
       setupDateRangeListeners(); // Re-attach date range listeners to new elements
-      // Note: Collapse/expand buttons use event delegation, so no re-initialization needed
     }
   });
 

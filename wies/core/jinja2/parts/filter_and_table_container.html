@@ -24,12 +24,6 @@ Context required:
     <!-- Filter Sidebar -->
     <aside class="filter-sidebar" id="filterSidebar">
 
-      <!-- Collapsed State Toggle Button (only visible when collapsed) -->
-      <button type="button" class="filter-sidebar-collapsed-toggle" id="expandSidebarButton" aria-label="Toon filters">
-        <c-icon icon="delta-naar-rechts" color="grijs-700" size="md" class="collapsed-icon" />
-        <c-h3 noMargins class="filter-sidebar-collapsed-text">Filters</c-h3>
-      </button>
-
       <form class="rvo-form filter-sidebar-form"
         hx-get="{{ url('placements') }}"
         hx-target="#filter-and-table-container"
@@ -37,12 +31,9 @@ Context required:
         hx-trigger="change,input delay:500ms from:[data-filter-input]"
         hx-include="[data-filter-input]">
 
-        <!-- Sidebar Header (hidden when collapsed) -->
+        <!-- Sidebar Header -->
         <div class="filter-sidebar-header">
           <c-h2 noMargins>Filters</c-h2>
-          <button type="button" class="filter-sidebar-toggle" id="collapseSidebarButton" aria-label="Verberg filters">
-            <c-icon icon="delta-naar-links" color="grijs-600" size="md" />
-          </button>
         </div>
 
         <!-- Filter Fields -->

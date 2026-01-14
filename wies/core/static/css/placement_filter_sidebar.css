@@ -11,21 +11,11 @@
   flex: 0 0 280px;
   width: 280px;
   background: var(--rvo-color-grijs-100);
-  /* border: 1px solid var(--rvo-color-grijs-300, #e6e6e6); */
-  /* border-radius: 8px; */
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease, flex-basis 0.3s ease;
   overflow: hidden;
   align-self: stretch;
   min-height: 100%;
-}
-
-/* Collapsed state - narrow strip that remains visible */
-.filter-sidebar.collapsed {
-  flex: 0 0 50px;
-  width: 50px;
-  overflow: hidden;
 }
 
 /* Sidebar Header */
@@ -43,36 +33,11 @@
   white-space: nowrap;
 }
 
-.filter-sidebar-toggle {
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
-}
-
-.filter-sidebar-toggle:hover {
-  background-color: var(--rvo-color-grijs-100, #f5f5f5);
-}
-
-/* Hide normal header content when collapsed */
-.filter-sidebar.collapsed .filter-sidebar-header {
-  display: none;
-}
-
 /* Active Filters Section (legacy - no longer used in sidebar) */
 .filter-sidebar-active-filters {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid var(--rvo-color-grijs-300, #e6e6e6);
   min-width: 280px;
-}
-
-.filter-sidebar.collapsed .filter-sidebar-active-filters {
-  display: none;
 }
 
 /* Filter Chips and Search Container - Horizontal Layout */
@@ -157,11 +122,6 @@
   min-width: 280px;
 }
 
-/* Hide body when collapsed */
-.filter-sidebar.collapsed .filter-sidebar-body {
-  display: none;
-}
-
 /* Date Range Field Styling */
 .filter-sidebar-date-range {
   display: flex;
@@ -173,37 +133,6 @@
   font-weight: var(--rvo-font-weight-bold, 700);
   font-size: var(--rvo-font-size-sm, 0.875rem);
   color: var(--rvo-color-grijs-700, #3d3d3d);
-}
-
-/* Collapsed Sidebar Toggle Button */
-.filter-sidebar-collapsed-toggle {
-  display: none;
-  width: 100%;
-  height: 100%;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 1rem 0;
-  align-items: center;
-  justify-content: start;
-  transition: background-color 0.2s ease;
-}
-
-.filter-sidebar.collapsed .filter-sidebar-collapsed-toggle {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.filter-sidebar-collapsed-toggle .collapsed-icon {
-  transform: rotate(0deg);
-  transition: transform 0.2s ease;
-}
-
-.filter-sidebar-collapsed-text {
-  writing-mode: vertical-rl;
-  padding-top: 10px;
-  /* letter-spacing: 0.5px; */
 }
 
 /* Main Content Area */
@@ -261,14 +190,5 @@
     max-height: none;
     position: relative;
     top: 0;
-  }
-
-  .filter-sidebar.collapsed {
-    display: none;
-  }
-
-  /* On mobile, collapsed toggle is not needed - use display: none instead */
-  .filter-sidebar-collapsed-toggle {
-    display: none !important;
   }
 }
