@@ -2,6 +2,9 @@
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
+- ...
+
+## 2026-01-14
 - (backwards incompatible) clean slate - start over with only essential 4W functionality
 - Change login to only pass when user is in database
 - Remove login requirement from logout endpoint
