@@ -2,7 +2,7 @@
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
-- ...
+- 127: remove banner, implement scrollbar gutter to remove jump in sidepanel, wider screen
 
 ## 2026-01-14
 - (backwards incompatible) clean slate - start over with only essential 4W functionality
@@ -44,8 +44,6 @@ This files lists the changes during the lifetime of this project.
 - 123: Change layout user modal
 - 123: Aligned modals
 - bump authlib due to path vulnerability
-- 127: remove banner, implement scrollbar gutter to remove jump in sidepanel, wider screen
-
 
 ## 2025-10-09
 - add period filter to placement page

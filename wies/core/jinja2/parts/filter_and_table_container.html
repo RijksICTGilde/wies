@@ -51,7 +51,7 @@ Context required:
 
             {# Search filter chip #}
             {% if search_filter %}
-            <div class="filter-chip" data-filter-name="search" data-filter-type="search">
+            <div class="filter-chip filter-chip--default" data-filter-name="search" data-filter-type="search">
               <span class="filter-chip-label">{{ search_filter }}</span>
               <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="search">
                 <c-icon icon="kruis" color="grijs-700" size="sm" />
@@ -69,7 +69,7 @@ Context required:
                   {% for label_id in filter_value %}
                     {% for option in filter_group.options %}
                       {% if option.value == label_id %}
-                      <div class="filter-chip" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ label_id }}" data-filter-type="select-multi">
+                      <div class="filter-chip filter-chip--label" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ label_id }}" data-filter-type="select-multi" style="background-color: {{ option.category_color }};">
                         <span class="filter-chip-label">{{ option.label }}</span>
                         <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ label_id }}">
                           <c-icon icon="kruis" color="grijs-700" size="sm" />
@@ -83,7 +83,7 @@ Context required:
                 {% elif filter_value and filter_group.name != 'label' %}
                   {% for option in filter_group.options %}
                     {% if option.value == filter_value %}
-                    <div class="filter-chip" data-filter-name="{{ filter_group.name }}" data-filter-type="select">
+                    <div class="filter-chip filter-chip--default" data-filter-name="{{ filter_group.name }}" data-filter-type="select">
                       <span class="filter-chip-label">{{ option.label }}</span>
                       <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="{{ filter_group.name }}">
                         <c-icon icon="kruis" color="grijs-700" size="sm" />
@@ -95,7 +95,7 @@ Context required:
 
               {# Date range filter #}
               {% elif filter_group.type == 'date_range' and active_filters.get(filter_group.name) %}
-                <div class="filter-chip" data-filter-name="{{ filter_group.name }}" data-filter-type="date_range">
+                <div class="filter-chip filter-chip--default" data-filter-name="{{ filter_group.name }}" data-filter-type="date_range">
                   <span class="filter-chip-label">{{ active_filters.get(filter_group.name).from }} tm {{ active_filters.get(filter_group.name).to }}</span>
                   <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="{{ filter_group.name }}">
                     <c-icon icon="kruis" color="grijs-700" size="sm" />

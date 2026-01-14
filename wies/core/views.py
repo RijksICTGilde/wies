@@ -364,7 +364,8 @@ class PlacementListView(ListView):
             for label in Label.objects.filter(category=category):
                 options.append({
                     'value': str(label.id),
-                    'label': f"{label.name}"
+                    'label': f"{label.name}",
+                    'category_color': category.color
                 })
                 if str(label.id) in active_filters.get('label', set()):
                     options[-1]['selected'] = True
