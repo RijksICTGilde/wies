@@ -44,6 +44,8 @@ This files lists the changes during the lifetime of this project.
 - 123: Change layout user modal
 - 123: Aligned modals
 - bump authlib due to path vulnerability
+- 127: remove banner, implement scrollbar gutter to remove jump in sidepanel, wider screen
+
 
 ## 2025-10-09
 - add period filter to placement page
