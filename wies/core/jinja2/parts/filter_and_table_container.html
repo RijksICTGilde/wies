@@ -44,13 +44,13 @@
                     <label for="filter-{{ filter_group.name }}-from" class="rvo-label utrecht-form-label">{{ filter_group.from_label }}</label>
                   </div>
                   <input
-                    type="month"
+                    type="date"
                     id="filter-{{ filter_group.name }}-from"
                     class="utrecht-textbox utrecht-textbox--html-input"
                     data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
                     data-combined-name="{{ filter_group.name }}"
                     data-pair-id="filter-{{ filter_group.name }}-to"
-                    value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from.strftime('%Y-%m') }}{% endif %}"
+                    value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from.strftime('%Y-%m-%d') }}{% endif %}"
                   />
                 </div>
 
@@ -59,13 +59,13 @@
                     <label for="filter-{{ filter_group.name }}-to" class="rvo-label utrecht-form-label">{{ filter_group.to_label }}</label>
                   </div>
                   <input
-                    type="month"
+                    type="date"
                     id="filter-{{ filter_group.name }}-to"
                     class="utrecht-textbox utrecht-textbox--html-input"
                     data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
                     data-combined-name="{{ filter_group.name }}"
                     data-pair-id="filter-{{ filter_group.name }}-from"
-                    value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to.strftime('%Y-%m') }}{% endif %}"
+                    value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to.strftime('%Y-%m-%d') }}{% endif %}"
                   />
                 </div>
               </div>

@@ -18,7 +18,7 @@ def filter_placements_by_period(queryset, period):
 
     Args:
         queryset: Placement queryset to filter
-        period: Period string in format "YYYY-MM_YYYY-MM"
+        period: Period string in format "YYYY-MM-DD_YYYY-MM-DD"
 
     Returns:
         Filtered queryset containing only placements that overlap with the given period
@@ -26,22 +26,14 @@ def filter_placements_by_period(queryset, period):
     if not period:
         return queryset
 
-    # Parse period in format "YYYY-MM_YYYY-MM"
+    # Parse period in format "YYYY-MM-DD_YYYY-MM-DD"
     if '_' not in period:
         return queryset
 
     try:
         period_from_str, period_to_str = period.split('_', 1)
-        # Parse as first day of the month
-        period_from = datetime.datetime.strptime(period_from_str, '%Y-%m').date()
-        # Parse as first day, then get last day of the month
-        period_to_first = datetime.datetime.strptime(period_to_str, '%Y-%m').date()
-        # Calculate last day of the month
-        if period_to_first.month == 12:
-            period_to = period_to_first.replace(day=31)
-        else:
-            next_month = period_to_first.replace(month=period_to_first.month + 1, day=1)
-            period_to = next_month - datetime.timedelta(days=1)
+        period_from = datetime.datetime.strptime(period_from_str, '%Y-%m-%d').date()
+        period_to = datetime.datetime.strptime(period_to_str, '%Y-%m-%d').date()
 
         # Annotate with actual dates at database level
         queryset = annotate_placement_dates(queryset)

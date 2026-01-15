@@ -113,14 +113,14 @@
 }
 
 /* Make month inputs full width and clickable anywhere */
-.filter-sidebar-date-range input[type="month"] {
+.filter-sidebar-date-range input[type="date"] {
   cursor: pointer;
   width: 100%;
   position: relative;
 }
 
 /* Make the calendar icon clickable area cover the entire input, but keep icon visible */
-.filter-sidebar-date-range input[type="month"]::-webkit-calendar-picker-indicator {
+.filter-sidebar-date-range input[type="date"]::-webkit-calendar-picker-indicator {
   position: absolute;
   top: 0;
   right: 0;
