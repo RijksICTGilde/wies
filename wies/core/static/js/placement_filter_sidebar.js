@@ -72,7 +72,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('.filter-sidebar-form');
     if (!form) return;
 
-    const dateRangeInputs = document.querySelectorAll('input[type="month"]');
+    const dateRangeInputs = document.querySelectorAll('input[type="date"]');
 
     dateRangeInputs.forEach(input => {
       input.addEventListener('change', function(event) {

@@ -37,31 +37,35 @@
             {% elif filter_group.type == 'date_range' %}
 
             <div class="filter-sidebar-date-range">
-              <label class="filter-sidebar-date-range-label">{{ filter_group.label }}</label>
+              <span class="rvo-label">{{ filter_group.label }}</span>
               <div class="rvo-layout-column rvo-layout-gap--sm">
                 <div class="utrecht-form-field rvo-form-field">
-                  <label for="filter-{{ filter_group.name }}-from" class="rvo-label utrecht-form-label">{{ filter_group.from_label }}</label>
+                  <div class="rvo-form-field__label">
+                    <label for="filter-{{ filter_group.name }}-from" class="rvo-label utrecht-form-label">{{ filter_group.from_label }}</label>
+                  </div>
                   <input
-                    type="month"
+                    type="date"
                     id="filter-{{ filter_group.name }}-from"
-                    class="utrecht-textbox utrecht-textbox--html-input rvo-date-input"
+                    class="utrecht-textbox utrecht-textbox--html-input"
                     data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
                     data-combined-name="{{ filter_group.name }}"
                     data-pair-id="filter-{{ filter_group.name }}-to"
-                    value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from.strftime('%Y-%m') }}{% endif %}"
+                    value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from.strftime('%Y-%m-%d') }}{% endif %}"
                   />
                 </div>
 
                 <div class="utrecht-form-field rvo-form-field">
-                  <label for="filter-{{ filter_group.name }}-to" class="rvo-label utrecht-form-label">{{ filter_group.to_label }}</label>
+                  <div class="rvo-form-field__label">
+                    <label for="filter-{{ filter_group.name }}-to" class="rvo-label utrecht-form-label">{{ filter_group.to_label }}</label>
+                  </div>
                   <input
-                    type="month"
+                    type="date"
                     id="filter-{{ filter_group.name }}-to"
-                    class="utrecht-textbox utrecht-textbox--html-input rvo-date-input"
+                    class="utrecht-textbox utrecht-textbox--html-input"
                     data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
                     data-combined-name="{{ filter_group.name }}"
                     data-pair-id="filter-{{ filter_group.name }}-from"
-                    value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to.strftime('%Y-%m') }}{% endif %}"
+                    value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to.strftime('%Y-%m-%d') }}{% endif %}"
                   />
                 </div>
               </div>
@@ -75,7 +79,7 @@
               data-filter-input
             />
             <div id="{{ filter_group.name }}-validation-message" class="date-range-validation-message" style="display: none; color: #e17000; font-size: 0.875rem; margin-top: 0.25rem;">
-              Beide maanden zijn vereist voor een geldige periode filter.
+              Beide datums zijn vereist voor een geldige periode filter.
             </div>
             {% endif %}
             {% endif %}

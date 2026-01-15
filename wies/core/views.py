@@ -347,8 +347,8 @@ class PlacementListView(ListView):
         if active_filters.get('periode'):
             periode_from, periode_to = active_filters['periode'].split('_')
             active_filters['periode'] = {
-                'from': datetime.strptime(periode_from, '%Y-%m').date(),
-                'to': datetime.strptime(periode_to, '%Y-%m').date(),
+                'from': datetime.strptime(periode_from, '%Y-%m-%d').date(),
+                'to': datetime.strptime(periode_to, '%Y-%m-%d').date(),
             }
 
         label_filter_groups = []
