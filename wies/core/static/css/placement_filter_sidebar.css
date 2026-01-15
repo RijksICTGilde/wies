@@ -108,10 +108,29 @@
   gap: 0.5rem;
 }
 
-.filter-sidebar-date-range-label {
+.filter-sidebar-date-range > .rvo-label {
   font-weight: var(--rvo-font-weight-bold, 700);
-  font-size: var(--rvo-font-size-sm, 0.875rem);
-  color: var(--rvo-color-grijs-700, #3d3d3d);
+}
+
+/* Make month inputs full width and clickable anywhere */
+.filter-sidebar-date-range input[type="month"] {
+  cursor: pointer;
+  width: 100%;
+  position: relative;
+}
+
+/* Make the calendar icon clickable area cover the entire input, but keep icon visible */
+.filter-sidebar-date-range input[type="month"]::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: auto;
+  height: auto;
+  cursor: pointer;
+  background-position: right 0.75rem center;
+  background-size: 1rem;
 }
 
 /* Main Content Area */

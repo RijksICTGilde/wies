@@ -37,14 +37,16 @@
             {% elif filter_group.type == 'date_range' %}
 
             <div class="filter-sidebar-date-range">
-              <label class="filter-sidebar-date-range-label">{{ filter_group.label }}</label>
+              <span class="rvo-label">{{ filter_group.label }}</span>
               <div class="rvo-layout-column rvo-layout-gap--sm">
                 <div class="utrecht-form-field rvo-form-field">
-                  <label for="filter-{{ filter_group.name }}-from" class="rvo-label utrecht-form-label">{{ filter_group.from_label }}</label>
+                  <div class="rvo-form-field__label">
+                    <label for="filter-{{ filter_group.name }}-from" class="rvo-label utrecht-form-label">{{ filter_group.from_label }}</label>
+                  </div>
                   <input
                     type="month"
                     id="filter-{{ filter_group.name }}-from"
-                    class="utrecht-textbox utrecht-textbox--html-input rvo-date-input"
+                    class="utrecht-textbox utrecht-textbox--html-input"
                     data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
                     data-combined-name="{{ filter_group.name }}"
                     data-pair-id="filter-{{ filter_group.name }}-to"
@@ -53,11 +55,13 @@
                 </div>
 
                 <div class="utrecht-form-field rvo-form-field">
-                  <label for="filter-{{ filter_group.name }}-to" class="rvo-label utrecht-form-label">{{ filter_group.to_label }}</label>
+                  <div class="rvo-form-field__label">
+                    <label for="filter-{{ filter_group.name }}-to" class="rvo-label utrecht-form-label">{{ filter_group.to_label }}</label>
+                  </div>
                   <input
                     type="month"
                     id="filter-{{ filter_group.name }}-to"
-                    class="utrecht-textbox utrecht-textbox--html-input rvo-date-input"
+                    class="utrecht-textbox utrecht-textbox--html-input"
                     data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
                     data-combined-name="{{ filter_group.name }}"
                     data-pair-id="filter-{{ filter_group.name }}-from"
