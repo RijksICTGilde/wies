@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from django.views.generic.list import ListView
 from django.views.generic import DetailView
@@ -349,8 +350,8 @@ class PlacementListView(ListView):
         if active_filters.get('periode'):
             periode_from, periode_to = active_filters['periode'].split('_')
             active_filters['periode'] = {
-                'from': periode_from,
-                'to': periode_to,
+                'from': datetime.strptime(periode_from, '%Y-%m').date(),
+                'to': datetime.strptime(periode_to, '%Y-%m').date(),
             }
 
         label_filter_groups = []

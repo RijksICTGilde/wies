@@ -6,6 +6,34 @@ from django.utils.safestring import mark_safe
 from django.utils.http import urlencode
 from jinja_roos_components import setup_components
 
+# Nederlandse maandnamen
+MAANDEN_KORT = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec']
+MAANDEN_LANG = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december']
+
+
+def datum_nl(datum, format='kort'):
+    """
+    Formatteert een datum in het Nederlands.
+
+    Formats:
+    - 'kort': "jan 24" (maand jaar)
+    - 'lang': "1 januari 2024" (dag maand jaar)
+    - 'maand_jaar': "januari 2024"
+    """
+    if datum is None:
+        return "?"
+
+    maand_idx = datum.month - 1
+
+    if format == 'kort':
+        return f"{MAANDEN_KORT[maand_idx]} {datum.strftime('%y')}"
+    elif format == 'lang':
+        return f"{datum.day} {MAANDEN_LANG[maand_idx]} {datum.year}"
+    elif format == 'maand_jaar':
+        return f"{MAANDEN_LANG[maand_idx]} {datum.year}"
+    else:
+        return datum.strftime(format)
+
 
 def get_csrf_hidden_input(request):
         """Returns a hidden input field with CSRF token"""
@@ -56,5 +84,6 @@ def environment(**options):
         'get_toggle_sort_url': get_toggle_sort_url,
         'get_sort_state': get_sort_state,
     })
+    env.filters['datum_nl'] = datum_nl
 
     return env

@@ -39,27 +39,31 @@
             <div class="filter-sidebar-date-range">
               <label class="filter-sidebar-date-range-label">{{ filter_group.label }}</label>
               <div class="rvo-layout-column rvo-layout-gap--sm">
-                <c-date-input-field
-                  id="filter-{{ filter_group.name }}-from"
-                  label="{{ filter_group.from_label }}"
-                  helperText=""
-                  data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
-                  data-combined-name="{{ filter_group.name }}"
-                  data-pair-id="filter-{{ filter_group.name }}-to"
-                  size
-                  value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from }}{% endif %}"
-                />
+                <div class="utrecht-form-field rvo-form-field">
+                  <label for="filter-{{ filter_group.name }}-from" class="rvo-label utrecht-form-label">{{ filter_group.from_label }}</label>
+                  <input
+                    type="month"
+                    id="filter-{{ filter_group.name }}-from"
+                    class="utrecht-textbox utrecht-textbox--html-input rvo-date-input"
+                    data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
+                    data-combined-name="{{ filter_group.name }}"
+                    data-pair-id="filter-{{ filter_group.name }}-to"
+                    value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from.strftime('%Y-%m') }}{% endif %}"
+                  />
+                </div>
 
-                <c-date-input-field
-                  id="filter-{{ filter_group.name }}-to"
-                  label="{{ filter_group.to_label }}"
-                  helperText=""
-                  data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
-                  data-combined-name="{{ filter_group.name }}"
-                  data-pair-id="filter-{{ filter_group.name }}-from"
-                  size
-                  value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to }}{% endif %}"
-                />
+                <div class="utrecht-form-field rvo-form-field">
+                  <label for="filter-{{ filter_group.name }}-to" class="rvo-label utrecht-form-label">{{ filter_group.to_label }}</label>
+                  <input
+                    type="month"
+                    id="filter-{{ filter_group.name }}-to"
+                    class="utrecht-textbox utrecht-textbox--html-input rvo-date-input"
+                    data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
+                    data-combined-name="{{ filter_group.name }}"
+                    data-pair-id="filter-{{ filter_group.name }}-from"
+                    value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to.strftime('%Y-%m') }}{% endif %}"
+                  />
+                </div>
               </div>
             </div>
             {% if filter_group.require_both %}
@@ -71,7 +75,7 @@
               data-filter-input
             />
             <div id="{{ filter_group.name }}-validation-message" class="date-range-validation-message" style="display: none; color: #e17000; font-size: 0.875rem; margin-top: 0.25rem;">
-              Beide datums zijn vereist voor een geldige periode filter.
+              Beide maanden zijn vereist voor een geldige periode filter.
             </div>
             {% endif %}
             {% endif %}
@@ -143,7 +147,7 @@
             {# Date range filter #}
             {% elif filter_group.type == 'date_range' and active_filters.get(filter_group.name) %}
               <div class="filter-chip filter-chip--default" data-filter-name="{{ filter_group.name }}" data-filter-type="date_range">
-                <span class="filter-chip-label">{{ active_filters.get(filter_group.name).from }} tm {{ active_filters.get(filter_group.name).to }}</span>
+                <span class="filter-chip-label">{{ active_filters.get(filter_group.name).from|datum_nl('kort') }} t/m {{ active_filters.get(filter_group.name).to|datum_nl('kort') }}</span>
                 <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="{{ filter_group.name }}">
                   <c-icon icon="kruis" color="grijs-700" size="sm" />
                 </button>
