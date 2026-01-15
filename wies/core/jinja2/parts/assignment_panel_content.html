@@ -28,7 +28,7 @@
       <dt>Periode</dt>
       <dd>
         {% if assignment.start_date or assignment.end_date %}
-          {{ assignment.start_date|datum_nl('lang') }} - {{ assignment.end_date|datum_nl('lang') }}
+          {{ assignment.start_date|datum_nl('j F Y') }} - {{ assignment.end_date|datum_nl('j F Y') }}
         {% else %}
           <span class="rvo-text--italic rvo-text--subtle">Geen periode opgegeven</span>
         {% endif %}

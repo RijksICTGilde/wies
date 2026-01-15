@@ -147,7 +147,7 @@
             {# Date range filter #}
             {% elif filter_group.type == 'date_range' and active_filters.get(filter_group.name) %}
               <div class="filter-chip filter-chip--default" data-filter-name="{{ filter_group.name }}" data-filter-type="date_range">
-                <span class="filter-chip-label">{{ active_filters.get(filter_group.name).from|datum_nl('kort') }} t/m {{ active_filters.get(filter_group.name).to|datum_nl('kort') }}</span>
+                <span class="filter-chip-label">{{ active_filters.get(filter_group.name).from|datum_nl('N Y') }} t/m {{ active_filters.get(filter_group.name).to|datum_nl('N Y') }}</span>
                 <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="{{ filter_group.name }}">
                   <c-icon icon="kruis" color="grijs-700" size="sm" />
                 </button>
