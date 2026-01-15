@@ -96,19 +96,6 @@ dialog.rvo-dialog--inset-inline-end::backdrop {
   grid-template-columns: 200px 1fr !important;
 }
 
-/* Sidepanel breadcrumbs */
-.rvo-dialog .rvo-breadcrumbs {
-  margin-bottom: var(--rvo-space-md);
-}
-
-/* Breadcrumb button styling */
-.rvo-dialog .rvo-breadcrumb-button {
-  border: none;
-  background: none;
-  cursor: pointer;
-  padding: 0;
-}
-
 /* Placement details header - used in side panel */
 .placement-details-header {
   display: flex;

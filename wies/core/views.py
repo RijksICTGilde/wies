@@ -278,7 +278,7 @@ class PlacementListView(ListView):
         return {
             'panel_content_template': 'parts/colleague_panel_content.html',
             'panel_title': colleague.name,
-            'breadcrumb_items': None,
+            'back_url': None,
             'close_url': self._build_close_url(self.request),
             'colleague': colleague,
             'assignment_list': assignment_list,
@@ -296,21 +296,16 @@ class PlacementListView(ListView):
             placement.colleague_url = self._build_colleague_url(placement.colleague.id)
             placements.append(placement)
         
-        # Build breadcrumb items
+        # Build back URL to colleague panel
         params = QueryDict(mutable=True)
         params.update(self.request.GET)
         params.pop('opdracht', None)
-        colleague_url = f"/plaatsingen/?{params.urlencode()}"
+        back_url = f"/plaatsingen/?{params.urlencode()}"
 
-        breadcrumb_items = [
-            {'text': colleague.name, 'url': colleague_url},
-            {'text': assignment.name, 'url': None}
-        ]
-        
         return {
             'panel_content_template': 'parts/assignment_panel_content.html',
             'panel_title': assignment.name,
-            'breadcrumb_items': breadcrumb_items,
+            'back_url': back_url,
             'close_url': self._build_close_url(self.request),
             'assignment': assignment,
             'placements': placements,

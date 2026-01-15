@@ -3,8 +3,8 @@
         id="side_panel">
 
     <div class="side-panel__header">
-      {% if panel_data.breadcrumb_items %}
-      <button type="button" class="utrecht-button utrecht-button--rvo-tertiary-action utrecht-button--rvo-md utrecht-button--icon-before" onclick="window.location.href='{{ panel_data.breadcrumb_items[0].url }}'">
+      {% if panel_data.back_url %}
+      <button type="button" class="utrecht-button utrecht-button--rvo-tertiary-action utrecht-button--rvo-md utrecht-button--icon-before" onclick="window.location.href='{{ panel_data.back_url }}'">
         <span class="utrecht-icon rvo-icon rvo-icon-terug rvo-icon--md rvo-link__icon--before" role="img" aria-label="Terug"></span>
         Terug
       </button>
@@ -17,28 +17,6 @@
     </div>
 
     <div class="rvo-dialog__content">
-      {% if panel_data.breadcrumb_items %}
-      <ol class="rvo-breadcrumbs rvo-breadcrumbs--lg">
-        {% for item in panel_data.breadcrumb_items %}
-          <li class="rvo-breadcrumbs-item">
-            {% if not loop.first %}
-              <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs rvo-icon--hemelblauw"
-                    role="img"
-                    aria-label="Delta naar rechts"></span>
-            {% endif %}
-            {% if loop.last %}
-              <span class="rvo-breadcrumb-current-page">{{ item.text }}</span>
-            {% else %}
-              <a class="rvo-link rvo-link--no-underline rvo-breadcrumb-button"
-                 href="{{ item.url }}">
-                {{ item.text }}
-              </a>
-            {% endif %}
-          </li>
-        {% endfor %}
-      </ol>
-      {% endif %}
-
       {% include panel_data.panel_content_template %}
     </div>
   </dialog>
