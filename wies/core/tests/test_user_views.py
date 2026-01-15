@@ -77,7 +77,7 @@ class UserViewsTest(TestCase):
         """Test that user list requires authentication"""
         response = self.client.get(reverse('admin-users'), follow=False)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith('/login/'))
+        self.assertTrue(response.url.startswith('/inloggen/'))
 
     def test_user_admin_excludes_superusers(self):
         """Test that superusers are excluded from user list"""
@@ -102,7 +102,7 @@ class UserViewsTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by label A
-        response = self.client.get(reverse('admin-users'), {'label': self.label_a.id})
+        response = self.client.get(reverse('admin-users'), {'labels': self.label_a.id})
         content = response.content.decode()
 
         # user1 should be in results
@@ -115,13 +115,13 @@ class UserViewsTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Search by first name
-        response = self.client.get(reverse('admin-users'), {'search': 'John'})
+        response = self.client.get(reverse('admin-users'), {'zoek': 'John'})
         content = response.content.decode()
         self.assertIn(self.user1.get_full_name(), content)
         self.assertNotIn(self.user2.get_full_name(), content)
 
         # Search by email
-        response = self.client.get(reverse('admin-users'), {'search': 'jane'})
+        response = self.client.get(reverse('admin-users'), {'zoek': 'jane'})
         content = response.content.decode()
         self.assertIn(self.user2.get_full_name(), content)
         self.assertNotIn(self.user1.get_full_name(), content)
@@ -131,7 +131,7 @@ class UserViewsTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Search by full name "John Doe" - this should find user1 but currently doesn't
-        response = self.client.get(reverse('admin-users'), {'search': 'John Doe'})
+        response = self.client.get(reverse('admin-users'), {'zoek': 'John Doe'})
         content = response.content.decode()
         self.assertIn(self.user1.get_full_name(), content)
         self.assertNotIn(self.user2.get_full_name(), content)
@@ -246,7 +246,7 @@ class UserViewsTest(TestCase):
         })
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith('/login/'))
+        self.assertTrue(response.url.startswith('/inloggen/'))
 
     def test_user_delete_success(self):
         """Test successful user deletion"""
@@ -296,7 +296,7 @@ class UserViewsTest(TestCase):
         response = self.client.post(reverse('user-delete', args=[self.user1.id]))
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith('/login/'))
+        self.assertTrue(response.url.startswith('/inloggen/'))
 
     # Permission tests
     def test_user_admin_requires_view_permission(self):
@@ -484,7 +484,7 @@ class UserViewsTest(TestCase):
         })
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith('/login/'))
+        self.assertTrue(response.url.startswith('/inloggen/'))
 
     def test_user_edit_requires_change_permission(self):
         """Test that user editing returns 403 without change_user permission"""
@@ -591,7 +591,7 @@ class UserImportTest(TestCase):
         """Test that import endpoint requires authentication"""
         response = self.client.get(self.import_url)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith('/login/'))
+        self.assertTrue(response.url.startswith('/inloggen/'))
 
     def test_import_requires_add_permission(self):
         """Test that import requires add_user permission"""

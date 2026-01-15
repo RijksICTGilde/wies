@@ -37,29 +37,37 @@
             {% elif filter_group.type == 'date_range' %}
 
             <div class="filter-sidebar-date-range">
-              <label class="filter-sidebar-date-range-label">{{ filter_group.label }}</label>
+              <span class="rvo-label">{{ filter_group.label }}</span>
               <div class="rvo-layout-column rvo-layout-gap--sm">
-                <c-date-input-field
-                  id="filter-{{ filter_group.name }}-from"
-                  label="{{ filter_group.from_label }}"
-                  helperText=""
-                  data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
-                  data-combined-name="{{ filter_group.name }}"
-                  data-pair-id="filter-{{ filter_group.name }}-to"
-                  size
-                  value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from }}{% endif %}"
-                />
+                <div class="utrecht-form-field rvo-form-field">
+                  <div class="rvo-form-field__label">
+                    <label for="filter-{{ filter_group.name }}-from" class="rvo-label utrecht-form-label">{{ filter_group.from_label }}</label>
+                  </div>
+                  <input
+                    type="date"
+                    id="filter-{{ filter_group.name }}-from"
+                    class="utrecht-textbox utrecht-textbox--html-input"
+                    data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
+                    data-combined-name="{{ filter_group.name }}"
+                    data-pair-id="filter-{{ filter_group.name }}-to"
+                    value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from.strftime('%Y-%m-%d') }}{% endif %}"
+                  />
+                </div>
 
-                <c-date-input-field
-                  id="filter-{{ filter_group.name }}-to"
-                  label="{{ filter_group.to_label }}"
-                  helperText=""
-                  data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
-                  data-combined-name="{{ filter_group.name }}"
-                  data-pair-id="filter-{{ filter_group.name }}-from"
-                  size
-                  value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to }}{% endif %}"
-                />
+                <div class="utrecht-form-field rvo-form-field">
+                  <div class="rvo-form-field__label">
+                    <label for="filter-{{ filter_group.name }}-to" class="rvo-label utrecht-form-label">{{ filter_group.to_label }}</label>
+                  </div>
+                  <input
+                    type="date"
+                    id="filter-{{ filter_group.name }}-to"
+                    class="utrecht-textbox utrecht-textbox--html-input"
+                    data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
+                    data-combined-name="{{ filter_group.name }}"
+                    data-pair-id="filter-{{ filter_group.name }}-from"
+                    value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to.strftime('%Y-%m-%d') }}{% endif %}"
+                  />
+                </div>
               </div>
             </div>
             {% if filter_group.require_both %}
@@ -91,16 +99,16 @@
       <!-- Filter Chips and Search Bar Container -->
       <div class="filter-chips-and-search-container">
 
-        <p>{{ page_obj.paginator.count }} resultaten</p>
+        <p><b>{{ page_obj.paginator.count }}</b> resultaten</p>
 
         <!-- Active Filter Chips -->
         <div class="active-filters-chips">
 
           {# Search filter chip #}
           {% if search_filter %}
-          <div class="filter-chip filter-chip--default" data-filter-name="search" data-filter-type="search">
+          <div class="filter-chip filter-chip--default" data-filter-name="zoek" data-filter-type="zoek">
             <span class="filter-chip-label">{{ search_filter }}</span>
-            <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="search">
+            <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="zoek">
               <c-icon icon="kruis" color="grijs-700" size="sm" />
             </button>
           </div>
@@ -112,7 +120,7 @@
               {% set filter_value = active_filters.get(filter_group.name) %}
 
               {# For label filters (multi-select), show multiple chips #}
-              {% if filter_group.name == 'label' and filter_value %}
+              {% if filter_group.name == 'labels' and filter_value %}
                 {% for label_id in filter_value %}
                   {% for option in filter_group.options %}
                     {% if option.value == label_id %}
@@ -143,7 +151,7 @@
             {# Date range filter #}
             {% elif filter_group.type == 'date_range' and active_filters.get(filter_group.name) %}
               <div class="filter-chip filter-chip--default" data-filter-name="{{ filter_group.name }}" data-filter-type="date_range">
-                <span class="filter-chip-label">{{ active_filters.get(filter_group.name).from }} tm {{ active_filters.get(filter_group.name).to }}</span>
+                <span class="filter-chip-label">{{ active_filters.get(filter_group.name).from|datum_nl('N Y') }} t/m {{ active_filters.get(filter_group.name).to|datum_nl('N Y') }}</span>
                 <button type="button" class="filter-chip-remove" aria-label="Verwijder filter" data-filter-name="{{ filter_group.name }}">
                   <c-icon icon="kruis" color="grijs-700" size="sm" />
                 </button>
@@ -165,7 +173,7 @@
             <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon"/>
             <c-input
               id="search"
-              name="search"
+              name="zoek"
               placeholder="Zoeken..."
               value="{% if search_filter %}{{ search_filter }}{% endif %}"
               aria-label="Zoeken"

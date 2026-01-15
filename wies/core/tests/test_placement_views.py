@@ -81,7 +81,7 @@ class PlacementImportTest(TestCase):
         """Test that import endpoint requires authentication"""
         response = self.client.get(self.import_url)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith('/login/'))
+        self.assertTrue(response.url.startswith('/inloggen/'))
 
     def test_import_requires_all_permissions(self):
         """Test that import requires all five add permissions (assignment, service, placement, colleague, ministry)"""

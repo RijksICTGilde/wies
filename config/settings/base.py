@@ -148,7 +148,7 @@ STORAGES = {
 
 SESSION_COOKIE_AGE = 24 * 60 * 60  # 24h in s
 
-LOGIN_URL = '/login/'
+LOGIN_URL = '/inloggen/'
 
 AUTHENTICATION_BACKENDS = [
     'wies.core.auth_backend.AuthBackend',

@@ -68,7 +68,7 @@ class AuthViewsTest(TestCase):
 
         # Should redirect to no-access page
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/no-access/')
+        self.assertEqual(response.url, '/geen-toegang/')
 
         # Should NOT create session
         self.assertNotIn('_auth_user_id', self.client.session)
@@ -105,13 +105,13 @@ class AuthViewsTest(TestCase):
 
         # Should redirect to home/login
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/login/')
+        self.assertEqual(response.url, '/inloggen/')
 
         # Session should be cleared (new session will be created but without user)
         # Accessing a protected page should now redirect to login
         protected_response = self.client.get(reverse('placements'))
         self.assertEqual(protected_response.status_code, 302)
-        self.assertTrue(protected_response.url.startswith('/login/'))
+        self.assertTrue(protected_response.url.startswith('/inloggen/'))
 
     def test_logout_when_not_logged_in(self):
         """Test logout works gracefully when user is not logged in"""
@@ -119,7 +119,7 @@ class AuthViewsTest(TestCase):
 
         # Should redirect to home without error (no login requirement)
         self.assertEqual(response.status_code, 302)
-        self.assertEqual(response.url, '/login/')
+        self.assertEqual(response.url, '/inloggen/')
 
     @patch('wies.core.views.oauth.oidc.authorize_redirect')
     def test_login_post_initiates_oidc_flow(self, mock_authorize_redirect):

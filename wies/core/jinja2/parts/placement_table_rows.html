@@ -40,7 +40,7 @@
 
     <td class="rvo-table-cell">
       <span class="rvo-text">
-        {{ placement.start_date.strftime("%b %y") if placement.start_date else "?" }} - {{ placement.end_date.strftime("%b %y") if placement.end_date else "?" }}
+        {{ placement.start_date|datum_nl('N y') }} - {{ placement.end_date|datum_nl('N y') }}
       </span>
     </td>
   </tr>

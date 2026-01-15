@@ -108,11 +108,10 @@
   gap: 0.5rem;
 }
 
-.filter-sidebar-date-range-label {
+.filter-sidebar-date-range > .rvo-label {
   font-weight: var(--rvo-font-weight-bold, 700);
-  font-size: var(--rvo-font-size-sm, 0.875rem);
-  color: var(--rvo-color-grijs-700, #3d3d3d);
 }
+
 
 /* Main Content Area */
 .filter-main-content {

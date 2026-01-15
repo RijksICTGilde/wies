@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime
 
 from django.views.generic.list import ListView
 from django.views.generic import DetailView
@@ -87,7 +88,7 @@ def auth(request):
         return redirect(request.build_absolute_uri(reverse("home")))
 
     logger.info('login not successful, access denied')
-    return redirect('/no-access/')
+    return redirect('/geen-toegang/')
 
 
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
@@ -149,7 +150,7 @@ class PlacementListView(ListView):
             service__assignment__status='INGEVULD'
         ).order_by('-service__assignment__start_date')
 
-        search_filter = self.request.GET.get('search')
+        search_filter = self.request.GET.get('zoek')
         if search_filter:
             qs = qs.filter(
                 Q(colleague__name__icontains=search_filter) |
@@ -175,31 +176,31 @@ class PlacementListView(ListView):
 
         # Filtering
 
-        if self.request.GET.get('skill'):
-            qs = qs.filter(service__skill__id=self.request.GET['skill'])
-        
-        if self.request.GET.get('client'):
-            qs = qs.filter(service__assignment__organization=self.request.GET['client'])
+        if self.request.GET.get('rol'):
+            qs = qs.filter(service__skill__id=self.request.GET['rol'])
 
-        if self.request.GET.get('ministry'):
-            qs = qs.filter(service__assignment__ministry__id=self.request.GET['ministry'])
+        if self.request.GET.get('opdrachtgever'):
+            qs = qs.filter(service__assignment__organization=self.request.GET['opdrachtgever'])
+
+        if self.request.GET.get('ministerie'):
+            qs = qs.filter(service__assignment__ministry__id=self.request.GET['ministerie'])
 
         # Label filter support multiselect
-        for l in self.request.GET.getlist('label'):
-            if l != '':  
+        for l in self.request.GET.getlist('labels'):
+            if l != '':
                  qs = qs.filter(colleague__labels__id__contains=l)
 
         # Apply period filtering for overlapping periods
-        period = self.request.GET.get('period')
-        if period:
-            qs = filter_placements_by_period(qs, period)
+        periode = self.request.GET.get('periode')
+        if periode:
+            qs = filter_placements_by_period(qs, periode)
 
         return qs.distinct()
 
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if 'HX-Request' in self.request.headers:
-            if self.request.GET.get('page'):
+            if self.request.GET.get('pagina'):
                 return ['parts/placement_table_rows.html']
             return ['parts/filter_and_table_container.html']
         return ['placement_table.html']
@@ -208,38 +209,38 @@ class PlacementListView(ListView):
         """Build close URL preserving current filters"""
         params = QueryDict(mutable=True)
         params.update(request.GET)
-        params.pop('colleague', None)
-        params.pop('assignment', None)
-        return f"/placements/?{params.urlencode()}" if params else "/placements/"
+        params.pop('collega', None)
+        params.pop('opdracht', None)
+        return f"/plaatsingen/?{params.urlencode()}" if params else "/plaatsingen/"
 
     def _build_assignment_url(self, request, assignment_id):
         """Build assignment panel URL preserving current filters"""
         params = QueryDict(mutable=True)
         params.update(request.GET)
-        params.pop('assignment', None)
-        params['assignment'] = assignment_id
-        return f"/placements/?{params.urlencode()}"
+        params.pop('opdracht', None)
+        params['opdracht'] = assignment_id
+        return f"/plaatsingen/?{params.urlencode()}"
 
     def _build_client_url(self, client_name):
         """Build client filter URL"""
         params = QueryDict(mutable=True)
         params['client'] = client_name
-        return f"/placements/?{params.urlencode()}"
+        return f"/plaatsingen/?{params.urlencode()}"
 
     def _build_ministry_url(self, ministry_id):
         """Build ministry filter URL"""
         params = QueryDict(mutable=True)
         params['ministry'] = ministry_id
-        return f"/placements/?{params.urlencode()}"
+        return f"/plaatsingen/?{params.urlencode()}"
 
     def _build_colleague_url(self, colleague_id):
         """Build colleague panel URL preserving current filters"""
         params = QueryDict(mutable=True)
         params.update(self.request.GET)
-        params.pop('colleague', None)
-        params.pop('assignment', None)
-        params['colleague'] = colleague_id
-        return f"/placements/?{params.urlencode()}"
+        params.pop('collega', None)
+        params.pop('opdracht', None)
+        params['collega'] = colleague_id
+        return f"/plaatsingen/?{params.urlencode()}"
 
     def _get_colleague_assignments(self, colleague):
         """Get assignments for a colleague"""
@@ -300,8 +301,8 @@ class PlacementListView(ListView):
         if colleague:
             params = QueryDict(mutable=True)
             params.update(self.request.GET)
-            params.pop('assignment', None)
-            colleague_url = f"/placements/?{params.urlencode()}"
+            params.pop('opdracht', None)
+            colleague_url = f"/plaatsingen/?{params.urlencode()}"
             
             breadcrumb_items = [
                 {'text': colleague.name, 'url': colleague_url},
@@ -328,29 +329,29 @@ class PlacementListView(ListView):
             placement.assignment_url = self._build_assignment_url(self.request, placement.service.assignment.id)
             placement.colleague_url = self._build_colleague_url(placement.colleague.id)
 
-        context['search_field'] = 'search'
+        context['search_field'] = 'zoek'
         context['search_placeholder'] = 'Zoek op collega, opdracht of opdrachtgever...'
-        context['search_filter'] = self.request.GET.get('search')
+        context['search_filter'] = self.request.GET.get('zoek')
 
         active_filters = {}  # key: val
-        for filter_param in ['skill', 'client', 'ministry', 'period']:
+        for filter_param in ['rol', 'opdrachtgever', 'ministerie', 'periode']:
             val = self.request.GET.get(filter_param)
             if val:
                 active_filters[filter_param] = val
 
         # label filter supports multi-select
         label_filter = set()
-        for l in self.request.GET.getlist('label'):
+        for l in self.request.GET.getlist('labels'):
             if l != '':
                 label_filter.add(l)
         if len(label_filter) > 0:
-            active_filters['label'] = label_filter
+            active_filters['labels'] = label_filter
 
-        if active_filters.get('period'):
-            period_from, period_to = active_filters['period'].split('_')
-            active_filters['period'] = {
-                'from': period_from,
-                'to': period_to,
+        if active_filters.get('periode'):
+            periode_from, periode_to = active_filters['periode'].split('_')
+            active_filters['periode'] = {
+                'from': datetime.strptime(periode_from, '%Y-%m-%d').date(),
+                'to': datetime.strptime(periode_to, '%Y-%m-%d').date(),
             }
 
         label_filter_groups = []
@@ -367,13 +368,13 @@ class PlacementListView(ListView):
                     'label': f"{label.name}",
                     'category_color': category.color
                 })
-                if str(label.id) in active_filters.get('label', set()):
+                if str(label.id) in active_filters.get('labels', set()):
                     options[-1]['selected'] = True
                     value = str(label.id)
-            
+
             filter_group = {
                 'type': 'select',
-                'name': 'label',
+                'name': 'labels',
                 'label': select_label,
                 'options': options,
                 'value': value,
@@ -388,7 +389,7 @@ class PlacementListView(ListView):
         skill_value = ''
         for skill in Skill.objects.order_by('name'):
             skill_options.append({'value': str(skill.id), 'label': skill.name})
-            if active_filters.get('skill') == str(skill.id):
+            if active_filters.get('rol') == str(skill.id):
                 skill_options[-1]['selected'] = True
                 skill_value = str(skill.id)
 
@@ -403,7 +404,7 @@ class PlacementListView(ListView):
         client_value = ''
         for client in clients:
             client_options.append({'value': client['id'], 'label': client['name']})
-            if active_filters.get('client') == str(client['id']):
+            if active_filters.get('opdrachtgever') == str(client['id']):
                 client_options[-1]['selected'] = True
                 client_value = str(client['id'])
 
@@ -413,7 +414,7 @@ class PlacementListView(ListView):
         ministry_value = ''
         for ministry in Ministry.objects.order_by('name'):
             ministry_options.append({'value': str(ministry.id), 'label': ministry.name})
-            if active_filters.get('ministry') == str(ministry.id):
+            if active_filters.get('ministerie') == str(ministry.id):
                 ministry_options[-1]['selected'] = True
                 ministry_value = str(ministry.id)
 
@@ -426,28 +427,28 @@ class PlacementListView(ListView):
             *label_filter_groups,
             {
                 'type': 'select',
-                'name': 'skill',
+                'name': 'rol',
                 'label': 'Rollen',
                 'options': skill_options,
                 'value': skill_value,
             },
             {
                 'type': 'select',
-                'name': 'client',
+                'name': 'opdrachtgever',
                 'label': 'Opdrachtgever',
                 'options': client_options,
                 'value': client_value,
             },
             {
                 'type': 'select',
-                'name': 'ministry',
+                'name': 'ministerie',
                 'label': 'Ministerie',
                 'options': ministry_options,
                 'value': ministry_value,
             },
             {
                 'type': 'date_range',
-                'name': 'period',
+                'name': 'periode',
                 'label': 'Periode',
                 'from_label': 'Van',
                 'to_label': 'Tot',
@@ -459,16 +460,16 @@ class PlacementListView(ListView):
         if context.get('page_obj') and context['page_obj'].has_next():
             filter_params = []
             for key, value in self.request.GET.items():
-                if key != 'page':  # Exclude page param
+                if key != 'pagina':  # Exclude page param
                     filter_params.append(f'{key}={value}')
             params_str = '&'.join(filter_params)
             next_page = context['page_obj'].next_page_number()
-            context['next_page_url'] = f'?page={next_page}' + (f'&{params_str}' if params_str else '')
+            context['next_page_url'] = f'?pagina={next_page}' + (f'&{params_str}' if params_str else '')
         else:
             context['next_page_url'] = None
 
-        colleague_id = self.request.GET.get('colleague')
-        assignment_id = self.request.GET.get('assignment')
+        colleague_id = self.request.GET.get('collega')
+        assignment_id = self.request.GET.get('opdracht')
 
         # if one or both of the ids are invalid, the panel_data is skipped
         if colleague_id and not assignment_id:
@@ -507,7 +508,7 @@ class UserListView(PermissionRequiredMixin, ListView):
             is_superuser=False
         ).order_by('last_name', 'first_name')
 
-        search_filter = self.request.GET.get('search')
+        search_filter = self.request.GET.get('zoek')
         if search_filter:
             qs = qs.annotate(
                 full_name=Concat('first_name', Value(' '), 'last_name'),
@@ -519,12 +520,12 @@ class UserListView(PermissionRequiredMixin, ListView):
             )
 
         # Label filter support multiselect
-        for l in self.request.GET.getlist('label'):
+        for l in self.request.GET.getlist('labels'):
             if l != '':
                  qs = qs.filter(labels__id__contains=l)
-           
+
         # Role filter
-        role_filter = self.request.GET.get('role')
+        role_filter = self.request.GET.get('rol')
         if role_filter:
             qs = qs.filter(groups__id=role_filter)
 
@@ -534,7 +535,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         """Return appropriate template based on request type"""
         if 'HX-Request' in self.request.headers:
             # If paginating, return only rows
-            if self.request.GET.get('page'):
+            if self.request.GET.get('pagina'):
                 return ['parts/user_table_rows.html']
             # Otherwise, return full table (for filter changes)
             return ['parts/user_table.html']
@@ -544,23 +545,23 @@ class UserListView(PermissionRequiredMixin, ListView):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
 
-        context['search_field'] = 'search'
+        context['search_field'] = 'zoek'
         context['search_placeholder'] = 'Zoek op naam of email...'
-        context['search_filter'] = self.request.GET.get('search')
+        context['search_filter'] = self.request.GET.get('zoek')
 
         active_filters = {}
 
         # label filter supports multi-select
         label_filter = set()
-        for l in self.request.GET.getlist('label'):
+        for l in self.request.GET.getlist('labels'):
             if l != '':
                 label_filter.add(l)
         if len(label_filter) > 0:
-            active_filters['label'] = label_filter
+            active_filters['labels'] = label_filter
 
-        role_filter = self.request.GET.get('role')
+        role_filter = self.request.GET.get('rol')
         if role_filter:
-            active_filters['role'] = role_filter
+            active_filters['rol'] = role_filter
 
         label_filter_groups = []
         for category in LabelCategory.objects.all():
@@ -575,27 +576,27 @@ class UserListView(PermissionRequiredMixin, ListView):
                     'value': str(label.id),
                     'label': f"{label.name}"
                 })
-                if str(label.id) in active_filters.get('label', set()):
+                if str(label.id) in active_filters.get('labels', set()):
                     options[-1]['selected'] = True
                     value = str(label.id)
-            
+
             filter_group = {
                 'type': 'select',
-                'name': 'label',
+                'name': 'labels',
                 'label': select_label,
                 'options': options,
                 'value': value,
             }
 
             label_filter_groups.append(filter_group)
-            
+
         role_options = [
             {'value': '', 'label': 'Alle rollen'},
         ]
         role_value = ''
         for group in Group.objects.all().order_by('name'):
             role_options.append({'value': str(group.id), 'label': group.name})
-            if active_filters.get('role') == str(group.id):
+            if active_filters.get('rol') == str(group.id):
                 role_options[-1]['selected'] = True
                 role_value = str(group.id)
 
@@ -605,7 +606,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         context['filter_groups'] = [
             {
                 'type': 'select',
-                'name': 'role',
+                'name': 'rol',
                 'label': 'Rol',
                 'options': role_options,
                 'value': role_value,
@@ -626,11 +627,11 @@ class UserListView(PermissionRequiredMixin, ListView):
         if context.get('page_obj') and context['page_obj'].has_next():
             filter_params = []
             for key, value in self.request.GET.items():
-                if key != 'page':
+                if key != 'pagina':
                     filter_params.append(f'{key}={value}')
             params_str = '&'.join(filter_params)
             next_page = context['page_obj'].next_page_number()
-            context['next_page_url'] = f'?page={next_page}' + (f'&{params_str}' if params_str else '')
+            context['next_page_url'] = f'?pagina={next_page}' + (f'&{params_str}' if params_str else '')
         else:
             context['next_page_url'] = None
 

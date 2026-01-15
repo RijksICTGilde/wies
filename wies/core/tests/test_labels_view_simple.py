@@ -32,8 +32,8 @@ class LabelsViewTest(TestCase):
         self.label = Label.objects.create(name='Test Label', category=self.category)
 
     def test_labels_endpoint_loads(self):
-        """Test that the /admin/labels/ endpoint loads successfully"""
-        response = self.client.get('/admin/labels/')
+        """Test that the /instellingen/labels/ endpoint loads successfully"""
+        response = self.client.get('/instellingen/labels/')
 
 
         if response.status_code != 200:

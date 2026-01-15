@@ -4,7 +4,15 @@ from django.urls import reverse
 from django.middleware.csrf import get_token
 from django.utils.safestring import mark_safe
 from django.utils.http import urlencode
+from django.utils.formats import date_format
 from jinja_roos_components import setup_components
+
+
+def datum_nl(datum, format='N Y'):
+    """Format a date using Django's localization (nl-nl)"""
+    if datum is None:
+        return "?"
+    return date_format(datum, format)
 
 
 def get_csrf_hidden_input(request):
@@ -56,5 +64,6 @@ def environment(**options):
         'get_toggle_sort_url': get_toggle_sort_url,
         'get_sort_state': get_sort_state,
     })
+    env.filters['datum_nl'] = datum_nl
 
     return env

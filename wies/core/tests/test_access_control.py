@@ -31,9 +31,9 @@ class AccessControlTest(TestCase):
         """Test that login-not-required endpoints are accessible without authentication and do not redirect to login"""
 
         LOGIN_NOT_REQUIRED_PATHS = [
-            '/login/',
+            '/inloggen/',
             '/djadmin/login/',
-            '/no-access/',
+            '/geen-toegang/',
             # '/auth/',  # /auth/ requires OIDC state and will raise an error without it. this path is tested in test_auth_views.py with proper mocking
             # '/logout/',  # logout redirects to login. tested in test_auth_view in detail
         ]
@@ -45,7 +45,7 @@ class AccessControlTest(TestCase):
 
     def test_unauthenticated_access_to_placements_redirects_to_login(self):
         """Specific test for placements view (main landing page)"""
-        response = self.client.get('/placements/', follow=False)
+        response = self.client.get('/plaatsingen/', follow=False)
 
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.url.startswith(settings.LOGIN_URL))

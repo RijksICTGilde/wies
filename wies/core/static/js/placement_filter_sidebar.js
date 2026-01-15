@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const form = document.querySelector('.filter-sidebar-form');
     if (!form) return;
 
-    if (filterType === 'search') {
+    if (filterType === 'zoek') {
       const searchInput = document.querySelector('#search');
       if (searchInput) {
         searchInput.value = '';
