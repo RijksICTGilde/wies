@@ -24,10 +24,25 @@ dialog.rvo-dialog--inset-inline-end::backdrop {
 /* Remove old overlay system - now using ::backdrop */
 
 
-.rvo-dialog__close {
+/* Side panel header with back and close buttons */
+.side-panel__header {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
   padding: var(--rvo-space-md);
+  width: 100%;
+}
+
+.side-panel__back-button {
+  display: flex;
+  align-items: center;
+  padding: 0.25rem;
+  border-radius: 4px;
+}
+
+.side-panel__back-button:hover {
+  background-color: var(--rvo-color-grijs-100);
 }
 
 .rvo-dialog__content {

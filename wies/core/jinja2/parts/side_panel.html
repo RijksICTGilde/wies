@@ -1,13 +1,21 @@
 <dialog class="rvo-dialog rvo-dialog--wit rvo-dialog--inset-inline-end"
         aria-label="{{ panel_data.panel_title }}"
         id="side_panel">
-    
-    <div class="rvo-dialog__close">
+
+    <div class="side-panel__header">
+      {% if panel_data.breadcrumb_items %}
+      <button type="button" class="utrecht-button utrecht-button--rvo-tertiary-action utrecht-button--rvo-md utrecht-button--icon-before" onclick="window.location.href='{{ panel_data.breadcrumb_items[0].url }}'">
+        <span class="utrecht-icon rvo-icon rvo-icon-terug rvo-icon--md rvo-link__icon--before" role="img" aria-label="Terug"></span>
+        Terug
+      </button>
+      {% else %}
+      <div></div>
+      {% endif %}
       <button type="button" class="modal-close-button">
         &times;
       </button>
     </div>
-    
+
     <div class="rvo-dialog__content">
       {% if panel_data.breadcrumb_items %}
       <ol class="rvo-breadcrumbs rvo-breadcrumbs--lg">
@@ -30,7 +38,7 @@
         {% endfor %}
       </ol>
       {% endif %}
-            
+
       {% include panel_data.panel_content_template %}
     </div>
   </dialog>
