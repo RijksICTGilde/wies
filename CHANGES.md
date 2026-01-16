@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 - 127: move placement filter in page, with chips
 - 127: remove banner, remove jump in sidepanel, wider content
 - 132: Update urls & dates from english to dutch
+- 135: Styling menu items, adjust Layout, assignment not clickable, back button in side panel 
 
 ## 2026-01-14
 - (backwards incompatible) clean slate - start over with only essential 4W functionality
