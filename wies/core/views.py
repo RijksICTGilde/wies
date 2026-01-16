@@ -189,7 +189,7 @@ class PlacementListView(ListView):
         # Label filter support multiselect
         for l in self.request.GET.getlist('labels'):
             if l != '':
-                 qs = qs.filter(colleague__labels__id__contains=l)
+                 qs = qs.filter(colleague__labels__id=int(l))
 
         # Apply period filtering for overlapping periods
         periode = self.request.GET.get('periode')

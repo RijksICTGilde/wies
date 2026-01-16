@@ -2,7 +2,7 @@
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
-- ...
+- fix bug with label filters returning wrong answers
 
 ## 2026-01-16
 - 127: move placement filter in page, with chips
