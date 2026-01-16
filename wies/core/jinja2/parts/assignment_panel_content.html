@@ -2,11 +2,41 @@
 
   <section>
     <h2>Opdracht gegevens</h2>
-    
+
     <dl class="rvo-data-list">
+      {# Editable assignment name field #}
       <dt>Opdracht naam</dt>
-      <dd>{{ assignment.name }}</dd>
+      <dd>
+        <div id="assignment-name-content">
+          {% with target_element='assignment-name-content', field_value=assignment.name, field_label='Opdracht naam', edit_url=url('assignment-edit-attribute', args=[assignment.id, 'name']), user_can_edit=panel_data.user_can_edit %}
+            {% include 'parts/editable_text_field.html' %}
+          {% endwith %}
+        </div>
+      </dd>
+
+      {# Editable assignment description field #}
+      <dt>Beschrijving</dt>
+      <dd>
+        <div id="assignment-extra-info-content">
+          {% with target_element='assignment-extra-info-content', field_value=assignment.extra_info, field_label='Beschrijving', edit_url=url('assignment-edit-attribute', args=[assignment.id, 'extra_info']), user_can_edit=panel_data.user_can_edit, expanded=false %}
+            {% include 'parts/editable_textarea_field.html' %}
+          {% endwith %}
+        </div>
+      </dd>
       
+      {% if assignment.source != 'wies' %}
+      <dt>Externe bron</dt>
+      <dd>
+        {% if assignment.source_url %}
+          <a href="{{ assignment.source_url }}" target="_blank" class="rvo-link">
+            {{ assignment.get_source_display() }}
+            <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs" role="img" aria-label="Externe link"></span>
+          </a>
+        {% else %}
+          {{ assignment.get_source_display() }}
+        {% endif %}
+      </dd>
+      {% endif %}
       <dt>Opdrachtgever</dt>
       <dd>
         <a href="{{ panel_data.client_url }}" class="rvo-link" title="Filter op {{ assignment.organization }}">
@@ -33,25 +63,12 @@
           <span class="rvo-text--italic rvo-text--subtle">Geen periode opgegeven</span>
         {% endif %}
       </dd>
-      
-      {% if assignment.extra_info %}
-      <dt>Extra informatie</dt>
-      <dd>{{ assignment.extra_info }}</dd>
-      {% endif %}
-      
-      {% if assignment.source != 'wies' %}
-      <dt>Externe bron</dt>
+      <dt>Business Manager</dt>
       <dd>
-        {% if assignment.source_url %}
-          <a href="{{ assignment.source_url }}" target="_blank" class="rvo-link">
-            {{ assignment.get_source_display() }}
-            <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs" role="img" aria-label="Externe link"></span>
-          </a>
-        {% else %}
-          {{ assignment.get_source_display() }}
-        {% endif %}
+        <a href="/plaatsingen/?collega={{ assignment.owner.id }}" class="rvo-link">
+            {{ assignment.owner }}
+        </a>
       </dd>
-      {% endif %}
     </dl>
   </section>
 

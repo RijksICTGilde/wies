@@ -1,0 +1,15 @@
+<div class="editable-field-display">
+  <span>{{ field_value }}</span>
+  {% if user_can_edit %}
+    <button
+      type="button"
+      class="edit-icon-button"
+      hx-get="{{ edit_url }}"
+      hx-target="#{{ target_element }}"
+      hx-swap="innerHTML"
+      aria-label="Bewerk {{ field_label }}"
+    >
+      <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md" role="img" aria-label="Bewerk"></span>
+    </button>
+  {% endif %}
+</div>

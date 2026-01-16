@@ -24,6 +24,7 @@ from wies.core.views import UserListView, user_create, user_edit, user_delete, u
 from wies.core.views import placement_import_csv
 from wies.core.views import label_admin, label_category_create, label_category_edit, label_category_delete
 from wies.core.views import label_create, label_edit, label_delete
+from wies.core.views import assignment_edit_attribute
 
 
 urlpatterns = [
@@ -36,6 +37,7 @@ urlpatterns = [
     path('auth/', auth, name='auth'),
     path('plaatsingen/', PlacementListView.as_view(), name='placements'),
     path('plaatsingen/importeren/', placement_import_csv, name='placement-import-csv'),
+    path('opdrachten/<int:pk>/edit/<str:attribute>/', assignment_edit_attribute, name='assignment-edit-attribute'),
     path('instellingen/', RedirectView.as_view(pattern_name='admin-users', permanent=False), name='admin'),
     path('instellingen/gebruikers/', UserListView.as_view(), name='admin-users'),
     path('instellingen/gebruikers/aanmaken/', user_create, name='user-create'),
