@@ -278,7 +278,6 @@ class PlacementListView(ListView):
         return {
             'panel_content_template': 'parts/colleague_panel_content.html',
             'panel_title': colleague.name,
-            'back_url': None,
             'close_url': self._build_close_url(self.request),
             'colleague': colleague,
             'assignment_list': assignment_list,
@@ -295,17 +294,10 @@ class PlacementListView(ListView):
         for placement in placements_qs:
             placement.colleague_url = self._build_colleague_url(placement.colleague.id)
             placements.append(placement)
-        
-        # Build back URL to colleague panel
-        params = QueryDict(mutable=True)
-        params.update(self.request.GET)
-        params.pop('opdracht', None)
-        back_url = f"/plaatsingen/?{params.urlencode()}"
 
         return {
             'panel_content_template': 'parts/assignment_panel_content.html',
             'panel_title': assignment.name,
-            'back_url': back_url,
             'close_url': self._build_close_url(self.request),
             'assignment': assignment,
             'placements': placements,
