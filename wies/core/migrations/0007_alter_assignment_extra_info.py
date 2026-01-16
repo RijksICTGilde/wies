@@ -13,6 +13,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='assignment',
             name='extra_info',
-            field=models.TextField(blank=True, max_length=1000),
+            field=models.TextField(blank=True, max_length=5000),
         ),
     ]

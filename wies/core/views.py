@@ -1112,7 +1112,7 @@ EDITABLE_ASSIGNMENT_FIELDS = {
     'extra_info': {
         'field_type': 'textarea',
         'field_name': 'extra_info',
-        'max_length': 1000,
+        'max_length': 5000,
         'required': False,
         'label': 'Beschrijving',
         'display_template': 'parts/editable_textarea_field.html',
