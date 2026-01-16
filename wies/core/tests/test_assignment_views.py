@@ -240,33 +240,57 @@ class AssignmentEditAttributeTest(TestCase):
         # Should contain error message
         self.assertContains(response, 'Opdracht naam is verplicht')
 
-    # ========== Extra Info Foldable State Tests ==========
+    # ========== Extra Info Client-Side Toggle Tests ==========
 
-    def test_assignment_extra_info_get_expanded_state(self):
-        """Test that GET with ?expanded=true returns expanded display view with full text"""
+    def test_assignment_extra_info_long_text_has_toggle(self):
+        """Test that long descriptions have both truncated and full text with toggle link"""
         self.client.force_login(self.user_with_permission)
 
         response = self.client.get(
-            reverse('assignment-edit-attribute', args=[self.assignment.id, 'extra_info']) + '?expanded=true'
+            reverse('assignment-edit-attribute', args=[self.assignment.id, 'extra_info']) + '?cancel=true'
         )
 
         self.assertEqual(response.status_code, 200)
-        # Should contain the full text (not truncated)
+
+        # Should contain "Toon meer" link for long text
+        self.assertContains(response, 'Toon meer')
+
+        # Should contain truncated text class
+        self.assertContains(response, 'class="truncated-text"')
+
+        # Should contain full text class (hidden initially)
+        self.assertContains(response, 'class="full-text"')
+
+        # Should contain the beginning of the text in truncated version
         self.assertContains(response, 'Lorem ipsum dolor sit amet')
-        # Should NOT contain "Toon meer" link when expanded
+
+        # The full text should be present in the DOM (even if hidden)
+        # This allows client-side toggle without backend call
+        self.assertContains(response, 'display: none', count=1)  # Full text is hidden
+
+    def test_assignment_extra_info_short_text_no_toggle(self):
+        """Test that short descriptions don't have toggle functionality"""
+        self.client.force_login(self.user_with_permission)
+
+        # Update assignment with short text
+        self.assignment.extra_info = "Short description"
+        self.assignment.save()
+
+        response = self.client.get(
+            reverse('assignment-edit-attribute', args=[self.assignment.id, 'extra_info']) + '?cancel=true'
+        )
+
+        self.assertEqual(response.status_code, 200)
+
+        # Should NOT contain "Toon meer" link for short text
         self.assertNotContains(response, 'Toon meer')
 
-    def test_assignment_extra_info_get_collapsed_state(self):
-        """Test that GET with expanded=false returns collapsed display view"""
-        self.client.force_login(self.user_with_permission)
+        # Should NOT contain truncated/full text classes
+        self.assertNotContains(response, 'truncated-text')
+        self.assertNotContains(response, 'full-text')
 
-        response = self.client.get(
-            reverse('assignment-edit-attribute', args=[self.assignment.id, 'extra_info']) + '?expanded=false'
-        )
-
-        self.assertEqual(response.status_code, 200)
-        # Should contain "Toon meer" link (show more) for long text
-        self.assertContains(response, 'Toon meer')
+        # Should contain the full text directly
+        self.assertContains(response, 'Short description')
 
     # ========== Edge Case Tests ==========
 
