@@ -135,7 +135,7 @@ class Assignment(models.Model):
     organization = models.CharField(blank=True)
     ministry = models.ForeignKey('Ministry', models.SET_NULL, null=True, blank=False)
     owner = models.ForeignKey('Colleague', models.SET_NULL, null=True, blank=False, related_name='owned_assignments')
-    extra_info = models.TextField(blank=True)
+    extra_info = models.TextField(blank=True, max_length=1000)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(null=True, blank=True)

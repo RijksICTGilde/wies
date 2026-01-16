@@ -3,6 +3,47 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 from wies.core.models import User, Assignment, Service, Placement, Colleague, Ministry, LabelCategory, Label
 
+
+def user_can_edit_assignment(user, assignment):
+    """
+    Check if a user can edit an assignment.
+
+    A user can edit an assignment if they:
+    - Have the 'core.change_assignment' permission, OR
+    - Are the BDM (owner) of the assignment, OR
+    - Are assigned to the assignment as a colleague
+
+    Args:
+        user: User object to check permissions for
+        assignment: Assignment object to check edit permissions against
+
+    Returns:
+        bool: True if user can edit the assignment, False otherwise
+    """
+    if not user.is_authenticated:
+        return False
+
+    # Check permission
+    if user.has_perm('core.change_assignment'):
+        return True
+
+    # Check if user has a colleague profile
+    if not hasattr(user, 'colleague'):
+        return False
+
+    # Check if user is the owner (BDM)
+    if assignment.owner and assignment.owner.id == user.colleague.id:
+        return True
+
+    # Check if user is assigned to the assignment
+    is_assigned = Placement.objects.filter(
+        service__assignment=assignment,
+        colleague__id=user.colleague.id
+    ).exists()
+
+    return is_assigned
+
+
 def setup_roles():
     # Define roles
     roles = {
@@ -29,3 +70,5 @@ def setup_roles():
                 for codename in codenames:
                     perm = Permission.objects.get(codename=codename, content_type=content_type)
                     group.permissions.add(perm)
+
+

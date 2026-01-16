@@ -1,0 +1,32 @@
+<form
+  hx-post="{{ edit_url }}"
+  hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+  hx-target="#{{ target_element }}"
+  hx-swap="innerHTML"
+>
+  <div class="rvo-form-field">
+    <input
+      type="text"
+      id="{{ field_name }}"
+      name="{{ field_name }}"
+      value="{{ field_value }}"
+      class="rvo-input{% if errors and errors.get(field_name) %} rvo-input--error{% endif %}"
+      autofocus
+    />
+    {% if errors and errors.get(field_name) %}
+      <p class="rvo-form-field__error">{{ errors.get(field_name) }}</p>
+    {% endif %}
+  </div>
+  <div class="field-actions">
+    <c-button type="submit" kind="primary">Opslaan</c-button>
+    <c-button
+      type="button"
+      kind="secondary"
+      hx-get="{{ edit_url }}?cancel=true"
+      hx-target="#{{ target_element }}"
+      hx-swap="innerHTML"
+    >
+      Annuleren
+    </c-button>
+  </div>
+</form>

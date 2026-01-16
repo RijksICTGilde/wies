@@ -1,0 +1,31 @@
+<div class="editable-field-display">
+  {% if field_value %}
+    {% set is_long = field_value|length > 300 %}
+    {% set is_expanded = expanded|default(false) %}
+    {% if is_long and not is_expanded %}
+      <span style="white-space: pre-wrap;">{{ field_value[:300] }}... <a
+        href="#"
+        class="show-more-link"
+        hx-get="{{ edit_url }}?expanded=true"
+        hx-target="#{{ target_element }}"
+        hx-swap="innerHTML"
+      >Toon meer</a></span>
+    {% else %}
+      <span style="white-space: pre-wrap;">{{ field_value }}</span>
+    {% endif %}
+  {% else %}
+    <span class="rvo-text--italic rvo-text--subtle">Niet ingevuld</span>
+  {% endif %}
+  {% if user_can_edit %}
+    <button
+      type="button"
+      class="edit-icon-button"
+      hx-get="{{ edit_url }}"
+      hx-target="#{{ target_element }}"
+      hx-swap="innerHTML"
+      aria-label="Bewerk {{ field_label }}"
+    >
+      <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md" role="img" aria-label="Bewerk"></span>
+    </button>
+  {% endif %}
+</div>

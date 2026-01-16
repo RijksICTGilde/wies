@@ -32,6 +32,7 @@ from .services.users import create_user, update_user, create_users_from_csv
 from .services.events import create_event
 from .forms import UserForm, LabelCategoryForm, LabelForm
 from .querysets import annotate_usage_counts
+from .roles import user_can_edit_assignment
 
 
 logger = logging.getLogger(__name__)
@@ -224,13 +225,13 @@ class PlacementListView(ListView):
     def _build_client_url(self, client_name):
         """Build client filter URL"""
         params = QueryDict(mutable=True)
-        params['client'] = client_name
+        params['opdrachtgever'] = client_name
         return f"/plaatsingen/?{params.urlencode()}"
 
     def _build_ministry_url(self, ministry_id):
         """Build ministry filter URL"""
         params = QueryDict(mutable=True)
-        params['ministry'] = ministry_id
+        params['ministerie'] = ministry_id
         return f"/plaatsingen/?{params.urlencode()}"
 
     def _build_colleague_url(self, colleague_id):
@@ -294,6 +295,9 @@ class PlacementListView(ListView):
         for placement in placements_qs:
             placement.colleague_url = self._build_colleague_url(placement.colleague.id)
             placements.append(placement)
+        
+        # Check if user can edit assignment
+        user_can_edit = user_can_edit_assignment(self.request.user, assignment)
 
         return {
             'panel_content_template': 'parts/assignment_panel_content.html',
@@ -303,6 +307,7 @@ class PlacementListView(ListView):
             'placements': placements,
             'client_url': self._build_client_url(assignment.organization),
             'ministry_url': self._build_ministry_url(assignment.ministry.id) if assignment.ministry else None,
+            'user_can_edit': user_can_edit,
         }
 
     def get_context_data(self, **kwargs):
@@ -1088,5 +1093,121 @@ def label_delete(request, pk):
         })
         response['HX-Trigger'] = 'closeModal'
         return response
-    
+        
+    return HttpResponse(status=405)
+
+
+# Configuration for editable assignment fields
+EDITABLE_ASSIGNMENT_FIELDS = {
+    'name': {
+        'field_type': 'text',
+        'field_name': 'name',
+        'max_length': 200,
+        'required': True,
+        'label': 'Opdracht naam',
+        'display_template': 'parts/editable_text_field.html',
+        'form_template': 'parts/editable_text_field_form.html',
+        'target_element': 'assignment-name-content',
+    },
+    'extra_info': {
+        'field_type': 'textarea',
+        'field_name': 'extra_info',
+        'max_length': 1000,
+        'required': False,
+        'label': 'Beschrijving',
+        'display_template': 'parts/editable_textarea_field.html',
+        'form_template': 'parts/editable_textarea_field_form.html',
+        'target_element': 'assignment-extra-info-content',
+    },
+}
+
+
+# Permission check is done in function body, not decorator
+def assignment_edit_attribute(request, pk, attribute):
+    """
+    Generic inline editor for assignment attributes.
+    Handles both GET (show form) and POST (save) for any configured attribute.
+    Returns a partial html page, to be used with htmx.
+
+    Args:
+        request: HttpRequest object
+        pk: Assignment primary key
+        attribute: Name of the attribute to edit (must be in EDITABLE_ASSIGNMENT_FIELDS)
+    """
+    # Validate attribute
+    if attribute not in EDITABLE_ASSIGNMENT_FIELDS:
+        return HttpResponse(status=404)
+
+    field_config = EDITABLE_ASSIGNMENT_FIELDS[attribute]
+    assignment = get_object_or_404(Assignment, pk=pk)
+
+    # Check if user is authorized: has permission OR is owner OR is assigned colleague
+    if not user_can_edit_assignment(request.user, assignment):
+        return HttpResponse(status=403)
+
+    # Build edit URL
+    edit_url = reverse('assignment-edit-attribute', kwargs={'pk': assignment.id, 'attribute': attribute})
+
+    if request.method == 'POST':
+        # Process form submission
+        field_name = field_config['field_name']
+        new_value = request.POST.get(field_name, '').strip()
+
+        # Validate
+        errors = {}
+        if field_config['required'] and not new_value:
+            errors[field_name] = f"{field_config['label']} is verplicht"
+        elif field_config.get('max_length') and len(new_value) > field_config['max_length']:
+            errors[field_name] = f"{field_config['label']} mag maximaal {field_config['max_length']} tekens bevatten"
+
+        if errors:
+            # Return form with errors
+            return render(request, field_config['form_template'], {
+                'target_element': field_config['target_element'],
+                'field_name': field_name,
+                'field_value': new_value,
+                'edit_url': edit_url,
+                'errors': errors,
+            })
+
+        # Save
+        setattr(assignment, field_name, new_value)
+        assignment.save()
+
+        # Return updated display (always collapsed after save)
+        return render(request, field_config['display_template'], {
+            'target_element': field_config['target_element'],
+            'field_label': field_config['label'],
+            'field_value': getattr(assignment, field_name),
+            'edit_url': edit_url,
+            'user_can_edit': True,
+            'expanded': False,
+        })
+
+    elif request.method == 'GET':
+        current_value = getattr(assignment, field_config['field_name'])
+
+        # Get expanded parameter for show more/less functionality
+        expanded = request.GET.get('expanded', 'false').lower() == 'true'
+
+        # Check if this is a cancel request or expanded toggle request
+        if request.GET.get('cancel') or 'expanded' in request.GET:
+            # Return display mode
+            return render(request, field_config['display_template'], {
+                'target_element': field_config['target_element'],
+                'field_label': field_config['label'],
+                'field_value': current_value,
+                'edit_url': edit_url,
+                'user_can_edit': True,
+                'expanded': expanded,
+            })
+        else:
+            # Return edit form
+            return render(request, field_config['form_template'], {
+                'target_element': field_config['target_element'],
+                'field_name': field_config['field_name'],
+                'field_value': current_value or '',
+                'edit_url': edit_url,
+            })
+
     return HttpResponse(status=405)

@@ -7,6 +7,10 @@ This files lists the changes during the lifetime of this project.
 - 132: Update urls & dates from english to dutch
 - 135: Styling menu items, adjust Layout, assignment not clickable, back button in side panel 
 
+- 133: Add 'BDM', change 'Beschrijving' (former 'extra info') on assignment panel
+- 133: (migration) Change assignment.extra_info to max 1000 chars
+- 133: Add possibility to edit name and description of assignment by owner and those working on assignment
+
 ## 2026-01-14
 - (backwards incompatible) clean slate - start over with only essential 4W functionality
 - Change login to only pass when user is in database
