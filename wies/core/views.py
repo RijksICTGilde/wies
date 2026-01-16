@@ -1174,24 +1174,20 @@ def assignment_edit_attribute(request, pk, attribute):
         setattr(assignment, field_name, new_value)
         assignment.save()
 
-        # Return updated display (always collapsed after save)
+        # Return updated display after save
         return render(request, field_config['display_template'], {
             'target_element': field_config['target_element'],
             'field_label': field_config['label'],
             'field_value': getattr(assignment, field_name),
             'edit_url': edit_url,
             'user_can_edit': True,
-            'expanded': False,
         })
 
     elif request.method == 'GET':
         current_value = getattr(assignment, field_config['field_name'])
 
-        # Get expanded parameter for show more/less functionality
-        expanded = request.GET.get('expanded', 'false').lower() == 'true'
-
-        # Check if this is a cancel request or expanded toggle request
-        if request.GET.get('cancel') or 'expanded' in request.GET:
+        # Check if this is a cancel request
+        if request.GET.get('cancel'):
             # Return display mode
             return render(request, field_config['display_template'], {
                 'target_element': field_config['target_element'],
@@ -1199,7 +1195,6 @@ def assignment_edit_attribute(request, pk, attribute):
                 'field_value': current_value,
                 'edit_url': edit_url,
                 'user_can_edit': True,
-                'expanded': expanded,
             })
         else:
             # Return edit form

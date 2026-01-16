@@ -1,15 +1,17 @@
 <div class="editable-field-display">
   {% if field_value %}
     {% set is_long = field_value|length > 300 %}
-    {% set is_expanded = expanded|default(false) %}
-    {% if is_long and not is_expanded %}
-      <span style="white-space: pre-wrap;">{{ field_value[:300] }}... <a
-        href="#"
-        class="show-more-link"
-        hx-get="{{ edit_url }}?expanded=true"
-        hx-target="#{{ target_element }}"
-        hx-swap="innerHTML"
-      >Toon meer</a></span>
+    {% if is_long %}
+      <span style="flex: 1;">
+        <span style="white-space: pre-wrap; display: block;" class="truncated-text">{{ field_value[:300] }}...</span>
+        <span style="white-space: pre-wrap; display: none;" class="full-text">{{ field_value }}</span>
+        <a
+          href="#"
+          class="show-more-link"
+          style="display: block; margin-left: 0; margin-top: 0.5em;"
+          onclick="event.preventDefault(); const container = this.parentElement; container.querySelector('.truncated-text').style.display = container.querySelector('.truncated-text').style.display === 'none' ? 'block' : 'none'; container.querySelector('.full-text').style.display = container.querySelector('.full-text').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent === 'Toon meer' ? 'Toon minder' : 'Toon meer';"
+        >Toon meer</a>
+      </span>
     {% else %}
       <span style="white-space: pre-wrap;">{{ field_value }}</span>
     {% endif %}
