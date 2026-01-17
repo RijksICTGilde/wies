@@ -156,3 +156,6 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 AUTH_USER_MODEL = 'core.User'
+
+# Allowed email domains for ODI users
+ALLOWED_EMAIL_DOMAINS = ['@rijksoverheid.nl', '@minbzk.nl']

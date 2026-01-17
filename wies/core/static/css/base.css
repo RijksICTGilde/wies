@@ -52,7 +52,7 @@ html {
 
 /* Modal footer button layout */
 .modal-footer-buttons {
-  display: flex; 
+  display: flex;
   gap: 0.5rem;
 }
 
@@ -184,4 +184,11 @@ html {
 .menu-item--active{
   font-weight: 600;
   text-decoration: underline !important;
+}
+
+/* Logo link should never have underline */
+.logo-link,
+.logo-link:hover,
+.logo-link:focus {
+  text-decoration: none;
 }

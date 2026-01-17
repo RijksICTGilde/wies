@@ -1,32 +1,39 @@
 {% extends "base.html" %}
 
-{% block title %}Inloggen - Wies{% endblock %}
+{% block title %}Geen toegang - Wies{% endblock %}
 
 {% block header %}
-    <!-- No header on login page -->
+{% include "parts/header_logo.html" %}
 {% endblock %}
 
 {% block content %}
-<main class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--md">
-<div class="rvo-layout-column rvo-layout-gap--xl rvo-layout-align-items--center" style="min-height: 70vh; justify-content: center;">
-    <div class="rvo-max-width-layout rvo-max-width-layout--sm">
-        <div class="rvo-card rvo-card--padding-lg">
-            <div class="rvo-layout-column rvo-layout-gap--lg rvo-layout-align-items--center">
-                <div class="rvo-layout-column rvo-layout-gap--md rvo-layout-align-items--center">
-                    <c-h1>Geen toegang</c-h1>
-                    <p class="rvo-text">
-                        Je kan niet geauthenticeerd worden en krijgt daarom geen toegang tot Wies, een tool voor ODI.
-                        Denk je dat dit een fout is? Stuur een berichtje naar <br><a href="mailto:WIES-ODI@rijksoverheid.nl">WIES-ODI@rijksoverheid.nl</a>.
-                    </p>
-
-                    <c-h2>Mogelijke oorzaken</c-h2>
-                    <ul>
-                        <li>Inloggen met emailadres opdrachtgever: <br> Je krijgt alleen toegang met je ODI E-mail adres (@rijksoverheid, @minbzk) </c-li>
-                    <ul>
-
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<main class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--md" style="padding-top: 2rem;">
+    <c-h1>Geen toegang</c-h1>
+    {% if is_allowed_domain %}
+        {# Scenario: ODI e-mail maar nog geen toegang #}
+        <c-paragraph>
+            Je bent ingelogd met <strong>{{ email }}</strong>, maar je hebt nog geen toegang tot Wies. Als je werkt voor de
+            Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie, stuur dan een e-mail naar
+            <a href="mailto:wies-odi@rijksoverheid.nl?subject=Aanvraag%20toegang%20Wies">wies-odi@rijksoverheid.nl</a> om toegang aan te vragen.
+        </c-paragraph>
+    {% else %}
+        {# Scenario: Verkeerd account (niet ODI) #}
+        <c-paragraph>
+            {% if email %}
+            Je bent ingelogd met <strong>{{ email }}</strong>.
+            {% endif %}
+            Je krijgt alleen toegang tot Wies met je ODI / BZK e-mailadres (@rijksoverheid.nl of @minbzk.nl). Als je hulp nodig hebt,
+            stuur dan een e-mail naar <a href="mailto:wies-support@rijksoverheid.nl?subject=Hulp%20met%20toegang%20Wies">wies-support@rijksoverheid.nl</a>.
+        </c-paragraph>
+        <c-alert kind="info">
+            Mogelijk ben je ingelogd met het e-mailadres van een opdrachtgever. Log uit en probeer het opnieuw met je ODI-account.
+        </c-alert>
+    {% endif %}
+    {# TODO: Activeer uitlogknop zodra volledige SSO-Rijk logout flow is geïmplementeerd (https://github.com/RijksICTGilde/wies/issues/58)
+    <form action="{{ url('logout') }}" method="post">
+        {{ get_csrf_hidden_input(request) }}
+        <c-button kind="secondary" type="submit">Uitloggen en opnieuw proberen</c-button>
+    </form>
+    #}
+</main>
 {% endblock %}
