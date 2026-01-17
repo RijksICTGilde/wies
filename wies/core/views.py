@@ -58,14 +58,9 @@ oauth.register(
 
 @login_not_required  # login page cannot require login
 def login(request):
-    """Display login page or handle login action"""
-    if request.method == 'GET':
-        # Show the login page
-        return render(request, 'login.html')
-    elif request.method == 'POST':
-        # Handle login action
-        redirect_uri = request.build_absolute_uri(reverse_lazy('auth'))
-        return oauth.oidc.authorize_redirect(request, redirect_uri)
+    """Redirect directly to Keycloak for authentication"""
+    redirect_uri = request.build_absolute_uri(reverse_lazy('auth'))
+    return oauth.oidc.authorize_redirect(request, redirect_uri)
 
 @login_not_required  # called by oidc, cannot have login
 def auth(request):
@@ -74,7 +69,7 @@ def auth(request):
     first_name = oidc_response['userinfo']['given_name']
     last_name = oidc_response['userinfo']['family_name']
     email = oidc_response['userinfo']['email']
-    user = auth_authenticate(request, 
+    user = auth_authenticate(request,
                              username=username,
                              email=email,
                              extra_fields={
@@ -89,12 +84,19 @@ def auth(request):
         return redirect(request.build_absolute_uri(reverse("home")))
 
     logger.info('login not successful, access denied')
+    # Store email for no_access page
+    request.session['failed_login_email'] = email
     return redirect('/geen-toegang/')
 
 
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
 def no_access(request):
-    return render(request, 'no_access.html')
+    email = request.session.pop('failed_login_email', None)
+    is_allowed_domain = email and any(email.endswith(domain) for domain in settings.ALLOWED_EMAIL_DOMAINS)
+    return render(request, 'no_access.html', {
+        'email': email,
+        'is_allowed_domain': is_allowed_domain
+    })
 
 
 @login_not_required  # logout should be accessible without login

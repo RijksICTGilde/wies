@@ -3,6 +3,7 @@ from unittest.mock import patch
 from django.test import TestCase, Client, override_settings
 from django.urls import reverse
 from django.http import HttpResponse
+from django.conf import settings
 
 from wies.core.models import User
 
@@ -122,13 +123,13 @@ class AuthViewsTest(TestCase):
         self.assertEqual(response.url, '/inloggen/')
 
     @patch('wies.core.views.oauth.oidc.authorize_redirect')
-    def test_login_post_initiates_oidc_flow(self, mock_authorize_redirect):
-        """Test POST to login initiates OIDC authorization flow"""
-        
+    def test_login_redirects_directly_to_keycloak(self, mock_authorize_redirect):
+        """Test login directly redirects to Keycloak (no intermediate page)"""
+
         # Return a proper HttpResponse instead of MagicMock
         mock_authorize_redirect.return_value = HttpResponse(status=302)
 
-        self.client.post(reverse('login'))
+        response = self.client.get(reverse('login'))
 
         # Should call OIDC authorization
         mock_authorize_redirect.assert_called_once()
@@ -137,3 +138,74 @@ class AuthViewsTest(TestCase):
         call_args = mock_authorize_redirect.call_args
         redirect_uri = call_args[0][1]  # Second positional argument
         self.assertIn('/auth/', redirect_uri)
+
+    @patch('wies.core.views.oauth.oidc.authorize_access_token')
+    def test_failed_login_stores_email_in_session(self, mock_authorize):
+        """Test that failed login stores email in session for no_access page"""
+        mock_authorize.return_value = {
+            'userinfo': {
+                'sub': 'unknown_user',
+                'given_name': 'Unknown',
+                'family_name': 'Person',
+                'email': 'unknown@external.com'
+            }
+        }
+
+        self.client.get(reverse('auth'))
+
+        # Email should be stored in session
+        self.assertEqual(self.client.session.get('failed_login_email'), 'unknown@external.com')
+
+    def test_no_access_page_with_non_odi_email(self):
+        """Test no_access page shows correct message for non-ODI email"""
+        # Set up session with non-ODI email
+        session = self.client.session
+        session['failed_login_email'] = 'user@external.com'
+        session.save()
+
+        response = self.client.get('/geen-toegang/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'user@external.com')
+        self.assertContains(response, 'ODI / BZK e-mailadres')
+        # Should show the "wrong account" scenario
+        self.assertContains(response, 'opdrachtgever')
+
+    def test_no_access_page_with_odi_email(self):
+        """Test no_access page shows correct message for ODI email without access"""
+        # Set up session with ODI email
+        session = self.client.session
+        session['failed_login_email'] = 'user@rijksoverheid.nl'
+        session.save()
+
+        response = self.client.get('/geen-toegang/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'user@rijksoverheid.nl')
+        # Should show the "request access" scenario
+        self.assertContains(response, 'nog geen toegang')
+        self.assertContains(response, 'wies-odi@rijksoverheid.nl')
+
+    def test_no_access_page_clears_email_from_session(self):
+        """Test that viewing no_access page clears email from session"""
+        session = self.client.session
+        session['failed_login_email'] = 'user@external.com'
+        session.save()
+
+        self.client.get('/geen-toegang/')
+
+        # Email should be cleared from session after viewing
+        self.assertIsNone(self.client.session.get('failed_login_email'))
+
+    def test_no_access_page_without_email(self):
+        """Test no_access page works without email in session"""
+        response = self.client.get('/geen-toegang/')
+
+        self.assertEqual(response.status_code, 200)
+        # Should show generic message without specific email
+        self.assertContains(response, 'ODI / BZK e-mailadres')
+
+    def test_allowed_email_domains_setting(self):
+        """Test that ALLOWED_EMAIL_DOMAINS setting contains expected domains"""
+        self.assertIn('@rijksoverheid.nl', settings.ALLOWED_EMAIL_DOMAINS)
+        self.assertIn('@minbzk.nl', settings.ALLOWED_EMAIL_DOMAINS)

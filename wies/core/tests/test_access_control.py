@@ -15,7 +15,7 @@ from wies.core.models import User
 class AccessControlTest(TestCase):
     """
     Test that endpoints require login or excluded ones dont.
-    """    
+    """
 
     def setUp(self):
         """Create test data"""
@@ -31,11 +31,8 @@ class AccessControlTest(TestCase):
         """Test that login-not-required endpoints are accessible without authentication and do not redirect to login"""
 
         LOGIN_NOT_REQUIRED_PATHS = [
-            '/inloggen/',
             '/djadmin/login/',
             '/geen-toegang/',
-            # '/auth/',  # /auth/ requires OIDC state and will raise an error without it. this path is tested in test_auth_views.py with proper mocking
-            # '/logout/',  # logout redirects to login. tested in test_auth_view in detail
         ]
 
         for path in LOGIN_NOT_REQUIRED_PATHS:
