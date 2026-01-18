@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv lock:*)",
+      "Bash(uv sync:*)",
+      "Bash(just:*)",
+      "Bash(DJANGO_SETTINGS_MODULE=config.settings.local uv run pytest:*)",
+      "WebFetch(domain:github.com)",
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"$TOOL_INPUT\" == *models.py* ]]; then echo '\u26a0\ufe0f  Model changed - remember to update dummy_data.json'; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
