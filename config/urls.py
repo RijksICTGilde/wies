@@ -14,12 +14,14 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import RedirectView
 
-from wies.core.views import PlacementListView
+from wies.core.views import PlacementListView, robots_txt
 from wies.core.views import admin_db, login, no_access, logout, auth
+from wies.core.views import error_400, error_403, error_404, error_500
 from wies.core.views import UserListView, user_create, user_edit, user_delete, user_import_csv
 from wies.core.views import placement_import_csv
 from wies.core.views import label_admin, label_category_create, label_category_edit, label_category_delete
@@ -28,8 +30,13 @@ from wies.core.views import assignment_edit_attribute
 
 
 urlpatterns = [
+    # Well-known paths
+    path('robots.txt', robots_txt, name='robots-txt'),
+    path('.well-known/security.txt', RedirectView.as_view(url='https://www.ncsc.nl/.well-known/security.txt', permanent=False), name='security-txt'),
+    # Admin
     path('djadmin/db/', admin_db, name='djadmin-db'),
     path('djadmin/', admin.site.urls),
+    # Wies
     path('', RedirectView.as_view(pattern_name='placements', permanent=False), name='home'),
     path('inloggen/', login, name='login'),
     path('geen-toegang/', no_access),
@@ -52,3 +59,17 @@ urlpatterns = [
     path('instellingen/labels/<int:pk>/bewerken/', label_edit, name='label-edit'),
     path('instellingen/labels/<int:pk>/verwijderen/', label_delete, name='label-delete'),
 ]
+
+# Custom error handlers
+handler400 = error_400
+handler403 = error_403
+handler404 = error_404
+handler500 = error_500
+
+if settings.DEBUG:
+    urlpatterns += [
+        path('test-400/', error_400, name='test-400'),
+        path('test-403/', error_403, name='test-403'),
+        path('test-404/', error_404, name='test-404'),
+        path('test-500/', error_500, name='test-500'),
+    ]

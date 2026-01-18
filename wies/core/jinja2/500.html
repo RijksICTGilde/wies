@@ -1,0 +1,15 @@
+{% extends "base_error.html" %}
+
+{% block title %}HTTP 500 - Serverfout - Wies{% endblock %}
+
+{% block error_title %}HTTP 500 - Er ging iets mis{% endblock %}
+
+{% block error_message %}
+    Er is een onverwachte fout opgetreden. Probeer het later opnieuw.
+{% endblock %}
+
+{% block error_extra %}
+<p class="rvo-text">
+    Blijft het probleem bestaan? Neem contact op via <a href="mailto:wies-odi@rijksoverheid.nl">wies-odi@rijksoverheid.nl</a>.
+</p>
+{% endblock %}
