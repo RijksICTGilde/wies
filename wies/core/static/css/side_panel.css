@@ -23,7 +23,6 @@ dialog.rvo-dialog--inset-inline-end::backdrop {
 
 /* Remove old overlay system - now using ::backdrop */
 
-
 /* Side panel header with back and close buttons */
 .side-panel__header {
   display: flex;
@@ -60,17 +59,17 @@ dialog.rvo-dialog--inset-inline-end::backdrop {
     max-width: none;
     min-width: none;
   }
-  
+
   .rvo-dialog__background::before {
     display: none;
   }
-  
+
   .rvo-dialog__close {
     width: 100%;
     box-sizing: border-box;
     background: white;
   }
-  
+
   .rvo-dialog__content {
     height: calc(100vh - 80px);
     overflow-y: auto;
@@ -89,6 +88,15 @@ dialog.rvo-dialog--inset-inline-end::backdrop {
 
 .rvo-dialog .rvo-card--padding--sm {
   padding: var(--rvo-space-sm) !important;
+}
+
+/* Colleague profile avatar */
+.colleague-avatar-container {
+  flex: 0 0 110px !important;
+  width: 110px !important;
+  height: 110px !important;
+  display: flex !important;
+  align-items: center !important;
 }
 
 /* Sidepanel data list styling */
@@ -191,4 +199,32 @@ dialog.rvo-dialog--inset-inline-end::backdrop {
 .show-more-link:focus {
   outline: 2px solid var(--rvo-color-focus);
   outline-offset: 2px;
+}
+
+/* Text pre-wrap for preserving whitespace/newlines */
+.text-pre-wrap {
+  white-space: pre-wrap;
+}
+
+/* Show more/less container */
+.show-more-container {
+  flex: 1;
+}
+
+/* Block display for text spans */
+.text-block {
+  display: block;
+}
+
+/* Show more link block styling */
+.show-more-link--block {
+  display: block;
+  margin-left: 0;
+  margin-top: 0.5em;
+}
+
+/* Clickable card without underline */
+.clickable-card {
+  text-decoration: none;
+  color: inherit;
 }

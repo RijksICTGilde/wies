@@ -1,8 +1,10 @@
-from django.test import TestCase
+import pytest
 from django.contrib.auth import authenticate
+from django.test import TestCase
 
-from wies.core.models import User
 from wies.core.auth_backend import AuthBackend
+from wies.core.models import User
+
 
 class AuthBackendTest(TestCase):
     """Tests for custom authentication backend"""
@@ -23,15 +25,15 @@ class AuthBackendTest(TestCase):
             username="test_user",
             email="test@example.com",
             extra_fields={
-                'first_name': 'Test',
-                'last_name': 'User'
-            }
+                "first_name": "Test",
+                "last_name": "User",
+            },
         )
 
-        self.assertEqual(user.email, "test@example.com")
-        self.assertEqual(user.username, "test_user")
-        self.assertEqual(user.first_name, "Test")
-        self.assertEqual(user.last_name, "User")
+        assert user.email == "test@example.com"
+        assert user.username == "test_user"
+        assert user.first_name == "Test"
+        assert user.last_name == "User"
 
     def test_authenticate_not_existing_colleague(self):
         """Test that authentication fails for non-existing Colleague"""
@@ -40,75 +42,67 @@ class AuthBackendTest(TestCase):
             username="nonexisting",
             email="not@existing.com",
             extra_fields={
-                'first_name': 'Not',
-                'last_name': 'Existing'
-            }
+                "first_name": "Not",
+                "last_name": "Existing",
+            },
         )
 
-        self.assertIsNone(user)
+        assert user is None
 
     def test_get_user_existing(self):
         """Test that get_user returns existing Colleague by ID"""
         backend = AuthBackend()
         user = backend.get_user(self.test_user.pk)
 
-        self.assertEqual(user.pk, self.test_user.pk)
-        self.assertEqual(user.email, "test@example.com")
+        assert user.pk == self.test_user.pk
+        assert user.email == "test@example.com"
 
     def test_get_user_non_existent(self):
         """Test that get_user returns None for non-existent ID"""
         backend = AuthBackend()
         user = backend.get_user(0)
 
-        self.assertIsNone(user)
+        assert user is None
 
     def test_authenticate_missing_username(self):
         """Test that authentication raises ValueError for missing username"""
-        with self.assertRaises(ValueError) as context:
+        with pytest.raises(ValueError, match=r"(?i)username"):
             authenticate(
                 request=None,
                 username=None,
                 email="test@example.com",
-                extra_fields={}
+                extra_fields={},
             )
-
-        self.assertIn("username", str(context.exception).lower())
 
     def test_authenticate_empty_username(self):
         """Test that authentication raises ValueError for empty username"""
-        with self.assertRaises(ValueError) as context:
+        with pytest.raises(ValueError, match=r"(?i)username"):
             authenticate(
                 request=None,
                 username="",
                 email="test@example.com",
-                extra_fields={}
+                extra_fields={},
             )
-
-        self.assertIn("username", str(context.exception).lower())
 
     def test_authenticate_missing_email(self):
         """Test that authentication raises ValueError for missing email"""
-        with self.assertRaises(ValueError) as context:
+        with pytest.raises(ValueError, match=r"(?i)email"):
             authenticate(
                 request=None,
                 username="test_user",
                 email=None,
-                extra_fields={}
+                extra_fields={},
             )
-
-        self.assertIn("email", str(context.exception).lower())
 
     def test_authenticate_empty_email(self):
         """Test that authentication raises ValueError for empty email"""
-        with self.assertRaises(ValueError) as context:
+        with pytest.raises(ValueError, match=r"(?i)email"):
             authenticate(
                 request=None,
                 username="test_user",
                 email="",
-                extra_fields={}
+                extra_fields={},
             )
-
-        self.assertIn("email", str(context.exception).lower())
 
     def test_authenticate_with_none_extra_fields(self):
         """Test that authentication works with extra_fields=None (uses default)"""
@@ -116,11 +110,11 @@ class AuthBackendTest(TestCase):
             request=None,
             username="test_user",
             email="test@example.com",
-            extra_fields=None
+            extra_fields=None,
         )
 
-        self.assertIsNotNone(user)
-        self.assertEqual(user.email, "test@example.com")
+        assert user is not None
+        assert user.email == "test@example.com"
 
     def test_authenticate_uses_email_for_lookup(self):
         """Test that authentication uses email (not username) for Colleague lookup"""
@@ -136,14 +130,14 @@ class AuthBackendTest(TestCase):
         user = authenticate(
             request=None,
             username="different_username",  # Different from stored username
-            email="lookup@example.com",     # Same email
+            email="lookup@example.com",  # Same email
             extra_fields={
-                'first_name': 'Lookup',
-                'last_name': 'Test'
-            }
+                "first_name": "Lookup",
+                "last_name": "Test",
+            },
         )
 
         # Should find the colleague by email, not username
-        self.assertEqual(user.pk, colleague.pk)
-        self.assertEqual(user.email, "lookup@example.com")
-        self.assertEqual(user.username, "original_username")  # Original username preserved
+        assert user.pk == colleague.pk
+        assert user.email == "lookup@example.com"
+        assert user.username == "original_username"  # Original username preserved

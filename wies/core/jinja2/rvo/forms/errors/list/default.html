@@ -1,3 +1,5 @@
-{% if errors %}<div class="rvo-form-field__error">{% for error in errors %}
-  <span class="rvo-text--error">{{ error }}</span>{% endfor %}
-</div>{% endif %}
+{% if errors %}
+  <div class="rvo-form-field__error">
+    {% for error in errors %}<span class="rvo-text--error">{{ error }}</span>{% endfor %}
+  </div>
+{% endif %}

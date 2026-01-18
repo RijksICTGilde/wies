@@ -2,32 +2,29 @@
   {% if field_value %}
     {% set is_long = field_value|length > 300 %}
     {% if is_long %}
-      <span style="flex: 1;">
-        <span style="white-space: pre-wrap; display: block;" class="truncated-text">{{ field_value[:300] }}...</span>
-        <span style="white-space: pre-wrap; display: none;" class="full-text">{{ field_value }}</span>
-        <a
-          href="#"
-          class="show-more-link"
-          style="display: block; margin-left: 0; margin-top: 0.5em;"
-          onclick="event.preventDefault(); const container = this.parentElement; container.querySelector('.truncated-text').style.display = container.querySelector('.truncated-text').style.display === 'none' ? 'block' : 'none'; container.querySelector('.full-text').style.display = container.querySelector('.full-text').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent === 'Toon meer' ? 'Toon minder' : 'Toon meer';"
-        >Toon meer</a>
+      <span class="show-more-container">
+        <span class="text-pre-wrap text-block truncated-text">{{ field_value[:300] }}...</span>
+        <span class="text-pre-wrap full-text hidden">{{ field_value }}</span>
+        <a href="#"
+           class="show-more-link show-more-link--block"
+           onclick="event.preventDefault(); const container = this.parentElement; container.querySelector('.truncated-text').classList.toggle('hidden'); container.querySelector('.full-text').classList.toggle('hidden'); this.textContent = this.textContent === 'Toon meer' ? 'Toon minder' : 'Toon meer';">Toon meer</a>
       </span>
     {% else %}
-      <span style="white-space: pre-wrap;">{{ field_value }}</span>
+      <span class="text-pre-wrap">{{ field_value }}</span>
     {% endif %}
   {% else %}
     <span class="rvo-text--italic rvo-text--subtle">Niet ingevuld</span>
   {% endif %}
   {% if user_can_edit %}
-    <button
-      type="button"
-      class="edit-icon-button"
-      hx-get="{{ edit_url }}"
-      hx-target="#{{ target_element }}"
-      hx-swap="innerHTML"
-      aria-label="Bewerk {{ field_label }}"
-    >
-      <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md" role="img" aria-label="Bewerk"></span>
+    <button type="button"
+            class="edit-icon-button"
+            hx-get="{{ edit_url }}"
+            hx-target="#{{ target_element }}"
+            hx-swap="innerHTML"
+            aria-label="Bewerk {{ field_label }}">
+      <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md"
+            role="img"
+            aria-label="Bewerk"></span>
     </button>
   {% endif %}
 </div>

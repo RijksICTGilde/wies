@@ -5,11 +5,10 @@ This module provides efficient database-level annotations for start_date and end
 that cascade from Assignment -> Service -> Placement hierarchy.
 """
 
-from datetime import date
-from django.db.models import Case, When, F, Q, Max, Count, Prefetch
+from django.db.models import Case, Count, F, Prefetch, Q, When
 from django.db.models.functions import Lower
 
-from wies.core.models import Label, LabelCategory
+from wies.core.models import Label
 
 
 def annotate_placement_dates(queryset):
@@ -28,35 +27,37 @@ def annotate_placement_dates(queryset):
         actual_start_date=Case(
             # When placement uses SERVICE dates
             When(
-                period_source='SERVICE',
+                period_source="SERVICE",
                 then=Case(
                     # And service uses ASSIGNMENT dates
-                    When(service__period_source='ASSIGNMENT', then=F('service__assignment__start_date')),
+                    When(service__period_source="ASSIGNMENT", then=F("service__assignment__start_date")),
                     # Or service has its own dates
-                    default=F('service__specific_start_date')
-                )
+                    default=F("service__specific_start_date"),
+                ),
             ),
             # When placement has its own dates
-            default=F('specific_start_date')
+            default=F("specific_start_date"),
         ),
         actual_end_date=Case(
             # When placement uses SERVICE dates
             When(
-                period_source='SERVICE',
+                period_source="SERVICE",
                 then=Case(
                     # And service uses ASSIGNMENT dates
-                    When(service__period_source='ASSIGNMENT', then=F('service__assignment__end_date')),
+                    When(service__period_source="ASSIGNMENT", then=F("service__assignment__end_date")),
                     # Or service has its own dates
-                    default=F('service__specific_end_date')
-                )
+                    default=F("service__specific_end_date"),
+                ),
             ),
             # When placement has its own dates
-            default=F('specific_end_date')
-        )
+            default=F("specific_end_date"),
+        ),
     )
 
 
-def filter_by_date_overlap(queryset, start_date, end_date, start_field='actual_start_date', end_field='actual_end_date'):
+def filter_by_date_overlap(
+    queryset, start_date, end_date, start_field="actual_start_date", end_field="actual_end_date"
+):
     """
     Filter queryset for records that overlap with the given date range.
 
@@ -73,21 +74,22 @@ def filter_by_date_overlap(queryset, start_date, end_date, start_field='actual_s
         Filtered QuerySet
     """
     return queryset.filter(
-        Q(**{f'{start_field}__lte': end_date}) &
-        Q(**{f'{end_field}__gte': start_date}) &
-        Q(**{f'{start_field}__isnull': False}) &
-        Q(**{f'{end_field}__isnull': False})
+        Q(**{f"{start_field}__lte": end_date})
+        & Q(**{f"{end_field}__gte": start_date})
+        & Q(**{f"{start_field}__isnull": False})
+        & Q(**{f"{end_field}__isnull": False}),
     )
+
 
 def annotate_usage_counts(queryset):
     """
     Annotate LabelCategory queryset with usage counts on labels
     """
 
-    labels_with_usage = Label.objects.order_by(Lower('name')).annotate(
-        usage_count=Count('users', distinct=True) + Count('colleagues', distinct=True)
+    labels_with_usage = Label.objects.order_by(Lower("name")).annotate(
+        usage_count=Count("users", distinct=True) + Count("colleagues", distinct=True),
     )
 
     return queryset.prefetch_related(
-        Prefetch('labels', queryset=labels_with_usage)
+        Prefetch("labels", queryset=labels_with_usage),
     )

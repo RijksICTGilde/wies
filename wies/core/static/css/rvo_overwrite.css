@@ -56,3 +56,10 @@
 .rvo-max-width-layout--placements .rvo-menubar__group--flex:first-child {
   margin-left: calc(280px + 0.75rem);
 }
+
+/* Date range validation message styling */
+.date-range-validation-message {
+  color: #e17000;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}

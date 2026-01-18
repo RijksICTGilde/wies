@@ -1,46 +1,46 @@
 <!DOCTYPE html>
-<html>
-<head>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Database Admin - Beheer tool voor Wies" />
+    <meta name="keywords" content="admin, Wies" />
     <title>Database Admin</title>
-</head>
-<body>
-    <h1><a href="/">home</a>/Database Admin</h1>
-    
-    Nr of assignments: {{ assignment_count }} <br>
+  </head>
+  <body>
+    <h1>
+      <a href="{{ url('home') }}">home</a>/Database Admin
+    </h1>
+    Nr of assignments: {{ assignment_count }}
+    <br />
     Nr of colleagues: {{ colleague_count }}
-
     {% if messages %}
-        {% for message in messages %}
-            <div>{{ message }}</div>
-        {% endfor %}
+      {% for message in messages %}<div>{{ message }}</div>{% endfor %}
     {% endif %}
-    
     <h2>Clear All Data</h2>
-    <form method="post" onsubmit="return confirm('Are you sure you want to clear all data?');">
-        {{ get_csrf_hidden_input(request) }}
-        <input type="hidden" name="action" value="clear_data">
-        <button type="submit">Clear All Data</button>
+    <form method="post"
+          onsubmit="return confirm('Are you sure you want to clear all data?');">
+      {{ get_csrf_hidden_input(request) }}
+      <input type="hidden" name="action" value="clear_data" />
+      <button type="submit">Clear All Data</button>
     </form>
-    
     <h2>Load Dummy Data</h2>
     <form method="post">
-        {{ get_csrf_hidden_input(request) }}
-        <input type="hidden" name="action" value="load_data">
-        <button type="submit">Load Dummy Data</button>
+      {{ get_csrf_hidden_input(request) }}
+      <input type="hidden" name="action" value="load_data" />
+      <button type="submit">Load Dummy Data</button>
     </form>
-
     <h2>Add developer user</h2>
     <form method="post">
-        {{ get_csrf_hidden_input(request) }}
-        <input type="hidden" name="action" value="add_developer_user">
-        <button type="submit">Add dev user</button>
+      {{ get_csrf_hidden_input(request) }}
+      <input type="hidden" name="action" value="add_developer_user" />
+      <button type="submit">Add dev user</button>
     </form>
-
     <h2>Sync all records from OTYS IIR</h2>
     <form method="post">
-        {{ get_csrf_hidden_input(request) }}
-        <input type="hidden" name="action" value="sync_all_otys_records">
-        <button type="submit">Sync all records from OTYS IIR</button>
+      {{ get_csrf_hidden_input(request) }}
+      <input type="hidden" name="action" value="sync_all_otys_records" />
+      <button type="submit">Sync all records from OTYS IIR</button>
     </form>
-</body>
+  </body>
 </html>

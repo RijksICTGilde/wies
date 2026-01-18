@@ -5,7 +5,5 @@
   "main": "index.js",
   "dependencies": {
     "@nl-rvo/assets": "1.0.0-alpha.360"
-  },
-  "author": "Ruben Rouwhof",
-  "license": "MIT"
+  }
 }

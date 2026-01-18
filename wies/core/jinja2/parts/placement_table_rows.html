@@ -1,43 +1,30 @@
 {% for placement in object_list %}
-  <tr class="rvo-table-row clickable-row" 
-      onclick="window.location.href='{{ placement.colleague_url }}'"
-      style="cursor: pointer;">
+  <tr class="rvo-table-row clickable-row"
+      onclick="window.location.href='{{ placement.colleague_url }}'">
     <td class="rvo-table-cell">
       <div class="user-table-cell">
-        <div class="user-avatar">
-          {{ placement.colleague.name|first|upper }}
-        </div>
+        <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>
         <div class="user-info">
-          <div class="rvo-text rvo-text--bold">
-            {{ placement.colleague.name }}
-          </div>
-          <div class="rvo-text rvo-text--sm rvo-text--subtle">
-          </div>
+          <div class="rvo-text rvo-text--bold">{{ placement.colleague.name }}</div>
+          <div class="rvo-text rvo-text--sm rvo-text--subtle"></div>
         </div>
       </div>
     </td>
     <td class="rvo-table-cell">
       <div class="placement-assignment">
         <span class="rvo-text--bold">{{ placement.service.assignment.name }}</span>
-        <div class="rvo-text--sm rvo-text--subtle">
-          {{ placement.service.assignment.organization }}
-        </div>
+        <div class="rvo-text--sm rvo-text--subtle">{{ placement.service.assignment.organization }}</div>
       </div>
     </td>
     <td class="rvo-table-cell">
       {% if placement.service.skill %}
         <span class="rvo-tag rvo-tag--default">{{ placement.service.skill.name }}</span>
       {% else %}
-        <span class="rvo-text--italic rvo-text--subtle">
-          Geen rol
-        </span>
+        <span class="rvo-text--italic rvo-text--subtle">Geen rol</span>
       {% endif %}
     </td>
-
     <td class="rvo-table-cell">
-      <span class="rvo-text">
-        {{ placement.start_date|datum_nl('N y') }} - {{ placement.end_date|datum_nl('N y') }}
-      </span>
+      <span class="rvo-text">{{ placement.start_date|datum_nl("N y") }} - {{ placement.end_date|datum_nl("N y") }}</span>
     </td>
   </tr>
 {% else %}
@@ -47,15 +34,14 @@
     </td>
   </tr>
 {% endfor %}
-
 {% if next_page_url %}
-<tr hx-get="{{ next_page_url }}"
-    hx-trigger="revealed"
-    hx-swap="outerHTML">
-  <td colspan="4" class="rvo-table-cell">
-    <div style="text-align: center; padding: 1rem;">
-      <span class="rvo-text--subtle">Meer laden...</span>
-    </div>
-  </td>
-</tr>
+  <tr hx-get="{{ next_page_url }}"
+      hx-trigger="revealed"
+      hx-swap="outerHTML">
+    <td colspan="4" class="rvo-table-cell">
+      <div class="loading-indicator">
+        <span class="rvo-text--subtle">Meer laden...</span>
+      </div>
+    </td>
+  </tr>
 {% endif %}

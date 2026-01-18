@@ -6,33 +6,30 @@
       title="Bewerk {{ user.first_name }} {{ user.last_name }}">
     <td class="rvo-table-cell">
       <div class="user-table-cell">
-        <div class="user-avatar">
-          {{ user.first_name|first|upper if user.first_name else user.email|first|upper }}
-        </div>
+        <div class="user-avatar">{{ user.first_name|first|upper if user.first_name else user.email|first|upper }}</div>
         <div class="user-info">
-          <div class="rvo-text rvo-text--bold">
-            {{ user.first_name }} {{ user.last_name }}
-          </div>
-
+          <div class="rvo-text rvo-text--bold">{{ user.first_name }} {{ user.last_name }}</div>
         </div>
       </div>
     </td>
     <td class="rvo-table-cell">
-      <div style="display: flex; gap: 0.25rem; flex-wrap: wrap; align-items: center; justify-content: space-between;">
-        <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+      <div class="user-roles-cell">
+        <div class="user-roles-list">
           {% for group in user.groups.all() %}
-            <span class="rvo-text rvo-text--sm" style="background-color: #e6f0ff; color: #154273; padding: 0.125rem 0.5rem; border-radius: 0.25rem; white-space: nowrap;">
+            <span class="rvo-text rvo-text--sm role-badge">
               {% if group.name == 'Business Development Manager' %}
-              BDM
+                BDM
               {% else %}
-              {{ group.name }}
+                {{ group.name }}
               {% endif %}
             </span>
           {% else %}
             <span class="rvo-text rvo-text--sm rvo-text--subtle">-</span>
           {% endfor %}
         </div>
-        <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="Bewerken" style="flex-shrink: 0;"></span>
+        <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw icon-no-shrink"
+              role="img"
+              aria-label="Bewerken"></span>
       </div>
     </td>
   </tr>
@@ -43,15 +40,14 @@
     </td>
   </tr>
 {% endfor %}
-
 {% if next_page_url %}
-<tr hx-get="{{ next_page_url }}"
-    hx-trigger="revealed"
-    hx-swap="outerHTML">
-  <td colspan="2" class="rvo-table-cell">
-    <div style="text-align: center; padding: 1rem;">
-      <span class="rvo-text--subtle">Meer laden...</span>
-    </div>
-  </td>
-</tr>
+  <tr hx-get="{{ next_page_url }}"
+      hx-trigger="revealed"
+      hx-swap="outerHTML">
+    <td colspan="2" class="rvo-table-cell">
+      <div class="loading-indicator">
+        <span class="rvo-text--subtle">Meer laden...</span>
+      </div>
+    </td>
+  </tr>
 {% endif %}

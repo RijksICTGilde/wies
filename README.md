@@ -1,7 +1,9 @@
-# wies (prototype)
+# Wies (prototype)
+
 Interne tool voor overzicht wie, waar, wat, wanneer
 
 ## Prerequisites
+
 - docker
 - just
 - uv
@@ -10,11 +12,12 @@ Interne tool voor overzicht wie, waar, wat, wanneer
 ## Setup
 
 Setting up the system. Can also be used to clean up current state.
+
 - installs dependencies
 - sets up database from scratch, including source data
 - creates example .env file if non-existent
   - correct the OIDC credentials
-  - correct the DEV firstname, lastname and email (yourself) 
+  - correct the DEV firstname, lastname and email (yourself)
 
 ```
 just setup
@@ -23,6 +26,7 @@ just setup
 ## Start
 
 Starts up current system
+
 - Applies hanging data migration if available
 
 ```
@@ -38,11 +42,14 @@ just manage [...]
 ```
 
 ### Special URLs
+
 The following URLs are not linked through the UI
+
 - /djadmin/
 - /djadmin/db/: for dropping db and loading dummy data
 
 ### Release
+
 - everything in main
 - change "unreleased" in CHANGES to date + commit & push
 - tag with date using "yyyy-mm-dd": e.g. `git tag -a 2025-08-18 -m "2025-08-18"`
@@ -50,7 +57,9 @@ The following URLs are not linked through the UI
 - (CI produces image)
 
 ### Testing
+
 Run all tests
+
 ```
 just test
 ```

@@ -1,7 +1,8 @@
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
-from wies.core.models import User, Assignment, Service, Placement, Colleague, Ministry, LabelCategory, Label
+
+from wies.core.models import Assignment, Colleague, Label, LabelCategory, Ministry, Placement, Service, User
 
 
 def user_can_edit_assignment(user, assignment):
@@ -24,11 +25,11 @@ def user_can_edit_assignment(user, assignment):
         return False
 
     # Check permission
-    if user.has_perm('core.change_assignment'):
+    if user.has_perm("core.change_assignment"):
         return True
 
     # Check if user has a colleague profile
-    if not hasattr(user, 'colleague'):
+    if not hasattr(user, "colleague"):
         return False
 
     # Check if user is the owner (BDM)
@@ -36,12 +37,10 @@ def user_can_edit_assignment(user, assignment):
         return True
 
     # Check if user is assigned to the assignment
-    is_assigned = Placement.objects.filter(
+    return Placement.objects.filter(
         service__assignment=assignment,
-        colleague__id=user.colleague.id
+        colleague__id=user.colleague.id,
     ).exists()
-
-    return is_assigned
 
 
 def setup_roles():
@@ -49,7 +48,10 @@ def setup_roles():
     roles = {
         "Beheerder": [
             (User, ["view_user", "add_user", "delete_user", "change_user"]),
-            (LabelCategory, ["view_labelcategory", "add_labelcategory", "change_labelcategory", "delete_labelcategory"]),
+            (
+                LabelCategory,
+                ["view_labelcategory", "add_labelcategory", "change_labelcategory", "delete_labelcategory"],
+            ),
             (Label, ["view_label", "add_label", "change_label", "delete_label"]),
         ],
         "Consultant": [],
@@ -58,17 +60,15 @@ def setup_roles():
             (Service, ["add_service"]),
             (Placement, ["add_placement"]),
             (Colleague, ["add_colleague"]),
-            (Ministry, ["add_ministry"])
+            (Ministry, ["add_ministry"]),
         ],
     }
 
     with transaction.atomic():
         for role_name, model_permissions in roles.items():
-            group, created = Group.objects.get_or_create(name=role_name)
+            group, _created = Group.objects.get_or_create(name=role_name)
             for model, codenames in model_permissions:
                 content_type = ContentType.objects.get_for_model(model)
                 for codename in codenames:
                     perm = Permission.objects.get(codename=codename, content_type=content_type)
                     group.permissions.add(perm)
-
-

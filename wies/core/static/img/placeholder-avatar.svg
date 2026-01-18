@@ -1,7 +1,6 @@
 <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
   <!-- Background rectangle with RVO hemelblauw-150 color -->
   <rect width="60" height="60" rx="4" fill="#E6F2FF"/>
-  
   <!-- Person icon in RVO logoblauw color -->
   <g transform="translate(18, 16)">
     <!-- Head -->

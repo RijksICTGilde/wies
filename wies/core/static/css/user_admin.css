@@ -7,16 +7,76 @@
 }
 
 /* Column width optimization for user table */
-#user_table .rvo-table th:nth-child(1), #user_table .rvo-table td:nth-child(1) {
+#user_table .rvo-table th:nth-child(1),
+#user_table .rvo-table td:nth-child(1) {
   width: 30%; /* Naam column - more space for avatar + info */
 }
 
-#user_table .rvo-table th:nth-child(2), #user_table .rvo-table td:nth-child(2) {
+#user_table .rvo-table th:nth-child(2),
+#user_table .rvo-table td:nth-child(2) {
   width: 40%; /* Rollen column */
 }
 
-#user_table .rvo-table th:nth-child(3), #user_table .rvo-table td:nth-child(3) {
+#user_table .rvo-table th:nth-child(3),
+#user_table .rvo-table td:nth-child(3) {
   width: 30%; /* Acties column - wider to fit both buttons */
   white-space: nowrap;
   min-width: 220px; /* Ensure minimum width for buttons */
+}
+
+/* User roles cell layout */
+.user-roles-cell {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.user-roles-list {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+}
+
+/* Role badge styling */
+.role-badge {
+  background-color: #e6f0ff;
+  color: #154273;
+  padding: 0.125rem 0.5rem;
+  border-radius: 0.25rem;
+  white-space: nowrap;
+}
+
+/* Icon that doesn't shrink */
+.icon-no-shrink {
+  flex-shrink: 0;
+}
+
+/* User form modal two-column layout */
+.user-form-layout {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.user-form-column {
+  flex: 1;
+}
+
+.user-form-column-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.user-form-column-header {
+  margin-bottom: 1rem;
+}
+
+/* Vertical divider between columns */
+.user-form-divider {
+  border-left: 1px solid #e6e6e6;
+  height: auto;
+  align-self: stretch;
 }

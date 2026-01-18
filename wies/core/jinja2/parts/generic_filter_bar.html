@@ -1,150 +1,103 @@
-{#  
+{#
 Usage:
 {% with url_name='placements', target_selector='#placement-content' %}
   {% include 'parts/generic_filter_bar.html' %}
 {% endwith %}
- #}
-
-
+#}
 <link rel="stylesheet" href="{{ static('css/generic_filter_bar.css') }}">
-
 <!-- Generic Compact Filters Section -->
 <form class="rvo-form filter-bar"
-  hx-get="{{ url(url_name) }}"
-  hx-target="{{ target_selector }}"
-  hx-push-url="true"
-  hx-trigger="change,input delay:500ms from:input"
-  hx-include="[data-filter-input]">
-
+      hx-get="{{ url(url_name) }}"
+      hx-target="{{ target_selector }}"
+      hx-push-url="true"
+      hx-trigger="change,input delay:500ms from:input"
+      hx-include="[data-filter-input]">
   <!-- Compact filter bar -->
   <div class="filter-bar-bar">
-
     <!-- Search Field -->
     <!-- TODO jrc: could we standardize on a search bar? -->
-    <div role="group" aria-labelledby="search-field-label" class="search-field-wrapper">
-      <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon"/>
+    <div role="group"
+         aria-labelledby="search-field-label"
+         class="search-field-wrapper">
+      <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon" />
       <!-- TODO jrc: size attribute without value necessary to leave out sizing css -->
-      <c-input
-        id="search"
-        name="{{ search_field|default('search') }}"
-        placeholder="{{ search_placeholder|default('Zoeken...') }}"
-        value="{% if search_filter %}{{ search_filter }}{% endif %}"
-        aria-label="{{ search_placeholder|default('Zoeken') }}"
-        size
-      />
+      <c-input id="search" name="{{ search_field|default('search') }}" placeholder="{{ search_placeholder|default('Zoeken...') }}" value="{{ search_filter or '' }}" aria-label="{{ search_placeholder|default('Zoeken') }}" size />
     </div>
-
     <!-- Filters Button with indicator -->
     <!-- TODO jrc: below button cannot be changed into c-button, because it is manipulated by javascript, which only sees the raw css -->
     <div class="filter-button-container">
       {% if filter_groups %}
-      <button type="button"
-              class="filter-button utrecht-button utrecht-button--secondary-action{% if active_filter_count > 0 %} utrecht-button--active{% endif %} utrecht-button--rvo-md utrecht-button--icon-before rvo-button">
-        <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before" role="img" aria-label="Trechter"></span>
-        <span class="filter-text">Filters{% if active_filter_count > 0 %} ({{ active_filter_count }}){% endif %}</span>
-      </button>
+        <button type="button"
+                class="filter-button utrecht-button utrecht-button--secondary-action{% if active_filter_count > 0 %} utrecht-button--active{% endif %} utrecht-button--rvo-md utrecht-button--icon-before rvo-button">
+          <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before"
+                role="img"
+                aria-label="Trechter"></span>
+          <span class="filter-text">Filters
+            {% if active_filter_count > 0 %}({{ active_filter_count }}){% endif %}
+          </span>
+        </button>
       {% endif %}
     </div>
-
     <div>
       {% if primary_button %}
-      <button
-      type="button"
-      class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before rvo-button"
-      {% for attr_label, attr_value  in primary_button.attrs.items() %}
-      {{ attr_label }}="{{ attr_value }}"
-      {% endfor %}
-      >
-      <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before" role="img" aria-label="Plus"></span>
-      {{ primary_button.button_text }}
-      </button>
+        <button type="button"
+                class="utrecht-button utrecht-button--primary-action utrecht-button--rvo-md utrecht-button--icon-before rvo-button"
+                {% for attr_label, attr_value in primary_button.attrs.items() %}{{ attr_label }}="{{ attr_value }}"{% endfor %}>
+          <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before"
+                role="img"
+                aria-label="Plus"></span>
+          {{ primary_button.button_text }}
+        </button>
       {% endif %}
     </div>
-
   </div>
-
   <!-- Filter inputs inside modal -->
   <div id="filterModal" class="modal-overlay">
     <div class="modal-content">
       <!-- Modal Header -->
       <div class="modal-header">
         <c-h2 noMargins>Filters</c-h2>
-        <button type="button" class="modal-close">&times;</button>
+        <button type="button" class="modal-close">×</button>
       </div>
-
       <div class="modal-body">
         <div class="rvo-layout-column rvo-layout-gap--md">
-
           {% for filter_group in filter_groups %}
-          {% if filter_group.type == 'select' %}
-
-          <c-select-field
-            label="{{ filter_group.label }}"
-            name="{{ filter_group.name }}"
-            id="filter-{{ filter_group.name }}"
-            data-filter-input
-            :options="filter_group.options"
-            value="{{ filter_group.value }}"
-          />
-
-          {% elif filter_group.type == 'date_range' %}
-
-          <!-- TODO jrc: c-date-range-field would be very nice -->
-          <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
-            <!-- TODO jrc label "for" only specified when id is given in. maybe better generate random id that id is also given? -->
-            <!-- TODO jrc: helpertext should be empty by default? -->
-            <!-- TODO JRC: setting size without attribute necessary to leave out sizing css -->
-            <c-date-input-field 
-              id="filter-{{ filter_group.name }}-from"
-              label="{{ filter_group.from_label }}" 
-              helperText=""
-              data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
-              data-combined-name="{{ filter_group.name }}"
-              data-pair-id="filter-{{ filter_group.name }}-to"
-              size
-              value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from }}{% endif %}"
-            />
-
-            <c-date-input-field 
-              id="filter-{{ filter_group.name }}-to"
-              label="{{ filter_group.to_label }}" 
-              helperText=""
-              data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
-              data-combined-name="{{ filter_group.name }}"
-              data-pair-id="filter-{{ filter_group.name }}-from"
-              size
-              value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to }}{% endif %}"
-            />
-          </div>
-          {% if filter_group.require_both %}
-          <!-- Hidden input managed by JS - only submitted when both dates are filled -->
-          <input
-            type="hidden"
-            id="filter-{{ filter_group.name }}-combined"
-            name="{{ filter_group.name }}"
-            data-filter-input
-          />
-          <div id="{{ filter_group.name }}-validation-message" class="date-range-validation-message" style="display: none; color: #e17000; font-size: 0.875rem; margin-top: 0.25rem;">
-            Beide datums zijn vereist voor een geldige periode filter.
-          </div>
-          {% endif %}
-          {% endif %}
+            {% if filter_group.type == 'select' %}
+              <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
+            {% elif filter_group.type == 'date_range' %}
+              <!-- TODO jrc: c-date-range-field would be very nice -->
+              <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
+                <!-- TODO jrc label "for" only specified when id is given in. maybe better generate random id that id is also given? -->
+                <!-- TODO jrc: helpertext should be empty by default? -->
+                <!-- TODO JRC: setting size without attribute necessary to leave out sizing css -->
+                <c-date-input-field id="filter-{{ filter_group.name }}-from" label="{{ filter_group.from_label }}" helperText="" data-require-both="{{ 'true' if filter_group.require_both else 'false' }}" data-combined-name="{{ filter_group.name }}" data-pair-id="filter-{{ filter_group.name }}-to" size value="{{ active_filters.get(filter_group.name).from if active_filters.get(filter_group.name) else '' }}" />
+                <c-date-input-field id="filter-{{ filter_group.name }}-to" label="{{ filter_group.to_label }}" helperText="" data-require-both="{{ 'true' if filter_group.require_both else 'false' }}" data-combined-name="{{ filter_group.name }}" data-pair-id="filter-{{ filter_group.name }}-from" size value="{{ active_filters.get(filter_group.name).to if active_filters.get(filter_group.name) else '' }}" />
+              </div>
+              {% if filter_group.require_both %}
+                <!-- Hidden input managed by JS - only submitted when both dates are filled -->
+                <input type="hidden"
+                       id="filter-{{ filter_group.name }}-combined"
+                       name="{{ filter_group.name }}"
+                       data-filter-input />
+                <div id="{{ filter_group.name }}-validation-message"
+                     class="date-range-validation-message hidden">
+                  Beide datums zijn vereist voor een geldige periode filter.
+                </div>
+              {% endif %}
+            {% endif %}
           {% endfor %}
-
         </div>
       </div>
-
       <!-- Modal Footer -->
       <div class="modal-footer">
         <c-button class="clear-filters-button" kind="warning-subtle">
-          Wis alle filters
+        Wis alle filters
         </c-button>
         <c-button class="close-modal-button" kind="primary">
-          Naar resultaten
+        Naar resultaten
         </c-button>
       </div>
     </div>
   </div>
 </form>
-
 <script src="{{ static('js/generic_filter_bar.js') }}"></script>

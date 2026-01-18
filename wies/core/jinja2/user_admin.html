@@ -1,34 +1,25 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block extra_head %}
-<link rel="stylesheet" href="{{ static('css/user_admin.css') }}">
-<link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
-<script src="{{ static('js/dialog.js') }}"></script>
-{% endblock %}
-
+  <link rel="stylesheet" href="{{ static('css/user_admin.css') }}">
+  <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
+  <script src="{{ static('js/dialog.js') }}"></script>
+{% endblock extra_head %}
 {% block content %}
-
-<main class="rvo-sidebar-layout__container">
-  <div class="rvo-sidebar-layout rvo-max-width-layout rvo-max-width-layout--lg">
-    {% include 'parts/admin_sidebar.html' %}
-    <div class="rvo-sidebar-layout__content">
-      <div class="rvo-layout-column rvo-layout-gap--xl">
-        <c-h1>Gebruikers</c-h1>
-
-        {% with url_name='admin-users', target_selector='#user_table' %}
-          {% include 'parts/generic_filter_bar.html' %}
-        {% endwith %}
-
-        <!-- Content -->
-        <div id="user_table" class="rvo-table-container">
-          {% include 'parts/user_table.html' %}
+  <main class="rvo-sidebar-layout__container">
+    <div class="rvo-sidebar-layout rvo-max-width-layout rvo-max-width-layout--lg">
+      {% include "parts/admin_sidebar.html" %}
+      <div class="rvo-sidebar-layout__content">
+        <div class="rvo-layout-column rvo-layout-gap--xl">
+          <c-h1>Gebruikers</c-h1>
+          {% with url_name="admin-users", target_selector="#user_table" %}
+            {% include "parts/generic_filter_bar.html" %}
+          {% endwith %}
+          <!-- Content -->
+          <div id="user_table" class="rvo-table-container">{% include "parts/user_table.html" %}</div>
+          <!-- Modal container -->
+          <div id="userFormModal"></div>
         </div>
-
-        <!-- Modal container -->
-        <div id="userFormModal"></div>
       </div>
     </div>
-  </div>
-</main>
-
-{% endblock %}
+  </main>
+{% endblock content %}

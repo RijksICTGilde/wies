@@ -1,18 +1,24 @@
 <header class="rvo-header">
   <div class="rvo-header__logo-wrapper">
-    <a href="/plaatsingen/" class="rvo-link rvo-link--no-underline">
+    <a href="{{ url('placements') }}"
+       class="rvo-link rvo-link--no-underline">
       <div class="rvo-logo rvo-header__logo-img">
         <div class="rvo-logo__emblem">
-          <img src="{{ static('@nl-rvo/assets/images/emblem.svg') }}" alt="RVO Embleem">
+          <img src="{{ static('@nl-rvo/assets/images/emblem.svg') }}"
+               alt="Rijksoverheid embleem"
+               width="50"
+               height="100">
         </div>
         <div class="rvo-logo__wordmark">
-          <p class="rvo-logo__title">Rijksorganisatie voor Ontwikkeling, <br> Digitalisering en Innovatie</p>
+          {# djlint:off #}
+          {# rvo-logo__title: white-space:pre-line, newlines worden gerenderd als regeleindes en dat willen we niet #}
+          <p class="rvo-logo__title">Rijksorganisatie voor Ontwikkeling,<br>Digitalisering en Innovatie</p>
+          {# djlint:on #}
         </div>
       </div>
     </a>
   </div>
 </header>
-
 <div class="rvo-menubar__background rvo-menubar__background--horizontal-rule">
   <div class="rvo-max-width-layout rvo-max-width-layout--placements rvo-max-width-layout-inline-padding--md">
     <nav class="rvo-menubar rvo-menubar--md">
@@ -20,7 +26,8 @@
         <li class="rvo-menubar__list">
           <ul class="rvo-menubar__group--flex">
             <li class="rvo-menubar__item">
-              <a href="/plaatsingen/" class="rvo-link rvo-link--no-underline rvo-link--logoblauw {% if '/plaatsingen/' in request.path %}menu-item--active{% endif %}">
+              <a href="{{ url('placements') }}"
+                 class="rvo-link rvo-link--no-underline rvo-link--logoblauw {% if url('placements') in request.path %}menu-item--active{% endif %}">
                 Wie zit waar?
               </a>
             </li>
@@ -29,25 +36,34 @@
             <li class="rvo-menubar__item">
               {% if user.is_authenticated %}
                 {% if user.colleague %}
-                  <a href="/plaatsingen/?collega={{ user.colleague.id }}" class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw">
-                    <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before" role="img" aria-label="User"></span>
+                  <a href="{{ url('placements') }}?collega={{ user.colleague.id }}"
+                     class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw">
+                    <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before"
+                          role="img"
+                          aria-label="User"></span>
                     {{ user.get_full_name() }}
                   </a>
                 {% else %}
-                  <a href="#" class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw">
-                    <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before" role="img" aria-label="User"></span>
+                  <a href="#"
+                     class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw">
+                    <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before"
+                          role="img"
+                          aria-label="User"></span>
                     {{ user.get_full_name() }}
                   </a>
                 {% endif %}
               {% endif %}
             </li>
             {% if user.has_perms(['core.view_user', 'core.view_labelcategory']) %}
-            <li class="rvo-menubar__item">
-              <a href="/instellingen/" class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw {% if '/instellingen/' in request.path %}menu-item--active{% endif %}">
-                <span class="utrecht-icon rvo-icon rvo-icon-instellingen rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before" role="img" aria-label="Instellingen"></span>
-                Instellingen
-              </a>
-            </li>
+              <li class="rvo-menubar__item">
+                <a href="{{ url('admin') }}"
+                   class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw {% if url('admin') in request.path %}menu-item--active{% endif %}">
+                  <span class="utrecht-icon rvo-icon rvo-icon-instellingen rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before"
+                        role="img"
+                        aria-label="Instellingen"></span>
+                  Instellingen
+                </a>
+              </li>
             {% endif %}
           </ul>
         </li>
