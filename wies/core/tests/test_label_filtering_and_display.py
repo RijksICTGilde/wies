@@ -198,7 +198,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by Rijks ICT Gilde label
-        response = self.client.get(reverse('placements'), {'labels': self.rig_label.id})
+        response = self.client.get(reverse('home'), {'labels': self.rig_label.id})
         self.assertEqual(response.status_code, 200)
 
         # colleague1 and colleague3 have RIG label, colleague2 doesn't
@@ -211,7 +211,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by I-Interim Rijk label
-        response = self.client.get(reverse('placements'), {'labels': self.iir_label.id})
+        response = self.client.get(reverse('home'), {'labels': self.iir_label.id})
         self.assertEqual(response.status_code, 200)
 
         # Only colleague2 has IIR label
@@ -225,7 +225,7 @@ class LabelFilteringAndDisplayTest(TestCase):
 
         # Filter by both label and skill
         response = self.client.get(
-            reverse('placements'),
+            reverse('home'),
             {'labels': self.rig_label.id, 'rol': self.skill.id}
         )
         self.assertEqual(response.status_code, 200)
@@ -253,7 +253,7 @@ class LabelFilteringAndDisplayTest(TestCase):
             source='wies'
         )
 
-        response = self.client.get(reverse('placements'))
+        response = self.client.get(reverse('home'))
         self.assertEqual(response.status_code, 200)
 
         # Should show colleague name even without labels
@@ -304,7 +304,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Both colleague1 and colleague3 have rig_label
-        response = self.client.get(reverse('placements'), {'labels': self.rig_label.id})
+        response = self.client.get(reverse('home'), {'labels': self.rig_label.id})
         self.assertEqual(response.status_code, 200)
 
         # Both should be in results

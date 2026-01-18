@@ -7,7 +7,7 @@
     <aside class="filter-sidebar" id="filterSidebar">
 
       <form class="rvo-form filter-sidebar-form"
-        hx-get="{{ url('placements') }}"
+        hx-get="{{ url('home') }}"
         hx-target="#filter-and-table-container"
         hx-push-url="true"
         hx-trigger="change,input delay:500ms from:[data-filter-input]"
@@ -163,7 +163,7 @@
 
         <!-- Search Field -->
         <form class="rvo-form filter-search-form"
-          hx-get="{{ url('placements') }}"
+          hx-get="{{ url('home') }}"
           hx-target="#filter-and-table-container"
           hx-push-url="true"
           hx-trigger="change,input delay:500ms from:[data-filter-input]"

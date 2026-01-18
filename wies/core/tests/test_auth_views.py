@@ -109,7 +109,7 @@ class AuthViewsTest(TestCase):
 
         # Session should be cleared (new session will be created but without user)
         # Accessing a protected page should now redirect to login
-        protected_response = self.client.get(reverse('placements'))
+        protected_response = self.client.get(reverse('home'))
         self.assertEqual(protected_response.status_code, 302)
         self.assertTrue(protected_response.url.startswith('/inloggen/'))
 

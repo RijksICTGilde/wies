@@ -212,7 +212,7 @@ class PlacementListView(ListView):
         params.update(request.GET)
         params.pop('collega', None)
         params.pop('opdracht', None)
-        return f"/plaatsingen/?{params.urlencode()}" if params else "/plaatsingen/"
+        return f"{reverse('home')}?{params.urlencode()}" if params else reverse('home')
 
     def _build_assignment_url(self, request, assignment_id):
         """Build assignment panel URL preserving current filters"""
@@ -220,19 +220,19 @@ class PlacementListView(ListView):
         params.update(request.GET)
         params.pop('opdracht', None)
         params['opdracht'] = assignment_id
-        return f"/plaatsingen/?{params.urlencode()}"
+        return f"{reverse('home')}?{params.urlencode()}"
 
     def _build_client_url(self, client_name):
         """Build client filter URL"""
         params = QueryDict(mutable=True)
         params['opdrachtgever'] = client_name
-        return f"/plaatsingen/?{params.urlencode()}"
+        return f"{reverse('home')}?{params.urlencode()}"
 
     def _build_ministry_url(self, ministry_id):
         """Build ministry filter URL"""
         params = QueryDict(mutable=True)
         params['ministerie'] = ministry_id
-        return f"/plaatsingen/?{params.urlencode()}"
+        return f"{reverse('home')}?{params.urlencode()}"
 
     def _build_colleague_url(self, colleague_id):
         """Build colleague panel URL preserving current filters"""
@@ -241,7 +241,7 @@ class PlacementListView(ListView):
         params.pop('collega', None)
         params.pop('opdracht', None)
         params['collega'] = colleague_id
-        return f"/plaatsingen/?{params.urlencode()}"
+        return f"{reverse('home')}?{params.urlencode()}"
 
     def _get_colleague_assignments(self, colleague):
         """Get assignments for a colleague"""
