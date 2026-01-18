@@ -1,20 +1,46 @@
-.editorconfig
+# Git
 .git
 .gitattributes
 .gitignore
+.github
+
+# Python
+__pycache__
+*.py[cod]
+*.egg-info
+.venv
+.cache
+.ruff_cache
+
+# Testing
+.pytest_cache
+.coverage
+
+# Environment
+.env
+.env.*
+
+# IDE / OS
+.vscode
+.editorconfig
+.DS_Store
+
+# Project config (not needed in runtime)
+.claude
 .pre-commit-config.yaml
 .python-version
-.ruff_cache
-.venv
-.vscode
-db.sqlite3
 docker-compose.yml
-justfile
-README.md
-LICENSE
-CLAUDE.md
 Dockerfile
-.bash_history
-.python_history
+justfile
+
+# Documentation
+README.md
+CHANGES.md
+LICENSE
+
+# Development
+db.sqlite3
 node_modules
 staticfiles
+.bash_history
+.python_history
