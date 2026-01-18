@@ -5,7 +5,7 @@
       "Bash(uv sync:*)",
       "Bash(just:*)",
       "Bash(DJANGO_SETTINGS_MODULE=config.settings.local uv run pytest:*)",
-      "WebFetch(domain:github.com)",
+      "WebFetch(domain:github.com)"
     ]
   },
   "hooks": {
