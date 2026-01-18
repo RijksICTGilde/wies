@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 - fix bug with label filters returning wrong answers
 - Change ordering of filters: ministry, client, skill, labels alphabetically, period
+- Increase side panel width
 
 ## 2026-01-16
 - 127: move placement filter in page, with chips
