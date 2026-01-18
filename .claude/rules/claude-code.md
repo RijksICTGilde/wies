@@ -5,12 +5,12 @@ This project uses Claude Code with custom configuration.
 ## Directory Structure
 ```
 .claude/
+├── CLAUDE.md           # Project instructions and context
 ├── settings.json       # Shared team settings (hooks, permissions)
 ├── settings.local.json # Personal settings (gitignored)
 ├── rules/              # Auto-loaded context (always active)
 ├── skills/             # On-demand knowledge (Claude-invoked)
-├── agents/             # Specialized agents
-└── commands/           # User-invoked slash commands
+└── agents/             # Specialized agents
 ```
 
 ## Rules vs Skills

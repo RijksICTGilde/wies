@@ -121,6 +121,7 @@ This project has configuration for [Claude Code](https://claude.ai/code) in `.cl
 
 ```
 .claude/
+├── CLAUDE.md    # Project instructions and context
 ├── rules/       # Code style, testing, security guidelines
 ├── skills/      # Domain knowledge, Django patterns, UI components
 └── agents/      # Specialized agents for UI development

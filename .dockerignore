@@ -12,7 +12,7 @@ docker-compose.yml
 justfile
 README.md
 LICENSE
-CLAUDE.md
+.claude
 Dockerfile
 .bash_history
 .python_history
