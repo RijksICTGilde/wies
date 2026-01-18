@@ -18,7 +18,8 @@ class MinistryAdmin(admin.ModelAdmin):
     pass
 
 class LabelCategoryAdmin(admin.ModelAdmin):
-    pass
+    list_display = ['name', 'color', 'display_order']
+    ordering = ['display_order', 'name']
 
 class LabelAdmin(admin.ModelAdmin):
     pass

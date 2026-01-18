@@ -17,25 +17,9 @@ SOURCE_CHOICES = {
 
 
 DEFAULT_LABELS = {
-    'Merk': {
-        'color': "#DCE3EA",
-        'labels': {
-            'Rijksconsultants',
-            'I-Interim Rijk',
-            'Rijks ICT Gilde',
-            'Rijks I-Traineeship',
-            'Innoveren met Impact',
-            'RADIO',
-            'Leer en ontwikkel campus',
-            'Intercoach',
-            'Mindful Rijk',
-            'Gateway review',
-            'Delta review',
-            'Mindful Rijk',
-        }
-    },
     'Expertise': {
         'color': "#B3D7EE",
+        'display_order': 10,
         'labels': {
             'Strategie, beleid, governance en compliance',
             'Architectuur en technologie',
@@ -52,8 +36,9 @@ DEFAULT_LABELS = {
             'Kennis- en innovatiemanagement',
         }
     },
-    "Thema": {
+    'Thema': {
         'color': "#FFE9B8",
+        'display_order': 20,
         'labels': {
             'Digitale weerbaarheid',
             'Artificiële intelligentie',
@@ -61,13 +46,46 @@ DEFAULT_LABELS = {
             'Ambtelijk en digitaal vakmanschap',
             'Innovatieve en lerende overheid'
         }
-    }
+    },
+    'Merk': {
+        'color': "#DCE3EA",
+        'display_order': 30,
+        'labels': {
+            'Rijksconsultants',
+            'I-Interim Rijk',
+            'Rijks ICT Gilde',
+            'Rijks I-Traineeship',
+            'Innoveren met Impact',
+            'RADIO',
+            'Leer en ontwikkel campus',
+            'Intercoach',
+            'Mindful Rijk',
+            'Gateway review',
+            'Delta review',
+        }
+    },
 }
+
+
+def get_next_display_order():
+    """Calculate next display_order: highest value + 10, rounded to nearest 10."""
+    max_order = LabelCategory.objects.aggregate(max=models.Max('display_order'))['max'] or 0
+    return ((max_order // 10) + 1) * 10
 
 
 class LabelCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
     color = models.CharField(max_length=7)  # Hex color like #FF5733
+    display_order = models.PositiveIntegerField(
+        default=get_next_display_order,
+        verbose_name='Weergavevolgorde',
+        help_text='Lagere waarden verschijnen eerst in filters'
+    )
+
+    class Meta:
+        ordering = ['display_order', Lower('name')]
+        verbose_name = 'Label categorie'
+        verbose_name_plural = 'Label categorieën'
 
     def __str__(self):
         return self.name

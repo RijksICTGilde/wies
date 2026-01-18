@@ -22,7 +22,8 @@ class Command(BaseCommand):
             for category_name, category_vals in DEFAULT_LABELS.items():
                 category = LabelCategory.objects.create(
                     name=category_name,
-                    color=category_vals['color']
+                    color=category_vals['color'],
+                    display_order=category_vals.get('display_order', 100)
                 )
                 for label_name in category_vals['labels']:
                     Label.objects.create(name=label_name, category=category)

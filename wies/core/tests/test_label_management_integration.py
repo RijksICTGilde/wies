@@ -54,7 +54,7 @@ class LabelManagementIntegrationTest(TestCase):
         # Step 1: Create a label category
         response = self.client.post(
             reverse('label-category-create'),
-            {'name': 'Test Category', 'color': '#F9DFDD'},
+            {'name': 'Test Category', 'color': '#F9DFDD', 'display_order': 10},
         )
         self.assertEqual(response.status_code, 200)
 

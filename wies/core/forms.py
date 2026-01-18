@@ -7,7 +7,7 @@ from django.forms.utils import ErrorList
 from django.template import engines
 from django.core.exceptions import ValidationError
 
-from .models import User, Label, LabelCategory
+from .models import User, Label, LabelCategory, get_next_display_order
 
 logger = logging.getLogger(__name__)
 
@@ -88,10 +88,22 @@ class LabelCategoryForm(RvoFormMixin, forms.ModelForm):
         ('#C4DBB7', 'Groen'),
         ('#F9DFDD', 'Rood'),
     ], widget=forms.RadioSelect)
+    display_order = forms.IntegerField(
+        label='Volgorde',
+        min_value=0,
+        required=True,
+        help_text='Lagere waarden verschijnen eerst',
+        widget=forms.TextInput(attrs={'type': 'number', 'min': '0'})
+    )
 
     class Meta:
         model = LabelCategory
-        fields = ['name', 'color']
+        fields = ['name', 'color', 'display_order']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if not self.instance.pk:  # only for new category
+            self.fields['display_order'].initial = get_next_display_order()
 
 
 class LabelForm(RvoFormMixin, forms.ModelForm):
