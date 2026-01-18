@@ -1,5 +1,5 @@
 from django.test import TestCase, Client, override_settings
-from django.conf import settings
+from django.urls import reverse
 
 from wies.core.models import User
 
@@ -48,7 +48,7 @@ class AccessControlTest(TestCase):
         response = self.client.get('/plaatsingen/', follow=False)
 
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith(settings.LOGIN_URL))
+        self.assertTrue(response.url.startswith(reverse('login')))
 
     def test_admin_views_require_authentication(self):
         """Test that admin views require authentication"""
