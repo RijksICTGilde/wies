@@ -63,6 +63,7 @@ wies/
 ```bash
 just setup          # Set up fresh environment
 just up             # Start application
+just down           # Stop containers
 just test           # Run tests
 just manage [...]   # Django manage.py commands
 ```

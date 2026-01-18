@@ -14,6 +14,7 @@ Language: Dutch UI, English code.
 ## Commands
 - `just setup` - Fresh environment
 - `just up` - Start containers
+- `just down` - Stop containers
 - `just test` - Run tests
 - `uv run ruff check --fix` - Lint and fix
 
