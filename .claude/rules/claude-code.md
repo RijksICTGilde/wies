@@ -22,6 +22,7 @@ This project uses Claude Code with custom configuration.
 - `wies-domain` - Project domain knowledge (plaatsingen, opdrachten, roles)
 - `django` - Django development patterns
 - `model-workflow` - Model change checklist
+- `planning-workflow` - Multi-agent planning for complex tasks
 
 ## Hooks
 Post-edit hook reminds about `dummy_data.json` when `models.py` is modified.
