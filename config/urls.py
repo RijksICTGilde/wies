@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import RedirectView
@@ -28,6 +29,7 @@ from wies.core.views import assignment_edit_attribute
 
 
 urlpatterns = [
+    path('favicon.ico', RedirectView.as_view(url=settings.STATIC_URL + 'WIES-fav.png', permanent=True)),
     path('djadmin/db/', admin_db, name='djadmin-db'),
     path('djadmin/', admin.site.urls),
     path('', RedirectView.as_view(pattern_name='placements', permanent=False), name='home'),
