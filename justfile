@@ -23,6 +23,10 @@ setup:
 up:
   docker compose up
 
+# Stop and remove containers
+down:
+  docker compose down
+
 up-jrc-m:
   docker compose run -v /Users/matthijs/jinja-roos-components:/app/jinja-roos-components --service-ports django sh -c "uv pip install -e ./jinja-roos-components && python manage.py runserver 0.0.0.0:8000"
 
