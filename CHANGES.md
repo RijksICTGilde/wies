@@ -2,6 +2,7 @@
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
+- 144 - Drop django-extensions
 
 ## 2026-01-19
 - 136: fix bug with label filters returning wrong answers
