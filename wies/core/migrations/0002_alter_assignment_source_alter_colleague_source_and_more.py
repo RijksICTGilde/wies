@@ -4,30 +4,29 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0001_initial'),
+        ("core", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='assignment',
-            name='source',
-            field=models.CharField(choices=[('otys_iir', 'OTYS IIR'), ('wies', 'Wies')], max_length=10),
+            model_name="assignment",
+            name="source",
+            field=models.CharField(choices=[("otys_iir", "OTYS IIR"), ("wies", "Wies")], max_length=10),
         ),
         migrations.AlterField(
-            model_name='colleague',
-            name='source',
-            field=models.CharField(choices=[('otys_iir', 'OTYS IIR'), ('wies', 'Wies')], max_length=10),
+            model_name="colleague",
+            name="source",
+            field=models.CharField(choices=[("otys_iir", "OTYS IIR"), ("wies", "Wies")], max_length=10),
         ),
         migrations.AlterField(
-            model_name='placement',
-            name='source',
-            field=models.CharField(choices=[('otys_iir', 'OTYS IIR'), ('wies', 'Wies')], max_length=10),
+            model_name="placement",
+            name="source",
+            field=models.CharField(choices=[("otys_iir", "OTYS IIR"), ("wies", "Wies")], max_length=10),
         ),
         migrations.AlterField(
-            model_name='service',
-            name='source',
-            field=models.CharField(choices=[('otys_iir', 'OTYS IIR'), ('wies', 'Wies')], max_length=10),
+            model_name="service",
+            name="source",
+            field=models.CharField(choices=[("otys_iir", "OTYS IIR"), ("wies", "Wies")], max_length=10),
         ),
     ]

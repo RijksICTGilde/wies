@@ -1,24 +1,23 @@
-from jinja2 import Environment
+from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.urls import reverse
-from django.middleware.csrf import get_token
-from django.utils.safestring import mark_safe
-from django.utils.http import urlencode
 from django.utils.formats import date_format
+from django.utils.safestring import mark_safe
+from jinja2 import Environment
 from jinja_roos_components import setup_components
 
 
-def datum_nl(datum, format='N Y'):
+def datum_nl(datum, fmt="N Y"):
     """Format a date using Django's localization (nl-nl)"""
     if datum is None:
         return "?"
-    return date_format(datum, format)
+    return date_format(datum, fmt)
 
 
 def get_csrf_hidden_input(request):
-        """Returns a hidden input field with CSRF token"""
-        token = get_token(request)
-        return mark_safe(f'<input type="hidden" name="csrfmiddlewaretoken" value="{token}">')
+    """Returns a hidden input field with CSRF token"""
+    token = get_token(request)
+    return mark_safe(f'<input type="hidden" name="csrfmiddlewaretoken" value="{token}">')  # noqa: S308
 
 
 def get_toggle_sort_url(request, field):
@@ -29,13 +28,13 @@ def get_toggle_sort_url(request, field):
     Preserves all other query parameters.
     """
     params = request.GET.copy()
-    current_order = params.get('order', '')
+    current_order = params.get("order", "")
 
     # Toggle: if currently ascending, switch to descending; otherwise ascending
     if current_order == field:
-        params['order'] = f'-{field}'
+        params["order"] = f"-{field}"
     else:
-        params['order'] = field
+        params["order"] = field
 
     return f"{request.path}?{params.urlencode()}"
 
@@ -45,25 +44,27 @@ def get_sort_state(request, field):
     Get the current sort state for a field.
     Returns: 'ascending', 'descending', or None
     """
-    current_order = request.GET.get('order', '')
+    current_order = request.GET.get("order", "")
     if current_order == field:
-        return 'ascending'
-    elif current_order == f'-{field}':
-        return 'descending'
+        return "ascending"
+    if current_order == f"-{field}":
+        return "descending"
     return None
 
 
 def environment(**options):
-    env = Environment(**options)
+    env = Environment(**options)  # noqa: S701 - autoescape handled by Django
     setup_components(env)
-    env.globals.update({
-        'static': static,
-        'url': reverse,
-        'get_csrf_token': get_token,
-        'get_csrf_hidden_input': get_csrf_hidden_input,
-        'get_toggle_sort_url': get_toggle_sort_url,
-        'get_sort_state': get_sort_state,
-    })
-    env.filters['datum_nl'] = datum_nl
+    env.globals.update(
+        {
+            "static": static,
+            "url": reverse,
+            "get_csrf_token": get_token,
+            "get_csrf_hidden_input": get_csrf_hidden_input,
+            "get_toggle_sort_url": get_toggle_sort_url,
+            "get_sort_state": get_sort_state,
+        }
+    )
+    env.filters["datum_nl"] = datum_nl
 
     return env

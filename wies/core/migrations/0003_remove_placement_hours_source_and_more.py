@@ -4,22 +4,21 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0002_alter_assignment_source_alter_colleague_source_and_more'),
+        ("core", "0002_alter_assignment_source_alter_colleague_source_and_more"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='placement',
-            name='hours_source',
+            model_name="placement",
+            name="hours_source",
         ),
         migrations.RemoveField(
-            model_name='placement',
-            name='specific_hours_per_week',
+            model_name="placement",
+            name="specific_hours_per_week",
         ),
         migrations.RemoveField(
-            model_name='service',
-            name='hours_per_week',
+            model_name="service",
+            name="hours_per_week",
         ),
     ]

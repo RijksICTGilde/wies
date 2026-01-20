@@ -5,17 +5,17 @@ from django.contrib.auth.backends import BaseBackend
 from .models import Colleague, User
 from .services.events import create_event
 
-
 logger = logging.getLogger(__name__)
 
 
 class AuthBackend(BaseBackend):
-
     def authenticate(self, request, username=None, email=None, extra_fields=None):
         if not username:
-            raise ValueError('username can\'t be blank!')
+            msg = "username can't be blank!"
+            raise ValueError(msg)
         if not email:
-            raise ValueError('email cannot be blank!')
+            msg = "email cannot be blank!"
+            raise ValueError(msg)
 
         if extra_fields is None:
             extra_fields = {}
@@ -25,9 +25,13 @@ class AuthBackend(BaseBackend):
         except User.DoesNotExist:
             # do not authenticate if User record does not exist
             logging.info("User not authenticated, user not known.")
-            create_event(email, 'Login.fail', {
-                "reason": "Unknown user",
-            })
+            create_event(
+                email,
+                "Login.fail",
+                {
+                    "reason": "Unknown user",
+                },
+            )
             return None
 
         # Link colleague if match on email
@@ -39,8 +43,8 @@ class AuthBackend(BaseBackend):
             pass
 
         logging.info("user successfully authenticated")
-        return user 
-    
+        return user
+
     def get_user(self, user_id):
         try:
             return User.objects.get(pk=user_id)
