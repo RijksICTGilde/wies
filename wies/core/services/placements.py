@@ -20,6 +20,12 @@ from wies.core.models import (
 from wies.core.querysets import annotate_placement_dates, filter_by_date_overlap
 
 
+def parse_date_dmy(date_str: str) -> datetime.date:
+    """Parse date string in DD-MM-YYYY format to datetime.date."""
+    day, month, year = date_str.split("-")
+    return datetime.date(int(year), int(month), int(day))
+
+
 def filter_placements_by_period(queryset, period):
     """
     Filter placement queryset by period range for overlapping periods.
@@ -126,18 +132,10 @@ def create_placements_from_csv(csv_content: str):
                     ministry = None
 
                 # parse dates into proper types
-                start_date = row["assignment_start_date"]
-                end_date = row["assignment_end_date"]
-                start_date = (
-                    datetime.datetime.strptime(start_date, "%d-%m-%Y").date()  # noqa: DTZ007
-                    if start_date
-                    else None
-                )
-                end_date = (
-                    datetime.datetime.strptime(end_date, "%d-%m-%Y").date()  # noqa: DTZ007
-                    if end_date
-                    else None
-                )
+                start_date_str = row["assignment_start_date"]
+                end_date_str = row["assignment_end_date"]
+                start_date = parse_date_dmy(start_date_str) if start_date_str else None
+                end_date = parse_date_dmy(end_date_str) if end_date_str else None
 
                 # owner update or create
                 assignment, created = Assignment.objects.get_or_create(

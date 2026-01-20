@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from datetime import date
 
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
@@ -333,8 +333,8 @@ class PlacementListView(ListView):
         if active_filters.get("periode"):
             periode_from, periode_to = active_filters["periode"].split("_")
             active_filters["periode"] = {
-                "from": datetime.strptime(periode_from, "%Y-%m-%d").date(),  # noqa: DTZ007
-                "to": datetime.strptime(periode_to, "%Y-%m-%d").date(),  # noqa: DTZ007
+                "from": date.fromisoformat(periode_from),
+                "to": date.fromisoformat(periode_to),
             }
 
         label_filter_groups = []

@@ -1,8 +1,7 @@
-import datetime
-
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Lower
+from django.utils import timezone
 
 ASSIGNMENT_STATUS = {
     "VACATURE": "VACATURE",
@@ -149,7 +148,7 @@ class Assignment(models.Model):
 
     @property
     def phase(self):
-        today_date = datetime.datetime.now(tz=datetime.UTC).date()
+        today_date = timezone.now().date()
         if None in (self.start_date, self.end_date):
             # this is undertermined
             return None

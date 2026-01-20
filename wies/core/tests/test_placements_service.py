@@ -1,9 +1,35 @@
+import datetime
 from pathlib import Path
 
+import pytest
 from django.test import TestCase, override_settings
 
 from wies.core.models import Assignment, Colleague, Ministry, Placement, Service, Skill
-from wies.core.services.placements import create_placements_from_csv
+from wies.core.services.placements import create_placements_from_csv, parse_date_dmy
+
+
+class ParseDateDmyTest(TestCase):
+    """Tests for parse_date_dmy helper function"""
+
+    def test_valid_date(self):
+        """Test parsing a valid DD-MM-YYYY date"""
+        result = parse_date_dmy("15-03-2025")
+        assert result == datetime.date(2025, 3, 15)
+
+    def test_single_digit_day_month(self):
+        """Test parsing date with single digit day and month"""
+        result = parse_date_dmy("1-2-2025")
+        assert result == datetime.date(2025, 2, 1)
+
+    def test_invalid_format_raises_error(self):
+        """Test that invalid format raises ValueError"""
+        with pytest.raises(ValueError, match=r"not enough values to unpack"):
+            parse_date_dmy("15-03")  # Missing year
+
+    def test_invalid_date_raises_error(self):
+        """Test that invalid date raises ValueError"""
+        with pytest.raises(ValueError, match=r"day is out of range"):
+            parse_date_dmy("31-02-2025")  # February 31st doesn't exist
 
 
 @override_settings(
@@ -38,9 +64,14 @@ Test Assignment,Description,Owner Name,owner@test.com,Test Org,Ministerie van Bi
         result = create_placements_from_csv(csv_content)
         assert not result["success"]
         assert len(result["errors"]) > 0
-        # Verify the error message mentions the date format issue
+        # Verify the error message mentions a date-related issue
         error_message = result["errors"][0].lower()
-        assert "time data" in error_message or "format" in error_message or "match" in error_message
+        assert (
+            "time data" in error_message
+            or "format" in error_message
+            or "match" in error_message
+            or "day is out of range" in error_message
+        )
 
     # Core Validation Tests
     def test_missing_required_columns(self):

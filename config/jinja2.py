@@ -2,7 +2,7 @@ from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.urls import reverse
 from django.utils.formats import date_format
-from django.utils.safestring import mark_safe
+from django.utils.html import format_html
 from jinja2 import Environment
 from jinja_roos_components import setup_components
 
@@ -17,7 +17,7 @@ def datum_nl(datum, fmt="N Y"):
 def get_csrf_hidden_input(request):
     """Returns a hidden input field with CSRF token"""
     token = get_token(request)
-    return mark_safe(f'<input type="hidden" name="csrfmiddlewaretoken" value="{token}">')  # noqa: S308
+    return format_html('<input type="hidden" name="csrfmiddlewaretoken" value="{}">', token)
 
 
 def get_toggle_sort_url(request, field):
