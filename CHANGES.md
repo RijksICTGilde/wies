@@ -3,6 +3,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 - 143: Bump Django from 5.2.9 to 6.0.1
+- 144 - Drop django-extensions
 
 ## 2026-01-19
 - 136: fix bug with label filters returning wrong answers
