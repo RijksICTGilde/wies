@@ -1,7 +1,7 @@
 <div id="filter-and-table-container">
-  <!-- Filter Sidebar and Main Content Wrapper -->
+  {# Filter Sidebar and Main Content Wrapper #}
   <div class="filter-layout-wrapper">
-    <!-- Filter Sidebar -->
+    {# Filter Sidebar #}
     <aside class="filter-sidebar" id="filterSidebar">
       <form class="rvo-form filter-sidebar-form"
             hx-get="{{ url('placements') }}"
@@ -9,11 +9,11 @@
             hx-push-url="true"
             hx-trigger="change,input delay:500ms from:[data-filter-input]"
             hx-include="[data-filter-input]">
-        <!-- Sidebar Header -->
+        {# Sidebar Header #}
         <div class="filter-sidebar-header">
           <c-h2 noMargins>Filters</c-h2>
         </div>
-        <!-- Filter Fields -->
+        {# Filter Fields #}
         <div class="filter-sidebar-body">
           <div class="rvo-layout-column rvo-layout-gap--md">
             {% for filter_group in filter_groups %}
@@ -52,7 +52,7 @@
                   </div>
                 </div>
                 {% if filter_group.require_both %}
-                  <!-- Hidden input managed by JS - only submitted when both dates are filled -->
+                  {# Hidden input managed by JS - only submitted when both dates are filled #}
                   <input type="hidden"
                          id="filter-{{ filter_group.name }}-combined"
                          name="{{ filter_group.name }}"
@@ -70,15 +70,15 @@
         </div>
       </form>
     </aside>
-    <!-- Main Content Area -->
+    {# Main Content Area #}
     <div class="filter-main-content">
       <c-h1 noMargins class="rvo-padding-block-start--md">Wie zit waar?</c-h1>
-      <!-- Filter Chips and Search Bar Container -->
+      {# Filter Chips and Search Bar Container #}
       <div class="filter-chips-and-search-container">
         <p>
           <b>{{ page_obj.paginator.count }}</b> resultaten
         </p>
-        <!-- Active Filter Chips -->
+        {# Active Filter Chips #}
         <div class="active-filters-chips">
           {# Search filter chip #}
           {% if search_filter %}
@@ -154,7 +154,7 @@
             {% endif %}
           {% endfor %}
         </div>
-        <!-- Search Field -->
+        {# Search Field #}
         <form class="rvo-form filter-search-form"
               hx-get="{{ url('placements') }}"
               hx-target="#filter-and-table-container"
@@ -169,7 +169,7 @@
           </div>
         </form>
       </div>
-      <!-- Placement Table -->
+      {# Placement Table #}
       <div class="rvo-table--responsive" id="placement_table">
         <table class="rvo-table">
           <thead class="rvo-table-head">
