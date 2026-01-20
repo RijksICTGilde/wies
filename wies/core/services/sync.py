@@ -1,7 +1,7 @@
 import logging
-import os
 import time
 
+from django.conf import settings
 from django.db import transaction
 
 from wies.core.models import DEFAULT_LABELS, Assignment, Colleague, Label, LabelCategory, Placement, Service
@@ -20,10 +20,7 @@ def sync_all_otys_iir_records():
     Vacancy title format: "Assignment Name - Service Description"
     """
 
-    otys_api_key = os.environ["OTYS_API_KEY"]
-    otys_url = os.environ["OTYS_URL"]
-
-    with OTYSAPI(otys_api_key) as otys_api:
+    with OTYSAPI(settings.OTYS_API_KEY) as otys_api:
         # Get candidates and vacancies
         logger.info("Fetching candidates from OTYS...")
         otys_candidates = otys_api.get_candidate_list()["listOutput"]
@@ -76,7 +73,7 @@ def sync_all_otys_iir_records():
             # Prepare colleague data
             colleague_data = {
                 "name": name,
-                "source_url": f"{otys_url}/us/modular.html#/candidates/{uid}",
+                "source_url": f"{settings.OTYS_URL}/us/modular.html#/candidates/{uid}",
                 "email": email or "",
             }
 
@@ -110,7 +107,7 @@ def sync_all_otys_iir_records():
             assignment_data = {
                 "name": assignment_name.strip(),
                 "status": "INGEVULD",
-                "source_url": f"{otys_url}/us/modular.html#/vacancies/{vacancy_uid}",
+                "source_url": f"{settings.OTYS_URL}/us/modular.html#/vacancies/{vacancy_uid}",
             }
 
             assignment, assignment_created = Assignment.objects.update_or_create(
@@ -125,7 +122,7 @@ def sync_all_otys_iir_records():
                 "assignment": assignment,
                 "description": service_description.strip(),
                 "period_source": "ASSIGNMENT",  # Use assignment dates
-                "source_url": f"{otys_url}/us/modular.html#/vacancies/{vacancy_uid}",
+                "source_url": f"{settings.OTYS_URL}/us/modular.html#/vacancies/{vacancy_uid}",
             }
 
             service, service_created = Service.objects.update_or_create(
@@ -165,7 +162,7 @@ def sync_all_otys_iir_records():
                     "service": service,
                     "period_source": "SERVICE",
                     "hours_source": "SERVICE",
-                    "source_url": f"{otys_url}/us/modular.html#/procedures/{procedure_uid}",
+                    "source_url": f"{settings.OTYS_URL}/us/modular.html#/procedures/{procedure_uid}",
                 }
 
                 _placement, placement_created = Placement.objects.update_or_create(

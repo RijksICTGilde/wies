@@ -155,3 +155,7 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 AUTH_USER_MODEL = "core.User"
+
+# OTYS API settings
+OTYS_API_KEY = os.environ.get("OTYS_API_KEY", "")
+OTYS_URL = os.environ.get("OTYS_URL", "")

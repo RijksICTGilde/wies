@@ -204,7 +204,9 @@ New Assignment,Description,,,Test Org,,01-01-2025,31-12-2025,Django,Existing Col
         mock_api_instance.get_vacancy_list.return_value = {"listOutput": []}
 
         # Run sync
-        with patch.dict("os.environ", {"OTYS_API_KEY": "test_key", "OTYS_URL": "https://test.otys.com"}):
+        with patch("wies.core.services.sync.settings") as mock_settings:
+            mock_settings.OTYS_API_KEY = "test_key"
+            mock_settings.OTYS_URL = "https://test.otys.com"
             result = sync_all_otys_iir_records()
 
         assert result["candidates_synced"] == 2
@@ -255,7 +257,9 @@ New Assignment,Description,,,Test Org,,01-01-2025,31-12-2025,Django,Existing Col
         mock_api_instance.get_vacancy_list.return_value = {"listOutput": []}
 
         # Run sync again
-        with patch.dict("os.environ", {"OTYS_API_KEY": "test_key", "OTYS_URL": "https://test.otys.com"}):
+        with patch("wies.core.services.sync.settings") as mock_settings:
+            mock_settings.OTYS_API_KEY = "test_key"
+            mock_settings.OTYS_URL = "https://test.otys.com"
             result = sync_all_otys_iir_records()
 
         assert result["candidates_synced"] == 1
