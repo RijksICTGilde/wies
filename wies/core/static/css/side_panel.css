@@ -4,9 +4,7 @@ dialog#side_panel {
   inset: 0 0 0 auto !important;
   height: 100vh !important;
   min-height: 100vh !important;
-  width: 600px !important;
-  max-width: 700px !important;
-  min-width: 500px !important;
+  width: 900px !important;
   margin: 0 !important;
   border: none !important;
   padding: 0 !important;

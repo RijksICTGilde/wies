@@ -189,7 +189,7 @@ class PlacementListView(ListView):
         # Label filter support multiselect
         for l in self.request.GET.getlist('labels'):
             if l != '':
-                 qs = qs.filter(colleague__labels__id__contains=l)
+                 qs = qs.filter(colleague__labels__id=int(l))
 
         # Apply period filtering for overlapping periods
         periode = self.request.GET.get('periode')
@@ -413,13 +413,12 @@ class PlacementListView(ListView):
         # TODO: this can be become an object to help defining correctly and performing extra preprocessing on context
         # introduce value_key, label_key:
         context['filter_groups'] = [
-            *label_filter_groups,
             {
                 'type': 'select',
-                'name': 'rol',
-                'label': 'Rollen',
-                'options': skill_options,
-                'value': skill_value,
+                'name': 'ministerie',
+                'label': 'Ministerie',
+                'options': ministry_options,
+                'value': ministry_value,
             },
             {
                 'type': 'select',
@@ -430,11 +429,12 @@ class PlacementListView(ListView):
             },
             {
                 'type': 'select',
-                'name': 'ministerie',
-                'label': 'Ministerie',
-                'options': ministry_options,
-                'value': ministry_value,
+                'name': 'rol',
+                'label': 'Rollen',
+                'options': skill_options,
+                'value': skill_value,
             },
+            *label_filter_groups,
             {
                 'type': 'date_range',
                 'name': 'periode',
