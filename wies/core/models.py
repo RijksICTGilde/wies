@@ -120,7 +120,7 @@ class Colleague(models.Model):
     labels = models.ManyToManyField("Label", related_name="colleagues", blank=True)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
-    source_url = models.URLField(null=True, blank=True)  # noqa: DJ001
+    source_url = models.URLField(blank=True)
     # placements via reversed relation
 
     def __str__(self):
@@ -141,7 +141,7 @@ class Assignment(models.Model):
     extra_info = models.TextField(blank=True, max_length=5000)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
-    source_url = models.URLField(null=True, blank=True)  # noqa: DJ001
+    source_url = models.URLField(blank=True)
 
     def __str__(self):
         return self.name
@@ -173,7 +173,7 @@ class Placement(models.Model):
     specific_end_date = models.DateField(null=True, blank=True)  # do not use, use properties below
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
-    source_url = models.URLField(null=True, blank=True)  # only for non wies  # noqa: DJ001
+    source_url = models.URLField(blank=True)  # only for non wies
 
     def __str__(self):
         return f"{self.colleague.name} - {self.service.description}"
@@ -213,7 +213,7 @@ class Service(models.Model):
     # placements via reverse relation
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
-    source_url = models.URLField(null=True, blank=True)  # only for non wies  # noqa: DJ001
+    source_url = models.URLField(blank=True)  # only for non wies
 
     def __str__(self):
         return f"{self.description}"
