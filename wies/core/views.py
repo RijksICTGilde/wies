@@ -302,6 +302,7 @@ class PlacementListView(ListView):
             "client_url": self._build_client_url(assignment.organization),
             "ministry_url": self._build_ministry_url(assignment.ministry.id) if assignment.ministry else None,
             "user_can_edit": user_can_edit,
+            "owner_url": self._build_colleague_url(assignment.owner.id) if assignment.owner else '',
         }
 
     def get_context_data(self, **kwargs):

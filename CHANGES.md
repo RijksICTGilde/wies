@@ -10,6 +10,7 @@ This files lists the changes during the lifetime of this project.
 - 162: Add .editor.config
 - 162: Add Github action for labeling pre-commit PRs with label dependencies
 - 162: Change formatting according to styling rules
+- ?: Fix that BM link no longer resets active filters
 
 ## 2026-01-19
 
