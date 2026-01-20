@@ -31,14 +31,9 @@
     {% block header %}
       {% include "parts/header.html" %}
     {% endblock header %}
-    <div class="rvo-layout-column rvo-layout-gap--3x;">
-      <div class="rvo-layout-column rvo-layout-gap--xl">
-        {% block content %}
-        {% endblock content %}
-      </div>
+    <div class="rvo-layout-column rvo-layout-gap--xl">
+      {% block content %}
+      {% endblock content %}
     </div>
-    {% block footer %}
-      {# evt. include van je footer #}
-    {% endblock footer %}
   </body>
 </html>
