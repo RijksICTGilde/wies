@@ -32,9 +32,17 @@ jobs:
         run: uv sync --frozen
 
       - name: Run tests with coverage
-        run: uv run pytest
+        run: uv run pytest --cov-report=html
 
       - name: Coverage summary
         run: |
           echo "## Test Coverage" >> $GITHUB_STEP_SUMMARY
           uv run coverage report --format=markdown >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📥 Download the HTML report artifact for line-by-line coverage details." >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov/
