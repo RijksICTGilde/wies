@@ -1,26 +1,31 @@
 # Changes
+
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
+
 - 143: Bump Django from 5.2.9 to 6.0.1
 - 144 - Drop django-extensions
 
 ## 2026-01-19
+
 - 136: fix bug with label filters returning wrong answers
 - 136: (migration) Change ordering of filters: ministry, client, skill, labels alphabetically, period
 - 136: Increase side panel width
 
 ## 2026-01-16
+
 - 127: move placement filter in page, with chips
 - 127: remove banner, remove jump in sidepanel, wider content
 - 132: Update urls & dates from english to dutch
-- 135: Styling menu items, adjust Layout, assignment not clickable, back button in side panel 
+- 135: Styling menu items, adjust Layout, assignment not clickable, back button in side panel
 - 133: Add 'Business Manager', change 'Beschrijving' (former 'Extra info') on assignment panel
 - 133: (migration) Change assignment.extra_info to max 5000 chars
 - 133: Add possibility to edit name and description of assignment by business manager and consultants working on assignment
 - 133: Fix ministry and client link from side panel triggering filter
 
 ## 2026-01-14
+
 - (backwards incompatible) clean slate - start over with only essential 4W functionality
 - Change login to only pass when user is in database
 - Remove login requirement from logout endpoint
@@ -31,18 +36,18 @@ This files lists the changes during the lifetime of this project.
 - Users page with filtering, search, create, edit and delete (only admins)
 - Add tests for authentication and user views
 - Introduce forms.py/RVOMixin to enable style the form with roos
-- Add /users/import csv upload for sourcing starting userlist 
+- Add /users/import csv upload for sourcing starting userlist
 - Upgrade to jrc 0.3
 - Remove actions menu on assignment
 - Introduce "wies" as extra source on records
 - Developer user during setup now gets all roles
-- Add /placements/import csv upload for sourcing RIG placement list 
+- Add /placements/import csv upload for sourcing RIG placement list
 - Upgrade to django 5.2.9 for security patch
 - (migration) Remove hours_per_week on service and placement
 - (migration) Make email unique in db
 - Fix that RVOMixin uses proper jinja environment (enabling components and other functions)
 - 114: Implement right-side panel with colleague and assignment details
-- 114: Add support for combining panel & filter URLs 
+- 114: Add support for combining panel & filter URLs
 - 114: Remove legacy detail pages
 - 114: Add filtering for clients and ministries from panel
 - 113: replace brand table with label system for more flexibility
@@ -55,13 +60,14 @@ This files lists the changes during the lifetime of this project.
 - 123: Side menu instellingen pagina fully to left
 - 123: Styling navigation
 - 123: Delete functionality to modal
-- 123: Update behaviour gebruikers and labels table rows 
+- 123: Update behaviour gebruikers and labels table rows
 - 123: Update showModal behaviour for closing
 - 123: Change layout user modal
 - 123: Aligned modals
 - bump authlib due to path vulnerability
 
 ## 2025-10-09
+
 - add period filter to placement page
 - add end date of current placement to colleague list
 - add availability sorting to colleague list
@@ -89,12 +95,14 @@ This files lists the changes during the lifetime of this project.
 - introduce "VACATURE" entries in dummy data
 
 ## 2025-09-19
+
 - update dependencies to latest, including django security release
 - fix that a cancel action on create/edit/remove takes user back to page from which action was perfomed
 - add breadcrumbs on client detail page
 - add underline active state to main tabs
 
 ## 2025-08-21
+
 - add user profile page with RVO tab navigation (Overzicht, Opdrachten, CV, Instellingen)
 - link user accounts to colleague profiles via email matching
 - add auto-create colleague on login
@@ -113,6 +121,7 @@ This files lists the changes during the lifetime of this project.
 - add link to relevant colleague page for matching
 
 ## 2025-08-18
+
 - add dashboard page as landing page with summary cards
 - add summary cards to dashboard, clients and assignment detail pages
 - add clickable table rows with hover states to all dashboard tables
@@ -128,6 +137,7 @@ This files lists the changes during the lifetime of this project.
 - add syncing between OTYS IIR and wies colleagues
 
 ## demo-2025-08-11
+
 - add gunicorn for production server
 - add whitenoise for static file serving
 - change that you only need container start for production
@@ -141,4 +151,5 @@ This files lists the changes during the lifetime of this project.
 - add syncing between exact and wies colleagues
 
 ## demo-2025-08-04
+
 ...
