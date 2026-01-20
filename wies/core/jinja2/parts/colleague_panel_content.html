@@ -1,59 +1,58 @@
 <div class="rvo-layout-column rvo-layout-gap--lg">
-
-  <section>    
+  <section>
     <div class="rvo-card rvo-card--with-image rvo-card--with-image-sm rvo-card--outline rvo-card--padding--sm">
       <div class="rvo-card__image-container">
-        <img alt="Profielfoto van {{ colleague.name }}" 
-             class="rvo-card__image rvo-card-img--sm" 
+        <img alt="Profielfoto van {{ colleague.name }}"
+             class="rvo-card__image rvo-card-img--sm"
              src="{{ static('img/placeholder-avatar.svg') }}" />
       </div>
       <div class="rvo-card__content">
         <div class="rvo-layout-column rvo-layout-gap--sm">
-<!-- To do: switch to components c-h3 -->
+          <!-- To do: switch to components c-h3 -->
           <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin rvo-heading--gap-xs">{{ colleague.name }}</h3>
           <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
-            <span class="utrecht-icon rvo-icon rvo-icon-mail rvo-icon--md rvo-icon--hemelblauw" role="img" aria-label="E-mail"></span>
+            <span class="utrecht-icon rvo-icon rvo-icon-mail rvo-icon--md rvo-icon--hemelblauw"
+                  role="img"
+                  aria-label="E-mail"></span>
             <a href="mailto:{{ colleague.email }}" class="rvo-link">{{ colleague.email }}</a>
           </div>
         </div>
       </div>
     </div>
   </section>
-
   {% if colleague.user and colleague.user.labels.all()|length > 0 %}
     {% set labels = colleague.user.labels.all() %}
-    {% else %}
+  {% else %}
     {% set labels = colleague.labels.all() %}
   {% endif %}
-
   {% if labels %}
     <div class="rvo-layout-row rvo-layout-gap--sm" style="flex-wrap: wrap;">
       {% for label in labels %}
-        <span class="rvo-badge" style="background-color: {{ label.category.color }}; padding: 0.25rem 0.5rem; border-radius: 3px;">
-          {{ label.name }}
-        </span>
+        <span class="rvo-badge"
+              style="background-color: {{ label.category.color }};
+                     padding: 0.25rem 0.5rem;
+                     border-radius: 3px">{{ label.name }}</span>
       {% endfor %}
     </div>
   {% else %}
     <span class="rvo-text--italic">Geen labels toegewezen</span>
   {% endif %}
-  
   <section>
     <h2>Opdrachten</h2>
-    
     {% if panel_data.assignment_list %}
       <div class="rvo-layout-column rvo-layout-gap--sm">
         {% for assignment in panel_data.assignment_list %}
-          <a href="{{ assignment.assignment_url }}" class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row" style="text-decoration: none; color: inherit;">
+          <a href="{{ assignment.assignment_url }}"
+             class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row"
+             style="text-decoration: none;
+                    color: inherit">
             <div class="rvo-card__content">
-              <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin">
-                {{ assignment.name }}
-              </h3>
+              <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin">{{ assignment.name }}</h3>
               <div class="rvo-text">{{ assignment.organization }}</div>
               {% if assignment.skill %}
-              <div class="assignment-skill-tag">
-                <span class="rvo-tag rvo-tag--default">{{ assignment.skill }}</span>
-              </div>
+                <div class="assignment-skill-tag">
+                  <span class="rvo-tag rvo-tag--default">{{ assignment.skill }}</span>
+                </div>
               {% endif %}
             </div>
           </a>
@@ -62,11 +61,12 @@
     {% else %}
       <div class="rvo-card rvo-card--outline rvo-card--padding--md">
         <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center">
-          <span class="utrecht-icon rvo-icon rvo-icon-info rvo-icon--lg rvo-icon--rvo-grijs-700" role="img" aria-label="Informatie"></span>
+          <span class="utrecht-icon rvo-icon rvo-icon-info rvo-icon--lg rvo-icon--rvo-grijs-700"
+                role="img"
+                aria-label="Informatie"></span>
           <span class="rvo-text--italic rvo-text--subtle">Geen opdrachten gevonden voor deze collega.</span>
         </div>
       </div>
     {% endif %}
   </section>
-
 </div>

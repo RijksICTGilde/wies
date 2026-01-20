@@ -120,3 +120,7 @@ exclude_lines = [
 profile = "jinja"
 indent = 2
 max_line_length = 120
+ignore = "H006,H021,H030,H031"
+# H006: img width/height (fix later)
+# H021: inline styles (fix later)
+# H030,H031: meta description/keywords not needed for internal tool

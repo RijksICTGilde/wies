@@ -1,76 +1,59 @@
-
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block content %}
-<main class="rvo-max-width-layout rvo-max-width-layout--md">
-  <div class="rvo-layout-column rvo-layout-gap--md">
-
-  <c-h1>Plaatsingen RIG importeren</c-h1>
-
-  <form method="post" action="{{ url('placement-import-csv') }}" enctype="multipart/form-data">
-    {{ get_csrf_hidden_input(request) }}
-
-    <c-alert>Upload een CSV-bestand met plaatsingsgegevens. <c-link href="{{ static('example_placement_import.csv') }}">Download het voorbeeldbestand</c-link> om het juiste formaat te zien.</c-alert>
-    <br>
-
-    <!-- TODO JRC: required attribute puts red border around field, which is poor UX on first load. this seems to be different for the react component -->
-    <c-file-input-field accept=".csv" label="CSV-bestand" name="csv_file"/>
-    <br>
-    {% if result and result.success %}
-      <c-alert kind="success">Import geslaagd!</c-alert>
-
-      <!-- Success details -->
-      <div class="rvo-layout-column rvo-layout-gap--sm">
-
-        <ul class="rvo-list">
-          <li class="rvo-text">
-            <strong>{{ result.placements_created }}</strong> plaatsingen geïmporteerd
-          </li>
-          <li class="rvo-text">
-            <strong>{{ result.colleagues_created }}</strong> nieuwe collega's aangemaakt
-          </li>
-          <li class="rvo-text">
-            <strong>{{ result.assignments_created }}</strong> nieuwe opdrachten aangemaakt
-          </li>
-          <li class="rvo-text">
-            <strong>{{ result.services_created }}</strong> nieuwe diensten aangemaakt
-          </li>
-          <li class="rvo-text">
-            <strong>{{ result.skills_created }}</strong> nieuwe rollen aangemaakt
-          </li>
-        </ul>
-        
-      </div>
-
-      <!-- Warnings if any -->
-      {% if result.errors and result.errors|length > 0 %}
-        <c-alert kind="warning">Waarschuwingen:</c-alert>
-        <ul class="rvo-list">
-          {% for error in result.errors %}
-            <li>{{ error }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-
-    {% elif result %}
-      <!-- Error alert -->
-      <c-alert kind="error">Import mislukt</c-alert>
-
-      <!-- Error details -->
-      {% if result.errors and result.errors|length > 0 %}
-        <p class="rvo-text">De volgende fouten zijn gevonden:</p>
-        <ul class="rvo-list">
-          {% for error in result.errors %}
-            <li>{{ error }}</li>
-          {% endfor %}
-        </ul>
-      {% endif %}
-    {% endif %}
-
-    <c-button type="submit">Importeren</c-button>
-  </form>
-
-  </div>
-</main>
-
-{% endblock %}
+  <main class="rvo-max-width-layout rvo-max-width-layout--md">
+    <div class="rvo-layout-column rvo-layout-gap--md">
+      <c-h1>Plaatsingen RIG importeren</c-h1>
+      <form method="post"
+            action="{{ url('placement-import-csv') }}"
+            enctype="multipart/form-data">
+        {{ get_csrf_hidden_input(request) }}
+        <c-alert>Upload een CSV-bestand met plaatsingsgegevens. <c-link href="{{ static('example_placement_import.csv') }}">Download het voorbeeldbestand</c-link> om het juiste formaat te zien.</c-alert>
+        <br>
+        <!-- TODO JRC: required attribute puts red border around field, which is poor UX on first load. this seems to be different for the react component -->
+        <c-file-input-field accept=".csv" label="CSV-bestand" name="csv_file" />
+        <br>
+        {% if result and result.success %}
+          <c-alert kind="success">Import geslaagd!</c-alert>
+          <!-- Success details -->
+          <div class="rvo-layout-column rvo-layout-gap--sm">
+            <ul class="rvo-list">
+              <li class="rvo-text">
+                <strong>{{ result.placements_created }}</strong> plaatsingen geïmporteerd
+              </li>
+              <li class="rvo-text">
+                <strong>{{ result.colleagues_created }}</strong> nieuwe collega's aangemaakt
+              </li>
+              <li class="rvo-text">
+                <strong>{{ result.assignments_created }}</strong> nieuwe opdrachten aangemaakt
+              </li>
+              <li class="rvo-text">
+                <strong>{{ result.services_created }}</strong> nieuwe diensten aangemaakt
+              </li>
+              <li class="rvo-text">
+                <strong>{{ result.skills_created }}</strong> nieuwe rollen aangemaakt
+              </li>
+            </ul>
+          </div>
+          <!-- Warnings if any -->
+          {% if result.errors and result.errors|length > 0 %}
+            <c-alert kind="warning">Waarschuwingen:</c-alert>
+            <ul class="rvo-list">
+              {% for error in result.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+        {% elif result %}
+          <!-- Error alert -->
+          <c-alert kind="error">Import mislukt</c-alert>
+          <!-- Error details -->
+          {% if result.errors and result.errors|length > 0 %}
+            <p class="rvo-text">De volgende fouten zijn gevonden:</p>
+            <ul class="rvo-list">
+              {% for error in result.errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+          {% endif %}
+        {% endif %}
+        <c-button type="submit">Importeren</c-button>
+      </form>
+    </div>
+  </main>
+{% endblock content %}

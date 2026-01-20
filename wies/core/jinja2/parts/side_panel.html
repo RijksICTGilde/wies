@@ -1,18 +1,16 @@
 <dialog class="rvo-dialog rvo-dialog--wit rvo-dialog--inset-inline-end"
         aria-label="{{ panel_data.panel_title }}"
         id="side_panel">
-
-    <div class="side-panel__header">
-      <button type="button" class="utrecht-button utrecht-button--rvo-tertiary-action utrecht-button--rvo-md utrecht-button--icon-before" onclick="history.back()">
-        <span class="utrecht-icon rvo-icon rvo-icon-terug rvo-icon--md rvo-link__icon--before" role="img" aria-label="Terug"></span>
-        Terug
-      </button>
-      <button autofocus type="button" class="modal-close-button">
-        &times;
-      </button>
-    </div>
-
-    <div class="rvo-dialog__content">
-      {% include panel_data.panel_content_template %}
-    </div>
-  </dialog>
+  <div class="side-panel__header">
+    <button type="button"
+            class="utrecht-button utrecht-button--rvo-tertiary-action utrecht-button--rvo-md utrecht-button--icon-before"
+            onclick="history.back()">
+      <span class="utrecht-icon rvo-icon rvo-icon-terug rvo-icon--md rvo-link__icon--before"
+            role="img"
+            aria-label="Terug"></span>
+      Terug
+    </button>
+    <button autofocus type="button" class="modal-close-button">×</button>
+  </div>
+  <div class="rvo-dialog__content">{% include panel_data.panel_content_template %}</div>
+</dialog>

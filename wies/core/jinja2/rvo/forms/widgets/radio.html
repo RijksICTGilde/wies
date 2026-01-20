@@ -1,21 +1,16 @@
-
 <div class="rvo-radio-button__group">
-    {% for group_name, group_choices, group_index in widget.optgroups %}
-
+  {% for group_name, group_choices, group_index in widget.optgroups %}
     {% set loop_nr = loop.index %}
-
     {% for option_widget in group_choices %}
-
-<label class="rvo-radio-button" for="{{ option_widget.name }}_{{ loop_nr }}">
-    <input
-    id="{{ option_widget.name }}_{{ loop_nr }}"
-    name="{{ option_widget.name }}"
-    type="radio"
-    value="{{ option_widget.value }}"
-    class="utrecht-radio-button"
-    {% if option_widget.selected %}checked="checked"{% endif %}
-    />{{ option_widget.label }}</label
->
-{% endfor %}
-{% endfor %}
+      <label class="rvo-radio-button" for="{{ option_widget.name }}_{{ loop_nr }}">
+        <input id="{{ option_widget.name }}_{{ loop_nr }}"
+               name="{{ option_widget.name }}"
+               type="radio"
+               value="{{ option_widget.value }}"
+               class="utrecht-radio-button"
+               {% if option_widget.selected %}checked="checked"{% endif %} />
+        {{ option_widget.label }}
+      </label>
+    {% endfor %}
+  {% endfor %}
 </div>
