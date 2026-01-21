@@ -165,7 +165,7 @@
                aria-labelledby="search-field-label"
                class="search-field-wrapper">
             <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon" />
-            <c-input id="search" name="zoek" placeholder="Zoeken..." value="{{ search_filter|default('') }}" aria-label="Zoeken" data-filter-input size />
+            <c-input id="search" name="zoek" placeholder="Zoeken..." value="{{ search_filter|default('', True) }}" aria-label="Zoeken" data-filter-input size />
           </div>
         </form>
       </div>
