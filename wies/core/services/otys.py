@@ -1,52 +1,24 @@
 import requests
 
-
 EXAMPLE_CONDITION_ASSIGNMENT_LIST = {
     "type": "AND",
     "items": [
         {
             "type": "AND",
             "items": [
-                {
-                    "type": "COND",
-                    "field": "endDate",
-                    "op": "GE",
-                    "param": "2025-07-31T22:00:00.000Z"
-                },
-                {
-                    "type": "COND",
-                    "field": "endDate",
-                    "op": "LE",
-                    "param": "2025-12-31T21:59:59.999Z"
-                }
-            ]
+                {"type": "COND", "field": "endDate", "op": "GE", "param": "2025-07-31T22:00:00.000Z"},
+                {"type": "COND", "field": "endDate", "op": "LE", "param": "2025-12-31T21:59:59.999Z"},
+            ],
         },
         {
             "type": "AND",
             "items": [
-                {
-                    "type": "COND",
-                    "field": "startDate",
-                    "op": "GE",
-                    "param": "2000-12-31T23:00:00.000Z"
-                },
-                {
-                    "type": "COND",
-                    "field": "startDate",
-                    "op": "LE",
-                    "param": "2025-08-08T21:59:59.999Z"
-                }
-            ]
+                {"type": "COND", "field": "startDate", "op": "GE", "param": "2000-12-31T23:00:00.000Z"},
+                {"type": "COND", "field": "startDate", "op": "LE", "param": "2025-08-08T21:59:59.999Z"},
+            ],
         },
-        {
-            "type": "COND",
-            "field": "isDeleted",
-            "op": "EQ",
-            "param": [
-                0
-            ]
-        }
-    ]
+        {"type": "COND", "field": "isDeleted", "op": "EQ", "param": [0]},
+    ],
 }
 
 EXAMPLE_WHAT_ASSIGNMENT_LIST = {
@@ -54,26 +26,18 @@ EXAMPLE_WHAT_ASSIGNMENT_LIST = {
     "createdDateTime": 1,
     "versionId": 1,
     "name": 1,
-    "Candidate": {
-        "fullName": 1,
-        "candidateOuid": 1
-    },
-    "Customer": {
-        "relation": 1,
-        "relationId": 1
-    },
+    "Candidate": {"fullName": 1, "candidateOuid": 1},
+    "Customer": {"relation": 1, "relationId": 1},
     "startDate": 1,
-    "endDate": 1
+    "endDate": 1,
 }
 
-EXAMPLE_SORT_ASSIGNMENT_LIST = {
-    "startDate": "DESC"
-}
+EXAMPLE_SORT_ASSIGNMENT_LIST = {"startDate": "DESC"}
 
 
 class OTYSAPIError(Exception):
     def __init__(self, message, error_code):
-        super().__init__(f'{message} (error code: {error_code})')
+        super().__init__(f"{message} (error code: {error_code})")
 
 
 class OTYSAPI:
@@ -97,6 +61,11 @@ class OTYSAPI:
 
     def __init__(self, api_key):
         # a single session is created which will be re-used. This session is maximum valid for 14 hours
+
+        if not api_key:
+            msg = "OTYSAPI cannot be initiated with empty api_key"
+            raise ValueError(msg)
+
         self._api_key = api_key
         self.session_id = None  # set during __enter__
         self.url = "https://otys.otysapp.com/jservice.php"
@@ -109,43 +78,30 @@ class OTYSAPI:
         self._logout(self.session_id)
 
     def _raise_for_status(self, response):
-        # when an error occurs, the backend still sends back status_code 200, so normal reponse.raise_for_status does not work
+        # when an error occurs, the backend still sends back status_code 200,
+        # so normal response.raise_for_status does not work
         response_json = response.json()
-        if 'error' in response_json:
-            raise OTYSAPIError(response_json['error']['message'], response_json['error']['code'])
+        if "error" in response_json:
+            raise OTYSAPIError(response_json["error"]["message"], response_json["error"]["code"])
 
     def _get_session_id(self, api_key):
         """
         This session_id is valid for 14 hours!
         """
 
-        payload = {
-            "jsonrpc": "2.0",
-            "method": "loginByUid",
-            "params": [
-                f"{api_key}"
-            ],
-            "id": 1
-        }
+        payload = {"jsonrpc": "2.0", "method": "loginByUid", "params": [f"{api_key}"], "id": 1}
         headers = {}
 
-        response = requests.request("POST", self.url, headers=headers, json=payload)
+        response = requests.request("POST", self.url, headers=headers, json=payload, timeout=30)
         self._raise_for_status(response)
-        return response.json()['result']
+        return response.json()["result"]
 
     def _logout(self, session_id):
-        payload = {
-            "jsonrpc": "2.0",
-            "method": "logout",
-            "params": [
-            f"{session_id}"
-            ],
-            "id": 1
-        }
+        payload = {"jsonrpc": "2.0", "method": "logout", "params": [f"{session_id}"], "id": 1}
         headers = {}
-        response = requests.request("POST", self.url, headers=headers, json=payload)
+        response = requests.request("POST", self.url, headers=headers, json=payload, timeout=30)
         self._raise_for_status(response)
-        return response.json()['result']
+        return response.json()["result"]
 
     def get_assignment_list(self, limit=25, offset=0, condition=None, what=None, sort=None):
         """docs: https://ows.otys.nl/info/detail.php?service=Otys.Services.AssignmentService"""
@@ -167,24 +123,23 @@ class OTYSAPI:
                     "sort": sort,
                     "excludeLimitCheck": True,
                     # "condition": condition,  (optionally added later)
-                }
+                },
             ],
-            "id": 1
+            "id": 1,
         }
-        
+
         if what is not None:
-            payload['params'][1]['what'] = what
+            payload["params"][1]["what"] = what
         if condition is not None:
-            payload['params'][1]['condition'] = condition
+            payload["params"][1]["condition"] = condition
 
         headers = {}
 
-        response = requests.request("POST", self.url, headers=headers, json=payload)
+        response = requests.request("POST", self.url, headers=headers, json=payload, timeout=30)
         self._raise_for_status(response)
-        return response.json()['result']
+        return response.json()["result"]
 
     def get_assignment_detail(self, assignment_id: str):
-
         method = "Otys.Services.AssignmentService.getDetail"
         payload = {
             "jsonrpc": "2.0",
@@ -197,23 +152,17 @@ class OTYSAPI:
                     "createdDateTime": 1,
                     "versionId": 1,
                     "name": 1,
-                    "Candidate": {
-                        "fullName": 1,
-                        "candidateOuid": 1
-                    },
-                    "Customer": {
-                        "relation": 1,
-                        "relationId": 1
-                    },
+                    "Candidate": {"fullName": 1, "candidateOuid": 1},
+                    "Customer": {"relation": 1, "relationId": 1},
                     "startDate": 1,
-                    "endDate": 1
-                }
+                    "endDate": 1,
+                },
             ],
-            "id": 1
+            "id": 1,
         }
         headers = {}
 
-        response = requests.request("POST", self.url, headers=headers, json=payload)
+        response = requests.request("POST", self.url, headers=headers, json=payload, timeout=30)
         self._raise_for_status(response)
 
     def get_vacancy_list(self, limit=25, offset=0, condition=None, what=None, sort=None):
@@ -236,21 +185,21 @@ class OTYSAPI:
                     "sort": sort,
                     "excludeLimitCheck": True,
                     # "condition": condition,  (optionally added later)
-                }
+                },
             ],
-            "id": 1
+            "id": 1,
         }
 
         if what is not None:
-            payload['params'][1]['what'] = what
+            payload["params"][1]["what"] = what
         if condition is not None:
-            payload['params'][1]['condition'] = condition
+            payload["params"][1]["condition"] = condition
 
         headers = {}
 
-        response = requests.request("POST", self.url, headers=headers, json=payload)
+        response = requests.request("POST", self.url, headers=headers, json=payload, timeout=30)
         self._raise_for_status(response)
-        return response.json()['result']
+        return response.json()["result"]
 
     def get_vacancy_detail(self, vacancy_id: str, what=None):
         """docs: https://ows.otys.nl/info/detail.php?service=Otys.Services.VacancyService"""
@@ -267,10 +216,7 @@ class OTYSAPI:
                 "description": 1,
                 "startDate": 1,
                 "endDate": 1,
-                "Customer": {
-                    "relation": 1,
-                    "relationId": 1
-                }
+                "Customer": {"relation": 1, "relationId": 1},
             }
 
         payload = {
@@ -281,13 +227,13 @@ class OTYSAPI:
                 f"{vacancy_id}",
                 # what
             ],
-            "id": 1
+            "id": 1,
         }
         headers = {}
 
-        response = requests.request("POST", self.url, headers=headers, json=payload)
+        response = requests.request("POST", self.url, headers=headers, json=payload, timeout=30)
         self._raise_for_status(response)
-        return response.json()['result']
+        return response.json()["result"]
 
     def get_procedure_list(self, limit=25, offset=0, condition=None, what=None, sort=None):
         """
@@ -312,37 +258,32 @@ class OTYSAPI:
                     "sort": sort,
                     "excludeLimitCheck": True,
                     # "condition": condition,  (optionally added later)
-                }
+                },
             ],
-            "id": 1
+            "id": 1,
         }
 
         if what is not None:
-            payload['params'][1]['what'] = what
+            payload["params"][1]["what"] = what
         if condition is not None:
-            payload['params'][1]['condition'] = condition
+            payload["params"][1]["condition"] = condition
 
         headers = {}
 
-        response = requests.request("POST", self.url, headers=headers, json=payload)
+        response = requests.request("POST", self.url, headers=headers, json=payload, timeout=30)
         self._raise_for_status(response)
-        return response.json()['result']
+        return response.json()["result"]
 
     def get_procedures_for_specific_vacancy(self, vacancy_uid: str, **kwargs):
         """Own help function to ease use, already constructing the condition"""
         specific_vacancy_condition = {
             "type": "AND",
             "items": [
-                {
-                    "type": "COND",
-                    "field": "vacancyUid",
-                    "op": "EQ",
-                    "param": vacancy_uid
-                },
-            ]
+                {"type": "COND", "field": "vacancyUid", "op": "EQ", "param": vacancy_uid},
+            ],
         }
 
-        kwargs['condition'] = specific_vacancy_condition
+        kwargs["condition"] = specific_vacancy_condition
 
         return self.get_procedure_list(**kwargs)
 
@@ -366,22 +307,22 @@ class OTYSAPI:
                     "sort": sort,
                     "excludeLimitCheck": True,
                     # "condition": condition,  (optionally added later)
-                }
+                },
             ],
-            "id": 1
+            "id": 1,
         }
 
         if what is not None:
-            payload['params'][1]['what'] = what
+            payload["params"][1]["what"] = what
         if condition is not None:
-            payload['params'][1]['condition'] = condition
+            payload["params"][1]["condition"] = condition
 
         headers = {}
 
-        response = requests.request("POST", self.url, headers=headers, json=payload)
+        response = requests.request("POST", self.url, headers=headers, json=payload, timeout=30)
         self._raise_for_status(response)
-        return response.json()['result']
-    
+        return response.json()["result"]
+
     def get_candidate_detail(self, candidate_id: str):
         method = "Otys.Services.CandidateService.getDetail"
         payload = {
@@ -392,17 +333,14 @@ class OTYSAPI:
                 f"{candidate_id}",
                 {  # no what here
                     "uid": 1,
-                    "Person": {
-                        "firstName": 1,
-                        "lastName": 1
-                    },
-                }
+                    "Person": {"firstName": 1, "lastName": 1},
+                },
             ],
-            "id": 1
+            "id": 1,
         }
         headers = {}
 
-        response = requests.request("POST", self.url, headers=headers, json=payload)
+        response = requests.request("POST", self.url, headers=headers, json=payload, timeout=30)
         self._raise_for_status(response)
         return response.json()
 
@@ -419,13 +357,13 @@ class OTYSAPI:
                     "Person": {
                         "firstName": new_firstname,
                     },
-                }
+                },
             ],
-            "id": 1
+            "id": 1,
         }
         headers = {}
 
-        response = requests.request("POST", self.url, headers=headers, json=payload)
+        response = requests.request("POST", self.url, headers=headers, json=payload, timeout=30)
         self._raise_for_status(response)
 
     def create_candidate(self, firstname: str, lastname: str, email: str):
@@ -440,18 +378,18 @@ class OTYSAPI:
                     "Person": {
                         "firstName": firstname,
                         "lastName": lastname,
-                        "emailPrimary": email, 
+                        "emailPrimary": email,
                     },
-                }
+                },
             ],
-            "id": 1
+            "id": 1,
         }
         headers = {}
 
-        response = requests.request("POST", self.url, headers=headers, json=payload)
+        response = requests.request("POST", self.url, headers=headers, json=payload, timeout=30)
         self._raise_for_status(response)
         return response.json()
-    
+
     def delete_candidate(self, candidate_id: str):
         """Simple demonstrator of delete functionality over API"""
         method = "Otys.Services.CandidateService.delete"
@@ -462,10 +400,10 @@ class OTYSAPI:
                 f"{self.session_id}",
                 str(candidate_id),
             ],
-            "id": 1
+            "id": 1,
         }
         headers = {}
 
-        response = requests.request("POST", self.url, headers=headers, json=payload)
+        response = requests.request("POST", self.url, headers=headers, json=payload, timeout=30)
         self._raise_for_status(response)
         return response.json()

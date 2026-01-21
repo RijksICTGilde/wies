@@ -22,6 +22,7 @@ Patterns from the Wies codebase using jinja-roos-components.
 ```
 
 With HTMX:
+
 ```jinja2
 <c-button kind="primary"
           hx-post="{{ form_post_url }}"
@@ -42,12 +43,14 @@ With HTMX:
 ## Form Inputs
 
 Text input:
+
 ```jinja2
 <c-input name="field_name" placeholder="Zoeken..." />
 <c-input type="text" name="name" required />
 ```
 
 Select field:
+
 ```jinja2
 <c-select-field
     name="filter_name"
@@ -62,11 +65,13 @@ Select field:
 ```
 
 File input:
+
 ```jinja2
 <c-file-input-field accept=".csv" label="CSV-bestand" name="csv_file"/>
 ```
 
 Date input:
+
 ```jinja2
 <c-date-input-field
     name="start_date"
@@ -96,6 +101,7 @@ Colors: `logoblauw`, `grijs-700`
 ## Modal Dialogs
 
 Standard modal pattern (see `parts/generic_form_modal.html`):
+
 ```jinja2
 <dialog id="{{ modal_element_id }}" class="modal-dialog" closedby="any">
   <div class="modal-content">
@@ -121,6 +127,7 @@ Standard modal pattern (see `parts/generic_form_modal.html`):
 ## Django Form Fields
 
 Form fields render via `rvo/forms/field.html`:
+
 ```jinja2
 <div class="utrecht-form-field">
   <div class="rvo-form-field__label">
@@ -138,6 +145,7 @@ Form fields render via `rvo/forms/field.html`:
 ## RVO Layout Classes
 
 Page layout:
+
 ```jinja2
 <div class="rvo-layout-column rvo-layout-gap--3x">
   <div class="rvo-layout-column rvo-layout-gap--xl">
@@ -147,6 +155,7 @@ Page layout:
 ```
 
 Max-width container:
+
 ```jinja2
 <div class="rvo-max-width-layout rvo-max-width-layout-inline-padding--md">
   <!-- content -->
@@ -156,6 +165,7 @@ Max-width container:
 ## RVO Links with Icons
 
 For links with icons, use RVO classes (not jinja-roos-components):
+
 ```jinja2
 <a href="{{ url }}" class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw">
   <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before"

@@ -15,7 +15,7 @@
   flex-direction: column;
   overflow: hidden;
   align-self: stretch;
-  min-height: calc(100vh - 176px);;
+  min-height: calc(100vh - 176px);
 }
 
 /* Sidebar Header */
@@ -111,7 +111,6 @@
 .filter-sidebar-date-range > .rvo-label {
   font-weight: var(--rvo-font-weight-bold, 700);
 }
-
 
 /* Main Content Area */
 .filter-main-content {

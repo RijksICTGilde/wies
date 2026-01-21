@@ -1,18 +1,17 @@
-document.addEventListener('DOMContentLoaded', function() {
-
+document.addEventListener("DOMContentLoaded", function () {
   // Set body overflow when panel is present (like filter modal)
-  const panelContainer = document.getElementById('side_panel-container');
+  const panelContainer = document.getElementById("side_panel-container");
   if (panelContainer && panelContainer.innerHTML.trim()) {
-    document.body.style.overflow = 'hidden';
-    
+    document.body.style.overflow = "hidden";
+
     // Use showModal() for consistency with other modals
-    const panel = document.getElementById('side_panel');
+    const panel = document.getElementById("side_panel");
     if (panel) {
       panel.showModal();
-      
+
       // Handle ESC key to close panel completely
-      panel.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
+      panel.addEventListener("keydown", function (e) {
+        if (e.key === "Escape") {
           e.preventDefault(); // Prevent default dialog close
           closePanelWithFilters();
         }
@@ -20,24 +19,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   } else {
     // Reset overflow if no panel is present (important for back button)
-    document.body.style.overflow = 'auto';
+    document.body.style.overflow = "auto";
   }
-
 
   // Close panel with filter preservation
   function closePanelWithFilters() {
     const url = new URL(window.location);
-    url.searchParams.delete('collega');
-    url.searchParams.delete('opdracht');
+    url.searchParams.delete("collega");
+    url.searchParams.delete("opdracht");
     window.location.href = url.toString();
   }
 
   // Handle close button clicks
-  const panel = document.getElementById('side_panel');
+  const panel = document.getElementById("side_panel");
   if (panel) {
-    const closeBtn = panel.querySelector('.modal-close-button');
+    const closeBtn = panel.querySelector(".modal-close-button");
     if (closeBtn) {
-      closeBtn.addEventListener('click', function(e) {
+      closeBtn.addEventListener("click", function (e) {
         e.preventDefault();
         closePanelWithFilters();
       });
@@ -45,11 +43,10 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Handle background click to close panel (dialog backdrop click)
-  document.addEventListener('click', function(e) {
-    const panel = document.getElementById('side_panel');
+  document.addEventListener("click", function (e) {
+    const panel = document.getElementById("side_panel");
     if (panel && e.target === panel) {
       closePanelWithFilters();
     }
   });
-
 });

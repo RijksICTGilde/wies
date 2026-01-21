@@ -21,7 +21,6 @@ dialog.rvo-dialog--inset-inline-end::backdrop {
 
 /* Remove old overlay system - now using ::backdrop */
 
-
 /* Side panel header with back and close buttons */
 .side-panel__header {
   display: flex;
@@ -58,17 +57,17 @@ dialog.rvo-dialog--inset-inline-end::backdrop {
     max-width: none;
     min-width: none;
   }
-  
+
   .rvo-dialog__background::before {
     display: none;
   }
-  
+
   .rvo-dialog__close {
     width: 100%;
     box-sizing: border-box;
     background: white;
   }
-  
+
   .rvo-dialog__content {
     height: calc(100vh - 80px);
     overflow-y: auto;
