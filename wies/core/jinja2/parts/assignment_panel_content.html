@@ -61,8 +61,9 @@
       </dd>
       <dt>Business Manager</dt>
       <dd>
-        <a href="{{ url("placements") }}?collega={{ assignment.owner.id }}"
-           class="rvo-link">{{ assignment.owner }}</a>
+        <a href="{{ panel_data.owner_url }}" class="rvo-link">
+            {{ assignment.owner }}
+        </a>
       </dd>
     </dl>
   </section>
