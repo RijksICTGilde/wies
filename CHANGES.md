@@ -5,7 +5,11 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 143: Bump Django from 5.2.9 to 6.0.1
-- 144 - Drop django-extensions
+- 144: Drop django-extensions
+- 162: Add pre-cmmit, ruff, djlint, pytest and coverage report
+- 162: Add .editor.config
+- 162: Add Github action for labeling pre-commit PRs with label dependencies
+- 162: Change formatting according to styling rules
 
 ## 2026-01-19
 
