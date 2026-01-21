@@ -29,7 +29,7 @@ from wies.core.views import assignment_edit_attribute
 
 
 urlpatterns = [
-    path('favicon.ico', RedirectView.as_view(url=settings.STATIC_URL + 'wies.ico', permanent=True)),
+    path('favicon.ico', RedirectView.as_view(url=settings.STATIC_URL + 'favicon.ico', permanent=True)),
     path('djadmin/db/', admin_db, name='djadmin-db'),
     path('djadmin/', admin.site.urls),
     path('', RedirectView.as_view(pattern_name='placements', permanent=False), name='home'),
