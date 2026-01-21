@@ -61,6 +61,11 @@ class OTYSAPI:
 
     def __init__(self, api_key):
         # a single session is created which will be re-used. This session is maximum valid for 14 hours
+
+        if not api_key:
+            msg = "OTYSAPI cannot be initiated with empty api_key"
+            raise ValueError(msg)
+
         self._api_key = api_key
         self.session_id = None  # set during __enter__
         self.url = "https://otys.otysapp.com/jservice.php"
