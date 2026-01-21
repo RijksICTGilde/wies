@@ -4,7 +4,7 @@ Internal tool for managing colleague placements within the Dutch government. Wie
 
 ## Tech Stack
 
-- **Backend**: Django 5.2 with SQLite
+- **Backend**: Django 6 with SQLite
 - **Templates**: Jinja2 with [jinja-roos-components](https://github.com/RijksICTGilde/jinja-roos-components)
 - **Styling**: [RVO Design System](https://github.com/nl-design-system/rvo) (Dutch government design system)
 - **Interactivity**: HTMX
@@ -17,6 +17,7 @@ Internal tool for managing colleague placements within the Dutch government. Wie
 - [just](https://github.com/casey/just)
 - [uv](https://docs.astral.sh/uv/)
 - [npm](https://www.npmjs.com/)
+- [pre-commit](https://pre-commit.com/)
 
 ## Quick Start
 
