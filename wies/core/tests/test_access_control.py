@@ -1,17 +1,9 @@
 from django.conf import settings
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 
 from wies.core.models import User
 
 
-@override_settings(
-    # Use simple static files storage for tests
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class AccessControlTest(TestCase):
     """
     Test that endpoints require login or excluded ones dont.

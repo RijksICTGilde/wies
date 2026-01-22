@@ -8,14 +8,6 @@ from wies.core.forms import RvoFormMixin, UserForm
 from wies.core.models import Label, LabelCategory, User
 
 
-@override_settings(
-    # Use simple static files storage for tests
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class RvoFormMixinTest(TestCase):
     """Tests for RvoFormMixin functionality and form rendering"""
 
@@ -151,14 +143,7 @@ class RvoFormMixinTest(TestCase):
         assert "not in RVO widget_templates mapping" in log.output[0]
 
 
-@override_settings(
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-    ALLOWED_EMAIL_DOMAINS=["@rijksoverheid.nl", "@minbzk.nl"],
-)
+@override_settings(ALLOWED_EMAIL_DOMAINS=["@rijksoverheid.nl", "@minbzk.nl"])
 class UserFormEmailDomainValidationTest(TestCase):
     """Tests for email domain validation in UserForm"""
 
@@ -264,14 +249,7 @@ class UserFormEmailDomainValidationTest(TestCase):
         assert "email" in form.errors
 
 
-@override_settings(
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-    ALLOWED_EMAIL_DOMAINS=[],  # Empty list = no restriction
-)
+@override_settings(ALLOWED_EMAIL_DOMAINS=[])
 class UserFormEmailDomainValidationDisabledTest(TestCase):
     """Tests for when email domain validation is disabled"""
 

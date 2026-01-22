@@ -58,8 +58,13 @@ ALLOWED_EMAIL_DOMAINS = []
 
 # STATIC FILES
 # ----------------------------------------------------------------------------------------------------------------------
-# Disable WhiteNoise middleware to avoid warnings about missing staticfiles directory
+# Disable WhiteNoise middleware and storage to avoid warnings about missing staticfiles directory
 MIDDLEWARE = [m for m in MIDDLEWARE if m != "whitenoise.middleware.WhiteNoiseMiddleware"]  # noqa: F405
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # LOGGING
 # ----------------------------------------------------------------------------------------------------------------------

@@ -8,17 +8,7 @@ from django.urls import reverse
 from wies.core.models import User
 
 
-@override_settings(
-    # Use simple static files storage for tests
-    # Because tests are not running with debug True, you would otherise need to run
-    # collectstatic before running the test
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-    ALLOWED_EMAIL_DOMAINS=["@rijksoverheid.nl", "@minbzk.nl"],
-)
+@override_settings(ALLOWED_EMAIL_DOMAINS=["@rijksoverheid.nl", "@minbzk.nl"])
 class AuthViewsTest(TestCase):
     """Integration tests for authentication flow views"""
 
