@@ -1,17 +1,21 @@
 {% extends "base_error.html" %}
-
-{% block title %}Geen toegang - Wies{% endblock %}
-
-{% block error_title %}Geen toegang{% endblock %}
-
+{% block title %}
+  Geen toegang - Wies
+{% endblock title %}
+{% block error_title %}
+  Geen toegang
+{% endblock error_title %}
 {% block error_message %}
-    Je kan niet geauthenticeerd worden en krijgt daarom geen toegang tot Wies, een tool voor ODI.
-    Denk je dat dit een fout is? Stuur een berichtje naar <a href="mailto:wies-odi@rijksoverheid.nl">wies-odi@rijksoverheid.nl</a>.
-{% endblock %}
-
+  Je kan niet geauthenticeerd worden en krijgt daarom geen toegang tot Wies, een tool voor ODI.
+  Denk je dat dit een fout is? Stuur een berichtje naar <a href="mailto:wies-odi@rijksoverheid.nl">wies-odi@rijksoverheid.nl</a>.
+{% endblock error_message %}
 {% block error_extra %}
-<c-h2>Mogelijke oorzaken</c-h2>
-<ul>
-    <li>Inloggen met emailadres opdrachtgever: <br> Je krijgt alleen toegang met je ODI E-mail adres (@rijksoverheid, @minbzk)</li>
-</ul>
-{% endblock %}
+  <c-h2>Mogelijke oorzaken</c-h2>
+  <ul>
+    <li>
+      Inloggen met emailadres opdrachtgever:
+      <br>
+      Je krijgt alleen toegang met je ODI E-mail adres (@rijksoverheid, @minbzk)
+    </li>
+  </ul>
+{% endblock error_extra %}

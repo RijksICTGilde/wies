@@ -14,50 +14,73 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.conf import settings
 from django.contrib import admin
 from django.urls import path
 from django.views.generic import RedirectView
 
-from wies.core.views import PlacementListView, robots_txt
-from wies.core.views import admin_db, login, no_access, logout, auth
-from wies.core.views import error_400, error_403, error_404, error_500
-from wies.core.views import UserListView, user_create, user_edit, user_delete, user_import_csv
-from wies.core.views import placement_import_csv
-from wies.core.views import label_admin, label_category_create, label_category_edit, label_category_delete
-from wies.core.views import label_create, label_edit, label_delete
-from wies.core.views import assignment_edit_attribute
-
+from wies.core.views import (
+    PlacementListView,
+    UserListView,
+    admin_db,
+    assignment_edit_attribute,
+    auth,
+    error_400,
+    error_403,
+    error_404,
+    error_500,
+    label_admin,
+    label_category_create,
+    label_category_delete,
+    label_category_edit,
+    label_create,
+    label_delete,
+    label_edit,
+    login,
+    logout,
+    no_access,
+    placement_import_csv,
+    robots_txt,
+    user_create,
+    user_delete,
+    user_edit,
+    user_import_csv,
+)
 
 urlpatterns = [
     # Well-known paths
-    path('robots.txt', robots_txt, name='robots-txt'),
-    path('.well-known/security.txt', RedirectView.as_view(url='https://www.ncsc.nl/.well-known/security.txt', permanent=False), name='security-txt'),
+    path("robots.txt", robots_txt, name="robots-txt"),
+    path(
+        ".well-known/security.txt",
+        RedirectView.as_view(url="https://www.ncsc.nl/.well-known/security.txt", permanent=False),
+        name="security-txt",
+    ),
     # Admin
-    path('djadmin/db/', admin_db, name='djadmin-db'),
-    path('djadmin/', admin.site.urls),
+    path("djadmin/db/", admin_db, name="djadmin-db"),
+    path("djadmin/", admin.site.urls),
     # Wies
-    path('', RedirectView.as_view(pattern_name='placements', permanent=False), name='home'),
-    path('inloggen/', login, name='login'),
-    path('geen-toegang/', no_access),
-    path('uitloggen/', logout, name='logout'),
-    path('auth/', auth, name='auth'),
-    path('plaatsingen/', PlacementListView.as_view(), name='placements'),
-    path('plaatsingen/importeren/', placement_import_csv, name='placement-import-csv'),
-    path('opdrachten/<int:pk>/edit/<str:attribute>/', assignment_edit_attribute, name='assignment-edit-attribute'),
-    path('instellingen/', RedirectView.as_view(pattern_name='admin-users', permanent=False), name='admin'),
-    path('instellingen/gebruikers/', UserListView.as_view(), name='admin-users'),
-    path('instellingen/gebruikers/aanmaken/', user_create, name='user-create'),
-    path('instellingen/gebruikers/<int:pk>/bewerken/', user_edit, name='user-edit'),
-    path('instellingen/gebruikers/<int:pk>/verwijderen/', user_delete, name='user-delete'),
-    path('instellingen/gebruikers/importeren/', user_import_csv, name='user-import-csv'),
-    path('instellingen/labels/', label_admin, name='label-admin'),
-    path('instellingen/labels/categorie/aanmaken/', label_category_create, name='label-category-create'),
-    path('instellingen/labels/categorie/<int:pk>/bewerken/', label_category_edit, name='label-category-edit'),
-    path('instellingen/labels/categorie/<int:pk>/verwijderen/', label_category_delete, name='label-category-delete'),
-    path('instellingen/labels/categorie/<int:pk>/labels/aanmaken/', label_create),
-    path('instellingen/labels/<int:pk>/bewerken/', label_edit, name='label-edit'),
-    path('instellingen/labels/<int:pk>/verwijderen/', label_delete, name='label-delete'),
+    path("", RedirectView.as_view(pattern_name="placements", permanent=False), name="home"),
+    path("inloggen/", login, name="login"),
+    path("geen-toegang/", no_access),
+    path("uitloggen/", logout, name="logout"),
+    path("auth/", auth, name="auth"),
+    path("plaatsingen/", PlacementListView.as_view(), name="placements"),
+    path("plaatsingen/importeren/", placement_import_csv, name="placement-import-csv"),
+    path("opdrachten/<int:pk>/edit/<str:attribute>/", assignment_edit_attribute, name="assignment-edit-attribute"),
+    path("instellingen/", RedirectView.as_view(pattern_name="admin-users", permanent=False), name="admin"),
+    path("instellingen/gebruikers/", UserListView.as_view(), name="admin-users"),
+    path("instellingen/gebruikers/aanmaken/", user_create, name="user-create"),
+    path("instellingen/gebruikers/<int:pk>/bewerken/", user_edit, name="user-edit"),
+    path("instellingen/gebruikers/<int:pk>/verwijderen/", user_delete, name="user-delete"),
+    path("instellingen/gebruikers/importeren/", user_import_csv, name="user-import-csv"),
+    path("instellingen/labels/", label_admin, name="label-admin"),
+    path("instellingen/labels/categorie/aanmaken/", label_category_create, name="label-category-create"),
+    path("instellingen/labels/categorie/<int:pk>/bewerken/", label_category_edit, name="label-category-edit"),
+    path("instellingen/labels/categorie/<int:pk>/verwijderen/", label_category_delete, name="label-category-delete"),
+    path("instellingen/labels/categorie/<int:pk>/labels/aanmaken/", label_create),
+    path("instellingen/labels/<int:pk>/bewerken/", label_edit, name="label-edit"),
+    path("instellingen/labels/<int:pk>/verwijderen/", label_delete, name="label-delete"),
 ]
 
 # Custom error handlers
@@ -68,8 +91,8 @@ handler500 = error_500
 
 if settings.DEBUG:
     urlpatterns += [
-        path('test-400/', error_400, name='test-400'),
-        path('test-403/', error_403, name='test-403'),
-        path('test-404/', error_404, name='test-404'),
-        path('test-500/', error_500, name='test-500'),
+        path("test-400/", error_400, name="test-400"),
+        path("test-403/", error_403, name="test-403"),
+        path("test-404/", error_404, name="test-404"),
+        path("test-500/", error_500, name="test-500"),
     ]
