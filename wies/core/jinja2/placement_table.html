@@ -7,19 +7,237 @@
   <script src="{{ static('js/placement_filter_sidebar.js') }}"></script>
   <script src="{{ static('js/dialog.js') }}"></script>
   <script src="{{ static('js/side_panel.js') }}"></script>
-{% endblock extra_head %}
+{% endblock %}
+{# ============================================================
+   SIDEBAR: Filter Form
+   ============================================================ #}
+{% block sidebar %}
+  <form class="rvo-form filter-sidebar-form"
+        hx-get="{{ url('placements') }}"
+        hx-target="#filter-and-table-container"
+        hx-push-url="true"
+        hx-trigger="change,input delay:500ms from:[data-filter-input]"
+        hx-include="[data-filter-input]">
+    <!-- Behoud filters state in HTMX requests -->
+    {% if request.GET.get('filters') %}
+      <input type="hidden"
+             name="filters"
+             value="{{ request.GET.get('filters') }}"
+             data-filter-input />
+    {% endif %}
+    <!-- Filter Fields -->
+    <div class="app-sidebar__content">
+      <div class="rvo-layout-column rvo-layout-gap--md">
+        {% for filter_group in filter_groups %}
+          {% if filter_group.type == 'select' %}
+            <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
+          {% elif filter_group.type == 'date_range' %}
+            <div class="filter-sidebar-date-range">
+              <span class="rvo-label filter-sidebar-label">{{ filter_group.label }}</span>
+              <div class="rvo-layout-column rvo-layout-gap--sm">
+                <div class="utrecht-form-field rvo-form-field">
+                  <div class="rvo-form-field__label">
+                    <label for="filter-{{ filter_group.name }}-from"
+                           class="rvo-label utrecht-form-label">{{ filter_group.from_label }}</label>
+                  </div>
+                  <input type="date"
+                         id="filter-{{ filter_group.name }}-from"
+                         class="utrecht-textbox utrecht-textbox--html-input"
+                         data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
+                         data-combined-name="{{ filter_group.name }}"
+                         data-pair-id="filter-{{ filter_group.name }}-to"
+                         value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).from.strftime('%Y-%m-%d') }}{% endif %}" />
+                </div>
+                <div class="utrecht-form-field rvo-form-field">
+                  <div class="rvo-form-field__label">
+                    <label for="filter-{{ filter_group.name }}-to"
+                           class="rvo-label utrecht-form-label">{{ filter_group.to_label }}</label>
+                  </div>
+                  <input type="date"
+                         id="filter-{{ filter_group.name }}-to"
+                         class="utrecht-textbox utrecht-textbox--html-input"
+                         data-require-both="{% if filter_group.require_both %}true{% else %}false{% endif %}"
+                         data-combined-name="{{ filter_group.name }}"
+                         data-pair-id="filter-{{ filter_group.name }}-from"
+                         value="{% if active_filters.get(filter_group.name) %}{{ active_filters.get(filter_group.name).to.strftime('%Y-%m-%d') }}{% endif %}" />
+                </div>
+              </div>
+            </div>
+            {% if filter_group.require_both %}
+              <!-- Hidden input managed by JS - only submitted when both dates are filled -->
+              <input type="hidden"
+                     id="filter-{{ filter_group.name }}-combined"
+                     name="{{ filter_group.name }}"
+                     data-filter-input />
+              <div id="{{ filter_group.name }}-validation-message"
+                   class="date-range-validation-message">
+                Beide datums zijn vereist voor een geldige periode filter.
+              </div>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    </div>
+  </form>
+{% endblock %}
+{# ============================================================
+   MAIN CONTENT: Search, Chips, Table
+   ============================================================ #}
 {% block content %}
-  <main class="rvo-max-width-layout rvo-max-width-layout--placements rvo-max-width-layout-inline-padding--md">
-    <div id="placement_content" class="rvo-layout-column rvo-layout-gap--md">
-      {% include "parts/filter_and_table_container.html" %}
+  <div id="filter-and-table-container">
+    <!-- Page Header -->
+    <div class="app-main__header">
+      <!-- Row 1: Title + Search -->
+      <div class="header-row header-row--between">
+        <c-h1 noMargins>Wie zit waar?</c-h1>
+        <div class="header-actions">
+          <!-- Mobile filter toggle -->
+          <button type="button"
+                  class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--icon-before rvo-button app-mobile-filter-toggle"
+                  onclick="toggleFilters()">
+            <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before"
+                  role="img"
+                  aria-label=""></span>
+            Filters
+          </button>
+          <!-- Search Field -->
+          <form class="rvo-form filter-search-form"
+                hx-get="{{ url('placements') }}"
+                hx-target="#filter-and-table-container"
+                hx-push-url="true"
+                hx-trigger="change,input delay:500ms from:[data-filter-input]"
+                hx-include="[data-filter-input]">
+            {% if request.GET.get('filters') %}
+              <input type="hidden"
+                     name="filters"
+                     value="{{ request.GET.get('filters') }}"
+                     data-filter-input />
+            {% endif %}
+            <div class="search-field-wrapper">
+              <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon" />
+              <c-input id="search" name="zoek" placeholder="Zoeken..." value="
+              {% if search_filter %}{{ search_filter }}{% endif %}
+              " aria-label="Zoeken" data-filter-input size />
+            </div>
+          </form>
+        </div>
+      </div>
+      <!-- Row 2: Result count + Active Filter Chips -->
+      <div class="header-row">
+        <p class="results-count">
+          <b>{{ page_obj.paginator.count }}</b> resultaten
+        </p>
+        <!-- Active Filter Chips -->
+        <div class="filter-chips-container">
+          {# Search filter chip #}
+          {% if search_filter %}
+            <div class="filter-chip filter-chip--default"
+                 data-filter-name="zoek"
+                 data-filter-type="zoek">
+              <span>{{ search_filter }}</span>
+              <button type="button"
+                      class="filter-chip-remove"
+                      aria-label="Verwijder filter"
+                      data-filter-name="zoek">
+                <c-icon icon="kruis" color="grijs-700" size="sm" />
+              </button>
+            </div>
+          {% endif %}
+          {# Regular filters #}
+          {% for filter_group in filter_groups %}
+            {% if filter_group.type == 'select' %}
+              {% set filter_value = active_filters.get(filter_group.name) %}
+              {# For label filters (multi-select) #}
+              {% if filter_group.name == 'labels' and filter_value %}
+                {% for label_id in filter_value %}
+                  {% for option in filter_group.options %}
+                    {% if option.value == label_id %}
+                      <div class="filter-chip filter-chip--label"
+                           data-filter-name="{{ filter_group.name }}"
+                           data-filter-value="{{ label_id }}"
+                           data-filter-type="select-multi"
+                           style="background-color: {{ option.category_color }}">
+                        <span>{{ option.label }}</span>
+                        <button type="button"
+                                class="filter-chip-remove"
+                                aria-label="Verwijder filter"
+                                data-filter-name="{{ filter_group.name }}"
+                                data-filter-value="{{ label_id }}">
+                          <c-icon icon="kruis" color="grijs-700" size="sm" />
+                        </button>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
+                {% endfor %}
+                {# For single-select filters #}
+              {% elif filter_value and filter_group.name != 'label' %}
+                {% for option in filter_group.options %}
+                  {% if option.value == filter_value %}
+                    <div class="filter-chip filter-chip--default"
+                         data-filter-name="{{ filter_group.name }}"
+                         data-filter-type="select">
+                      <span>{{ option.label }}</span>
+                      <button type="button"
+                              class="filter-chip-remove"
+                              aria-label="Verwijder filter"
+                              data-filter-name="{{ filter_group.name }}">
+                        <c-icon icon="kruis" color="grijs-700" size="sm" />
+                      </button>
+                    </div>
+                  {% endif %}
+                {% endfor %}
+              {% endif %}
+              {# Date range filter #}
+            {% elif filter_group.type == 'date_range' and active_filters.get(filter_group.name) %}
+              <div class="filter-chip filter-chip--default"
+                   data-filter-name="{{ filter_group.name }}"
+                   data-filter-type="date_range">
+                <span>{{ active_filters.get(filter_group.name).from|datum_nl('N Y') }} t/m {{ active_filters.get(filter_group.name).to|datum_nl('N Y') }}</span>
+                <button type="button"
+                        class="filter-chip-remove"
+                        aria-label="Verwijder filter"
+                        data-filter-name="{{ filter_group.name }}">
+                  <c-icon icon="kruis" color="grijs-700" size="sm" />
+                </button>
+              </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+      </div>
     </div>
-    {# Side Panel Container #}
-    <div id="side_panel-container">
-      {% if panel_data %}
-        {% set colleague = panel_data.colleague %}
-        {% set assignment = panel_data.assignment %}
-        {% include "parts/side_panel.html" %}
-      {% endif %}
+    <!-- Placement Table -->
+    <div class="rvo-table--responsive" id="placement_table">
+      <table class="rvo-table">
+        <thead class="rvo-table-head">
+          <tr class="rvo-table-row">
+            {% with field='name', label='Naam', target='#filter-and-table-container', sort_state=get_sort_state(request, 'name') %}
+              {% include 'parts/generic_sortable_header.html' %}
+            {% endwith %}
+            {% with field='assignment', label='Opdracht', target='#filter-and-table-container', sort_state=get_sort_state(request, 'assignment') %}
+              {% include 'parts/generic_sortable_header.html' %}
+            {% endwith %}
+            {% with field='skill', label='Rol', target='#filter-and-table-container', sort_state=get_sort_state(request, 'skill') %}
+              {% include 'parts/generic_sortable_header.html' %}
+            {% endwith %}
+            <th class="rvo-table-header">Periode</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% include 'parts/placement_table_rows.html' %}
+        </tbody>
+      </table>
     </div>
-  </main>
-{% endblock content %}
+  </div>
+{% endblock %}
+{# ============================================================
+   SIDE PANEL (overlay)
+   ============================================================ #}
+{% block panel %}
+  <div id="side_panel-container">
+    {% if panel_data %}
+      {% set colleague = panel_data.colleague %}
+      {% set assignment = panel_data.assignment %}
+      {% include 'parts/side_panel.html' %}
+    {% endif %}
+  </div>
+{% endblock %}

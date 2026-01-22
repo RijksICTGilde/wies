@@ -26,12 +26,10 @@
     {% set labels = colleague.labels.all() %}
   {% endif %}
   {% if labels %}
-    <div class="rvo-layout-row rvo-layout-gap--sm" style="flex-wrap: wrap;">
+    <div class="rvo-layout-row rvo-layout-gap--sm panel-labels">
       {% for label in labels %}
-        <span class="rvo-badge"
-              style="background-color: {{ label.category.color }};
-                     padding: 0.25rem 0.5rem;
-                     border-radius: 3px">{{ label.name }}</span>
+        <span class="rvo-badge panel-label-badge"
+              style="background-color: {{ label.category.color }}">{{ label.name }}</span>
       {% endfor %}
     </div>
   {% else %}
@@ -43,9 +41,7 @@
       <div class="rvo-layout-column rvo-layout-gap--sm">
         {% for assignment in panel_data.assignment_list %}
           <a href="{{ assignment.assignment_url }}"
-             class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row"
-             style="text-decoration: none;
-                    color: inherit">
+             class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row panel-card-link">
             <div class="rvo-card__content">
               <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin">{{ assignment.name }}</h3>
               <div class="rvo-text">{{ assignment.organization }}</div>

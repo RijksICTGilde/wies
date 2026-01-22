@@ -4,35 +4,144 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>
-      {% block title %}
-        Wies
-      {% endblock title %}
+      {% block title %}Wies{% endblock %}
     </title>
-    {# Favicon #}
+    <!-- Favicon -->
     <link rel="icon" type="image/png" href="{{ static('WIES-fav.png') }}">
     <link rel="shortcut icon"
           type="image/png"
           href="{{ static('WIES-fav.png') }}">
     <link rel="stylesheet" href="{{ static('vendor/rvo/design-tokens.css') }}" />
-    <link rel="stylesheet"
-          href="{{ static('vendor/rvo/component-library.css') }}" />
+    <link rel="stylesheet" href="{{ static('vendor/rvo/component-library.css') }}" />
     <link rel="stylesheet"
           href="{{ static('@nl-rvo/assets/icons/index.css') }}">
     <link rel="stylesheet"
           href="{{ static('@nl-rvo/assets/fonts/index.css') }}">
-    <link rel="stylesheet" href="{{ static('css/rvo_overwrite.css') }}">
+    <!-- App Styles -->
     <link rel="stylesheet" href="{{ static('css/base.css') }}">
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
-    {% block extra_head %}
-    {% endblock extra_head %}
+    <script src="{{ static('js/app_layout.js') }}"></script>
+    {% block extra_head %}{% endblock extra_head %}
   </head>
   <body class="rvo-theme">
-    {% block header %}
-      {% include "parts/header.html" %}
-    {% endblock header %}
-    <div class="rvo-layout-column rvo-layout-gap--xl">
-      {% block content %}
-      {% endblock content %}
+    <div class="app-layout {% if request.GET.get('filters') == '0' %}app-layout--collapsed{% endif %} {% block layout_class %}{% endblock %}"
+         id="app-layout">
+      <!-- ============================================================
+             HEADER: Originele RVO header styling
+             ============================================================ -->
+      <header class="app-header rvo-header">
+        <div class="rvo-header__logo-wrapper">
+          <a href="/plaatsingen/" class="rvo-link rvo-link--no-underline">
+            <div class="rvo-logo rvo-header__logo-img">
+              <div class="rvo-logo__emblem">
+                <img src="{{ static('@nl-rvo/assets/images/emblem.svg') }}"
+                     alt="RVO Embleem">
+              </div>
+              <div class="rvo-logo__wordmark">
+                <p class="rvo-logo__title">
+                  Rijksorganisatie voor Ontwikkeling,
+                  <br>
+                  Digitalisering en Innovatie
+                </p>
+              </div>
+            </div>
+          </a>
+        </div>
+      </header>
+      <!-- ============================================================
+             BODY: Grid met menubar, sidebar en main content
+             ============================================================ -->
+      <div class="app-body">
+        <!-- Menu Bar -->
+        <div class="app-menubar">
+          <!-- Sidebar sectie (leeg, voor alignment) -->
+          <div class="app-menubar__sidebar-section"></div>
+          <!-- Navigatie sectie -->
+          <nav class="app-menubar__nav-section">
+            <ul class="app-menubar__nav-left">
+              <li>
+                <a href="/plaatsingen/"
+                   class="rvo-link rvo-link--no-underline rvo-link--logoblauw {% if '/plaatsingen/' in request.path %}menu-item--active{% endif %}">
+                  Wie zit waar?
+                </a>
+              </li>
+            </ul>
+            <ul class="app-menubar__nav-right">
+              {% if user.is_authenticated %}
+                <li>
+                  {% if user.colleague %}
+                    <a href="/plaatsingen/?collega={{ user.colleague.id }}"
+                       class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw">
+                      <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before"
+                            role="img"
+                            aria-label="User"></span>
+                      {{ user.get_full_name() }}
+                    </a>
+                  {% else %}
+                    <span class="rvo-link rvo-link--with-icon rvo-link--logoblauw">
+                      <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before"
+                            role="img"
+                            aria-label="User"></span>
+                      {{ user.get_full_name() }}
+                    </span>
+                  {% endif %}
+                </li>
+              {% endif %}
+              {% if user.has_perms(['core.view_user', 'core.view_labelcategory']) %}
+                <li>
+                  <a href="/instellingen/"
+                     class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw {% if '/instellingen/' in request.path %}menu-item--active{% endif %}">
+                    <span class="utrecht-icon rvo-icon rvo-icon-instellingen rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before"
+                          role="img"
+                          aria-label="Instellingen"></span>
+                    Instellingen
+                  </a>
+                </li>
+              {% endif %}
+            </ul>
+          </nav>
+        </div>
+        <!-- Sidebar -->
+        <aside class="app-sidebar {% block sidebar_class %}{% endblock %}">
+          {% block sidebar_header %}
+            <!-- Toggle row: titel + chevron (altijd zichtbaar) -->
+            <div class="app-sidebar__toggle-row">
+              <div class="app-sidebar__title">
+                <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-icon--logoblauw"
+                      role="img"
+                      aria-label="Filters"></span>
+                <span class="app-sidebar__title-text">Filters</span>
+              </div>
+              <button type="button"
+                      class="app-sidebar-toggle"
+                      onclick="toggleFilters()"
+                      aria-label="Toggle filters">
+                <!-- Chevron for desktop -->
+                <svg class="app-sidebar-toggle__icon app-sidebar-toggle__icon--chevron"
+                     viewBox="0 0 24 24"
+                     fill="none"
+                     stroke="currentColor"
+                     stroke-width="2">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+                <!-- Cross for mobile -->
+                <span class="app-sidebar-toggle__icon app-sidebar-toggle__icon--close utrecht-icon rvo-icon rvo-icon-kruis rvo-icon--md"
+                      role="img"
+                      aria-label="Sluiten"></span>
+              </button>
+            </div>
+          {% endblock %}
+          {% block sidebar %}{% endblock %}
+        </aside>
+        <!-- Main Content -->
+        <main class="app-main {% block main_class %}{% endblock %}">
+          {% block content %}{% endblock %}
+        </main>
+      </div>
     </div>
+    <!-- Side Panel (overlay) -->
+    {% block panel %}{% endblock %}
+    {% block footer %}{% endblock %}
+    {% block extra_scripts %}{% endblock %}
   </body>
 </html>

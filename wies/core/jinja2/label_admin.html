@@ -1,33 +1,54 @@
 {% extends "base.html" %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
   <link rel="stylesheet" href="{{ static('css/admin_labels.css') }}">
   <script src="{{ static('js/dialog.js') }}"></script>
-{% endblock extra_head %}
+{% endblock %}
+{% block layout_class %}app-layout--no-collapse{% endblock %}
+{# Geen sidebar header voor instellingen #}
+{% block sidebar_header %}{% endblock %}
+{# ============================================================
+   SIDEBAR: Menu navigatie
+   ============================================================ #}
+{% block sidebar %}
+  <div class="app-sidebar__content">
+    <nav class="settings-nav">
+      <a href="/instellingen/gebruikers/"
+         class="settings-nav__item {% if '/gebruikers/' in request.path %}settings-nav__item--active{% endif %}">
+        <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--logoblauw"
+              role="img"
+              aria-label="Gebruikers"></span>
+        Gebruikers
+      </a>
+      <a href="/instellingen/labels/"
+         class="settings-nav__item {% if '/labels/' in request.path %}settings-nav__item--active{% endif %}">
+        <span class="utrecht-icon rvo-icon rvo-icon-label rvo-icon--md rvo-icon--logoblauw"
+              role="img"
+              aria-label="Labels"></span>
+        Labels
+      </a>
+    </nav>
+  </div>
+{% endblock %}
+{# ============================================================
+   MAIN CONTENT: Labels beheer
+   ============================================================ #}
 {% block content %}
-  <main class="rvo-sidebar-layout__container">
-    <div class="rvo-sidebar-layout rvo-max-width-layout rvo-max-width-layout--lg">
-      {% include "parts/admin_sidebar.html" %}
-      <div class="rvo-sidebar-layout__content">
-        <div class="rvo-layout-column rvo-layout-gap--xl">
-          <div class="admin-header">
-            <c-h1>Labels</c-h1>
-            <c-button kind="primary" icon="plus" iconPlacement="before" hx-get="{{ url('label-category-create', args=() ) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
-            Categorie toevoegen
-            </c-button>
-          </div>
-          {# Categories and Labels #}
-          {% if categories %}
-            {% for category in categories %}
-              <div id="label_category_{{ category.id }}">{% include "parts/label_category.html" %}</div>
-            {% endfor %}
-          {% else %}
-            <p>Geen categorieën gevonden. Maak een nieuwe categorie aan om te beginnen.</p>
-          {% endif %}
-          {# Modal container #}
-          <div id="labelFormModal"></div>
-        </div>
-      </div>
+  <div class="rvo-layout-column rvo-layout-gap--xl">
+    <div class="admin-header">
+      <c-h1>Labels</c-h1>
+      <c-button kind="primary" icon="plus" iconPlacement="before" hx-get="{{ url('label-category-create', args=() ) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+      Categorie toevoegen
+      </c-button>
     </div>
-  </main>
-{% endblock content %}
+    <!-- Categories and Labels -->
+    {% if categories %}
+      {% for category in categories %}
+        <div id="label_category_{{ category.id }}">{% include 'parts/label_category.html' %}</div>
+      {% endfor %}
+    {% else %}
+      <p>Geen categorieën gevonden. Maak een nieuwe categorie aan om te beginnen.</p>
+    {% endif %}
+    <!-- Modal container -->
+    <div id="labelFormModal"></div>
+  </div>
+{% endblock %}
