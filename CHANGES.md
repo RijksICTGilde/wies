@@ -6,9 +6,10 @@ This files lists the changes during the lifetime of this project.
 
 - 143: Bump Django from 5.2.9 to 6.0.1
 - 144: Drop django-extensions
-- 162: Add pre-cmmit, ruff, djlint, pytest and coverage report
-- 162: Add .editor.config
-- 162: Add Github action for labeling pre-commit PRs with label dependencies
+- 150: Add Wies logo to navbar item "Wie zit waar?"
+- 162: Add pre-commit, ruff, djlint, pytest and coverage report
+- 162: Add .editorconfig
+- 162: Add GitHub action for labeling pre-commit PRs with label dependencies
 - 162: Change formatting according to styling rules
 - 161: Fix that BM link no longer resets active filters
 
