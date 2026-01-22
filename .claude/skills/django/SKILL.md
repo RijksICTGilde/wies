@@ -6,12 +6,15 @@ description: Django development patterns for Wies. Use when working with views, 
 # Django Patterns for Wies
 
 ## Documentation
+
 Always check the latest Django documentation when uncertain about APIs or best practices:
+
 - Django docs: https://docs.djangoproject.com/en/5.2/
 - Use WebFetch to verify current syntax and recommendations
 - This project uses Django 5.2
 
 ## Project Structure
+
 ```
 wies/
 ├── core/
@@ -27,6 +30,7 @@ wies/
 ```
 
 ## Models
+
 - All models in `wies/core/models.py`
 - Use `verbose_name` for Dutch field labels
 - ForeignKey: always use `related_name` and `on_delete`
@@ -47,6 +51,7 @@ class MyModel(models.Model):
 ```
 
 ## Views
+
 - Use function-based views or Django's generic CBVs
 - Always check permissions with `user_can_edit_*` functions from `roles.py`
 - Use `@login_required` decorator
@@ -60,6 +65,7 @@ def my_view(request):
 ```
 
 ## Forms
+
 - Use `RVOMixin` for RVO design system styling
 - Define `verbose_name` in model for automatic Dutch labels
 
@@ -71,12 +77,14 @@ class MyForm(RVOMixin, forms.ModelForm):
 ```
 
 ## Templates (Jinja2)
+
 - Located in `wies/core/jinja2/`
 - Use jinja-roos-components for UI elements
 - CSRF token: `{{ get_csrf_hidden_input(request) }}`
 - Static files: `{{ static('path/to/file') }}`
 
 ## Testing
+
 - Test files in `wies/core/tests/`
 - Use `self.client.force_login(user)` for authenticated tests
 - Test permission checks for each role
@@ -95,6 +103,7 @@ class MyViewTest(TestCase):
 ```
 
 ## HTMX Integration
+
 Views often return partial HTML for HTMX requests:
 
 ```python

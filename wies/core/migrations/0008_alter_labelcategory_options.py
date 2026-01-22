@@ -4,14 +4,13 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0007_alter_assignment_extra_info'),
+        ("core", "0007_alter_assignment_extra_info"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='labelcategory',
-            options={'ordering': ['name']},
+            name="labelcategory",
+            options={"ordering": ["name"]},
         ),
     ]

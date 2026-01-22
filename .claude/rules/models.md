@@ -10,7 +10,9 @@ When changing Django models:
 6. **Run tests** to verify nothing breaks
 
 ## Dummy Data Format
+
 Django dumpdata format:
+
 - model: "core.modelname"
 - pk: integer
 - fields: { field values }

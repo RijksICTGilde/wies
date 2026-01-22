@@ -31,6 +31,7 @@ When changing Django models in Wies, follow this workflow:
 ```
 
 ## Checklist
+
 - [ ] Model updated
 - [ ] dummy_data.json updated
 - [ ] Migration mentioned (not executed)
