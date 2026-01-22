@@ -23,6 +23,10 @@ setup:
 up:
   docker compose up
 
+# Stop and remove containers
+down:
+  docker compose down
+
 up-jrc-m:
   docker compose run -v /Users/matthijs/jinja-roos-components:/app/jinja-roos-components --service-ports django sh -c "uv pip install -e ./jinja-roos-components && python manage.py runserver 0.0.0.0:8000"
 
@@ -51,4 +55,22 @@ manage *args="--help":
   docker compose run --rm django python manage.py {{args}}
 
 test:
-  docker compose run --rm django python manage.py test wies
+  docker compose run --rm django uv run pytest
+
+# Run linting checks
+lint:
+  uv run ruff check .
+  uv run ruff format --check .
+
+# Auto-fix linting issues and format code
+format:
+  uv run ruff check --fix .
+  uv run ruff format .
+
+# Run all pre-commit hooks
+pre-commit:
+  uv run pre-commit run --all-files
+
+# Install pre-commit hooks
+pre-commit-install:
+  uv run pre-commit install

@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0005_label_labelcategory_remove_user_brand_and_more'),
+        ("core", "0005_label_labelcategory_remove_user_brand_and_more"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Event',
+            name="Event",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('timestamp', models.DateTimeField(auto_now_add=True, db_index=True)),
-                ('user_email', models.EmailField(blank=True, db_index=True, max_length=255)),
-                ('name', models.CharField(db_index=True, max_length=32)),
-                ('context', models.JSONField(default=dict)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("timestamp", models.DateTimeField(auto_now_add=True, db_index=True)),
+                ("user_email", models.EmailField(blank=True, db_index=True, max_length=255)),
+                ("name", models.CharField(db_index=True, max_length=32)),
+                ("context", models.JSONField(default=dict)),
             ],
         ),
     ]

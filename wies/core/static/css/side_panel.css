@@ -4,9 +4,7 @@ dialog#side_panel {
   inset: 0 0 0 auto !important;
   height: 100vh !important;
   min-height: 100vh !important;
-  width: 600px !important;
-  max-width: 700px !important;
-  min-width: 500px !important;
+  width: 900px !important;
   margin: 0 !important;
   border: none !important;
   padding: 0 !important;
@@ -22,7 +20,6 @@ dialog.rvo-dialog--inset-inline-end::backdrop {
 }
 
 /* Remove old overlay system - now using ::backdrop */
-
 
 /* Side panel header with back and close buttons */
 .side-panel__header {
@@ -60,17 +57,17 @@ dialog.rvo-dialog--inset-inline-end::backdrop {
     max-width: none;
     min-width: none;
   }
-  
+
   .rvo-dialog__background::before {
     display: none;
   }
-  
+
   .rvo-dialog__close {
     width: 100%;
     box-sizing: border-box;
     background: white;
   }
-  
+
   .rvo-dialog__content {
     height: calc(100vh - 80px);
     overflow-y: auto;

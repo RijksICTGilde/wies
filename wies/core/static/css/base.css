@@ -1,5 +1,5 @@
 html {
-	scrollbar-gutter: stable;
+  scrollbar-gutter: stable;
 }
 
 /* Table row styling - custom application classes */
@@ -8,7 +8,7 @@ html {
   transition: background-color 0.2s ease;
 }
 
-.clickable-row:hover{
+.clickable-row:hover {
   background-color: var(--rvo-color-hemelblauw-150) !important;
   cursor: pointer;
 }
@@ -94,7 +94,9 @@ html {
   justify-content: center;
   font-weight: var(--rvo-font-weight-semibold);
   color: var(--rvo-color-logoblauw);
-  font-family: var(--rvo-font-sans-serif-font-family), var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
+  font-family:
+    var(--rvo-font-sans-serif-font-family),
+    var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
 }
 
 .user-info {
@@ -181,7 +183,7 @@ html {
   flex: 0 0 auto; /* Prevents buttons from stretching */
 }
 
-.menu-item--active{
+.menu-item--active {
   font-weight: 600;
   text-decoration: underline !important;
 }

@@ -4,17 +4,15 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
-
-
 def migrate_brands_to_labels(apps, schema_editor):
     """
     Forward migration: Convert Brand objects to Labels in "Merk" category
     """
-    Brand = apps.get_model('core', 'Brand')
-    LabelCategory = apps.get_model('core', 'LabelCategory')
-    Label = apps.get_model('core', 'Label')
-    User = apps.get_model('core', 'User')
-    Colleague = apps.get_model('core', 'Colleague')
+    Brand = apps.get_model("core", "Brand")
+    LabelCategory = apps.get_model("core", "LabelCategory")
+    Label = apps.get_model("core", "Label")
+    User = apps.get_model("core", "User")
+    Colleague = apps.get_model("core", "Colleague")
 
     # we don't automatically want to generate brand category if there is no existing data
     # this would block the generation of default label during setup
@@ -24,16 +22,10 @@ def migrate_brands_to_labels(apps, schema_editor):
     brand_to_label = {}
     for brand in Brand.objects.all():
         if merken_category is None:
-            merken_category, _ = LabelCategory.objects.get_or_create(
-                name='Merk',
-                defaults={'color': '#94A3B8'}
-            )
+            merken_category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#94A3B8"})
 
-        label, _ = Label.objects.get_or_create(
-            name=brand.name,
-            category=merken_category
-        )
-        
+        label, _ = Label.objects.get_or_create(name=brand.name, category=merken_category)
+
         brand_to_label[brand.id] = label
 
     # Migrate User.brand -> User.labels
@@ -51,14 +43,14 @@ def reverse_labels_to_brands(apps, schema_editor):
     """
     Reverse migration: Restore Brand model from Labels in "Merk" category
     """
-    Brand = apps.get_model('core', 'Brand')
-    LabelCategory = apps.get_model('core', 'LabelCategory')
-    Label = apps.get_model('core', 'Label')
-    User = apps.get_model('core', 'User')
-    Colleague = apps.get_model('core', 'Colleague')
+    Brand = apps.get_model("core", "Brand")
+    LabelCategory = apps.get_model("core", "LabelCategory")
+    Label = apps.get_model("core", "Label")
+    User = apps.get_model("core", "User")
+    Colleague = apps.get_model("core", "Colleague")
 
     try:
-        merken_category = LabelCategory.objects.get(name='Merk')
+        merken_category = LabelCategory.objects.get(name="Merk")
     except LabelCategory.DoesNotExist:
         return  # Nothing to migrate back
 
@@ -86,56 +78,61 @@ def reverse_labels_to_brands(apps, schema_editor):
                 colleague.brand = label_to_brand[first_label.id]
                 colleague.save()
 
-class Migration(migrations.Migration):
 
+class Migration(migrations.Migration):
     dependencies = [
-        ('core', '0004_alter_user_email'),
+        ("core", "0004_alter_user_email"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='LabelCategory',
+            name="LabelCategory",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, unique=True)),
-                ('color', models.CharField(max_length=7)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=100, unique=True)),
+                ("color", models.CharField(max_length=7)),
             ],
         ),
         migrations.CreateModel(
-            name='Label',
+            name="Label",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('category', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='labels', to='core.labelcategory')),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=100)),
+                (
+                    "category",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name="labels", to="core.labelcategory"
+                    ),
+                ),
             ],
             options={
-                'ordering': [django.db.models.functions.text.Lower('name')],
+                "ordering": [django.db.models.functions.text.Lower("name")],
             },
         ),
         migrations.AlterUniqueTogether(
-            name='label',
-            unique_together={('name', 'category')},
+            name="label",
+            unique_together={("name", "category")},
         ),
         migrations.AddField(
-            model_name='user',
-            name='labels',
-            field=models.ManyToManyField(blank=True, related_name='users', to='core.label'),
+            model_name="user",
+            name="labels",
+            field=models.ManyToManyField(blank=True, related_name="users", to="core.label"),
         ),
         migrations.AddField(
-            model_name='colleague',
-            name='labels',
-            field=models.ManyToManyField(blank=True, related_name='colleagues', to='core.label'),
+            model_name="colleague",
+            name="labels",
+            field=models.ManyToManyField(blank=True, related_name="colleagues", to="core.label"),
         ),
         migrations.RunPython(migrate_brands_to_labels, reverse_labels_to_brands),
         migrations.RemoveField(
-            model_name='user',
-            name='brand',
+            model_name="user",
+            name="brand",
         ),
         migrations.RemoveField(
-            model_name='colleague',
-            name='brand',
+            model_name="colleague",
+            name="brand",
         ),
         migrations.DeleteModel(
-            name='Brand',
+            name="Brand",
         ),
     ]

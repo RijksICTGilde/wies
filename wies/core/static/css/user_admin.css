@@ -7,15 +7,18 @@
 }
 
 /* Column width optimization for user table */
-#user_table .rvo-table th:nth-child(1), #user_table .rvo-table td:nth-child(1) {
+#user_table .rvo-table th:nth-child(1),
+#user_table .rvo-table td:nth-child(1) {
   width: 30%; /* Naam column - more space for avatar + info */
 }
 
-#user_table .rvo-table th:nth-child(2), #user_table .rvo-table td:nth-child(2) {
+#user_table .rvo-table th:nth-child(2),
+#user_table .rvo-table td:nth-child(2) {
   width: 40%; /* Rollen column */
 }
 
-#user_table .rvo-table th:nth-child(3), #user_table .rvo-table td:nth-child(3) {
+#user_table .rvo-table th:nth-child(3),
+#user_table .rvo-table td:nth-child(3) {
   width: 30%; /* Acties column - wider to fit both buttons */
   white-space: nowrap;
   min-width: 220px; /* Ensure minimum width for buttons */
