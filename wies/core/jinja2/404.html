@@ -10,6 +10,8 @@
 {% endblock error_message %}
 {% block error_extra %}
   <p class="rvo-text">
+    {# djlint:off J018 - url() doesn't work in error handler context #}
     <a href="/">Ga naar de homepage</a>
+    {# djlint:on #}
   </p>
 {% endblock error_extra %}
