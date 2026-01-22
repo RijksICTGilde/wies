@@ -33,6 +33,10 @@ class AccessControlTest(TestCase):
         login_not_required_paths = [
             "/djadmin/login/",
             "/geen-toegang/",
+            # Endpoints where login is not required but which are tested separately
+            # '/auth/',    # /auth/ requires OIDC state and will raise an error without it. This path is tested in
+            #                test_auth_views.py with proper mocking.
+            # '/logout/',  # /logout/ redirects to login. Tested in test_auth_view.
         ]
 
         for path in login_not_required_paths:
