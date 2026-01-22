@@ -1,9 +1,15 @@
 {% extends "base_error.html" %}
-{% block title %}HTTP 404 - Pagina niet gevonden - Wies{% endblock %}
-{% block error_title %}HTTP 404 - Pagina niet gevonden{% endblock %}
-{% block error_message %}De pagina die je zoekt bestaat niet of is verplaatst.{% endblock %}
+{% block title %}
+  HTTP 404 - Pagina niet gevonden - Wies
+{% endblock title %}
+{% block error_title %}
+  HTTP 404 - Pagina niet gevonden
+{% endblock error_title %}
+{% block error_message %}
+  De pagina die je zoekt bestaat niet of is verplaatst.
+{% endblock error_message %}
 {% block error_extra %}
   <p class="rvo-text">
     <a href="/">Ga naar de homepage</a>
   </p>
-{% endblock %}
+{% endblock error_extra %}
