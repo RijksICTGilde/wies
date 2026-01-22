@@ -9,7 +9,7 @@ class SecurityHeadersMiddleware:
     def __call__(self, request):
         response = self.get_response(request)
 
-        # Using geolocation, microphone or camera is completely blocked 
+        # Using geolocation, microphone or camera is completely blocked
         response["Permissions-Policy"] = "geolocation=(), microphone=(), camera=()"
 
         # Content-Security-Policy

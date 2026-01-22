@@ -1,25 +1,25 @@
 {% extends "base.html" %}
-
-{% block header %}
-    <!-- No header on error pages -->
-{% endblock %}
-
+{% block header %}<!-- No header on error pages -->{% endblock %}
 {% block content %}
-<main class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--md">
-<div class="rvo-layout-column rvo-layout-gap--xl rvo-layout-align-items--center" style="min-height: 70vh; justify-content: center;">
-    <div class="rvo-max-width-layout rvo-max-width-layout--sm">
+  <main class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--md">
+    <div class="rvo-layout-column rvo-layout-gap--xl rvo-layout-align-items--center"
+         style="min-height: 70vh;
+                justify-content: center">
+      <div class="rvo-max-width-layout rvo-max-width-layout--sm">
         <div class="rvo-card rvo-card--padding-lg">
-            <div class="rvo-layout-column rvo-layout-gap--lg rvo-layout-align-items--center">
-                <div class="rvo-layout-column rvo-layout-gap--md rvo-layout-align-items--center">
-                    <c-h1>{% block error_title %}Fout{% endblock %}</c-h1>
-                    <p class="rvo-text">
-                        {% block error_message %}Er is iets misgegaan.{% endblock %}
-                    </p>
-                    {% block error_extra %}{% endblock %}
-                </div>
+          <div class="rvo-layout-column rvo-layout-gap--lg rvo-layout-align-items--center">
+            <div class="rvo-layout-column rvo-layout-gap--md rvo-layout-align-items--center">
+              <c-h1>
+              {% block error_title %}Fout{% endblock %}
+              </c-h1>
+              <p class="rvo-text">
+                {% block error_message %}Er is iets misgegaan.{% endblock %}
+              </p>
+              {% block error_extra %}{% endblock %}
             </div>
+          </div>
         </div>
+      </div>
     </div>
-</div>
-</main>
+  </main>
 {% endblock %}
