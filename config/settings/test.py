@@ -50,6 +50,12 @@ CACHES = {
 # ----------------------------------------------------------------------------------------------------------------------
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
+# ALLOWED EMAIL DOMAINS
+# ----------------------------------------------------------------------------------------------------------------------
+# Disable email domain validation in tests by default.
+# Tests that specifically test email domain validation use @override_settings.
+ALLOWED_EMAIL_DOMAINS = []
+
 # STATIC FILES
 # ----------------------------------------------------------------------------------------------------------------------
 # Disable WhiteNoise middleware to avoid warnings about missing staticfiles directory

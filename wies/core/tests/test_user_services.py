@@ -1,9 +1,10 @@
 import pytest
-from django.test import TestCase
+from django.contrib.auth.models import Group
+from django.test import TestCase, override_settings
 
 from wies.core.errors import EmailNotAvailableError
 from wies.core.models import Event, User
-from wies.core.services.users import create_user, update_user
+from wies.core.services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
 
 class CreateUserServiceTest(TestCase):
@@ -141,3 +142,95 @@ class UpdateUserServiceTest(TestCase):
         # Verify user1's email was not changed
         user1.refresh_from_db()
         assert user1.email == "user1@example.com"
+
+
+@override_settings(ALLOWED_EMAIL_DOMAINS=["@rijksoverheid.nl", "@minbzk.nl"])
+class EmailDomainValidationTest(TestCase):
+    """Tests for is_allowed_email_domain helper function"""
+
+    def test_allowed_rijksoverheid_domain(self):
+        """Test that @rijksoverheid.nl emails are allowed"""
+        assert is_allowed_email_domain("test@rijksoverheid.nl") is True
+
+    def test_allowed_minbzk_domain(self):
+        """Test that @minbzk.nl emails are allowed"""
+        assert is_allowed_email_domain("test@minbzk.nl") is True
+
+    def test_disallowed_external_domain(self):
+        """Test that external domains are not allowed"""
+        assert is_allowed_email_domain("test@gmail.com") is False
+        assert is_allowed_email_domain("test@external.nl") is False
+
+    def test_case_insensitive(self):
+        """Test that domain check is case insensitive"""
+        assert is_allowed_email_domain("test@RIJKSOVERHEID.NL") is True
+        assert is_allowed_email_domain("test@MinBZK.nl") is True
+
+
+@override_settings(ALLOWED_EMAIL_DOMAINS=[])
+class EmailDomainValidationDisabledTest(TestCase):
+    """Tests for when email domain validation is disabled"""
+
+    def test_any_domain_allowed_when_empty_list(self):
+        """Test that any domain is allowed when ALLOWED_EMAIL_DOMAINS is empty"""
+        assert is_allowed_email_domain("test@anydomain.com") is True
+
+
+@override_settings(ALLOWED_EMAIL_DOMAINS=["@rijksoverheid.nl", "@minbzk.nl"])
+class CreateUsersFromCSVEmailDomainTest(TestCase):
+    """Tests for email domain validation in CSV import"""
+
+    def setUp(self):
+        """Create required groups for CSV import"""
+        Group.objects.get_or_create(name="Beheerder")
+        Group.objects.get_or_create(name="Consultant")
+        Group.objects.get_or_create(name="Business Development Manager")
+
+    def test_csv_import_valid_emails(self):
+        """Test CSV import with valid ODI email addresses"""
+        csv_content = """first_name,last_name,email
+Jan,Jansen,jan.jansen@rijksoverheid.nl
+Piet,Pietersen,piet.pietersen@minbzk.nl"""
+
+        result = create_users_from_csv(None, csv_content)
+
+        assert result["success"] is True
+        assert result["users_created"] == 2
+        assert len(result["errors"]) == 0
+
+    def test_csv_import_invalid_email_domain(self):
+        """Test CSV import rejects invalid email domains"""
+        csv_content = """first_name,last_name,email
+Jan,Jansen,jan.jansen@gmail.com"""
+
+        result = create_users_from_csv(None, csv_content)
+
+        assert result["success"] is False
+        assert result["users_created"] == 0
+        assert len(result["errors"]) == 1
+        assert "invalid domain" in result["errors"][0]
+        assert "@rijksoverheid.nl" in result["errors"][0]
+
+    def test_csv_import_mixed_valid_invalid_emails(self):
+        """Test CSV import with mix of valid and invalid email domains"""
+        csv_content = """first_name,last_name,email
+Jan,Jansen,jan.jansen@rijksoverheid.nl
+Piet,Pietersen,piet@external.com
+Kees,Ansen,kees@minbzk.nl"""
+
+        result = create_users_from_csv(None, csv_content)
+
+        assert result["success"] is False
+        assert result["users_created"] == 0  # No users created when any validation fails
+        assert len(result["errors"]) == 1
+        assert "Row 3" in result["errors"][0]  # Piet is on row 3
+
+    def test_csv_import_client_email_rejected(self):
+        """Test CSV import rejects client email addresses"""
+        csv_content = """first_name,last_name,email
+Jan,Jansen,jan.jansen@clientorganisatie.nl"""
+
+        result = create_users_from_csv(None, csv_content)
+
+        assert result["success"] is False
+        assert "invalid domain" in result["errors"][0]

@@ -17,6 +17,7 @@ from wies.core.models import User
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
         },
     },
+    ALLOWED_EMAIL_DOMAINS=["@rijksoverheid.nl", "@minbzk.nl"],
 )
 class AuthViewsTest(TestCase):
     """Integration tests for authentication flow views"""

@@ -5,7 +5,7 @@ from django.contrib.auth.models import Group
 from django.test import TestCase, override_settings
 
 from wies.core.forms import RvoFormMixin, UserForm
-from wies.core.models import Label, LabelCategory
+from wies.core.models import Label, LabelCategory, User
 
 
 @override_settings(
@@ -149,3 +149,145 @@ class RvoFormMixinTest(TestCase):
         assert "FileInput" in log.output[0]
         assert "document" in log.output[0]
         assert "not in RVO widget_templates mapping" in log.output[0]
+
+
+@override_settings(
+    STORAGES={
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    },
+    ALLOWED_EMAIL_DOMAINS=["@rijksoverheid.nl", "@minbzk.nl"],
+)
+class UserFormEmailDomainValidationTest(TestCase):
+    """Tests for email domain validation in UserForm"""
+
+    def setUp(self):
+        """Create test data"""
+        Group.objects.get_or_create(name="Beheerder")
+        Group.objects.get_or_create(name="Consultant")
+        Group.objects.get_or_create(name="Business Development Manager")
+
+    def test_valid_rijksoverheid_email(self):
+        """Test that @rijksoverheid.nl emails are accepted"""
+        form = UserForm(
+            data={
+                "first_name": "Test",
+                "last_name": "User",
+                "email": "test.user@rijksoverheid.nl",
+            }
+        )
+        assert form.is_valid(), f"Form should be valid, errors: {form.errors}"
+
+    def test_valid_minbzk_email(self):
+        """Test that @minbzk.nl emails are accepted"""
+        form = UserForm(
+            data={
+                "first_name": "Test",
+                "last_name": "User",
+                "email": "test.user@minbzk.nl",
+            }
+        )
+        assert form.is_valid(), f"Form should be valid, errors: {form.errors}"
+
+    def test_invalid_external_email(self):
+        """Test that external email addresses are rejected"""
+        form = UserForm(
+            data={
+                "first_name": "Test",
+                "last_name": "User",
+                "email": "test.user@gmail.com",
+            }
+        )
+        assert not form.is_valid()
+        assert "email" in form.errors
+        assert "ODI e-mailadressen" in str(form.errors["email"])
+
+    def test_invalid_client_email(self):
+        """Test that client email addresses are rejected"""
+        form = UserForm(
+            data={
+                "first_name": "Test",
+                "last_name": "User",
+                "email": "test.user@externeclient.nl",
+            }
+        )
+        assert not form.is_valid()
+        assert "email" in form.errors
+
+    def test_email_validation_case_insensitive(self):
+        """Test that email domain validation is case insensitive"""
+        form = UserForm(
+            data={
+                "first_name": "Test",
+                "last_name": "User",
+                "email": "test.user@RIJKSOVERHEID.NL",
+            }
+        )
+        assert form.is_valid(), f"Form should accept uppercase domain, errors: {form.errors}"
+
+    def test_edit_existing_user_with_valid_email(self):
+        """Test editing an existing user with a valid email domain"""
+        user = User.objects.create(
+            username="existinguser",
+            email="existing@rijksoverheid.nl",
+            first_name="Existing",
+            last_name="User",
+        )
+        form = UserForm(
+            data={
+                "first_name": "Updated",
+                "last_name": "Name",
+                "email": "updated@minbzk.nl",
+            },
+            instance=user,
+        )
+        assert form.is_valid(), f"Form should be valid, errors: {form.errors}"
+
+    def test_edit_existing_user_with_invalid_email(self):
+        """Test editing an existing user with an invalid email domain is rejected"""
+        user = User.objects.create(
+            username="existinguser",
+            email="existing@rijksoverheid.nl",
+            first_name="Existing",
+            last_name="User",
+        )
+        form = UserForm(
+            data={
+                "first_name": "Updated",
+                "last_name": "Name",
+                "email": "updated@external.com",
+            },
+            instance=user,
+        )
+        assert not form.is_valid()
+        assert "email" in form.errors
+
+
+@override_settings(
+    STORAGES={
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    },
+    ALLOWED_EMAIL_DOMAINS=[],  # Empty list = no restriction
+)
+class UserFormEmailDomainValidationDisabledTest(TestCase):
+    """Tests for when email domain validation is disabled"""
+
+    def setUp(self):
+        """Create test data"""
+        Group.objects.get_or_create(name="Beheerder")
+        Group.objects.get_or_create(name="Consultant")
+        Group.objects.get_or_create(name="Business Development Manager")
+
+    def test_any_email_accepted_when_no_domain_restriction(self):
+        """Test that any email is accepted when ALLOWED_EMAIL_DOMAINS is empty"""
+        form = UserForm(
+            data={
+                "first_name": "Test",
+                "last_name": "User",
+                "email": "anyone@anydomain.com",
+            }
+        )
+        assert form.is_valid(), f"Form should accept any email when no restriction, errors: {form.errors}"

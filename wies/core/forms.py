@@ -1,6 +1,7 @@
 import logging
 
 from django import forms
+from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.forms.renderers import Jinja2
@@ -138,7 +139,7 @@ class UserForm(RvoFormMixin, forms.ModelForm):
 
     first_name = forms.CharField(label="Voornaam", required=True)
     last_name = forms.CharField(label="Achternaam", required=True)
-    email = forms.EmailField(label="Email (ODI)", required=True)
+    email = forms.EmailField(label="E-mail (ODI)", required=True)
     groups = forms.ModelMultipleChoiceField(
         label="Rollen",
         queryset=Group.objects.filter(),
@@ -152,6 +153,15 @@ class UserForm(RvoFormMixin, forms.ModelForm):
         model = User
         fields = ["first_name", "last_name", "email", "groups"]
         # label attribute is manually constructed and serialized below
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email", "").lower()
+        allowed_domains = getattr(settings, "ALLOWED_EMAIL_DOMAINS", [])
+        if allowed_domains and not any(email.endswith(domain) for domain in allowed_domains):
+            domains_str = ", ".join(allowed_domains)
+            msg = f"Alleen ODI e-mailadressen zijn toegestaan ({domains_str})"
+            raise ValidationError(msg)
+        return email
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
