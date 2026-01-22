@@ -68,6 +68,7 @@ just up             # Start application
 just down           # Stop containers
 just test           # Run tests
 just manage [...]   # Django manage.py commands
+just update-vendor  # Update vendor assets (htmx, RVO CSS)
 ```
 
 ### Testing

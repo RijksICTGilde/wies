@@ -27,7 +27,7 @@ class SecurityHeadersMiddleware:
         # See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
         response["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline' https://unpkg.com; "
+            "script-src 'self' 'unsafe-inline'; "
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:; "
             "font-src 'self'; "
