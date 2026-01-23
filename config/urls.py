@@ -48,7 +48,7 @@ from wies.core.views import (
     user_import_csv,
 )
 
-urlpatterns = [    
+urlpatterns = [
     # Well-known paths
     path("favicon.ico", RedirectView.as_view(url=settings.STATIC_URL + "favicon.ico", permanent=False)),
     path("robots.txt", robots_txt, name="robots-txt"),
