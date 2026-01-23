@@ -25,7 +25,7 @@ from .roles import user_can_edit_assignment
 from .services.events import create_event
 from .services.placements import create_placements_from_csv, filter_placements_by_period
 from .services.sync import sync_all_otys_iir_records
-from .services.users import create_user, create_users_from_csv, update_user
+from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
 logger = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ def auth(request):
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
 def no_access(request):
     email = request.session.pop("failed_login_email", None)
-    is_allowed_domain = email and any(email.endswith(domain) for domain in settings.ALLOWED_EMAIL_DOMAINS)
+    is_allowed_domain = email and is_allowed_email_domain(email)
     return render(request, "no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
 
 

@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
-from wies.core.errors import EmailNotAvailableError
+from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import Event, User
 from wies.core.services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
@@ -70,6 +70,23 @@ class CreateUserServiceTest(TestCase):
 
         # Verify only one user exists with that email
         assert User.objects.filter(email="duplicate@rijksoverheid.nl").count() == 1
+
+    def test_create_user_invalid_email_domain(self):
+        """Test that creating user with invalid email domain raises InvalidEmailDomainError"""
+        with pytest.raises(InvalidEmailDomainError) as exc_info:
+            create_user(
+                None,
+                first_name="External",
+                last_name="User",
+                email="external@gmail.com",
+            )
+
+        # Verify error contains useful info
+        assert exc_info.value.email == "external@gmail.com"
+        assert "@rijksoverheid.nl" in exc_info.value.allowed_domains
+
+        # Verify no user was created
+        assert not User.objects.filter(email="external@gmail.com").exists()
 
 
 class UpdateUserServiceTest(TestCase):
@@ -142,6 +159,33 @@ class UpdateUserServiceTest(TestCase):
         # Verify user1's email was not changed
         user1.refresh_from_db()
         assert user1.email == "user1@rijksoverheid.nl"
+
+    def test_update_user_invalid_email_domain(self):
+        """Test that updating user with invalid email domain raises InvalidEmailDomainError"""
+        # Create a user with valid email
+        user = create_user(
+            None,
+            first_name="Test",
+            last_name="User",
+            email="test@rijksoverheid.nl",
+        )
+
+        # Try to update to invalid email domain
+        with pytest.raises(InvalidEmailDomainError) as exc_info:
+            update_user(
+                None,
+                user=user,
+                first_name="Test",
+                last_name="User",
+                email="test@gmail.com",
+            )
+
+        # Verify error contains useful info
+        assert exc_info.value.email == "test@gmail.com"
+
+        # Verify user's email was not changed
+        user.refresh_from_db()
+        assert user.email == "test@rijksoverheid.nl"
 
 
 class EmailDomainValidationTest(TestCase):

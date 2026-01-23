@@ -9,6 +9,7 @@ from django.forms.utils import ErrorList
 from django.template import engines
 
 from .models import Label, LabelCategory, User
+from .services.users import is_allowed_email_domain
 
 logger = logging.getLogger(__name__)
 
@@ -156,8 +157,8 @@ class UserForm(RvoFormMixin, forms.ModelForm):
 
     def clean_email(self):
         email = self.cleaned_data.get("email", "").lower()
-        allowed_domains = getattr(settings, "ALLOWED_EMAIL_DOMAINS", [])
-        if allowed_domains and not any(email.endswith(domain) for domain in allowed_domains):
+        if not is_allowed_email_domain(email):
+            allowed_domains = getattr(settings, "ALLOWED_EMAIL_DOMAINS", [])
             domains_str = ", ".join(allowed_domains)
             msg = f"Alleen ODI e-mailadressen zijn toegestaan ({domains_str})"
             raise ValidationError(msg)

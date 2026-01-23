@@ -7,7 +7,7 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
-from wies.core.errors import EmailNotAvailableError
+from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import DEFAULT_LABELS, Label, LabelCategory, User
 from wies.core.services.events import create_event
 
@@ -27,6 +27,10 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
 
     if groups is None:
         groups = []
+
+    # Validate email domain
+    if not is_allowed_email_domain(email):
+        raise InvalidEmailDomainError(email)
 
     # django built in User model necessitates a username, this generates a random one
     random_username = uuid.uuid4()
@@ -70,6 +74,10 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
 
     if groups is None:
         groups = []
+
+    # Validate email domain
+    if not is_allowed_email_domain(email):
+        raise InvalidEmailDomainError(email)
 
     try:
         user_with_email = User.objects.get(email=email)
