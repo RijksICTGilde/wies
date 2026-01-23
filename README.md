@@ -68,7 +68,40 @@ just up             # Start application
 just down           # Stop containers
 just test           # Run tests
 just manage [...]   # Django manage.py commands
+just update-vendor  # Update vendor assets (htmx, RVO CSS)
 ```
+
+### Vendor Assets
+
+This project vendors external JavaScript and CSS dependencies instead of using a CDN. This ensures the application works without external network dependencies and improves security (no CDN in CSP).
+
+**Vendored packages:**
+
+- [htmx](https://htmx.org/) - JavaScript library for AJAX/HTML
+- [@nl-rvo/design-tokens](https://www.npmjs.com/package/@nl-rvo/design-tokens) - RVO design tokens
+- [@nl-rvo/component-library-css](https://www.npmjs.com/package/@nl-rvo/component-library-css) - RVO component styles
+
+#### Update vendor dependencies
+
+To update vendor dependencies:
+
+1. Edit the version numbers in `justfile`:
+
+   ```
+   HTMX_VERSION := "2.0.6"
+   RVO_DESIGN_TOKENS_VERSION := "1.11.0"
+   RVO_COMPONENT_LIBRARY_VERSION := "4.11.1"
+   ```
+
+2. Run the update command:
+
+   ```bash
+   just update-vendor
+   ```
+
+3. Test the application to verify everything works with the new versions.
+
+4. Commit the updated files in `wies/core/static/vendor/`.
 
 ### Testing
 
