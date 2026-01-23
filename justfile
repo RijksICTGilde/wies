@@ -1,5 +1,10 @@
 export COMPOSE_FILE := "docker-compose.yml"
 
+# Vendor package versies
+HTMX_VERSION := "2.0.6"
+RVO_DESIGN_TOKENS_VERSION := "1.11.0"
+RVO_COMPONENT_LIBRARY_VERSION := "4.11.1"
+
 # Default command to list all available commands.
 default:
   @just --list
@@ -55,4 +60,38 @@ manage *args="--help":
   docker compose run --rm django python manage.py {{args}}
 
 test:
-  docker compose run --rm django python manage.py test wies
+  docker compose run --rm django uv run pytest
+
+# Run linting checks
+lint:
+  uv run ruff check .
+  uv run ruff format --check .
+
+# Auto-fix linting issues and format code
+format:
+  uv run ruff check --fix .
+  uv run ruff format .
+
+# Run all pre-commit hooks
+pre-commit:
+  uv run pre-commit run --all-files
+
+# Install pre-commit hooks
+pre-commit-install:
+  uv run pre-commit install
+
+# Download vendor packages (externe dependencies lokaal)
+update-vendor:
+  @echo "Downloading vendor packages..."
+  @mkdir -p wies/core/static/vendor/htmx
+  @mkdir -p wies/core/static/vendor/rvo
+  curl -sL "https://unpkg.com/htmx.org@{{HTMX_VERSION}}/dist/htmx.min.js" \
+    -o wies/core/static/vendor/htmx/htmx.min.js
+  curl -sL "https://cdn.jsdelivr.net/npm/@nl-rvo/design-tokens@{{RVO_DESIGN_TOKENS_VERSION}}/dist/index.css" \
+    -o wies/core/static/vendor/rvo/design-tokens.css
+  curl -sL "https://cdn.jsdelivr.net/npm/@nl-rvo/component-library-css@{{RVO_COMPONENT_LIBRARY_VERSION}}/dist/index.css" \
+    -o wies/core/static/vendor/rvo/component-library.css
+  @echo "Done! Vendor packages updated:"
+  @echo "  - htmx.min.js ({{HTMX_VERSION}})"
+  @echo "  - design-tokens.css ({{RVO_DESIGN_TOKENS_VERSION}})"
+  @echo "  - component-library.css ({{RVO_COMPONENT_LIBRARY_VERSION}})"

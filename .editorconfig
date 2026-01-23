@@ -1,0 +1,26 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{py,rst,ini}]
+indent_style = space
+indent_size = 4
+
+[*.{html,css,scss,json,yml,yaml,xml,toml,js}]
+indent_style = space
+indent_size = 2
+
+[*.min.js]
+indent_style = ignore
+insert_final_newline = false
+
+[*.md]
+trim_trailing_whitespace = false
+
+[justfile]
+indent_style = space
+indent_size = 2

@@ -3,8 +3,7 @@ name = "wies"
 dynamic = ["version"]
 requires-python = ">=3.13"
 dependencies = [
-  "django==5.2.9",
-  "django_extensions==4.1",
+  "django==6.0.1",
   "whitenoise==6.11.0",
   "gunicorn==23.0.0",
   "Authlib==1.6.6",
@@ -14,8 +13,114 @@ dependencies = [
   "jinja_roos_components@git+https://github.com/RijksICTGilde/jinja-roos-components.git@0.3",
 ]
 
+[dependency-groups]
+dev = [
+  "pre-commit>=4.0.0",
+  "ruff>=0.9.0",
+  "djlint>=1.36.0",
+  "pytest>=8.0",
+  "pytest-django>=4.9",
+  "pytest-cov>=6.0",
+  "coverage[toml]>=7.6",
+]
+
 [tool.setuptools]
 py-modules = []
 
 [tool.uv]
 package = false
+
+# Ruff configuration
+[tool.ruff]
+target-version = "py313"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+  "F",     # pyflakes
+  "E",     # pycodestyle errors
+  "W",     # pycodestyle warnings
+  "C90",   # mccabe complexity
+  "I",     # isort
+  "N",     # pep8-naming
+  "UP",    # pyupgrade
+  "YTT",   # flake8-2020
+  "ASYNC", # flake8-async
+  "S",     # flake8-bandit (security)
+  "BLE",   # flake8-blind-except
+  "FBT",   # flake8-boolean-trap
+  "B",     # flake8-bugbear
+  "A",     # flake8-builtins
+  "C4",    # flake8-comprehensions
+  "DTZ",   # flake8-datetimez
+  "T10",   # flake8-debugger
+  "DJ",    # flake8-django
+  "EM",    # flake8-errmsg
+  "EXE",   # flake8-executable
+  "FA",    # flake8-future-annotations
+  "ISC",   # flake8-implicit-str-concat
+  "ICN",   # flake8-import-conventions
+  "G",     # flake8-logging-format
+  "INP",   # flake8-no-pep420
+  "PIE",   # flake8-pie
+  "T20",   # flake8-print
+  "PYI",   # flake8-pyi
+  "PT",    # flake8-pytest-style
+  "Q",     # flake8-quotes
+  "RSE",   # flake8-raise
+  "RET",   # flake8-return
+  "SLF",   # flake8-self
+  "SLOT",  # flake8-slots
+  "SIM",   # flake8-simplify
+  "TID",   # flake8-tidy-imports
+  "TC",    # flake8-type-checking
+  "INT",   # flake8-gettext
+  "PTH",   # flake8-use-pathlib
+  "ERA",   # eradicate (commented code)
+  "PD",    # pandas-vet
+  "PGH",   # pygrep-hooks
+  "PL",    # pylint
+  "TRY",   # tryceratops
+  "FLY",   # flynt
+  "PERF",  # perflint
+  "RUF",   # ruff-specific
+]
+ignore = [
+  "RUF012",  # mutable class attributes
+  "PLR0911", # too many return statements (fix later)
+  "PLR0912", # too many branches (fix later)
+  "PLR0913", # too many arguments (fix later)
+  "PLR0915", # too many statements (fix later)
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["wies", "config"]
+
+[tool.ruff.lint.per-file-ignores]
+"wies/core/tests/*" = ["E501", "S101", "S106", "PLR2004"]
+"wies/core/views.py" = ["C901"]  # complexity (fix later)
+"wies/core/services/*" = ["C901"]  # complexity (fix later)
+
+
+[tool.pytest.ini_options]
+addopts = "--cov=wies --cov-report=term-missing --no-cov-on-fail"
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["test_*.py"]
+
+[tool.coverage.run]
+source = ["wies"]
+omit = ["*/migrations/*", "*/tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+  "if TYPE_CHECKING:",
+]
+
+[tool.djlint]
+profile = "jinja"
+indent = 2
+max_line_length = 120
+ignore = "H006,H021,H030,H031"
+# H006: img width/height (fix later)
+# H021: inline styles (fix later)
+# H030,H031: meta description/keywords not needed for internal tool

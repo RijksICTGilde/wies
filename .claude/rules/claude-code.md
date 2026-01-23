@@ -3,6 +3,7 @@
 This project uses Claude Code with custom configuration.
 
 ## Directory Structure
+
 ```
 .claude/
 ├── CLAUDE.md           # Project instructions and context
@@ -14,20 +15,26 @@ This project uses Claude Code with custom configuration.
 ```
 
 ## Rules vs Skills
+
 - **Rules** (`rules/`): Always loaded as context. Use for coding standards, security, testing requirements.
 - **Skills** (`skills/`): Claude loads when relevant. Use for domain knowledge, workflows, component patterns.
 
 ## Available Skills
+
 - `jinja-roos-components` - UI component patterns
 - `wies-domain` - Project domain knowledge (plaatsingen, opdrachten, roles)
 - `django` - Django development patterns
 - `model-workflow` - Model change checklist
+- `planning-workflow` - Multi-agent planning for complex tasks
 
 ## Hooks
+
 Post-edit hook reminds about `dummy_data.json` when `models.py` is modified.
 
 ## When to Use Skills
+
 Claude should automatically load relevant skills based on context:
+
 - Working on templates → `jinja-roos-components`
 - Working on models → `model-workflow`, `django`
 - Questions about business logic → `wies-domain`

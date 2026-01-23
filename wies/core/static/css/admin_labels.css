@@ -1,6 +1,6 @@
 /* make sure label names take enough space */
 .rvo-table {
-    table-layout: auto;
+  table-layout: auto;
 }
 
 /* Clickable category header styling */
@@ -10,8 +10,8 @@
 
 /* Category header layout */
 .category-header {
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   justify-content: space-between;
 }
 
@@ -21,14 +21,14 @@
 
 /* Label badge styling */
 .label-badge {
-  padding: 0.25rem 0.5rem; 
+  padding: 0.25rem 0.5rem;
   border-radius: 3px;
 }
 
 /* Table cell with actions */
 .table-cell-with-actions {
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   justify-content: space-between;
 }
 
@@ -42,9 +42,9 @@
 }
 
 .label-form {
-  display: flex; 
-  gap: 0.5rem; 
-  align-items: flex-start; 
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
   max-width: 600px;
 }
 
@@ -53,12 +53,12 @@
 }
 
 .form-error {
-  margin-top: 0.5rem; 
+  margin-top: 0.5rem;
   color: #e73636;
 }
 
 /* Empty category message */
 .empty-category-message {
-  margin-top: 1rem; 
+  margin-top: 1rem;
   color: #666;
 }

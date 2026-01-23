@@ -4,7 +4,9 @@
 .placement-ministry {
   font-size: var(--rvo-font-size-xs);
   color: var(--rvo-color-grijs-600);
-  font-family: var(--rvo-font-sans-serif-font-family), var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
+  font-family:
+    var(--rvo-font-sans-serif-font-family),
+    var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
 }
 
 .placement-assignment {
@@ -26,20 +28,24 @@
 }
 
 /* Column width optimization for placement table only */
-#placement_table .rvo-table th:nth-child(1), #placement_table .rvo-table td:nth-child(1) {
+#placement_table .rvo-table th:nth-child(1),
+#placement_table .rvo-table td:nth-child(1) {
   width: 28%; /* Naam column - more space */
 }
 
-#placement_table .rvo-table th:nth-child(2), #placement_table .rvo-table td:nth-child(2) {
+#placement_table .rvo-table th:nth-child(2),
+#placement_table .rvo-table td:nth-child(2) {
   width: 37%; /* Opdracht column - slightly smaller */
 }
 
-#placement_table .rvo-table th:nth-child(3), #placement_table .rvo-table td:nth-child(3) {
+#placement_table .rvo-table th:nth-child(3),
+#placement_table .rvo-table td:nth-child(3) {
   width: 20%; /* Rol column - same */
   white-space: nowrap; /* Prevent wrapping */
 }
 
-#placement_table .rvo-table th:nth-child(4), #placement_table .rvo-table td:nth-child(4) {
+#placement_table .rvo-table th:nth-child(4),
+#placement_table .rvo-table td:nth-child(4) {
   width: 15%; /* Periode column - same */
   white-space: nowrap; /* Prevent wrapping */
 }
