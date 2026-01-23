@@ -13,17 +13,16 @@
     <link rel="shortcut icon"
           type="image/png"
           href="{{ static('WIES-fav.png') }}">
+    <link rel="stylesheet" href="{{ static('vendor/rvo/design-tokens.css') }}" />
     <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@nl-rvo/design-tokens@1.11.0/dist/index.css" />
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/@nl-rvo/component-library-css@4.11.1/dist/index.css" />
+          href="{{ static('vendor/rvo/component-library.css') }}" />
     <link rel="stylesheet"
           href="{{ static('@nl-rvo/assets/icons/index.css') }}">
     <link rel="stylesheet"
           href="{{ static('@nl-rvo/assets/fonts/index.css') }}">
     <link rel="stylesheet" href="{{ static('css/rvo_overwrite.css') }}">
     <link rel="stylesheet" href="{{ static('css/base.css') }}">
-    <script src="https://unpkg.com/htmx.org@2.0.6/dist/htmx.min.js"></script>
+    <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
     {% block extra_head %}
     {% endblock extra_head %}
   </head>
