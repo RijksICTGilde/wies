@@ -302,7 +302,7 @@ class PlacementListView(ListView):
             "client_url": self._build_client_url(assignment.organization),
             "ministry_url": self._build_ministry_url(assignment.ministry.id) if assignment.ministry else None,
             "user_can_edit": user_can_edit,
-            "owner_url": self._build_colleague_url(assignment.owner.id) if assignment.owner else '',
+            "owner_url": self._build_colleague_url(assignment.owner.id) if assignment.owner else "",
         }
 
     def get_context_data(self, **kwargs):
@@ -1262,3 +1262,75 @@ def assignment_edit_attribute(request, pk, attribute):
         )
 
     return HttpResponse(status=405)
+
+
+@login_not_required
+def error_400(request, exception=None):
+    return render(request, "400.html", status=400)
+
+
+@login_not_required
+def error_403(request, exception=None):
+    return render(request, "403.html", status=403)
+
+
+@login_not_required
+def error_404(request, exception=None):
+    return render(request, "404.html", status=404)
+
+
+@login_not_required
+def error_500(request):
+    return render(request, "500.html", status=500)
+
+
+@login_not_required
+def robots_txt(request):
+    """
+    Serve robots.txt to block crawlers and AI scrapers.
+    """
+    content = """# Disallow all crawlers
+User-agent: *
+Disallow: /
+
+# AI scrapers
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+"""
+    return HttpResponse(content, content_type="text/plain")

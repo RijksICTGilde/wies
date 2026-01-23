@@ -1,0 +1,17 @@
+{% extends "base_error.html" %}
+{% block title %}
+  HTTP 404 - Pagina niet gevonden - Wies
+{% endblock title %}
+{% block error_title %}
+  HTTP 404 - Pagina niet gevonden
+{% endblock error_title %}
+{% block error_message %}
+  De pagina die je zoekt bestaat niet of is verplaatst.
+{% endblock error_message %}
+{% block error_extra %}
+  <p class="rvo-text">
+    {# djlint:off J018 - url() doesn't work in error handler context #}
+    <a href="/">Ga naar de homepage</a>
+    {# djlint:on #}
+  </p>
+{% endblock error_extra %}

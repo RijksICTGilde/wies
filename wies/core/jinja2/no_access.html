@@ -1,38 +1,21 @@
-{% extends "base.html" %}
+{% extends "base_error.html" %}
 {% block title %}
   Geen toegang - Wies
 {% endblock title %}
-{% block header %}
-  {# No header on this page #}
-{% endblock header %}
-{% block content %}
-  <main class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--md">
-    <div class="rvo-layout-column rvo-layout-gap--xl rvo-layout-align-items--center"
-         style="min-height: 70vh;
-                justify-content: center">
-      <div class="rvo-max-width-layout rvo-max-width-layout--sm">
-        <div class="rvo-card rvo-card--padding-lg">
-          <div class="rvo-layout-column rvo-layout-gap--lg rvo-layout-align-items--center">
-            <div class="rvo-layout-column rvo-layout-gap--md rvo-layout-align-items--center">
-              <c-h1>Geen toegang</c-h1>
-              <p class="rvo-text">
-                Je kan niet geauthenticeerd worden en krijgt daarom geen toegang tot Wies, een tool voor ODI.
-                Denk je dat dit een fout is? Stuur een berichtje naar
-                <br>
-                <a href="mailto:WIES-ODI@rijksoverheid.nl">WIES-ODI@rijksoverheid.nl</a>.
-              </p>
-              <c-h2>Mogelijke oorzaken</c-h2>
-              <ul>
-                <li>
-                  Inloggen met emailadres opdrachtgever:
-                  <br>
-                  Je krijgt alleen toegang met je ODI E-mail adres (@rijksoverheid, @minbzk)
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </main>
-{% endblock content %}
+{% block error_title %}
+  Geen toegang
+{% endblock error_title %}
+{% block error_message %}
+  Je kan niet geauthenticeerd worden en krijgt daarom geen toegang tot Wies, een tool voor ODI.
+  Denk je dat dit een fout is? Stuur een berichtje naar <a href="mailto:wies-odi@rijksoverheid.nl">wies-odi@rijksoverheid.nl</a>.
+{% endblock error_message %}
+{% block error_extra %}
+  <c-h2>Mogelijke oorzaken</c-h2>
+  <ul>
+    <li>
+      Inloggen met emailadres opdrachtgever:
+      <br>
+      Je krijgt alleen toegang met je ODI E-mail adres (@rijksoverheid, @minbzk)
+    </li>
+  </ul>
+{% endblock error_extra %}

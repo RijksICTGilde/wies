@@ -1,17 +1,9 @@
-from django.conf import settings
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
+from django.urls import reverse
 
 from wies.core.models import User
 
 
-@override_settings(
-    # Use simple static files storage for tests
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class AccessControlTest(TestCase):
     """
     Test that endpoints require login or excluded ones dont.
@@ -48,7 +40,7 @@ class AccessControlTest(TestCase):
         response = self.client.get("/plaatsingen/", follow=False)
 
         assert response.status_code == 302
-        assert response.url.startswith(settings.LOGIN_URL)
+        assert response.url.startswith(reverse("login"))
 
     def test_admin_views_require_authentication(self):
         """Test that admin views require authentication"""

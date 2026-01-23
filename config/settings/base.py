@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "wies.core.middleware.SecurityHeadersMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -84,6 +85,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": WRITABLE_FOLDER / "db.sqlite3",
+        "CONN_MAX_AGE": 60,
     }
 }
 
@@ -136,7 +138,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 STORAGES = {
     # ...
@@ -145,9 +146,9 @@ STORAGES = {
     },
 }
 
-SESSION_COOKIE_AGE = 24 * 60 * 60  # 24h in s
+SESSION_COOKIE_AGE = 8 * 60 * 60  # 8 hours (workday)
 
-LOGIN_URL = "/inloggen/"
+LOGIN_URL = "login"
 
 AUTHENTICATION_BACKENDS = [
     "wies.core.auth_backend.AuthBackend",
