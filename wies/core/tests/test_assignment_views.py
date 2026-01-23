@@ -21,7 +21,7 @@ class AssignmentEditAttributeTest(TestCase):
         # Create users
         self.user_with_permission = User.objects.create(
             username="user_with_perm",
-            email="perm@example.com",
+            email="perm@rijksoverheid.nl",
             first_name="User",
             last_name="WithPerm",
         )
@@ -30,21 +30,21 @@ class AssignmentEditAttributeTest(TestCase):
 
         self.owner_user = User.objects.create(
             username="owner_user",
-            email="owner@example.com",
+            email="owner@rijksoverheid.nl",
             first_name="Owner",
             last_name="User",
         )
 
         self.assigned_user = User.objects.create(
             username="assigned_user",
-            email="assigned@example.com",
+            email="assigned@rijksoverheid.nl",
             first_name="Assigned",
             last_name="User",
         )
 
         self.unrelated_user = User.objects.create(
             username="unrelated_user",
-            email="unrelated@example.com",
+            email="unrelated@rijksoverheid.nl",
             first_name="Unrelated",
             last_name="User",
         )
@@ -53,14 +53,14 @@ class AssignmentEditAttributeTest(TestCase):
         self.owner_colleague = Colleague.objects.create(
             user=self.owner_user,
             name="Owner Colleague",
-            email="owner@example.com",
+            email="owner@rijksoverheid.nl",
             source="wies",
         )
 
         self.assigned_colleague = Colleague.objects.create(
             user=self.assigned_user,
             name="Assigned Colleague",
-            email="assigned@example.com",
+            email="assigned@rijksoverheid.nl",
             source="wies",
         )
 

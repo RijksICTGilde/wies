@@ -14,7 +14,7 @@ class AccessControlTest(TestCase):
         self.client = Client()
         self.test_user = User.objects.create(
             username="test_user",
-            email="test@example.com",
+            email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
         )
@@ -61,7 +61,7 @@ class AccessControlTest(TestCase):
         """Test that superuser can access /djadmin/db/ view"""
         superuser = User.objects.create(
             username="admin",
-            email="admin@example.com",
+            email="admin@rijksoverheid.nl",
             first_name="Admin",
             last_name="User",
             is_superuser=True,

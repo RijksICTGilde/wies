@@ -1,6 +1,6 @@
 import pytest
 from django.contrib.auth.models import Group
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 from wies.core.errors import EmailNotAvailableError
 from wies.core.models import Event, User
@@ -16,21 +16,21 @@ class CreateUserServiceTest(TestCase):
             None,
             first_name="New",
             last_name="User",
-            email="newuser@example.com",
+            email="newuser@rijksoverheid.nl",
         )
 
         # Verify user was created with correct attributes
         assert user.first_name == "New"
         assert user.last_name == "User"
-        assert user.email == "newuser@example.com"
+        assert user.email == "newuser@rijksoverheid.nl"
         assert user.username is not None  # UUID should be generated
-        assert User.objects.filter(email="newuser@example.com").exists()
+        assert User.objects.filter(email="newuser@rijksoverheid.nl").exists()
 
         # Verify that event was created
         event = Event.objects.filter(name="User.create", context__created_id=user.id).first()
         assert event is not None
         assert event.user_email == ""  # System-created (creator is None)
-        assert event.context["email"] == "newuser@example.com"
+        assert event.context["email"] == "newuser@rijksoverheid.nl"
         assert event.context["first_name"] == "New"
         assert event.context["last_name"] == "User"
 
@@ -38,14 +38,14 @@ class CreateUserServiceTest(TestCase):
             user,
             first_name="New2",
             last_name="User2",
-            email="newuser2@example.com",
+            email="newuser2@rijksoverheid.nl",
         )
 
         # Verify that event is created and creator user is logged
         event2 = Event.objects.filter(name="User.create", context__created_id=user2.id).first()
         assert event2 is not None
         assert event2.user_email == user.email  # Creator is user
-        assert event2.context["email"] == "newuser2@example.com"
+        assert event2.context["email"] == "newuser2@rijksoverheid.nl"
         assert event2.context["first_name"] == "New2"
         assert event2.context["last_name"] == "User2"
 
@@ -56,7 +56,7 @@ class CreateUserServiceTest(TestCase):
             None,
             first_name="First",
             last_name="User",
-            email="duplicate@example.com",
+            email="duplicate@rijksoverheid.nl",
         )
 
         # Try to create second user with same email
@@ -65,11 +65,11 @@ class CreateUserServiceTest(TestCase):
                 None,
                 first_name="Second",
                 last_name="User",
-                email="duplicate@example.com",
+                email="duplicate@rijksoverheid.nl",
             )
 
         # Verify only one user exists with that email
-        assert User.objects.filter(email="duplicate@example.com").count() == 1
+        assert User.objects.filter(email="duplicate@rijksoverheid.nl").count() == 1
 
 
 class UpdateUserServiceTest(TestCase):
@@ -82,7 +82,7 @@ class UpdateUserServiceTest(TestCase):
             None,
             first_name="Original",
             last_name="Name",
-            email="original@example.com",
+            email="original@rijksoverheid.nl",
         )
 
         # Update the user
@@ -91,27 +91,27 @@ class UpdateUserServiceTest(TestCase):
             user=user,
             first_name="Updated",
             last_name="NewName",
-            email="updated@example.com",
+            email="updated@rijksoverheid.nl",
         )
 
         # Verify the user was updated
         assert updated_user.id == user.id
         assert updated_user.first_name == "Updated"
         assert updated_user.last_name == "NewName"
-        assert updated_user.email == "updated@example.com"
+        assert updated_user.email == "updated@rijksoverheid.nl"
 
         # Verify that event was created
         event = Event.objects.filter(name="User.update", context__updated_id=user.id).first()
         assert event is not None
         assert event.user_email == ""  # Updater is None (system)
-        assert event.context["email"] == "updated@example.com"
+        assert event.context["email"] == "updated@rijksoverheid.nl"
         assert event.context["first_name"] == "Updated"
         assert event.context["last_name"] == "NewName"
 
         # Verify changes were persisted
         user.refresh_from_db()
         assert user.first_name == "Updated"
-        assert user.email == "updated@example.com"
+        assert user.email == "updated@rijksoverheid.nl"
 
     def test_update_user_email_to_existing(self):
         """Test that updating user email to another user's email raises EmailNotAvailableError"""
@@ -120,13 +120,13 @@ class UpdateUserServiceTest(TestCase):
             None,
             first_name="User",
             last_name="One",
-            email="user1@example.com",
+            email="user1@rijksoverheid.nl",
         )
         create_user(
             None,
             first_name="User",
             last_name="Two",
-            email="user2@example.com",
+            email="user2@rijksoverheid.nl",
         )
 
         # Try to update user1's email to user2's email
@@ -136,15 +136,14 @@ class UpdateUserServiceTest(TestCase):
                 user=user1,
                 first_name="User",
                 last_name="One",
-                email="user2@example.com",  # This email belongs to user2
+                email="user2@rijksoverheid.nl",  # This email belongs to user2
             )
 
         # Verify user1's email was not changed
         user1.refresh_from_db()
-        assert user1.email == "user1@example.com"
+        assert user1.email == "user1@rijksoverheid.nl"
 
 
-@override_settings(ALLOWED_EMAIL_DOMAINS=["@rijksoverheid.nl", "@minbzk.nl"])
 class EmailDomainValidationTest(TestCase):
     """Tests for is_allowed_email_domain helper function"""
 
@@ -167,16 +166,6 @@ class EmailDomainValidationTest(TestCase):
         assert is_allowed_email_domain("test@MinBZK.nl") is True
 
 
-@override_settings(ALLOWED_EMAIL_DOMAINS=[])
-class EmailDomainValidationDisabledTest(TestCase):
-    """Tests for when email domain validation is disabled"""
-
-    def test_any_domain_allowed_when_empty_list(self):
-        """Test that any domain is allowed when ALLOWED_EMAIL_DOMAINS is empty"""
-        assert is_allowed_email_domain("test@anydomain.com") is True
-
-
-@override_settings(ALLOWED_EMAIL_DOMAINS=["@rijksoverheid.nl", "@minbzk.nl"])
 class CreateUsersFromCSVEmailDomainTest(TestCase):
     """Tests for email domain validation in CSV import"""
 

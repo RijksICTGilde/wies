@@ -21,9 +21,9 @@ class DataImportIntegrationTest(TestCase):
     def test_csv_user_import_with_brand_creates_labels(self):
         """Test: CSV with brand column creates users with labels in Merk category"""
         csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
-John,Doe,john@example.com,Rijks ICT Gilde,y,n,n
-Jane,Smith,jane@example.com,Rijksconsultants,n,y,n
-Bob,Johnson,bob@example.com,Rijks ICT Gilde,n,n,y"""
+John,Doe,john@rijksoverheid.nl,Rijks ICT Gilde,y,n,n
+Jane,Smith,jane@rijksoverheid.nl,Rijksconsultants,n,y,n
+Bob,Johnson,bob@rijksoverheid.nl,Rijks ICT Gilde,n,n,y"""
 
         result = create_users_from_csv(None, csv_content)
 
@@ -42,20 +42,20 @@ Bob,Johnson,bob@example.com,Rijks ICT Gilde,n,n,y"""
         rc_label = Label.objects.get(name="Rijksconsultants", category=merken_category)
 
         # Verify users have correct labels
-        john = User.objects.get(email="john@example.com")
+        john = User.objects.get(email="john@rijksoverheid.nl")
         assert rig_label in john.labels.all()
 
-        jane = User.objects.get(email="jane@example.com")
+        jane = User.objects.get(email="jane@rijksoverheid.nl")
         assert rc_label in jane.labels.all()
 
-        bob = User.objects.get(email="bob@example.com")
+        bob = User.objects.get(email="bob@rijksoverheid.nl")
         assert rig_label in bob.labels.all()
 
     def test_csv_user_import_without_brand_creates_users_without_labels(self):
         """Test: CSV without brand column or empty brand creates users with no labels"""
         csv_content = """first_name,last_name,email,brand
-Alice,Wonder,alice@example.com,
-Charlie,Brown,charlie@example.com,"""
+Alice,Wonder,alice@rijksoverheid.nl,
+Charlie,Brown,charlie@rijksoverheid.nl,"""
 
         result = create_users_from_csv(None, csv_content)
 
@@ -64,10 +64,10 @@ Charlie,Brown,charlie@example.com,"""
         assert result["labels_created"] == 0
 
         # Verify users have no labels
-        alice = User.objects.get(email="alice@example.com")
+        alice = User.objects.get(email="alice@rijksoverheid.nl")
         assert alice.labels.count() == 0
 
-        charlie = User.objects.get(email="charlie@example.com")
+        charlie = User.objects.get(email="charlie@rijksoverheid.nl")
         assert charlie.labels.count() == 0
 
     def test_csv_user_import_reuses_existing_labels(self):
@@ -77,9 +77,9 @@ Charlie,Brown,charlie@example.com,"""
         existing_label = Label.objects.create(name="Pre-existing Brand", category=merken_category)
 
         csv_content = """first_name,last_name,email,brand
-User,One,user1@example.com,Pre-existing Brand
-User,Two,user2@example.com,Pre-existing Brand
-User,Three,user3@example.com,Pre-existing Brand"""
+User,One,user1@rijksoverheid.nl,Pre-existing Brand
+User,Two,user2@rijksoverheid.nl,Pre-existing Brand
+User,Three,user3@rijksoverheid.nl,Pre-existing Brand"""
 
         result = create_users_from_csv(None, csv_content)
 
@@ -92,9 +92,9 @@ User,Three,user3@example.com,Pre-existing Brand"""
         assert labels_count == 1
 
         # Verify all users have the same label
-        user1 = User.objects.get(email="user1@example.com")
-        user2 = User.objects.get(email="user2@example.com")
-        user3 = User.objects.get(email="user3@example.com")
+        user1 = User.objects.get(email="user1@rijksoverheid.nl")
+        user2 = User.objects.get(email="user2@rijksoverheid.nl")
+        user3 = User.objects.get(email="user3@rijksoverheid.nl")
 
         assert existing_label in user1.labels.all()
         assert existing_label in user2.labels.all()
@@ -104,7 +104,7 @@ User,Three,user3@example.com,Pre-existing Brand"""
         """Test: Re-importing user with existing email skips and warns"""
         # First import
         csv_content1 = """first_name,last_name,email,brand
-Original,Name,duplicate@example.com,Brand A"""
+Original,Name,duplicate@rijksoverheid.nl,Brand A"""
 
         result1 = create_users_from_csv(None, csv_content1)
         assert result1["success"]
@@ -112,22 +112,22 @@ Original,Name,duplicate@example.com,Brand A"""
 
         # Second import with same email
         csv_content2 = """first_name,last_name,email,brand
-Different,Name,duplicate@example.com,Brand B"""
+Different,Name,duplicate@rijksoverheid.nl,Brand B"""
 
         result2 = create_users_from_csv(None, csv_content2)
         assert result2["success"]
         assert result2["users_created"] == 0
-        assert "duplicate@example.com" in result2["errors"][0]
+        assert "duplicate@rijksoverheid.nl" in result2["errors"][0]
 
         # Verify original user unchanged
-        user = User.objects.get(email="duplicate@example.com")
+        user = User.objects.get(email="duplicate@rijksoverheid.nl")
         assert user.first_name == "Original"
         assert user.last_name == "Name"
 
     def test_csv_placement_import_assigns_rijks_ict_gilde_label(self):
         """Test: CSV placement import assigns Rijks ICT Gilde label to new colleagues"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Test Description,Owner Name,owner@test.com,Test Org,,01-01-2025,31-12-2025,Python,John Doe,john@test.com"""
+Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,Test Org,,01-01-2025,31-12-2025,Python,John Doe,john@rijksoverheid.nl"""
 
         result = create_placements_from_csv(csv_content)
 
@@ -141,10 +141,10 @@ Test Assignment,Test Description,Owner Name,owner@test.com,Test Org,,01-01-2025,
         rig_label = Label.objects.get(name="Rijks ICT Gilde", category=merken_category)
 
         # Verify colleagues have the label
-        john = Colleague.objects.get(email="john@test.com")
+        john = Colleague.objects.get(email="john@rijksoverheid.nl")
         assert rig_label in john.labels.all()
 
-        owner = Colleague.objects.get(email="owner@test.com")
+        owner = Colleague.objects.get(email="owner@rijksoverheid.nl")
         assert rig_label in owner.labels.all()
 
     def test_csv_placement_import_existing_colleague_no_duplicate_label(self):
@@ -153,12 +153,14 @@ Test Assignment,Test Description,Owner Name,owner@test.com,Test Org,,01-01-2025,
         merken_category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
         rig_label, _ = Label.objects.get_or_create(name="Rijks ICT Gilde", category=merken_category)
 
-        colleague = Colleague.objects.create(name="Existing Colleague", email="existing@test.com", source="wies")
+        colleague = Colleague.objects.create(
+            name="Existing Colleague", email="existing@rijksoverheid.nl", source="wies"
+        )
         colleague.labels.add(rig_label)
 
         # Import placement with existing colleague
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-New Assignment,Description,,,Test Org,,01-01-2025,31-12-2025,Django,Existing Colleague,existing@test.com"""
+New Assignment,Description,,,Test Org,,01-01-2025,31-12-2025,Django,Existing Colleague,existing@rijksoverheid.nl"""
 
         result = create_placements_from_csv(csv_content)
 
@@ -270,7 +272,9 @@ New Assignment,Description,,,Test Org,,01-01-2025,31-12-2025,Django,Existing Col
         iir_label, _ = Label.objects.get_or_create(name="I-Interim Rijk", category=merken_category)
 
         # Create colleague with both labels
-        colleague = Colleague.objects.create(name="Multi-Label Colleague", email="multi@test.com", source="wies")
+        colleague = Colleague.objects.create(
+            name="Multi-Label Colleague", email="multi@rijksoverheid.nl", source="wies"
+        )
         colleague.labels.add(rig_label, iir_label)
 
         # Verify both labels are assigned
@@ -282,7 +286,7 @@ New Assignment,Description,,,Test Org,,01-01-2025,31-12-2025,Django,Existing Col
         """Test: Complete workflow from CSV import to data visibility"""
         # Import users with labels
         csv_content = """first_name,last_name,email,brand
-Test,User,testuser@example.com,Test Brand"""
+Test,User,testuser@rijksoverheid.nl,Test Brand"""
 
         result = create_users_from_csv(None, csv_content)
         assert result["success"]
@@ -292,7 +296,7 @@ Test,User,testuser@example.com,Test Brand"""
         test_label = Label.objects.get(name="Test Brand", category=merken_category)
 
         # Verify user has label
-        user = User.objects.get(email="testuser@example.com")
+        user = User.objects.get(email="testuser@rijksoverheid.nl")
         assert test_label in user.labels.all()
 
         # Verify label appears in queryset (simulating UI display)

@@ -24,7 +24,7 @@ class PlacementImportTest(TestCase):
         # Create authenticated user with all required permissions
         self.auth_user = User.objects.create(
             username="testuser",
-            email="test@example.com",
+            email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
         )
@@ -40,7 +40,7 @@ class PlacementImportTest(TestCase):
         # Create user without permissions
         self.no_perm_user = User.objects.create(
             username="nopermuser",
-            email="noperm@example.com",
+            email="noperm@rijksoverheid.nl",
             first_name="No",
             last_name="Permission",
         )
@@ -48,7 +48,7 @@ class PlacementImportTest(TestCase):
         # Create user with only some permissions (missing add_service and add_ministry)
         self.partial_perm_user = User.objects.create(
             username="partialuser",
-            email="partial@example.com",
+            email="partial@rijksoverheid.nl",
             first_name="Partial",
             last_name="Permission",
         )
@@ -123,7 +123,7 @@ class PlacementImportTest(TestCase):
 
         self.client.force_login(self.auth_user)
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Test Description,John Owner,john@example.com,Test Org,BZK,01-01-2024,31-12-2024,Python,Jane Colleague,jane@example.com"""
+Test Assignment,Test Description,John Owner,john@rijksoverheid.nl,Test Org,BZK,01-01-2024,31-12-2024,Python,Jane Colleague,jane@rijksoverheid.nl"""
         csv_file = self._create_csv_file(csv_content)
 
         response = self.client.post(self.import_url, {"csv_file": csv_file})

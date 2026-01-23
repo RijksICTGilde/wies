@@ -2,13 +2,12 @@ from unittest.mock import patch
 
 from django.conf import settings
 from django.http import HttpResponse
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.models import User
 
 
-@override_settings(ALLOWED_EMAIL_DOMAINS=["@rijksoverheid.nl", "@minbzk.nl"])
 class AuthViewsTest(TestCase):
     """Integration tests for authentication flow views"""
 
@@ -17,7 +16,7 @@ class AuthViewsTest(TestCase):
         self.client = Client()
         self.colleague = User.objects.create(
             username="test_sso_user",
-            email="test@example.com",
+            email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
         )
@@ -31,7 +30,7 @@ class AuthViewsTest(TestCase):
                 "sub": "test_sso_user",
                 "given_name": "Test",
                 "family_name": "User",
-                "email": "test@example.com",
+                "email": "test@rijksoverheid.nl",
             }
         }
 
@@ -53,7 +52,7 @@ class AuthViewsTest(TestCase):
                 "sub": "unknown_user",
                 "given_name": "Unknown",
                 "family_name": "Person",
-                "email": "unknown@example.com",
+                "email": "unknown@rijksoverheid.nl",
             }
         }
 
@@ -74,7 +73,7 @@ class AuthViewsTest(TestCase):
                 "sub": "test_sso_user",
                 "given_name": "Test",
                 "family_name": "User",
-                "email": "test@example.com",
+                "email": "test@rijksoverheid.nl",
             }
         }
 

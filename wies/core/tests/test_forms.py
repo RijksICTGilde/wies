@@ -2,7 +2,7 @@ import re
 
 from django import forms
 from django.contrib.auth.models import Group
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 from wies.core.forms import RvoFormMixin, UserForm
 from wies.core.models import Label, LabelCategory, User
@@ -143,7 +143,6 @@ class RvoFormMixinTest(TestCase):
         assert "not in RVO widget_templates mapping" in log.output[0]
 
 
-@override_settings(ALLOWED_EMAIL_DOMAINS=["@rijksoverheid.nl", "@minbzk.nl"])
 class UserFormEmailDomainValidationTest(TestCase):
     """Tests for email domain validation in UserForm"""
 
@@ -247,25 +246,3 @@ class UserFormEmailDomainValidationTest(TestCase):
         )
         assert not form.is_valid()
         assert "email" in form.errors
-
-
-@override_settings(ALLOWED_EMAIL_DOMAINS=[])
-class UserFormEmailDomainValidationDisabledTest(TestCase):
-    """Tests for when email domain validation is disabled"""
-
-    def setUp(self):
-        """Create test data"""
-        Group.objects.get_or_create(name="Beheerder")
-        Group.objects.get_or_create(name="Consultant")
-        Group.objects.get_or_create(name="Business Development Manager")
-
-    def test_any_email_accepted_when_no_domain_restriction(self):
-        """Test that any email is accepted when ALLOWED_EMAIL_DOMAINS is empty"""
-        form = UserForm(
-            data={
-                "first_name": "Test",
-                "last_name": "User",
-                "email": "anyone@anydomain.com",
-            }
-        )
-        assert form.is_valid(), f"Form should accept any email when no restriction, errors: {form.errors}"
