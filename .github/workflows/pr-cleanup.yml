@@ -16,6 +16,7 @@ jobs:
       contents: read
       deployments: write
       packages: write
+      pull-requests: write
 
     steps:
       - name: Cleanup ZAD deployment
@@ -31,3 +32,4 @@ jobs:
           container-name: wies
           container-tag: ${{ env.IMAGE_TAG }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          update-pr-comment: true
