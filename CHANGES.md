@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 149: Change home page from redirect to `/plaatsingen/` to serve placements directly at `/`
 - 147: Add security headers (CSP, Permissions-Policy, HSTS, etc.)
 - 147: Serve vendor assets (htmx, RVO CSS) locally instead of from CDN
 - 143: Bump Django from 5.2.9 to 6.0.1
