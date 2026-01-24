@@ -20,6 +20,12 @@ def is_allowed_email_domain(email: str) -> bool:
     return any(email.lower().endswith(domain) for domain in allowed_domains)
 
 
+def validate_email_domain(email: str) -> None:
+    """Validate email domain. Raises InvalidEmailDomainError if invalid."""
+    if not is_allowed_email_domain(email):
+        raise InvalidEmailDomainError(email)
+
+
 def create_user(creator: User, first_name, last_name, email, labels=None, groups=None):
     """
     :param creator: can be None when user create is triggered from system itself
@@ -29,8 +35,7 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
         groups = []
 
     # Validate email domain
-    if not is_allowed_email_domain(email):
-        raise InvalidEmailDomainError(email)
+    validate_email_domain(email)
 
     # django built in User model necessitates a username, this generates a random one
     random_username = uuid.uuid4()
@@ -76,8 +81,7 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
         groups = []
 
     # Validate email domain
-    if not is_allowed_email_domain(email):
-        raise InvalidEmailDomainError(email)
+    validate_email_domain(email)
 
     try:
         user_with_email = User.objects.get(email=email)

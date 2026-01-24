@@ -1,15 +1,15 @@
 import logging
 
 from django import forms
-from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.forms.renderers import Jinja2
 from django.forms.utils import ErrorList
 from django.template import engines
 
+from .errors import InvalidEmailDomainError
 from .models import Label, LabelCategory, User
-from .services.users import is_allowed_email_domain
+from .services.users import validate_email_domain
 
 logger = logging.getLogger(__name__)
 
@@ -157,11 +157,12 @@ class UserForm(RvoFormMixin, forms.ModelForm):
 
     def clean_email(self):
         email = self.cleaned_data.get("email", "").lower()
-        if not is_allowed_email_domain(email):
-            allowed_domains = getattr(settings, "ALLOWED_EMAIL_DOMAINS", [])
-            domains_str = ", ".join(allowed_domains)
+        try:
+            validate_email_domain(email)
+        except InvalidEmailDomainError as e:
+            domains_str = ", ".join(e.allowed_domains)
             msg = f"Alleen ODI e-mailadressen zijn toegestaan ({domains_str})"
-            raise ValidationError(msg)
+            raise ValidationError(msg) from e
         return email
 
     def __init__(self, *args, **kwargs):

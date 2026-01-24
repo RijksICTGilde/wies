@@ -4,7 +4,13 @@ from django.test import TestCase
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import Event, User
-from wies.core.services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
+from wies.core.services.users import (
+    create_user,
+    create_users_from_csv,
+    is_allowed_email_domain,
+    update_user,
+    validate_email_domain,
+)
 
 
 class CreateUserServiceTest(TestCase):
@@ -208,6 +214,19 @@ class EmailDomainValidationTest(TestCase):
         """Test that domain check is case insensitive"""
         assert is_allowed_email_domain("test@RIJKSOVERHEID.NL") is True
         assert is_allowed_email_domain("test@MinBZK.nl") is True
+
+
+class ValidateEmailDomainTest(TestCase):
+    """Tests for validate_email_domain function"""
+
+    def test_valid_domain_passes(self):
+        """Test that valid domain does not raise"""
+        validate_email_domain("test@rijksoverheid.nl")  # Should not raise
+
+    def test_invalid_domain_raises(self):
+        """Test that invalid domain raises InvalidEmailDomainError"""
+        with pytest.raises(InvalidEmailDomainError):
+            validate_email_domain("test@gmail.com")
 
 
 class CreateUsersFromCSVEmailDomainTest(TestCase):
