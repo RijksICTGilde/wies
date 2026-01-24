@@ -1,89 +1,83 @@
 <div class="rvo-layout-column rvo-layout-gap--lg">
-
   <section>
     <h2>Opdracht gegevens</h2>
-
     <dl class="rvo-data-list">
       {# Editable assignment name field #}
       <dt>Opdracht naam</dt>
       <dd>
         <div id="assignment-name-content">
-          {% with target_element='assignment-name-content', field_value=assignment.name, field_label='Opdracht naam', edit_url=url('assignment-edit-attribute', args=[assignment.id, 'name']), user_can_edit=panel_data.user_can_edit %}
-            {% include 'parts/editable_text_field.html' %}
+          {% with target_element="assignment-name-content", field_value=assignment.name, field_label="Opdracht naam", edit_url=url("assignment-edit-attribute", args=[assignment.id, "name"]), user_can_edit=panel_data.user_can_edit %}
+            {% include "parts/editable_text_field.html" %}
           {% endwith %}
         </div>
       </dd>
-
       {# Editable assignment description field #}
       <dt>Beschrijving</dt>
       <dd>
         <div id="assignment-extra-info-content">
-          {% with target_element='assignment-extra-info-content', field_value=assignment.extra_info, field_label='Beschrijving', edit_url=url('assignment-edit-attribute', args=[assignment.id, 'extra_info']), user_can_edit=panel_data.user_can_edit, expanded=false %}
-            {% include 'parts/editable_textarea_field.html' %}
+          {% with target_element="assignment-extra-info-content", field_value=assignment.extra_info, field_label="Beschrijving", edit_url=url("assignment-edit-attribute", args=[assignment.id, "extra_info"]), user_can_edit=panel_data.user_can_edit, expanded=false %}
+            {% include "parts/editable_textarea_field.html" %}
           {% endwith %}
         </div>
       </dd>
-      
       {% if assignment.source != 'wies' %}
-      <dt>Externe bron</dt>
-      <dd>
-        {% if assignment.source_url %}
-          <a href="{{ assignment.source_url }}" target="_blank" class="rvo-link">
+        <dt>Externe bron</dt>
+        <dd>
+          {% if assignment.source_url %}
+            <a href="{{ assignment.source_url }}" target="_blank" class="rvo-link">
+              {{ assignment.get_source_display() }}
+              <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs"
+                    role="img"
+                    aria-label="Externe link"></span>
+            </a>
+          {% else %}
             {{ assignment.get_source_display() }}
-            <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs" role="img" aria-label="Externe link"></span>
-          </a>
-        {% else %}
-          {{ assignment.get_source_display() }}
-        {% endif %}
-      </dd>
+          {% endif %}
+        </dd>
       {% endif %}
       <dt>Opdrachtgever</dt>
       <dd>
-        <a href="{{ panel_data.client_url }}" class="rvo-link" title="Filter op {{ assignment.organization }}">
-          {{ assignment.organization }}
-        </a>
+        <a href="{{ panel_data.client_url }}"
+           class="rvo-link"
+           title="Filter op {{ assignment.organization }}">{{ assignment.organization }}</a>
       </dd>
-      
       <dt>Ministerie</dt>
       <dd>
         {% if assignment.ministry and panel_data.ministry_url %}
-          <a href="{{ panel_data.ministry_url }}" class="rvo-link" title="Filter op {{ assignment.ministry.name }}">
-            {{ assignment.ministry.name }}
-          </a>
+          <a href="{{ panel_data.ministry_url }}"
+             class="rvo-link"
+             title="Filter op {{ assignment.ministry.name }}">{{ assignment.ministry.name }}</a>
         {% else %}
           <span class="rvo-text--italic rvo-text--subtle">Geen ministerie opgegeven</span>
         {% endif %}
       </dd>
-      
       <dt>Periode</dt>
       <dd>
         {% if assignment.start_date or assignment.end_date %}
-          {{ assignment.start_date|datum_nl('j F Y') }} - {{ assignment.end_date|datum_nl('j F Y') }}
+          {{ assignment.start_date|datum_nl("j F Y") }} - {{ assignment.end_date|datum_nl("j F Y") }}
         {% else %}
           <span class="rvo-text--italic rvo-text--subtle">Geen periode opgegeven</span>
         {% endif %}
       </dd>
       <dt>Business Manager</dt>
       <dd>
-        <a href="/plaatsingen/?collega={{ assignment.owner.id }}" class="rvo-link">
-            {{ assignment.owner }}
-        </a>
+        <a href="{{ panel_data.owner_url }}" class="rvo-link">{{ assignment.owner }}</a>
       </dd>
     </dl>
   </section>
-
   <section>
     <h2>Team</h2>
-    
     {% if panel_data.placements %}
       <div class="rvo-item-list">
         {% for placement in panel_data.placements %}
-          <a href="{{ placement.colleague_url }}" class="rvo-item-list__item clickable-row" style="text-decoration: none; color: inherit;" title="Bekijk {{ placement.colleague.name }}">
+          <a href="{{ placement.colleague_url }}"
+             class="rvo-item-list__item clickable-row"
+             style="text-decoration: none;
+                    color: inherit"
+             title="Bekijk {{ placement.colleague.name }}">
             <div class="placement-details-header">
               <div class="user-table-cell">
-                <div class="user-avatar">
-                  {{ placement.colleague.name|first|upper }}
-                </div>
+                <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>
                 <div class="user-info">
                   <strong>{{ placement.colleague.name }}</strong>
                 </div>
@@ -100,12 +94,12 @@
     {% else %}
       <div class="rvo-card rvo-card--outline rvo-card--padding-md">
         <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center">
-          <span class="utrecht-icon rvo-icon rvo-icon-info rvo-icon--xs" role="img" aria-label="Informatie"></span>
+          <span class="utrecht-icon rvo-icon rvo-icon-info rvo-icon--xs"
+                role="img"
+                aria-label="Informatie"></span>
           <span class="rvo-text--italic rvo-text--subtle">Geen team leden gevonden voor deze opdracht.</span>
         </div>
       </div>
     {% endif %}
   </section>
-
-
 </div>

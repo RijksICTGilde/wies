@@ -1,47 +1,33 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
 {% block extra_head %}
-<link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
-<link rel="stylesheet" href="{{ static('css/admin_labels.css') }}">
-<script src="{{ static('js/dialog.js') }}"></script>
-{% endblock %}
-
+  <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
+  <link rel="stylesheet" href="{{ static('css/admin_labels.css') }}">
+  <script src="{{ static('js/dialog.js') }}"></script>
+{% endblock extra_head %}
 {% block content %}
-
-<main class="rvo-sidebar-layout__container">
-  <div class="rvo-sidebar-layout rvo-max-width-layout rvo-max-width-layout--lg">
-    {% include 'parts/admin_sidebar.html' %}
-    <div class="rvo-sidebar-layout__content">
-      <div class="rvo-layout-column rvo-layout-gap--xl">
-        <div class="admin-header">
-          <c-h1>Labels</c-h1>
-          <c-button
-            kind="primary"
-            icon="plus"
-            iconPlacement="before"
-            hx-get="{{ url('label-category-create', args=()) }}"
-            hx-target="#labelFormModal"
-            hx-swap="innerHTML">
+  <main class="rvo-sidebar-layout__container">
+    <div class="rvo-sidebar-layout rvo-max-width-layout rvo-max-width-layout--lg">
+      {% include "parts/admin_sidebar.html" %}
+      <div class="rvo-sidebar-layout__content">
+        <div class="rvo-layout-column rvo-layout-gap--xl">
+          <div class="admin-header">
+            <c-h1>Labels</c-h1>
+            <c-button kind="primary" icon="plus" iconPlacement="before" hx-get="{{ url('label-category-create', args=() ) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
             Categorie toevoegen
-          </c-button>
+            </c-button>
+          </div>
+          {# Categories and Labels #}
+          {% if categories %}
+            {% for category in categories %}
+              <div id="label_category_{{ category.id }}">{% include "parts/label_category.html" %}</div>
+            {% endfor %}
+          {% else %}
+            <p>Geen categorieën gevonden. Maak een nieuwe categorie aan om te beginnen.</p>
+          {% endif %}
+          {# Modal container #}
+          <div id="labelFormModal"></div>
         </div>
-        <!-- Categories and Labels -->
-        {% if categories %}
-          {% for category in categories %}
-            <div id="label_category_{{ category.id }}">
-            {% include 'parts/label_category.html' %}
-            </div>
-          {% endfor %}
-        {% else %}
-          <p>Geen categorieën gevonden. Maak een nieuwe categorie aan om te beginnen.</p>
-        {% endif %}
-
-        <!-- Modal container -->
-        <div id="labelFormModal"></div>
       </div>
     </div>
-  </div>
-</main>
-
-
-{% endblock %}
+  </main>
+{% endblock content %}

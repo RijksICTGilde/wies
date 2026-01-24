@@ -1,74 +1,68 @@
 <div class="category-section" id="category-{{ category.name|lower }}">
   <div class="category-header">
     <c-h2>{{ category.name }}</c-h2>
-    <c-button kind="tertiary" 
-              icon="bewerken"
-              iconPlacement="after"
-              hx-get="{{ url('label-category-edit', kwargs={'pk': category.pk}) }}"
-              hx-target="#labelFormModal"
-              hx-swap="innerHTML">
-      Bewerk categorie
+    <c-button kind="tertiary" icon="bewerken" iconPlacement="after" hx-get="{{ url('label-category-edit', kwargs={'pk': category.pk}) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+    Bewerk categorie
     </c-button>
   </div>
 </div>
-
 {% if category.labels.all() %}
-<div class="rvo-table--responsive">
+  <div class="rvo-table--responsive">
     <table class="rvo-table">
-    <thead class="rvo-table__head">
+      <thead class="rvo-table__head">
         <tr class="rvo-table-row">
-            <th scope="col" class="rvo-table-header">Naam</th>
-            <th scope="col" class="rvo-table-header">Toegepast</th>
+          <th scope="col" class="rvo-table-header">Naam</th>
+          <th scope="col" class="rvo-table-header">Toegepast</th>
         </tr>
-    </thead>
-    <tbody class="rvo-table-body">
+      </thead>
+      <tbody class="rvo-table-body">
         {% for label in category.labels.all() %}
-        <tr class="rvo-table-row clickable-row"
-            hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}"
-            hx-target="#labelFormModal"
-            hx-swap="innerHTML"
-            title="Bewerk {{ label.name }}">
-            <td class="rvo-table-cell"><span class="rvo-badge label-badge" style="background-color: {{ label.category.color }};">{{ label.name }}</span></td>
+          <tr class="rvo-table-row clickable-row"
+              hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}"
+              hx-target="#labelFormModal"
+              hx-swap="innerHTML"
+              title="Bewerk {{ label.name }}">
             <td class="rvo-table-cell">
-                <div class="table-cell-with-actions">
-                    <span>{{ label.usage_count|default(0) }}</span>
-                    <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw edit-icon" role="img" aria-label="Bewerken"></span>
-                </div>
+              <span class="rvo-badge label-badge"
+                    style="background-color: {{ label.category.color }}">{{ label.name }}</span>
             </td>
-        </tr>
+            <td class="rvo-table-cell">
+              <div class="table-cell-with-actions">
+                <span>{{ label.usage_count|default(0) }}</span>
+                <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw edit-icon"
+                      role="img"
+                      aria-label="Bewerken"></span>
+              </div>
+            </td>
+          </tr>
         {% endfor %}
-    </tbody>
+      </tbody>
     </table>
-</div>
-<div class="label-form-container">
-    <form class="label-form" hx-post="/instellingen/labels/categorie/{{ category.id }}/labels/aanmaken/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
-        <c-input name="name"/>
-        <c-button kind="secondary" 
-                  icon="plus"
-                  iconPlacement="before"
-                  type="submit">
-            Label toevoegen
-        </c-button>
+  </div>
+  <div class="label-form-container">
+    <form class="label-form"
+          hx-post="/instellingen/labels/categorie/{{ category.id }}/labels/aanmaken/"
+          hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+          hx-target="#label_category_{{ category.id }}">
+      <c-input name="name" />
+      <c-button kind="secondary" icon="plus" iconPlacement="before" type="submit">
+      Label toevoegen
+      </c-button>
     </form>
-    {% if errors and errors.name%}
-        <div class="form-error">{{ errors.name }}</div>
-    {% endif %}
-</div>
+    {% if errors and errors.name %}<div class="form-error">{{ errors.name }}</div>{% endif %}
+  </div>
 {% else %}
-<p class="empty-category-message">Geen labels in deze categorie</p>
-<div class="label-form-container">
-    <form class="label-form" hx-post="/instellingen/labels/categorie/{{ category.id }}/labels/aanmaken/" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#label_category_{{ category.id }}">
-        <c-input name="name"/>
-        <c-button kind="secondary" 
-                  icon="plus"
-                  iconPlacement="before"
-                  type="submit">
-            Label toevoegen
-        </c-button>
+  <p class="empty-category-message">Geen labels in deze categorie</p>
+  <div class="label-form-container">
+    <form class="label-form"
+          hx-post="/instellingen/labels/categorie/{{ category.id }}/labels/aanmaken/"
+          hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+          hx-target="#label_category_{{ category.id }}">
+      <c-input name="name" />
+      <c-button kind="secondary" icon="plus" iconPlacement="before" type="submit">
+      Label toevoegen
+      </c-button>
     </form>
-    {% if errors and errors.name%}
-        <div class="form-error">{{ errors.name }}</div>
-    {% endif %}
-</div>
+    {% if errors and errors.name %}<div class="form-error">{{ errors.name }}</div>{% endif %}
+  </div>
 {% endif %}
-

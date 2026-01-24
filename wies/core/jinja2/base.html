@@ -1,35 +1,38 @@
 <!DOCTYPE html>
 <html lang="nl">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Wies{% endblock %}</title>
-    
-    <!-- Favicon -->
+    <title>
+      {% block title %}
+        Wies
+      {% endblock title %}
+    </title>
+    {# Favicon #}
     <link rel="icon" type="image/png" href="{{ static('WIES-fav.png') }}">
-    <link rel="shortcut icon" type="image/png" href="{{ static('WIES-fav.png') }}">
-    
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nl-rvo/design-tokens@1.11.0/dist/index.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@nl-rvo/component-library-css@4.11.1/dist/index.css" />
-    <link rel="stylesheet" href="{{ static('@nl-rvo/assets/icons/index.css') }}">
-    <link rel="stylesheet" href="{{ static('@nl-rvo/assets/fonts/index.css') }}">
+    <link rel="shortcut icon"
+          type="image/png"
+          href="{{ static('WIES-fav.png') }}">
+    <link rel="stylesheet" href="{{ static('vendor/rvo/design-tokens.css') }}" />
+    <link rel="stylesheet"
+          href="{{ static('vendor/rvo/component-library.css') }}" />
+    <link rel="stylesheet"
+          href="{{ static('@nl-rvo/assets/icons/index.css') }}">
+    <link rel="stylesheet"
+          href="{{ static('@nl-rvo/assets/fonts/index.css') }}">
     <link rel="stylesheet" href="{{ static('css/rvo_overwrite.css') }}">
     <link rel="stylesheet" href="{{ static('css/base.css') }}">
-    <script src="https://unpkg.com/htmx.org@2.0.6/dist/htmx.min.js"></script>
-    {% block extra_head %}{% endblock %}
-</head>
-<body class="rvo-theme">
+    <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
+    {% block extra_head %}
+    {% endblock extra_head %}
+  </head>
+  <body class="rvo-theme">
     {% block header %}
-        {% include "parts/header.html" %}
-    {% endblock %}
-    <div class="rvo-layout-column rvo-layout-gap--3x;">
-      <div class="rvo-layout-column rvo-layout-gap--xl">
-        {% block content %}{% endblock %}
-      </div>
+      {% include "parts/header.html" %}
+    {% endblock header %}
+    <div class="rvo-layout-column rvo-layout-gap--xl">
+      {% block content %}
+      {% endblock content %}
     </div>
-    {% block footer %}
-        <!-- evt. include van je footer -->
-    {% endblock %}
-    
-</body>
-</html> 
+  </body>
+</html>

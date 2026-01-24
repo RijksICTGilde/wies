@@ -2,12 +2,13 @@
   <div class="modal-content">
     <div class="modal-header">
       <h2 class="utrecht-heading-2">{{ modal_title }}</h2>
-      <button type="button" class="close modal-close-button">&times;</button>
+      <button type="button" class="close modal-close-button">×</button>
     </div>
-
-    <form method="post" action="{{ form_post_url }}" hx-post="{{ form_post_url }}" hx-target="#{{ target_element_id }}">
+    <form method="post"
+          action="{{ form_post_url }}"
+          hx-post="{{ form_post_url }}"
+          hx-target="#{{ target_element_id }}">
       {{ get_csrf_hidden_input(request) }}
-
       <div class="modal-body">
         {% if delete_warning %}
           <div style="padding: 1rem;">
@@ -17,28 +18,23 @@
           {{ content }}
         {% endif %}
       </div>
-
       <div class="modal-footer">
         <div class="modal-footer-buttons">
           <div class="close">
-            <c-button kind="{% if warning_modal %}warning-subtle{% else %}secondary{% endif %}" type="button">
-              Annuleren
+            <c-button kind="{{ 'warning-subtle' if warning_modal else 'secondary' }}" type="button">
+            Annuleren
             </c-button>
           </div>
           {% if delete_url %}
-          <c-button kind="warning-subtle" 
-                    hx-get="{{ delete_url }}"
-                    hx-target="#{{ modal_element_id }}"
-                    hx-swap="innerHTML">
+            <c-button kind="warning-subtle" hx-get="{{ delete_url }}" hx-target="#{{ modal_element_id }}" hx-swap="innerHTML">
             Verwijderen
-          </c-button>
+            </c-button>
           {% endif %}
         </div>
-        <c-button kind="{% if warning_modal %}warning{% else %}primary{% endif %}" type="submit">
-          {{ form_button_label }}
+        <c-button kind="{{ 'warning' if warning_modal else 'primary' }}" type="submit">
+        {{ form_button_label }}
         </c-button>
       </div>
     </form>
   </div>
 </dialog>
-

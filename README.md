@@ -4,7 +4,7 @@ Internal tool for managing colleague placements within the Dutch government. Wie
 
 ## Tech Stack
 
-- **Backend**: Django 5.2 with SQLite
+- **Backend**: Django 6 with SQLite
 - **Templates**: Jinja2 with [jinja-roos-components](https://github.com/RijksICTGilde/jinja-roos-components)
 - **Styling**: [RVO Design System](https://github.com/nl-design-system/rvo) (Dutch government design system)
 - **Interactivity**: HTMX
@@ -17,6 +17,7 @@ Internal tool for managing colleague placements within the Dutch government. Wie
 - [just](https://github.com/casey/just)
 - [uv](https://docs.astral.sh/uv/)
 - [npm](https://www.npmjs.com/)
+- [pre-commit](https://pre-commit.com/)
 
 ## Quick Start
 
@@ -29,6 +30,7 @@ just setup
 ```
 
 Then update `.env`:
+
 - Fill in OIDC credentials
 - Set DEV firstname, lastname and email (yourself)
 
@@ -66,16 +68,51 @@ just up             # Start application
 just down           # Stop containers
 just test           # Run tests
 just manage [...]   # Django manage.py commands
+just update-vendor  # Update vendor assets (htmx, RVO CSS)
 ```
+
+### Vendor Assets
+
+This project vendors external JavaScript and CSS dependencies instead of using a CDN. This ensures the application works without external network dependencies and improves security (no CDN in CSP).
+
+**Vendored packages:**
+
+- [htmx](https://htmx.org/) - JavaScript library for AJAX/HTML
+- [@nl-rvo/design-tokens](https://www.npmjs.com/package/@nl-rvo/design-tokens) - RVO design tokens
+- [@nl-rvo/component-library-css](https://www.npmjs.com/package/@nl-rvo/component-library-css) - RVO component styles
+
+#### Update vendor dependencies
+
+To update vendor dependencies:
+
+1. Edit the version numbers in `justfile`:
+
+   ```
+   HTMX_VERSION := "2.0.6"
+   RVO_DESIGN_TOKENS_VERSION := "1.11.0"
+   RVO_COMPONENT_LIBRARY_VERSION := "4.11.1"
+   ```
+
+2. Run the update command:
+
+   ```bash
+   just update-vendor
+   ```
+
+3. Test the application to verify everything works with the new versions.
+
+4. Commit the updated files in `wies/core/static/vendor/`.
 
 ### Testing
 
 Run all tests:
+
 ```bash
 just test
 ```
 
 Run specific tests:
+
 ```bash
 just manage test wies.core.tests.test_roles
 ```
@@ -83,6 +120,7 @@ just manage test wies.core.tests.test_roles
 ### Special URLs
 
 Not linked in the UI:
+
 - `/djadmin/` - Django admin
 - `/djadmin/db/` - Drop database and load dummy data
 - `/plaatsingen/import/` - Import placements from CSV
@@ -91,21 +129,21 @@ Not linked in the UI:
 
 ### User Roles
 
-| Role            | Description                   | Permissions                    |
-|-----------------|-------------------------------|--------------------------------|
-| **Beheerder**   | Administrator                 | User and label management      |
-| **Consultant**  | Employee                      | View-only access               |
-| **BDM**         | Business Development Manager  | Create and manage assignments  |
+| Role           | Description                  | Permissions                   |
+| -------------- | ---------------------------- | ----------------------------- |
+| **Beheerder**  | Administrator                | User and label management     |
+| **Consultant** | Employee                     | View-only access              |
+| **BDM**        | Business Development Manager | Create and manage assignments |
 
 ### Core Concepts
 
-| Term            | Description                                     |
-|-----------------|-------------------------------------------------|
-| **Plaatsing**   | Placement of a colleague on a service           |
-| **Opdracht**    | Assignment/project for a ministry               |
-| **Dienst**      | Service/work needed for an assignment           |
-| **Collega**     | Colleague with skills who can be placed         |
-| **Ministerie**  | Government organization that issues assignments |
+| Term           | Description                                     |
+| -------------- | ----------------------------------------------- |
+| **Plaatsing**  | Placement of a colleague on a service           |
+| **Opdracht**   | Assignment/project for a ministry               |
+| **Dienst**     | Service/work needed for an assignment           |
+| **Collega**    | Colleague with skills who can be placed         |
+| **Ministerie** | Government organization that issues assignments |
 
 ## Release Process
 

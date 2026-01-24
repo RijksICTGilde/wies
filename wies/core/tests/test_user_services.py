@@ -1,7 +1,8 @@
+import pytest
 from django.test import TestCase
 
-from wies.core.models import User, Event
 from wies.core.errors import EmailNotAvailableError
+from wies.core.models import Event, User
 from wies.core.services.users import create_user, update_user
 
 
@@ -18,19 +19,19 @@ class CreateUserServiceTest(TestCase):
         )
 
         # Verify user was created with correct attributes
-        self.assertEqual(user.first_name, "New")
-        self.assertEqual(user.last_name, "User")
-        self.assertEqual(user.email, "newuser@example.com")
-        self.assertIsNotNone(user.username)  # UUID should be generated
-        self.assertTrue(User.objects.filter(email="newuser@example.com").exists())
+        assert user.first_name == "New"
+        assert user.last_name == "User"
+        assert user.email == "newuser@example.com"
+        assert user.username is not None  # UUID should be generated
+        assert User.objects.filter(email="newuser@example.com").exists()
 
         # Verify that event was created
-        event = Event.objects.filter(name='User.create', context__created_id=user.id).first()
-        self.assertIsNotNone(event)
-        self.assertEqual(event.user_email, "")  # System-created (creator is None)
-        self.assertEqual(event.context['email'], 'newuser@example.com')
-        self.assertEqual(event.context['first_name'], 'New')
-        self.assertEqual(event.context['last_name'], 'User')
+        event = Event.objects.filter(name="User.create", context__created_id=user.id).first()
+        assert event is not None
+        assert event.user_email == ""  # System-created (creator is None)
+        assert event.context["email"] == "newuser@example.com"
+        assert event.context["first_name"] == "New"
+        assert event.context["last_name"] == "User"
 
         user2 = create_user(
             user,
@@ -40,13 +41,12 @@ class CreateUserServiceTest(TestCase):
         )
 
         # Verify that event is created and creator user is logged
-        event2 = Event.objects.filter(name='User.create', context__created_id=user2.id).first()
-        self.assertIsNotNone(event2)
-        self.assertEqual(event2.user_email, user.email)  # Creator is user
-        self.assertEqual(event2.context['email'], 'newuser2@example.com')
-        self.assertEqual(event2.context['first_name'], 'New2')
-        self.assertEqual(event2.context['last_name'], 'User2')
-
+        event2 = Event.objects.filter(name="User.create", context__created_id=user2.id).first()
+        assert event2 is not None
+        assert event2.user_email == user.email  # Creator is user
+        assert event2.context["email"] == "newuser2@example.com"
+        assert event2.context["first_name"] == "New2"
+        assert event2.context["last_name"] == "User2"
 
     def test_create_user_duplicate_email(self):
         """Test that creating user with duplicate email raises EmailNotAvailableError"""
@@ -59,7 +59,7 @@ class CreateUserServiceTest(TestCase):
         )
 
         # Try to create second user with same email
-        with self.assertRaises(EmailNotAvailableError):
+        with pytest.raises(EmailNotAvailableError):
             create_user(
                 None,
                 first_name="Second",
@@ -68,7 +68,7 @@ class CreateUserServiceTest(TestCase):
             )
 
         # Verify only one user exists with that email
-        self.assertEqual(User.objects.filter(email="duplicate@example.com").count(), 1)
+        assert User.objects.filter(email="duplicate@example.com").count() == 1
 
 
 class UpdateUserServiceTest(TestCase):
@@ -94,23 +94,23 @@ class UpdateUserServiceTest(TestCase):
         )
 
         # Verify the user was updated
-        self.assertEqual(updated_user.id, user.id)
-        self.assertEqual(updated_user.first_name, "Updated")
-        self.assertEqual(updated_user.last_name, "NewName")
-        self.assertEqual(updated_user.email, "updated@example.com")
+        assert updated_user.id == user.id
+        assert updated_user.first_name == "Updated"
+        assert updated_user.last_name == "NewName"
+        assert updated_user.email == "updated@example.com"
 
         # Verify that event was created
-        event = Event.objects.filter(name='User.update', context__updated_id=user.id).first()
-        self.assertIsNotNone(event)
-        self.assertEqual(event.user_email, "")  # Updater is None (system)
-        self.assertEqual(event.context['email'], 'updated@example.com')
-        self.assertEqual(event.context['first_name'], 'Updated')
-        self.assertEqual(event.context['last_name'], 'NewName')
+        event = Event.objects.filter(name="User.update", context__updated_id=user.id).first()
+        assert event is not None
+        assert event.user_email == ""  # Updater is None (system)
+        assert event.context["email"] == "updated@example.com"
+        assert event.context["first_name"] == "Updated"
+        assert event.context["last_name"] == "NewName"
 
         # Verify changes were persisted
         user.refresh_from_db()
-        self.assertEqual(user.first_name, "Updated")
-        self.assertEqual(user.email, "updated@example.com")
+        assert user.first_name == "Updated"
+        assert user.email == "updated@example.com"
 
     def test_update_user_email_to_existing(self):
         """Test that updating user email to another user's email raises EmailNotAvailableError"""
@@ -121,7 +121,7 @@ class UpdateUserServiceTest(TestCase):
             last_name="One",
             email="user1@example.com",
         )
-        user2 = create_user(
+        create_user(
             None,
             first_name="User",
             last_name="Two",
@@ -129,7 +129,7 @@ class UpdateUserServiceTest(TestCase):
         )
 
         # Try to update user1's email to user2's email
-        with self.assertRaises(EmailNotAvailableError):
+        with pytest.raises(EmailNotAvailableError):
             update_user(
                 None,
                 user=user1,
@@ -140,4 +140,4 @@ class UpdateUserServiceTest(TestCase):
 
         # Verify user1's email was not changed
         user1.refresh_from_db()
-        self.assertEqual(user1.email, "user1@example.com")
+        assert user1.email == "user1@example.com"
