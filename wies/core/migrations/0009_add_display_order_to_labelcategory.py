@@ -27,7 +27,7 @@ def reverse_migration(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0007_alter_assignment_extra_info'),
+        ('core', '0008_alter_labelcategory_options'),
     ]
 
     operations = [
