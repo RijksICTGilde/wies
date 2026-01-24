@@ -14,28 +14,28 @@ class GetNextDisplayOrderTest(TestCase):
 
     def test_empty_database_returns_10(self):
         """Empty database returns 10."""
-        self.assertEqual(get_next_display_order(), 10)
+        assert get_next_display_order() == 10
 
     def test_increments_by_10_from_round_number(self):
         """With max=10, returns 20."""
         LabelCategory.objects.create(name="First", color="#111111", display_order=10)
-        self.assertEqual(get_next_display_order(), 20)
+        assert get_next_display_order() == 20
 
     def test_rounds_up_to_next_10(self):
         """With max=25, returns 30 (rounded to 10)."""
         LabelCategory.objects.create(name="First", color="#111111", display_order=25)
-        self.assertEqual(get_next_display_order(), 30)
+        assert get_next_display_order() == 30
 
     def test_handles_max_at_boundary(self):
         """With max=30, returns 40."""
         LabelCategory.objects.create(name="First", color="#111111", display_order=30)
-        self.assertEqual(get_next_display_order(), 40)
+        assert get_next_display_order() == 40
 
     def test_uses_highest_value(self):
         """Uses highest value, not the last created."""
         LabelCategory.objects.create(name="High", color="#111111", display_order=50)
         LabelCategory.objects.create(name="Low", color="#222222", display_order=10)
-        self.assertEqual(get_next_display_order(), 60)
+        assert get_next_display_order() == 60
 
 
 class LabelCategoryOrderingTest(TestCase):
@@ -50,9 +50,9 @@ class LabelCategoryOrderingTest(TestCase):
     def test_label_categories_ordered_by_display_order(self):
         """Categories are sorted by display_order."""
         categories = list(LabelCategory.objects.all())
-        self.assertEqual(categories[0].name, "Expertise")
-        self.assertEqual(categories[1].name, "Thema")
-        self.assertEqual(categories[2].name, "Merk")
+        assert categories[0].name == "Expertise"
+        assert categories[1].name == "Thema"
+        assert categories[2].name == "Merk"
 
     def test_same_display_order_sorted_by_name_case_insensitive(self):
         """With equal display_order, sorts by name (case-insensitive)."""
@@ -63,9 +63,9 @@ class LabelCategoryOrderingTest(TestCase):
 
         categories = list(LabelCategory.objects.all())
         # Case-insensitive: apple, Banana, Zebra
-        self.assertEqual(categories[0].name, "apple")
-        self.assertEqual(categories[1].name, "Banana")
-        self.assertEqual(categories[2].name, "Zebra")
+        assert categories[0].name == "apple"
+        assert categories[1].name == "Banana"
+        assert categories[2].name == "Zebra"
 
 
 class DynamicDisplayOrderIntegrationTest(TestCase):
@@ -74,33 +74,33 @@ class DynamicDisplayOrderIntegrationTest(TestCase):
     def test_model_uses_helper_as_default(self):
         """Model.objects.create() uses get_next_display_order()."""
         cat = LabelCategory.objects.create(name="Test", color="#000000")
-        self.assertEqual(cat.display_order, 10)
+        assert cat.display_order == 10
 
         cat2 = LabelCategory.objects.create(name="Test2", color="#111111")
-        self.assertEqual(cat2.display_order, 20)
+        assert cat2.display_order == 20
 
     def test_explicit_display_order_overrides_default(self):
         """Explicitly provided display_order overrides default."""
         cat = LabelCategory.objects.create(name="Test", color="#000000", display_order=99)
-        self.assertEqual(cat.display_order, 99)
+        assert cat.display_order == 99
 
     def test_entered_value_not_rounded(self):
         """Entered value is not rounded - 25 stays 25."""
         cat = LabelCategory.objects.create(name="Test", color="#000000", display_order=25)
-        self.assertEqual(cat.display_order, 25)  # not rounded to 30
+        assert cat.display_order == 25  # not rounded to 30
 
     def test_form_sets_dynamic_initial_for_new_category(self):
         """LabelCategoryForm gets dynamic initial for new category."""
         LabelCategory.objects.create(name="Existing", color="#111111", display_order=50)
         form = LabelCategoryForm()
-        self.assertEqual(form.fields["display_order"].initial, 60)
+        assert form.fields["display_order"].initial == 60
 
     def test_form_edit_preserves_existing_value(self):
         """When editing, form preserves existing value."""
         cat = LabelCategory.objects.create(name="Existing", color="#111111", display_order=25)
         form = LabelCategoryForm(instance=cat)
         # On edit: instance value is preserved
-        self.assertEqual(form.instance.display_order, 25)
+        assert form.instance.display_order == 25
 
 
 @override_settings(
@@ -136,6 +136,6 @@ class FilterOrderingViewTest(TestCase):
             # First 3 should be label category filters
             label_filters = [fg for fg in filter_groups if fg.get("name") == "labels"]
             if len(label_filters) >= 3:
-                self.assertEqual(label_filters[0]["label"], "Expertise")
-                self.assertEqual(label_filters[1]["label"], "Thema")
-                self.assertEqual(label_filters[2]["label"], "Merk")
+                assert label_filters[0]["label"] == "Expertise"
+                assert label_filters[1]["label"] == "Thema"
+                assert label_filters[2]["label"] == "Merk"
