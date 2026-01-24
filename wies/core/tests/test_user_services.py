@@ -228,6 +228,18 @@ class ValidateEmailDomainTest(TestCase):
         with pytest.raises(InvalidEmailDomainError):
             validate_email_domain("test@gmail.com")
 
+    def test_invalid_domain_english_message_by_default(self):
+        """Test that error message is English by default"""
+        with pytest.raises(InvalidEmailDomainError) as exc_info:
+            validate_email_domain("test@gmail.com")
+        assert "has invalid domain" in str(exc_info.value)
+
+    def test_invalid_domain_dutch_message_when_user_facing(self):
+        """Test that error message is Dutch when user_facing=True"""
+        with pytest.raises(InvalidEmailDomainError) as exc_info:
+            validate_email_domain("test@gmail.com", user_facing=True)
+        assert "Alleen ODI e-mailadressen zijn toegestaan" in str(exc_info.value)
+
 
 class CreateUsersFromCSVEmailDomainTest(TestCase):
     """Tests for email domain validation in CSV import"""

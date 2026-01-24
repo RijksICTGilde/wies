@@ -20,10 +20,10 @@ def is_allowed_email_domain(email: str) -> bool:
     return any(email.lower().endswith(domain) for domain in allowed_domains)
 
 
-def validate_email_domain(email: str) -> None:
+def validate_email_domain(email: str, *, user_facing: bool = False) -> None:
     """Validate email domain. Raises InvalidEmailDomainError if invalid."""
     if not is_allowed_email_domain(email):
-        raise InvalidEmailDomainError(email)
+        raise InvalidEmailDomainError(email, user_facing=user_facing)
 
 
 def create_user(creator: User, first_name, last_name, email, labels=None, groups=None):

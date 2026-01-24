@@ -7,7 +7,6 @@ from django.forms.renderers import Jinja2
 from django.forms.utils import ErrorList
 from django.template import engines
 
-from .errors import InvalidEmailDomainError
 from .models import Label, LabelCategory, User
 from .services.users import validate_email_domain
 
@@ -157,12 +156,7 @@ class UserForm(RvoFormMixin, forms.ModelForm):
 
     def clean_email(self):
         email = self.cleaned_data.get("email", "").lower()
-        try:
-            validate_email_domain(email)
-        except InvalidEmailDomainError as e:
-            domains_str = ", ".join(e.allowed_domains)
-            msg = f"Alleen ODI e-mailadressen zijn toegestaan ({domains_str})"
-            raise ValidationError(msg) from e
+        validate_email_domain(email, user_facing=True)
         return email
 
     def __init__(self, *args, **kwargs):
