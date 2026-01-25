@@ -30,7 +30,7 @@ __pycache__
 .pre-commit-config.yaml
 .python-version
 docker-compose.yml
-Dockerfile
+docker/Dockerfile
 justfile
 
 # Documentation

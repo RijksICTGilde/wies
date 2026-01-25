@@ -221,7 +221,7 @@ class OrganizationUnitForm(RvoFormMixin, forms.ModelForm):
     )
     parent = forms.ModelChoiceField(
         label="Bovenliggende organisatie",
-        queryset=OrganizationUnit.objects.all(),
+        queryset=OrganizationUnit.objects.active(),
         required=False,
     )
     is_active = forms.BooleanField(label="Actief", required=False, initial=True)

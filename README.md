@@ -145,6 +145,65 @@ Not linked in the UI:
 | **Collega**    | Colleague with skills who can be placed         |
 | **Ministerie** | Government organization that issues assignments |
 
+## Deployment
+
+### Docker
+
+```bash
+# Build image
+docker build -t wies .
+
+# Run with gunicorn (default entrypoint)
+docker run -p 8000:8000 --env-file .env wies
+```
+
+### Docker Compose
+
+```bash
+# Start only the Django application
+docker compose up
+
+# Start Django + cron scheduler (for scheduled tasks)
+docker compose --profile cron up
+```
+
+> **Note:** Services with `profiles: [cron]` do NOT start with regular `docker compose up`. Use `--profile cron` to include them.
+
+### Kubernetes
+
+For Kubernetes deployment:
+
+1. **Web deployment**: Use the default image entrypoint (gunicorn). Mount a PersistentVolume for the SQLite database.
+2. **Scheduled tasks**: Create a CronJob that runs the management command directly
+
+Example CronJob for organization sync:
+
+```yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: wies-sync-organizations
+spec:
+  schedule: "21 3 * * *" # Daily at 3:21 AM
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: sync
+              image: wies:latest
+              command: ["python", "manage.py", "sync_organizations", "--yes"]
+          restartPolicy: OnFailure
+```
+
+### Scheduled Tasks
+
+Organization data is synced from [organisaties.overheid.nl](https://organisaties.overheid.nl).
+
+| Task               | Schedule      | Command                                     |
+| ------------------ | ------------- | ------------------------------------------- |
+| Sync organizations | Daily 3:21 AM | `python manage.py sync_organizations --yes` |
+
 ## Release Process
 
 1. Everything in `main` branch

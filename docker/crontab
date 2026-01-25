@@ -1,0 +1,7 @@
+# Wies scheduled tasks
+# Format: minute hour day month weekday command
+
+# Sync organizations daily at 3:21 AM (offset to avoid thundering herd)
+21 3 * * * cd /app && python manage.py sync_organizations --yes >> /proc/1/fd/1 2>&1
+
+# Empty line required at end
