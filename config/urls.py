@@ -30,6 +30,8 @@ from wies.core.views import (
     error_403,
     error_404,
     error_500,
+    filter_move,
+    filter_settings,
     label_admin,
     label_category_create,
     label_category_delete,
@@ -81,6 +83,8 @@ urlpatterns = [
     path("instellingen/labels/categorie/<int:pk>/labels/aanmaken/", label_create),
     path("instellingen/labels/<int:pk>/bewerken/", label_edit, name="label-edit"),
     path("instellingen/labels/<int:pk>/verwijderen/", label_delete, name="label-delete"),
+    path("instellingen/filters/", filter_settings, name="filter-settings"),
+    path("instellingen/filters/<int:position>/<str:direction>/", filter_move, name="filter-move"),
 ]
 
 # Custom error handlers

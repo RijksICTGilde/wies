@@ -2,20 +2,12 @@ import re
 
 from django import forms
 from django.contrib.auth.models import Group
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 from wies.core.forms import RvoFormMixin, UserForm
 from wies.core.models import Label, LabelCategory
 
 
-@override_settings(
-    # Use simple static files storage for tests
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class RvoFormMixinTest(TestCase):
     """Tests for RvoFormMixin functionality and form rendering"""
 

@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Lower
@@ -15,22 +17,6 @@ SOURCE_CHOICES = {
 
 
 DEFAULT_LABELS = {
-    "Merk": {
-        "color": "#DCE3EA",
-        "labels": {
-            "Rijksconsultants",
-            "I-Interim Rijk",
-            "Rijks ICT Gilde",
-            "Rijks I-Traineeship",
-            "Innoveren met Impact",
-            "RADIO",
-            "Leer en ontwikkel campus",
-            "Intercoach",
-            "Mindful Rijk",
-            "Gateway review",
-            "Delta review",
-        },
-    },
     "Expertise": {
         "color": "#B3D7EE",
         "labels": {
@@ -59,6 +45,22 @@ DEFAULT_LABELS = {
             "Innovatieve en lerende overheid",
         },
     },
+    "Merk": {
+        "color": "#DCE3EA",
+        "labels": {
+            "Rijksconsultants",
+            "I-Interim Rijk",
+            "Rijks ICT Gilde",
+            "Rijks I-Traineeship",
+            "Innoveren met Impact",
+            "RADIO",
+            "Leer en ontwikkel campus",
+            "Intercoach",
+            "Mindful Rijk",
+            "Gateway review",
+            "Delta review",
+        },
+    },
 }
 
 
@@ -67,7 +69,9 @@ class LabelCategory(models.Model):
     color = models.CharField(max_length=7)  # Hex color like #FF5733
 
     class Meta:
-        ordering = ["name"]
+        ordering = [Lower("name")]
+        verbose_name = "Label categorie"
+        verbose_name_plural = "Label categorieën"
 
     def __str__(self):
         return self.name
@@ -237,6 +241,33 @@ class Service(models.Model):
         if self.period_source == "ASSIGNMENT":
             return self.assignment.end_date
         return self.specific_end_date
+
+
+class Config(models.Model):
+    """Generic key-value config model voor systeem-brede instellingen."""
+
+    key = models.CharField(max_length=100, unique=True, primary_key=True)
+    value = models.JSONField(default=dict)
+
+    class Meta:
+        verbose_name = "Configuratie"
+        verbose_name_plural = "Configuraties"
+
+    def __str__(self):
+        return self.key
+
+    @classmethod
+    def get(cls, key: str, default: Any = None) -> Any:
+        """Haal config waarde op."""
+        try:
+            return cls.objects.get(key=key).value
+        except cls.DoesNotExist:
+            return default
+
+    @classmethod
+    def set(cls, key: str, value: Any) -> None:
+        """Sla config waarde op."""
+        cls.objects.update_or_create(key=key, defaults={"value": value})
 
 
 class Event(models.Model):

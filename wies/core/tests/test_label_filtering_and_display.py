@@ -1,17 +1,10 @@
 from django.contrib.auth.models import Permission
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.models import Assignment, Colleague, Label, LabelCategory, Ministry, Placement, Service, Skill, User
 
 
-@override_settings(
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class LabelFilteringAndDisplayTest(TestCase):
     """High-level integration tests for label filtering and display in views"""
 
@@ -205,8 +198,8 @@ class LabelFilteringAndDisplayTest(TestCase):
         response = self.client.get(reverse("admin-users"))
         assert response.status_code == 200
 
-        # Should have label filter option
-        self.assertContains(response, "Label")
+        # Should have label filter option (sidebar shows "Labels voor gebruikers")
+        self.assertContains(response, "Labels voor gebruikers")
 
         # Should show label names in dropdown format "Category: Label"
         # This depends on implementation of filter_groups in view

@@ -18,7 +18,10 @@ class Command(BaseCommand):
         # setting up label categories and labels if completely empty
         if LabelCategory.objects.count() == 0:
             for category_name, category_vals in DEFAULT_LABELS.items():
-                category = LabelCategory.objects.create(name=category_name, color=category_vals["color"])
+                category = LabelCategory.objects.create(
+                    name=category_name,
+                    color=category_vals["color"],
+                )
                 for label_name in category_vals["labels"]:
                     Label.objects.create(name=label_name, category=category)
                 logger.info("Successfully setup label categories and labels")

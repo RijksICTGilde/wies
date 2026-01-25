@@ -1,0 +1,31 @@
+<ul class="filter-order-list" role="list" aria-label="Filter volgorde">
+  {% for filter in filters %}
+    <li class="filter-order-item{% if moved_position == filter.position %} filter-order-item--moved{% endif %}{% if swapped_position == filter.position %} filter-order-item--swapped{% endif %}"
+        {% if moved_position == filter.position and moved_direction %}data-moved-direction="{{ moved_direction }}"{% endif %}>
+      <span class="filter-order-position">{{ filter.position }}.</span>
+      <span class="filter-order-label">{{ filter.label }}</span>
+      <div class="filter-order-actions">
+        {% if filter.is_first %}
+          <span class="filter-order-button-placeholder"></span>
+        {% else %}
+          <form hx-post="{{ url('filter-move', args=[filter.position, 'up']) }}"
+                hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+                hx-target="#filter-list"
+                hx-swap="innerHTML">
+            <c-button type="submit" kind="tertiary" size="sm" icon="delta-omhoog" iconPlacement="before">Omhoog</c-button>
+          </form>
+        {% endif %}
+        {% if filter.is_last %}
+          <span class="filter-order-button-placeholder"></span>
+        {% else %}
+          <form hx-post="{{ url('filter-move', args=[filter.position, 'down']) }}"
+                hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+                hx-target="#filter-list"
+                hx-swap="innerHTML">
+            <c-button type="submit" kind="tertiary" size="sm" icon="delta-omlaag" iconPlacement="before">Omlaag</c-button>
+          </form>
+        {% endif %}
+      </div>
+    </li>
+  {% endfor %}
+</ul>
