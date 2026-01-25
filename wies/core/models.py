@@ -1,3 +1,5 @@
+from typing import override
+
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
@@ -106,43 +108,14 @@ class Ministry(models.Model):
         return f"{self.name} ({self.abbreviation})"
 
 
-# Valid parent types per organization type
-# Key = child type, Value = list of allowed parent types
-# Types not in this dict have no restrictions (can be root or have any parent)
-VALID_PARENT_TYPES = {
-    # Ministry hierarchy (strict)
-    "directoraat_generaal": ["ministerie"],
-    "directie": [
-        "directoraat_generaal",
-        "ministerie",
-        "agentschap",
-        "gemeente",
-        "provincie",
-        "waterschap",
-    ],
-    "afdeling": [
-        "directie",
-        "directoraat_generaal",
-        "agentschap",
-        "gemeente",
-        "provincie",
-    ],
-    # Execution under ministry
-    "agentschap": ["ministerie"],
-    "shared_service_organisatie": ["ministerie"],
-    "planbureau": ["ministerie"],
-    "inspectie": ["ministerie", "directoraat_generaal"],
-    # Advisory boards
-    "adviescollege": ["ministerie", "directoraat_generaal"],
-}
-
-
 # Organization type configuration: single source of truth for type metadata
 # - label: Dutch UI label
-# - is_root: True if this type can exist without parent (shown as root in tree filter)
+# - is_root: True if this type must be root (no parent allowed), False if parent required
 # - xml_name: Value in <classificatie> element of organisaties.overheid.nl XML export
 #             (https://organisaties.overheid.nl/archive/exportOO.xml)
 #             None = not importable from XML (internal hierarchy types)
+# - valid_parents: List of allowed parent types (only for is_root=False types)
+#                  Default is None = any parent allowed
 ORGANIZATION_TYPE_CONFIG = {
     # === Root types (can exist without parent) ===
     # Government layers
@@ -150,6 +123,58 @@ ORGANIZATION_TYPE_CONFIG = {
     "gemeente": {"label": "Gemeente", "is_root": True, "xml_name": "Gemeente"},
     "provincie": {"label": "Provincie", "is_root": True, "xml_name": "Provincie"},
     "waterschap": {"label": "Waterschap", "is_root": True, "xml_name": "Waterschap"},
+    # === Sub types (require parent) ===
+    # Ministry hierarchy
+    "directoraat_generaal": {
+        "label": "Directoraat-Generaal",
+        "is_root": False,
+        "xml_name": None,
+        "valid_parents": ["ministerie"],
+    },
+    "directie": {
+        "label": "Directie",
+        "is_root": False,
+        "xml_name": None,
+        "valid_parents": ["directoraat_generaal", "ministerie", "agentschap", "gemeente", "provincie", "waterschap"],
+    },
+    "afdeling": {
+        "label": "Afdeling",
+        "is_root": False,
+        "xml_name": None,
+        "valid_parents": ["directie", "directoraat_generaal", "agentschap", "gemeente", "provincie"],
+    },
+    "organisatieonderdeel": {
+        "label": "Organisatieonderdeel",
+        "is_root": False,
+        "xml_name": "Organisatieonderdeel",
+        "valid_parents": [
+            "ministerie",
+            "gemeente",
+            "provincie",
+            "waterschap",
+            "directoraat_generaal",
+            "directie",
+            "afdeling",
+            "agentschap",
+            "zelfstandig_bestuursorgaan",
+            "rechtspersoon_wettelijke_taak",
+            "stichting",
+            "staatsdeelneming",
+            "hoog_college_van_staat",
+            "rechtspraak",
+            "politie",
+            "kabinet_van_de_koning",
+            "publiekrechtelijke_instelling",
+            "speciaal_sectorbedrijf",
+            "gemeenschappelijke_regeling",
+            "caribisch_openbaar_lichaam",
+            "shared_service_organisatie",
+            "planbureau",
+            "adviescollege",
+            "inspectie",
+        ],
+    },
+    # === More root types that can exist without parent ===
     # Independent bodies (top-level)
     "zelfstandig_bestuursorgaan": {
         "label": "Zelfstandig Bestuursorgaan",
@@ -197,22 +222,37 @@ ORGANIZATION_TYPE_CONFIG = {
         "is_root": True,
         "xml_name": "Caribisch openbaar lichaam",
     },
-    # === Sub types (require parent) ===
-    # Ministry hierarchy
-    "directoraat_generaal": {"label": "Directoraat-Generaal", "is_root": False, "xml_name": None},
-    "directie": {"label": "Directie", "is_root": False, "xml_name": None},
-    "afdeling": {"label": "Afdeling", "is_root": False, "xml_name": None},
+    # === More sub types that require parent ===
     # Execution & independent units (under ministry)
-    "agentschap": {"label": "Agentschap", "is_root": False, "xml_name": "Agentschap"},
-    "shared_service_organisatie": {"label": "Shared Service Organisatie", "is_root": False, "xml_name": None},
-    "planbureau": {"label": "Planbureau", "is_root": False, "xml_name": None},
-    "adviescollege": {"label": "Adviescollege", "is_root": False, "xml_name": "Adviescollege"},
-    "inspectie": {"label": "Inspectie", "is_root": False, "xml_name": None},
-    # Generic (for imports where specific type is unknown)
-    "organisatieonderdeel": {
-        "label": "Organisatieonderdeel",
+    "agentschap": {
+        "label": "Agentschap",
         "is_root": False,
-        "xml_name": "Organisatieonderdeel",
+        "xml_name": "Agentschap",
+        "valid_parents": ["ministerie"],
+    },
+    "shared_service_organisatie": {
+        "label": "Shared Service Organisatie",
+        "is_root": False,
+        "xml_name": None,
+        "valid_parents": ["ministerie"],
+    },
+    "planbureau": {
+        "label": "Planbureau",
+        "is_root": False,
+        "xml_name": None,
+        "valid_parents": ["ministerie"],
+    },
+    "adviescollege": {
+        "label": "Adviescollege",
+        "is_root": False,
+        "xml_name": "Adviescollege",
+        "valid_parents": ["ministerie", "directoraat_generaal"],
+    },
+    "inspectie": {
+        "label": "Inspectie",
+        "is_root": False,
+        "xml_name": None,
+        "valid_parents": ["ministerie", "directoraat_generaal"],
     },
 }
 
@@ -235,7 +275,7 @@ XML_TYPE_MAPPING = {
 }
 
 
-class OrganizationQuerySet(models.QuerySet):
+class OrganizationUnitQuerySet(models.QuerySet):
     """QuerySet for Organization model with tree operations."""
 
     def active(self):
@@ -243,43 +283,44 @@ class OrganizationQuerySet(models.QuerySet):
         return self.filter(is_active=True)
 
     def roots(self):
-        """Filter to root organizations (no parent)."""
         return self.filter(parent__isnull=True)
 
     def of_type(self, *org_types):
-        """Filter by organization type(s)."""
         return self.filter(organization_type__in=org_types)
 
     def with_descendants(self, root_ids: list[int]) -> list[int]:
-        """
-        Get all organization IDs that fall under root_ids (including roots).
-
-        Uses iterative batch queries instead of recursion per node.
-
-        Args:
-            root_ids: List of root organization IDs to start from
-
-        Returns:
-            List of all organization IDs (roots + all descendants)
-        """
-
+        """Get all organization IDs that fall under root_ids (including roots)."""
         all_ids = set(root_ids)
         current_level = list(root_ids)
-
         while current_level:
             children = list(self.filter(parent_id__in=current_level).values_list("id", flat=True))
             current_level = children
             all_ids.update(children)
-
         return list(all_ids)
 
 
-class Organization(models.Model):
+class OrganizationUnitManager(models.Manager.from_queryset(OrganizationUnitQuerySet)):
+    """Manager filtering non-deleted records by default."""
+
+    def get_queryset(self):
+        return super().get_queryset().filter(deleted_at__isnull=True)
+
+    def with_deleted(self):
+        """Include all records, including deleted."""
+        return super().get_queryset()
+
+
+class OrganizationUnit(models.Model):
     """Hierarchical organization model for Dutch government organizations."""
 
     # === Basic fields ===
     name = models.CharField(max_length=200, verbose_name="Naam")
-    abbreviation = models.CharField(max_length=20, blank=True, verbose_name="Afkorting")
+    abbreviations = models.JSONField(
+        default=list,
+        blank=True,
+        verbose_name="Afkortingen",
+        help_text='Lijst van afkortingen, bijv. ["BZK", "MinBZK"]',
+    )
     organization_type = models.CharField(
         max_length=30,
         choices=OrganizationType.choices,
@@ -351,12 +392,20 @@ class Organization(models.Model):
         help_text="Organisatie die deze heeft overgenomen (bij fusie/opheffing)",
     )
 
-    objects = OrganizationQuerySet.as_manager()
+    # === Soft delete ===
+    deleted_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Verwijderd op",
+        help_text="Tijdstip van soft delete. Null = niet verwijderd.",
+    )
+
+    objects = OrganizationUnitManager()
 
     class Meta:
         ordering = ["name"]
-        verbose_name = "Organisatie"
-        verbose_name_plural = "Organisaties"
+        verbose_name = "Organisatie-eenheid"
+        verbose_name_plural = "Organisatie-eenheden"
         indexes = [
             models.Index(fields=["parent", "is_active"]),
         ]
@@ -365,6 +414,13 @@ class Organization(models.Model):
         if self.abbreviation:
             return f"{self.name} ({self.abbreviation})"
         return self.name
+
+    @property
+    def abbreviation(self) -> str:
+        """Return the first abbreviation, or empty string if none."""
+        if self.abbreviations and len(self.abbreviations) > 0:
+            return self.abbreviations[0]
+        return ""
 
     def clean(self):
         """Validate model constraints."""
@@ -386,10 +442,18 @@ class Organization(models.Model):
                 seen.add(current.pk)
                 current = current.parent
 
-        # Validate hierarchy order (types not in VALID_PARENT_TYPES have no restrictions)
+        # Validate hierarchy based on type configuration
+        type_config = ORGANIZATION_TYPE_CONFIG.get(self.organization_type, {})
+
         if self.parent:
-            valid_parents = VALID_PARENT_TYPES.get(self.organization_type)
-            if valid_parents and self.parent.organization_type not in valid_parents:
+            # Root types cannot have a parent
+            if type_config.get("is_root"):
+                msg = f"{self.get_organization_type_display()} mag geen bovenliggende organisatie hebben."
+                raise ValidationError(msg)
+
+            # Check allowed parent types
+            valid_parents = type_config.get("valid_parents")
+            if valid_parents is not None and self.parent.organization_type not in valid_parents:
                 msg = (
                     f"{self.get_organization_type_display()} kan niet onder "
                     f"{self.parent.get_organization_type_display()} vallen."
@@ -468,6 +532,31 @@ class Organization(models.Model):
         chain = self.get_successor_chain()
         return chain[-1] if chain else None
 
+    @override
+    def delete(self, *args, **kwargs):
+        """Soft delete instead of hard delete. Prevents deletion of TOOI-synced orgs."""
+        if self.tooi_identifier:
+            msg = "Organisaties met TOOI-identifier kunnen niet worden verwijderd."
+            raise models.ProtectedError(msg, [self])
+        if self.children.exists():
+            msg = "Organisaties met onderliggende eenheden kunnen niet worden verwijderd."
+            raise models.ProtectedError(msg, [self])
+        if self.assignment_relations.exists():
+            msg = "Organisaties met gekoppelde opdrachten kunnen niet worden verwijderd."
+            raise models.ProtectedError(msg, [self])
+
+        self.deleted_at = timezone.now()
+        self.save(update_fields=["deleted_at"])
+
+    def hard_delete(self, *args, **kwargs):
+        """Actually delete from database. Use with caution."""
+        super().delete(*args, **kwargs)
+
+    def restore(self):
+        """Restore a soft-deleted organization."""
+        self.deleted_at = None
+        self.save(update_fields=["deleted_at"])
+
     def rename(self, new_name: str) -> None:
         """Rename organization and preserve old name in history."""
         today = timezone.now().date().isoformat()
@@ -477,29 +566,29 @@ class Organization(models.Model):
         self.save(update_fields=["name", "previous_names"])
 
 
-class OrganizationRole(models.TextChoices):
-    """Role of an organization in relation to an assignment."""
+class OrganizationUnitRole(models.TextChoices):
+    """Role of an organization unit in relation to an assignment."""
 
     PRIMARY = "PRIMARY", "Primaire organisatie"
     INVOLVED = "INVOLVED", "Betrokken partij"
     SUCCESSOR = "SUCCESSOR", "Opvolger (na overdracht)"
 
 
-class AssignmentOrganization(models.Model):
-    """Through table between Assignment and Organization with role and period.
+class AssignmentOrganizationUnit(models.Model):
+    """Through table between Assignment and OrganizationUnit with role and period.
 
-    Each assignment can have multiple organizations with different roles:
+    Each assignment can have multiple organization units with different roles:
     - PRIMARY: The main organization responsible for the assignment (max 1 per assignment)
     - INVOLVED: Other organizations involved in the assignment
     - SUCCESSOR: Organization that took over after transfer (with effective dates)
     """
 
     assignment = models.ForeignKey("Assignment", on_delete=models.CASCADE, related_name="organization_relations")
-    organization = models.ForeignKey("Organization", on_delete=models.PROTECT, related_name="assignment_relations")
+    organization = models.ForeignKey("OrganizationUnit", on_delete=models.PROTECT, related_name="assignment_relations")
     role = models.CharField(
         max_length=20,
-        choices=OrganizationRole,
-        default=OrganizationRole.PRIMARY,
+        choices=OrganizationUnitRole,
+        default=OrganizationUnitRole.PRIMARY,
         verbose_name="Rol",
     )
     effective_from = models.DateField(null=True, blank=True, verbose_name="Geldig vanaf")
@@ -573,10 +662,10 @@ class Assignment(models.Model):
 
     # New: M2M via through model for organization hierarchy
     organizations = models.ManyToManyField(
-        "Organization",
-        through="AssignmentOrganization",
+        "OrganizationUnit",
+        through="AssignmentOrganizationUnit",
         related_name="assignments",
-        verbose_name="Organisaties",
+        verbose_name="Organisatie-eenheden",
     )
 
     def __str__(self):
@@ -596,7 +685,7 @@ class Assignment(models.Model):
 
     def get_primary_organization(self):
         """Return the primary organization (or None)."""
-        rel = self.organization_relations.filter(role=OrganizationRole.PRIMARY).first()
+        rel = self.organization_relations.filter(role=OrganizationUnitRole.PRIMARY).first()
         return rel.organization if rel else None
 
 

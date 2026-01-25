@@ -1,0 +1,12 @@
+{# Field template for single checkbox (BooleanField) - label naast checkbox #}
+<div class="utrecht-form-field">
+  <label class="rvo-checkbox">
+    <input type="checkbox"
+           name="{{ field.html_name }}"
+           class="rvo-checkbox__input"
+           {% if field.value %}checked{% endif %}
+           {% if field.auto_id %}id="{{ field.auto_id }}"{% endif %}>
+    <span class="rvo-text">{{ field.label }}</span>
+  </label>
+  {% if field.errors %}{{ field.errors }}{% endif %}
+</div>

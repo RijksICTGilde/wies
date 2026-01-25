@@ -1,0 +1,43 @@
+{% for org in organizations %}
+  <tr class="rvo-table-row clickable-row"
+      hx-get="{{ url('organization-edit', args=[org.pk]) }}"
+      hx-target="#organizationFormModal"
+      hx-swap="innerHTML"
+      title="Bewerk {{ org.name }}">
+    <td class="rvo-table-cell">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <div class="rvo-text rvo-text--bold">{{ org.name }}</div>
+        {% if not org.is_active %}<span class="rvo-tag rvo-tag--grijs" style="font-size: 0.75rem;">Inactief</span>{% endif %}
+      </div>
+    </td>
+    <td class="rvo-table-cell">
+      <span class="rvo-text rvo-text--sm"
+            style="background-color: #e6f0ff;
+                   color: #154273;
+                   padding: 0.125rem 0.5rem;
+                   border-radius: 0.25rem;
+                   white-space: nowrap">{{ org.get_organization_type_display() }}</span>
+    </td>
+    <td class="rvo-table-cell">
+      <div style="display: flex;
+                  align-items: center;
+                  justify-content: space-between">
+        {% if org.parent %}
+          <span class="rvo-text rvo-text--sm">{{ org.parent.abbreviation or org.parent.name }}</span>
+        {% else %}
+          <span class="rvo-text rvo-text--sm rvo-text--subtle">-</span>
+        {% endif %}
+        <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw"
+              role="img"
+              aria-label="Bewerken"
+              style="flex-shrink: 0"></span>
+      </div>
+    </td>
+  </tr>
+{% else %}
+  <tr class="rvo-table-row">
+    <td class="rvo-table-cell" colspan="3">
+      <span class="rvo-text--italic">Geen organisatie-eenheden gevonden.</span>
+    </td>
+  </tr>
+{% endfor %}

@@ -4,8 +4,8 @@ from django import forms
 from django.contrib.auth.models import Group
 from django.test import TestCase, override_settings
 
-from wies.core.forms import RvoFormMixin, UserForm
-from wies.core.models import Label, LabelCategory
+from wies.core.forms import OrganizationUnitForm, RvoFormMixin, UserForm
+from wies.core.models import Label, LabelCategory, OrganizationUnit
 
 
 @override_settings(
@@ -26,10 +26,10 @@ class RvoFormMixinTest(TestCase):
         self.label_a = Label.objects.create(name="Brand A", category=self.category)
         self.label_b = Label.objects.create(name="Brand B", category=self.category)
 
-        # Create test groups for checkbox rendering
-        self.admin_group = Group.objects.create(name="Beheerder")
-        self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name="Business Development Manager")
+        # Get or create test groups (migration may have created them)
+        self.admin_group, _ = Group.objects.get_or_create(name="Beheerder")
+        self.consultant_group, _ = Group.objects.get_or_create(name="Consultant")
+        self.bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
 
     def test_form_renders_with_rvo_classes(self):
         """Test that forms using RvoFormMixin render with RVO design system classes"""
@@ -149,3 +149,128 @@ class RvoFormMixinTest(TestCase):
         assert "FileInput" in log.output[0]
         assert "document" in log.output[0]
         assert "not in RVO widget_templates mapping" in log.output[0]
+
+
+class OrganizationUnitFormTest(TestCase):
+    """Tests for OrganizationUnitForm validation."""
+
+    def test_valid_organization_form(self):
+        """Valid data creates organization."""
+        form = OrganizationUnitForm(
+            data={
+                "name": "Test Gemeente",
+                "abbreviation": "TG",
+                "organization_type": "gemeente",
+                "is_active": True,
+            }
+        )
+        assert form.is_valid()
+
+    def test_name_required(self):
+        """Name is required."""
+        form = OrganizationUnitForm(
+            data={
+                "name": "",
+                "organization_type": "gemeente",
+            }
+        )
+        assert not form.is_valid()
+        assert "name" in form.errors
+
+    def test_hierarchy_validation(self):
+        """Form validates hierarchy rules from model."""
+        afdeling = OrganizationUnit.objects.create(
+            name="Afdeling",
+            organization_type="afdeling",
+        )
+        # DG cannot be under Afdeling
+        form = OrganizationUnitForm(
+            data={
+                "name": "Test DG",
+                "organization_type": "directoraat_generaal",
+                "parent": afdeling.pk,
+                "is_active": True,
+            }
+        )
+        assert not form.is_valid()
+
+    def test_root_type_validation(self):
+        """Form validates root types cannot have parent and shows error on parent field."""
+        ministry = OrganizationUnit.objects.create(
+            name="Ministry",
+            organization_type="ministerie",
+        )
+        # Ministerie cannot have parent
+        form = OrganizationUnitForm(
+            data={
+                "name": "Another Ministry",
+                "organization_type": "ministerie",
+                "parent": ministry.pk,
+                "is_active": True,
+            }
+        )
+        assert not form.is_valid()
+        # Error should be on parent field
+        assert "parent" in form.errors
+        assert "bovenliggende" in str(form.errors["parent"]).lower()
+
+    def test_parent_queryset_only_active(self):
+        """Parent dropdown only shows active organizations."""
+        active = OrganizationUnit.objects.create(
+            name="Active Org",
+            organization_type="ministerie",
+            is_active=True,
+        )
+        inactive = OrganizationUnit.objects.create(
+            name="Inactive Org",
+            organization_type="ministerie",
+            is_active=False,
+        )
+        form = OrganizationUnitForm()
+        parent_choices = list(form.fields["parent"].queryset)
+        assert active in parent_choices
+        assert inactive not in parent_choices
+
+    def test_name_change_tracked_in_previous_names(self):
+        """Changing name via form saves old name in previous_names."""
+        org = OrganizationUnit.objects.create(
+            name="Oude Naam",
+            organization_type="ministerie",
+        )
+        assert org.previous_names == []
+
+        form = OrganizationUnitForm(
+            data={
+                "name": "Nieuwe Naam",
+                "organization_type": "ministerie",
+                "is_active": True,
+            },
+            instance=org,
+        )
+        assert form.is_valid()
+        saved = form.save()
+
+        assert saved.name == "Nieuwe Naam"
+        assert len(saved.previous_names) == 1
+        assert saved.previous_names[0]["name"] == "Oude Naam"
+        assert "until" in saved.previous_names[0]
+
+    def test_same_name_not_tracked(self):
+        """Saving with same name doesn't add to previous_names."""
+        org = OrganizationUnit.objects.create(
+            name="Test Org",
+            organization_type="ministerie",
+        )
+
+        form = OrganizationUnitForm(
+            data={
+                "name": "Test Org",  # Same name
+                "organization_type": "ministerie",
+                "is_active": True,
+            },
+            instance=org,
+        )
+        assert form.is_valid()
+        saved = form.save()
+
+        assert saved.previous_names == []

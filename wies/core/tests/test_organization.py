@@ -1,30 +1,30 @@
-"""Tests for Organization model and related functionality."""
+"""Tests for OrganizationUnit model and related functionality."""
 
 import pytest
 from django.core.exceptions import ValidationError
-from django.db import IntegrityError
+from django.db import IntegrityError, models
 from django.test import TestCase
 
 from wies.core.models import (
     Assignment,
-    AssignmentOrganization,
+    AssignmentOrganizationUnit,
     Colleague,
     Ministry,
-    Organization,
-    OrganizationRole,
     OrganizationType,
+    OrganizationUnit,
+    OrganizationUnitRole,
     User,
 )
 
 
-class OrganizationModelTest(TestCase):
-    """Tests for the Organization model."""
+class OrganizationUnitModelTest(TestCase):
+    """Tests for the OrganizationUnit model."""
 
     def test_create_root_organization(self):
         """Ministerie without parent can be created."""
-        org = Organization.objects.create(
+        org = OrganizationUnit.objects.create(
             name="Ministerie van BZK",
-            abbreviation="BZK",
+            abbreviations=["BZK"],
             organization_type=OrganizationType.MINISTERIE,
         )
         assert org.parent is None
@@ -32,8 +32,8 @@ class OrganizationModelTest(TestCase):
 
     def test_create_child_organization(self):
         """Directoraat-Generaal under Ministerie is correctly linked."""
-        ministry = Organization.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
-        dg = Organization.objects.create(
+        ministry = OrganizationUnit.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
+        dg = OrganizationUnit.objects.create(
             name="DGDOO",
             organization_type=OrganizationType.DIRECTORAAT_GENERAAL,
             parent=ministry,
@@ -43,16 +43,16 @@ class OrganizationModelTest(TestCase):
 
     def test_circular_reference_rejected(self):
         """Circular reference is rejected."""
-        org1 = Organization.objects.create(name="Org1", organization_type=OrganizationType.DIRECTIE)
-        org2 = Organization.objects.create(name="Org2", organization_type=OrganizationType.AFDELING, parent=org1)
+        org1 = OrganizationUnit.objects.create(name="Org1", organization_type=OrganizationType.DIRECTIE)
+        org2 = OrganizationUnit.objects.create(name="Org2", organization_type=OrganizationType.AFDELING, parent=org1)
         org1.parent = org2
         with pytest.raises(ValidationError):
             org1.full_clean()
 
     def test_hierarchy_validation_dg_under_ministry(self):
         """Directoraat-Generaal can only be placed under Ministerie."""
-        ministry = Organization.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
-        dg = Organization(
+        ministry = OrganizationUnit.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
+        dg = OrganizationUnit(
             name="DGDOO",
             organization_type=OrganizationType.DIRECTORAAT_GENERAAL,
             parent=ministry,
@@ -62,8 +62,8 @@ class OrganizationModelTest(TestCase):
 
     def test_hierarchy_validation_dg_under_afdeling_rejected(self):
         """Directoraat-Generaal cannot be placed under Afdeling."""
-        afdeling = Organization.objects.create(name="Afdeling X", organization_type=OrganizationType.AFDELING)
-        dg = Organization(
+        afdeling = OrganizationUnit.objects.create(name="Afdeling X", organization_type=OrganizationType.AFDELING)
+        dg = OrganizationUnit(
             name="DG Y",
             organization_type=OrganizationType.DIRECTORAAT_GENERAAL,
             parent=afdeling,
@@ -73,8 +73,8 @@ class OrganizationModelTest(TestCase):
 
     def test_root_type_cannot_have_parent(self):
         """Root types (ministerie, gemeente, etc.) cannot have a parent."""
-        ministry1 = Organization.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
-        ministry2 = Organization(
+        ministry1 = OrganizationUnit.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
+        ministry2 = OrganizationUnit(
             name="EZK",
             organization_type=OrganizationType.MINISTERIE,
             parent=ministry1,
@@ -84,16 +84,16 @@ class OrganizationModelTest(TestCase):
 
     def test_get_full_path(self):
         """get_full_path() returns correct breadcrumb."""
-        ministry = Organization.objects.create(
-            name="BZK", abbreviation="BZK", organization_type=OrganizationType.MINISTERIE
+        ministry = OrganizationUnit.objects.create(
+            name="BZK", abbreviations=["BZK"], organization_type=OrganizationType.MINISTERIE
         )
-        dg = Organization.objects.create(
+        dg = OrganizationUnit.objects.create(
             name="DGDOO",
-            abbreviation="DGDOO",
+            abbreviations=["DGDOO"],
             organization_type=OrganizationType.DIRECTORAAT_GENERAAL,
             parent=ministry,
         )
-        directie = Organization.objects.create(
+        directie = OrganizationUnit.objects.create(
             name="Directie DO",
             organization_type=OrganizationType.DIRECTIE,
             parent=dg,
@@ -102,7 +102,7 @@ class OrganizationModelTest(TestCase):
 
     def test_rename_preserves_history(self):
         """rename() preserves old name in previous_names."""
-        org = Organization.objects.create(name="Digitale Overheid", organization_type=OrganizationType.DIRECTIE)
+        org = OrganizationUnit.objects.create(name="Digitale Overheid", organization_type=OrganizationType.DIRECTIE)
         org.rename("Publieke Dienstverlening")
         org.refresh_from_db()
         assert org.name == "Publieke Dienstverlening"
@@ -111,7 +111,7 @@ class OrganizationModelTest(TestCase):
 
     def test_oin_validation_invalid(self):
         """OIN must be exactly 20 digits - invalid rejected."""
-        org = Organization(
+        org = OrganizationUnit(
             name="Test",
             organization_type=OrganizationType.MINISTERIE,
             oin_number="123",
@@ -121,7 +121,7 @@ class OrganizationModelTest(TestCase):
 
     def test_oin_validation_valid(self):
         """OIN with exactly 20 digits is accepted."""
-        org = Organization(
+        org = OrganizationUnit(
             name="Test",
             organization_type=OrganizationType.MINISTERIE,
             oin_number="00000001234567890123",
@@ -130,8 +130,8 @@ class OrganizationModelTest(TestCase):
 
     def test_predecessor_successor_chain(self):
         """Test merger scenario: Weesp -> Amsterdam."""
-        amsterdam = Organization.objects.create(name="Amsterdam", organization_type=OrganizationType.GEMEENTE)
-        weesp = Organization.objects.create(
+        amsterdam = OrganizationUnit.objects.create(name="Amsterdam", organization_type=OrganizationType.GEMEENTE)
+        weesp = OrganizationUnit.objects.create(
             name="Weesp",
             organization_type=OrganizationType.GEMEENTE,
             successor=amsterdam,
@@ -149,7 +149,7 @@ class OrganizationModelTest(TestCase):
 
     def test_multiple_predecessors(self):
         """Test multiple merger: Cuijk + Boxmeer + etc -> Land van Cuijk."""
-        land_van_cuijk = Organization.objects.create(
+        land_van_cuijk = OrganizationUnit.objects.create(
             name="Land van Cuijk",
             organization_type=OrganizationType.GEMEENTE,
         )
@@ -161,7 +161,7 @@ class OrganizationModelTest(TestCase):
             "Mill en Sint Hubert",
         ]
         for name in predecessor_names:
-            Organization.objects.create(
+            OrganizationUnit.objects.create(
                 name=name,
                 organization_type=OrganizationType.GEMEENTE,
                 successor=land_van_cuijk,
@@ -173,18 +173,18 @@ class OrganizationModelTest(TestCase):
 
     def test_get_ancestors(self):
         """get_ancestors() returns all ancestors in order."""
-        ministry = Organization.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
-        dg = Organization.objects.create(
+        ministry = OrganizationUnit.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
+        dg = OrganizationUnit.objects.create(
             name="DGDOO",
             organization_type=OrganizationType.DIRECTORAAT_GENERAAL,
             parent=ministry,
         )
-        directie = Organization.objects.create(
+        directie = OrganizationUnit.objects.create(
             name="Directie DO",
             organization_type=OrganizationType.DIRECTIE,
             parent=dg,
         )
-        afdeling = Organization.objects.create(
+        afdeling = OrganizationUnit.objects.create(
             name="Afdeling DI",
             organization_type=OrganizationType.AFDELING,
             parent=directie,
@@ -198,13 +198,13 @@ class OrganizationModelTest(TestCase):
 
     def test_get_descendants(self):
         """get_descendants() returns all descendants recursively."""
-        ministry = Organization.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
-        dg = Organization.objects.create(
+        ministry = OrganizationUnit.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
+        dg = OrganizationUnit.objects.create(
             name="DGDOO",
             organization_type=OrganizationType.DIRECTORAAT_GENERAAL,
             parent=ministry,
         )
-        directie = Organization.objects.create(
+        directie = OrganizationUnit.objects.create(
             name="Directie DO",
             organization_type=OrganizationType.DIRECTIE,
             parent=dg,
@@ -217,79 +217,87 @@ class OrganizationModelTest(TestCase):
 
     def test_str_with_abbreviation(self):
         """__str__ includes abbreviation when present."""
-        org = Organization.objects.create(
+        org = OrganizationUnit.objects.create(
             name="Ministerie van BZK",
-            abbreviation="BZK",
+            abbreviations=["BZK"],
             organization_type=OrganizationType.MINISTERIE,
         )
         assert str(org) == "Ministerie van BZK (BZK)"
 
     def test_str_without_abbreviation(self):
         """__str__ shows only name when no abbreviation."""
-        org = Organization.objects.create(
+        org = OrganizationUnit.objects.create(
             name="Directie Digitale Overheid",
             organization_type=OrganizationType.DIRECTIE,
         )
         assert str(org) == "Directie Digitale Overheid"
 
 
-class OrganizationQuerySetTest(TestCase):
-    """Tests for OrganizationQuerySet methods."""
+class OrganizationUnitQuerySetTest(TestCase):
+    """Tests for OrganizationUnitQuerySet methods."""
 
     def setUp(self):
         """Create test organization hierarchy."""
-        self.ministry = Organization.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
-        self.dg = Organization.objects.create(
+        # Clear any fixture data for isolated tests
+        OrganizationUnit.objects.all().delete()
+
+        self.ministry = OrganizationUnit.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
+        self.dg = OrganizationUnit.objects.create(
             name="DGDOO",
             organization_type=OrganizationType.DIRECTORAAT_GENERAAL,
             parent=self.ministry,
         )
-        self.directie = Organization.objects.create(
+        self.directie = OrganizationUnit.objects.create(
             name="Directie DO",
             organization_type=OrganizationType.DIRECTIE,
             parent=self.dg,
         )
-        self.inactive_org = Organization.objects.create(
+        self.inactive_org = OrganizationUnit.objects.create(
             name="Oude Directie",
             organization_type=OrganizationType.DIRECTIE,
             is_active=False,
         )
 
-    def test_active_filter(self):
-        """active() filters to only active organizations."""
-        active = Organization.objects.active()
-        assert active.count() == 3
-        assert self.inactive_org not in active
+    def test_default_includes_inactive(self):
+        """Default queryset includes inactive organizations (only filters deleted)."""
+        all_orgs = OrganizationUnit.objects.all()
+        assert all_orgs.count() == 4
+        assert self.inactive_org in all_orgs
+
+    def test_active_excludes_inactive(self):
+        """active() queryset excludes inactive organizations."""
+        active_orgs = OrganizationUnit.objects.active()
+        assert active_orgs.count() == 3
+        assert self.inactive_org not in active_orgs
 
     def test_roots_filter(self):
         """roots() filters to organizations without parent."""
-        roots = Organization.objects.roots()
-        assert roots.count() == 2
+        roots = OrganizationUnit.objects.roots()
+        assert roots.count() == 2  # ministry + inactive_org (both are roots)
         assert self.ministry in roots
-        assert self.inactive_org in roots
 
     def test_of_type_filter(self):
         """of_type() filters by organization type."""
-        ministries = Organization.objects.of_type(OrganizationType.MINISTERIE)
+        ministries = OrganizationUnit.objects.of_type(OrganizationType.MINISTERIE)
         assert ministries.count() == 1
         assert self.ministry in ministries
 
     def test_of_type_multiple_types(self):
         """of_type() accepts multiple types."""
-        orgs = Organization.objects.of_type(OrganizationType.MINISTERIE, OrganizationType.DIRECTIE)
-        assert orgs.count() == 3
+        orgs = OrganizationUnit.objects.of_type(OrganizationType.MINISTERIE, OrganizationType.DIRECTIE)
+        assert orgs.count() == 3  # ministry + directie + inactive_org
 
     def test_with_descendants(self):
         """with_descendants() returns all IDs including descendants."""
-        all_ids = Organization.objects.with_descendants([self.ministry.id])
+        all_ids = OrganizationUnit.objects.with_descendants([self.ministry.id])
         assert len(all_ids) == 3
         assert self.ministry.id in all_ids
         assert self.dg.id in all_ids
         assert self.directie.id in all_ids
 
 
-class AssignmentOrganizationTest(TestCase):
-    """Tests for AssignmentOrganization through model."""
+class AssignmentOrganizationUnitTest(TestCase):
+    """Tests for AssignmentOrganizationUnit through model."""
 
     def setUp(self):
         """Create test data."""
@@ -300,7 +308,7 @@ class AssignmentOrganizationTest(TestCase):
             email="colleague@example.com",
             source="wies",
         )
-        self.org = Organization.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
+        self.org = OrganizationUnit.objects.create(name="BZK", organization_type=OrganizationType.MINISTERIE)
 
     def test_assignment_primary_organization(self):
         """get_primary_organization() returns PRIMARY relation."""
@@ -310,10 +318,10 @@ class AssignmentOrganizationTest(TestCase):
             owner=self.colleague,
             source="wies",
         )
-        AssignmentOrganization.objects.create(
+        AssignmentOrganizationUnit.objects.create(
             assignment=assignment,
             organization=self.org,
-            role=OrganizationRole.PRIMARY,
+            role=OrganizationUnitRole.PRIMARY,
         )
         assert assignment.get_primary_organization() == self.org
 
@@ -329,31 +337,33 @@ class AssignmentOrganizationTest(TestCase):
 
     def test_multiple_organizations_per_assignment(self):
         """Assignment can have multiple organizations with different roles."""
-        org2 = Organization.objects.create(name="EZK", organization_type=OrganizationType.MINISTERIE)
+        org2 = OrganizationUnit.objects.create(name="EZK", organization_type=OrganizationType.MINISTERIE)
         assignment = Assignment.objects.create(
             name="Test",
             ministry=self.ministry_legacy,
             owner=self.colleague,
             source="wies",
         )
-        AssignmentOrganization.objects.create(
-            assignment=assignment, organization=self.org, role=OrganizationRole.PRIMARY
+        AssignmentOrganizationUnit.objects.create(
+            assignment=assignment, organization=self.org, role=OrganizationUnitRole.PRIMARY
         )
-        AssignmentOrganization.objects.create(assignment=assignment, organization=org2, role=OrganizationRole.INVOLVED)
+        AssignmentOrganizationUnit.objects.create(
+            assignment=assignment, organization=org2, role=OrganizationUnitRole.INVOLVED
+        )
         assert assignment.organization_relations.count() == 2
 
     def test_assignment_organization_str(self):
-        """AssignmentOrganization __str__ is descriptive."""
+        """AssignmentOrganizationUnit __str__ is descriptive."""
         assignment = Assignment.objects.create(
             name="Test Opdracht",
             ministry=self.ministry_legacy,
             owner=self.colleague,
             source="wies",
         )
-        rel = AssignmentOrganization.objects.create(
+        rel = AssignmentOrganizationUnit.objects.create(
             assignment=assignment,
             organization=self.org,
-            role=OrganizationRole.PRIMARY,
+            role=OrganizationUnitRole.PRIMARY,
         )
         assert "Test Opdracht" in str(rel)
         assert "BZK" in str(rel)
@@ -361,7 +371,7 @@ class AssignmentOrganizationTest(TestCase):
 
     def test_only_one_primary_organization_allowed(self):
         """Only one PRIMARY organization per assignment is allowed."""
-        org2 = Organization.objects.create(name="EZK", organization_type=OrganizationType.MINISTERIE)
+        org2 = OrganizationUnit.objects.create(name="EZK", organization_type=OrganizationType.MINISTERIE)
         assignment = Assignment.objects.create(
             name="Test",
             ministry=self.ministry_legacy,
@@ -369,11 +379,84 @@ class AssignmentOrganizationTest(TestCase):
             source="wies",
         )
         # First PRIMARY is OK
-        AssignmentOrganization.objects.create(
-            assignment=assignment, organization=self.org, role=OrganizationRole.PRIMARY
+        AssignmentOrganizationUnit.objects.create(
+            assignment=assignment, organization=self.org, role=OrganizationUnitRole.PRIMARY
         )
         # Second PRIMARY should fail at database level
         with pytest.raises(IntegrityError):
-            AssignmentOrganization.objects.create(
-                assignment=assignment, organization=org2, role=OrganizationRole.PRIMARY
+            AssignmentOrganizationUnit.objects.create(
+                assignment=assignment, organization=org2, role=OrganizationUnitRole.PRIMARY
             )
+
+
+class SoftDeleteTest(TestCase):
+    """Tests for soft delete functionality."""
+
+    def test_soft_delete_sets_deleted_at(self):
+        """delete() sets deleted_at instead of removing record."""
+        org = OrganizationUnit.objects.create(name="Test", organization_type=OrganizationType.GEMEENTE)
+        org.delete()
+
+        # Should not be in default queryset
+        assert OrganizationUnit.objects.filter(pk=org.pk).count() == 0
+
+        # Should be in objects.with_deleted() queryset
+        deleted_org = OrganizationUnit.objects.with_deleted().get(pk=org.pk)
+        assert deleted_org.deleted_at is not None
+
+    def test_restore_clears_deleted_at(self):
+        """restore() clears deleted_at."""
+        org = OrganizationUnit.objects.create(name="Test", organization_type=OrganizationType.GEMEENTE)
+        org.delete()
+        assert OrganizationUnit.objects.filter(pk=org.pk).count() == 0
+
+        # Restore
+        deleted_org = OrganizationUnit.objects.with_deleted().get(pk=org.pk)
+        deleted_org.restore()
+
+        # Should be back in default queryset
+        assert OrganizationUnit.objects.filter(pk=org.pk).count() == 1
+        restored_org = OrganizationUnit.objects.get(pk=org.pk)
+        assert restored_org.deleted_at is None
+
+    def test_cannot_delete_org_with_tooi(self):
+        """Organizations with TOOI identifier cannot be deleted."""
+        org = OrganizationUnit.objects.create(
+            name="Test Ministry",
+            organization_type=OrganizationType.MINISTERIE,
+            tooi_identifier="https://identifier.overheid.nl/tooi/id/test",
+        )
+        with pytest.raises(models.ProtectedError) as exc_info:
+            org.delete()
+        assert "TOOI" in str(exc_info.value)
+
+    def test_cannot_delete_org_with_children(self):
+        """Organizations with children cannot be deleted."""
+        parent = OrganizationUnit.objects.create(name="Parent", organization_type=OrganizationType.MINISTERIE)
+        OrganizationUnit.objects.create(
+            name="Child", organization_type=OrganizationType.DIRECTORAAT_GENERAAL, parent=parent
+        )
+
+        with pytest.raises(models.ProtectedError) as exc_info:
+            parent.delete()
+        assert "onderliggende" in str(exc_info.value)
+
+    def test_hard_delete_removes_record(self):
+        """hard_delete() actually removes from database."""
+        org = OrganizationUnit.objects.create(name="Test", organization_type=OrganizationType.GEMEENTE)
+        pk = org.pk
+        org.hard_delete()
+
+        assert OrganizationUnit.objects.with_deleted().filter(pk=pk).count() == 0
+
+    def test_default_manager_excludes_deleted(self):
+        """objects manager excludes soft-deleted records."""
+        org1 = OrganizationUnit.objects.create(name="Active", organization_type=OrganizationType.GEMEENTE)
+        org2 = OrganizationUnit.objects.create(name="To Delete", organization_type=OrganizationType.GEMEENTE)
+        org2.delete()
+
+        # Default manager only sees active
+        assert list(OrganizationUnit.objects.all()) == [org1]
+
+        # objects.with_deleted() sees both
+        assert OrganizationUnit.objects.with_deleted().count() == 2

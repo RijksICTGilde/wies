@@ -24,10 +24,10 @@ class PlacementImportTest(TestCase):
         self.client = Client()
         self.import_url = reverse("placement-import-csv")
 
-        # Create test groups
-        self.admin_group = Group.objects.create(name="Beheerder")
-        self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name="Business Development Manager")
+        # Get or create test groups (migration may have created them)
+        self.admin_group, _ = Group.objects.get_or_create(name="Beheerder")
+        self.consultant_group, _ = Group.objects.get_or_create(name="Consultant")
+        self.bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
 
         # Create authenticated user with all required permissions
         self.auth_user = User.objects.create(

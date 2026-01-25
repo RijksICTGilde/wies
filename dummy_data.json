@@ -51,7 +51,7 @@
     "model": "core.ministry",
     "pk": 7,
     "fields": {
-      "name": "Ministerie van Financi\u00ebn",
+      "name": "Ministerie van Financiën",
       "abbreviation": "Fin"
     }
   },
@@ -120,65 +120,296 @@
     }
   },
   {
-    "model": "core.organization",
+    "model": "core.organizationunit",
     "pk": 1,
     "fields": {
-      "name": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "abbreviation": "BZK",
+      "name": "Ministerie van Algemene Zaken",
+      "abbreviations": ["AZ"],
       "organization_type": "ministerie",
       "parent": null,
       "is_active": true,
-      "tooi_identifier": null,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1010",
       "oin_number": null,
       "previous_names": [],
-      "successor": null
+      "successor": null,
+      "deleted_at": null
     }
   },
   {
-    "model": "core.organization",
+    "model": "core.organizationunit",
     "pk": 2,
     "fields": {
+      "name": "Ministerie van Asiel en Migratie",
+      "abbreviations": ["AenM"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1162",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 3,
+    "fields": {
+      "name": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
+      "abbreviations": ["BZK"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1034",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 4,
+    "fields": {
+      "name": "Ministerie van Buitenlandse Zaken",
+      "abbreviations": ["BZ"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1013",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 5,
+    "fields": {
+      "name": "Ministerie van Defensie",
+      "abbreviations": ["Def"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1018",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 6,
+    "fields": {
+      "name": "Ministerie van Economische Zaken",
+      "abbreviations": ["EZ"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1045",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 7,
+    "fields": {
+      "name": "Ministerie van Financiën",
+      "abbreviations": ["Fin"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1090",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 8,
+    "fields": {
+      "name": "Ministerie van Infrastructuur en Waterstaat",
+      "abbreviations": ["IenW"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1130",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 9,
+    "fields": {
+      "name": "Ministerie van Justitie en Veiligheid",
+      "abbreviations": ["JenV"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1058",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 10,
+    "fields": {
+      "name": "Ministerie van Klimaat en Groene Groei",
+      "abbreviations": ["KGG"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1182",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 11,
+    "fields": {
+      "name": "Ministerie van Landbouw, Visserij, Voedselzekerheid en Natuur",
+      "abbreviations": ["LVVN"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1153",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 12,
+    "fields": {
+      "name": "Ministerie van Onderwijs, Cultuur en Wetenschap",
+      "abbreviations": ["OCW"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1109",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 13,
+    "fields": {
+      "name": "Ministerie van Sociale Zaken en Werkgelegenheid",
+      "abbreviations": ["SZW"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1073",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 14,
+    "fields": {
+      "name": "Ministerie van Volksgezondheid, Welzijn en Sport",
+      "abbreviations": ["VWS"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1025",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 15,
+    "fields": {
+      "name": "Ministerie van Volkshuisvesting en Ruimtelijke Ordening",
+      "abbreviations": ["VRO"],
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1171",
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null,
+      "deleted_at": null
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 101,
+    "fields": {
       "name": "Directoraat-Generaal Digitalisering en Overheidsorganisatie",
-      "abbreviation": "DGDOO",
+      "abbreviations": ["DGDOO"],
       "organization_type": "directoraat_generaal",
-      "parent": 1,
+      "parent": 3,
       "is_active": true,
       "tooi_identifier": null,
       "oin_number": null,
       "previous_names": [],
-      "successor": null
+      "successor": null,
+      "deleted_at": null
     }
   },
   {
-    "model": "core.organization",
-    "pk": 3,
+    "model": "core.organizationunit",
+    "pk": 102,
     "fields": {
       "name": "Directie Publieke Dienstverlening & Digitalisering",
-      "abbreviation": "",
+      "abbreviations": [],
       "organization_type": "directie",
-      "parent": 2,
+      "parent": 101,
       "is_active": true,
       "tooi_identifier": null,
       "oin_number": null,
       "previous_names": [
-        { "name": "Directie Digitale Overheid", "until": "2024-06-01" }
+        {
+          "name": "Directie Digitale Overheid",
+          "until": "2024-06-01"
+        }
       ],
-      "successor": null
+      "successor": null,
+      "deleted_at": null
     }
   },
   {
-    "model": "core.organization",
-    "pk": 4,
+    "model": "core.organizationunit",
+    "pk": 103,
     "fields": {
       "name": "Logius",
-      "abbreviation": "",
+      "abbreviations": [],
       "organization_type": "agentschap",
-      "parent": 1,
+      "parent": 3,
       "is_active": true,
       "tooi_identifier": null,
       "oin_number": null,
       "previous_names": [],
-      "successor": null
+      "successor": null,
+      "deleted_at": null
     }
   },
   {
@@ -11888,9 +12119,9 @@
       "start_date": "2025-05-01",
       "end_date": "2026-03-31",
       "status": "INGEVULD",
-      "organization": "Directie Financi\u00eble Markten",
+      "organization": "Directie Financiële Markten",
       "ministry": 7,
-      "extra_info": "Groot digitalisering project voor Ministerie van Financi\u00ebn met focus op moderne technologie en gebruikservaring",
+      "extra_info": "Groot digitalisering project voor Ministerie van Financiën met focus op moderne technologie en gebruikservaring",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -11942,7 +12173,7 @@
       "status": "INGEVULD",
       "organization": "Agentschap van de Generale Thesaurie",
       "ministry": 7,
-      "extra_info": "Groot digitalisering project voor Ministerie van Financi\u00ebn met focus op moderne technologie en gebruikservaring",
+      "extra_info": "Groot digitalisering project voor Ministerie van Financiën met focus op moderne technologie en gebruikservaring",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -12087,7 +12318,7 @@
       "status": "INGEVULD",
       "organization": "De Nederlandsche Bank (DNB)",
       "ministry": 7,
-      "extra_info": "Groot digitalisering project voor Ministerie van Financi\u00ebn met focus op moderne technologie en gebruikservaring",
+      "extra_info": "Groot digitalisering project voor Ministerie van Financiën met focus op moderne technologie en gebruikservaring",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -12139,7 +12370,7 @@
       "status": "INGEVULD",
       "organization": "Agentschap van de Generale Thesaurie",
       "ministry": 7,
-      "extra_info": "Groot digitalisering project voor Ministerie van Financi\u00ebn met focus op moderne technologie en gebruikservaring",
+      "extra_info": "Groot digitalisering project voor Ministerie van Financiën met focus op moderne technologie en gebruikservaring",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -12861,9 +13092,9 @@
       "start_date": "2025-10-08",
       "end_date": "2026-06-05",
       "status": "LEAD",
-      "organization": "Directie Financi\u00eble Markten",
+      "organization": "Directie Financiële Markten",
       "ministry": 7,
-      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
+      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financiën",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -12876,9 +13107,9 @@
       "start_date": "2025-04-01",
       "end_date": "2026-04-30",
       "status": "INGEVULD",
-      "organization": "Directie Financi\u00eble Markten",
+      "organization": "Directie Financiële Markten",
       "ministry": 7,
-      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
+      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financiën",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -12993,7 +13224,7 @@
       "status": "INGEVULD",
       "organization": "Belastingdienst",
       "ministry": 7,
-      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
+      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financiën",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -13019,7 +13250,7 @@
       "status": "INGEVULD",
       "organization": "Agentschap van de Generale Thesaurie",
       "ministry": 7,
-      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
+      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financiën",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -13045,7 +13276,7 @@
       "status": "INGEVULD",
       "organization": "Belastingdienst",
       "ministry": 7,
-      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
+      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financiën",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -13104,7 +13335,7 @@
       "status": "INGEVULD",
       "organization": "Agentschap van de Generale Thesaurie",
       "ministry": 7,
-      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
+      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financiën",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -13128,9 +13359,9 @@
       "start_date": "2024-12-01",
       "end_date": "2025-07-31",
       "status": "INGEVULD",
-      "organization": "Directie Financi\u00eble Markten",
+      "organization": "Directie Financiële Markten",
       "ministry": 7,
-      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
+      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financiën",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -13222,7 +13453,7 @@
       "status": "INGEVULD",
       "organization": "De Nederlandsche Bank (DNB)",
       "ministry": 7,
-      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
+      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financiën",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -13248,7 +13479,7 @@
       "status": "INGEVULD",
       "organization": "Belastingdienst",
       "ministry": 7,
-      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
+      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financiën",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -13274,7 +13505,7 @@
       "status": "LEAD",
       "organization": "Belastingdienst",
       "ministry": 7,
-      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
+      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financiën",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -13289,7 +13520,7 @@
       "status": "LEAD",
       "organization": "Agentschap van de Generale Thesaurie",
       "ministry": 7,
-      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
+      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financiën",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -13304,7 +13535,7 @@
       "status": "INGEVULD",
       "organization": "De Nederlandsche Bank (DNB)",
       "ministry": 7,
-      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
+      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financiën",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -13342,7 +13573,7 @@
       "status": "LEAD",
       "organization": "De Nederlandsche Bank (DNB)",
       "ministry": 7,
-      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financi\u00ebn",
+      "extra_info": "Strategisch digitalisering initiatief van Ministerie van Financiën",
       "owner": 1,
       "source": "otys_iir"
     }
@@ -22558,7 +22789,7 @@
       "start_date": "2022-08-09",
       "end_date": "2023-03-29",
       "status": "INGEVULD",
-      "organization": "Directie Financi\u00eble Markten",
+      "organization": "Directie Financiële Markten",
       "extra_info": "Afgerond project uit voorgaande periode",
       "ministry": 7,
       "owner": 1,
@@ -22603,7 +22834,7 @@
       "start_date": "2022-03-16",
       "end_date": "2022-12-14",
       "status": "INGEVULD",
-      "organization": "Directie Financi\u00eble Markten",
+      "organization": "Directie Financiële Markten",
       "extra_info": "Afgerond project uit voorgaande periode",
       "ministry": 7,
       "owner": 1,
@@ -22708,7 +22939,7 @@
       "start_date": "2024-12-07",
       "end_date": "2025-04-01",
       "status": "INGEVULD",
-      "organization": "Directie Financi\u00eble Markten",
+      "organization": "Directie Financiële Markten",
       "extra_info": "Afgerond project uit voorgaande periode",
       "ministry": 7,
       "owner": 1,

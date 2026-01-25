@@ -18,8 +18,20 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic.list import ListView
 
-from .forms import LabelCategoryForm, LabelForm, UserForm
-from .models import Assignment, Colleague, Label, LabelCategory, Ministry, Placement, Service, Skill, User
+from .forms import LabelCategoryForm, LabelForm, OrganizationUnitForm, UserForm
+from .models import (
+    Assignment,
+    Colleague,
+    Label,
+    LabelCategory,
+    Ministry,
+    OrganizationType,
+    OrganizationUnit,
+    Placement,
+    Service,
+    Skill,
+    User,
+)
 from .querysets import annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
@@ -35,6 +47,29 @@ def get_delete_context(delete_url_name, object_pk, object_name):
     return {
         "delete_url": reverse(delete_url_name, args=[object_pk]),
         "delete_confirm_message": f"Weet je zeker dat je {object_name} wilt verwijderen?",
+    }
+
+
+def htmx_redirect(request, url_name, *args):
+    """Return appropriate redirect response for HTMX or regular requests."""
+    url = reverse(url_name, args=args) if args else reverse(url_name)
+    if "HX-Request" in request.headers:
+        response = HttpResponse(status=200)
+        response["HX-Redirect"] = url
+        return response
+    return redirect(url_name, *args)
+
+
+def modal_context(form, form_post_url, modal_title, button_label, element_id, **extra):
+    """Build standard modal context dict."""
+    return {
+        "content": form,
+        "form_post_url": form_post_url,
+        "modal_title": modal_title,
+        "form_button_label": button_label,
+        "modal_element_id": element_id,
+        "target_element_id": element_id,
+        **extra,
     }
 
 
@@ -315,7 +350,7 @@ class PlacementListView(ListView):
 
         context["search_field"] = "zoek"
         context["search_placeholder"] = "Zoek op collega, opdracht of opdrachtgever..."
-        context["search_filter"] = self.request.GET.get("zoek")
+        context["search_filter"] = self.request.GET.get("zoek", "")
 
         active_filters = {}  # key: val
         for filter_param in ["rol", "opdrachtgever", "ministerie", "periode"]:
@@ -521,8 +556,8 @@ class UserListView(PermissionRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
 
         context["search_field"] = "zoek"
-        context["search_placeholder"] = "Zoek op naam of email..."
-        context["search_filter"] = self.request.GET.get("zoek")
+        context["search_placeholder"] = "Zoek op naam of e-mail..."
+        context["search_filter"] = self.request.GET.get("zoek", "")
 
         active_filters = {}
 
@@ -1334,3 +1369,239 @@ User-agent: Applebot-Extended
 Disallow: /
 """
     return HttpResponse(content, content_type="text/plain")
+
+
+# === OrganizationUnit Admin Views ===
+
+
+class OrganizationUnitListView(PermissionRequiredMixin, ListView):
+    """View for organization unit list with filtering."""
+
+    model = OrganizationUnit
+    template_name = "organization_admin.html"
+    context_object_name = "organizations"
+    permission_required = "core.view_organizationunit"
+
+    def get_queryset(self):
+        """Filter organizations (active only)."""
+        qs = OrganizationUnit.objects.active().select_related("parent").order_by("name")
+
+        # Search filter (JSONFields searched via icontains on text representation)
+        search = self.request.GET.get("search")
+        if search:
+            qs = qs.filter(
+                Q(name__icontains=search) | Q(abbreviations__icontains=search) | Q(previous_names__icontains=search)
+            )
+
+        # Type filter
+        org_type = self.request.GET.get("type")
+        if org_type:
+            qs = qs.filter(organization_type=org_type)
+
+        # Top-level filter (optional)
+        top_level_only = self.request.GET.get("toplevel") == "1"
+        if top_level_only:
+            qs = qs.filter(parent__isnull=True)
+
+        return qs
+
+    def get_template_names(self):
+        """Return appropriate template based on request type."""
+        if "HX-Request" in self.request.headers:
+            return ["parts/organization_table.html"]
+        return ["organization_admin.html"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["search_placeholder"] = "Zoek op naam of afkorting..."
+        context["search_filter"] = self.request.GET.get("search", "")
+
+        # Build filter options
+        type_options = [{"value": "", "label": "Alle types"}]
+        current_type = self.request.GET.get("type", "")
+        for choice in OrganizationType.choices:
+            opt = {"value": choice[0], "label": choice[1]}
+            if choice[0] == current_type:
+                opt["selected"] = True
+            type_options.append(opt)
+
+        # Top-level filter
+        top_level_only = self.request.GET.get("toplevel") == "1"
+        toplevel_options = [
+            {"value": "", "label": "Alle organisaties"},
+            {"value": "1", "label": "Alleen top-level", "selected": top_level_only},
+        ]
+
+        context["filter_groups"] = [
+            {
+                "type": "select",
+                "name": "type",
+                "label": "Type",
+                "options": type_options,
+                "value": current_type,
+            },
+            {
+                "type": "select",
+                "name": "toplevel",
+                "label": "Niveau",
+                "options": toplevel_options,
+                "value": "1" if top_level_only else "",
+            },
+        ]
+
+        # Count active filters
+        active_filter_count = 0
+        if current_type:
+            active_filter_count += 1
+        if top_level_only:
+            active_filter_count += 1
+
+        context["active_filter_count"] = active_filter_count
+
+        context["primary_button"] = {
+            "button_text": "Organisatie-eenheid toevoegen",
+            "attrs": {
+                "hx-get": reverse("organization-create"),
+                "hx-target": "#organizationFormModal",
+                "hx-push-url": "false",
+            },
+        }
+
+        return context
+
+
+@permission_required("core.add_organizationunit", raise_exception=True)
+def organization_create(request):
+    """Handle organization unit creation."""
+    template = "parts/organization_form_modal.html"
+    ctx_base = {
+        "form_post_url": reverse("organization-create"),
+        "modal_title": "Nieuwe organisatie-eenheid",
+        "element_id": "organizationFormModal",
+    }
+
+    if request.method == "GET":
+        form = OrganizationUnitForm()
+        return render(request, template, modal_context(form, **ctx_base, button_label="Toevoegen"))
+
+    if request.method == "POST":
+        form = OrganizationUnitForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return htmx_redirect(request, "organization-list")
+        return render(request, template, modal_context(form, **ctx_base, button_label="Toevoegen"))
+
+    return HttpResponse(status=405)
+
+
+@permission_required("core.change_organizationunit", raise_exception=True)
+def organization_edit(request, pk):
+    """Handle organization unit editing."""
+    organization = get_object_or_404(OrganizationUnit, pk=pk)
+    template = "parts/organization_form_modal.html"
+    has_children = organization.children.exists()
+    has_assignments = organization.assignment_relations.exists()
+    has_tooi = bool(organization.tooi_identifier)
+    # Can't delete if has TOOI, children, or assignments
+    can_delete = not has_tooi and not has_children and not has_assignments
+    delete_ctx = get_delete_context("organization-delete", pk, organization.name) if can_delete else {}
+    ctx_base = {
+        "form_post_url": reverse("organization-edit", args=[pk]),
+        "modal_title": "Organisatie-eenheid bewerken",
+        "element_id": "organizationFormModal",
+    }
+
+    if request.method == "GET":
+        form = OrganizationUnitForm(instance=organization)
+        ctx = modal_context(
+            form,
+            **ctx_base,
+            button_label="Opslaan",
+            has_children=has_children,
+            has_assignments=has_assignments,
+            has_tooi=has_tooi,
+            organization=organization,
+            **delete_ctx,
+        )
+        return render(request, template, ctx)
+
+    if request.method == "POST":
+        form = OrganizationUnitForm(request.POST, instance=organization)
+        if form.is_valid():
+            form.save()
+            return htmx_redirect(request, "organization-list")
+        ctx = modal_context(
+            form,
+            **ctx_base,
+            button_label="Opslaan",
+            has_children=has_children,
+            has_assignments=has_assignments,
+            has_tooi=has_tooi,
+            organization=organization,
+            **delete_ctx,
+        )
+        return render(request, template, ctx)
+
+    return HttpResponse(status=405)
+
+
+@permission_required("core.delete_organizationunit", raise_exception=True)
+def organization_delete(request, pk):
+    """Handle organization unit deletion (soft delete)."""
+    organization = get_object_or_404(OrganizationUnit, pk=pk)
+    element_id = "organizationFormModal"
+
+    def _render_cannot_delete(message):
+        if "HX-Request" in request.headers:
+            return render(
+                request,
+                "parts/generic_form_modal.html",
+                {
+                    "modal_title": "Kan niet verwijderen",
+                    "modal_element_id": element_id,
+                    "target_element_id": element_id,
+                    "delete_warning": message,
+                    "form_post_url": reverse("organization-edit", args=[pk]),
+                    "form_button_label": "Terug",
+                    "warning_modal": True,
+                },
+            )
+        return HttpResponse(message, status=400)
+
+    # Block deletion if organization has TOOI identifier (synced from government registry)
+    if organization.tooi_identifier:
+        return _render_cannot_delete(
+            f"'{organization.name}' komt uit het overheidsregister (TOOI) en kan niet worden verwijderd."
+        )
+
+    # Block deletion if organization has children
+    if organization.children.exists():
+        return _render_cannot_delete(
+            f"'{organization.name}' heeft onderliggende eenheden. Verwijder of verplaats deze eerst."
+        )
+
+    # Block deletion if organization has assignments
+    if organization.assignment_relations.exists():
+        return _render_cannot_delete(f"'{organization.name}' heeft gekoppelde opdrachten.")
+
+    if request.method == "GET":
+        return render(
+            request,
+            "parts/generic_form_modal.html",
+            {
+                "modal_title": f"Verwijder organisatie-eenheid: {organization.name}",
+                "warning_modal": True,
+                "modal_element_id": element_id,
+                "target_element_id": "organization_table",
+                "delete_warning": f"Weet je zeker dat je '{organization.name}' wilt verwijderen?",
+                "form_post_url": reverse("organization-delete", kwargs={"pk": pk}),
+                "form_button_label": "Verwijderen",
+            },
+        )
+
+    if request.method == "POST":
+        organization.delete()  # Soft delete
+        return htmx_redirect(request, "organization-list")
+
+    return HttpResponse(status=405)

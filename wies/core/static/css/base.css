@@ -23,6 +23,7 @@ html {
   max-height: 90vh;
   overflow-y: auto;
   background: white;
+  outline: none;
 }
 
 /* Wider modal for user forms with two columns */
@@ -169,6 +170,27 @@ html {
 
 .modal-body {
   padding: 1.5rem;
+}
+
+.modal-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.modal-info-box {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.modal-info-box__title {
+  margin-bottom: 0.5rem;
+}
+
+.modal-alert--spaced {
+  margin-top: 1rem;
 }
 
 .modal-footer {
