@@ -16,6 +16,7 @@ from django.db.models.functions import Concat
 from django.http import HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.views.decorators.http import require_http_methods
 from django.views.generic.list import ListView
 
 from .forms import LabelCategoryForm, LabelForm, UserForm
@@ -23,6 +24,7 @@ from .models import Assignment, Colleague, Label, LabelCategory, Ministry, Place
 from .querysets import annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
+from .services.filter_order import get_filter_order, get_filters_for_display, move_filter_by_position
 from .services.placements import create_placements_from_csv, filter_placements_by_period
 from .services.sync import sync_all_otys_iir_records
 from .services.users import create_user, create_users_from_csv, update_user
@@ -91,6 +93,42 @@ def logout(request):
     if request.user and request.user.is_authenticated:
         auth_logout(request)
     return redirect(reverse("login"))
+
+
+@permission_required("core.change_config", raise_exception=True)
+def filter_settings(request):
+    """Display all filters in order."""
+    filters = get_filters_for_display()
+    return render(request, "filter_settings.html", {"filters": filters})
+
+
+@permission_required("core.change_config", raise_exception=True)
+@require_http_methods(["POST"])
+def filter_move(request, position: int, direction: str):
+    """Move filter at position up/down."""
+    if direction not in ("up", "down"):
+        return HttpResponse(status=400)
+
+    try:
+        moved_position, swapped_position = move_filter_by_position(position, direction)
+    except ValueError:
+        return HttpResponse(status=400)
+
+    # Return partial for HTMX with highlight info
+    if "HX-Request" in request.headers:
+        filters = get_filters_for_display()
+        return render(
+            request,
+            "parts/filter_list.html",
+            {
+                "filters": filters,
+                "moved_position": moved_position,
+                "swapped_position": swapped_position,
+                "moved_direction": direction,
+            },
+        )
+
+    return HttpResponse(status=204)  # No Content
 
 
 @user_passes_test(lambda u: u.is_superuser and u.is_authenticated, login_url="/djadmin/login/")
@@ -338,102 +376,112 @@ class PlacementListView(ListView):
                 "to": date.fromisoformat(periode_to),
             }
 
-        label_filter_groups = []
-        for category in LabelCategory.objects.all():
-            select_label = category.name
-            options = [
-                {"value": "", "label": ""},
-            ]
-            value = ""
-            for label in Label.objects.filter(category=category):
-                options.append({"value": str(label.id), "label": f"{label.name}", "category_color": category.color})
-                if str(label.id) in active_filters.get("labels", set()):
-                    options[-1]["selected"] = True
-                    value = str(label.id)
-
-            filter_group = {
-                "type": "select",
-                "name": "labels",
-                "label": select_label,
-                "options": options,
-                "value": value,
-            }
-
-            label_filter_groups.append(filter_group)
-
-        skill_options = [{"value": "", "label": ""}]
-        skill_value = ""
-        for skill in Skill.objects.order_by("name"):
-            skill_options.append({"value": str(skill.id), "label": skill.name})
-            if active_filters.get("rol") == str(skill.id):
-                skill_options[-1]["selected"] = True
-                skill_value = str(skill.id)
-
-        clients = [
-            {"id": org, "name": org}
-            for org in Assignment.objects.values_list("organization", flat=True)
-            .distinct()
-            .exclude(organization="")
-            .order_by("organization")
-        ]
-
-        client_options = [
-            {"value": "", "label": ""},
-        ]
-        client_value = ""
-        for client in clients:
-            client_options.append({"value": client["id"], "label": client["name"]})
-            if active_filters.get("opdrachtgever") == str(client["id"]):
-                client_options[-1]["selected"] = True
-                client_value = str(client["id"])
-
-        ministry_options = [
-            {"value": "", "label": ""},
-        ]
-        ministry_value = ""
-        for ministry in Ministry.objects.order_by("name"):
-            ministry_options.append({"value": str(ministry.id), "label": ministry.name})
-            if active_filters.get("ministerie") == str(ministry.id):
-                ministry_options[-1]["selected"] = True
-                ministry_value = str(ministry.id)
-
-        context["active_filters"] = active_filters
-        context["active_filter_count"] = len(active_filters)
-
-        # TODO: this can be become an object to help defining correctly and performing extra preprocessing on context
-        # introduce value_key, label_key:
-        context["filter_groups"] = [
-            {
+        # Build filter data for each type
+        def build_ministry_filter():
+            ministry_options = [{"value": "", "label": ""}]
+            ministry_value = ""
+            for ministry in Ministry.objects.order_by("name"):
+                ministry_options.append({"value": str(ministry.id), "label": ministry.name})
+                if active_filters.get("ministerie") == str(ministry.id):
+                    ministry_options[-1]["selected"] = True
+                    ministry_value = str(ministry.id)
+            return {
                 "type": "select",
                 "name": "ministerie",
                 "label": "Ministerie",
                 "options": ministry_options,
                 "value": ministry_value,
-            },
-            {
+            }
+
+        def build_client_filter():
+            clients = [
+                {"id": org, "name": org}
+                for org in Assignment.objects.values_list("organization", flat=True)
+                .distinct()
+                .exclude(organization="")
+                .order_by("organization")
+            ]
+            client_options = [{"value": "", "label": ""}]
+            client_value = ""
+            for client in clients:
+                client_options.append({"value": client["id"], "label": client["name"]})
+                if active_filters.get("opdrachtgever") == str(client["id"]):
+                    client_options[-1]["selected"] = True
+                    client_value = str(client["id"])
+            return {
                 "type": "select",
                 "name": "opdrachtgever",
                 "label": "Opdrachtgever",
                 "options": client_options,
                 "value": client_value,
-            },
-            {
+            }
+
+        def build_skill_filter():
+            skill_options = [{"value": "", "label": ""}]
+            skill_value = ""
+            for skill in Skill.objects.order_by("name"):
+                skill_options.append({"value": str(skill.id), "label": skill.name})
+                if active_filters.get("rol") == str(skill.id):
+                    skill_options[-1]["selected"] = True
+                    skill_value = str(skill.id)
+            return {
                 "type": "select",
                 "name": "rol",
                 "label": "Rollen",
                 "options": skill_options,
                 "value": skill_value,
-            },
-            *label_filter_groups,
-            {
+            }
+
+        def build_period_filter():
+            return {
                 "type": "date_range",
                 "name": "periode",
                 "label": "Periode",
                 "from_label": "Van",
                 "to_label": "Tot",
                 "require_both": True,
-            },
-        ]
+            }
+
+        def build_label_category_filter(category):
+            options = [{"value": "", "label": ""}]
+            value = ""
+            for label in Label.objects.filter(category=category):
+                options.append({"value": str(label.id), "label": f"{label.name}", "category_color": category.color})
+                if str(label.id) in active_filters.get("labels", set()):
+                    options[-1]["selected"] = True
+                    value = str(label.id)
+            return {
+                "type": "select",
+                "name": "labels",
+                "label": category.name,
+                "options": options,
+                "value": value,
+            }
+
+        # Build filter_groups in configured order
+        filter_builders = {
+            "ministerie": build_ministry_filter,
+            "opdrachtgever": build_client_filter,
+            "rol": build_skill_filter,
+            "periode": build_period_filter,
+        }
+
+        categories_by_id = {cat.id: cat for cat in LabelCategory.objects.all()}
+        filter_order = get_filter_order()
+
+        filter_groups = []
+        for item in filter_order:
+            if isinstance(item, str):
+                if item in filter_builders:
+                    filter_groups.append(filter_builders[item]())
+            else:
+                cat = categories_by_id.get(item["label_category"])
+                if cat:
+                    filter_groups.append(build_label_category_filter(cat))
+
+        context["active_filters"] = active_filters
+        context["active_filter_count"] = len(active_filters)
+        context["filter_groups"] = filter_groups
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
@@ -931,7 +979,7 @@ def label_category_edit(request, pk):
 
     category = get_object_or_404(LabelCategory, pk=pk)
     form_post_url = reverse("label-category-edit", kwargs={"pk": pk})
-    modal_title = f"Bewerk categorie: {category.name}"
+    modal_title = f"Bewerk label categorie: {category.name}"
     form_button_label = "Opslaan"
     element_id = "labelFormModal"
 

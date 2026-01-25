@@ -7,7 +7,7 @@ from django.forms.renderers import Jinja2
 from django.forms.utils import ErrorList
 from django.template import engines
 
-from .models import Label, LabelCategory, User, get_next_display_order
+from .models import Label, LabelCategory, User
 
 logger = logging.getLogger(__name__)
 
@@ -94,22 +94,10 @@ class LabelCategoryForm(RvoFormMixin, forms.ModelForm):
         ],
         widget=forms.RadioSelect,
     )
-    display_order = forms.IntegerField(
-        label="Volgorde",
-        min_value=0,
-        required=True,
-        help_text="Lagere waarden verschijnen eerst",
-        widget=forms.TextInput(attrs={"type": "number", "min": "0"}),
-    )
 
     class Meta:
         model = LabelCategory
-        fields = ["name", "color", "display_order"]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if not self.instance.pk:  # only for new category
-            self.fields["display_order"].initial = get_next_display_order()
+        fields = ["name", "color"]
 
 
 class LabelForm(RvoFormMixin, forms.ModelForm):

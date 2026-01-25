@@ -1,3 +1,5 @@
+from typing import Any
+
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db.models.functions import Lower
@@ -17,7 +19,6 @@ SOURCE_CHOICES = {
 DEFAULT_LABELS = {
     "Expertise": {
         "color": "#B3D7EE",
-        "display_order": 10,
         "labels": {
             "Strategie, beleid, governance en compliance",
             "Architectuur en technologie",
@@ -36,7 +37,6 @@ DEFAULT_LABELS = {
     },
     "Thema": {
         "color": "#FFE9B8",
-        "display_order": 20,
         "labels": {
             "Digitale weerbaarheid",
             "Artificiële intelligentie",
@@ -47,7 +47,6 @@ DEFAULT_LABELS = {
     },
     "Merk": {
         "color": "#DCE3EA",
-        "display_order": 30,
         "labels": {
             "Rijksconsultants",
             "I-Interim Rijk",
@@ -65,23 +64,12 @@ DEFAULT_LABELS = {
 }
 
 
-def get_next_display_order():
-    """Calculate next display_order: highest value + 10, rounded to nearest 10."""
-    max_order = LabelCategory.objects.aggregate(max=models.Max("display_order"))["max"] or 0
-    return ((max_order // 10) + 1) * 10
-
-
 class LabelCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
     color = models.CharField(max_length=7)  # Hex color like #FF5733
-    display_order = models.PositiveIntegerField(
-        default=get_next_display_order,
-        verbose_name="Weergavevolgorde",
-        help_text="Lagere waarden verschijnen eerst in filters",
-    )
 
     class Meta:
-        ordering = ["display_order", Lower("name")]
+        ordering = [Lower("name")]
         verbose_name = "Label categorie"
         verbose_name_plural = "Label categorieën"
 
@@ -253,6 +241,33 @@ class Service(models.Model):
         if self.period_source == "ASSIGNMENT":
             return self.assignment.end_date
         return self.specific_end_date
+
+
+class Config(models.Model):
+    """Generic key-value config model voor systeem-brede instellingen."""
+
+    key = models.CharField(max_length=100, unique=True, primary_key=True)
+    value = models.JSONField(default=dict)
+
+    class Meta:
+        verbose_name = "Configuratie"
+        verbose_name_plural = "Configuraties"
+
+    def __str__(self):
+        return self.key
+
+    @classmethod
+    def get(cls, key: str, default: Any = None) -> Any:
+        """Haal config waarde op."""
+        try:
+            return cls.objects.get(key=key).value
+        except cls.DoesNotExist:
+            return default
+
+    @classmethod
+    def set(cls, key: str, value: Any) -> None:
+        """Sla config waarde op."""
+        cls.objects.update_or_create(key=key, defaults={"value": value})
 
 
 class Event(models.Model):
