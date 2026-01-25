@@ -1,7 +1,7 @@
 from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import Group
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 from wies.core.models import Colleague, Label, LabelCategory, User
 from wies.core.services.placements import create_placements_from_csv
@@ -9,13 +9,6 @@ from wies.core.services.sync import sync_all_otys_iir_records
 from wies.core.services.users import create_users_from_csv
 
 
-@override_settings(
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class DataImportIntegrationTest(TestCase):
     """High-level integration tests for CSV imports and OTYS sync with label assignment"""
 

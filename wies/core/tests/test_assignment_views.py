@@ -1,17 +1,10 @@
 from django.contrib.auth.models import Permission
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.models import Assignment, Colleague, Ministry, Placement, Service, User
 
 
-@override_settings(
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class AssignmentEditAttributeTest(TestCase):
     """Tests for assignment inline editing feature"""
 

@@ -2,7 +2,7 @@ import datetime
 from pathlib import Path
 
 import pytest
-from django.test import TestCase, override_settings
+from django.test import TestCase
 
 from wies.core.models import Assignment, Colleague, Ministry, Placement, Service, Skill
 from wies.core.services.placements import create_placements_from_csv, parse_date_dmy
@@ -32,16 +32,6 @@ class ParseDateDmyTest(TestCase):
             parse_date_dmy("31-02-2025")  # February 31st doesn't exist
 
 
-@override_settings(
-    # Use simple static files storage for tests
-    # Because tests are not running with debug True, you would otherise need to run
-    # collectstatic before running the test
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class CreateFromCSVTest(TestCase):
     @classmethod
     def setUpTestData(cls):

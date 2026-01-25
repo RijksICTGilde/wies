@@ -1,18 +1,11 @@
 from django.contrib.auth.models import Group
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.models import Label, LabelCategory, User
 from wies.core.roles import setup_roles
 
 
-@override_settings(
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class RBACSetupTest(TestCase):
     """Integration tests for RBAC role setup"""
 
