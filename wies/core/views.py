@@ -24,7 +24,6 @@ from .models import (
     Colleague,
     Label,
     LabelCategory,
-    Ministry,
     OrganizationType,
     OrganizationUnit,
     Placement,
@@ -143,7 +142,7 @@ def admin_db(request):
             Skill.objects.all().delete()
             Placement.objects.all().delete()
             Service.objects.all().delete()
-            Ministry.objects.all().delete()
+            OrganizationUnit.objects.all().delete()
             LabelCategory.objects.all().delete()
             Label.objects.all().delete()
         elif action == "load_data":
@@ -170,7 +169,7 @@ class PlacementListView(ListView):
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
         qs = (
-            Placement.objects.select_related("colleague", "service", "service__skill", "service__assignment__ministry")
+            Placement.objects.select_related("colleague", "service", "service__skill", "service__assignment")
             .prefetch_related("colleague__labels")
             .filter(service__assignment__status="INGEVULD")
             .order_by("-service__assignment__start_date")
@@ -182,9 +181,7 @@ class PlacementListView(ListView):
                 Q(colleague__name__icontains=search_filter)
                 | Q(service__assignment__name__icontains=search_filter)
                 | Q(service__assignment__extra_info__icontains=search_filter)
-                | Q(service__assignment__organization__icontains=search_filter)
-                | Q(service__assignment__ministry__name__icontains=search_filter)
-                | Q(service__assignment__ministry__abbreviation__icontains=search_filter)
+                | Q(service__assignment__organization_relations__organization__name__icontains=search_filter)
             )
 
         order_mapping = {
@@ -204,11 +201,16 @@ class PlacementListView(ListView):
         if self.request.GET.get("rol"):
             qs = qs.filter(service__skill__id=self.request.GET["rol"])
 
-        if self.request.GET.get("opdrachtgever"):
-            qs = qs.filter(service__assignment__organization=self.request.GET["opdrachtgever"])
-
-        if self.request.GET.get("ministerie"):
-            qs = qs.filter(service__assignment__ministry__id=self.request.GET["ministerie"])
+        if self.request.GET.get("organisatie"):
+            # Hierarchical filter: include selected org and all descendants
+            org_id = int(self.request.GET["organisatie"])
+            selected_org = OrganizationUnit.objects.filter(id=org_id).first()
+            if selected_org:
+                org_ids = [org_id] + [d.id for d in selected_org.get_descendants()]
+                qs = qs.filter(
+                    service__assignment__organization_relations__organization_id__in=org_ids,
+                    service__assignment__organization_relations__role="PRIMARY",
+                )
 
         # Label filter support multiselect
         for label_id in self.request.GET.getlist("labels"):
@@ -246,16 +248,10 @@ class PlacementListView(ListView):
         params["opdracht"] = assignment_id
         return f"/plaatsingen/?{params.urlencode()}"
 
-    def _build_client_url(self, client_name):
-        """Build client filter URL"""
+    def _build_organization_url(self, organization_id):
+        """Build organization filter URL"""
         params = QueryDict(mutable=True)
-        params["opdrachtgever"] = client_name
-        return f"/plaatsingen/?{params.urlencode()}"
-
-    def _build_ministry_url(self, ministry_id):
-        """Build ministry filter URL"""
-        params = QueryDict(mutable=True)
-        params["ministerie"] = ministry_id
+        params["organisatie"] = organization_id
         return f"/plaatsingen/?{params.urlencode()}"
 
     def _build_colleague_url(self, colleague_id):
@@ -268,22 +264,32 @@ class PlacementListView(ListView):
         return f"/plaatsingen/?{params.urlencode()}"
 
     def _get_colleague_assignments(self, colleague):
-        """Get assignments for a colleague"""
-        return (
+        """Get assignments for a colleague with organization info"""
+        placements = (
             Placement.objects.filter(colleague=colleague)
-            .select_related("service__assignment", "service__assignment__ministry", "service__skill")
-            .values(
-                "id",
-                "service__assignment__id",
-                "service__assignment__name",
-                "service__assignment__organization",
-                "service__assignment__ministry__name",
-                "service__assignment__start_date",
-                "service__assignment__end_date",
-                "service__skill__name",
-            )
-            .distinct()
+            .select_related("service__assignment", "service__skill")
+            .prefetch_related("service__assignment__organization_relations__organization")
         )
+        # Build list with organization from M2M
+        results = []
+        seen_assignments = set()
+        for p in placements:
+            assignment = p.service.assignment
+            if assignment.id in seen_assignments:
+                continue
+            seen_assignments.add(assignment.id)
+            org = assignment.get_primary_organization()
+            results.append(
+                {
+                    "id": assignment.id,
+                    "name": assignment.name,
+                    "organization": org.name if org else None,
+                    "start_date": assignment.start_date,
+                    "end_date": assignment.end_date,
+                    "skill": p.service.skill.name if p.service.skill else None,
+                }
+            )
+        return results
 
     def _get_colleague_panel_data(self, colleague):
         """Get colleague panel data for server-side rendering"""
@@ -291,16 +297,8 @@ class PlacementListView(ListView):
         colleague_assignments = self._get_colleague_assignments(colleague)
         assignment_list = [
             {
-                "name": item["service__assignment__name"],
-                "id": item["service__assignment__id"],
-                "organization": item["service__assignment__organization"],
-                "ministry": {"name": item["service__assignment__ministry__name"]}
-                if item["service__assignment__ministry__name"]
-                else None,
-                "start_date": item["service__assignment__start_date"],
-                "end_date": item["service__assignment__end_date"],
-                "skill": item["service__skill__name"],
-                "assignment_url": self._build_assignment_url(self.request, item["service__assignment__id"]),
+                **item,
+                "assignment_url": self._build_assignment_url(self.request, item["id"]),
             }
             for item in colleague_assignments
         ]
@@ -328,14 +326,14 @@ class PlacementListView(ListView):
         # Check if user can edit assignment
         user_can_edit = user_can_edit_assignment(self.request.user, assignment)
 
+        primary_org = assignment.get_primary_organization()
         return {
             "panel_content_template": "parts/assignment_panel_content.html",
             "panel_title": assignment.name,
             "close_url": self._build_close_url(self.request),
             "assignment": assignment,
             "placements": placements,
-            "client_url": self._build_client_url(assignment.organization),
-            "ministry_url": self._build_ministry_url(assignment.ministry.id) if assignment.ministry else None,
+            "organization_url": self._build_organization_url(primary_org.id) if primary_org else "",
             "user_can_edit": user_can_edit,
             "owner_url": self._build_colleague_url(assignment.owner.id) if assignment.owner else "",
         }
@@ -353,7 +351,7 @@ class PlacementListView(ListView):
         context["search_filter"] = self.request.GET.get("zoek", "")
 
         active_filters = {}  # key: val
-        for filter_param in ["rol", "opdrachtgever", "ministerie", "periode"]:
+        for filter_param in ["rol", "organisatie", "periode"]:
             val = self.request.GET.get(filter_param)
             if val:
                 active_filters[filter_param] = val
@@ -404,33 +402,27 @@ class PlacementListView(ListView):
                 skill_options[-1]["selected"] = True
                 skill_value = str(skill.id)
 
-        clients = [
-            {"id": org, "name": org}
-            for org in Assignment.objects.values_list("organization", flat=True)
+        # Get organizations linked to assignments + their ancestors (for hierarchical filtering)
+        linked_org_ids = set(
+            Assignment.objects.filter(status="INGEVULD")
+            .values_list("organization_relations__organization_id", flat=True)
             .distinct()
-            .exclude(organization="")
-            .order_by("organization")
-        ]
+        )
+        # Add all ancestors so clicking breadcrumb links works
+        all_org_ids = set(linked_org_ids)
+        for org in OrganizationUnit.objects.filter(id__in=linked_org_ids):
+            for ancestor in org.get_ancestors():
+                all_org_ids.add(ancestor.id)
 
-        client_options = [
+        organization_options = [
             {"value": "", "label": ""},
         ]
-        client_value = ""
-        for client in clients:
-            client_options.append({"value": client["id"], "label": client["name"]})
-            if active_filters.get("opdrachtgever") == str(client["id"]):
-                client_options[-1]["selected"] = True
-                client_value = str(client["id"])
-
-        ministry_options = [
-            {"value": "", "label": ""},
-        ]
-        ministry_value = ""
-        for ministry in Ministry.objects.order_by("name"):
-            ministry_options.append({"value": str(ministry.id), "label": ministry.name})
-            if active_filters.get("ministerie") == str(ministry.id):
-                ministry_options[-1]["selected"] = True
-                ministry_value = str(ministry.id)
+        organization_value = ""
+        for org in OrganizationUnit.objects.filter(id__in=all_org_ids).order_by("name"):
+            organization_options.append({"value": str(org.id), "label": org.name})
+            if active_filters.get("organisatie") == str(org.id):
+                organization_options[-1]["selected"] = True
+                organization_value = str(org.id)
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
@@ -440,17 +432,10 @@ class PlacementListView(ListView):
         context["filter_groups"] = [
             {
                 "type": "select",
-                "name": "ministerie",
-                "label": "Ministerie",
-                "options": ministry_options,
-                "value": ministry_value,
-            },
-            {
-                "type": "select",
-                "name": "opdrachtgever",
+                "name": "organisatie",
                 "label": "Opdrachtgever",
-                "options": client_options,
-                "value": client_value,
+                "options": organization_options,
+                "value": organization_value,
             },
             {
                 "type": "select",
@@ -850,7 +835,6 @@ def user_import_csv(request):
         "core.add_service",
         "core.add_placement",
         "core.add_colleague",
-        "core.add_ministry",
     ],
     raise_exception=True,
 )

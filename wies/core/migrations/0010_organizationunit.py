@@ -30,7 +30,6 @@ def setup_roles(apps, schema_editor):
             ("core", "service", ["add_service"]),
             ("core", "placement", ["add_placement"]),
             ("core", "colleague", ["add_colleague"]),
-            ("core", "ministry", ["add_ministry"]),
         ],
     }
 
@@ -55,6 +54,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        # Create OrganizationUnit model
         migrations.CreateModel(
             name="OrganizationUnit",
             fields=[
@@ -194,6 +194,7 @@ class Migration(migrations.Migration):
                 "ordering": ["name"],
             },
         ),
+        # Create AssignmentOrganizationUnit through model
         migrations.CreateModel(
             name="AssignmentOrganizationUnit",
             fields=[
@@ -235,6 +236,7 @@ class Migration(migrations.Migration):
                 "verbose_name_plural": "Opdracht-organisatie koppelingen",
             },
         ),
+        # Add M2M field to Assignment
         migrations.AddField(
             model_name="assignment",
             name="organizations",
@@ -245,10 +247,12 @@ class Migration(migrations.Migration):
                 verbose_name="Organisatie-eenheden",
             ),
         ),
+        # Add index for parent lookups
         migrations.AddIndex(
             model_name="organizationunit",
             index=models.Index(fields=["parent", "is_active"], name="core_organi_parent__a926e0_idx"),
         ),
+        # Constraints for AssignmentOrganizationUnit
         migrations.AddConstraint(
             model_name="assignmentorganizationunit",
             constraint=models.UniqueConstraint(
@@ -264,5 +268,19 @@ class Migration(migrations.Migration):
                 name="unique_primary_org_per_assignment",
             ),
         ),
+        # Remove old ministry field and model
+        migrations.RemoveField(
+            model_name="assignment",
+            name="ministry",
+        ),
+        migrations.DeleteModel(
+            name="Ministry",
+        ),
+        # Remove old organization field (was temporary FK during migration)
+        migrations.RemoveField(
+            model_name="assignment",
+            name="organization",
+        ),
+        # Setup roles with OrganizationUnit permissions
         migrations.RunPython(setup_roles, migrations.RunPython.noop),
     ]

@@ -7,7 +7,6 @@ from wies.core.models import (
     Colleague,
     Label,
     LabelCategory,
-    Ministry,
     OrganizationUnit,
     Placement,
     Service,
@@ -83,7 +82,6 @@ def setup_roles():
             (Service, ["add_service"]),
             (Placement, ["add_placement"]),
             (Colleague, ["add_colleague"]),
-            (Ministry, ["add_ministry"]),
         ],
     }
 

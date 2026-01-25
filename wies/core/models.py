@@ -89,25 +89,6 @@ class Label(models.Model):
         return f"{self.name}"
 
 
-class Ministry(models.Model):
-    """
-    DEPRECATED: Use Organization model with organization_type='ministerie' instead.
-
-    This model will be removed after data migration to Organization is complete.
-    Kept temporarily for backwards compatibility during the migration period.
-    """
-
-    name = models.CharField(max_length=98)
-    abbreviation = models.CharField(max_length=10)
-
-    class Meta:
-        ordering = ["name"]
-        verbose_name_plural = "ministries"
-
-    def __str__(self):
-        return f"{self.name} ({self.abbreviation})"
-
-
 # Organization type configuration: single source of truth for type metadata
 # - label: Dutch UI label
 # - is_root: True if this type must be root (no parent allowed), False if parent required
@@ -652,8 +633,6 @@ class Assignment(models.Model):
     # placements through foreignkey on Placement
     # services through foreignkey on Service
     status = models.CharField(max_length=20, choices=ASSIGNMENT_STATUS, default="LEAD")
-    organization = models.CharField(blank=True)  # DEPRECATED: use organizations M2M
-    ministry = models.ForeignKey("Ministry", models.SET_NULL, null=True, blank=False)  # DEPRECATED
     owner = models.ForeignKey("Colleague", models.SET_NULL, null=True, blank=False, related_name="owned_assignments")
     extra_info = models.TextField(blank=True, max_length=5000)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
@@ -685,7 +664,9 @@ class Assignment(models.Model):
 
     def get_primary_organization(self):
         """Return the primary organization (or None)."""
-        rel = self.organization_relations.filter(role=OrganizationUnitRole.PRIMARY).first()
+        rel = (
+            self.organization_relations.filter(role=OrganizationUnitRole.PRIMARY).select_related("organization").first()
+        )
         return rel.organization if rel else None
 
 

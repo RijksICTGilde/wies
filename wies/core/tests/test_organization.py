@@ -9,7 +9,6 @@ from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
-    Ministry,
     OrganizationType,
     OrganizationUnit,
     OrganizationUnitRole,
@@ -301,7 +300,6 @@ class AssignmentOrganizationUnitTest(TestCase):
 
     def setUp(self):
         """Create test data."""
-        self.ministry_legacy = Ministry.objects.create(name="BZK", abbreviation="BZK")
         self.user = User.objects.create_user(username="test", email="test@example.com", password="test")
         self.colleague = Colleague.objects.create(
             name="Test Colleague",
@@ -314,7 +312,6 @@ class AssignmentOrganizationUnitTest(TestCase):
         """get_primary_organization() returns PRIMARY relation."""
         assignment = Assignment.objects.create(
             name="Test Opdracht",
-            ministry=self.ministry_legacy,
             owner=self.colleague,
             source="wies",
         )
@@ -329,7 +326,6 @@ class AssignmentOrganizationUnitTest(TestCase):
         """get_primary_organization() returns None when no PRIMARY relation."""
         assignment = Assignment.objects.create(
             name="Test Opdracht",
-            ministry=self.ministry_legacy,
             owner=self.colleague,
             source="wies",
         )
@@ -340,7 +336,6 @@ class AssignmentOrganizationUnitTest(TestCase):
         org2 = OrganizationUnit.objects.create(name="EZK", organization_type=OrganizationType.MINISTERIE)
         assignment = Assignment.objects.create(
             name="Test",
-            ministry=self.ministry_legacy,
             owner=self.colleague,
             source="wies",
         )
@@ -356,7 +351,6 @@ class AssignmentOrganizationUnitTest(TestCase):
         """AssignmentOrganizationUnit __str__ is descriptive."""
         assignment = Assignment.objects.create(
             name="Test Opdracht",
-            ministry=self.ministry_legacy,
             owner=self.colleague,
             source="wies",
         )
@@ -374,7 +368,6 @@ class AssignmentOrganizationUnitTest(TestCase):
         org2 = OrganizationUnit.objects.create(name="EZK", organization_type=OrganizationType.MINISTERIE)
         assignment = Assignment.objects.create(
             name="Test",
-            ministry=self.ministry_legacy,
             owner=self.colleague,
             source="wies",
         )

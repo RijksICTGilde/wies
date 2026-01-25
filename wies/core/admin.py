@@ -6,7 +6,6 @@ from .models import (
     Colleague,
     Label,
     LabelCategory,
-    Ministry,
     OrganizationUnit,
     Placement,
     Service,
@@ -32,11 +31,6 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Skill)
 class SkillAdmin(admin.ModelAdmin):
-    pass
-
-
-@admin.register(Ministry)
-class MinistryAdmin(admin.ModelAdmin):
     pass
 
 
