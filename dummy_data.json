@@ -120,6 +120,68 @@
     }
   },
   {
+    "model": "core.organization",
+    "pk": 1,
+    "fields": {
+      "name": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
+      "abbreviation": "BZK",
+      "organization_type": "ministerie",
+      "parent": null,
+      "is_active": true,
+      "tooi_identifier": null,
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null
+    }
+  },
+  {
+    "model": "core.organization",
+    "pk": 2,
+    "fields": {
+      "name": "Directoraat-Generaal Digitalisering en Overheidsorganisatie",
+      "abbreviation": "DGDOO",
+      "organization_type": "directoraat_generaal",
+      "parent": 1,
+      "is_active": true,
+      "tooi_identifier": null,
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null
+    }
+  },
+  {
+    "model": "core.organization",
+    "pk": 3,
+    "fields": {
+      "name": "Directie Publieke Dienstverlening & Digitalisering",
+      "abbreviation": "",
+      "organization_type": "directie",
+      "parent": 2,
+      "is_active": true,
+      "tooi_identifier": null,
+      "oin_number": null,
+      "previous_names": [
+        { "name": "Directie Digitale Overheid", "until": "2024-06-01" }
+      ],
+      "successor": null
+    }
+  },
+  {
+    "model": "core.organization",
+    "pk": 4,
+    "fields": {
+      "name": "Logius",
+      "abbreviation": "",
+      "organization_type": "agentschap",
+      "parent": 1,
+      "is_active": true,
+      "tooi_identifier": null,
+      "oin_number": null,
+      "previous_names": [],
+      "successor": null
+    }
+  },
+  {
     "model": "core.skill",
     "pk": 1,
     "fields": {
