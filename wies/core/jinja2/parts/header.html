@@ -1,20 +1,5 @@
-<header class="rvo-header">
-  <div class="rvo-header__logo-wrapper">
-    <a href="{{ url('home') }}" class="rvo-link rvo-link--no-underline">
-      <div class="rvo-logo rvo-header__logo-img">
-        <div class="rvo-logo__emblem">
-          <img src="{{ static('@nl-rvo/assets/images/emblem.svg') }}"
-               alt="RVO Embleem">
-        </div>
-        <div class="rvo-logo__wordmark">
-          {# djlint:off #}
-          <p class="rvo-logo__title">Rijksorganisatie voor Ontwikkeling,<br />Digitalisering en Innovatie</p>
-          {# djlint:on #}
-        </div>
-      </div>
-    </a>
-  </div>
-</header>
+{% include "parts/header_logo.html" %}
+
 <div class="rvo-menubar__background rvo-menubar__background--horizontal-rule">
   <div class="rvo-max-width-layout rvo-max-width-layout--placements rvo-max-width-layout-inline-padding--md">
     <nav class="rvo-menubar rvo-menubar--md">
@@ -24,6 +9,7 @@
             <li class="rvo-menubar__item">
               <a href="{{ url('home') }}"
                  class="rvo-link rvo-link--no-underline rvo-link--logoblauw {% if request.resolver_match.url_name == 'home' %}menu-item--active{% endif %}">
+                <img src="{{ static('wies.svg') }}" alt="Wies logo" class="wies-logo">
                 Wie zit waar?
               </a>
             </li>

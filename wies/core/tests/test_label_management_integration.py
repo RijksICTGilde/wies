@@ -1,17 +1,10 @@
 from django.contrib.auth.models import Permission
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.models import Colleague, Label, LabelCategory, User
 
 
-@override_settings(
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class LabelManagementIntegrationTest(TestCase):
     """High-level integration tests for complete label lifecycle"""
 
@@ -22,7 +15,7 @@ class LabelManagementIntegrationTest(TestCase):
         # Create admin user with all label permissions
         self.admin_user = User.objects.create(
             username="admin",
-            email="admin@example.com",
+            email="admin@rijksoverheid.nl",
             first_name="Admin",
             last_name="User",
         )
@@ -42,7 +35,7 @@ class LabelManagementIntegrationTest(TestCase):
         # Create unprivileged user
         self.regular_user = User.objects.create(
             username="regular",
-            email="regular@example.com",
+            email="regular@rijksoverheid.nl",
             first_name="Regular",
             last_name="User",
         )
@@ -75,14 +68,14 @@ class LabelManagementIntegrationTest(TestCase):
             {
                 "first_name": "Test",
                 "last_name": "User",
-                "email": "test@example.com",
+                "email": "test@rijksoverheid.nl",
                 "category_Test Category": label.id,
             },
             follow=True,
         )
         assert response.status_code == 200
 
-        user = User.objects.get(email="test@example.com")
+        user = User.objects.get(email="test@rijksoverheid.nl")
         assert label in user.labels.all()
 
         # Step 4: Verify label appears in user list view
@@ -111,10 +104,12 @@ class LabelManagementIntegrationTest(TestCase):
         label = Label.objects.create(name="Original Name", category=category)
 
         # Assign to user and colleague
-        user = User.objects.create(username="test_user", email="user@test.com", first_name="Test", last_name="User")
+        user = User.objects.create(
+            username="test_user", email="user@rijksoverheid.nl", first_name="Test", last_name="User"
+        )
         user.labels.add(label)
 
-        colleague = Colleague.objects.create(name="Test Colleague", email="colleague@test.com", source="wies")
+        colleague = Colleague.objects.create(name="Test Colleague", email="colleague@rijksoverheid.nl", source="wies")
         colleague.labels.add(label)
 
         # Edit the label
@@ -166,10 +161,14 @@ class LabelManagementIntegrationTest(TestCase):
         label3 = Label.objects.create(name="JavaScript", category=category)
 
         # Assign labels to users
-        user1 = User.objects.create(username="user1", email="user1@test.com", first_name="User", last_name="One")
+        user1 = User.objects.create(
+            username="user1", email="user1@rijksoverheid.nl", first_name="User", last_name="One"
+        )
         user1.labels.add(label1, label2)
 
-        user2 = User.objects.create(username="user2", email="user2@test.com", first_name="User", last_name="Two")
+        user2 = User.objects.create(
+            username="user2", email="user2@rijksoverheid.nl", first_name="User", last_name="Two"
+        )
         user2.labels.add(label2, label3)
 
         # Delete the category

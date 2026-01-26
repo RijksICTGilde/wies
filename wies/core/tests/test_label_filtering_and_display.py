@@ -1,17 +1,10 @@
 from django.contrib.auth.models import Permission
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.models import Assignment, Colleague, Label, LabelCategory, Ministry, Placement, Service, Skill, User
 
 
-@override_settings(
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class LabelFilteringAndDisplayTest(TestCase):
     """High-level integration tests for label filtering and display in views"""
 
@@ -22,7 +15,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         # Create user with view permissions
         self.auth_user = User.objects.create(
             username="auth_user",
-            email="auth@example.com",
+            email="auth@rijksoverheid.nl",
             first_name="Auth",
             last_name="User",
         )
@@ -41,23 +34,35 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.django_label, _ = Label.objects.get_or_create(name="Django", category=self.skills_category)
 
         # Create users with labels
-        self.user1 = User.objects.create(username="user1", email="user1@test.com", first_name="User", last_name="One")
+        self.user1 = User.objects.create(
+            username="user1", email="user1@rijksoverheid.nl", first_name="User", last_name="One"
+        )
         self.user1.labels.add(self.rig_label, self.python_label)
 
-        self.user2 = User.objects.create(username="user2", email="user2@test.com", first_name="User", last_name="Two")
+        self.user2 = User.objects.create(
+            username="user2", email="user2@rijksoverheid.nl", first_name="User", last_name="Two"
+        )
         self.user2.labels.add(self.rc_label)
 
-        self.user3 = User.objects.create(username="user3", email="user3@test.com", first_name="User", last_name="Three")
+        self.user3 = User.objects.create(
+            username="user3", email="user3@rijksoverheid.nl", first_name="User", last_name="Three"
+        )
         self.user3.labels.add(self.rig_label, self.django_label)
 
         # Create colleagues with labels
-        self.colleague1 = Colleague.objects.create(name="Colleague One", email="colleague1@test.com", source="wies")
+        self.colleague1 = Colleague.objects.create(
+            name="Colleague One", email="colleague1@rijksoverheid.nl", source="wies"
+        )
         self.colleague1.labels.add(self.rig_label)
 
-        self.colleague2 = Colleague.objects.create(name="Colleague Two", email="colleague2@test.com", source="wies")
+        self.colleague2 = Colleague.objects.create(
+            name="Colleague Two", email="colleague2@rijksoverheid.nl", source="wies"
+        )
         self.colleague2.labels.add(self.iir_label)
 
-        self.colleague3 = Colleague.objects.create(name="Colleague Three", email="colleague3@test.com", source="wies")
+        self.colleague3 = Colleague.objects.create(
+            name="Colleague Three", email="colleague3@rijksoverheid.nl", source="wies"
+        )
         self.colleague3.labels.add(self.rig_label)
 
         # Create placements
@@ -186,7 +191,10 @@ class LabelFilteringAndDisplayTest(TestCase):
         # Create many users with same label to trigger pagination
         for i in range(25):
             user = User.objects.create(
-                username=f"paginated_user_{i}", email=f"paginated{i}@test.com", first_name="User", last_name=f"{i}"
+                username=f"paginated_user_{i}",
+                email=f"paginated{i}@rijksoverheid.nl",
+                first_name="User",
+                last_name=f"{i}",
             )
             user.labels.add(self.rig_label)
 
