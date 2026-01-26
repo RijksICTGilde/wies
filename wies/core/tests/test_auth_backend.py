@@ -13,7 +13,7 @@ class AuthBackendTest(TestCase):
         """Create test data"""
         self.test_user = User.objects.create(
             username="test_user",
-            email="test@example.com",
+            email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
         )
@@ -23,11 +23,11 @@ class AuthBackendTest(TestCase):
         user = authenticate(
             request=None,
             username="test_user",
-            email="test@example.com",
+            email="test@rijksoverheid.nl",
             extra_fields={"first_name": "Test", "last_name": "User"},
         )
 
-        assert user.email == "test@example.com"
+        assert user.email == "test@rijksoverheid.nl"
         assert user.username == "test_user"
         assert user.first_name == "Test"
         assert user.last_name == "User"
@@ -49,7 +49,7 @@ class AuthBackendTest(TestCase):
         user = backend.get_user(self.test_user.pk)
 
         assert user.pk == self.test_user.pk
-        assert user.email == "test@example.com"
+        assert user.email == "test@rijksoverheid.nl"
 
     def test_get_user_non_existent(self):
         """Test that get_user returns None for non-existent ID"""
@@ -61,12 +61,12 @@ class AuthBackendTest(TestCase):
     def test_authenticate_missing_username(self):
         """Test that authentication raises ValueError for missing username"""
         with pytest.raises(ValueError, match=r"(?i)username"):
-            authenticate(request=None, username=None, email="test@example.com", extra_fields={})
+            authenticate(request=None, username=None, email="test@rijksoverheid.nl", extra_fields={})
 
     def test_authenticate_empty_username(self):
         """Test that authentication raises ValueError for empty username"""
         with pytest.raises(ValueError, match=r"(?i)username"):
-            authenticate(request=None, username="", email="test@example.com", extra_fields={})
+            authenticate(request=None, username="", email="test@rijksoverheid.nl", extra_fields={})
 
     def test_authenticate_missing_email(self):
         """Test that authentication raises ValueError for missing email"""
@@ -80,17 +80,17 @@ class AuthBackendTest(TestCase):
 
     def test_authenticate_with_none_extra_fields(self):
         """Test that authentication works with extra_fields=None (uses default)"""
-        user = authenticate(request=None, username="test_user", email="test@example.com", extra_fields=None)
+        user = authenticate(request=None, username="test_user", email="test@rijksoverheid.nl", extra_fields=None)
 
         assert user is not None
-        assert user.email == "test@example.com"
+        assert user.email == "test@rijksoverheid.nl"
 
     def test_authenticate_uses_email_for_lookup(self):
         """Test that authentication uses email (not username) for Colleague lookup"""
         # Create base colleague
         colleague = User.objects.create(
             username="original_username",
-            email="lookup@example.com",
+            email="lookup@rijksoverheid.nl",
             first_name="Lookup",
             last_name="Test",
         )
@@ -99,11 +99,11 @@ class AuthBackendTest(TestCase):
         user = authenticate(
             request=None,
             username="different_username",  # Different from stored username
-            email="lookup@example.com",  # Same email
+            email="lookup@rijksoverheid.nl",  # Same email
             extra_fields={"first_name": "Lookup", "last_name": "Test"},
         )
 
         # Should find the colleague by email, not username
         assert user.pk == colleague.pk
-        assert user.email == "lookup@example.com"
+        assert user.email == "lookup@rijksoverheid.nl"
         assert user.username == "original_username"  # Original username preserved

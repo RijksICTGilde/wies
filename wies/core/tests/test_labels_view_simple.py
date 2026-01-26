@@ -3,20 +3,13 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.db.models import Count
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 
 from wies.core.models import Label, LabelCategory
 
 User = get_user_model()
 
 
-@override_settings(
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    }
-)
 class LabelsViewTest(TestCase):
     """Test the labels view endpoint"""
 

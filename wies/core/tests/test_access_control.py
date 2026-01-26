@@ -14,7 +14,7 @@ class AccessControlTest(TestCase):
         self.client = Client()
         self.test_user = User.objects.create(
             username="test_user",
-            email="test@example.com",
+            email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
         )
@@ -23,11 +23,12 @@ class AccessControlTest(TestCase):
         """Test that login-not-required endpoints are accessible without authentication and do not redirect to login"""
 
         login_not_required_paths = [
-            "/inloggen/",
             "/djadmin/login/",
             "/geen-toegang/",
-            # '/auth/',  # /auth/ requires OIDC state and will raise an error without it. this path is tested in test_auth_views.py with proper mocking
-            # '/logout/',  # logout redirects to login. tested in test_auth_view in detail
+            # Endpoints where login is not required but which are tested separately
+            # '/auth/',    # /auth/ requires OIDC state and will raise an error without it. This path is tested in
+            #                test_auth_views.py with proper mocking.
+            # '/logout/',  # /logout/ redirects to login. Tested in test_auth_view.
         ]
 
         for path in login_not_required_paths:
@@ -37,7 +38,7 @@ class AccessControlTest(TestCase):
 
     def test_unauthenticated_access_to_placements_redirects_to_login(self):
         """Specific test for placements view (main landing page)"""
-        response = self.client.get("/plaatsingen/", follow=False)
+        response = self.client.get("/", follow=False)
 
         assert response.status_code == 302
         assert response.url.startswith(reverse("login"))
@@ -60,7 +61,7 @@ class AccessControlTest(TestCase):
         """Test that superuser can access /djadmin/db/ view"""
         superuser = User.objects.create(
             username="admin",
-            email="admin@example.com",
+            email="admin@rijksoverheid.nl",
             first_name="Admin",
             last_name="User",
             is_superuser=True,

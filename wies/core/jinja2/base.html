@@ -9,10 +9,12 @@
       {% endblock title %}
     </title>
     {# Favicon #}
-    <link rel="icon" type="image/png" href="{{ static('WIES-fav.png') }}">
-    <link rel="shortcut icon"
+    <link rel="icon"
           type="image/png"
-          href="{{ static('WIES-fav.png') }}">
+          href="{{ static('favicon-96x96.png') }}"
+          sizes="96x96" />
+    <link rel="icon" type="image/svg+xml" href="{{ static('favicon.svg') }}" />
+    <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="stylesheet" href="{{ static('vendor/rvo/design-tokens.css') }}" />
     <link rel="stylesheet"
           href="{{ static('vendor/rvo/component-library.css') }}" />

@@ -2,27 +2,19 @@ from unittest.mock import patch
 
 from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.models import User
 
 
-@override_settings(
-    # Use simple static files storage for tests
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class PlacementImportTest(TestCase):
     """Tests for CSV placement import view functionality"""
 
     def setUp(self):
         """Create test data"""
         self.client = Client()
-        self.import_url = reverse("placement-import-csv")
+        self.import_url = reverse("assignment-import-csv")
 
         # Create test groups
         self.admin_group = Group.objects.create(name="Beheerder")
@@ -32,7 +24,7 @@ class PlacementImportTest(TestCase):
         # Create authenticated user with all required permissions
         self.auth_user = User.objects.create(
             username="testuser",
-            email="test@example.com",
+            email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
         )
@@ -48,7 +40,7 @@ class PlacementImportTest(TestCase):
         # Create user without permissions
         self.no_perm_user = User.objects.create(
             username="nopermuser",
-            email="noperm@example.com",
+            email="noperm@rijksoverheid.nl",
             first_name="No",
             last_name="Permission",
         )
@@ -56,7 +48,7 @@ class PlacementImportTest(TestCase):
         # Create user with only some permissions (missing add_service and add_ministry)
         self.partial_perm_user = User.objects.create(
             username="partialuser",
-            email="partial@example.com",
+            email="partial@rijksoverheid.nl",
             first_name="Partial",
             last_name="Permission",
         )
@@ -93,7 +85,7 @@ class PlacementImportTest(TestCase):
         content = response.content.decode()
         assert "Plaatsingen" in content
         assert "csv_file" in content
-        assert "example_placement_import.csv" in content
+        assert "example_assignment_import.csv" in content
 
     def test_import_requires_file_upload(self):
         """Test that import requires a file to be uploaded"""
@@ -115,7 +107,7 @@ class PlacementImportTest(TestCase):
         content = response.content.decode()
         assert "Ongeldig bestandstype" in content
 
-    @patch("wies.core.views.create_placements_from_csv")
+    @patch("wies.core.views.create_assignments_from_csv")
     def test_import_successful_result_display(self, mock_create_placements):
         """Test that successful import displays correct result information"""
         # Mock the service function to return success
@@ -131,7 +123,7 @@ class PlacementImportTest(TestCase):
 
         self.client.force_login(self.auth_user)
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Test Description,John Owner,john@example.com,Test Org,BZK,01-01-2024,31-12-2024,Python,Jane Colleague,jane@example.com"""
+Test Assignment,Test Description,John Owner,john@rijksoverheid.nl,Test Org,BZK,01-01-2024,31-12-2024,Python,Jane Colleague,jane@rijksoverheid.nl"""
         csv_file = self._create_csv_file(csv_content)
 
         response = self.client.post(self.import_url, {"csv_file": csv_file})
@@ -156,7 +148,7 @@ Test Assignment,Test Description,John Owner,john@example.com,Test Org,BZK,01-01-
         call_args = mock_create_placements.call_args[0][0]
         assert "Test Assignment" in call_args
 
-    @patch("wies.core.views.create_placements_from_csv")
+    @patch("wies.core.views.create_assignments_from_csv")
     def test_import_error_result_display(self, mock_create_placements):
         """Test that failed import displays error messages properly"""
         # Mock the service function to return failure
