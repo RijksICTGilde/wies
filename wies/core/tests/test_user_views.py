@@ -1,19 +1,11 @@
 from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.models import Event, Label, LabelCategory, User
 
 
-@override_settings(
-    # Use simple static files storage for tests
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class UserViewsTest(TestCase):
     """Tests for user list, creation, and deletion views"""
 
@@ -24,7 +16,7 @@ class UserViewsTest(TestCase):
         # Create a regular user for authentication
         self.auth_user = User.objects.create(
             username="auth_user",
-            email="auth@example.com",
+            email="auth@rijksoverheid.nl",
             first_name="Auth",
             last_name="User",
         )
@@ -39,7 +31,7 @@ class UserViewsTest(TestCase):
         # Create a superuser (should be excluded from list)
         self.superuser = User.objects.create_superuser(
             username="admin",
-            email="admin@example.com",
+            email="admin@rijksoverheid.nl",
             password="admin123",
             first_name="Admin",
             last_name="User",
@@ -58,7 +50,7 @@ class UserViewsTest(TestCase):
         # Create test users
         self.user1 = User.objects.create(
             username="user1",
-            email="user1@example.com",
+            email="user1@rijksoverheid.nl",
             first_name="John",
             last_name="Doe",
         )
@@ -66,7 +58,7 @@ class UserViewsTest(TestCase):
 
         self.user2 = User.objects.create(
             username="user2",
-            email="user2@example.com",
+            email="user2@rijksoverheid.nl",
             first_name="Jane",
             last_name="Smith",
         )
@@ -157,7 +149,7 @@ class UserViewsTest(TestCase):
             {
                 "first_name": "New",
                 "last_name": "User",
-                "email": "newuser@example.com",
+                "email": "newuser@rijksoverheid.nl",
                 "category_Merk": self.label_a.id,
             },
         )
@@ -170,7 +162,7 @@ class UserViewsTest(TestCase):
         assert User.objects.filter(is_superuser=False).count() == initial_count + 1
 
         # Verify user details
-        new_user = User.objects.get(email="newuser@example.com")
+        new_user = User.objects.get(email="newuser@rijksoverheid.nl")
         assert new_user.first_name == "New"
         assert new_user.last_name == "User"
         assert new_user.labels.filter(id=self.label_a.id).exists()
@@ -180,7 +172,7 @@ class UserViewsTest(TestCase):
         assert Event.objects.count() == initial_event_count + 1
         created_event = Event.objects.last()
         assert created_event.name == "User.create"
-        assert created_event.context["email"] == "newuser@example.com"
+        assert created_event.context["email"] == "newuser@rijksoverheid.nl"
 
     def test_user_create_without_labels(self):
         """Test user creation without labels (optional field)"""
@@ -191,7 +183,7 @@ class UserViewsTest(TestCase):
             {
                 "first_name": "No",
                 "last_name": "Labels",
-                "email": "nolabels@example.com",
+                "email": "nolabels@rijksoverheid.nl",
             },
         )
 
@@ -199,7 +191,7 @@ class UserViewsTest(TestCase):
         assert response.status_code == 302
         assert response.url == reverse("admin-users")
 
-        new_user = User.objects.get(email="nolabels@example.com")
+        new_user = User.objects.get(email="nolabels@rijksoverheid.nl")
         assert new_user.labels.count() == 0
 
     def test_user_create_validation_errors(self):
@@ -231,7 +223,7 @@ class UserViewsTest(TestCase):
             {
                 "first_name": "Duplicate",
                 "last_name": "User",
-                "email": "user1@example.com",  # This email already exists (user1)
+                "email": "user1@rijksoverheid.nl",  # This email already exists (user1)
             },
         )
 
@@ -245,7 +237,7 @@ class UserViewsTest(TestCase):
         assert "email" in content.lower()
 
         # User should not be created
-        assert User.objects.filter(email="user1@example.com").count() == 1
+        assert User.objects.filter(email="user1@rijksoverheid.nl").count() == 1
 
     def test_user_create_requires_login(self):
         """Test that user creation requires authentication"""
@@ -254,7 +246,7 @@ class UserViewsTest(TestCase):
             {
                 "first_name": "Test",
                 "last_name": "User",
-                "email": "test@example.com",
+                "email": "test@rijksoverheid.nl",
             },
         )
 
@@ -317,7 +309,7 @@ class UserViewsTest(TestCase):
         # Create user without view_user permission
         user_no_perms = User.objects.create(
             username="no_perms",
-            email="noperms@example.com",
+            email="noperms@rijksoverheid.nl",
             first_name="No",
             last_name="Perms",
         )
@@ -330,7 +322,7 @@ class UserViewsTest(TestCase):
         """Test that user list works with view_user permission"""
         user_with_perms = User.objects.create(
             username="with_perms",
-            email="withperms@example.com",
+            email="withperms@rijksoverheid.nl",
             first_name="With",
             last_name="Perms",
         )
@@ -346,7 +338,7 @@ class UserViewsTest(TestCase):
         # Create user with only view permission
         user_view_only = User.objects.create(
             username="view_only",
-            email="viewonly@example.com",
+            email="viewonly@rijksoverheid.nl",
             first_name="View",
             last_name="Only",
         )
@@ -360,19 +352,19 @@ class UserViewsTest(TestCase):
             {
                 "first_name": "New",
                 "last_name": "User",
-                "email": "newuser@example.com",
+                "email": "newuser@rijksoverheid.nl",
             },
         )
         assert response.status_code == 403
 
         # User should not be created
-        assert not User.objects.filter(email="newuser@example.com").exists()
+        assert not User.objects.filter(email="newuser@rijksoverheid.nl").exists()
 
     def test_user_create_get_requires_add_permission(self):
         """Test that getting the user creation form returns 403 without add_user permission"""
         user_no_add = User.objects.create(
             username="no_add",
-            email="noadd@example.com",
+            email="noadd@rijksoverheid.nl",
             first_name="No",
             last_name="Add",
         )
@@ -386,7 +378,7 @@ class UserViewsTest(TestCase):
         # Create user with only view permission
         user_view_only = User.objects.create(
             username="view_only2",
-            email="viewonly2@example.com",
+            email="viewonly2@rijksoverheid.nl",
             first_name="View",
             last_name="Only2",
         )
@@ -429,7 +421,7 @@ class UserViewsTest(TestCase):
             {
                 "first_name": "Updated",
                 "last_name": "Name",
-                "email": "updated@example.com",
+                "email": "updated@rijksoverheid.nl",
             },
         )
 
@@ -441,13 +433,13 @@ class UserViewsTest(TestCase):
         self.user1.refresh_from_db()
         assert self.user1.first_name == "Updated"
         assert self.user1.last_name == "Name"
-        assert self.user1.email == "updated@example.com"
+        assert self.user1.email == "updated@rijksoverheid.nl"
 
         # Event should be created
         assert Event.objects.count() == initial_count_events + 1
         created_event = Event.objects.last()
         assert created_event.name == "User.update"
-        assert created_event.context["email"] == "updated@example.com"
+        assert created_event.context["email"] == "updated@rijksoverheid.nl"
 
     def test_user_edit_validation_errors(self):
         """Test user editing with validation errors"""
@@ -482,7 +474,7 @@ class UserViewsTest(TestCase):
             {
                 "first_name": "Hacked",
                 "last_name": "Admin",
-                "email": "hacked@example.com",
+                "email": "hacked@rijksoverheid.nl",
             },
         )
 
@@ -507,7 +499,7 @@ class UserViewsTest(TestCase):
             {
                 "first_name": "Test",
                 "last_name": "User",
-                "email": "test@example.com",
+                "email": "test@rijksoverheid.nl",
             },
         )
 
@@ -519,7 +511,7 @@ class UserViewsTest(TestCase):
         # Create user with only view permission
         user_view_only = User.objects.create(
             username="view_only3",
-            email="viewonly3@example.com",
+            email="viewonly3@rijksoverheid.nl",
             first_name="View",
             last_name="Only3",
         )
@@ -533,7 +525,7 @@ class UserViewsTest(TestCase):
             {
                 "first_name": "Unauthorized",
                 "last_name": "Edit",
-                "email": "unauthorized@example.com",
+                "email": "unauthorized@rijksoverheid.nl",
             },
         )
         assert response.status_code == 403
@@ -546,7 +538,7 @@ class UserViewsTest(TestCase):
         """Test that getting the user edit form returns 403 without change_user permission"""
         user_no_change = User.objects.create(
             username="no_change",
-            email="nochange@example.com",
+            email="nochange@rijksoverheid.nl",
             first_name="No",
             last_name="Change",
         )
@@ -568,13 +560,6 @@ class UserViewsTest(TestCase):
         assert "utrecht-form-field" in content
 
 
-@override_settings(
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class UserImportTest(TestCase):
     """Tests for CSV user import functionality"""
 
@@ -595,7 +580,7 @@ class UserImportTest(TestCase):
         # Create authenticated user with add_user permission
         self.auth_user = User.objects.create(
             username="testuser",
-            email="test@example.com",
+            email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
         )
@@ -605,7 +590,7 @@ class UserImportTest(TestCase):
         # Create user without permissions
         self.no_perm_user = User.objects.create(
             username="nopermuser",
-            email="noperm@example.com",
+            email="noperm@rijksoverheid.nl",
             first_name="No",
             last_name="Permission",
         )
@@ -660,8 +645,8 @@ class UserImportTest(TestCase):
         """Test successful import of valid CSV with users"""
         self.client.force_login(self.auth_user)
         csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
-John,Doe,john.doe@example.com,Brand A,y,n,n
-Jane,Smith,jane.smith@example.com,Brand B,n,y,n"""
+John,Doe,john.doe@rijksoverheid.nl,Brand A,y,n,n
+Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         csv_file = self._create_csv_file(csv_content)
 
         response = self.client.post(self.import_url, {"csv_file": csv_file})
@@ -674,7 +659,7 @@ Jane,Smith,jane.smith@example.com,Brand B,n,y,n"""
         assert "Brand B" in content
 
         # Verify users were created
-        john = User.objects.get(email="john.doe@example.com")
+        john = User.objects.get(email="john.doe@rijksoverheid.nl")
         assert john.first_name == "John"
         assert john.last_name == "Doe"
         # Verify label was assigned (Brand A should be created as label)
@@ -682,7 +667,7 @@ Jane,Smith,jane.smith@example.com,Brand B,n,y,n"""
         assert john.groups.filter(name="Beheerder").exists()
         assert not john.groups.filter(name="Consultant").exists()
 
-        jane = User.objects.get(email="jane.smith@example.com")
+        jane = User.objects.get(email="jane.smith@rijksoverheid.nl")
         assert jane.first_name == "Jane"
         assert jane.groups.filter(name="Consultant").exists()
         assert not jane.groups.filter(name="Beheerder").exists()
@@ -691,7 +676,7 @@ Jane,Smith,jane.smith@example.com,Brand B,n,y,n"""
         """Test that import reuses existing labels instead of creating duplicates"""
         self.client.force_login(self.auth_user)
         csv_content = f"""first_name,last_name,email,brand,Administrator,Consultant,BDM
-John,Doe,john.doe@example.com,{self.existing_label.name},n,n,n"""
+John,Doe,john.doe@rijksoverheid.nl,{self.existing_label.name},n,n,n"""
         csv_file = self._create_csv_file(csv_content)
 
         label_count_before = Label.objects.count()
@@ -703,7 +688,7 @@ John,Doe,john.doe@example.com,{self.existing_label.name},n,n,n"""
         assert "Import geslaagd" in content
         assert Label.objects.count() == label_count_before
 
-        john = User.objects.get(email="john.doe@example.com")
+        john = User.objects.get(email="john.doe@rijksoverheid.nl")
         assert john.labels.filter(id=self.existing_label.id).exists()
 
     def test_import_validates_missing_required_columns(self):
@@ -724,8 +709,8 @@ John,Doe,john.doe@example.com,{self.existing_label.name},n,n,n"""
         """Test that import validates required fields have values"""
         self.client.force_login(self.auth_user)
         csv_content = """first_name,last_name,email
-John,,john@example.com
-,Doe,jane@example.com"""
+John,,john@rijksoverheid.nl
+,Doe,jane@rijksoverheid.nl"""
         csv_file = self._create_csv_file(csv_content)
 
         response = self.client.post(self.import_url, {"csv_file": csv_file})
@@ -757,8 +742,8 @@ Jane,Smith,also-invalid"""
         """Test that import validates group columns have 'y' or 'n' values"""
         self.client.force_login(self.auth_user)
         csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
-John,Doe,john@example.com,Brand A,yes,n,n
-Jane,Smith,jane@example.com,Brand B,y,maybe,n"""
+John,Doe,john@rijksoverheid.nl,Brand A,yes,n,n
+Jane,Smith,jane@rijksoverheid.nl,Brand B,y,maybe,n"""
         csv_file = self._create_csv_file(csv_content)
 
         response = self.client.post(self.import_url, {"csv_file": csv_file})
@@ -774,8 +759,8 @@ Jane,Smith,jane@example.com,Brand B,y,maybe,n"""
         """Test that import detects duplicate emails within the CSV"""
         self.client.force_login(self.auth_user)
         csv_content = """first_name,last_name,email
-John,Doe,duplicate@example.com
-Jane,Smith,duplicate@example.com"""
+John,Doe,duplicate@rijksoverheid.nl
+Jane,Smith,duplicate@rijksoverheid.nl"""
         csv_file = self._create_csv_file(csv_content)
 
         response = self.client.post(self.import_url, {"csv_file": csv_file})
@@ -789,11 +774,13 @@ Jane,Smith,duplicate@example.com"""
         """Test that import skips users with existing email addresses"""
         self.client.force_login(self.auth_user)
         # Create existing user
-        User.objects.create(username="existing", email="existing@example.com", first_name="Existing", last_name="User")
+        User.objects.create(
+            username="existing", email="existing@rijksoverheid.nl", first_name="Existing", last_name="User"
+        )
 
         csv_content = """first_name,last_name,email
-John,Doe,john@example.com
-Jane,Smith,existing@example.com"""
+John,Doe,john@rijksoverheid.nl
+Jane,Smith,existing@rijksoverheid.nl"""
         csv_file = self._create_csv_file(csv_content)
 
         response = self.client.post(self.import_url, {"csv_file": csv_file})
@@ -805,14 +792,14 @@ Jane,Smith,existing@example.com"""
         assert "already exists" in content
 
         # Verify only John was created
-        assert User.objects.filter(email="john@example.com").exists()
-        assert User.objects.filter(email="existing@example.com").count() == 1
+        assert User.objects.filter(email="john@rijksoverheid.nl").exists()
+        assert User.objects.filter(email="existing@rijksoverheid.nl").count() == 1
 
     def test_import_without_optional_fields(self):
         """Test import with only required fields (no brand, no groups)"""
         self.client.force_login(self.auth_user)
         csv_content = """first_name,last_name,email
-John,Doe,john@example.com"""
+John,Doe,john@rijksoverheid.nl"""
         csv_file = self._create_csv_file(csv_content)
 
         response = self.client.post(self.import_url, {"csv_file": csv_file})
@@ -821,7 +808,7 @@ John,Doe,john@example.com"""
         content = response.content.decode()
         assert "Import geslaagd" in content
 
-        john = User.objects.get(email="john@example.com")
+        john = User.objects.get(email="john@rijksoverheid.nl")
         assert john.labels.count() == 0
         assert john.groups.count() == 0
 
@@ -829,7 +816,7 @@ John,Doe,john@example.com"""
         """Test user assigned to multiple groups"""
         self.client.force_login(self.auth_user)
         csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
-John,Doe,john@example.com,Brand A,y,y,y"""
+John,Doe,john@rijksoverheid.nl,Brand A,y,y,y"""
         csv_file = self._create_csv_file(csv_content)
 
         response = self.client.post(self.import_url, {"csv_file": csv_file})
@@ -838,7 +825,7 @@ John,Doe,john@example.com,Brand A,y,y,y"""
         content = response.content.decode()
         assert "Import geslaagd" in content
 
-        john = User.objects.get(email="john@example.com")
+        john = User.objects.get(email="john@rijksoverheid.nl")
         assert john.groups.count() == 3
         assert john.groups.filter(name="Beheerder").exists()
         assert john.groups.filter(name="Consultant").exists()
@@ -874,7 +861,7 @@ John,Doe,john@example.com,Brand A,y,y,y"""
         """Test that validation happens before any users are created"""
         self.client.force_login(self.auth_user)
         csv_content = """first_name,last_name,email
-John,Doe,john@example.com
+John,Doe,john@rijksoverheid.nl
 Jane,Smith,invalid-email"""
         csv_file = self._create_csv_file(csv_content)
 
@@ -892,7 +879,7 @@ Jane,Smith,invalid-email"""
         """Test that import properly trims whitespace from fields"""
         self.client.force_login(self.auth_user)
         csv_content = """first_name,last_name,email,brand,Beheerder,Consultant,BDM
-  John  ,  Doe  ,  john@example.com  ,  Brand A  , y , n , n """
+  John  ,  Doe  ,  john@rijksoverheid.nl  ,  Brand A  , y , n , n """
         csv_file = self._create_csv_file(csv_content)
 
         response = self.client.post(self.import_url, {"csv_file": csv_file})
@@ -901,7 +888,7 @@ Jane,Smith,invalid-email"""
         content = response.content.decode()
         assert "Import geslaagd" in content
 
-        john = User.objects.get(email="john@example.com")
+        john = User.objects.get(email="john@rijksoverheid.nl")
         assert john.first_name == "John"
         assert john.last_name == "Doe"
         assert john.labels.filter(name="Brand A").exists()

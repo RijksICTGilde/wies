@@ -1,18 +1,11 @@
 from django.contrib.auth.models import Group
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.models import Label, LabelCategory, User
 from wies.core.roles import setup_roles
 
 
-@override_settings(
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class RBACSetupTest(TestCase):
     """Integration tests for RBAC role setup"""
 
@@ -43,7 +36,7 @@ class RBACSetupTest(TestCase):
         # Create user and add to Beheerder group
         admin_user = User.objects.create(
             username="admin_user",
-            email="admin@example.com",
+            email="admin@rijksoverheid.nl",
             first_name="Admin",
             last_name="User",
         )
@@ -69,17 +62,17 @@ class RBACSetupTest(TestCase):
             {
                 "first_name": "New",
                 "last_name": "User",
-                "email": "newuser@example.com",
+                "email": "newuser@rijksoverheid.nl",
                 "labels": [label.id],
             },
         )
         assert response.status_code == 302
-        assert User.objects.filter(email="newuser@example.com").exists()
+        assert User.objects.filter(email="newuser@rijksoverheid.nl").exists()
 
         # Test user deletion
         user_to_delete = User.objects.create(
             username="delete_me",
-            email="deleteme@example.com",
+            email="deleteme@rijksoverheid.nl",
             first_name="Delete",
             last_name="Me",
         )
