@@ -157,6 +157,9 @@ AUTHENTICATION_BACKENDS = [
 
 AUTH_USER_MODEL = "core.User"
 
+# Allowed email domains for ODI users
+ALLOWED_EMAIL_DOMAINS = ["@rijksoverheid.nl", "@minbzk.nl"]
+
 # OTYS API settings
 OTYS_API_KEY = os.environ.get("OTYS_API_KEY", "")
 OTYS_URL = os.environ.get("OTYS_URL", "")

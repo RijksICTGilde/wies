@@ -2,13 +2,28 @@ import csv
 import uuid
 from io import StringIO
 
+from django.conf import settings
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
-from wies.core.errors import EmailNotAvailableError
+from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import DEFAULT_LABELS, Label, LabelCategory, User
 from wies.core.services.events import create_event
+
+
+def is_allowed_email_domain(email: str) -> bool:
+    """Check if the email address has an allowed domain."""
+    allowed_domains = getattr(settings, "ALLOWED_EMAIL_DOMAINS", [])
+    if not allowed_domains:
+        return True
+    return any(email.lower().endswith(domain) for domain in allowed_domains)
+
+
+def validate_email_domain(email: str, *, user_facing: bool = False) -> None:
+    """Validate email domain. Raises InvalidEmailDomainError if invalid."""
+    if not is_allowed_email_domain(email):
+        raise InvalidEmailDomainError(email, user_facing=user_facing)
 
 
 def create_user(creator: User, first_name, last_name, email, labels=None, groups=None):
@@ -18,6 +33,9 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
 
     if groups is None:
         groups = []
+
+    # Validate email domain
+    validate_email_domain(email)
 
     # django built in User model necessitates a username, this generates a random one
     random_username = uuid.uuid4()
@@ -61,6 +79,9 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
 
     if groups is None:
         groups = []
+
+    # Validate email domain
+    validate_email_domain(email)
 
     try:
         user_with_email = User.objects.get(email=email)
@@ -163,6 +184,11 @@ def create_users_from_csv(creator, csv_content: str):
                 validate_email(email)
             except ValidationError:
                 row_errors.append(f"Row {row_num}: invalid email format '{email}'")
+
+            if not is_allowed_email_domain(email):
+                allowed_domains = getattr(settings, "ALLOWED_EMAIL_DOMAINS", [])
+                domains_str = ", ".join(allowed_domains)
+                row_errors.append(f"Row {row_num}: email '{email}' has invalid domain. Allowed: {domains_str}")
 
         for group_name in ["Beheerder", "Consultant", "BDM"]:
             if group_name in row:

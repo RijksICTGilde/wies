@@ -25,7 +25,7 @@ from .roles import user_can_edit_assignment
 from .services.events import create_event
 from .services.placements import create_placements_from_csv, filter_placements_by_period
 from .services.sync import sync_all_otys_iir_records
-from .services.users import create_user, create_users_from_csv, update_user
+from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
 logger = logging.getLogger(__name__)
 
@@ -50,15 +50,9 @@ oauth.register(
 
 @login_not_required  # login page cannot require login
 def login(request):
-    """Display login page or handle login action"""
-    if request.method == "GET":
-        # Show the login page
-        return render(request, "login.html")
-    if request.method == "POST":
-        # Handle login action
-        redirect_uri = request.build_absolute_uri(reverse_lazy("auth"))
-        return oauth.oidc.authorize_redirect(request, redirect_uri)
-    return None
+    """Redirect directly to Keycloak for authentication"""
+    redirect_uri = request.build_absolute_uri(reverse_lazy("auth"))
+    return oauth.oidc.authorize_redirect(request, redirect_uri)
 
 
 @login_not_required  # called by oidc, cannot have login
@@ -78,12 +72,16 @@ def auth(request):
         return redirect(request.build_absolute_uri(reverse("home")))
 
     logger.info("login not successful, access denied")
+    # Store email for no_access page
+    request.session["failed_login_email"] = email
     return redirect("/geen-toegang/")
 
 
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
 def no_access(request):
-    return render(request, "no_access.html")
+    email = request.session.pop("failed_login_email", None)
+    is_allowed_domain = email and is_allowed_email_domain(email)
+    return render(request, "no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
 
 
 @login_not_required  # logout should be accessible without login

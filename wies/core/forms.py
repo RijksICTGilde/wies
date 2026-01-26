@@ -8,6 +8,7 @@ from django.forms.utils import ErrorList
 from django.template import engines
 
 from .models import Label, LabelCategory, User
+from .services.users import validate_email_domain
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +139,7 @@ class UserForm(RvoFormMixin, forms.ModelForm):
 
     first_name = forms.CharField(label="Voornaam", required=True)
     last_name = forms.CharField(label="Achternaam", required=True)
-    email = forms.EmailField(label="Email (ODI)", required=True)
+    email = forms.EmailField(label="E-mail (ODI)", required=True)
     groups = forms.ModelMultipleChoiceField(
         label="Rollen",
         queryset=Group.objects.filter(),
@@ -152,6 +153,11 @@ class UserForm(RvoFormMixin, forms.ModelForm):
         model = User
         fields = ["first_name", "last_name", "email", "groups"]
         # label attribute is manually constructed and serialized below
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email", "").lower()
+        validate_email_domain(email, user_facing=True)
+        return email
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

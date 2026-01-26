@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 139: Skip login page, redirect directly to Keycloak (SSO-Rijk)
+- 139: Improved "no access" page with context-specific messages based on email domain
+- 139: Add `ALLOWED_EMAIL_DOMAINS` setting for ODI email validation
+- 139: Add email domain validation to user create, edit and CSV import
 - 147: Add security headers (CSP, Permissions-Policy, HSTS, etc.)
 - 147: Serve vendor assets (htmx, RVO CSS) locally instead of from CDN
 - 143: Bump Django from 5.2.9 to 6.0.1
