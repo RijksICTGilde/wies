@@ -2,24 +2,24 @@
 {% block extra_head %}
   <link rel="stylesheet" href="{{ static('css/user_admin.css') }}">
   <script src="{{ static('js/dialog.js') }}"></script>
-{% endblock %}
-{% block layout_class %}app-layout--no-collapse{% endblock %}
+{% endblock extra_head %}
+{% block layout_class %}
+  app-layout--no-collapse
+{% endblock layout_class %}
 {# Geen sidebar header voor instellingen #}
-{% block sidebar_header %}{% endblock %}
-{# ============================================================
-   SIDEBAR: Menu navigatie
-   ============================================================ #}
+{% block sidebar_header %}
+{% endblock sidebar_header %}
 {% block sidebar %}
   <div class="app-sidebar__content">
     <nav class="settings-nav">
-      <a href="/instellingen/gebruikers/"
+      <a href="{{ url('admin-users') }}"
          class="settings-nav__item {% if '/gebruikers/' in request.path %}settings-nav__item--active{% endif %}">
         <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--logoblauw"
               role="img"
               aria-label="Gebruikers"></span>
         Gebruikers
       </a>
-      <a href="/instellingen/labels/"
+      <a href="{{ url('admin-labels') }}"
          class="settings-nav__item {% if '/labels/' in request.path %}settings-nav__item--active{% endif %}">
         <span class="utrecht-icon rvo-icon rvo-icon-label rvo-icon--md rvo-icon--logoblauw"
               role="img"
@@ -28,19 +28,16 @@
       </a>
     </nav>
   </div>
-{% endblock %}
-{# ============================================================
-   MAIN CONTENT: Gebruikers overzicht
-   ============================================================ #}
+{% endblock sidebar %}
 {% block content %}
   <div class="rvo-layout-column rvo-layout-gap--xl">
     <c-h1>Gebruikers</c-h1>
-    {% with url_name='admin-users', target_selector='#user_table', primary_button=primary_button %}
-      {% include 'parts/generic_filter_bar.html' %}
+    {% with url_name="admin-users", target_selector="#user_table", primary_button=primary_button %}
+      {% include "parts/generic_filter_bar.html" %}
     {% endwith %}
     <!-- Content -->
-    <div id="user_table" class="rvo-table-container">{% include 'parts/user_table.html' %}</div>
+    <div id="user_table" class="rvo-table-container">{% include "parts/user_table.html" %}</div>
     <!-- Modal container -->
     <div id="userFormModal"></div>
   </div>
-{% endblock %}
+{% endblock content %}

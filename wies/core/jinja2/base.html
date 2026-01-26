@@ -20,21 +20,23 @@
           href="{{ static('@nl-rvo/assets/icons/index.css') }}">
     <link rel="stylesheet"
           href="{{ static('@nl-rvo/assets/fonts/index.css') }}">
+    <link rel="stylesheet" href="{{ static('css/rvo_overwrite.css') }}">
     <link rel="stylesheet" href="{{ static('css/base.css') }}">
+    <link rel="stylesheet" href="{{ static('css/app_layout.css') }}">
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
     <script src="{{ static('js/app_layout.js') }}"></script>
     {% block extra_head %}
     {% endblock extra_head %}
   </head>
   <body class="rvo-theme">
-    {% include 'parts/app_header.html' %}
+    {% include "parts/app_header.html" %}
     <div class="app-layout {% if request.GET.get('filters') == '0' %}app-layout--collapsed{% endif %} {% block layout_class %}{% endblock layout_class %}"
          id="app-layout">
       <div class="app-body">
-        {% include 'parts/app_menubar.html' %}
+        {% include "parts/app_menubar.html" %}
         <aside class="app-sidebar {% block sidebar_class %}{% endblock sidebar_class %}">
           {% block sidebar_header %}
-            {% include 'parts/app_sidebar_toggle.html' %}
+            {% include "parts/app_sidebar_toggle.html" %}
           {% endblock sidebar_header %}
           {% block sidebar %}
           {% endblock sidebar %}
