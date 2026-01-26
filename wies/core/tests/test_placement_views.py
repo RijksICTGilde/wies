@@ -14,7 +14,7 @@ class PlacementImportTest(TestCase):
     def setUp(self):
         """Create test data"""
         self.client = Client()
-        self.import_url = reverse("placement-import-csv")
+        self.import_url = reverse("assignment-import-csv")
 
         # Create test groups
         self.admin_group = Group.objects.create(name="Beheerder")
@@ -85,7 +85,7 @@ class PlacementImportTest(TestCase):
         content = response.content.decode()
         assert "Plaatsingen" in content
         assert "csv_file" in content
-        assert "example_placement_import.csv" in content
+        assert "example_assignment_import.csv" in content
 
     def test_import_requires_file_upload(self):
         """Test that import requires a file to be uploaded"""
@@ -107,7 +107,7 @@ class PlacementImportTest(TestCase):
         content = response.content.decode()
         assert "Ongeldig bestandstype" in content
 
-    @patch("wies.core.views.create_placements_from_csv")
+    @patch("wies.core.views.create_assignments_from_csv")
     def test_import_successful_result_display(self, mock_create_placements):
         """Test that successful import displays correct result information"""
         # Mock the service function to return success
@@ -148,7 +148,7 @@ Test Assignment,Test Description,John Owner,john@rijksoverheid.nl,Test Org,BZK,0
         call_args = mock_create_placements.call_args[0][0]
         assert "Test Assignment" in call_args
 
-    @patch("wies.core.views.create_placements_from_csv")
+    @patch("wies.core.views.create_assignments_from_csv")
     def test_import_error_result_display(self, mock_create_placements):
         """Test that failed import displays error messages properly"""
         # Mock the service function to return failure

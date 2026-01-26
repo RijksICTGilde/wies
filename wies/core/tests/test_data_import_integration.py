@@ -4,7 +4,7 @@ from django.contrib.auth.models import Group
 from django.test import TestCase
 
 from wies.core.models import Colleague, Label, LabelCategory, User
-from wies.core.services.placements import create_placements_from_csv
+from wies.core.services.placements import create_assignments_from_csv
 from wies.core.services.sync import sync_all_otys_iir_records
 from wies.core.services.users import create_users_from_csv
 
@@ -124,12 +124,12 @@ Different,Name,duplicate@rijksoverheid.nl,Brand B"""
         assert user.first_name == "Original"
         assert user.last_name == "Name"
 
-    def test_csv_placement_import_assigns_rijks_ict_gilde_label(self):
+    def test_csv_assignment_import_assigns_rijks_ict_gilde_label(self):
         """Test: CSV placement import assigns Rijks ICT Gilde label to new colleagues"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
 Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,Test Org,,01-01-2025,31-12-2025,Python,John Doe,john@rijksoverheid.nl"""
 
-        result = create_placements_from_csv(csv_content)
+        result = create_assignments_from_csv(csv_content)
 
         assert result["success"]
         assert result["colleagues_created"] > 0
@@ -147,7 +147,7 @@ Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,Test Org,,01-
         owner = Colleague.objects.get(email="owner@rijksoverheid.nl")
         assert rig_label in owner.labels.all()
 
-    def test_csv_placement_import_existing_colleague_no_duplicate_label(self):
+    def test_csv_assignment_import_existing_colleague_no_duplicate_label(self):
         """Test: Re-importing placement for existing colleague doesn't duplicate label"""
         # Pre-create colleague with label (use get_or_create to avoid conflicts)
         merken_category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
@@ -162,7 +162,7 @@ Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,Test Org,,01-
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
 New Assignment,Description,,,Test Org,,01-01-2025,31-12-2025,Django,Existing Colleague,existing@rijksoverheid.nl"""
 
-        result = create_placements_from_csv(csv_content)
+        result = create_assignments_from_csv(csv_content)
 
         assert result["success"]
 

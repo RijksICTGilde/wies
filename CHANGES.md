@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 149: Change `/plaatsingen/importeren` to `/opdrachten/importeren`
 - 149: Change home page from redirect to `/plaatsingen/` to serve placements directly at `/`
 - 139: Skip login page, redirect directly to Keycloak (SSO-Rijk)
 - 139: Improved "no access" page with context-specific messages based on email domain
