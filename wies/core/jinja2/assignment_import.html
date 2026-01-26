@@ -4,10 +4,10 @@
     <div class="rvo-layout-column rvo-layout-gap--md">
       <c-h1>Plaatsingen RIG importeren</c-h1>
       <form method="post"
-            action="{{ url('placement-import-csv') }}"
+            action="{{ url('assignment-import-csv') }}"
             enctype="multipart/form-data">
         {{ get_csrf_hidden_input(request) }}
-        <c-alert>Upload een CSV-bestand met plaatsingsgegevens. <c-link href="{{ static('example_placement_import.csv') }}">Download het voorbeeldbestand</c-link> om het juiste formaat te zien.</c-alert>
+        <c-alert>Upload een CSV-bestand met plaatsingsgegevens. <c-link href="{{ static('example_assignment_import.csv') }}">Download het voorbeeldbestand</c-link> om het juiste formaat te zien.</c-alert>
         <br>
         {# TODO JRC: required attribute puts red border around field, which is poor UX on first load. this seems to be different for the react component #}
         <c-file-input-field accept=".csv" label="CSV-bestand" name="csv_file" />

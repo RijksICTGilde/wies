@@ -231,12 +231,12 @@ class LabelManagementIntegrationTest(TestCase):
         """Test: Beheer menu only visible to users with appropriate permissions"""
         # Regular user without permissions
         self.client.force_login(self.regular_user)
-        response = self.client.get(reverse("placements"))
+        response = self.client.get(reverse("home"))
         assert response.status_code == 200
         self.assertNotContains(response, "Instellingen")
 
         # Admin user with permissions
         self.client.force_login(self.admin_user)
-        response = self.client.get(reverse("placements"))
+        response = self.client.get(reverse("home"))
         assert response.status_code == 200
         self.assertContains(response, "Instellingen")

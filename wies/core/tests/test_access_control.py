@@ -38,7 +38,7 @@ class AccessControlTest(TestCase):
 
     def test_unauthenticated_access_to_placements_redirects_to_login(self):
         """Specific test for placements view (main landing page)"""
-        response = self.client.get("/plaatsingen/", follow=False)
+        response = self.client.get("/", follow=False)
 
         assert response.status_code == 302
         assert response.url.startswith(reverse("login"))

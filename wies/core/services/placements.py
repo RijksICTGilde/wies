@@ -62,7 +62,7 @@ def filter_placements_by_period(queryset, period):
         return queryset
 
 
-def create_placements_from_csv(csv_content: str):
+def create_assignments_from_csv(csv_content: str):
     """
     Create colleagues, assignments, services and placements from csv
     """

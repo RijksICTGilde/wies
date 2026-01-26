@@ -23,7 +23,7 @@ from .models import Assignment, Colleague, Label, LabelCategory, Ministry, Place
 from .querysets import annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
-from .services.placements import create_placements_from_csv, filter_placements_by_period
+from .services.placements import create_assignments_from_csv, filter_placements_by_period
 from .services.sync import sync_all_otys_iir_records
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
@@ -199,7 +199,7 @@ class PlacementListView(ListView):
         params.update(request.GET)
         params.pop("collega", None)
         params.pop("opdracht", None)
-        return f"/plaatsingen/?{params.urlencode()}" if params else "/plaatsingen/"
+        return f"{reverse('home')}?{params.urlencode()}" if params else reverse("home")
 
     def _build_assignment_url(self, request, assignment_id):
         """Build assignment panel URL preserving current filters"""
@@ -207,19 +207,19 @@ class PlacementListView(ListView):
         params.update(request.GET)
         params.pop("opdracht", None)
         params["opdracht"] = assignment_id
-        return f"/plaatsingen/?{params.urlencode()}"
+        return f"{reverse('home')}?{params.urlencode()}"
 
     def _build_client_url(self, client_name):
         """Build client filter URL"""
         params = QueryDict(mutable=True)
         params["opdrachtgever"] = client_name
-        return f"/plaatsingen/?{params.urlencode()}"
+        return f"{reverse('home')}?{params.urlencode()}"
 
     def _build_ministry_url(self, ministry_id):
         """Build ministry filter URL"""
         params = QueryDict(mutable=True)
         params["ministerie"] = ministry_id
-        return f"/plaatsingen/?{params.urlencode()}"
+        return f"{reverse('home')}?{params.urlencode()}"
 
     def _build_colleague_url(self, colleague_id):
         """Build colleague panel URL preserving current filters"""
@@ -228,7 +228,7 @@ class PlacementListView(ListView):
         params.pop("collega", None)
         params.pop("opdracht", None)
         params["collega"] = colleague_id
-        return f"/plaatsingen/?{params.urlencode()}"
+        return f"{reverse('home')}?{params.urlencode()}"
 
     def _get_colleague_assignments(self, colleague):
         """Get assignments for a colleague"""
@@ -817,23 +817,23 @@ def user_import_csv(request):
     ],
     raise_exception=True,
 )
-def placement_import_csv(request):
+def assignment_import_csv(request):
     """
-    Import placements from a CSV file.
+    Import assignments from a CSV file.
 
     GET: Display the import form
-    POST: Process the uploaded CSV file and create placements
-          (with related assignments, services, colleagues, and skills)
+    POST: Process the uploaded CSV file and create assignments
+          (with related services, placements, colleagues, and skills)
 
-    For expected CSV format, see create_placements_from_csv function
+    For expected CSV format, see create_assignment_from_csv function
     """
     if request.method == "GET":
-        return render(request, "placement_import.html")
+        return render(request, "assignment_import.html")
     if request.method == "POST":
         if "csv_file" not in request.FILES:
             return render(
                 request,
-                "placement_import.html",
+                "assignment_import.html",
                 {"result": {"success": False, "errors": ["Geen bestand geüpload. Upload een CSV-bestand."]}},
             )
 
@@ -842,7 +842,7 @@ def placement_import_csv(request):
         if not csv_file.name.endswith(".csv"):
             return render(
                 request,
-                "placement_import.html",
+                "assignment_import.html",
                 {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
             )
 
@@ -851,14 +851,14 @@ def placement_import_csv(request):
         except UnicodeDecodeError:
             return render(
                 request,
-                "placement_import.html",
+                "assignment_import.html",
                 {"result": {"success": False, "errors": ["Invalid CSV file encoding. Please use UTF-8."]}},
             )
 
-        result = create_placements_from_csv(csv_content)
+        result = create_assignments_from_csv(csv_content)
 
         # Return results in the form
-        return render(request, "placement_import.html", {"result": result})
+        return render(request, "assignment_import.html", {"result": result})
     return HttpResponse(status=405)
 
 
