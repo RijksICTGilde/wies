@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 172: Move dummy_data.json to wies/core/fixtures/
 - 149: Change `/plaatsingen/importeren` to `/opdrachten/importeren`
 - 149: Change home page from redirect to `/plaatsingen/` to serve placements directly at `/`
 - 139: Skip login page, redirect directly to Keycloak (SSO-Rijk)
