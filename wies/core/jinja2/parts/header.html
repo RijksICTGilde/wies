@@ -7,7 +7,8 @@
           <ul class="rvo-menubar__group--flex">
             <li class="rvo-menubar__item">
               <a href="{{ url('placements') }}"
-                 class="rvo-link rvo-link--no-underline rvo-link--logoblauw {% if "/plaatsingen/" in request.path %}menu-item--active{% endif %}">
+                 class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw {% if '/plaatsingen/' in request.path %}menu-item--active{% endif %}">
+                <img src="{{ static('wies.svg') }}" alt="Wies logo" class="wies-logo">
                 Wie zit waar?
               </a>
             </li>
