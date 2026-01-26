@@ -4,7 +4,7 @@ from pathlib import Path
 import pytest
 from django.test import TestCase, override_settings
 
-from wies.core.models import Assignment, Colleague, Ministry, Placement, Service, Skill
+from wies.core.models import Assignment, Colleague, OrganizationUnit, Placement, Service, Skill
 from wies.core.services.placements import create_placements_from_csv, parse_date_dmy
 
 
@@ -45,7 +45,11 @@ class ParseDateDmyTest(TestCase):
 class CreateFromCSVTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        Ministry.objects.create(name="Ministerie van Binnenlandse Zaken en Koninkrijksrelaties", abbreviation="BZK")
+        cls.bzk = OrganizationUnit.objects.create(
+            name="Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
+            abbreviations=["BZK"],
+            organization_type="ministerie",
+        )
 
     def test_sample_csv_success(self):
         sample_csv_path = Path(__file__).parent.parent / "static" / "example_placement_import.csv"
@@ -103,17 +107,16 @@ Test Assignment,Description,Owner,owner@test.com,Org,Ministerie van Binnenlandse
         assert not result["success"]
         assert len(result["errors"]) > 0
 
-    def test_non_existent_ministry(self):
-        """Test that non-existent ministry name is created automatically"""
+    def test_non_existent_organization(self):
+        """Test that non-existent organization name does not create a link"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Description,Owner,owner@test.com,Org,Ministerie van Test,01-01-2025,28-02-2025,Python,John,john@test.com"""
+Test Assignment,Description,Owner,owner@test.com,Org,Non-existent Organization,01-01-2025,28-02-2025,Python,John,john@test.com"""
 
         result = create_placements_from_csv(csv_content)
         assert result["success"]
-        assert result["ministries_created"] == 1
-        # Verify ministry was created with name as both name and abbreviation
-        ministry = Ministry.objects.get(name="Ministerie van Test")
-        assert ministry.abbreviation == "Ministerie van Test"
+        # Assignment is created but without organization link
+        assignment = Assignment.objects.get(name="Test Assignment")
+        assert assignment.get_primary_organization() is None
 
     # Business Logic Tests
     def test_multiple_services_per_assignment(self):
@@ -171,7 +174,7 @@ Test Assignment,Description,John Doe,john@test.com,Org,Ministerie van Binnenland
 
     # Edge Case Tests
     def test_empty_optional_fields(self):
-        """Test that empty optional fields (owner email, ministry, dates, skill) are handled as None"""
+        """Test that empty optional fields (owner email, dates, skill) are handled as None"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
 Test Assignment,Description,Owner Name,,Org,,,,,John Doe,john@test.com"""
 
@@ -179,7 +182,6 @@ Test Assignment,Description,Owner Name,,Org,,,,,John Doe,john@test.com"""
         assert result["success"]
         assignment = Assignment.objects.get(name="Test Assignment", source="wies")
         assert assignment.owner is None
-        assert assignment.ministry is None
         assert assignment.start_date is None
         assert assignment.end_date is None
 
@@ -240,9 +242,10 @@ Test Assignment,Description,Owner Name,owner@test.com,Test Org,Ministerie van Bi
         assert assignment.owner is not None
         assert assignment.owner.email == "owner@test.com"
 
-        # Verify Assignment -> Ministry relationship
-        assert assignment.ministry is not None
-        assert assignment.ministry.name == "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties"
+        # Verify Assignment -> Organization relationship
+        primary_org = assignment.get_primary_organization()
+        assert primary_org is not None
+        assert primary_org.name == "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties"
 
         # Verify Service -> Assignment relationship
         service = Service.objects.get(assignment=assignment)

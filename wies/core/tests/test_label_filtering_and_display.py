@@ -2,7 +2,17 @@ from django.contrib.auth.models import Permission
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from wies.core.models import Assignment, Colleague, Label, LabelCategory, Ministry, Placement, Service, Skill, User
+from wies.core.models import (
+    Assignment,
+    Colleague,
+    Label,
+    LabelCategory,
+    OrganizationUnit,
+    Placement,
+    Service,
+    Skill,
+    User,
+)
 
 
 @override_settings(
@@ -61,10 +71,10 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.colleague3.labels.add(self.rig_label)
 
         # Create placements
-        self.ministry = Ministry.objects.create(name="Test Ministry", abbreviation="TM")
-        self.assignment = Assignment.objects.create(
-            name="Test Assignment", organization="Test Org", ministry=self.ministry, source="wies", status="INGEVULD"
+        self.organization = OrganizationUnit.objects.create(
+            name="Test Organization", abbreviations=["TO"], organization_type="ministerie"
         )
+        self.assignment = Assignment.objects.create(name="Test Assignment", source="wies", status="INGEVULD")
         self.skill = Skill.objects.create(name="Python")
         self.service = Service.objects.create(assignment=self.assignment, skill=self.skill, source="wies")
 

@@ -1,8 +1,14 @@
+# Wies Docker Compose
+#
+# Usage:
+#   docker compose up              # Start django only
+#   docker compose --profile cron up  # Start django + cron scheduler
+#
 services:
   django:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: docker/Dockerfile
     container_name: wies-django
     ports:
       - 8000:8000
@@ -10,3 +16,19 @@ services:
       - .:/app:z
     command: python manage.py runserver 0.0.0.0:8000
     env_file: .env
+
+  # Cron service - only starts with --profile cron
+  cron:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: wies-cron
+    user: root # cron requires root
+    volumes:
+      - .:/app:z
+    command: /app/docker/cron-entrypoint.sh
+    env_file: .env
+    profiles:
+      - cron
+    depends_on:
+      - django

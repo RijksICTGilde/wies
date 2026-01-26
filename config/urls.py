@@ -21,6 +21,7 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from wies.core.views import (
+    OrganizationUnitListView,
     PlacementListView,
     UserListView,
     admin_db,
@@ -40,6 +41,9 @@ from wies.core.views import (
     login,
     logout,
     no_access,
+    organization_create,
+    organization_delete,
+    organization_edit,
     placement_import_csv,
     robots_txt,
     user_create,
@@ -81,6 +85,10 @@ urlpatterns = [
     path("instellingen/labels/categorie/<int:pk>/labels/aanmaken/", label_create),
     path("instellingen/labels/<int:pk>/bewerken/", label_edit, name="label-edit"),
     path("instellingen/labels/<int:pk>/verwijderen/", label_delete, name="label-delete"),
+    path("instellingen/organisaties/", OrganizationUnitListView.as_view(), name="organization-list"),
+    path("instellingen/organisaties/aanmaken/", organization_create, name="organization-create"),
+    path("instellingen/organisaties/<int:pk>/bewerken/", organization_edit, name="organization-edit"),
+    path("instellingen/organisaties/<int:pk>/verwijderen/", organization_delete, name="organization-delete"),
 ]
 
 # Custom error handlers

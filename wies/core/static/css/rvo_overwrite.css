@@ -56,3 +56,10 @@
 .rvo-max-width-layout--placements .rvo-menubar__group--flex:first-child {
   margin-left: calc(280px + 0.75rem);
 }
+
+/* Invalid form field styling - red border on fields with validation errors */
+.utrecht-form-field--invalid .utrecht-textbox,
+.utrecht-form-field--invalid .utrecht-select.utrecht-select--html-select,
+.utrecht-form-field--invalid .rvo-select-wrapper .rvo-select {
+  border-color: #d51b1e !important; /* --rvo-color-rood */
+}

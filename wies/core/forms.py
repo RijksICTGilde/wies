@@ -1,4 +1,5 @@
 import logging
+from typing import override
 
 from django import forms
 from django.contrib.auth.models import Group
@@ -6,8 +7,9 @@ from django.core.exceptions import ValidationError
 from django.forms.renderers import Jinja2
 from django.forms.utils import ErrorList
 from django.template import engines
+from django.utils import timezone
 
-from .models import Label, LabelCategory, User
+from .models import Label, LabelCategory, OrganizationType, OrganizationUnit, User
 
 logger = logging.getLogger(__name__)
 
@@ -51,18 +53,28 @@ class RvoFormMixin:
         "RadioSelect": "rvo/forms/widgets/radio.html",
     }
 
+    # Field types that need a custom field template
+    field_templates = {
+        "CheckboxInput": "rvo/forms/checkbox_field.html",
+    }
+
     def _configure_field_for_rvo(self, field_name):
         field = self.fields[field_name]
 
         # Disable HTML5 client-side required validation
         field.widget.use_required_attribute = lambda _: False
-        field.template_name = "rvo/forms/field.html"
+
+        # Check if this widget needs a custom field template
+        widget_class_name = field.widget.__class__.__name__
+        if widget_class_name in self.field_templates:
+            field.template_name = self.field_templates[widget_class_name]
+        else:
+            field.template_name = "rvo/forms/field.html"
 
         # Auto-assign widget template based on widget type
-        widget_class_name = field.widget.__class__.__name__
         if widget_class_name in self.widget_templates:
             field.widget.template_name = self.widget_templates[widget_class_name]
-        else:
+        elif widget_class_name not in self.field_templates:
             logger.warning(
                 "Widget '%s' for field '%s' not in RVO widget_templates mapping. Using default Django template.",
                 widget_class_name,
@@ -192,3 +204,72 @@ class UserForm(RvoFormMixin, forms.ModelForm):
                 cleaned_data["labels"].append(selected_label)
 
         return cleaned_data
+
+
+class OrganizationUnitForm(RvoFormMixin, forms.ModelForm):
+    """Form for creating and updating OrganizationUnit instances."""
+
+    name = forms.CharField(label="Naam", required=True)
+    abbreviations_input = forms.CharField(
+        label="Afkortingen",
+        required=False,
+        help_text="Komma-gescheiden (bijv. 'BZK, MinBZK')",
+    )
+    organization_type = forms.ChoiceField(
+        label="Type organisatie",
+        choices=OrganizationType.choices,
+    )
+    parent = forms.ModelChoiceField(
+        label="Bovenliggende organisatie",
+        queryset=OrganizationUnit.objects.active(),
+        required=False,
+    )
+    is_active = forms.BooleanField(label="Actief", required=False, initial=True)
+
+    class Meta:
+        model = OrganizationUnit
+        fields = ["name", "organization_type", "parent", "is_active"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Pre-fill abbreviations_input from model's JSONField
+        if self.instance and self.instance.pk and self.instance.abbreviations:
+            self.fields["abbreviations_input"].initial = ", ".join(self.instance.abbreviations)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        # Run model validation on a temp instance with form data
+        temp = OrganizationUnit(
+            pk=self.instance.pk if self.instance else None,
+            name=cleaned_data.get("name", ""),
+            organization_type=cleaned_data.get("organization_type", ""),
+            parent=cleaned_data.get("parent"),
+        )
+        try:
+            temp.clean()
+        except ValidationError as e:
+            # Add error to parent field since hierarchy errors relate to parent selection
+            self.add_error("parent", e.message)
+        return cleaned_data
+
+    @override
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+
+        # Track name changes in previous_names history
+        if instance.pk:
+            old_name = OrganizationUnit.objects.filter(pk=instance.pk).values_list("name", flat=True).first()
+            new_name = self.cleaned_data.get("name")
+            if old_name and new_name and old_name != new_name:
+                history_entry = {"name": old_name, "until": timezone.now().date().isoformat()}
+                instance.previous_names.append(history_entry)
+
+        # Convert comma-separated string to list
+        abbrev_input = self.cleaned_data.get("abbreviations_input", "")
+        if abbrev_input:
+            instance.abbreviations = [a.strip() for a in abbrev_input.split(",") if a.strip()]
+        else:
+            instance.abbreviations = []
+        if commit:
+            instance.save()
+        return instance

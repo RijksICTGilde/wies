@@ -16,3 +16,14 @@ Django dumpdata format:
 - model: "core.modelname"
 - pk: integer
 - fields: { field values }
+
+## Model Design Principles
+
+- **YAGNI**: Don't add fields/methods until needed
+- **Single source of truth**: Use config dicts for related constants:
+  ```python
+  CONFIG = {"key": {"label": "...", "is_x": True}}
+  MyChoices = models.TextChoices("MyChoices", {k.upper(): (k, v["label"]) for k, v in CONFIG.items()})
+  ```
+- **Validation**: Use `clean()` method, place right after `__str__`
+- **Unique optional fields**: Use `blank=True, null=True, unique=True`

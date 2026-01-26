@@ -50,10 +50,10 @@ class UserViewsTest(TestCase):
         self.label_a = Label.objects.create(name="Brand A", category=self.category)
         self.label_b = Label.objects.create(name="Brand B", category=self.category)
 
-        # Create test groups for form testing
-        self.admin_group = Group.objects.create(name="Beheerder")
-        self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name="Business Development Manager")
+        # Get or create test groups for form testing (migration may have created them)
+        self.admin_group, _ = Group.objects.get_or_create(name="Beheerder")
+        self.consultant_group, _ = Group.objects.get_or_create(name="Consultant")
+        self.bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
 
         # Create test users
         self.user1 = User.objects.create(
@@ -583,10 +583,10 @@ class UserImportTest(TestCase):
         self.client = Client()
         self.import_url = reverse("user-import-csv")
 
-        # Create test groups
-        self.admin_group = Group.objects.create(name="Beheerder")
-        self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name="Business Development Manager")
+        # Get or create test groups (migration may have created them)
+        self.admin_group, _ = Group.objects.get_or_create(name="Beheerder")
+        self.consultant_group, _ = Group.objects.get_or_create(name="Consultant")
+        self.bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
 
         # Create test label
         category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})

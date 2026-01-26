@@ -5,7 +5,7 @@ Language: Dutch UI, English code.
 
 ## Tech Stack
 
-- Django 5.2 with SQLite
+- Django 6.0 with SQLite
 - Jinja2 templates with jinja-roos-components (https://github.com/RijksICTGilde/jinja-roos-components)
 - RVO CSS classes for layout/styling (nl-design-system/rvo)
 - HTMX for interactivity
@@ -19,6 +19,8 @@ Language: Dutch UI, English code.
 - `just down` - Stop containers
 - `just test` - Run tests
 - `uv run ruff check --fix` - Lint and fix
+- `python manage.py sync_organizations` - Sync organizations from organisaties.overheid.nl
+- `docker compose --profile cron up` - Start with scheduled tasks
 
 ## Code Style
 
@@ -58,3 +60,4 @@ Language: Dutch UI, English code.
 - Templates: `wies/core/jinja2/`
 - Roles/Permissions: `wies/core/roles.py`
 - Dummy data: `dummy_data.json`
+- Organization sync: `wies/core/services/organizations.py`

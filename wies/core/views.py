@@ -18,8 +18,19 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.generic.list import ListView
 
-from .forms import LabelCategoryForm, LabelForm, UserForm
-from .models import Assignment, Colleague, Label, LabelCategory, Ministry, Placement, Service, Skill, User
+from .forms import LabelCategoryForm, LabelForm, OrganizationUnitForm, UserForm
+from .models import (
+    Assignment,
+    Colleague,
+    Label,
+    LabelCategory,
+    OrganizationType,
+    OrganizationUnit,
+    Placement,
+    Service,
+    Skill,
+    User,
+)
 from .querysets import annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
@@ -35,6 +46,29 @@ def get_delete_context(delete_url_name, object_pk, object_name):
     return {
         "delete_url": reverse(delete_url_name, args=[object_pk]),
         "delete_confirm_message": f"Weet je zeker dat je {object_name} wilt verwijderen?",
+    }
+
+
+def htmx_redirect(request, url_name, *args):
+    """Return appropriate redirect response for HTMX or regular requests."""
+    url = reverse(url_name, args=args) if args else reverse(url_name)
+    if "HX-Request" in request.headers:
+        response = HttpResponse(status=200)
+        response["HX-Redirect"] = url
+        return response
+    return redirect(url_name, *args)
+
+
+def modal_context(form, form_post_url, modal_title, button_label, element_id, **extra):
+    """Build standard modal context dict."""
+    return {
+        "content": form,
+        "form_post_url": form_post_url,
+        "modal_title": modal_title,
+        "form_button_label": button_label,
+        "modal_element_id": element_id,
+        "target_element_id": element_id,
+        **extra,
     }
 
 
@@ -108,7 +142,7 @@ def admin_db(request):
             Skill.objects.all().delete()
             Placement.objects.all().delete()
             Service.objects.all().delete()
-            Ministry.objects.all().delete()
+            OrganizationUnit.objects.all().delete()
             LabelCategory.objects.all().delete()
             Label.objects.all().delete()
         elif action == "load_data":
@@ -135,7 +169,7 @@ class PlacementListView(ListView):
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
         qs = (
-            Placement.objects.select_related("colleague", "service", "service__skill", "service__assignment__ministry")
+            Placement.objects.select_related("colleague", "service", "service__skill", "service__assignment")
             .prefetch_related("colleague__labels")
             .filter(service__assignment__status="INGEVULD")
             .order_by("-service__assignment__start_date")
@@ -147,9 +181,7 @@ class PlacementListView(ListView):
                 Q(colleague__name__icontains=search_filter)
                 | Q(service__assignment__name__icontains=search_filter)
                 | Q(service__assignment__extra_info__icontains=search_filter)
-                | Q(service__assignment__organization__icontains=search_filter)
-                | Q(service__assignment__ministry__name__icontains=search_filter)
-                | Q(service__assignment__ministry__abbreviation__icontains=search_filter)
+                | Q(service__assignment__organization_relations__organization__name__icontains=search_filter)
             )
 
         order_mapping = {
@@ -169,11 +201,16 @@ class PlacementListView(ListView):
         if self.request.GET.get("rol"):
             qs = qs.filter(service__skill__id=self.request.GET["rol"])
 
-        if self.request.GET.get("opdrachtgever"):
-            qs = qs.filter(service__assignment__organization=self.request.GET["opdrachtgever"])
-
-        if self.request.GET.get("ministerie"):
-            qs = qs.filter(service__assignment__ministry__id=self.request.GET["ministerie"])
+        if self.request.GET.get("organisatie"):
+            # Hierarchical filter: include selected org and all descendants
+            org_id = int(self.request.GET["organisatie"])
+            selected_org = OrganizationUnit.objects.filter(id=org_id).first()
+            if selected_org:
+                org_ids = [org_id] + [d.id for d in selected_org.get_descendants()]
+                qs = qs.filter(
+                    service__assignment__organization_relations__organization_id__in=org_ids,
+                    service__assignment__organization_relations__role="PRIMARY",
+                )
 
         # Label filter support multiselect
         for label_id in self.request.GET.getlist("labels"):
@@ -211,16 +248,10 @@ class PlacementListView(ListView):
         params["opdracht"] = assignment_id
         return f"/plaatsingen/?{params.urlencode()}"
 
-    def _build_client_url(self, client_name):
-        """Build client filter URL"""
+    def _build_organization_url(self, organization_id):
+        """Build organization filter URL"""
         params = QueryDict(mutable=True)
-        params["opdrachtgever"] = client_name
-        return f"/plaatsingen/?{params.urlencode()}"
-
-    def _build_ministry_url(self, ministry_id):
-        """Build ministry filter URL"""
-        params = QueryDict(mutable=True)
-        params["ministerie"] = ministry_id
+        params["organisatie"] = organization_id
         return f"/plaatsingen/?{params.urlencode()}"
 
     def _build_colleague_url(self, colleague_id):
@@ -233,22 +264,32 @@ class PlacementListView(ListView):
         return f"/plaatsingen/?{params.urlencode()}"
 
     def _get_colleague_assignments(self, colleague):
-        """Get assignments for a colleague"""
-        return (
+        """Get assignments for a colleague with organization info"""
+        placements = (
             Placement.objects.filter(colleague=colleague)
-            .select_related("service__assignment", "service__assignment__ministry", "service__skill")
-            .values(
-                "id",
-                "service__assignment__id",
-                "service__assignment__name",
-                "service__assignment__organization",
-                "service__assignment__ministry__name",
-                "service__assignment__start_date",
-                "service__assignment__end_date",
-                "service__skill__name",
-            )
-            .distinct()
+            .select_related("service__assignment", "service__skill")
+            .prefetch_related("service__assignment__organization_relations__organization")
         )
+        # Build list with organization from M2M
+        results = []
+        seen_assignments = set()
+        for p in placements:
+            assignment = p.service.assignment
+            if assignment.id in seen_assignments:
+                continue
+            seen_assignments.add(assignment.id)
+            org = assignment.get_primary_organization()
+            results.append(
+                {
+                    "id": assignment.id,
+                    "name": assignment.name,
+                    "organization": org.name if org else None,
+                    "start_date": assignment.start_date,
+                    "end_date": assignment.end_date,
+                    "skill": p.service.skill.name if p.service.skill else None,
+                }
+            )
+        return results
 
     def _get_colleague_panel_data(self, colleague):
         """Get colleague panel data for server-side rendering"""
@@ -256,16 +297,8 @@ class PlacementListView(ListView):
         colleague_assignments = self._get_colleague_assignments(colleague)
         assignment_list = [
             {
-                "name": item["service__assignment__name"],
-                "id": item["service__assignment__id"],
-                "organization": item["service__assignment__organization"],
-                "ministry": {"name": item["service__assignment__ministry__name"]}
-                if item["service__assignment__ministry__name"]
-                else None,
-                "start_date": item["service__assignment__start_date"],
-                "end_date": item["service__assignment__end_date"],
-                "skill": item["service__skill__name"],
-                "assignment_url": self._build_assignment_url(self.request, item["service__assignment__id"]),
+                **item,
+                "assignment_url": self._build_assignment_url(self.request, item["id"]),
             }
             for item in colleague_assignments
         ]
@@ -293,14 +326,14 @@ class PlacementListView(ListView):
         # Check if user can edit assignment
         user_can_edit = user_can_edit_assignment(self.request.user, assignment)
 
+        primary_org = assignment.get_primary_organization()
         return {
             "panel_content_template": "parts/assignment_panel_content.html",
             "panel_title": assignment.name,
             "close_url": self._build_close_url(self.request),
             "assignment": assignment,
             "placements": placements,
-            "client_url": self._build_client_url(assignment.organization),
-            "ministry_url": self._build_ministry_url(assignment.ministry.id) if assignment.ministry else None,
+            "organization_url": self._build_organization_url(primary_org.id) if primary_org else "",
             "user_can_edit": user_can_edit,
             "owner_url": self._build_colleague_url(assignment.owner.id) if assignment.owner else "",
         }
@@ -315,10 +348,10 @@ class PlacementListView(ListView):
 
         context["search_field"] = "zoek"
         context["search_placeholder"] = "Zoek op collega, opdracht of opdrachtgever..."
-        context["search_filter"] = self.request.GET.get("zoek")
+        context["search_filter"] = self.request.GET.get("zoek", "")
 
         active_filters = {}  # key: val
-        for filter_param in ["rol", "opdrachtgever", "ministerie", "periode"]:
+        for filter_param in ["rol", "organisatie", "periode"]:
             val = self.request.GET.get(filter_param)
             if val:
                 active_filters[filter_param] = val
@@ -369,33 +402,27 @@ class PlacementListView(ListView):
                 skill_options[-1]["selected"] = True
                 skill_value = str(skill.id)
 
-        clients = [
-            {"id": org, "name": org}
-            for org in Assignment.objects.values_list("organization", flat=True)
+        # Get organizations linked to assignments + their ancestors (for hierarchical filtering)
+        linked_org_ids = set(
+            Assignment.objects.filter(status="INGEVULD")
+            .values_list("organization_relations__organization_id", flat=True)
             .distinct()
-            .exclude(organization="")
-            .order_by("organization")
-        ]
+        )
+        # Add all ancestors so clicking breadcrumb links works
+        all_org_ids = set(linked_org_ids)
+        for org in OrganizationUnit.objects.filter(id__in=linked_org_ids):
+            for ancestor in org.get_ancestors():
+                all_org_ids.add(ancestor.id)
 
-        client_options = [
+        organization_options = [
             {"value": "", "label": ""},
         ]
-        client_value = ""
-        for client in clients:
-            client_options.append({"value": client["id"], "label": client["name"]})
-            if active_filters.get("opdrachtgever") == str(client["id"]):
-                client_options[-1]["selected"] = True
-                client_value = str(client["id"])
-
-        ministry_options = [
-            {"value": "", "label": ""},
-        ]
-        ministry_value = ""
-        for ministry in Ministry.objects.order_by("name"):
-            ministry_options.append({"value": str(ministry.id), "label": ministry.name})
-            if active_filters.get("ministerie") == str(ministry.id):
-                ministry_options[-1]["selected"] = True
-                ministry_value = str(ministry.id)
+        organization_value = ""
+        for org in OrganizationUnit.objects.filter(id__in=all_org_ids).order_by("name"):
+            organization_options.append({"value": str(org.id), "label": org.name})
+            if active_filters.get("organisatie") == str(org.id):
+                organization_options[-1]["selected"] = True
+                organization_value = str(org.id)
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
@@ -405,17 +432,10 @@ class PlacementListView(ListView):
         context["filter_groups"] = [
             {
                 "type": "select",
-                "name": "ministerie",
-                "label": "Ministerie",
-                "options": ministry_options,
-                "value": ministry_value,
-            },
-            {
-                "type": "select",
-                "name": "opdrachtgever",
+                "name": "organisatie",
                 "label": "Opdrachtgever",
-                "options": client_options,
-                "value": client_value,
+                "options": organization_options,
+                "value": organization_value,
             },
             {
                 "type": "select",
@@ -521,8 +541,8 @@ class UserListView(PermissionRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
 
         context["search_field"] = "zoek"
-        context["search_placeholder"] = "Zoek op naam of email..."
-        context["search_filter"] = self.request.GET.get("zoek")
+        context["search_placeholder"] = "Zoek op naam of e-mail..."
+        context["search_filter"] = self.request.GET.get("zoek", "")
 
         active_filters = {}
 
@@ -815,7 +835,6 @@ def user_import_csv(request):
         "core.add_service",
         "core.add_placement",
         "core.add_colleague",
-        "core.add_ministry",
     ],
     raise_exception=True,
 )
@@ -1334,3 +1353,239 @@ User-agent: Applebot-Extended
 Disallow: /
 """
     return HttpResponse(content, content_type="text/plain")
+
+
+# === OrganizationUnit Admin Views ===
+
+
+class OrganizationUnitListView(PermissionRequiredMixin, ListView):
+    """View for organization unit list with filtering."""
+
+    model = OrganizationUnit
+    template_name = "organization_admin.html"
+    context_object_name = "organizations"
+    permission_required = "core.view_organizationunit"
+
+    def get_queryset(self):
+        """Filter organizations (active only)."""
+        qs = OrganizationUnit.objects.active().select_related("parent").order_by("name")
+
+        # Search filter (JSONFields searched via icontains on text representation)
+        search = self.request.GET.get("search")
+        if search:
+            qs = qs.filter(
+                Q(name__icontains=search) | Q(abbreviations__icontains=search) | Q(previous_names__icontains=search)
+            )
+
+        # Type filter
+        org_type = self.request.GET.get("type")
+        if org_type:
+            qs = qs.filter(organization_type=org_type)
+
+        # Top-level filter (optional)
+        top_level_only = self.request.GET.get("toplevel") == "1"
+        if top_level_only:
+            qs = qs.filter(parent__isnull=True)
+
+        return qs
+
+    def get_template_names(self):
+        """Return appropriate template based on request type."""
+        if "HX-Request" in self.request.headers:
+            return ["parts/organization_table.html"]
+        return ["organization_admin.html"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["search_placeholder"] = "Zoek op naam of afkorting..."
+        context["search_filter"] = self.request.GET.get("search", "")
+
+        # Build filter options
+        type_options = [{"value": "", "label": "Alle types"}]
+        current_type = self.request.GET.get("type", "")
+        for choice in OrganizationType.choices:
+            opt = {"value": choice[0], "label": choice[1]}
+            if choice[0] == current_type:
+                opt["selected"] = True
+            type_options.append(opt)
+
+        # Top-level filter
+        top_level_only = self.request.GET.get("toplevel") == "1"
+        toplevel_options = [
+            {"value": "", "label": "Alle organisaties"},
+            {"value": "1", "label": "Alleen top-level", "selected": top_level_only},
+        ]
+
+        context["filter_groups"] = [
+            {
+                "type": "select",
+                "name": "type",
+                "label": "Type",
+                "options": type_options,
+                "value": current_type,
+            },
+            {
+                "type": "select",
+                "name": "toplevel",
+                "label": "Niveau",
+                "options": toplevel_options,
+                "value": "1" if top_level_only else "",
+            },
+        ]
+
+        # Count active filters
+        active_filter_count = 0
+        if current_type:
+            active_filter_count += 1
+        if top_level_only:
+            active_filter_count += 1
+
+        context["active_filter_count"] = active_filter_count
+
+        context["primary_button"] = {
+            "button_text": "Organisatie-eenheid toevoegen",
+            "attrs": {
+                "hx-get": reverse("organization-create"),
+                "hx-target": "#organizationFormModal",
+                "hx-push-url": "false",
+            },
+        }
+
+        return context
+
+
+@permission_required("core.add_organizationunit", raise_exception=True)
+def organization_create(request):
+    """Handle organization unit creation."""
+    template = "parts/organization_form_modal.html"
+    ctx_base = {
+        "form_post_url": reverse("organization-create"),
+        "modal_title": "Nieuwe organisatie-eenheid",
+        "element_id": "organizationFormModal",
+    }
+
+    if request.method == "GET":
+        form = OrganizationUnitForm()
+        return render(request, template, modal_context(form, **ctx_base, button_label="Toevoegen"))
+
+    if request.method == "POST":
+        form = OrganizationUnitForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return htmx_redirect(request, "organization-list")
+        return render(request, template, modal_context(form, **ctx_base, button_label="Toevoegen"))
+
+    return HttpResponse(status=405)
+
+
+@permission_required("core.change_organizationunit", raise_exception=True)
+def organization_edit(request, pk):
+    """Handle organization unit editing."""
+    organization = get_object_or_404(OrganizationUnit, pk=pk)
+    template = "parts/organization_form_modal.html"
+    has_children = organization.children.exists()
+    has_assignments = organization.assignment_relations.exists()
+    has_tooi = bool(organization.tooi_identifier)
+    # Can't delete if has TOOI, children, or assignments
+    can_delete = not has_tooi and not has_children and not has_assignments
+    delete_ctx = get_delete_context("organization-delete", pk, organization.name) if can_delete else {}
+    ctx_base = {
+        "form_post_url": reverse("organization-edit", args=[pk]),
+        "modal_title": "Organisatie-eenheid bewerken",
+        "element_id": "organizationFormModal",
+    }
+
+    if request.method == "GET":
+        form = OrganizationUnitForm(instance=organization)
+        ctx = modal_context(
+            form,
+            **ctx_base,
+            button_label="Opslaan",
+            has_children=has_children,
+            has_assignments=has_assignments,
+            has_tooi=has_tooi,
+            organization=organization,
+            **delete_ctx,
+        )
+        return render(request, template, ctx)
+
+    if request.method == "POST":
+        form = OrganizationUnitForm(request.POST, instance=organization)
+        if form.is_valid():
+            form.save()
+            return htmx_redirect(request, "organization-list")
+        ctx = modal_context(
+            form,
+            **ctx_base,
+            button_label="Opslaan",
+            has_children=has_children,
+            has_assignments=has_assignments,
+            has_tooi=has_tooi,
+            organization=organization,
+            **delete_ctx,
+        )
+        return render(request, template, ctx)
+
+    return HttpResponse(status=405)
+
+
+@permission_required("core.delete_organizationunit", raise_exception=True)
+def organization_delete(request, pk):
+    """Handle organization unit deletion (soft delete)."""
+    organization = get_object_or_404(OrganizationUnit, pk=pk)
+    element_id = "organizationFormModal"
+
+    def _render_cannot_delete(message):
+        if "HX-Request" in request.headers:
+            return render(
+                request,
+                "parts/generic_form_modal.html",
+                {
+                    "modal_title": "Kan niet verwijderen",
+                    "modal_element_id": element_id,
+                    "target_element_id": element_id,
+                    "delete_warning": message,
+                    "form_post_url": reverse("organization-edit", args=[pk]),
+                    "form_button_label": "Terug",
+                    "warning_modal": True,
+                },
+            )
+        return HttpResponse(message, status=400)
+
+    # Block deletion if organization has TOOI identifier (synced from government registry)
+    if organization.tooi_identifier:
+        return _render_cannot_delete(
+            f"'{organization.name}' komt uit het overheidsregister (TOOI) en kan niet worden verwijderd."
+        )
+
+    # Block deletion if organization has children
+    if organization.children.exists():
+        return _render_cannot_delete(
+            f"'{organization.name}' heeft onderliggende eenheden. Verwijder of verplaats deze eerst."
+        )
+
+    # Block deletion if organization has assignments
+    if organization.assignment_relations.exists():
+        return _render_cannot_delete(f"'{organization.name}' heeft gekoppelde opdrachten.")
+
+    if request.method == "GET":
+        return render(
+            request,
+            "parts/generic_form_modal.html",
+            {
+                "modal_title": f"Verwijder organisatie-eenheid: {organization.name}",
+                "warning_modal": True,
+                "modal_element_id": element_id,
+                "target_element_id": "organization_table",
+                "delete_warning": f"Weet je zeker dat je '{organization.name}' wilt verwijderen?",
+                "form_post_url": reverse("organization-delete", kwargs={"pk": pk}),
+                "form_button_label": "Verwijderen",
+            },
+        )
+
+    if request.method == "POST":
+        organization.delete()  # Soft delete
+        return htmx_redirect(request, "organization-list")
+
+    return HttpResponse(status=405)

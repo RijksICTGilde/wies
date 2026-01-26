@@ -5,6 +5,24 @@
 - Python 3.13+ with type hints on public functions
 - Use `uv` for package management
 - Format with `ruff format`, lint with `ruff check --fix`
+- Run `uv run ruff check` before completing changes
+
+### Ruff Rules to Watch
+
+- **TRY003/EM101/EM102**: Assign exception messages to variable first:
+
+  ```python
+  # Wrong
+  raise ValidationError("Some message")
+
+  # Right
+  msg = "Some message"
+  raise ValidationError(msg)
+  ```
+
+- **E501**: Line too long (120 max). Use multiline strings for long help_text in migrations.
+- **PT009/PT027**: Use `pytest.raises` and `assert` instead of unittest-style
+- **PLC0415**: Imports at top of file
 
 ## Django
 

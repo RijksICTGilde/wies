@@ -65,6 +65,8 @@ RUN groupadd --gid 1000 app \
 RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
   # Devcontainer dependencies and utils
   sudo git bash-completion vim \
+  # Cron for scheduled tasks
+  cron \
   # Cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
@@ -78,8 +80,7 @@ COPY --from=uv /uv /bin/uv
 
 COPY --chown=app:app . /app
 RUN chown -R app:app /app
-RUN rm -rf /app/docker && \
-  rm -rf /app/.dockerignore && \
+RUN rm -rf /app/.dockerignore && \
   rm -rf /app/pyproject.toml && \
   rm -rf /app/uv.lock && \
   rm -rf /app/package.json && \
@@ -95,4 +96,4 @@ RUN python manage.py collectstatic
 
 USER app
 
-CMD ["./docker-entrypoint.sh"]
+CMD ["./docker/web-entrypoint.sh"]

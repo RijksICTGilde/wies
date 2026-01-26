@@ -14,7 +14,8 @@
     <td class="rvo-table-cell">
       <div class="placement-assignment">
         <span class="rvo-text--bold">{{ placement.service.assignment.name }}</span>
-        <div class="rvo-text--sm rvo-text--subtle">{{ placement.service.assignment.organization }}</div>
+        {% set primary_org = placement.service.assignment.get_primary_organization() %}
+        {% if primary_org %}<div class="rvo-text--sm rvo-text--subtle">{{ primary_org.name }}</div>{% endif %}
       </div>
     </td>
     <td class="rvo-table-cell">

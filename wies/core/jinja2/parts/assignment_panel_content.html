@@ -37,18 +37,25 @@
       {% endif %}
       <dt>Opdrachtgever</dt>
       <dd>
-        <a href="{{ panel_data.client_url }}"
-           class="rvo-link"
-           title="Filter op {{ assignment.organization }}">{{ assignment.organization }}</a>
-      </dd>
-      <dt>Ministerie</dt>
-      <dd>
-        {% if assignment.ministry and panel_data.ministry_url %}
-          <a href="{{ panel_data.ministry_url }}"
-             class="rvo-link"
-             title="Filter op {{ assignment.ministry.name }}">{{ assignment.ministry.name }}</a>
+        {% set primary_org = assignment.get_primary_organization() %}
+        {% if primary_org %}
+          <div>
+            <a href="{{ panel_data.organization_url }}"
+               class="rvo-link rvo-text--bold">{{ primary_org.name }}</a>
+          </div>
+          {% set ancestors = primary_org.get_ancestors()|list|reverse|list %}
+          {% if ancestors %}
+            <nav aria-label="Organisatie hiërarchie"
+                 class="rvo-text--sm rvo-text--subtle">
+              {% for org in ancestors %}
+                <a href="{{ url("placements") }}?organisatie={{ org.id }}"
+                   class="rvo-link rvo-text--subtle">{{ org.abbreviation or org.name }}</a>
+                {% if not loop.last %}›{% endif %}
+              {% endfor %}
+            </nav>
+          {% endif %}
         {% else %}
-          <span class="rvo-text--italic rvo-text--subtle">Geen ministerie opgegeven</span>
+          <span class="rvo-text--italic rvo-text--subtle">Geen opdrachtgever gekoppeld</span>
         {% endif %}
       </dd>
       <dt>Periode</dt>

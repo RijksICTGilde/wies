@@ -1,9 +1,9 @@
-from django.contrib.auth.models import Group
+from django.contrib.auth.models import AnonymousUser, Group
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from wies.core.models import Label, LabelCategory, User
-from wies.core.roles import setup_roles
+from wies.core.models import Label, LabelCategory, OrganizationUnit, User
+from wies.core.roles import setup_roles, user_can_edit_organization, user_can_view_organization
 
 
 @override_settings(
@@ -86,3 +86,40 @@ class RBACSetupTest(TestCase):
         response = client.post(reverse("user-delete", args=[user_to_delete.id]))
         assert response.status_code == 200
         assert not User.objects.filter(id=user_to_delete.id).exists()
+
+
+class OrganizationUnitPermissionTest(TestCase):
+    """Tests for organization permission functions."""
+
+    def setUp(self):
+        setup_roles()
+        self.organization = OrganizationUnit.objects.create(
+            name="Test Org",
+            organization_type="gemeente",
+        )
+
+    def test_view_organization_authenticated(self):
+        """Authenticated users can view organizations."""
+        user = User.objects.create_user(username="viewer@test.nl", email="viewer@test.nl")
+        assert user_can_view_organization(user, self.organization)
+
+    def test_view_organization_unauthenticated(self):
+        """Unauthenticated users cannot view organizations."""
+        anon = AnonymousUser()
+        assert not user_can_view_organization(anon, self.organization)
+
+    def test_edit_organization_beheerder(self):
+        """Beheerders can edit organizations."""
+        user = User.objects.create_user(username="beheerder@test.nl", email="beheerder@test.nl")
+        user.groups.add(Group.objects.get(name="Beheerder"))
+        assert user_can_edit_organization(user, self.organization)
+
+    def test_edit_organization_regular_user(self):
+        """Regular users cannot edit organizations."""
+        user = User.objects.create_user(username="regular@test.nl", email="regular@test.nl")
+        assert not user_can_edit_organization(user, self.organization)
+
+    def test_edit_organization_unauthenticated(self):
+        """Unauthenticated users cannot edit organizations."""
+        anon = AnonymousUser()
+        assert not user_can_edit_organization(anon, self.organization)

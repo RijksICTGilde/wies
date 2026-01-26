@@ -24,10 +24,10 @@ class PlacementImportTest(TestCase):
         self.client = Client()
         self.import_url = reverse("placement-import-csv")
 
-        # Create test groups
-        self.admin_group = Group.objects.create(name="Beheerder")
-        self.consultant_group = Group.objects.create(name="Consultant")
-        self.bdm_group = Group.objects.create(name="Business Development Manager")
+        # Get or create test groups (migration may have created them)
+        self.admin_group, _ = Group.objects.get_or_create(name="Beheerder")
+        self.consultant_group, _ = Group.objects.get_or_create(name="Consultant")
+        self.bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
 
         # Create authenticated user with all required permissions
         self.auth_user = User.objects.create(
@@ -40,9 +40,8 @@ class PlacementImportTest(TestCase):
         add_service_perm = Permission.objects.get(codename="add_service")
         add_placement_perm = Permission.objects.get(codename="add_placement")
         add_colleague_perm = Permission.objects.get(codename="add_colleague")
-        add_ministry_perm = Permission.objects.get(codename="add_ministry")
         self.auth_user.user_permissions.add(
-            add_assignment_perm, add_service_perm, add_placement_perm, add_colleague_perm, add_ministry_perm
+            add_assignment_perm, add_service_perm, add_placement_perm, add_colleague_perm
         )
 
         # Create user without permissions
@@ -53,7 +52,7 @@ class PlacementImportTest(TestCase):
             last_name="Permission",
         )
 
-        # Create user with only some permissions (missing add_service and add_ministry)
+        # Create user with only some permissions (missing add_service)
         self.partial_perm_user = User.objects.create(
             username="partialuser",
             email="partial@example.com",

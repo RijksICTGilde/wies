@@ -2,7 +2,7 @@ from django.contrib.auth.models import Permission
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from wies.core.models import Assignment, Colleague, Ministry, Placement, Service, User
+from wies.core.models import Assignment, Colleague, OrganizationUnit, Placement, Service, User
 
 
 @override_settings(
@@ -19,10 +19,11 @@ class AssignmentEditAttributeTest(TestCase):
         """Create test data"""
         self.client = Client()
 
-        # Create ministry (required for assignment)
-        self.ministry = Ministry.objects.create(
-            name="Test Ministry",
-            abbreviation="TM",
+        # Create organization
+        self.organization = OrganizationUnit.objects.create(
+            name="Test Organization",
+            abbreviations=["TO"],
+            organization_type="ministerie",
         )
 
         # Create users
@@ -74,7 +75,6 @@ class AssignmentEditAttributeTest(TestCase):
         # Create assignment with long extra_info (>300 chars for foldable testing)
         self.assignment = Assignment.objects.create(
             name="Test Assignment",
-            ministry=self.ministry,
             owner=self.owner_colleague,
             extra_info="Lorem ipsum dolor sit amet, consectetur adipiscing elit. " * 10,  # Long text
         )

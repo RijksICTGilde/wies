@@ -1,5 +1,5 @@
 {# TODO jrc: can this use jrc components? #}
-<div class="utrecht-form-field">
+<div class="utrecht-form-field{% if field.errors %} utrecht-form-field--invalid{% endif %}">
   <div class="rvo-form-field__label">
     {% if field.label %}
       <label class="rvo-label{% if field.field.required %} rvo-label--required{% endif %}"
