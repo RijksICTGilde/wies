@@ -30,7 +30,7 @@
   </head>
   <body class="rvo-theme">
     {% block header %}
-      {% include "parts/app_header.html" %}
+      {% include "parts/header_logo.html" %}
     {% endblock header %}
     <div class="app-layout {% if request.GET.get('filters') == '0' %}app-layout--collapsed{% endif %}"
          id="app-layout">

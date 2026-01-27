@@ -5,34 +5,7 @@
   <script src="{{ static('js/dialog.js') }}"></script>
 {% endblock extra_head %}
 {% block sidebar %}
-  <div class="app-sidebar__content">
-    <nav class="rvo-menubar rvo-menubar--md">
-      <ul class="rvo-menubar__ul">
-        <li class="rvo-menubar__list rvo-menubar__list--vertical">
-          <ul class="rvo-menubar__group--flex rvo-menubar__group--vertical">
-            <li class="rvo-menubar__item">
-              <a href="{{ url('admin-users') }}"
-                 class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw {% if '/gebruikers/' in request.path %}menu-item--active{% endif %}">
-                <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before"
-                      role="img"
-                      aria-label="Gebruikers"></span>
-                Gebruikers
-              </a>
-            </li>
-            <li class="rvo-menubar__item">
-              <a href="{{ url('label-admin') }}"
-                 class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw {% if '/labels/' in request.path %}menu-item--active{% endif %}">
-                <span class="utrecht-icon rvo-icon rvo-icon-label rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before"
-                      role="img"
-                      aria-label="Labels"></span>
-                Labels
-              </a>
-            </li>
-          </ul>
-        </li>
-      </ul>
-    </nav>
-  </div>
+  {% include "parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
   <div class="rvo-layout-column rvo-layout-gap--xl">
