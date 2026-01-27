@@ -1,14 +1,14 @@
 {# HTMX partial: Updates the main content area when filters change #}
 <div id="filter-and-table-container">
   <!-- Page Header -->
-  <div class="app-main__header">
+  <div class="layout__main__header">
     <!-- Row 1: Title + Search -->
     <div class="header-row header-row--between">
       <c-h1 noMargins>Wie zit waar?</c-h1>
       <div class="header-actions">
         <!-- Mobile filter toggle -->
         <button type="button"
-                class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--icon-before rvo-button app-mobile-filter-toggle"
+                class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--icon-before rvo-button mobile-filter-toggle"
                 onclick="toggleFilters()">
           <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before"
                 role="img"
@@ -30,9 +30,7 @@
           {% endif %}
           <div class="search-field-wrapper">
             <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon" />
-            <c-input id="search" name="zoek" placeholder="Zoeken..." value="
-            {% if search_filter %}{{ search_filter }}{% endif %}
-            " aria-label="Zoeken" data-filter-input size />
+            <c-input id="search" name="zoek" placeholder="Zoeken..." value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" aria-label="Zoeken" data-filter-input size />
           </div>
         </form>
       </div>
@@ -125,20 +123,20 @@
     <table class="rvo-table">
       <thead class="rvo-table-head">
         <tr class="rvo-table-row">
-          {% with field='name', label='Naam', target='#filter-and-table-container', sort_state=get_sort_state(request, 'name') %}
-            {% include 'parts/generic_sortable_header.html' %}
+          {% with field="name", label="Naam", target="#filter-and-table-container", sort_state=get_sort_state(request, "name") %}
+            {% include "parts/generic_sortable_header.html" %}
           {% endwith %}
-          {% with field='assignment', label='Opdracht', target='#filter-and-table-container', sort_state=get_sort_state(request, 'assignment') %}
-            {% include 'parts/generic_sortable_header.html' %}
+          {% with field="assignment", label="Opdracht", target="#filter-and-table-container", sort_state=get_sort_state(request, "assignment") %}
+            {% include "parts/generic_sortable_header.html" %}
           {% endwith %}
-          {% with field='skill', label='Rol', target='#filter-and-table-container', sort_state=get_sort_state(request, 'skill') %}
-            {% include 'parts/generic_sortable_header.html' %}
+          {% with field="skill", label="Rol", target="#filter-and-table-container", sort_state=get_sort_state(request, "skill") %}
+            {% include "parts/generic_sortable_header.html" %}
           {% endwith %}
           <th class="rvo-table-header">Periode</th>
         </tr>
       </thead>
       <tbody>
-        {% include 'parts/placement_table_rows.html' %}
+        {% include "parts/placement_table_rows.html" %}
       </tbody>
     </table>
   </div>

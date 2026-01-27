@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="{{ static('css/rvo_overwrite.css') }}">
     <link rel="stylesheet" href="{{ static('css/base.css') }}">
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
-    <script src="{{ static('js/app_layout.js') }}"></script>
+    <script src="{{ static('js/layout.js') }}"></script>
     {% block extra_head %}
     {% endblock extra_head %}
   </head>
@@ -31,15 +31,15 @@
     {% block header %}
       {% include "parts/header_logo.html" %}
     {% endblock header %}
-    <div class="app-layout {% if request.GET.get('filters') == '0' %}app-layout--collapsed{% endif %}"
-         id="app-layout">
-      <div class="app-body">
-        {% include "parts/app_menubar.html" %}
-        <aside class="app-sidebar">
+    <div class="layout {% if request.GET.get('filters') == '0' %}layout--collapsed{% endif %}"
+         id="layout">
+      <div class="layout__body">
+        {% include "parts/menubar.html" %}
+        <aside class="sidebar">
           {% block sidebar %}
           {% endblock sidebar %}
         </aside>
-        <main class="app-main">
+        <main class="layout__main">
           {% block content %}
           {% endblock content %}
         </main>

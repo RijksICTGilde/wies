@@ -1,15 +1,15 @@
 // App Layout Functions
 
 function toggleFilters() {
-  const layout = document.getElementById("app-layout");
+  const layout = document.getElementById("layout");
   const isMobile = window.innerWidth <= 1024;
 
   if (isMobile) {
     // Mobile: toggle full screen overlay
-    layout.classList.toggle("app-layout--mobile-filters-open");
+    layout.classList.toggle("layout--mobile-filters-open");
   } else {
     // Desktop: toggle collapsed state
-    const isCollapsed = layout.classList.toggle("app-layout--collapsed");
+    const isCollapsed = layout.classList.toggle("layout--collapsed");
 
     // Update URL without page reload
     const url = new URL(window.location);
