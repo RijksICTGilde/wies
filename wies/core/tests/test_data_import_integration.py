@@ -152,7 +152,7 @@ Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,Test Org,,01-
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Test Description,Owner Name,owner@test.com,Test Org,,01-01-2025,31-12-2025,Python,John Doe,john@test.com,,"""
 
-        result = create_placements_from_csv(csv_content)
+        result = create_assignments_from_csv(csv_content)
 
         assert result["success"]
         assert result["colleagues_created"] > 0
@@ -170,7 +170,7 @@ Test Assignment,Test Description,Owner Name,owner@test.com,Test Org,,01-01-2025,
 Assignment 1,Test,Owner A,ownera@test.com,Org,,01-01-2025,31-12-2025,Python,John Doe,john@test.com,Rijks ICT Gilde,Rijksconsultants
 Assignment 2,Test,Owner B,ownerb@test.com,Org,,01-01-2025,31-12-2025,Java,Jane Smith,jane@test.com,I-Interim Rijk,Rijks ICT Gilde"""
 
-        result = create_placements_from_csv(csv_content)
+        result = create_assignments_from_csv(csv_content)
 
         assert result["success"]
         assert result["colleagues_created"] == 4  # 2 owners + 2 placement colleagues
