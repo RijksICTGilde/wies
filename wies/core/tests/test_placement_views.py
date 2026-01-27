@@ -1,5 +1,5 @@
 from datetime import date
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -239,12 +239,13 @@ class PlacementListHistoricalFilterTest(TestCase):
             source="wies",
         )
 
-    @patch("wies.core.views.date")
-    def test_historical_placements_excluded(self, mock_date):
+    @patch("wies.core.views.timezone")
+    def test_historical_placements_excluded(self, mock_timezone):
         """Test that placements ending before today are excluded from list"""
         # Mock today as 2024-06-15
-        mock_date.today.return_value = date(2024, 6, 15)
-        mock_date.fromisoformat = date.fromisoformat
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
 
         # Create placement ending yesterday (2024-06-14)
         placement = self._create_placement_with_end_date(date(2024, 6, 14))
@@ -260,12 +261,13 @@ class PlacementListHistoricalFilterTest(TestCase):
         # Verify placement is NOT in queryset
         assert placement not in qs, "Historical placement should be excluded"
 
-    @patch("wies.core.views.date")
-    def test_current_placements_included(self, mock_date):
+    @patch("wies.core.views.timezone")
+    def test_current_placements_included(self, mock_timezone):
         """Test that placements ending today are included (boundary test)"""
         # Mock today as 2024-06-15
-        mock_date.today.return_value = date(2024, 6, 15)
-        mock_date.fromisoformat = date.fromisoformat
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
 
         # Create placement ending today (2024-06-15)
         placement = self._create_placement_with_end_date(date(2024, 6, 15))
@@ -282,12 +284,13 @@ class PlacementListHistoricalFilterTest(TestCase):
         # Verify placement IS in queryset
         assert placement in qs, "Placement ending today should be included"
 
-    @patch("wies.core.views.date")
-    def test_future_placements_included(self, mock_date):
+    @patch("wies.core.views.timezone")
+    def test_future_placements_included(self, mock_timezone):
         """Test that placements ending in the future are included"""
         # Mock today as 2024-06-15
-        mock_date.today.return_value = date(2024, 6, 15)
-        mock_date.fromisoformat = date.fromisoformat
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
 
         # Create placement ending tomorrow (2024-06-16)
         placement = self._create_placement_with_end_date(date(2024, 6, 16))
@@ -304,12 +307,13 @@ class PlacementListHistoricalFilterTest(TestCase):
         # Verify placement IS in queryset
         assert placement in qs, "Future placement should be included"
 
-    @patch("wies.core.views.date")
-    def test_hierarchical_date_inheritance_service_level(self, mock_date):
+    @patch("wies.core.views.timezone")
+    def test_hierarchical_date_inheritance_service_level(self, mock_timezone):
         """Test that filtering uses service dates when period_source='SERVICE'"""
         # Mock today as 2024-06-15
-        mock_date.today.return_value = date(2024, 6, 15)
-        mock_date.fromisoformat = date.fromisoformat
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
 
         # Create assignment and service with service-specific dates
         assignment = Assignment.objects.create(
@@ -346,12 +350,13 @@ class PlacementListHistoricalFilterTest(TestCase):
         # Verify placement is NOT in queryset (service ended yesterday)
         assert placement not in qs, "Placement with service ending yesterday should be excluded"
 
-    @patch("wies.core.views.date")
-    def test_hierarchical_date_inheritance_assignment_level(self, mock_date):
+    @patch("wies.core.views.timezone")
+    def test_hierarchical_date_inheritance_assignment_level(self, mock_timezone):
         """Test that filtering uses assignment dates when service uses period_source='ASSIGNMENT'"""
         # Mock today as 2024-06-15
-        mock_date.today.return_value = date(2024, 6, 15)
-        mock_date.fromisoformat = date.fromisoformat
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
 
         # Create assignment with dates in the past
         assignment = Assignment.objects.create(
@@ -422,12 +427,13 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         # Create test skill
         self.skill = Skill.objects.create(name="Python Developer")
 
-    @patch("wies.core.views.date")
-    def test_assignment_panel_excludes_historical_placements(self, mock_date):
+    @patch("wies.core.views.timezone")
+    def test_assignment_panel_excludes_historical_placements(self, mock_timezone):
         """Test that assignment panel filters out placements ending before today"""
         # Mock today as 2024-06-15
-        mock_date.today.return_value = date(2024, 6, 15)
-        mock_date.fromisoformat = date.fromisoformat
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
 
         # Create assignment
         assignment = Assignment.objects.create(
@@ -478,12 +484,13 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         assert current_placement.id in placement_ids, "Current placement should be in panel"
         assert historical_placement.id not in placement_ids, "Historical placement should be excluded"
 
-    @patch("wies.core.views.date")
-    def test_assignment_panel_includes_current_placements(self, mock_date):
+    @patch("wies.core.views.timezone")
+    def test_assignment_panel_includes_current_placements(self, mock_timezone):
         """Test that assignment panel includes placements ending today (boundary test)"""
         # Mock today as 2024-06-15
-        mock_date.today.return_value = date(2024, 6, 15)
-        mock_date.fromisoformat = date.fromisoformat
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
 
         # Create assignment
         assignment = Assignment.objects.create(
@@ -552,12 +559,13 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         # Create test skill
         self.skill = Skill.objects.create(name="Python Developer")
 
-    @patch("wies.core.views.date")
-    def test_colleague_panel_excludes_historical_placements(self, mock_date):
+    @patch("wies.core.views.timezone")
+    def test_colleague_panel_excludes_historical_placements(self, mock_timezone):
         """Test that colleague panel filters out placements ending before today"""
         # Mock today as 2024-06-15
-        mock_date.today.return_value = date(2024, 6, 15)
-        mock_date.fromisoformat = date.fromisoformat
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
 
         # Create assignment A with historical placement
         assignment_a = Assignment.objects.create(
@@ -619,12 +627,13 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         assert assignment_b.id in assignment_ids, "Current assignment should be in panel"
         assert assignment_a.id not in assignment_ids, "Historical assignment should be excluded"
 
-    @patch("wies.core.views.date")
-    def test_colleague_panel_includes_current_placements(self, mock_date):
+    @patch("wies.core.views.timezone")
+    def test_colleague_panel_includes_current_placements(self, mock_timezone):
         """Test that colleague panel includes placements ending today (boundary test)"""
         # Mock today as 2024-06-15
-        mock_date.today.return_value = date(2024, 6, 15)
-        mock_date.fromisoformat = date.fromisoformat
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
 
         # Create assignment with placement ending today
         assignment = Assignment.objects.create(
