@@ -9,6 +9,13 @@ document.addEventListener("DOMContentLoaded", function () {
     if (panel) {
       panel.showModal();
 
+      // Trigger animation after a tiny delay to ensure initial state is rendered
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          panel.classList.add("opening");
+        });
+      });
+
       // Handle ESC key to close panel completely
       panel.addEventListener("keydown", function (e) {
         if (e.key === "Escape") {
@@ -24,10 +31,25 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Close panel with filter preservation
   function closePanelWithFilters() {
-    const url = new URL(window.location);
-    url.searchParams.delete("collega");
-    url.searchParams.delete("opdracht");
-    window.location.href = url.toString();
+    const panel = document.getElementById("side_panel");
+    if (panel) {
+      // Add closing class for animation
+      panel.classList.add("closing");
+
+      // Wait for animation to finish before navigating
+      setTimeout(() => {
+        const url = new URL(window.location);
+        url.searchParams.delete("collega");
+        url.searchParams.delete("opdracht");
+        window.location.href = url.toString();
+      }, 400); // Match transition duration in CSS
+    } else {
+      // Fallback if panel doesn't exist
+      const url = new URL(window.location);
+      url.searchParams.delete("collega");
+      url.searchParams.delete("opdracht");
+      window.location.href = url.toString();
+    }
   }
 
   // Handle close button clicks

@@ -10,13 +10,36 @@ dialog#side_panel {
   padding: 0 !important;
   border-radius: 0 !important;
   box-sizing: border-box !important;
-  transform: none !important;
   max-height: none !important;
+  /* Smooth slide-in animation */
+  transform: translateX(100%) !important;
+  transition:
+    transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
+    opacity 0.4s ease-out !important;
+  opacity: 0;
+}
+
+/* Opening animation - triggered by JS */
+dialog#side_panel.opening,
+dialog#side_panel[open]:not(.closing) {
+  transform: translateX(0) !important;
+  opacity: 1;
+}
+
+/* Closing animation */
+dialog#side_panel.closing {
+  transform: translateX(100%) !important;
+  opacity: 0;
 }
 
 /* Dialog backdrop styling when using showModal() */
 dialog.rvo-dialog--inset-inline-end::backdrop {
   background-color: rgba(0, 0, 0, 0.3);
+  transition: opacity 0.4s ease-out;
+}
+
+dialog#side_panel.closing::backdrop {
+  opacity: 0;
 }
 
 /* Remove old overlay system - now using ::backdrop */
