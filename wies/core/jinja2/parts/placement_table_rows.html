@@ -1,6 +1,7 @@
 {% for placement in object_list %}
   <tr class="rvo-table-row clickable-row"
-      onclick="openColleaguePanel({{ placement.colleague.id }})">
+      onclick="window.location.href='{{ placement.colleague_url }}'"
+      style="cursor: pointer">
     <td class="rvo-table-cell">
       <div class="user-table-cell">
         <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>
@@ -39,7 +40,7 @@
       hx-trigger="revealed"
       hx-swap="outerHTML">
     <td colspan="4" class="rvo-table-cell">
-      <div class="empty-state">
+      <div style="text-align: center; padding: 1rem;">
         <span class="rvo-text--subtle">Meer laden...</span>
       </div>
     </td>

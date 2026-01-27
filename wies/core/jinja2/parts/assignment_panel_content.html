@@ -71,7 +71,9 @@
       <div class="rvo-item-list">
         {% for placement in panel_data.placements %}
           <a href="{{ placement.colleague_url }}"
-             class="rvo-item-list__item clickable-row panel-card-link"
+             class="rvo-item-list__item clickable-row"
+             style="text-decoration: none;
+                    color: inherit"
              title="Bekijk {{ placement.colleague.name }}">
             <div class="placement-details-header">
               <div class="user-table-cell">

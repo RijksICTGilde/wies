@@ -13,10 +13,18 @@
       </div>
     </td>
     <td class="rvo-table-cell">
-      <div class="user-labels-cell">
-        <div class="user-labels-list">
+      <div style="display: flex;
+                  gap: 0.25rem;
+                  flex-wrap: wrap;
+                  align-items: center;
+                  justify-content: space-between">
+        <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
           {% for group in user.groups.all() %}
-            <span class="rvo-text rvo-text--sm user-label-badge">
+            <span class="rvo-text rvo-text--sm"
+                  style="background-color: #e6f0ff;
+                         color: #154273;
+                         padding: 0.125rem 0.5rem;
+                         border-radius: 3px">
               {% if group.name == 'Business Development Manager' %}
                 BDM
               {% else %}
@@ -27,16 +35,19 @@
             <span class="rvo-text rvo-text--sm rvo-text--subtle">-</span>
           {% endfor %}
         </div>
-        <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw user-edit-icon"
+        <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw"
               role="img"
-              aria-label="Bewerken"></span>
+              aria-label="Bewerken"
+              style="flex-shrink: 0"></span>
       </div>
     </td>
   </tr>
 {% else %}
   <tr class="rvo-table-row">
     <td class="rvo-table-cell" colspan="2">
-      <span class="rvo-text--italic">Geen gebruikers gevonden.</span>
+      <div style="text-align: center; padding: 1rem;">
+        <span class="rvo-text--italic">Geen gebruikers gevonden.</span>
+      </div>
     </td>
   </tr>
 {% endfor %}
@@ -45,7 +56,7 @@
       hx-trigger="revealed"
       hx-swap="outerHTML">
     <td colspan="2" class="rvo-table-cell">
-      <div class="empty-state">
+      <div style="text-align: center; padding: 1rem;">
         <span class="rvo-text--subtle">Meer laden...</span>
       </div>
     </td>

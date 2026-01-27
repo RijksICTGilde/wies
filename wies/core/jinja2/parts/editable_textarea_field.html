@@ -2,16 +2,18 @@
   {% if field_value %}
     {% set is_long = field_value|length > 300 %}
     {% if is_long %}
-      <span class="editable-field-value">
-        <span class="editable-field-text editable-field-text--block truncated-text">{{ field_value[:300] }}...</span>
-        <span class="editable-field-text editable-field-text--block full-text"
-              style="display: none">{{ field_value }}</span>
+      <span style="flex: 1;">
+        <span style="white-space: pre-wrap; display: block;" class="truncated-text">{{ field_value[:300] }}...</span>
+        <span style="white-space: pre-wrap; display: none;" class="full-text">{{ field_value }}</span>
         <a href="#"
-           class="show-more-link editable-field-toggle"
+           class="show-more-link"
+           style="display: block;
+                  margin-left: 0;
+                  margin-top: 0.5em"
            onclick="event.preventDefault(); const container = this.parentElement; container.querySelector('.truncated-text').style.display = container.querySelector('.truncated-text').style.display === 'none' ? 'block' : 'none'; container.querySelector('.full-text').style.display = container.querySelector('.full-text').style.display === 'none' ? 'block' : 'none'; this.textContent = this.textContent === 'Toon meer' ? 'Toon minder' : 'Toon meer';">Toon meer</a>
       </span>
     {% else %}
-      <span class="editable-field-text">{{ field_value }}</span>
+      <span style="white-space: pre-wrap;">{{ field_value }}</span>
     {% endif %}
   {% else %}
     <span class="rvo-text--italic rvo-text--subtle">Niet ingevuld</span>
