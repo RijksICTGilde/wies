@@ -8,10 +8,20 @@ description: Wies project domain knowledge including Dutch government terminolog
 ## Core Concepts (Dutch terms)
 
 - **Plaatsing** - Placement of a colleague on a service
-- **Opdracht** - Assignment/project for a ministry
+- **Opdracht** - Assignment/project for an organization
 - **Dienst** - Service/work needed for an assignment
 - **Collega** - Colleague (person with skills)
-- **Ministerie** - Government ministry
+- **Organisatie-eenheid** - Organization unit (hierarchical: ministerie → DG → directie → afdeling)
+
+## Organization Hierarchy
+
+OrganizationUnit model supports hierarchical government structures:
+
+- **Root types**: Ministerie, Gemeente, Provincie, Waterschap, ZBO, etc.
+- **Sub types**: Directoraat-Generaal (DG), Directie, Afdeling
+- **Relationships**: Assignments link to organizations via AssignmentOrganizationUnit with roles (PRIMARY, INVOLVED)
+
+Data is synced from organisaties.overheid.nl via `python manage.py sync_organizations`.
 
 ## User Roles
 

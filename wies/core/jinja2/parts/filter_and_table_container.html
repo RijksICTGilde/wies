@@ -17,7 +17,37 @@
         <div class="filter-sidebar-body">
           <div class="rvo-layout-column rvo-layout-gap--md">
             {% for filter_group in filter_groups %}
-              {% if filter_group.type == 'select' %}
+              {% if filter_group.type == 'tree' %}
+                {# Organization filter - opens modal, styled like RVO select #}
+                <div class="utrecht-form-field rvo-form-field">
+                  <div class="rvo-form-field__label">
+                    <label class="rvo-label utrecht-form-label">{{ filter_group.label }}</label>
+                  </div>
+                  <div class="rvo-select-wrapper">
+                    <button type="button"
+                            class="utrecht-select utrecht-select--html-select org-filter-trigger__button"
+                            onclick="openOrgFilterModal()">
+                      <span class="org-filter-trigger__text">
+                        {% if filter_group.selected_ids %}
+                          {% set count = filter_group.selected_ids|length %}
+                          {% if count == 1 %}
+                            {% set org = filter_group.selected_orgs.values()|first %}
+                            {{ org.abbreviation or org.name }}
+                          {% else %}
+                            {{ count }} geselecteerd
+                          {% endif %}
+                        {% endif %}
+                      </span>
+                    </button>
+                  </div>
+                  {# Hidden inputs inside form-field, display:none #}
+                  <div id="org-tree-selected-inputs" style="display: none;">
+                    {% for org_id in filter_group.selected_ids %}
+                      <input type="hidden" name="org_id" value="{{ org_id }}" data-filter-input />
+                    {% endfor %}
+                  </div>
+                </div>
+              {% elif filter_group.type == 'select' %}
                 <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
               {% elif filter_group.type == 'date_range' %}
                 <div class="filter-sidebar-date-range">
@@ -151,6 +181,26 @@
                   <c-icon icon="kruis" color="grijs-700" size="sm" />
                 </button>
               </div>
+              {# Tree filter chips (organization multi-select) #}
+            {% elif filter_group.type == 'tree' and filter_group.selected_ids %}
+              {% for org_id in filter_group.selected_ids %}
+                {% set org = filter_group.selected_orgs.get(org_id) %}
+                {% if org %}
+                  <div class="filter-chip filter-chip--default"
+                       data-filter-name="{{ filter_group.name }}"
+                       data-filter-value="{{ org_id }}"
+                       data-filter-type="tree-multi">
+                    <span class="filter-chip-label">{{ org.abbreviation or org.name }}</span>
+                    <button type="button"
+                            class="filter-chip-remove"
+                            aria-label="Verwijder filter"
+                            data-filter-name="{{ filter_group.name }}"
+                            data-filter-value="{{ org_id }}">
+                      <c-icon icon="kruis" color="grijs-700" size="sm" />
+                    </button>
+                  </div>
+                {% endif %}
+              {% endfor %}
             {% endif %}
           {% endfor %}
         </div>

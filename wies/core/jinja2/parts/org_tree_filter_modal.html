@@ -1,0 +1,98 @@
+{# Organization Tree Filter Modal - MVI ZET style #}
+<dialog id="org-filter-modal"
+        class="modal-dialog modal-dialog--wide org-filter-modal">
+  <div class="modal-content">
+    {# Header #}
+    <div class="modal-header">
+      <h2 class="utrecht-heading-2">Selecteer opdrachtgevers</h2>
+      <button type="button" class="close modal-close-button" aria-label="Sluiten">
+        <span class="modal-close-icon" aria-hidden="true"></span>
+      </button>
+    </div>
+    {# Body #}
+    <div class="modal-body org-filter-modal__body">
+      {# Two column layout: Tree + Selected #}
+      <div class="org-filter-modal__content">
+        {# Tree/Search container #}
+        <div class="org-filter-modal__tree-container">
+          {# Search #}
+          <div class="org-filter-modal__search">
+            <div class="search-field-wrapper">
+              <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon" />
+              <input type="text"
+                     id="org-modal-search-input"
+                     class="utrecht-textbox utrecht-textbox--html-input org-filter-modal__search-input"
+                     placeholder="Zoek opdrachtgever..."
+                     hx-get="{{ url('organization-tree-search') }}"
+                     hx-trigger="input changed delay:300ms"
+                     hx-target="#org-modal-search-results"
+                     hx-include="#org-modal-selected-inputs input"
+                     name="q"
+                     autocomplete="off" />
+            </div>
+          </div>
+          {# Tree view (default) #}
+          <div id="org-modal-tree-view"
+               class="org-filter-modal__tree"
+               role="tree"
+               aria-label="Opdrachtgevers"
+               data-expand-ids="{{ expand_ids|list|join(',') }}">
+            {% for root in root_items %}
+              {% set node = root %}
+              {% set selected_ids = selected_ids %}
+              {% set level = 0 %}
+              {% set modal_mode = true %}
+              {% include "parts/org_tree_node_modal.html" %}
+            {% endfor %}
+          </div>
+          {# Search results (hidden by default) #}
+          <div id="org-modal-search-results"
+               class="org-filter-modal__search-results"
+               hidden></div>
+        </div>
+        {# Selected items panel #}
+        <div class="org-filter-modal__selected-panel">
+          <div class="org-filter-modal__selected-header">
+            <span class="rvo-label">Geselecteerd</span>
+            <span class="org-filter-modal__selected-count"
+                  id="org-modal-selected-count">{{ selected_ids|length }}</span>
+          </div>
+          <ul class="org-filter-modal__selected-list" id="org-modal-selected-list">
+            {% for org in selected_orgs %}
+              <li class="org-filter-modal__selected-item" data-org-id="{{ org.id }}">
+                <span class="org-filter-modal__selected-name">{{ org.abbreviation or org.name }}</span>
+                <button type="button"
+                        class="org-filter-modal__selected-remove"
+                        onclick="removeOrgFromModalSelection({{ org.id }})"
+                        aria-label="Verwijder {{ org.abbreviation or org.name }}">
+                  <c-icon icon="kruis" color="grijs-600" size="sm" />
+                </button>
+              </li>
+            {% else %}
+              <li class="org-filter-modal__selected-empty">Geen opdrachtgevers geselecteerd</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {# Hidden inputs for selected org IDs #}
+      <div id="org-modal-selected-inputs">
+        {% for org_id in selected_ids %}<input type="hidden" name="org_id" value="{{ org_id }}" />{% endfor %}
+      </div>
+    </div>
+    {# Footer #}
+    <div class="modal-footer">
+      <div class="modal-footer-buttons">
+        <div class="close">
+          <c-button kind="secondary" type="button">Annuleren</c-button>
+        </div>
+        <button type="button"
+                id="org-modal-clear-btn"
+                class="utrecht-button utrecht-button--subtle utrecht-button--warning"
+                {% if not selected_ids %}hidden{% endif %}>Filter verwijderen</button>
+      </div>
+      <button type="button"
+              id="org-modal-apply-btn"
+              class="utrecht-button utrecht-button--primary-action">Filter toepassen</button>
+    </div>
+  </div>
+</dialog>

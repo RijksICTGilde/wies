@@ -1,0 +1,8 @@
+{# Children nodes for modal tree - loaded via HTMX #}
+{# Variables: children, selected_ids, parent_level, parent_checked #}
+{% for child in children %}
+  {% set node = child %}
+  {% set level = parent_level + 1 %}
+  {% set inherit_checked = parent_checked %}
+  {% include "parts/org_tree_node_modal.html" %}
+{% endfor %}

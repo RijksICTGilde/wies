@@ -55,9 +55,12 @@ Language: Dutch UI, English code.
 ## Key Files
 
 - Models: `wies/core/models.py`
+  - OrganizationUnit: Hierarchical organization structure (ministerie, DG, directie, afdeling)
+  - AssignmentOrganizationUnit: Links assignments to organizations with roles (PRIMARY, INVOLVED)
 - Views: `wies/core/views.py`
 - Forms: `wies/core/forms.py`
 - Templates: `wies/core/jinja2/`
+  - Tree filter: `parts/org_tree_filter.html`, `parts/org_tree_node.html`
 - Roles/Permissions: `wies/core/roles.py`
 - Dummy data: `dummy_data.json`
-- Organization sync: `wies/core/services/organizations.py`
+- Organization sync: `wies/core/management/commands/sync_organizations.py`

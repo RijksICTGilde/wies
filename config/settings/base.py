@@ -166,3 +166,6 @@ TASKS = {
         "BACKEND": "django.tasks.backends.immediate.ImmediateBackend",
     }
 }
+
+# Wies app settings
+MIN_SEARCH_LENGTH = 2

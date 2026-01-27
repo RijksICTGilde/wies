@@ -1,0 +1,57 @@
+{# Children nodes loaded via HTMX #}
+{# Variables: children (list of OrganizationUnit), selected_ids (set of strings), level (int), parent_checked (bool) #}
+{% for child in children %}
+  {% set child_id = child.id|string %}
+  {# If parent is checked, child should also be checked #}
+  {% set is_selected = parent_checked or (child_id in selected_ids) %}
+  {% set has_children = child.has_children %}
+  {% set indent_class = "org-tree-node--level-" ~ level %}
+  {% set node_label = child.name ~ (" (" ~ child.abbreviation ~ ")" if child.abbreviation else "") %}
+  <div class="org-tree-node {{ indent_class }}"
+       data-org-id="{{ child.id }}"
+       data-has-children="{{ has_children|lower }}"
+       role="treeitem"
+       aria-expanded="{%- if has_children -%}false{%- else -%}undefined{%- endif -%}"
+       aria-selected="{{ is_selected|lower }}"
+       aria-level="{{ level + 1 }}">
+    <div class="org-tree-node__header">
+      {% if has_children %}
+        <button type="button"
+                class="org-tree-node__toggle"
+                aria-label="{%- if child.abbreviation -%}{{ child.abbreviation }}{%- else -%}{{ child.name }}{%- endif -%} uitklappen"
+                aria-expanded="false"
+                hx-get="{{ url('organization-tree-children', args=[child.id]) }}"
+                hx-target="#org-tree-children-{{ child.id }}"
+                hx-swap="innerHTML"
+                hx-trigger="click once"
+                hx-include="[name='org_id']"
+                onclick="this.closest('.org-tree-node').setAttribute('aria-expanded', 'true'); this.setAttribute('aria-expanded', 'true'); this.setAttribute('aria-label', '{{ node_label|replace("'", "\\'") }} inklappen'); this.classList.add('org-tree-node__toggle--expanded');">
+          <span class="org-tree-node__toggle-icon" aria-hidden="true"></span>
+        </button>
+      {% else %}
+        <span class="org-tree-node__toggle-spacer" aria-hidden="true"></span>
+      {% endif %}
+      <label class="org-tree-node__label">
+        <input type="checkbox"
+               class="org-tree-node__checkbox"
+               value="{{ child.id }}"
+               {% if is_selected %}checked{% endif %}
+               onchange="handleOrgTreeCheckboxChange(this)"
+               aria-label="Filter op {{ node_label }}{%- if child.assignment_count > 0 -%} ({{ child.assignment_count }} opdrachten){%- endif -%}" />
+        <span class="org-tree-node__name">
+          {{ child.name }}
+          {% if child.abbreviation %}<span class="org-tree-node__abbr">({{ child.abbreviation }})</span>{% endif %}
+        </span>
+        {% if child.assignment_count > 0 %}
+          <span class="org-tree-node__count"
+                aria-label="{{ child.assignment_count }} opdrachten">{{ child.assignment_count }}</span>
+        {% endif %}
+      </label>
+    </div>
+    {% if has_children %}
+      <div class="org-tree-node__children"
+           id="org-tree-children-{{ child.id }}"
+           role="group"></div>
+    {% endif %}
+  </div>
+{% endfor %}

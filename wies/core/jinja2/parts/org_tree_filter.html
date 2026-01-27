@@ -1,0 +1,61 @@
+{# Organization Tree Filter Component #}
+<div class="org-tree-filter"
+     id="org-tree-filter"
+     data-expand-ids="{{ filter_group.expand_ids|list|join(',') }}">
+  <div class="org-tree-filter__header">
+    <span class="rvo-label">{{ filter_group.label }}</span>
+    <div class="org-tree-filter__actions">
+      <button type="button"
+              class="org-tree-filter__action-btn"
+              onclick="collapseAllOrgTreeNodes()"
+              title="Alles inklappen">
+        <span class="org-tree-filter__icon org-tree-filter__icon--collapse"
+              aria-hidden="true"></span>
+        <span class="visually-hidden">Klap alle organisaties in</span>
+      </button>
+      <button type="button"
+              class="org-tree-filter__action-btn"
+              onclick="selectAllOrgTreeNodes()"
+              title="Selecteer alles">
+        <span class="org-tree-filter__icon org-tree-filter__icon--select-all"
+              aria-hidden="true"></span>
+        <span class="visually-hidden">Selecteer alle organisaties</span>
+      </button>
+      <button type="button"
+              class="org-tree-filter__action-btn"
+              onclick="deselectAllOrgTreeNodes()"
+              title="Deselecteer alles">
+        <span class="org-tree-filter__icon org-tree-filter__icon--deselect-all"
+              aria-hidden="true"></span>
+        <span class="visually-hidden">Deselecteer alle organisaties</span>
+      </button>
+    </div>
+  </div>
+  {# Search input #}
+  <div class="org-tree-filter__search">
+    <input type="text"
+           class="utrecht-textbox utrecht-textbox--html-input org-tree-filter__search-input"
+           placeholder="Zoek organisatie..."
+           hx-get="{{ url('organization-tree-search') }}"
+           hx-trigger="input changed delay:300ms"
+           hx-target="#org-tree-search-results"
+           hx-include="[name='org_id']"
+           name="q" />
+    <div id="org-tree-search-results" class="org-tree-filter__search-results"></div>
+  </div>
+  {# Tree container #}
+  <div class="org-tree-filter__tree" role="tree" aria-label="Organisaties">
+    {% for root in filter_group.root_items %}
+      {% set node = root %}
+      {% set selected_ids = filter_group.selected_ids %}
+      {% set level = 0 %}
+      {% include "parts/org_tree_node.html" %}
+    {% endfor %}
+  </div>
+  {# Hidden inputs for selected IDs (for form submission) #}
+  <div id="org-tree-selected-inputs">
+    {% for org_id in filter_group.selected_ids %}
+      <input type="hidden" name="org_id" value="{{ org_id }}" data-filter-input />
+    {% endfor %}
+  </div>
+</div>

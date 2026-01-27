@@ -44,6 +44,10 @@ from wies.core.views import (
     organization_create,
     organization_delete,
     organization_edit,
+    organization_filter_modal,
+    organization_tree_children,
+    organization_tree_children_modal,
+    organization_tree_search,
     placement_import_csv,
     robots_txt,
     user_create,
@@ -89,6 +93,17 @@ urlpatterns = [
     path("instellingen/organisaties/aanmaken/", organization_create, name="organization-create"),
     path("instellingen/organisaties/<int:pk>/bewerken/", organization_edit, name="organization-edit"),
     path("instellingen/organisaties/<int:pk>/verwijderen/", organization_delete, name="organization-delete"),
+    # Organization filter partials (used by placements filter)
+    path("plaatsingen/opdrachtgever/filter/", organization_filter_modal, name="organization-filter-modal"),
+    path(
+        "plaatsingen/opdrachtgever/tree/<int:parent_id>/", organization_tree_children, name="organization-tree-children"
+    ),
+    path(
+        "plaatsingen/opdrachtgever/tree-modal/<int:parent_id>/",
+        organization_tree_children_modal,
+        name="organization-tree-children-modal",
+    ),
+    path("plaatsingen/opdrachtgever/zoeken/", organization_tree_search, name="organization-tree-search"),
 ]
 
 # Custom error handlers

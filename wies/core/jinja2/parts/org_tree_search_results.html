@@ -1,0 +1,52 @@
+{# Search results for organization tree filter #}
+{# Variables: results (list of OrganizationUnit), selected_ids (set of strings), query (str) #}
+{# Helper macro to highlight search term in text #}
+{% macro highlight(text, term) %}
+  {%- set text_lower = text|lower -%}
+  {%- set term_lower = term|lower -%}
+  {%- set pos = text_lower.find(term_lower) -%}
+  {%- if pos >= 0 -%}
+    {{ text[:pos] }}<mark class="org-tree-search-highlight">{{ text[pos:pos+term|length] }}</mark>{{ text[pos+term|length:] }}
+  {%- else -%}
+    {{ text }}
+  {%- endif -%}
+{% endmacro %}
+{% if results %}
+  <div class="org-tree-search-header">
+    {{ results|length }} opdrachtgever
+    {% if results|length != 1 %}s{% endif %}
+    gevonden
+  </div>
+  {% for org in results %}
+    {% set org_id = org.id|string %}
+    {% set is_selected = org_id in selected_ids %}
+    <div class="org-tree-search-result">
+      <label class="org-tree-search-result__label">
+        <input type="checkbox"
+               class="org-tree-node__checkbox"
+               value="{{ org.id }}"
+               data-org-name="{{ org.abbreviation or org.name }}"
+               {% if is_selected %}checked{% endif %}
+               onchange="handleOrgModalCheckboxChange(this)"
+               aria-label="Selecteer {{ org.name }}" />
+        <div class="org-tree-search-result__content">
+          <div class="org-tree-search-result__name">
+            {{ highlight(org.name, query) }}
+            {% if org.abbreviation %}
+              <span class="org-tree-node__abbr">({{ highlight(org.abbreviation, query) }})</span>
+            {% endif %}
+          </div>
+          <div class="org-tree-search-result__path">
+            {% set ancestors = org.get_ancestors()|list|reverse %}
+            {% for ancestor in ancestors %}
+              {{ ancestor.abbreviation or ancestor.name }}
+              {% if not loop.last %}›{% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </label>
+    </div>
+  {% endfor %}
+{% else %}
+  <div class="org-tree-search-result org-tree-search-result--empty">Geen resultaten voor "{{ query }}"</div>
+{% endif %}

@@ -155,6 +155,488 @@
   margin-top: 0.25rem;
 }
 
+/* ========================================
+   Organization Tree Filter
+   ======================================== */
+
+.org-tree-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.org-tree-filter__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.org-tree-filter__actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.org-tree-filter__action-btn {
+  background: none;
+  border: 1px solid var(--rvo-color-grijs-300);
+  border-radius: 0.25rem;
+  padding: 0.125rem 0.375rem;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--rvo-color-grijs-700);
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+.org-tree-filter__action-btn:hover {
+  background-color: var(--rvo-color-grijs-100);
+  border-color: var(--rvo-color-grijs-400);
+}
+
+.org-tree-filter__action-btn:focus {
+  outline: 2px solid var(--rvo-color-logoblauw);
+  outline-offset: 1px;
+}
+
+/* Action button icons via CSS */
+.org-tree-filter__icon {
+  display: inline-block;
+  font-size: 0.875rem;
+  line-height: 1;
+}
+
+.org-tree-filter__icon--collapse::before {
+  content: "\229F"; /* ⊟ */
+}
+
+.org-tree-filter__icon--select-all::before {
+  content: "\2611"; /* ☑ */
+}
+
+.org-tree-filter__icon--deselect-all::before {
+  content: "\2610"; /* ☐ */
+}
+
+/* Modal close icon */
+.modal-close-icon::before {
+  content: "\00D7"; /* × */
+  font-size: 1.5rem;
+  line-height: 1;
+}
+
+.org-tree-filter__search {
+  position: relative;
+}
+
+.org-tree-filter__search-input {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.org-tree-filter__search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid var(--rvo-color-grijs-300);
+  border-top: none;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+  display: none;
+}
+
+.org-tree-filter__search-results:not(:empty) {
+  display: block;
+}
+
+.org-tree-filter__tree {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid var(--rvo-color-grijs-300);
+  background: white;
+  padding: 0.5rem;
+}
+
+/* Tree Node */
+.org-tree-node {
+  display: flex;
+  flex-direction: column;
+}
+
+.org-tree-node__header {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0;
+  min-height: 2rem;
+}
+
+/* Indentation levels - each level adds same amount, nesting handles total */
+.org-tree-node--level-0 {
+  padding-left: 0;
+}
+.org-tree-node--level-1,
+.org-tree-node--level-2,
+.org-tree-node--level-3,
+.org-tree-node--level-4,
+.org-tree-node--level-5 {
+  padding-left: 0.75rem;
+}
+
+/* Toggle button - CSS chevron like TenderNed */
+.org-tree-node__toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.org-tree-node__toggle:hover .org-tree-node__toggle-icon {
+  border-color: var(--rvo-color-logoblauw);
+}
+
+/* CSS chevron arrow pointing right, rotates to point down when expanded */
+.org-tree-node__toggle-icon {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-right: 2px solid var(--rvo-color-grijs-600);
+  border-bottom: 2px solid var(--rvo-color-grijs-600);
+  transform: rotate(-45deg);
+  transition:
+    transform 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.org-tree-node__toggle--expanded .org-tree-node__toggle-icon {
+  transform: rotate(45deg);
+}
+
+.org-tree-node__toggle-spacer {
+  width: 1.5rem;
+  height: 1.5rem;
+  flex-shrink: 0;
+}
+
+/* When toggle is used as spacer (no children), remove pointer cursor */
+.org-tree-node__toggle[aria-hidden="true"] {
+  cursor: default;
+}
+
+/* Checkbox and label */
+.org-tree-node__label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.org-tree-node__checkbox {
+  flex-shrink: 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  cursor: pointer;
+  accent-color: var(--rvo-color-logoblauw);
+}
+
+/* Indeterminate state shows a dash/minus, not a checkmark */
+.org-tree-node__checkbox:indeterminate {
+  position: relative;
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: white;
+  border: 2px solid var(--rvo-color-logoblauw);
+  border-radius: 2px;
+}
+
+.org-tree-node__checkbox:indeterminate::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 8px;
+  height: 2px;
+  background-color: var(--rvo-color-logoblauw);
+}
+
+.org-tree-node__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.org-tree-node__abbr {
+  /* Same styling as name - no color change */
+}
+
+.org-tree-node__count {
+  background: var(--rvo-color-grijs-200);
+  color: var(--rvo-color-grijs-700);
+  font-size: 0.75rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.75rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Children container */
+.org-tree-node__children {
+  display: none;
+}
+
+.org-tree-node[aria-expanded="true"] > .org-tree-node__children {
+  display: block;
+}
+
+/* Search results */
+.org-tree-search-header {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--rvo-color-grijs-600);
+  border-bottom: 1px solid var(--rvo-color-grijs-200);
+}
+
+.org-tree-search-result {
+  border-bottom: 1px solid var(--rvo-color-grijs-200);
+}
+
+.org-tree-search-result:last-child {
+  border-bottom: none;
+}
+
+.org-tree-search-result__label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  cursor: pointer;
+}
+
+.org-tree-search-result__label:hover {
+  background: var(--rvo-color-grijs-100);
+}
+
+.org-tree-search-result__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.org-tree-search-result__name {
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.org-tree-search-result__path {
+  font-size: 0.75rem;
+  color: var(--rvo-color-grijs-600);
+  margin-top: 0.125rem;
+}
+
+/* Search highlight */
+.org-tree-search-highlight {
+  background-color: var(--rvo-color-geel-300, #fff3cd);
+}
+
+.org-tree-search-result--empty {
+  color: var(--rvo-color-grijs-600);
+  font-style: italic;
+  cursor: default;
+}
+
+.org-tree-search-result--empty:hover {
+  background: none;
+}
+
+/* Loading indicator */
+.org-tree-node__children .htmx-indicator {
+  padding: 0.5rem;
+  color: var(--rvo-color-grijs-600);
+  font-size: 0.875rem;
+}
+
+/* ========================================
+   Organization Filter Trigger Button
+   Uses RVO select classes for consistent styling
+   ======================================== */
+
+/* Button uses .utrecht-select class - match native select styling */
+.org-filter-trigger__button {
+  cursor: pointer;
+  text-align: left;
+}
+
+.org-filter-trigger__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ========================================
+   Organization Filter Modal
+   ======================================== */
+
+.org-filter-modal {
+  max-width: 900px;
+}
+
+.org-filter-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 400px;
+  font-size: 1rem;
+}
+
+.org-filter-modal__search {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-300);
+  flex-shrink: 0;
+}
+
+.org-filter-modal__search-input {
+  width: 100%;
+  padding-left: 2.5rem;
+}
+
+/* Search results - same sizing as tree view */
+.org-filter-modal__search-results {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0.5rem 0.5rem 0;
+  min-height: 0;
+}
+
+.org-filter-modal__search-results[hidden] {
+  display: none;
+}
+
+.org-filter-modal__content {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 1rem;
+  flex: 1;
+  min-height: 0;
+}
+
+.org-filter-modal__tree-container {
+  border: 1px solid var(--rvo-color-grijs-300);
+  border-radius: 0.25rem;
+  background: white;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: min(500px, 50vh);
+}
+
+.org-filter-modal__tree,
+#org-modal-tree-view {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem 0.5rem 0.5rem 0;
+  min-height: 0;
+  max-height: 400px;
+}
+
+/* Selected items panel */
+.org-filter-modal__selected-panel {
+  border: 1px solid var(--rvo-color-grijs-300);
+  border-radius: 0.25rem;
+  background: var(--rvo-color-grijs-100);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.org-filter-modal__selected-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-300);
+  background: white;
+}
+
+.org-filter-modal__selected-count {
+  background: var(--rvo-color-logoblauw);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 1rem;
+  min-width: 1.5rem;
+  text-align: center;
+}
+
+.org-filter-modal__selected-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  overflow-y: auto;
+  max-height: 300px;
+}
+
+.org-filter-modal__selected-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-200);
+  background: white;
+}
+
+.org-filter-modal__selected-item:last-child {
+  border-bottom: none;
+}
+
+.org-filter-modal__selected-name {
+  flex: 1;
+  font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.org-filter-modal__selected-remove {
+  background: none;
+  border: none;
+  padding: 0.25rem;
+  cursor: pointer;
+  border-radius: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s;
+}
+
+.org-filter-modal__selected-remove:hover {
+  background: var(--rvo-color-grijs-200);
+}
+
+.org-filter-modal__selected-empty {
+  padding: 1rem;
+  text-align: center;
+  color: var(--rvo-color-grijs-600);
+  font-style: italic;
+  font-size: 0.875rem;
+}
+
 /* Responsive Design */
 @media (max-width: 1024px) {
   .filter-layout-wrapper {
@@ -167,5 +649,44 @@
     max-height: none;
     position: relative;
     top: 0;
+  }
+
+  dialog.modal-dialog.org-filter-modal {
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+    margin: 0.5rem !important;
+  }
+
+  .org-filter-modal__body {
+    min-height: auto;
+    gap: 0.5rem;
+  }
+
+  .org-filter-modal__content {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .org-filter-modal__tree-container {
+    height: auto;
+    max-height: 35vh;
+  }
+
+  .org-filter-modal__selected-panel {
+    max-height: 80px;
+  }
+
+  .org-filter-modal .modal-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .org-filter-modal .modal-footer-buttons {
+    order: 2;
+  }
+
+  .org-filter-modal #org-modal-apply-btn {
+    order: 1;
+    width: 100%;
   }
 }

@@ -1,0 +1,55 @@
+{# Single tree node for modal - recursive template #}
+{# Variables: node (OrganizationUnit), selected_ids (set of strings), level (int), inherit_checked (bool, optional) #}
+{% set node_id = node.id|string %}
+{% set is_selected = (inherit_checked|default(false)) or (node_id in selected_ids) %}
+{% set has_children = node.has_children %}
+{% set indent_class = "org-tree-node--level-" ~ level %}
+{% set node_label = node.name ~ (" (" ~ node.abbreviation ~ ")" if node.abbreviation else "") %}
+<div class="org-tree-node {{ indent_class }}"
+     data-org-id="{{ node.id }}"
+     data-org-name="{{ node.abbreviation or node.name }}"
+     data-has-children="{{ has_children|lower }}"
+     role="treeitem"
+     aria-expanded="{%- if has_children -%}false{%- else -%}undefined{%- endif -%}"
+     aria-selected="{{ is_selected|lower }}"
+     aria-level="{{ level + 1 }}">
+  <div class="org-tree-node__header">
+    {# Expand/collapse toggle - always reserve space for alignment #}
+    {% if has_children %}
+      <button type="button"
+              class="org-tree-node__toggle"
+              aria-label="{%- if node.abbreviation -%}{{ node.abbreviation }}{%- else -%}{{ node.name }}{%- endif -%} uitklappen"
+              aria-expanded="false"
+              onclick="expandOrgTreeNodeModal(this, {{ node.id }})">
+        <span class="org-tree-node__toggle-icon" aria-hidden="true"></span>
+      </button>
+    {% else %}
+      {# Empty spacer for alignment #}
+      <span class="org-tree-node__toggle" aria-hidden="true"></span>
+    {% endif %}
+    {# Checkbox and label #}
+    <label class="org-tree-node__label" title="{{ node_label }}">
+      <input type="checkbox"
+             class="org-tree-node__checkbox"
+             value="{{ node.id }}"
+             data-org-name="{{ node.abbreviation or node.name }}"
+             {% if is_selected %}checked{% endif %}
+             onchange="handleOrgModalCheckboxChange(this)"
+             aria-label="Filter op {{ node_label }}{%- if node.assignment_count > 0 -%} ({{ node.assignment_count }} opdrachten){%- endif -%}" />
+      <span class="org-tree-node__name" title="{{ node.name }}">
+        {{ node.name }}
+        {% if node.abbreviation %}<span class="org-tree-node__abbr">({{ node.abbreviation }})</span>{% endif %}
+      </span>
+      {% if node.assignment_count > 0 %}
+        <span class="org-tree-node__count"
+              aria-label="{{ node.assignment_count }} opdrachten">{{ node.assignment_count }}</span>
+      {% endif %}
+    </label>
+  </div>
+  {# Children container (lazy loaded) #}
+  {% if has_children %}
+    <div class="org-tree-node__children"
+         id="org-tree-children-modal-{{ node.id }}"
+         role="group">{# Children will be loaded via HTMX #}</div>
+  {% endif %}
+</div>
