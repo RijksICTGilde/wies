@@ -11,7 +11,7 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand
 
-from wies.core.services.sync_organizations import sync_organizations
+from wies.core.services.sync_organizations import AVAILABLE_TYPES, sync_organizations
 
 
 class Command(BaseCommand):
@@ -34,10 +34,13 @@ class Command(BaseCommand):
             type=Path,
             help="Use local XML file (for CI/CD without internet)",
         )
+        types_help = "Only sync specific type. Available: " + ", ".join(AVAILABLE_TYPES)
         parser.add_argument(
             "--type",
             dest="filter_type",
-            help="Only sync specific type (e.g., Ministerie)",
+            choices=AVAILABLE_TYPES,
+            metavar="TYPE",
+            help=types_help,
         )
 
     def handle(self, *args, **options):
@@ -66,7 +69,8 @@ class Command(BaseCommand):
             return
 
         # Show results
-        self.stdout.write("\nChanges:")
+        type_note = f" (type: {filter_type})" if filter_type else ""
+        self.stdout.write(f"\nChanges{type_note}:")
         self.stdout.write(f"  Create: {result.created}")
         self.stdout.write(f"  Update: {result.updated}")
         self.stdout.write(f"  Unchanged: {result.unchanged}")

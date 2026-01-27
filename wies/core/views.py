@@ -1490,14 +1490,14 @@ def organization_create(request):
 
     if request.method == "GET":
         form = OrganizationUnitForm()
-        return render(request, template, modal_context(form, **ctx_base, button_label="Toevoegen"))
+        return render(request, template, modal_context(form, **ctx_base, button_label="Toevoegen", can_delete=False))
 
     if request.method == "POST":
         form = OrganizationUnitForm(request.POST)
         if form.is_valid():
             form.save()
             return htmx_redirect(request, "organization-list")
-        return render(request, template, modal_context(form, **ctx_base, button_label="Toevoegen"))
+        return render(request, template, modal_context(form, **ctx_base, button_label="Toevoegen", can_delete=False))
 
     return HttpResponse(status=405)
 
@@ -1510,8 +1510,9 @@ def organization_edit(request, pk):
     has_children = organization.children.exists()
     has_assignments = organization.assignment_relations.exists()
     has_tooi = bool(organization.tooi_identifier)
-    # Can't delete if has TOOI, children, or assignments
-    can_delete = not has_tooi and not has_children and not has_assignments
+    is_from_external_source = organization.is_from_external_source
+    # Can't delete if has TOOI, external source, children, or assignments
+    can_delete = not has_tooi and not is_from_external_source and not has_children and not has_assignments
     delete_ctx = get_delete_context("organization-delete", pk, organization.name) if can_delete else {}
     ctx_base = {
         "form_post_url": reverse("organization-edit", args=[pk]),
@@ -1525,9 +1526,7 @@ def organization_edit(request, pk):
             form,
             **ctx_base,
             button_label="Opslaan",
-            has_children=has_children,
-            has_assignments=has_assignments,
-            has_tooi=has_tooi,
+            can_delete=can_delete,
             organization=organization,
             **delete_ctx,
         )
@@ -1542,9 +1541,7 @@ def organization_edit(request, pk):
             form,
             **ctx_base,
             button_label="Opslaan",
-            has_children=has_children,
-            has_assignments=has_assignments,
-            has_tooi=has_tooi,
+            can_delete=can_delete,
             organization=organization,
             **delete_ctx,
         )
@@ -1576,10 +1573,10 @@ def organization_delete(request, pk):
             )
         return HttpResponse(message, status=400)
 
-    # Block deletion if organization has TOOI identifier (synced from government registry)
-    if organization.tooi_identifier:
+    # Block deletion if organization is from external source (synced from government registry)
+    if organization.is_from_external_source or organization.tooi_identifier:
         return _render_cannot_delete(
-            f"'{organization.name}' komt uit het overheidsregister (TOOI) en kan niet worden verwijderd."
+            f"'{organization.name}' komt uit het overheidsregister en kan niet worden verwijderd."
         )
 
     # Block deletion if organization has children

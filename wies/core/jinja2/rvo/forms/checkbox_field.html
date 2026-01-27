@@ -5,7 +5,8 @@
            name="{{ field.html_name }}"
            class="rvo-checkbox__input"
            {% if field.value %}checked{% endif %}
-           {% if field.auto_id %}id="{{ field.auto_id }}"{% endif %}>
+           {% if field.auto_id %}id="{{ field.auto_id }}"{% endif %}
+           {% if field.field.disabled %}disabled{% endif %}>
     <span class="rvo-text">{{ field.label }}</span>
   </label>
   {% if field.errors %}{{ field.errors }}{% endif %}

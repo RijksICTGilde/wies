@@ -11,46 +11,59 @@
       {{ get_csrf_hidden_input(request) }}
       <div class="modal-body">
         <div class="modal-form-fields">
+          {% if organization and organization.is_from_external_source %}
+            <div class="rvo-alert rvo-alert--info modal-alert--spaced">
+              <p>De gegevens komen uit een externe bron en zijn daarom niet bewerkbaar.</p>
+            </div>
+          {% endif %}
           {{ content.name.as_field_group() }}
           {{ content.abbreviations_input.as_field_group() }}
           {{ content.organization_type.as_field_group() }}
           {{ content.parent.as_field_group() }}
           {{ content.is_active.as_field_group() }}
-          {% if organization and (organization.tooi_identifier or organization.oin_number) %}
-            <div class="modal-info-box">
-              <div class="rvo-text rvo-text--sm rvo-text--bold modal-info-box__title">Externe identifiers</div>
-              {% if organization.tooi_identifier %}
-                <div class="rvo-text rvo-text--sm">
-                  <strong>TOOI:</strong>
-                  <a href="{{ organization.tooi_identifier }}"
-                     target="_blank"
-                     rel="noopener">
-                    {{ organization.tooi_identifier | replace('https://identifier.overheid.nl/tooi/', '') }}
-                  </a>
-                </div>
-              {% endif %}
-              {% if organization.oin_number %}
-                <div class="rvo-text rvo-text--sm">
-                  <strong>OIN:</strong> {{ organization.oin_number }}
-                </div>
-              {% endif %}
-            </div>
-          {% endif %}
-          {% if has_tooi or has_children or has_assignments %}
-            <div class="rvo-alert rvo-alert--warning modal-alert--spaced">
-              <p>
-                <strong>Let op:</strong>
-                {% if has_tooi %}
-                  Deze organisatie komt uit het overheidsregister (TOOI) en kan niet worden verwijderd.
-                {% elif has_children and has_assignments %}
-                  Deze organisatie heeft onderliggende eenheden en gekoppelde opdrachten. Verwijderen is niet mogelijk.
-                {% elif has_children %}
-                  Deze organisatie heeft onderliggende eenheden. Verwijderen is niet mogelijk.
-                {% else %}
-                  Deze organisatie heeft gekoppelde opdrachten. Verwijderen is niet mogelijk.
+          {% if organization %}
+            {% if organization.source_url or organization.tooi_identifier or organization.oin_number %}
+              <div class="modal-info-box">
+                <div class="rvo-text rvo-text--sm rvo-text--bold modal-info-box__title">Overheidsregisters</div>
+                {% if organization.source_url %}
+                  <div class="rvo-text rvo-text--sm">
+                    <strong>Bron:</strong>
+                    <a href="{{ organization.source_url }}" target="_blank" rel="noopener">organisaties.overheid.nl</a>
+                  </div>
                 {% endif %}
-              </p>
-            </div>
+                {% if organization.tooi_identifier %}
+                  <div class="rvo-text rvo-text--sm">
+                    <strong>TOOI:</strong>
+                    <a href="{{ organization.tooi_identifier }}"
+                       target="_blank"
+                       rel="noopener">
+                      {{ organization.tooi_identifier | replace('https://identifier.overheid.nl/tooi/', '') }}
+                    </a>
+                  </div>
+                {% endif %}
+                {% if organization.oin_number %}
+                  <div class="rvo-text rvo-text--sm">
+                    <strong>OIN:</strong> {{ organization.oin_number }}
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
+            {% if not can_delete %}
+              <div class="rvo-alert rvo-alert--warning modal-alert--spaced">
+                <p>
+                  <strong>Let op:</strong>
+                  {% if organization.is_from_external_source or organization.tooi_identifier %}
+                    Deze organisatie komt uit het overheidsregister en kan daarom niet worden verwijderd.
+                  {% elif organization.children.exists() and organization.assignment_relations.exists() %}
+                    Deze organisatie heeft onderliggende eenheden en gekoppelde opdrachten. Verwijderen is niet mogelijk.
+                  {% elif organization.children.exists() %}
+                    Deze organisatie heeft onderliggende eenheden. Verwijderen is niet mogelijk.
+                  {% else %}
+                    Deze organisatie heeft gekoppelde opdrachten. Verwijderen is niet mogelijk.
+                  {% endif %}
+                </p>
+              </div>
+            {% endif %}
           {% endif %}
         </div>
       </div>
@@ -59,11 +72,15 @@
           <div class="close">
             <c-button kind="secondary" type="button">Annuleren</c-button>
           </div>
-          {% if delete_url and not has_tooi and not has_children and not has_assignments %}
+          {% if can_delete and delete_url %}
             <c-button kind="warning-subtle" hx-get="{{ delete_url }}" hx-target="#{{ modal_element_id }}" hx-swap="innerHTML">Verwijderen</c-button>
           {% endif %}
         </div>
-        <c-button kind="primary" type="submit">{{ form_button_label }}</c-button>
+        {% if organization and organization.is_from_external_source %}
+          <c-button kind="primary" type="button" class="close">Sluiten</c-button>
+        {% else %}
+          <c-button kind="primary" type="submit">{{ form_button_label }}</c-button>
+        {% endif %}
       </div>
     </form>
   </div>

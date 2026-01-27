@@ -351,6 +351,17 @@ class OrganizationUnit(models.Model):
             "Niet verplicht. Zie: https://oinregister.logius.nl"
         ),
     )
+    # Source URL: link to organisaties.overheid.nl page
+    source_url = models.URLField(
+        blank=True,
+        default="",
+        verbose_name="Bronpagina",
+        help_text=(
+            "URL naar de pagina op organisaties.overheid.nl. "
+            "Als deze is gevuld, komt de organisatie uit een externe bron "
+            "en zijn de gegevens niet bewerkbaar."
+        ),
+    )
 
     # === History tracking ===
     previous_names = models.JSONField(
@@ -474,6 +485,11 @@ class OrganizationUnit(models.Model):
         if successor:
             self.successor = successor
         self.save(update_fields=["is_active", "successor"])
+
+    @property
+    def is_from_external_source(self) -> bool:
+        """True if this organization was synced from an external source."""
+        return bool(self.source_url)
 
     @property
     def has_predecessors(self) -> bool:

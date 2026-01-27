@@ -236,6 +236,14 @@ class OrganizationUnitForm(RvoFormMixin, forms.ModelForm):
         if self.instance and self.instance.pk and self.instance.abbreviations:
             self.fields["abbreviations_input"].initial = ", ".join(self.instance.abbreviations)
 
+        # Make fields readonly for organizations from external sources
+        if self.instance and self.instance.pk and self.instance.is_from_external_source:
+            readonly_fields = ["name", "abbreviations_input", "organization_type", "parent", "is_active"]
+            for field_name in readonly_fields:
+                if field_name in self.fields:
+                    self.fields[field_name].disabled = True
+                    self.fields[field_name].widget.attrs["disabled"] = True
+
     def clean(self):
         cleaned_data = super().clean()
         # Run model validation on a temp instance with form data
