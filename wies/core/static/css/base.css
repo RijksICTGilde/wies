@@ -28,6 +28,20 @@ html {
   grid-template-rows: auto 1fr;
   flex: 1;
   transition: grid-template-columns 0.2s ease;
+  position: relative;
+}
+
+/* Extend sidebar background to left edge of viewport */
+.layout__body::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 100%;
+  width: 100vw;
+  background: var(--rvo-color-grijs-100, #f3f3f3);
+  grid-row: 2;
+  pointer-events: none;
 }
 
 .layout--collapsed .layout__body {
@@ -86,6 +100,13 @@ html {
   padding: var(--rvo-space-sm) 1.5rem;
 }
 
+.menubar__nav-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+}
+
 .menubar__nav-left,
 .menubar__nav-right {
   display: flex;
@@ -103,14 +124,35 @@ html {
   gap: 1.5rem;
 }
 
+/* Hide submenu items on desktop - they're in the sidebar */
+.menubar__submenu-item {
+  display: none;
+}
+
 .sidebar {
   grid-column: 1;
   grid-row: 2;
   background: var(--rvo-color-grijs-100, #f3f3f3);
   display: flex;
   flex-direction: column;
-  overflow: hidden;
   min-width: 0;
+  position: relative;
+  overflow: visible;
+}
+
+/* Extend sidebar background to the left */
+.sidebar::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--rvo-color-grijs-100, #f3f3f3);
+  margin-left: -100vw;
+  padding-left: 100vw;
+  z-index: -1;
+  pointer-events: none;
 }
 
 .sidebar__toggle-row {
@@ -119,7 +161,6 @@ html {
   align-items: center;
   justify-content: space-between;
   gap: var(--rvo-space-sm);
-  border-bottom: 1px solid var(--rvo-color-grijs-300, #c4c4c4);
 }
 
 .sidebar__title {
@@ -217,10 +258,94 @@ html {
   display: none;
 }
 
-@media (max-width: 1024px) {
+/* Mobile menu toggle button */
+.menubar__mobile-toggle {
+  display: none;
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  border-radius: 4px;
+  color: var(--rvo-color-logoblauw, #154273);
+  transition: background-color 0.2s ease;
+  width: 40px;
+  height: 40px;
+}
+
+.menubar__mobile-toggle:hover {
+  background-color: var(--rvo-color-grijs-200, #e6e6e6);
+}
+
+/* Both icons positioned absolutely in center - prevents jumping */
+.menubar__mobile-toggle-icon--hamburger,
+.menubar__mobile-toggle-icon--close {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+}
+
+/* Hamburger icon - three horizontal lines */
+.menubar__mobile-toggle-icon--hamburger::before,
+.menubar__mobile-toggle-icon--hamburger::after {
+  content: "";
+  display: block;
+  width: 20px;
+  height: 2px;
+  background-color: var(--rvo-color-logoblauw, #154273);
+  position: absolute;
+  left: 0;
+}
+
+.menubar__mobile-toggle-icon--hamburger::before {
+  top: 4px;
+}
+
+.menubar__mobile-toggle-icon--hamburger::after {
+  top: 14px;
+}
+
+/* Middle line using background */
+.menubar__mobile-toggle-icon--hamburger {
+  background: linear-gradient(
+    var(--rvo-color-logoblauw, #154273) 0%,
+    var(--rvo-color-logoblauw, #154273) 100%
+  );
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 20px 2px;
+}
+
+/* Close icon (RVO kruis) - hidden by default */
+.menubar__mobile-toggle-icon--close {
+  display: none;
+}
+
+/* When menu is open: hide hamburger, show close icon */
+.menubar--mobile-open .menubar__mobile-toggle-icon--hamburger {
+  display: none;
+}
+
+.menubar--mobile-open .menubar__mobile-toggle-icon--close {
+  display: block;
+}
+
+/* Ensure both toggle icons have same size */
+.sidebar-toggle__icon--close,
+.menubar__mobile-toggle-icon--close {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 800px) {
   .layout__body {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto auto 1fr;
   }
 
   .menubar {
@@ -231,14 +356,86 @@ html {
     display: none;
   }
 
-  .sidebar {
-    display: none;
-    grid-column: 1;
-    grid-row: 3;
+  .menubar__mobile-toggle {
+    display: flex;
   }
 
+  .menubar {
+    position: relative;
+  }
+
+  .menubar__nav-wrapper {
+    display: none;
+  }
+
+  .menubar--mobile-open .menubar__nav-wrapper {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    width: 100vw;
+    margin-left: calc(-50vw + 50%);
+    background: white;
+    padding: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+  }
+
+  .menubar--mobile-open .menubar__nav-left,
+  .menubar--mobile-open .menubar__nav-right {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .menubar--mobile-open .menubar__nav-right {
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--rvo-color-grijs-300, #e6e6e6);
+  }
+
+  .menubar--mobile-open .menubar__nav-left li,
+  .menubar--mobile-open .menubar__nav-right li {
+    width: 100%;
+  }
+
+  .menubar--mobile-open .menubar__nav-left a,
+  .menubar--mobile-open .menubar__nav-right a,
+  .menubar--mobile-open .menubar__nav-right span {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+  }
+
+  /* Show submenu items on mobile */
+  .menubar--mobile-open .menubar__submenu-item {
+    display: block;
+  }
+
+  .menubar--mobile-open .menubar__submenu-item a {
+    padding-left: 1.5rem;
+  }
+
+  .sidebar {
+    /* Mobile: hidden by default, becomes full-screen overlay when opened */
+    display: none;
+  }
+
+  /* Show sidebar as full-screen overlay when filters are open on mobile */
   .layout--mobile-filters-open .sidebar {
     display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 999;
+    background: var(--rvo-color-grijs-100);
+    flex-direction: column;
+    transform: translateX(0);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .layout--mobile-filters-open .sidebar__content {
@@ -262,13 +459,21 @@ html {
     transform: none;
   }
 
-  .layout__main {
-    grid-column: 1;
-    grid-row: 2;
+  /* Backdrop for mobile filter sidebar */
+  .layout--mobile-filters-open::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.3);
+    z-index: 998;
   }
 
-  .layout--mobile-filters-open .layout__body {
-    grid-template-rows: auto auto 1fr;
+  .layout__main {
+    grid-column: 1 / -1;
+    grid-row: 3;
   }
 
   .mobile-filter-toggle {

@@ -3,6 +3,10 @@
       hx-get="{{ url('user-edit', args=[user.id]) }}"
       hx-target="#userFormModal"
       hx-swap="innerHTML"
+      hx-trigger="click, keydown[key=='Enter' || key==' ']"
+      tabindex="0"
+      role="button"
+      aria-label="Bewerk {{ user.first_name }} {{ user.last_name }}"
       title="Bewerk {{ user.first_name }} {{ user.last_name }}">
     <td class="rvo-table-cell">
       <div class="user-table-cell">

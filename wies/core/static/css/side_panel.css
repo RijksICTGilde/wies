@@ -67,18 +67,39 @@ dialog#side_panel.closing::backdrop {
 
 .rvo-dialog__content {
   padding: var(--rvo-space-md);
-  max-height: calc(100vh - 120px);
   overflow-y: auto;
 }
 
-/* Mobile responsive */
-@media (max-width: 768px) {
-  .rvo-dialog--inset-inline-end {
-    width: 100vw;
-    left: 0;
-    right: 0;
-    max-width: none;
-    min-width: none;
+/* Desktop: set max-height */
+@media (min-width: 1025px) {
+  .rvo-dialog__content {
+    max-height: calc(100vh - 120px);
+  }
+}
+
+/* Mobile responsive - full screen */
+@media (max-width: 800px) {
+  dialog#side_panel {
+    top: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-width: none !important;
+    min-width: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .side-panel__header {
+    flex-shrink: 0;
+  }
+
+  .rvo-dialog__content {
+    flex: 1;
+    overflow-y: auto;
+    max-height: none;
   }
 
   .rvo-dialog__background::before {
@@ -89,11 +110,6 @@ dialog#side_panel.closing::backdrop {
     width: 100%;
     box-sizing: border-box;
     background: white;
-  }
-
-  .rvo-dialog__content {
-    height: calc(100vh - 80px);
-    overflow-y: auto;
   }
 }
 

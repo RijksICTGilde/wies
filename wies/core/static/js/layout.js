@@ -1,8 +1,15 @@
-// App Layout Functions
+// Layout Functions
+
+function toggleMobileMenu() {
+  const menubar = document.querySelector(".menubar");
+  if (menubar) {
+    menubar.classList.toggle("menubar--mobile-open");
+  }
+}
 
 function toggleFilters() {
   const layout = document.getElementById("layout");
-  const isMobile = window.innerWidth <= 1024;
+  const isMobile = window.innerWidth <= 800;
 
   if (isMobile) {
     // Mobile: toggle full screen overlay
