@@ -5,6 +5,7 @@ from io import StringIO
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import transaction
+from django.db.models import Q
 
 from wies.core.models import (
     DEFAULT_LABELS,
@@ -17,7 +18,6 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.querysets import annotate_placement_dates, filter_by_date_overlap
 
 
 def parse_date_dmy(date_str: str) -> datetime.date:
@@ -26,40 +26,28 @@ def parse_date_dmy(date_str: str) -> datetime.date:
     return datetime.date(int(year), int(month), int(day))
 
 
-def filter_placements_by_period(queryset, period):
+def filter_placements_by_period(queryset, period_from, period_to):
     """
     Filter placement queryset by period range for overlapping periods.
 
-    This function uses database-level annotations and filtering for optimal performance.
-
     Args:
         queryset: Placement queryset to filter
-        period: Period string in format "YYYY-MM-DD_YYYY-MM-DD"
-
+        period_from: date object
+        period_from: date object
     Returns:
         Filtered queryset containing only placements that overlap with the given period
     """
-    if not period:
-        return queryset
 
-    # Parse period in format "YYYY-MM-DD_YYYY-MM-DD"
-    if "_" not in period:
-        return queryset
+    return queryset.filter(
+        Q(actual_start_date__lte=period_to)
+        & Q(actual_end_date__gte=period_from)
+        & Q(actual_start_date__isnull=False)
+        & Q(actual_end_date__isnull=False)
+    )
 
-    try:
-        period_from_str, period_to_str = period.split("_", 1)
-        period_from = datetime.date.fromisoformat(period_from_str)
-        period_to = datetime.date.fromisoformat(period_to_str)
 
-        # Annotate with actual dates at database level
-        queryset = annotate_placement_dates(queryset)
-
-        # Filter for overlapping periods at database level
-        return filter_by_date_overlap(queryset, period_from, period_to)
-
-    except ValueError:
-        # Invalid date format, ignore filter
-        return queryset
+def filter_placements_by_min_end_date(queryset, min_end_date):
+    return queryset.filter(Q(actual_end_date__gte=min_end_date) | Q(actual_end_date__isnull=True))
 
 
 def create_assignments_from_csv(csv_content: str):
