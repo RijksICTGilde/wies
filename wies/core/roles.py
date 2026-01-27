@@ -9,10 +9,12 @@ def user_can_edit_assignment(user, assignment):
     """
     Check if a user can edit an assignment.
 
-    A user can edit an assignment if they:
-    - Have the 'core.change_assignment' permission, OR
-    - Are the BDM (owner) of the assignment, OR
-    - Are assigned to the assignment as a colleague
+    A user can edit an assignment if:
+    - User the 'core.change_assignment' permission, OR
+    - User is the BDM (owner) of the assignment, OR
+    - User is assigned to the assignment as a colleague
+    - ASsignment is sourced from wies, not external programm
+
 
     Args:
         user: User object to check permissions for
@@ -22,6 +24,9 @@ def user_can_edit_assignment(user, assignment):
         bool: True if user can edit the assignment, False otherwise
     """
     if not user.is_authenticated:
+        return False
+
+    if assignment.source not in ("wies", ""):
         return False
 
     # Check permission
