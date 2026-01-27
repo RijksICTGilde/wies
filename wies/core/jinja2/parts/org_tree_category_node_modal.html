@@ -1,0 +1,41 @@
+{# Category node for organization tree modal - groups root orgs by type #}
+{# Variables: category (dict with type, label, org_count, assignment_count, selection_state) #}
+{% set is_checked = category.selection_state == 'checked' %}
+{% set is_indeterminate = category.selection_state == 'indeterminate' %}
+<div class="org-tree-node org-tree-node--category org-tree-node--level-0"
+     data-org-type="{{ category.type }}"
+     data-has-children="true"
+     role="treeitem"
+     aria-expanded="false"
+     aria-selected="{{ is_checked|lower }}"
+     aria-level="1">
+  <div class="org-tree-node__header">
+    {# Expand/collapse toggle #}
+    <button type="button"
+            class="org-tree-node__toggle"
+            aria-label="{{ category.label }} uitklappen"
+            aria-expanded="false"
+            onclick="expandOrgTreeCategoryNodeModal(this, '{{ category.type }}')">
+      <span class="org-tree-node__toggle-icon" aria-hidden="true"></span>
+    </button>
+    {# Checkbox and label #}
+    <label class="org-tree-node__label">
+      <input type="checkbox"
+             class="org-tree-node__checkbox org-tree-node__checkbox--category"
+             name="org_type"
+             value="{{ category.type }}"
+             data-org-name="{{ category.label }}"
+             data-selection-state="{{ category.selection_state }}"
+             {% if is_checked %}checked{% endif %}
+             onchange="handleOrgModalCategoryCheckboxChange(this)"
+             aria-label="Filter op {{ category.label }} ({{ category.assignment_count }} opdrachten)" />
+      <span class="org-tree-node__name org-tree-node__name--category">{{ category.label }}</span>
+      <span class="org-tree-node__count"
+            aria-label="{{ category.assignment_count }} opdrachten">{{ category.assignment_count }}</span>
+    </label>
+  </div>
+  {# Children container (lazy loaded) #}
+  <div class="org-tree-node__children"
+       id="org-tree-category-children-modal-{{ category.type }}"
+       role="group">{# Children will be loaded via HTMX #}</div>
+</div>

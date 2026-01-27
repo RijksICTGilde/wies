@@ -43,19 +43,23 @@
            name="q" />
     <div id="org-tree-search-results" class="org-tree-filter__search-results"></div>
   </div>
-  {# Tree container #}
+  {# Tree container - starts with categories (organization types) #}
   <div class="org-tree-filter__tree" role="tree" aria-label="Organisaties">
-    {% for root in filter_group.root_items %}
-      {% set node = root %}
-      {% set selected_ids = filter_group.selected_ids %}
-      {% set level = 0 %}
-      {% include "parts/org_tree_node.html" %}
+    {% for category in filter_group.categories %}
+      {% set selected_types = filter_group.selected_types %}
+      {% include "parts/org_tree_category_node.html" %}
     {% endfor %}
   </div>
   {# Hidden inputs for selected IDs (for form submission) #}
   <div id="org-tree-selected-inputs">
     {% for org_id in filter_group.selected_ids %}
       <input type="hidden" name="org_id" value="{{ org_id }}" data-filter-input />
+    {% endfor %}
+    {% for org_type in filter_group.selected_types %}
+      <input type="hidden"
+             name="org_type"
+             value="{{ org_type }}"
+             data-filter-input />
     {% endfor %}
   </div>
 </div>

@@ -45,13 +45,21 @@ document.addEventListener("DOMContentLoaded", function () {
       if (hiddenInput) hiddenInput.value = "";
       if (validationMessage) validationMessage.style.display = "none";
     } else if (filterType === "tree-multi") {
-      // For tree multi-select, remove the specific hidden input
+      // For tree multi-select, remove the specific hidden input (org_id or org_type)
       const container = document.getElementById("org-tree-selected-inputs");
       if (container) {
         const input = container.querySelector(`input[value="${filterValue}"]`);
         if (input) {
           input.remove();
         }
+      }
+      // Also uncheck the corresponding checkbox in the tree
+      const checkbox = document.querySelector(
+        `.org-tree-filter .org-tree-node__checkbox[value="${filterValue}"]`,
+      );
+      if (checkbox) {
+        checkbox.checked = false;
+        checkbox.indeterminate = false;
       }
     }
 
@@ -92,7 +100,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // If node has children and is expanded, update all descendant checkboxes
     if (treeNode) {
       const childCheckboxes = treeNode.querySelectorAll(
-        ".org-tree-node__children .org-tree-node__checkbox",
+        ".org-tree-node__children .org-tree-node__checkbox:not(.org-tree-node__checkbox--category)",
       );
       childCheckboxes.forEach((childCb) => {
         childCb.checked = isChecked;
@@ -104,6 +112,32 @@ document.addEventListener("DOMContentLoaded", function () {
     updateParentCheckboxStates(treeNode);
 
     // Update hidden inputs
+    updateOrgTreeSelectedInputs();
+
+    // Trigger filter update
+    triggerOrgFilterUpdate();
+  };
+
+  // Handle category checkbox change (selects all orgs of a type)
+  window.handleOrgTreeCategoryCheckboxChange = function (checkbox) {
+    const isChecked = checkbox.checked;
+    const treeNode = checkbox.closest(".org-tree-node");
+
+    // Clear indeterminate state when explicitly clicked
+    checkbox.indeterminate = false;
+
+    // If category has loaded children, update all descendant checkboxes
+    if (treeNode) {
+      const childCheckboxes = treeNode.querySelectorAll(
+        ".org-tree-node__children .org-tree-node__checkbox:not(.org-tree-node__checkbox--category)",
+      );
+      childCheckboxes.forEach((childCb) => {
+        childCb.checked = isChecked;
+        childCb.indeterminate = false;
+      });
+    }
+
+    // Update hidden inputs (includes org_type)
     updateOrgTreeSelectedInputs();
 
     // Trigger filter update
@@ -176,12 +210,21 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   };
 
-  // Select all visible org tree nodes
+  // Select all visible org tree nodes (categories)
   window.selectAllOrgTreeNodes = function () {
-    const checkboxes = document.querySelectorAll(
-      ".org-tree-filter .org-tree-node__checkbox",
+    // Select all category checkboxes (this effectively selects all orgs)
+    const categoryCheckboxes = document.querySelectorAll(
+      ".org-tree-filter .org-tree-node__checkbox--category",
     );
-    checkboxes.forEach((cb) => {
+    categoryCheckboxes.forEach((cb) => {
+      cb.checked = true;
+      cb.indeterminate = false;
+    });
+    // Also select any loaded org checkboxes
+    const orgCheckboxes = document.querySelectorAll(
+      ".org-tree-filter .org-tree-node__checkbox:not(.org-tree-node__checkbox--category)",
+    );
+    orgCheckboxes.forEach((cb) => {
       cb.checked = true;
       cb.indeterminate = false;
     });
@@ -299,9 +342,16 @@ document.addEventListener("DOMContentLoaded", function () {
     const container = document.getElementById("org-tree-selected-inputs");
     if (!container) return;
 
-    // Collect all checked checkboxes in the tree
+    // Collect all checked category checkboxes (org_type)
+    const checkedCategoryBoxes = document.querySelectorAll(
+      ".org-tree-filter .org-tree-node__checkbox--category:checked",
+    );
+    const selectedTypes = new Set();
+    checkedCategoryBoxes.forEach((cb) => selectedTypes.add(cb.value));
+
+    // Collect all checked org checkboxes (org_id) - exclude category checkboxes
     const checkedBoxes = document.querySelectorAll(
-      ".org-tree-filter .org-tree-node__checkbox:checked",
+      ".org-tree-filter .org-tree-node__checkbox:checked:not(.org-tree-node__checkbox--category)",
     );
     const selectedIds = new Set();
     checkedBoxes.forEach((cb) => selectedIds.add(cb.value));
@@ -318,6 +368,20 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Update hidden inputs
     container.innerHTML = "";
+
+    // Add org_type inputs for selected categories
+    selectedTypes.forEach((type) => {
+      if (type) {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "org_type";
+        input.value = type;
+        input.setAttribute("data-filter-input", "");
+        container.appendChild(input);
+      }
+    });
+
+    // Add org_id inputs for individually selected orgs
     selectedIds.forEach((id) => {
       if (id) {
         const input = document.createElement("input");
@@ -417,8 +481,12 @@ document.addEventListener("DOMContentLoaded", function () {
       initializeOrgTreeCheckboxStates(); // Re-initialize org tree states
     }
 
-    // After loading tree children, update parent states
-    if (event.detail.target.id?.startsWith("org-tree-children-")) {
+    // After loading tree children (regular org or category), update parent states
+    const targetId = event.detail.target.id;
+    if (
+      targetId?.startsWith("org-tree-children-") ||
+      targetId?.startsWith("org-tree-category-children-")
+    ) {
       const parentNode = event.detail.target.closest(".org-tree-node");
       if (parentNode) {
         // Check if parent was checked - if so, check all new children
@@ -427,7 +495,7 @@ document.addEventListener("DOMContentLoaded", function () {
         );
         if (parentCheckbox?.checked) {
           const childCheckboxes = event.detail.target.querySelectorAll(
-            ".org-tree-node__checkbox",
+            ".org-tree-node__checkbox:not(.org-tree-node__checkbox--category)",
           );
           childCheckboxes.forEach((cb) => {
             cb.checked = true;
@@ -786,6 +854,65 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   };
 
+  // Expand category tree node in modal - handles HTMX request with selected IDs
+  window.expandOrgTreeCategoryNodeModal = function (button, orgType) {
+    const treeNode = button.closest(".org-tree-node");
+    if (!treeNode) return;
+
+    const isExpanded = treeNode.getAttribute("aria-expanded") === "true";
+
+    if (isExpanded) {
+      // Collapse - just toggle visual state
+      treeNode.setAttribute("aria-expanded", "false");
+      button.setAttribute("aria-expanded", "false");
+      button.classList.remove("org-tree-node__toggle--expanded");
+    } else {
+      // Expand - toggle visual state and load children
+      treeNode.setAttribute("aria-expanded", "true");
+      button.setAttribute("aria-expanded", "true");
+      button.classList.add("org-tree-node__toggle--expanded");
+
+      // Check if children already loaded
+      const childrenContainer = document.getElementById(
+        `org-tree-category-children-modal-${orgType}`,
+      );
+      if (childrenContainer && childrenContainer.children.length === 0) {
+        // Build URL with selected org_ids and org_types
+        const params = new URLSearchParams();
+        const modalInputs = document.getElementById(
+          "org-modal-selected-inputs",
+        );
+        if (modalInputs) {
+          modalInputs
+            .querySelectorAll('input[name="org_id"]')
+            .forEach((input) => {
+              if (input.value) {
+                params.append("org_id", input.value);
+              }
+            });
+          modalInputs
+            .querySelectorAll('input[name="org_type"]')
+            .forEach((input) => {
+              if (input.value) {
+                params.append("org_type", input.value);
+              }
+            });
+        }
+
+        const baseUrl = `/plaatsingen/opdrachtgever/tree-modal/categorie/${orgType}/`;
+        const url = params.toString()
+          ? `${baseUrl}?${params.toString()}`
+          : baseUrl;
+
+        // Make HTMX request
+        htmx.ajax("GET", url, {
+          target: `#org-tree-category-children-modal-${orgType}`,
+          swap: "innerHTML",
+        });
+      }
+    }
+  };
+
   // Toggle expand/collapse for tree node
   window.toggleOrgTreeNode = function (button) {
     const treeNode = button.closest(".org-tree-node");
@@ -817,7 +944,7 @@ document.addEventListener("DOMContentLoaded", function () {
     // Cascade to all visible children - when parent is checked/unchecked,
     // all children should reflect the same state for visual consistency
     const childCheckboxes = treeNode.querySelectorAll(
-      ".org-tree-node__checkbox",
+      ".org-tree-node__checkbox:not(.org-tree-node__checkbox--category)",
     );
     childCheckboxes.forEach((cb) => {
       cb.checked = isChecked;
@@ -831,17 +958,83 @@ document.addEventListener("DOMContentLoaded", function () {
     updateOrgModalSelection();
   };
 
+  // Handle search result checkbox change in modal
+  window.handleOrgModalSearchResultChange = function (checkbox) {
+    const isChecked = checkbox.checked;
+    const orgId = checkbox.value;
+
+    // Also update the corresponding checkbox in the tree if it exists
+    const modal = document.getElementById("org-filter-modal");
+    if (modal) {
+      const treeCheckbox = modal.querySelector(
+        `.org-tree-node__checkbox[value="${orgId}"]:not(.org-tree-node__checkbox--category)`,
+      );
+      if (treeCheckbox) {
+        treeCheckbox.checked = isChecked;
+        treeCheckbox.indeterminate = false;
+        const treeNode = treeCheckbox.closest(".org-tree-node");
+        if (treeNode) {
+          updateModalParentCheckboxStates(treeNode);
+        }
+      }
+    }
+
+    // Update selected panel and hidden inputs
+    updateOrgModalSelection();
+  };
+
+  // Handle category checkbox change in modal
+  window.handleOrgModalCategoryCheckboxChange = function (checkbox) {
+    // Clear indeterminate state when explicitly clicked
+    checkbox.indeterminate = false;
+
+    const isChecked = checkbox.checked;
+    const treeNode = checkbox.closest(".org-tree-node");
+
+    // Cascade to all visible children (orgs) - when category is checked/unchecked,
+    // all children should reflect the same state for visual consistency
+    const childCheckboxes = treeNode.querySelectorAll(
+      ".org-tree-node__checkbox:not(.org-tree-node__checkbox--category)",
+    );
+    childCheckboxes.forEach((cb) => {
+      cb.checked = isChecked;
+      cb.indeterminate = false;
+    });
+
+    // Update selected panel and hidden inputs
+    updateOrgModalSelection();
+  };
+
   // Update selected panel and hidden inputs in modal
   function updateOrgModalSelection() {
     const modal = document.getElementById("org-filter-modal");
     if (!modal) return;
 
-    // Collect all checked checkboxes
-    const checkedBoxes = modal.querySelectorAll(
-      ".org-tree-node__checkbox:checked",
+    // Collect all checked category checkboxes (org_type)
+    const checkedCategoryBoxes = modal.querySelectorAll(
+      ".org-tree-node__checkbox--category:checked",
     );
+    const selectedTypes = new Map();
+    checkedCategoryBoxes.forEach((cb) => {
+      selectedTypes.set(cb.value, cb.dataset.orgName || cb.value);
+    });
+
+    // Collect all checked org checkboxes (org_id) - from tree and search results
     const selectedOrgs = new Map();
-    checkedBoxes.forEach((cb) => {
+
+    // From tree (exclude category checkboxes)
+    const checkedTreeBoxes = modal.querySelectorAll(
+      ".org-tree-node__checkbox:checked:not(.org-tree-node__checkbox--category)",
+    );
+    checkedTreeBoxes.forEach((cb) => {
+      selectedOrgs.set(cb.value, cb.dataset.orgName || cb.value);
+    });
+
+    // From search results
+    const checkedSearchBoxes = modal.querySelectorAll(
+      ".org-tree-search-result__checkbox:checked",
+    );
+    checkedSearchBoxes.forEach((cb) => {
       selectedOrgs.set(cb.value, cb.dataset.orgName || cb.value);
     });
 
@@ -851,6 +1044,15 @@ document.addEventListener("DOMContentLoaded", function () {
     );
     if (inputsContainer) {
       inputsContainer.innerHTML = "";
+      // Add org_type inputs
+      selectedTypes.forEach((name, type) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "org_type";
+        input.value = type;
+        inputsContainer.appendChild(input);
+      });
+      // Add org_id inputs
       selectedOrgs.forEach((name, id) => {
         const input = document.createElement("input");
         input.type = "hidden";
@@ -860,14 +1062,34 @@ document.addEventListener("DOMContentLoaded", function () {
       });
     }
 
+    // Combine both for display
+    const allSelected = new Map([...selectedTypes, ...selectedOrgs]);
+
     // Update selected list
     const selectedList = document.getElementById("org-modal-selected-list");
     if (selectedList) {
-      if (selectedOrgs.size === 0) {
+      if (allSelected.size === 0) {
         selectedList.innerHTML =
           '<li class="org-filter-modal__selected-empty">Geen opdrachtgevers geselecteerd</li>';
       } else {
         selectedList.innerHTML = "";
+        // First show categories
+        selectedTypes.forEach((name, type) => {
+          const li = document.createElement("li");
+          li.className = "org-filter-modal__selected-item";
+          li.dataset.orgType = type;
+          li.innerHTML = `
+            <span class="org-filter-modal__selected-name">${name}</span>
+            <button type="button"
+                    class="org-filter-modal__selected-remove"
+                    onclick="removeOrgTypeFromModalSelection('${type}')"
+                    aria-label="Verwijder ${name}">
+              <c-icon icon="kruis" color="grijs-600" size="sm"></c-icon>
+            </button>
+          `;
+          selectedList.appendChild(li);
+        });
+        // Then show individual orgs
         selectedOrgs.forEach((name, id) => {
           const li = document.createElement("li");
           li.className = "org-filter-modal__selected-item";
@@ -889,26 +1111,50 @@ document.addEventListener("DOMContentLoaded", function () {
     // Update count badge
     const countBadge = document.getElementById("org-modal-selected-count");
     if (countBadge) {
-      countBadge.textContent = selectedOrgs.size;
+      countBadge.textContent = allSelected.size;
     }
 
     // Show/hide clear button based on selection
     const clearBtn = document.getElementById("org-modal-clear-btn");
     if (clearBtn) {
-      clearBtn.hidden = selectedOrgs.size === 0;
+      clearBtn.hidden = allSelected.size === 0;
     }
   }
 
+  // Remove organization type from modal selection
+  window.removeOrgTypeFromModalSelection = function (orgType) {
+    const modal = document.getElementById("org-filter-modal");
+    if (!modal) return;
+
+    // Uncheck the category checkbox in the tree
+    const checkbox = modal.querySelector(
+      `.org-tree-node__checkbox--category[value="${orgType}"]`,
+    );
+    if (checkbox) {
+      checkbox.checked = false;
+      checkbox.indeterminate = false;
+    }
+
+    // Update selection panel
+    updateOrgModalSelection();
+  };
+
   // Open the organization filter modal with current selection
   window.openOrgFilterModal = function () {
-    // Get selected org_ids from URL (source of truth) instead of hidden inputs
+    // Get selected org_ids and org_types from URL (source of truth) instead of hidden inputs
     const currentUrl = new URL(window.location.href);
     const orgIds = currentUrl.searchParams.getAll("org_id");
+    const orgTypes = currentUrl.searchParams.getAll("org_type");
 
     const params = new URLSearchParams();
     orgIds.forEach((id) => {
       if (id) {
         params.append("org_id", id);
+      }
+    });
+    orgTypes.forEach((type) => {
+      if (type) {
+        params.append("org_type", type);
       }
     });
 
@@ -948,10 +1194,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById("org-filter-modal");
     if (!modal) return;
 
-    const checkboxes = modal.querySelectorAll(".org-tree-node__checkbox");
-    checkboxes.forEach((cb) => {
+    // Clear tree checkboxes
+    const treeCheckboxes = modal.querySelectorAll(".org-tree-node__checkbox");
+    treeCheckboxes.forEach((cb) => {
       cb.checked = false;
       cb.indeterminate = false;
+    });
+
+    // Clear search result checkboxes
+    const searchCheckboxes = modal.querySelectorAll(
+      ".org-tree-search-result__checkbox",
+    );
+    searchCheckboxes.forEach((cb) => {
+      cb.checked = false;
     });
 
     updateOrgModalSelection();
@@ -962,21 +1217,39 @@ document.addEventListener("DOMContentLoaded", function () {
     const modal = document.getElementById("org-filter-modal");
     if (!modal) return;
 
-    // Collect selected IDs
+    // Collect selected types and IDs
     const inputsContainer = document.getElementById(
       "org-modal-selected-inputs",
     );
+    const selectedTypes = [];
     const selectedIds = [];
     if (inputsContainer) {
-      inputsContainer.querySelectorAll("input").forEach((input) => {
-        selectedIds.push(input.value);
-      });
+      inputsContainer
+        .querySelectorAll('input[name="org_type"]')
+        .forEach((input) => {
+          selectedTypes.push(input.value);
+        });
+      inputsContainer
+        .querySelectorAll('input[name="org_id"]')
+        .forEach((input) => {
+          selectedIds.push(input.value);
+        });
     }
 
     // Update the sidebar's hidden inputs
     const sidebarInputs = document.getElementById("org-tree-selected-inputs");
     if (sidebarInputs) {
       sidebarInputs.innerHTML = "";
+      // Add org_type inputs
+      selectedTypes.forEach((type) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "org_type";
+        input.value = type;
+        input.setAttribute("data-filter-input", "");
+        sidebarInputs.appendChild(input);
+      });
+      // Add org_id inputs
       selectedIds.forEach((id) => {
         const input = document.createElement("input");
         input.type = "hidden";
@@ -997,12 +1270,29 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   };
 
+  // Initialize category checkbox states (indeterminate) in modal
+  function initializeModalCategoryCheckboxStates() {
+    const modal = document.getElementById("org-filter-modal");
+    if (!modal) return;
+
+    // Find all category checkboxes and set indeterminate state based on data attribute
+    const categoryCheckboxes = modal.querySelectorAll(
+      '.org-tree-node__checkbox--category[data-selection-state="indeterminate"]',
+    );
+    categoryCheckboxes.forEach((cb) => {
+      cb.indeterminate = true;
+    });
+  }
+
   // Handle modal opening - initialize HTMX for the dialog
   document.body.addEventListener("htmx:afterSwap", function (event) {
     if (event.detail.target.id === "org-filter-modal-container") {
       const dialog = event.detail.target.querySelector("dialog");
       if (dialog) {
         dialog.showModal();
+
+        // Initialize category checkbox indeterminate states
+        initializeModalCategoryCheckboxStates();
 
         // Auto-expand to show selected organizations
         autoExpandModalTreeNodes();

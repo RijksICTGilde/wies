@@ -201,11 +201,14 @@ class PlacementListView(ListView):
         if self.request.GET.get("rol"):
             qs = qs.filter(service__skill__id=self.request.GET["rol"])
 
-        # Organization filter - supports multi-select via org_id[]
+        # Organization filter - supports multi-select via org_id[] and org_type[]
         org_id_param = self.request.GET.getlist("org_id")
+        org_type_param = self.request.GET.getlist("org_type")
+
+        all_org_id = set()
+
+        # Handle individual org IDs
         if org_id_param:
-            # Collect all relevant org IDs (selected + descendants for hierarchical filtering)
-            all_org_id = set()
             for param in org_id_param:
                 try:
                     org_id = int(param)
@@ -216,11 +219,24 @@ class PlacementListView(ListView):
                 except (ValueError, TypeError):
                     continue
 
-            if all_org_id:
-                qs = qs.filter(
-                    service__assignment__organization_relations__organization_id__in=all_org_id,
-                    service__assignment__organization_relations__role="PRIMARY",
+        # Handle organization type filters (select all orgs of a type)
+        if org_type_param:
+            for org_type in org_type_param:
+                # Get all root orgs of this type and their descendants
+                root_orgs = OrganizationUnit.objects.filter(
+                    organization_type=org_type,
+                    parent__isnull=True,
+                    is_active=True,
                 )
+                for org in root_orgs:
+                    all_org_id.add(org.id)
+                    all_org_id.update(d.id for d in org.get_descendants())
+
+        if all_org_id:
+            qs = qs.filter(
+                service__assignment__organization_relations__organization_id__in=all_org_id,
+                service__assignment__organization_relations__role="PRIMARY",
+            )
 
         # Label filter support multiselect
         for label_id in self.request.GET.getlist("labels"):
@@ -412,8 +428,9 @@ class PlacementListView(ListView):
                 skill_options[-1]["selected"] = True
                 skill_value = str(skill.id)
 
-        # Get selected organization IDs for tree filter
+        # Get selected organization IDs and types for tree filter
         selected_org_id = set(self.request.GET.getlist("org_id", []))
+        selected_org_types = set(self.request.GET.getlist("org_type", []))
 
         # Get selected organization objects for filter chips
         # Also collect ancestor IDs for auto-expand
@@ -426,24 +443,46 @@ class PlacementListView(ListView):
                 for ancestor in org.get_ancestors():
                     expand_org_id.add(str(ancestor.id))
 
-        # Get root organizations for tree filter (ministeries and other top-level)
-        # We only show roots that have assignments (directly or via descendants)
+        # Build categories from root organization types
+        # Group root orgs by type and count assignments
         root_orgs = OrganizationUnit.objects.filter(
             parent__isnull=True,
             is_active=True,
-        ).order_by("name")
+        ).order_by("organization_type", "name")
 
-        # Annotate with has_children and assignment_count
-        root_items = []
+        # Group by type and calculate totals
+        categories = {}
         for org in root_orgs:
-            org.has_children = org.children.filter(is_active=True).exists()
-            # Count assignments at this org + all descendants
-            org.assignment_count = org.assignment_relations.filter(role="PRIMARY").count()
+            org_type = org.organization_type
+            if org_type not in categories:
+                type_label = org.get_organization_type_display()
+                # Pluralize Dutch labels
+                plural_map = {
+                    "Ministerie": "Ministeries",
+                    "Gemeente": "Gemeentes",
+                    "Provincie": "Provincies",
+                    "Waterschap": "Waterschappen",
+                }
+                categories[org_type] = {
+                    "type": org_type,
+                    "label": plural_map.get(type_label, type_label),
+                    "org_count": 0,
+                    "assignment_count": 0,
+                }
+
+            # Count assignments for this org and descendants
+            org_assignment_count = org.assignment_relations.filter(role="PRIMARY").count()
             for desc in org.get_descendants():
-                org.assignment_count += desc.assignment_relations.filter(role="PRIMARY").count()
-            # Only include if has assignments somewhere in tree
-            if org.assignment_count > 0:
-                root_items.append(org)
+                org_assignment_count += desc.assignment_relations.filter(role="PRIMARY").count()
+
+            if org_assignment_count > 0:
+                categories[org_type]["org_count"] += 1
+                categories[org_type]["assignment_count"] += org_assignment_count
+
+        # Filter to only categories with assignments and convert to list
+        category_items = [cat for cat in categories.values() if cat["assignment_count"] > 0]
+        # Sort by label
+        category_items.sort(key=lambda c: c["label"])
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
@@ -455,8 +494,9 @@ class PlacementListView(ListView):
                 "type": "tree",
                 "name": "org_id",
                 "label": "Opdrachtgever",
-                "root_items": root_items,
+                "categories": category_items,
                 "selected_ids": selected_org_id,
+                "selected_types": selected_org_types,
                 "selected_orgs": selected_orgs,
                 "expand_ids": expand_org_id,
             },
@@ -1616,6 +1656,82 @@ def organization_delete(request, pk):
 # =============================================================================
 
 
+def organization_tree_category_children(request, org_type: str):
+    """HTMX endpoint: Load root organizations of a specific type for tree filter."""
+    # Get selected org IDs and types from request
+    selected_ids = set(request.GET.getlist("org_id", []))
+    selected_types = set(request.GET.getlist("org_type", []))
+
+    # Check if this category type is selected
+    category_checked = org_type in selected_types
+
+    # Get root organizations of this type with assignment counts
+    root_orgs = OrganizationUnit.objects.filter(
+        organization_type=org_type,
+        parent__isnull=True,
+        is_active=True,
+    ).order_by("name")
+
+    # Annotate with assignment count and has_children
+    children_data = []
+    for org in root_orgs:
+        org.has_children = org.children.filter(is_active=True).exists()
+        org.assignment_count = org.assignment_relations.filter(role="PRIMARY").count()
+        for desc in org.get_descendants():
+            org.assignment_count += desc.assignment_relations.filter(role="PRIMARY").count()
+        if org.assignment_count > 0:
+            children_data.append(org)
+
+    return render(
+        request,
+        "parts/org_tree_children.html",
+        {
+            "children": children_data,
+            "selected_ids": selected_ids,
+            "parent_checked": category_checked,
+            "level": 1,  # Level 1 because category is level 0
+        },
+    )
+
+
+def organization_tree_category_children_modal(request, org_type: str):
+    """HTMX endpoint: Load root organizations of a specific type for modal tree filter."""
+    # Get selected org IDs and types from request
+    selected_ids = set(request.GET.getlist("org_id", []))
+    selected_types = set(request.GET.getlist("org_type", []))
+
+    # Check if this category type is selected
+    category_checked = org_type in selected_types
+
+    # Get root organizations of this type with assignment counts
+    root_orgs = OrganizationUnit.objects.filter(
+        organization_type=org_type,
+        parent__isnull=True,
+        is_active=True,
+    ).order_by("name")
+
+    # Annotate with assignment count and has_children
+    children_data = []
+    for org in root_orgs:
+        org.has_children = org.children.filter(is_active=True).exists()
+        org.assignment_count = org.assignment_relations.filter(role="PRIMARY").count()
+        for desc in org.get_descendants():
+            org.assignment_count += desc.assignment_relations.filter(role="PRIMARY").count()
+        if org.assignment_count > 0:
+            children_data.append(org)
+
+    return render(
+        request,
+        "parts/org_tree_children_modal.html",
+        {
+            "children": children_data,
+            "selected_ids": selected_ids,
+            "parent_level": 0,  # Category is level 0
+            "parent_checked": category_checked,
+        },
+    )
+
+
 def organization_tree_children(request, parent_id: int):
     """HTMX endpoint: Load children of an organization for tree filter."""
     parent = get_object_or_404(OrganizationUnit, id=parent_id)
@@ -1696,23 +1812,65 @@ def organization_tree_search(request):
 
 def organization_filter_modal(request):
     """HTMX endpoint: Render the organization filter modal."""
-    # Get selected org IDs from current filter state
+    # Get selected org IDs and types from current filter state
     selected_ids = set(request.GET.getlist("org_id", []))
+    selected_types = set(request.GET.getlist("org_type", []))
 
-    # Get root organizations with assignment counts
+    # Build categories from root organizations grouped by type
     root_orgs = OrganizationUnit.objects.filter(
         parent__isnull=True,
         is_active=True,
-    ).order_by("name")
+    ).order_by("organization_type", "name")
 
-    root_items = []
+    # Group by type and calculate totals + selection state
+    categories = {}
     for org in root_orgs:
-        org.has_children = org.children.filter(is_active=True).exists()
-        org.assignment_count = org.assignment_relations.filter(role="PRIMARY").count()
+        org_type = org.organization_type
+        if org_type not in categories:
+            type_label = org.get_organization_type_display()
+            # Pluralize Dutch labels
+            plural_map = {
+                "Ministerie": "Ministeries",
+                "Gemeente": "Gemeentes",
+                "Provincie": "Provincies",
+                "Waterschap": "Waterschappen",
+            }
+            categories[org_type] = {
+                "type": org_type,
+                "label": plural_map.get(type_label, type_label),
+                "org_count": 0,
+                "assignment_count": 0,
+                "selected_count": 0,  # Track how many orgs are individually selected
+            }
+
+        # Count assignments for this org and descendants
+        org_assignment_count = org.assignment_relations.filter(role="PRIMARY").count()
         for desc in org.get_descendants():
-            org.assignment_count += desc.assignment_relations.filter(role="PRIMARY").count()
-        if org.assignment_count > 0:
-            root_items.append(org)
+            org_assignment_count += desc.assignment_relations.filter(role="PRIMARY").count()
+
+        if org_assignment_count > 0:
+            categories[org_type]["org_count"] += 1
+            categories[org_type]["assignment_count"] += org_assignment_count
+            # Check if this org is individually selected
+            if str(org.id) in selected_ids:
+                categories[org_type]["selected_count"] += 1
+
+    # Determine selection state for each category
+    for cat in categories.values():
+        if cat["type"] in selected_types:
+            cat["selection_state"] = "checked"
+        elif cat["selected_count"] > 0:
+            if cat["selected_count"] >= cat["org_count"]:
+                cat["selection_state"] = "checked"
+            else:
+                cat["selection_state"] = "indeterminate"
+        else:
+            cat["selection_state"] = "unchecked"
+
+    # Filter to only categories with assignments and convert to list
+    category_items = [cat for cat in categories.values() if cat["assignment_count"] > 0]
+    # Sort by label
+    category_items.sort(key=lambda c: c["label"])
 
     # Get selected organization objects and collect ancestor IDs for auto-expand
     selected_orgs = []
@@ -1723,14 +1881,17 @@ def organization_filter_modal(request):
             # Add all ancestors to expand list so the tree shows the path to this org
             for ancestor in org.get_ancestors():
                 expand_ids.add(str(ancestor.id))
+            # Also add the org's type to expand
+            expand_ids.add(f"type:{org.organization_type}")
         selected_orgs.sort(key=lambda o: o.name)
 
     return render(
         request,
         "parts/org_tree_filter_modal.html",
         {
-            "root_items": root_items,
+            "categories": category_items,
             "selected_ids": selected_ids,
+            "selected_types": selected_types,
             "selected_orgs": selected_orgs,
             "expand_ids": expand_ids,
         },

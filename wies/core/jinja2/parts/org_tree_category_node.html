@@ -1,0 +1,43 @@
+{# Category node for organization tree - groups root orgs by type #}
+{# Variables: category (dict with type, label, org_count, assignment_count), selected_types (set of strings) #}
+{% set is_selected = category.type in selected_types %}
+<div class="org-tree-node org-tree-node--category org-tree-node--level-0"
+     data-org-type="{{ category.type }}"
+     data-has-children="true"
+     role="treeitem"
+     aria-expanded="false"
+     aria-selected="{{ is_selected|lower }}"
+     aria-level="1">
+  <div class="org-tree-node__header">
+    {# Expand/collapse toggle #}
+    <button type="button"
+            class="org-tree-node__toggle"
+            aria-label="{{ category.label }} uitklappen"
+            aria-expanded="false"
+            hx-get="{{ url('organization-tree-category-children', args=[category.type]) }}"
+            hx-target="#org-tree-category-children-{{ category.type }}"
+            hx-swap="innerHTML"
+            hx-trigger="click once"
+            hx-include="[name='org_id'],[name='org_type']"
+            onclick="this.closest('.org-tree-node').setAttribute('aria-expanded', 'true'); this.setAttribute('aria-expanded', 'true'); this.setAttribute('aria-label', '{{ category.label }} inklappen'); this.classList.add('org-tree-node__toggle--expanded');">
+      <span class="org-tree-node__toggle-icon" aria-hidden="true"></span>
+    </button>
+    {# Checkbox and label #}
+    <label class="org-tree-node__label">
+      <input type="checkbox"
+             class="org-tree-node__checkbox org-tree-node__checkbox--category"
+             name="org_type"
+             value="{{ category.type }}"
+             {% if is_selected %}checked{% endif %}
+             onchange="handleOrgTreeCategoryCheckboxChange(this)"
+             aria-label="Filter op {{ category.label }} ({{ category.assignment_count }} opdrachten)" />
+      <span class="org-tree-node__name org-tree-node__name--category">{{ category.label }}</span>
+      <span class="org-tree-node__count"
+            aria-label="{{ category.assignment_count }} opdrachten">{{ category.assignment_count }}</span>
+    </label>
+  </div>
+  {# Children container (lazy loaded) #}
+  <div class="org-tree-node__children"
+       id="org-tree-category-children-{{ category.type }}"
+       role="group">{# Children will be loaded via HTMX #}</div>
+</div>

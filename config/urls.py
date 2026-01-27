@@ -45,6 +45,8 @@ from wies.core.views import (
     organization_delete,
     organization_edit,
     organization_filter_modal,
+    organization_tree_category_children,
+    organization_tree_category_children_modal,
     organization_tree_children,
     organization_tree_children_modal,
     organization_tree_search,
@@ -96,12 +98,22 @@ urlpatterns = [
     # Organization filter partials (used by placements filter)
     path("plaatsingen/opdrachtgever/filter/", organization_filter_modal, name="organization-filter-modal"),
     path(
+        "plaatsingen/opdrachtgever/tree/categorie/<str:org_type>/",
+        organization_tree_category_children,
+        name="organization-tree-category-children",
+    ),
+    path(
         "plaatsingen/opdrachtgever/tree/<int:parent_id>/", organization_tree_children, name="organization-tree-children"
     ),
     path(
         "plaatsingen/opdrachtgever/tree-modal/<int:parent_id>/",
         organization_tree_children_modal,
         name="organization-tree-children-modal",
+    ),
+    path(
+        "plaatsingen/opdrachtgever/tree-modal/categorie/<str:org_type>/",
+        organization_tree_category_children_modal,
+        name="organization-tree-category-children-modal",
     ),
     path("plaatsingen/opdrachtgever/zoeken/", organization_tree_search, name="organization-tree-search"),
 ]

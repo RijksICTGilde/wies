@@ -20,14 +20,14 @@
   {% for org in results %}
     {% set org_id = org.id|string %}
     {% set is_selected = org_id in selected_ids %}
-    <div class="org-tree-search-result">
+    <div class="org-tree-search-result" data-org-id="{{ org.id }}">
       <label class="org-tree-search-result__label">
         <input type="checkbox"
-               class="org-tree-node__checkbox"
+               class="org-tree-search-result__checkbox"
                value="{{ org.id }}"
                data-org-name="{{ org.abbreviation or org.name }}"
                {% if is_selected %}checked{% endif %}
-               onchange="handleOrgModalCheckboxChange(this)"
+               onchange="handleOrgModalSearchResultChange(this)"
                aria-label="Selecteer {{ org.name }}" />
         <div class="org-tree-search-result__content">
           <div class="org-tree-search-result__name">

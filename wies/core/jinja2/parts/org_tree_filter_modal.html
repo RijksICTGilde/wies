@@ -31,18 +31,14 @@
                      autocomplete="off" />
             </div>
           </div>
-          {# Tree view (default) #}
+          {# Tree view (default) - starts with categories #}
           <div id="org-modal-tree-view"
                class="org-filter-modal__tree"
                role="tree"
                aria-label="Opdrachtgevers"
                data-expand-ids="{{ expand_ids|list|join(',') }}">
-            {% for root in root_items %}
-              {% set node = root %}
-              {% set selected_ids = selected_ids %}
-              {% set level = 0 %}
-              {% set modal_mode = true %}
-              {% include "parts/org_tree_node_modal.html" %}
+            {% for category in categories %}
+              {% include "parts/org_tree_category_node_modal.html" %}
             {% endfor %}
           </div>
           {# Search results (hidden by default) #}
@@ -74,8 +70,9 @@
           </ul>
         </div>
       </div>
-      {# Hidden inputs for selected org IDs #}
+      {# Hidden inputs for selected org IDs and types #}
       <div id="org-modal-selected-inputs">
+        {% for org_type in selected_types %}<input type="hidden" name="org_type" value="{{ org_type }}" />{% endfor %}
         {% for org_id in selected_ids %}<input type="hidden" name="org_id" value="{{ org_id }}" />{% endfor %}
       </div>
     </div>

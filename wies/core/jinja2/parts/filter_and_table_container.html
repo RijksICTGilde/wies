@@ -28,13 +28,21 @@
                             class="utrecht-select utrecht-select--html-select org-filter-trigger__button"
                             onclick="openOrgFilterModal()">
                       <span class="org-filter-trigger__text">
-                        {% if filter_group.selected_ids %}
-                          {% set count = filter_group.selected_ids|length %}
-                          {% if count == 1 %}
-                            {% set org = filter_group.selected_orgs.values()|first %}
-                            {{ org.abbreviation or org.name }}
+                        {% set total_selected = filter_group.selected_ids|length + filter_group.selected_types|length %}
+                        {% if total_selected > 0 %}
+                          {% if total_selected == 1 %}
+                            {% if filter_group.selected_types|length == 1 %}
+                              {# Single category selected #}
+                              {% for cat in filter_group.categories %}
+                                {% if cat.type in filter_group.selected_types %}{{ cat.label }}{% endif %}
+                              {% endfor %}
+                            {% else %}
+                              {# Single org selected #}
+                              {% set org = filter_group.selected_orgs.values()|first %}
+                              {{ org.abbreviation or org.name }}
+                            {% endif %}
                           {% else %}
-                            {{ count }} geselecteerd
+                            {{ total_selected }} geselecteerd
                           {% endif %}
                         {% endif %}
                       </span>
@@ -44,6 +52,12 @@
                   <div id="org-tree-selected-inputs" style="display: none;">
                     {% for org_id in filter_group.selected_ids %}
                       <input type="hidden" name="org_id" value="{{ org_id }}" data-filter-input />
+                    {% endfor %}
+                    {% for org_type in filter_group.selected_types %}
+                      <input type="hidden"
+                             name="org_type"
+                             value="{{ org_type }}"
+                             data-filter-input />
                     {% endfor %}
                   </div>
                 </div>
@@ -182,7 +196,26 @@
                 </button>
               </div>
               {# Tree filter chips (organization multi-select) #}
-            {% elif filter_group.type == 'tree' and filter_group.selected_ids %}
+            {% elif filter_group.type == 'tree' and (filter_group.selected_ids or filter_group.selected_types) %}
+              {# First show selected categories #}
+              {% for cat in filter_group.categories %}
+                {% if cat.type in filter_group.selected_types %}
+                  <div class="filter-chip filter-chip--default"
+                       data-filter-name="org_type"
+                       data-filter-value="{{ cat.type }}"
+                       data-filter-type="tree-multi">
+                    <span class="filter-chip-label">{{ cat.label }}</span>
+                    <button type="button"
+                            class="filter-chip-remove"
+                            aria-label="Verwijder filter"
+                            data-filter-name="org_type"
+                            data-filter-value="{{ cat.type }}">
+                      <c-icon icon="kruis" color="grijs-700" size="sm" />
+                    </button>
+                  </div>
+                {% endif %}
+              {% endfor %}
+              {# Then show selected individual orgs #}
               {% for org_id in filter_group.selected_ids %}
                 {% set org = filter_group.selected_orgs.get(org_id) %}
                 {% if org %}
