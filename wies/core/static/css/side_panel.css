@@ -71,7 +71,7 @@ dialog#side_panel.closing::backdrop {
 }
 
 /* Desktop: set max-height */
-@media (min-width: 1025px) {
+@media (min-width: 801px) {
   .rvo-dialog__content {
     max-height: calc(100vh - 120px);
   }

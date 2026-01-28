@@ -30,21 +30,6 @@
   height: 3rem;
 }
 
-.filter-bar-bar .utrecht-textbox {
-  padding-left: 2.5rem;
-}
-
-/* Search icon styling */
-.filter-bar-bar .search-icon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 1;
-  color: #154273;
-  pointer-events: none;
-}
-
 .filter-bar-bar .utrecht-button {
   min-width: 110px;
   position: relative;
@@ -53,6 +38,29 @@
 /* Modal overlay - hidden by default */
 .modal-overlay {
   display: none;
+}
+
+/* Modal close button styling */
+.modal-close {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--rvo-color-logoblauw, #154273);
+  transition: background-color 0.2s ease;
+}
+
+.modal-close:hover {
+  background-color: var(--rvo-color-grijs-200, #e6e6e6);
+}
+
+.modal-close .utrecht-icon {
+  width: 20px;
+  height: 20px;
 }
 
 /* Mobile: transform modal into sidebar */
@@ -121,28 +129,5 @@
   .modal-overlay .modal-footer {
     background: var(--rvo-color-grijs-100, #f3f3f3);
     border-top: 1px solid var(--rvo-color-grijs-300, #c4c4c4);
-  }
-
-  /* Style close button */
-  .modal-overlay .modal-close {
-    background: none;
-    border: none;
-    padding: 0.5rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 4px;
-    color: var(--rvo-color-logoblauw, #154273);
-    transition: background-color 0.2s ease;
-  }
-
-  .modal-overlay .modal-close:hover {
-    background-color: var(--rvo-color-grijs-200, #e6e6e6);
-  }
-
-  .modal-overlay .modal-close .utrecht-icon {
-    width: 20px;
-    height: 20px;
   }
 }

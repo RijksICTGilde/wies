@@ -4,6 +4,7 @@ Usage:
   {% include "parts/generic_filter_bar.html" %}
 {% endwith %}
 #}
+<link rel="stylesheet" href="{{ static('css/filters.css') }}">
 <link rel="stylesheet" href="{{ static('css/generic_filter_bar.css') }}">
 {# Generic Compact Filters Section #}
 <form class="rvo-form filter-bar"
@@ -106,4 +107,5 @@ Usage:
     </div>
   </div>
 </form>
+<script src="{{ static('js/filter_utils.js') }}"></script>
 <script src="{{ static('js/generic_filter_bar.js') }}"></script>

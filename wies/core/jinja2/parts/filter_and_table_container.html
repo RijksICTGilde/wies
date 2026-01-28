@@ -22,12 +22,6 @@
               hx-push-url="true"
               hx-trigger="change,input delay:500ms from:[data-filter-input]"
               hx-include="[data-filter-input]">
-          {% if request.GET.get('filters') %}
-            <input type="hidden"
-                   name="filters"
-                   value="{{ request.GET.get('filters') }}"
-                   data-filter-input />
-          {% endif %}
           <div class="search-field-wrapper">
             <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon" />
             <c-input id="search" name="zoek" placeholder="Zoeken..." value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" aria-label="Zoeken" data-filter-input size />

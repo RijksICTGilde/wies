@@ -38,59 +38,8 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Close modal with escape key
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && modal.style.display === "flex") {
-      closeFilterModal();
-    }
-  });
-
-  // Handle date range validation and combined parameter submission
-  const dateRangeInputs = document.querySelectorAll('input[type="date"]');
-
-  dateRangeInputs.forEach((input) => {
-    input.addEventListener("change", function () {
-      const requireBoth = input.dataset.requireBoth === "true";
-      const combinedName = input.dataset.combinedName;
-      const pairId = input.dataset.pairId;
-
-      if (requireBoth && combinedName && pairId) {
-        const pairInput = document.getElementById(pairId);
-        const validationMessage = document.getElementById(
-          `${combinedName}-validation-message`,
-        );
-        const hiddenOutput = form.querySelector(
-          `input[name="${combinedName}"]`,
-        );
-
-        if (!pairInput || !hiddenOutput) return;
-
-        const fromInput = input.id.includes("-from") ? input : pairInput;
-        const toInput = input.id.includes("-to") ? input : pairInput;
-
-        const fromValue = fromInput.value;
-        const toValue = toInput.value;
-
-        // Show/hide validation message
-        if (validationMessage) {
-          if ((fromValue && !toValue) || (!fromValue && toValue)) {
-            validationMessage.style.display = "block";
-          } else {
-            validationMessage.style.display = "none";
-          }
-        }
-
-        // Update hidden output field
-        if (fromValue && toValue) {
-          // Both dates provided - set combined value
-          hiddenOutput.value = `${fromValue}_${toValue}`;
-        } else {
-          // Clear value (but keep name attribute)
-          hiddenOutput.value = "";
-        }
-      }
-    });
-  });
+  // Handle date range validation (from filter_utils.js)
+  setupDateRangeListeners(".rvo-form");
 
   // Clear all filters
   if (clearFiltersButton) {
@@ -162,8 +111,6 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initial update
   updateFilterIndicator();
 
-  // Handle back button navigation - simple page reload for filter sync
-  window.addEventListener("popstate", function (event) {
-    window.location.href = window.location.href;
-  });
+  // Handle back button navigation (from filter_utils.js)
+  setupPopstateHandler();
 });

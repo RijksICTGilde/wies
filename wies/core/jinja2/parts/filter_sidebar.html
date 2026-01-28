@@ -1,10 +1,7 @@
 <div class="sidebar__toggle-row">
-  <div class="sidebar__title">
-    <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-icon--logoblauw"
-          role="img"
-          aria-label="Filters"></span>
+  <h3 class="sidebar__title">
     <span class="sidebar__title-text">Filters</span>
-  </div>
+  </h3>
   <button type="button"
           class="sidebar-toggle"
           onclick="toggleFilters()"
@@ -27,13 +24,6 @@
       hx-push-url="true"
       hx-trigger="change,input delay:500ms from:[data-filter-input]"
       hx-include="[data-filter-input]">
-  <!-- Behoud filters state in HTMX requests -->
-  {% if request.GET.get('filters') %}
-    <input type="hidden"
-           name="filters"
-           value="{{ request.GET.get('filters') }}"
-           data-filter-input />
-  {% endif %}
   <!-- Filter Fields -->
   <div class="sidebar__content">
     <div class="rvo-layout-column rvo-layout-gap--md">

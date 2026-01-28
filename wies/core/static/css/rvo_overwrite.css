@@ -42,11 +42,6 @@
   min-height: calc(100vh - 200px);
 }
 
-/* Verkleinde afstand tussen icoon en tekst in menubar */
-.rvo-menubar .rvo-link--with-icon {
-  gap: 0.25rem;
-}
-
 /* Custom layout breedte voor plaatsingen pagina */
 .rvo-max-width-layout--placements {
   max-width: 1400px;
@@ -55,4 +50,9 @@
 /* Lijn navigatie uit met de tabel (voorbij de filter sidebar) */
 .rvo-max-width-layout--placements .rvo-menubar__group--flex:first-child {
   margin-left: calc(280px + 0.75rem);
+}
+
+/* Adjust logo wordmark margin to center text with emblem */
+.rvo-logo__wordmark {
+  margin-top: 20px;
 }

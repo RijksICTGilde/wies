@@ -40,8 +40,15 @@
 
 #placement_table .rvo-table th:nth-child(3),
 #placement_table .rvo-table td:nth-child(3) {
-  width: 20%; /* Rol column - same */
-  white-space: nowrap; /* Prevent wrapping */
+  width: 20%; /* Rol column */
+}
+
+/* Role tags with overflow protection */
+#placement_table .rvo-tag {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: inline-block;
 }
 
 #placement_table .rvo-table th:nth-child(4),

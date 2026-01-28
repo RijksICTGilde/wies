@@ -15,14 +15,6 @@ document.addEventListener("DOMContentLoaded", function () {
           panel.classList.add("opening");
         });
       });
-
-      // Handle ESC key to close panel completely
-      panel.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") {
-          e.preventDefault(); // Prevent default dialog close
-          closePanelWithFilters();
-        }
-      });
     }
   } else {
     // Reset overflow if no panel is present (important for back button)

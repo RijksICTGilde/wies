@@ -17,11 +17,11 @@
             <p class="rvo-text">{{ delete_warning }}</p>
           </div>
         {% else %}
-          <div style="display: flex; gap: 2rem; align-items: flex-start;">
+          <div class="user-form-layout">
             {# Left column: Basic user info #}
-            <div style="flex: 1;">
+            <div class="user-form-column">
               <h3 class="utrecht-heading-3" style="margin-bottom: 1rem;">Gebruikersgegevens</h3>
-              <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <div>
                 {{ content.first_name.as_field_group() }}
                 {{ content.last_name.as_field_group() }}
                 {{ content.email.as_field_group() }}
@@ -29,13 +29,11 @@
               </div>
             </div>
             {# Vertical divider #}
-            <div style="border-left: 1px solid #e6e6e6;
-                        height: auto;
-                        align-self: stretch"></div>
+            <div class="user-form-divider"></div>
             {# Right column: Labels #}
-            <div style="flex: 1;">
+            <div class="user-form-column">
               <h3 class="utrecht-heading-3" style="margin-bottom: 1rem;">Labels</h3>
-              <div style="display: flex; flex-direction: column; gap: 1rem;">
+              <div>
                 {% for field in content %}
                   {% if field.name.startswith('category_') %}{{ field.as_field_group() }}{% endif %}
                 {% endfor %}

@@ -1,15 +1,3 @@
-/* Admin Header with Title and Action Button */
-.admin-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.admin-header c-h1 {
-  margin: 0;
-}
-
 /* make sure label names take enough space */
 .rvo-table {
   table-layout: auto;
