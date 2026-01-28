@@ -5,7 +5,7 @@ This module provides efficient database-level annotations for start_date and end
 that cascade from Assignment -> Service -> Placement hierarchy.
 """
 
-from django.db.models import Case, Count, F, Prefetch, Q, When
+from django.db.models import Case, Count, F, Prefetch, When
 from django.db.models.functions import Lower
 
 from wies.core.models import Label
@@ -52,32 +52,6 @@ def annotate_placement_dates(queryset):
             # When placement has its own dates
             default=F("specific_end_date"),
         ),
-    )
-
-
-def filter_by_date_overlap(
-    queryset, start_date, end_date, start_field="actual_start_date", end_field="actual_end_date"
-):
-    """
-    Filter queryset for records that overlap with the given date range.
-
-    A record overlaps if: record_start <= range_end AND record_end >= range_start
-
-    Args:
-        queryset: QuerySet to filter (must have start/end date annotations)
-        start_date: Range start date
-        end_date: Range end date
-        start_field: Name of the start date field/annotation
-        end_field: Name of the end date field/annotation
-
-    Returns:
-        Filtered QuerySet
-    """
-    return queryset.filter(
-        Q(**{f"{start_field}__lte": end_date})
-        & Q(**{f"{end_field}__gte": start_date})
-        & Q(**{f"{start_field}__isnull": False})
-        & Q(**{f"{end_field}__isnull": False})
     )
 
 

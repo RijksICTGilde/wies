@@ -70,6 +70,15 @@ class AssignmentEditAttributeTest(TestCase):
             ministry=self.ministry,
             owner=self.owner_colleague,
             extra_info="Lorem ipsum dolor sit amet, consectetur adipiscing elit. " * 10,  # Long text
+            source="wies",  # Editable source
+        )
+
+        # Create external assignment (not editable)
+        self.external_assignment = Assignment.objects.create(
+            name="External Assignment",
+            ministry=self.ministry,
+            owner=self.owner_colleague,
+            source="otys_iir",  # External source - not editable
         )
 
         # Create service linked to assignment
@@ -140,6 +149,19 @@ class AssignmentEditAttributeTest(TestCase):
         assert response.status_code == 403
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Test Assignment"  # Should not change
+
+    def test_external_source_assignment_not_editable_even_with_permission(self):
+        """Test that assignments from external sources (otys_iir) cannot be edited even by authorized users"""
+        self.client.force_login(self.user_with_permission)
+
+        response = self.client.post(
+            reverse("assignment-edit-attribute", args=[self.external_assignment.id, "name"]),
+            {"name": "Attempted Update"},
+        )
+
+        assert response.status_code == 403
+        self.external_assignment.refresh_from_db()
+        assert self.external_assignment.name == "External Assignment"  # Should not change
 
     # ========== Name Field Validation Tests ==========
 
