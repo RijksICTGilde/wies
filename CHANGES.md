@@ -16,6 +16,7 @@ This files lists the changes during the lifetime of this project.
 - 177: Collapse filters
 - 177: Screens, modals and panels responsive
 - 177: Add logo to login
+- 177: Refactor layout to be more flexible
 
 ## 2026-01-19
 
