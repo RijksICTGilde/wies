@@ -88,4 +88,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Handle back button navigation
   setupPopstateHandler();
+
+  // Register ESC handler via overlay close registry (layout.js)
+  registerOverlayClose(
+    () => modal && modal.style.display === "flex",
+    () => closeFilterModal(),
+  );
 });

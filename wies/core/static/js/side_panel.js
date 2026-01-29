@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", function () {
         url.searchParams.delete("collega");
         url.searchParams.delete("opdracht");
         window.location.href = url.toString();
-      }, 400); // Match transition duration in CSS
+      }, LAYOUT.ANIMATION_DURATION_MS); // Match transition duration in CSS
     } else {
       // Fallback if panel doesn't exist
       const url = new URL(window.location);
@@ -63,4 +63,13 @@ document.addEventListener("DOMContentLoaded", function () {
       closePanelWithFilters();
     }
   });
+
+  // Register ESC handler via overlay close registry (layout.js)
+  registerOverlayClose(
+    () => {
+      const p = document.getElementById("side_panel");
+      return p && p.open;
+    },
+    () => closePanelWithFilters(),
+  );
 });

@@ -17,7 +17,7 @@
 /* Typography classes replaced with RVO design system classes in templates */
 
 /* Make sure the placement table container uses full width */
-#placement_table {
+.placement-table {
   width: 100%;
   max-width: none;
 }
@@ -28,31 +28,31 @@
 }
 
 /* Column width optimization for placement table only */
-#placement_table .rvo-table th:nth-child(1),
-#placement_table .rvo-table td:nth-child(1) {
+.placement-table .rvo-table th:nth-child(1),
+.placement-table .rvo-table td:nth-child(1) {
   width: 28%; /* Naam column - more space */
 }
 
-#placement_table .rvo-table th:nth-child(2),
-#placement_table .rvo-table td:nth-child(2) {
+.placement-table .rvo-table th:nth-child(2),
+.placement-table .rvo-table td:nth-child(2) {
   width: 37%; /* Opdracht column - slightly smaller */
 }
 
-#placement_table .rvo-table th:nth-child(3),
-#placement_table .rvo-table td:nth-child(3) {
+.placement-table .rvo-table th:nth-child(3),
+.placement-table .rvo-table td:nth-child(3) {
   width: 20%; /* Rol column */
 }
 
 /* Role tags with overflow protection */
-#placement_table .rvo-tag {
+.placement-table .rvo-tag {
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   display: inline-block;
 }
 
-#placement_table .rvo-table th:nth-child(4),
-#placement_table .rvo-table td:nth-child(4) {
+.placement-table .rvo-table th:nth-child(4),
+.placement-table .rvo-table td:nth-child(4) {
   width: 15%; /* Periode column - same */
   white-space: nowrap; /* Prevent wrapping */
 }

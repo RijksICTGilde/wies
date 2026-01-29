@@ -8,8 +8,8 @@
 
 /* Filter Sidebar */
 .filter-sidebar {
-  flex: 0 0 280px;
-  width: 280px;
+  flex: 0 0 var(--sidebar-width);
+  width: var(--sidebar-width);
   background: var(--rvo-color-grijs-100);
   display: flex;
   flex-direction: column;
@@ -25,7 +25,7 @@
   align-items: center;
   justify-content: space-between;
   flex-shrink: 0;
-  min-width: 280px;
+  min-width: var(--sidebar-width);
 }
 
 .filter-sidebar-header h2 {
@@ -54,7 +54,7 @@
 .filter-sidebar-body {
   padding: 1.5rem;
   flex: 0 0 auto;
-  min-width: 280px;
+  min-width: var(--sidebar-width);
 }
 
 /* Date Range Field Styling */

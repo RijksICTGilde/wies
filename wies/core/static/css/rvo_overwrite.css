@@ -49,7 +49,7 @@
 
 /* Lijn navigatie uit met de tabel (voorbij de filter sidebar) */
 .rvo-max-width-layout--placements .rvo-menubar__group--flex:first-child {
-  margin-left: calc(280px + 0.75rem);
+  margin-left: calc(var(--sidebar-width) + 0.75rem);
 }
 
 /* Adjust logo wordmark margin to center text with emblem */

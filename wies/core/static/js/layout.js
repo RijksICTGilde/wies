@@ -1,3 +1,25 @@
+// Layout constants - read from CSS custom properties (single source of truth)
+const LAYOUT = {
+  get MOBILE_BREAKPOINT() {
+    return (
+      parseInt(
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--breakpoint-mobile",
+        ),
+      ) || 800
+    );
+  },
+  get ANIMATION_DURATION_MS() {
+    return (
+      parseInt(
+        getComputedStyle(document.documentElement).getPropertyValue(
+          "--animation-duration-ms",
+        ),
+      ) || 400
+    );
+  },
+};
+
 // Layout Functions
 
 function toggleMobileMenu() {
@@ -9,7 +31,7 @@ function toggleMobileMenu() {
 
 function toggleFilters() {
   const layout = document.getElementById("layout");
-  const isMobile = window.innerWidth <= 800;
+  const isMobile = window.innerWidth <= LAYOUT.MOBILE_BREAKPOINT;
 
   if (isMobile) {
     // Mobile: toggle full screen overlay
@@ -42,42 +64,45 @@ function openAssignmentPanel(assignmentId) {
   window.location.href = url.toString();
 }
 
-// Global ESC key handler - closes all overlays
+// Overlay close registry - page scripts register their close handlers here.
+// Handlers are checked in order; the first matching handler closes its overlay.
+const overlayCloseHandlers = [];
+
+function registerOverlayClose(checkFn, closeFn) {
+  overlayCloseHandlers.push({ check: checkFn, close: closeFn });
+}
+
+// Built-in handlers: mobile filters and mobile menu
+registerOverlayClose(
+  () => {
+    const layout = document.getElementById("layout");
+    return layout && layout.classList.contains("layout--mobile-filters-open");
+  },
+  () => {
+    document
+      .getElementById("layout")
+      .classList.remove("layout--mobile-filters-open");
+  },
+);
+
+registerOverlayClose(
+  () => {
+    const menubar = document.querySelector(".menubar");
+    return menubar && menubar.classList.contains("menubar--mobile-open");
+  },
+  () => {
+    document.querySelector(".menubar").classList.remove("menubar--mobile-open");
+  },
+);
+
+// Global ESC key handler - delegates to registered overlay handlers
 document.addEventListener("keydown", function (e) {
   if (e.key === "Escape") {
-    // Close generic filter modal (admin pages)
-    const filterModal = document.getElementById("filterModal");
-    if (filterModal && filterModal.style.display === "flex") {
-      filterModal.style.display = "none";
-      document.body.style.overflow = "auto";
-      return;
-    }
-
-    // Close side panel
-    const sidePanel = document.getElementById("side_panel");
-    if (sidePanel && sidePanel.open) {
-      sidePanel.classList.add("closing");
-      setTimeout(() => {
-        const url = new URL(window.location);
-        url.searchParams.delete("collega");
-        url.searchParams.delete("opdracht");
-        window.location.href = url.toString();
-      }, 400);
-      return;
-    }
-
-    // Close mobile placement filters
-    const layout = document.getElementById("layout");
-    if (layout && layout.classList.contains("layout--mobile-filters-open")) {
-      layout.classList.remove("layout--mobile-filters-open");
-      return;
-    }
-
-    // Close mobile menu
-    const menubar = document.querySelector(".menubar");
-    if (menubar && menubar.classList.contains("menubar--mobile-open")) {
-      menubar.classList.remove("menubar--mobile-open");
-      return;
+    for (const handler of overlayCloseHandlers) {
+      if (handler.check()) {
+        handler.close();
+        return;
+      }
     }
   }
 });
