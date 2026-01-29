@@ -1,17 +1,17 @@
-{# RVO Header met logo - buiten layout voor full-width #}
 <header class="rvo-header">
   <div class="rvo-header__logo-wrapper">
-    <div class="rvo-logo rvo-header__logo-img">
-      <div class="rvo-logo__emblem">
-        <img src="{{ static('@nl-rvo/assets/images/emblem.svg') }}"
-             alt="RVO Embleem">
+    <a href="{{ url('home') }}" class="logo-link">
+      <div class="rvo-logo rvo-header__logo-img">
+        <div class="rvo-logo__emblem">
+          <img src="{{ static('@nl-rvo/assets/images/emblem.svg') }}"
+               alt="Rijksoverheid embleem">
+        </div>
+        <div class="rvo-logo__wordmark">
+          {# djlint:off #}
+          <p class="rvo-logo__title">Rijksorganisatie voor Ontwikkeling, <br> Digitalisering en Innovatie</p>
+          {# djlint:on #}
+        </div>
       </div>
-      <div class="rvo-logo__wordmark">
-        <p class="rvo-logo__title">
-          Rijksorganisatie voor Ontwikkeling,
-          Digitalisering en Innovatie
-        </p>
-      </div>
-    </div>
+    </a>
   </div>
 </header>
