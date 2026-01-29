@@ -4,19 +4,26 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 176: Fix that externally managed assignment can not be edited
+- 176: Filter out historical placements
+- 172: Move dummy_data.json to wies/core/fixtures/
+- 149: Change `/plaatsingen/importeren` to `/opdrachten/importeren`
+- 149: Change home page from redirect to `/plaatsingen/` to serve placements directly at `/`
+- 139: Skip login page, redirect directly to Keycloak (SSO-Rijk)
+- 139: Improved "no access" page with context-specific messages based on email domain
+- 139: Add `ALLOWED_EMAIL_DOMAINS` setting for ODI email validation
+- 139: Add email domain validation to user create, edit and CSV import
 - 147: Add security headers (CSP, Permissions-Policy, HSTS, etc.)
 - 147: Serve vendor assets (htmx, RVO CSS) locally instead of from CDN
 - 143: Bump Django from 5.2.9 to 6.0.1
 - 144: Drop django-extensions
-- 162: Add pre-cmmit, ruff, djlint, pytest and coverage report
-- 162: Add .editor.config
-- 162: Add Github action for labeling pre-commit PRs with label dependencies
+- 150: Add Wies logo to navbar item "Wie zit waar?"
+- 162: Add pre-commit, ruff, djlint, pytest and coverage report
+- 162: Add .editorconfig
+- 162: Add GitHub action for labeling pre-commit PRs with label dependencies
 - 162: Change formatting according to styling rules
 - 161: Fix that BM link no longer resets active filters
-- 177: Collapse filters
-- 177: Screens, modals and panels responsive
-- 177: Add logo to login
-- 177: Refactor layout to be more flexible
+- 163: Generalize assignment import to be brand independent
 
 ## 2026-01-19
 

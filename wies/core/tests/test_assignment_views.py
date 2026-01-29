@@ -1,17 +1,10 @@
 from django.contrib.auth.models import Permission
-from django.test import Client, TestCase, override_settings
+from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.models import Assignment, Colleague, Ministry, Placement, Service, User
 
 
-@override_settings(
-    STORAGES={
-        "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-        },
-    },
-)
 class AssignmentEditAttributeTest(TestCase):
     """Tests for assignment inline editing feature"""
 
@@ -28,7 +21,7 @@ class AssignmentEditAttributeTest(TestCase):
         # Create users
         self.user_with_permission = User.objects.create(
             username="user_with_perm",
-            email="perm@example.com",
+            email="perm@rijksoverheid.nl",
             first_name="User",
             last_name="WithPerm",
         )
@@ -37,21 +30,21 @@ class AssignmentEditAttributeTest(TestCase):
 
         self.owner_user = User.objects.create(
             username="owner_user",
-            email="owner@example.com",
+            email="owner@rijksoverheid.nl",
             first_name="Owner",
             last_name="User",
         )
 
         self.assigned_user = User.objects.create(
             username="assigned_user",
-            email="assigned@example.com",
+            email="assigned@rijksoverheid.nl",
             first_name="Assigned",
             last_name="User",
         )
 
         self.unrelated_user = User.objects.create(
             username="unrelated_user",
-            email="unrelated@example.com",
+            email="unrelated@rijksoverheid.nl",
             first_name="Unrelated",
             last_name="User",
         )
@@ -60,14 +53,14 @@ class AssignmentEditAttributeTest(TestCase):
         self.owner_colleague = Colleague.objects.create(
             user=self.owner_user,
             name="Owner Colleague",
-            email="owner@example.com",
+            email="owner@rijksoverheid.nl",
             source="wies",
         )
 
         self.assigned_colleague = Colleague.objects.create(
             user=self.assigned_user,
             name="Assigned Colleague",
-            email="assigned@example.com",
+            email="assigned@rijksoverheid.nl",
             source="wies",
         )
 
@@ -77,6 +70,15 @@ class AssignmentEditAttributeTest(TestCase):
             ministry=self.ministry,
             owner=self.owner_colleague,
             extra_info="Lorem ipsum dolor sit amet, consectetur adipiscing elit. " * 10,  # Long text
+            source="wies",  # Editable source
+        )
+
+        # Create external assignment (not editable)
+        self.external_assignment = Assignment.objects.create(
+            name="External Assignment",
+            ministry=self.ministry,
+            owner=self.owner_colleague,
+            source="otys_iir",  # External source - not editable
         )
 
         # Create service linked to assignment
@@ -147,6 +149,19 @@ class AssignmentEditAttributeTest(TestCase):
         assert response.status_code == 403
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Test Assignment"  # Should not change
+
+    def test_external_source_assignment_not_editable_even_with_permission(self):
+        """Test that assignments from external sources (otys_iir) cannot be edited even by authorized users"""
+        self.client.force_login(self.user_with_permission)
+
+        response = self.client.post(
+            reverse("assignment-edit-attribute", args=[self.external_assignment.id, "name"]),
+            {"name": "Attempted Update"},
+        )
+
+        assert response.status_code == 403
+        self.external_assignment.refresh_from_db()
+        assert self.external_assignment.name == "External Assignment"  # Should not change
 
     # ========== Name Field Validation Tests ==========
 

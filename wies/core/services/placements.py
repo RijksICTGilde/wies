@@ -5,6 +5,7 @@ from io import StringIO
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.db import transaction
+from django.db.models import Q
 
 from wies.core.models import (
     DEFAULT_LABELS,
@@ -17,7 +18,6 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.querysets import annotate_placement_dates, filter_by_date_overlap
 
 
 def parse_date_dmy(date_str: str) -> datetime.date:
@@ -26,45 +26,44 @@ def parse_date_dmy(date_str: str) -> datetime.date:
     return datetime.date(int(year), int(month), int(day))
 
 
-def filter_placements_by_period(queryset, period):
+def filter_placements_by_period(queryset, period_from, period_to):
     """
     Filter placement queryset by period range for overlapping periods.
 
-    This function uses database-level annotations and filtering for optimal performance.
-
     Args:
         queryset: Placement queryset to filter
-        period: Period string in format "YYYY-MM-DD_YYYY-MM-DD"
-
+        period_from: date object
+        period_from: date object
     Returns:
         Filtered queryset containing only placements that overlap with the given period
     """
-    if not period:
-        return queryset
 
-    # Parse period in format "YYYY-MM-DD_YYYY-MM-DD"
-    if "_" not in period:
-        return queryset
-
-    try:
-        period_from_str, period_to_str = period.split("_", 1)
-        period_from = datetime.date.fromisoformat(period_from_str)
-        period_to = datetime.date.fromisoformat(period_to_str)
-
-        # Annotate with actual dates at database level
-        queryset = annotate_placement_dates(queryset)
-
-        # Filter for overlapping periods at database level
-        return filter_by_date_overlap(queryset, period_from, period_to)
-
-    except ValueError:
-        # Invalid date format, ignore filter
-        return queryset
+    return queryset.filter(
+        Q(actual_start_date__lte=period_to)
+        & Q(actual_end_date__gte=period_from)
+        & Q(actual_start_date__isnull=False)
+        & Q(actual_end_date__isnull=False)
+    )
 
 
-def create_placements_from_csv(csv_content: str):
+def filter_placements_by_min_end_date(queryset, min_end_date):
+    return queryset.filter(Q(actual_end_date__gte=min_end_date) | Q(actual_end_date__isnull=True))
+
+
+def create_assignments_from_csv(csv_content: str):
     """
-    Create colleagues, assignments, services and placements from csv
+    Create colleagues, assignments, services and placements from csv.
+
+    The CSV should contain the following required columns:
+    - assignment_name, assignment_description, assignment_owner, assignment_owner_email
+    - assignment_organization, assignment_ministry, assignment_start_date, assignment_end_date
+    - service_skill, placement_colleague_name, placement_colleague_email
+
+    Optional columns:
+    - owner_brand: If provided, assigns the brand label to newly created assignment owners.
+                   If empty or not provided, no brand label is assigned.
+    - colleague_brand: If provided, assigns the brand label to newly created placement colleagues.
+                       If empty or not provided, no brand label is assigned.
     """
 
     csv_reader = csv.DictReader(StringIO(csv_content))
@@ -92,11 +91,13 @@ def create_placements_from_csv(csv_content: str):
 
     try:
         with transaction.atomic():
-            # Get or create the 'Rijks ICT Gilde' label for newly created colleagues
+            # Get or create the 'Merk' (Brand) label category
             merken_category, _ = LabelCategory.objects.get_or_create(
                 name="Merk", defaults={"color": DEFAULT_LABELS["Merk"]["color"]}
             )
-            rijks_ict_gilde_label, _ = Label.objects.get_or_create(name="Rijks ICT Gilde", category=merken_category)
+
+            # Cache for brand labels to avoid repeated database queries
+            label_mapping = {}
 
             colleagues_created = 0
             assignments_created = 0
@@ -105,6 +106,30 @@ def create_placements_from_csv(csv_content: str):
             skills_created = 0
             ministries_created = 0
             for _, row in enumerate(csv_reader, start=2):  # Start at 2 (1 is header)
+                # Get owner brand label if specified in CSV
+                owner_brand_name = row.get("owner_brand", "").strip()
+                owner_brand_label = None
+                if owner_brand_name:
+                    if owner_brand_name in label_mapping:
+                        owner_brand_label = label_mapping[owner_brand_name]
+                    else:
+                        owner_brand_label, _ = Label.objects.get_or_create(
+                            name=owner_brand_name, category=merken_category
+                        )
+                        label_mapping[owner_brand_name] = owner_brand_label
+
+                # Get colleague brand label if specified in CSV
+                colleague_brand_name = row.get("colleague_brand", "").strip()
+                colleague_brand_label = None
+                if colleague_brand_name:
+                    if colleague_brand_name in label_mapping:
+                        colleague_brand_label = label_mapping[colleague_brand_name]
+                    else:
+                        colleague_brand_label, _ = Label.objects.get_or_create(
+                            name=colleague_brand_name, category=merken_category
+                        )
+                        label_mapping[colleague_brand_name] = colleague_brand_label
+
                 assignment_owner_email = row["assignment_owner_email"]
                 if assignment_owner_email != "":
                     validate_email(assignment_owner_email)
@@ -116,7 +141,8 @@ def create_placements_from_csv(csv_content: str):
                             email=assignment_owner_email,
                             source="wies",
                         )
-                        owner.labels.add(rijks_ict_gilde_label)
+                        if owner_brand_label:
+                            owner.labels.add(owner_brand_label)
                         colleagues_created += 1
                 else:
                     owner = None
@@ -184,7 +210,8 @@ def create_placements_from_csv(csv_content: str):
                         email=colleague_email,
                         source="wies",
                     )
-                    colleague.labels.add(rijks_ict_gilde_label)
+                    if colleague_brand_label:
+                        colleague.labels.add(colleague_brand_label)
                     colleagues_created += 1
 
                 _, created = Placement.objects.get_or_create(
