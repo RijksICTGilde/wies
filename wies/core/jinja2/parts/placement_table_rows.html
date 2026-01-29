@@ -1,6 +1,10 @@
 {% for placement in object_list %}
   <tr class="rvo-table-row clickable-row"
       onclick="window.location.href='{{ placement.colleague_url }}'"
+      onkeydown="if(event.key==='Enter'||event.key===' '){window.location.href='{{ placement.colleague_url }}';event.preventDefault();}"
+      tabindex="0"
+      role="button"
+      aria-label="Bekijk plaatsing van {{ placement.colleague.name }}"
       style="cursor: pointer">
     <td class="rvo-table-cell">
       <div class="user-table-cell">
