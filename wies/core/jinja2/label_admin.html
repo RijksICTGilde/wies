@@ -15,7 +15,7 @@
       Categorie toevoegen
       </c-button>
     </div>
-    <!-- Categories and Labels -->
+    {# Categories and Labels #}
     {% if categories %}
       {% for category in categories %}
         <div id="label_category_{{ category.id }}">{% include "parts/label_category.html" %}</div>
@@ -23,7 +23,7 @@
     {% else %}
       <p>Geen categorieën gevonden. Maak een nieuwe categorie aan om te beginnen.</p>
     {% endif %}
-    <!-- Modal container -->
+    {# Modal container #}
     <div id="labelFormModal"></div>
   </div>
 {% endblock content %}
