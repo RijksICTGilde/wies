@@ -1,11 +1,13 @@
-from unittest.mock import patch
+from datetime import date
+from unittest.mock import Mock, patch
 
 from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.test import Client, TestCase
+from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
 
-from wies.core.models import User
+from wies.core.models import Assignment, Colleague, Ministry, Placement, Service, Skill, User
+from wies.core.views import PlacementListView
 
 
 class PlacementImportTest(TestCase):
@@ -183,3 +185,489 @@ Test Assignment,Test Description,John Owner,john@rijksoverheid.nl,Test Org,BZK,0
 
         # Verify the service function was called
         mock_create_placements.assert_called_once()
+
+
+class PlacementListHistoricalFilterTest(TestCase):
+    """Tests for historical placement filtering in PlacementListView"""
+
+    def setUp(self):
+        """Create test data"""
+        self.client = Client()
+        self.list_url = reverse("home")
+
+        # Create authenticated user
+        self.auth_user = User.objects.create(
+            username="testuser",
+            email="test@rijksoverheid.nl",
+            first_name="Test",
+            last_name="User",
+        )
+
+        # Create test ministry
+        self.ministry = Ministry.objects.create(name="Ministerie van BZK", abbreviation="BZK")
+
+        # Create test colleague
+        self.colleague = Colleague.objects.create(
+            name="Test Colleague",
+            email="colleague@rijksoverheid.nl",
+            source="wies",
+        )
+
+        # Create test skill
+        self.skill = Skill.objects.create(name="Python Developer")
+
+    def _create_placement_with_end_date(self, end_date):
+        """Helper to create a placement with specific end date at placement level"""
+        assignment = Assignment.objects.create(
+            name=f"Test Assignment {end_date}",
+            status="INGEVULD",
+            ministry=self.ministry,
+            source="wies",
+        )
+        service = Service.objects.create(
+            assignment=assignment,
+            description="Test Service",
+            skill=self.skill,
+            source="wies",
+        )
+        return Placement.objects.create(
+            colleague=self.colleague,
+            service=service,
+            period_source="PLACEMENT",
+            specific_start_date=date(2024, 1, 1),
+            specific_end_date=end_date,
+            source="wies",
+        )
+
+    @patch("wies.core.views.timezone")
+    def test_historical_placements_excluded(self, mock_timezone):
+        """Test that placements ending before today are excluded from list"""
+        # Mock today as 2024-06-15
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
+
+        # Create placement ending yesterday (2024-06-14)
+        placement = self._create_placement_with_end_date(date(2024, 6, 14))
+
+        factory = RequestFactory()
+        request = factory.get(self.list_url)
+        request.user = self.auth_user
+
+        view = PlacementListView()
+        view.request = request
+        qs = view.get_queryset()
+
+        # Verify placement is NOT in queryset
+        assert placement not in qs, "Historical placement should be excluded"
+
+    @patch("wies.core.views.timezone")
+    def test_current_placements_included(self, mock_timezone):
+        """Test that placements ending today are included (boundary test)"""
+        # Mock today as 2024-06-15
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
+
+        # Create placement ending today (2024-06-15)
+        placement = self._create_placement_with_end_date(date(2024, 6, 15))
+
+        # Get queryset from view directly
+        factory = RequestFactory()
+        request = factory.get(self.list_url)
+        request.user = self.auth_user
+
+        view = PlacementListView()
+        view.request = request
+        qs = view.get_queryset()
+
+        # Verify placement IS in queryset
+        assert placement in qs, "Placement ending today should be included"
+
+    @patch("wies.core.views.timezone")
+    def test_future_placements_included(self, mock_timezone):
+        """Test that placements ending in the future are included"""
+        # Mock today as 2024-06-15
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
+
+        # Create placement ending tomorrow (2024-06-16)
+        placement = self._create_placement_with_end_date(date(2024, 6, 16))
+
+        # Get queryset from view directly
+        factory = RequestFactory()
+        request = factory.get(self.list_url)
+        request.user = self.auth_user
+
+        view = PlacementListView()
+        view.request = request
+        qs = view.get_queryset()
+
+        # Verify placement IS in queryset
+        assert placement in qs, "Future placement should be included"
+
+    @patch("wies.core.views.timezone")
+    def test_hierarchical_date_inheritance_service_level(self, mock_timezone):
+        """Test that filtering uses service dates when period_source='SERVICE'"""
+        # Mock today as 2024-06-15
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
+
+        # Create assignment and service with service-specific dates
+        assignment = Assignment.objects.create(
+            name="Test Assignment Service Level",
+            status="INGEVULD",
+            ministry=self.ministry,
+            source="wies",
+        )
+        service = Service.objects.create(
+            assignment=assignment,
+            description="Test Service",
+            skill=self.skill,
+            period_source="SERVICE",
+            specific_start_date=date(2024, 1, 1),
+            specific_end_date=date(2024, 6, 14),  # Ends yesterday
+            source="wies",
+        )
+        placement = Placement.objects.create(
+            colleague=self.colleague,
+            service=service,
+            period_source="SERVICE",  # Inherits from service
+            source="wies",
+        )
+
+        # Get queryset from view directly
+        factory = RequestFactory()
+        request = factory.get(self.list_url)
+        request.user = self.auth_user
+
+        view = PlacementListView()
+        view.request = request
+        qs = view.get_queryset()
+
+        # Verify placement is NOT in queryset (service ended yesterday)
+        assert placement not in qs, "Placement with service ending yesterday should be excluded"
+
+    @patch("wies.core.views.timezone")
+    def test_hierarchical_date_inheritance_assignment_level(self, mock_timezone):
+        """Test that filtering uses assignment dates when service uses period_source='ASSIGNMENT'"""
+        # Mock today as 2024-06-15
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
+
+        # Create assignment with dates in the past
+        assignment = Assignment.objects.create(
+            name="Test Assignment Level",
+            status="INGEVULD",
+            ministry=self.ministry,
+            start_date=date(2024, 1, 1),
+            end_date=date(2024, 6, 14),  # Ends yesterday
+            source="wies",
+        )
+        service = Service.objects.create(
+            assignment=assignment,
+            description="Test Service",
+            skill=self.skill,
+            period_source="ASSIGNMENT",  # Inherits from assignment
+            source="wies",
+        )
+        placement = Placement.objects.create(
+            colleague=self.colleague,
+            service=service,
+            period_source="SERVICE",  # Inherits from service, which inherits from assignment
+            source="wies",
+        )
+
+        # Get queryset from view directly
+        factory = RequestFactory()
+        request = factory.get(self.list_url)
+        request.user = self.auth_user
+
+        view = PlacementListView()
+        view.request = request
+        qs = view.get_queryset()
+
+        # Verify placement is NOT in queryset (assignment ended yesterday)
+        assert placement not in qs, "Placement with assignment ending yesterday should be excluded"
+
+
+class AssignmentSidePanelHistoricalFilterTest(TestCase):
+    """Tests for historical placement filtering in assignment sidepanel"""
+
+    def setUp(self):
+        """Create test data"""
+        self.list_url = reverse("home")
+
+        # Create authenticated user
+        self.auth_user = User.objects.create(
+            username="testuser",
+            email="test@rijksoverheid.nl",
+            first_name="Test",
+            last_name="User",
+        )
+
+        # Create test ministry
+        self.ministry = Ministry.objects.create(name="Ministerie van BZK", abbreviation="BZK")
+
+        # Create test colleagues
+        self.colleague1 = Colleague.objects.create(
+            name="Test Colleague 1",
+            email="colleague1@rijksoverheid.nl",
+            source="wies",
+        )
+        self.colleague2 = Colleague.objects.create(
+            name="Test Colleague 2",
+            email="colleague2@rijksoverheid.nl",
+            source="wies",
+        )
+
+        # Create test skill
+        self.skill = Skill.objects.create(name="Python Developer")
+
+    @patch("wies.core.views.timezone")
+    def test_assignment_panel_excludes_historical_placements(self, mock_timezone):
+        """Test that assignment panel filters out placements ending before today"""
+        # Mock today as 2024-06-15
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
+
+        # Create assignment
+        assignment = Assignment.objects.create(
+            name="Test Assignment with Mixed Placements",
+            status="INGEVULD",
+            ministry=self.ministry,
+            source="wies",
+        )
+        service = Service.objects.create(
+            assignment=assignment,
+            description="Test Service",
+            skill=self.skill,
+            source="wies",
+        )
+
+        # Create historical placement (ended yesterday)
+        historical_placement = Placement.objects.create(
+            colleague=self.colleague1,
+            service=service,
+            period_source="PLACEMENT",
+            specific_start_date=date(2024, 1, 1),
+            specific_end_date=date(2024, 6, 14),  # Yesterday
+            source="wies",
+        )
+
+        # Create current placement (ending tomorrow)
+        current_placement = Placement.objects.create(
+            colleague=self.colleague2,
+            service=service,
+            period_source="PLACEMENT",
+            specific_start_date=date(2024, 1, 1),
+            specific_end_date=date(2024, 6, 16),  # Tomorrow
+            source="wies",
+        )
+
+        # Get panel data using view method
+        factory = RequestFactory()
+        request = factory.get(self.list_url)
+        request.user = self.auth_user
+
+        view = PlacementListView()
+        view.request = request
+        panel_data = view._get_assignment_panel_data(assignment, self.colleague1)  # noqa: SLF001 (private member access)
+
+        # Verify only current placement is in panel data
+        placement_ids = [p.id for p in panel_data["placements"]]
+        assert len(placement_ids) == 1, "Panel should contain only 1 (current) placement"
+        assert current_placement.id in placement_ids, "Current placement should be in panel"
+        assert historical_placement.id not in placement_ids, "Historical placement should be excluded"
+
+    @patch("wies.core.views.timezone")
+    def test_assignment_panel_includes_current_placements(self, mock_timezone):
+        """Test that assignment panel includes placements ending today (boundary test)"""
+        # Mock today as 2024-06-15
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
+
+        # Create assignment
+        assignment = Assignment.objects.create(
+            name="Test Assignment with Current Placement",
+            status="INGEVULD",
+            ministry=self.ministry,
+            source="wies",
+        )
+        service = Service.objects.create(
+            assignment=assignment,
+            description="Test Service",
+            skill=self.skill,
+            source="wies",
+        )
+
+        # Create placement ending today
+        placement = Placement.objects.create(
+            colleague=self.colleague1,
+            service=service,
+            period_source="PLACEMENT",
+            specific_start_date=date(2024, 1, 1),
+            specific_end_date=date(2024, 6, 15),  # Today
+            source="wies",
+        )
+
+        # Get panel data using view method
+        factory = RequestFactory()
+        request = factory.get(self.list_url)
+        request.user = self.auth_user
+
+        view = PlacementListView()
+        view.request = request
+        panel_data = view._get_assignment_panel_data(assignment, self.colleague1)  # noqa: SLF001 (private member access)
+
+        # Verify placement ending today is included
+        placement_ids = [p.id for p in panel_data["placements"]]
+        assert len(placement_ids) == 1, "Panel should contain the placement ending today"
+        assert placement.id in placement_ids, "Placement ending today should be included"
+
+
+class ColleagueSidePanelHistoricalFilterTest(TestCase):
+    """Tests for historical placement filtering in colleague sidepanel"""
+
+    def setUp(self):
+        """Create test data"""
+        self.list_url = reverse("home")
+
+        # Create authenticated user
+        self.auth_user = User.objects.create(
+            username="testuser",
+            email="test@rijksoverheid.nl",
+            first_name="Test",
+            last_name="User",
+        )
+
+        # Create test ministry
+        self.ministry = Ministry.objects.create(name="Ministerie van BZK", abbreviation="BZK")
+
+        # Create test colleague
+        self.colleague = Colleague.objects.create(
+            name="Test Colleague",
+            email="colleague@rijksoverheid.nl",
+            source="wies",
+        )
+
+        # Create test skill
+        self.skill = Skill.objects.create(name="Python Developer")
+
+    @patch("wies.core.views.timezone")
+    def test_colleague_panel_excludes_historical_placements(self, mock_timezone):
+        """Test that colleague panel filters out placements ending before today"""
+        # Mock today as 2024-06-15
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
+
+        # Create assignment A with historical placement
+        assignment_a = Assignment.objects.create(
+            name="Test Assignment A (Historical)",
+            status="INGEVULD",
+            ministry=self.ministry,
+            source="wies",
+        )
+        service_a = Service.objects.create(
+            assignment=assignment_a,
+            description="Test Service A",
+            skill=self.skill,
+            source="wies",
+        )
+        Placement.objects.create(  # historical_placement
+            colleague=self.colleague,
+            service=service_a,
+            period_source="PLACEMENT",
+            specific_start_date=date(2024, 1, 1),
+            specific_end_date=date(2024, 6, 14),  # Yesterday
+            source="wies",
+        )
+
+        # Create assignment B with current placement
+        assignment_b = Assignment.objects.create(
+            name="Test Assignment B (Current)",
+            status="INGEVULD",
+            ministry=self.ministry,
+            source="wies",
+        )
+        service_b = Service.objects.create(
+            assignment=assignment_b,
+            description="Test Service B",
+            skill=self.skill,
+            source="wies",
+        )
+        Placement.objects.create(  # current_placement
+            colleague=self.colleague,
+            service=service_b,
+            period_source="PLACEMENT",
+            specific_start_date=date(2024, 1, 1),
+            specific_end_date=date(2024, 6, 16),  # Tomorrow
+            source="wies",
+        )
+
+        # Get panel data using view method
+        factory = RequestFactory()
+        request = factory.get(self.list_url)
+        request.user = self.auth_user
+
+        view = PlacementListView()
+        view.request = request
+        panel_data = view._get_colleague_panel_data(self.colleague)  # noqa: SLF001 (private member access)
+
+        # Verify only current assignment is in panel data
+        assignment_list = panel_data["assignment_list"]
+        assignment_ids = [a["id"] for a in assignment_list]
+        assert len(assignment_ids) == 1, "Panel should contain only 1 (current) assignment"
+        assert assignment_b.id in assignment_ids, "Current assignment should be in panel"
+        assert assignment_a.id not in assignment_ids, "Historical assignment should be excluded"
+
+    @patch("wies.core.views.timezone")
+    def test_colleague_panel_includes_current_placements(self, mock_timezone):
+        """Test that colleague panel includes placements ending today (boundary test)"""
+        # Mock today as 2024-06-15
+        mock_now = Mock()
+        mock_now.date.return_value = date(2024, 6, 15)
+        mock_timezone.now.return_value = mock_now
+
+        # Create assignment with placement ending today
+        assignment = Assignment.objects.create(
+            name="Test Assignment Ending Today",
+            status="INGEVULD",
+            ministry=self.ministry,
+            source="wies",
+        )
+        service = Service.objects.create(
+            assignment=assignment,
+            description="Test Service",
+            skill=self.skill,
+            source="wies",
+        )
+        Placement.objects.create(
+            colleague=self.colleague,
+            service=service,
+            period_source="PLACEMENT",
+            specific_start_date=date(2024, 1, 1),
+            specific_end_date=date(2024, 6, 15),  # Today
+            source="wies",
+        )
+
+        # Get panel data using view method
+        factory = RequestFactory()
+        request = factory.get(self.list_url)
+        request.user = self.auth_user
+
+        view = PlacementListView()
+        view.request = request
+        panel_data = view._get_colleague_panel_data(self.colleague)  # noqa: SLF001 (private member access)
+
+        # Verify assignment ending today is included
+        assignment_list = panel_data["assignment_list"]
+        assignment_ids = [a["id"] for a in assignment_list]
+        assert len(assignment_ids) == 1, "Panel should contain the assignment with placement ending today"
+        assert assignment.id in assignment_ids, "Assignment with placement ending today should be included"

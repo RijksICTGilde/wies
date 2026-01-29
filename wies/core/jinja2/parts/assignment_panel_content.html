@@ -20,7 +20,7 @@
           {% endwith %}
         </div>
       </dd>
-      {% if assignment.source != 'wies' %}
+      {% if assignment.source not in ('wies', '') %}
         <dt>Externe bron</dt>
         <dd>
           {% if assignment.source_url %}

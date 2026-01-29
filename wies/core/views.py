@@ -16,14 +16,19 @@ from django.db.models.functions import Concat
 from django.http import HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.views.generic.list import ListView
 
 from .forms import LabelCategoryForm, LabelForm, UserForm
 from .models import Assignment, Colleague, Label, LabelCategory, Ministry, Placement, Service, Skill, User
-from .querysets import annotate_usage_counts
+from .querysets import annotate_placement_dates, annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
-from .services.placements import create_assignments_from_csv, filter_placements_by_period
+from .services.placements import (
+    create_assignments_from_csv,
+    filter_placements_by_min_end_date,
+    filter_placements_by_period,
+)
 from .services.sync import sync_all_otys_iir_records
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
@@ -178,10 +183,20 @@ class PlacementListView(ListView):
             if label_id != "":
                 qs = qs.filter(colleague__labels__id=int(label_id))
 
+        # filter out historical placements
+        qs = annotate_placement_dates(qs)
+        qs = filter_placements_by_min_end_date(qs, timezone.now().date())
+
         # Apply period filtering for overlapping periods
         periode = self.request.GET.get("periode")
-        if periode:
-            qs = filter_placements_by_period(qs, periode)
+        if periode and "_" in periode:
+            try:
+                period_from_str, period_to_str = periode.split("_", 1)
+                period_from = date.fromisoformat(period_from_str)
+                period_to = date.fromisoformat(period_to_str)
+                qs = filter_placements_by_period(qs, period_from, period_to)
+            except Value:
+                pass  # Invalid date format, ignore filter
 
         return qs.distinct()
 
@@ -230,7 +245,7 @@ class PlacementListView(ListView):
         params["collega"] = colleague_id
         return f"{reverse('home')}?{params.urlencode()}"
 
-    def _get_colleague_assignments(self, colleague):
+    def _get_colleague_placements(self, colleague):
         """Get assignments for a colleague"""
         return (
             Placement.objects.filter(colleague=colleague)
@@ -251,7 +266,12 @@ class PlacementListView(ListView):
     def _get_colleague_panel_data(self, colleague):
         """Get colleague panel data for server-side rendering"""
 
-        colleague_assignments = self._get_colleague_assignments(colleague)
+        placement_qs = self._get_colleague_placements(colleague)
+
+        # filter out historical placements
+        placement_qs = annotate_placement_dates(placement_qs)
+        placement_qs = filter_placements_by_min_end_date(placement_qs, timezone.now().date())
+
         assignment_list = [
             {
                 "name": item["service__assignment__name"],
@@ -265,7 +285,7 @@ class PlacementListView(ListView):
                 "skill": item["service__skill__name"],
                 "assignment_url": self._build_assignment_url(self.request, item["service__assignment__id"]),
             }
-            for item in colleague_assignments
+            for item in placement_qs
         ]
 
         return {
@@ -281,6 +301,10 @@ class PlacementListView(ListView):
         placements_qs = Placement.objects.filter(service__assignment=assignment).select_related(
             "colleague", "service__skill"
         )
+
+        # filter out historical placements
+        placements_qs = annotate_placement_dates(placements_qs)
+        placements_qs = filter_placements_by_min_end_date(placements_qs, timezone.now().date())
 
         # Add colleague URLs to placements
         placements = []
