@@ -1,4 +1,6 @@
-// Wait for DOM to be ready
+// Filter bar for user admin page (modal-based filters)
+// Depends on: filter_utils.js
+
 document.addEventListener("DOMContentLoaded", function () {
   const modal = document.getElementById("filterModal");
   const filterButton = document.querySelector(".filter-button");
@@ -8,6 +10,8 @@ document.addEventListener("DOMContentLoaded", function () {
   const form = document.querySelector(".rvo-form");
 
   if (!modal || !form) return;
+
+  const formSelector = ".rvo-form";
 
   // Open modal
   if (filterButton) {
@@ -38,42 +42,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Handle date range validation (from filter_utils.js)
-  setupDateRangeListeners(".rvo-form");
+  // Handle date range validation
+  setupDateRangeListeners(formSelector);
 
   // Clear all filters
   if (clearFiltersButton) {
     clearFiltersButton.addEventListener("click", function () {
-      // Clear all filter inputs
-      form.querySelectorAll("[data-filter-input]").forEach((input) => {
-        if (input.tagName === "SELECT") {
-          input.selectedIndex = 0;
-        } else if (input.type === "hidden") {
-          input.value = "";
-        }
-      });
-
-      // Clear date range inputs
-      form.querySelectorAll(".date-range-input").forEach((input) => {
-        input.value = "";
-      });
-
-      // Clear search field
-      const searchInput = form.querySelector("#search");
-      if (searchInput) {
-        searchInput.value = "";
-      }
-
-      // Clear validation messages
-      document
-        .querySelectorAll(".date-range-validation-message")
-        .forEach((msg) => {
-          msg.style.display = "none";
-        });
-
-      // Trigger form submission via HTMX
-      htmx.trigger(form, "change");
-
+      clearAllFilters(formSelector);
       closeFilterModal();
     });
   }
@@ -111,6 +86,6 @@ document.addEventListener("DOMContentLoaded", function () {
   // Initial update
   updateFilterIndicator();
 
-  // Handle back button navigation (from filter_utils.js)
+  // Handle back button navigation
   setupPopstateHandler();
 });
