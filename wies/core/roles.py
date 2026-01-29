@@ -13,7 +13,7 @@ def user_can_edit_assignment(user, assignment):
     - User the 'core.change_assignment' permission, OR
     - User is the BDM (owner) of the assignment, OR
     - User is assigned to the assignment as a colleague
-    - ASsignment is sourced from wies, not external programm
+    - Assignment is sourced from Wies, not an external program
 
 
     Args:

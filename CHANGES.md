@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 176: fix externally managed assignment can not be edited
+- 176: Fix that externally managed assignment can not be edited
 - 176: Filter out historical placements
 - 172: Move dummy_data.json to wies/core/fixtures/
 - 149: Change `/plaatsingen/importeren` to `/opdrachten/importeren`
