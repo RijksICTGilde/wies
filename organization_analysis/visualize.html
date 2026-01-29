@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hiërarchie Visualisatie - Nederlandse Overheid</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+        color: #333;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        margin-top: 0;
+        color: #154273;
+        border-bottom: 3px solid #154273;
+        padding-bottom: 10px;
+      }
+
+      .upload-section {
+        margin: 20px 0;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 4px;
+        border: 2px dashed #ccc;
+      }
+
+      .upload-section.dragover {
+        border-color: #154273;
+        background: #e8f4f8;
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      .upload-label {
+        display: inline-block;
+        padding: 10px 20px;
+        background: #154273;
+        color: white;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .upload-label:hover {
+        background: #1e5a8e;
+      }
+
+      .file-info {
+        margin-top: 10px;
+        color: #666;
+        font-size: 14px;
+      }
+
+      .controls {
+        margin: 20px 0;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 4px;
+      }
+
+      .controls button {
+        padding: 8px 16px;
+        margin-right: 10px;
+        background: #154273;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .controls button:hover {
+        background: #1e5a8e;
+      }
+
+      .controls input[type="text"] {
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        width: 300px;
+        font-size: 14px;
+      }
+
+      .stats {
+        margin: 20px 0;
+        padding: 15px;
+        background: #e8f4f8;
+        border-left: 4px solid #154273;
+        border-radius: 4px;
+      }
+
+      .stats strong {
+        color: #154273;
+      }
+
+      .tree {
+        margin-top: 20px;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      .tree-node {
+        margin: 2px 0;
+        user-select: none;
+      }
+
+      .tree-label {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 3px;
+        transition: background 0.15s;
+      }
+
+      .tree-label:hover {
+        background: #f0f0f0;
+      }
+
+      .tree-toggle {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        margin-right: 6px;
+        cursor: pointer;
+        font-size: 12px;
+        text-align: center;
+        line-height: 16px;
+        color: #666;
+        font-family: monospace;
+      }
+
+      .tree-toggle:hover {
+        color: #154273;
+      }
+
+      .tree-toggle.empty {
+        cursor: default;
+        color: transparent;
+      }
+
+      .tree-text {
+        flex: 1;
+      }
+
+      .tree-count {
+        margin-left: 8px;
+        font-size: 12px;
+        color: #666;
+        background: #e8f4f8;
+        padding: 2px 6px;
+        border-radius: 3px;
+      }
+
+      .tree-children {
+        margin-left: 24px;
+        border-left: 1px solid #e0e0e0;
+        padding-left: 12px;
+      }
+
+      .tree-children.collapsed {
+        display: none;
+      }
+
+      .match {
+        background: yellow;
+        font-weight: bold;
+      }
+
+      .search-match-count {
+        margin-left: 10px;
+        color: #154273;
+        font-weight: bold;
+      }
+
+      .error {
+        padding: 15px;
+        background: #fee;
+        border-left: 4px solid #c00;
+        color: #c00;
+        border-radius: 4px;
+        margin: 20px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🏛️ Hiërarchie Visualisatie Nederlandse Overheid</h1>
+      <div class="upload-section" id="uploadSection">
+        <label for="fileInput" class="upload-label">Kies JSON bestand</label>
+        <input type="file" id="fileInput" accept=".json" />
+        <div class="file-info" id="fileInfo">
+          Sleep een JSON bestand hierheen of klik op de knop om een bestand te
+          selecteren.
+        </div>
+      </div>
+      <div class="controls" id="controls" style="display: none">
+        <input type="text" id="searchInput" placeholder="Zoek in hiërarchie..." />
+        <button onclick="expandAll()">Alles Uitklappen</button>
+        <button onclick="collapseAll()">Alles Inklappen</button>
+        <button onclick="clearSearch()">Wis Zoekopdracht</button>
+        <span class="search-match-count" id="matchCount"></span>
+      </div>
+      <div class="stats" id="stats" style="display: none"></div>
+      <div class="tree" id="tree"></div>
+      <div id="error" class="error" style="display: none"></div>
+    </div>
+    <script>
+      let treeData = null;
+      let allNodes = [];
+
+      // File upload handling
+      const fileInput = document.getElementById("fileInput");
+      const uploadSection = document.getElementById("uploadSection");
+      const fileInfo = document.getElementById("fileInfo");
+      const controls = document.getElementById("controls");
+      const stats = document.getElementById("stats");
+      const tree = document.getElementById("tree");
+      const error = document.getElementById("error");
+      const searchInput = document.getElementById("searchInput");
+      const matchCount = document.getElementById("matchCount");
+
+      fileInput.addEventListener("change", handleFile);
+
+      // Drag and drop
+      uploadSection.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        uploadSection.classList.add("dragover");
+      });
+
+      uploadSection.addEventListener("dragleave", () => {
+        uploadSection.classList.remove("dragover");
+      });
+
+      uploadSection.addEventListener("drop", (e) => {
+        e.preventDefault();
+        uploadSection.classList.remove("dragover");
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          loadFile(files[0]);
+        }
+      });
+
+      // Search handling
+      let searchTimeout;
+      searchInput.addEventListener("input", () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(performSearch, 300);
+      });
+
+      function handleFile(e) {
+        const file = e.target.files[0];
+        if (file) {
+          loadFile(file);
+        }
+      }
+
+      function loadFile(file) {
+        if (!file.name.endsWith(".json")) {
+          showError("Selecteer alstublieft een geldig JSON bestand.");
+          return;
+        }
+
+        fileInfo.textContent = `Laden: ${file.name}...`;
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            treeData = JSON.parse(e.target.result);
+            renderTree();
+            fileInfo.textContent = `Geladen: ${file.name}`;
+            controls.style.display = "block";
+            stats.style.display = "block";
+            error.style.display = "none";
+          } catch (err) {
+            showError(`Fout bij het laden van JSON: ${err.message}`);
+            fileInfo.textContent = "Fout bij laden. Probeer opnieuw.";
+          }
+        };
+        reader.onerror = () => {
+          showError("Fout bij het lezen van het bestand.");
+        };
+        reader.readAsText(file);
+      }
+
+      function showError(message) {
+        error.textContent = message;
+        error.style.display = "block";
+      }
+
+      function renderTree() {
+        if (!treeData) return;
+
+        allNodes = [];
+        tree.innerHTML = "";
+
+        const rootNode = createTreeNode(treeData, 0);
+        tree.appendChild(rootNode);
+
+        // Calculate statistics
+        const totalNodes = allNodes.length;
+        const leafNodes = allNodes.filter((n) => !n.hasChildren).length;
+        const maxDepth = Math.max(...allNodes.map((n) => n.depth));
+
+        stats.innerHTML = `
+                <strong>Statistieken:</strong>
+                ${totalNodes} organisaties |
+                ${leafNodes} bladknopen |
+                Maximale diepte: ${maxDepth} niveaus
+            `;
+      }
+
+      function createTreeNode(data, depth) {
+        const nodeDiv = document.createElement("div");
+        nodeDiv.className = "tree-node";
+
+        const hasChildren = data.children && data.children.length > 0;
+        const nodeId = `node-${allNodes.length}`;
+
+        allNodes.push({
+          id: nodeId,
+          label: data.label,
+          hasChildren: hasChildren,
+          depth: depth,
+          element: nodeDiv,
+        });
+
+        // Create label
+        const labelDiv = document.createElement("div");
+        labelDiv.className = "tree-label";
+
+        // Toggle button
+        const toggle = document.createElement("span");
+        toggle.className = hasChildren ? "tree-toggle" : "tree-toggle empty";
+        toggle.textContent = hasChildren ? "▶" : "•";
+        toggle.dataset.expanded = "false";
+
+        // Text
+        const text = document.createElement("span");
+        text.className = "tree-text";
+        text.textContent = data.label;
+
+        labelDiv.appendChild(toggle);
+        labelDiv.appendChild(text);
+
+        // Count badge
+        if (hasChildren) {
+          const count = document.createElement("span");
+          count.className = "tree-count";
+          count.textContent = data.children.length;
+          labelDiv.appendChild(count);
+        }
+
+        nodeDiv.appendChild(labelDiv);
+
+        // Children container
+        if (hasChildren) {
+          const childrenDiv = document.createElement("div");
+          childrenDiv.className = "tree-children collapsed";
+
+          data.children.forEach((child) => {
+            childrenDiv.appendChild(createTreeNode(child, depth + 1));
+          });
+
+          nodeDiv.appendChild(childrenDiv);
+
+          // Toggle click handler
+          toggle.addEventListener("click", (e) => {
+            e.stopPropagation();
+            const isExpanded = toggle.dataset.expanded === "true";
+            if (isExpanded) {
+              childrenDiv.classList.add("collapsed");
+              toggle.textContent = "▶";
+              toggle.dataset.expanded = "false";
+            } else {
+              childrenDiv.classList.remove("collapsed");
+              toggle.textContent = "▼";
+              toggle.dataset.expanded = "true";
+            }
+          });
+        }
+
+        return nodeDiv;
+      }
+
+      function expandAll() {
+        document
+          .querySelectorAll(".tree-toggle:not(.empty)")
+          .forEach((toggle) => {
+            if (toggle.dataset.expanded === "false") {
+              toggle.click();
+            }
+          });
+      }
+
+      function collapseAll() {
+        document
+          .querySelectorAll(".tree-toggle:not(.empty)")
+          .forEach((toggle) => {
+            if (toggle.dataset.expanded === "true") {
+              toggle.click();
+            }
+          });
+      }
+
+      function performSearch() {
+        const query = searchInput.value.trim().toLowerCase();
+
+        // Clear previous highlights
+        document.querySelectorAll(".match").forEach((el) => {
+          const parent = el.parentNode;
+          parent.textContent = el.textContent;
+        });
+
+        if (!query) {
+          matchCount.textContent = "";
+          return;
+        }
+
+        let matches = 0;
+
+        allNodes.forEach((node) => {
+          const text = node.element.querySelector(".tree-text");
+          const label = node.label.toLowerCase();
+
+          if (label.includes(query)) {
+            matches++;
+
+            // Highlight match
+            const index = label.indexOf(query);
+            const originalText = node.label;
+            const before = originalText.substring(0, index);
+            const match = originalText.substring(index, index + query.length);
+            const after = originalText.substring(index + query.length);
+
+            text.innerHTML = `${before}<span class="match">${match}</span>${after}`;
+
+            // Expand parents
+            let parent = node.element.parentElement;
+            while (parent && parent.classList.contains("tree-children")) {
+              parent.classList.remove("collapsed");
+              const toggle =
+                parent.previousElementSibling.querySelector(".tree-toggle");
+              if (toggle) {
+                toggle.textContent = "▼";
+                toggle.dataset.expanded = "true";
+              }
+              parent = parent.parentElement.parentElement;
+            }
+          }
+        });
+
+        matchCount.textContent =
+          matches > 0 ? `${matches} resultaten gevonden` : "Geen resultaten";
+      }
+
+      function clearSearch() {
+        searchInput.value = "";
+        performSearch();
+      }
+
+      // Auto-load hierarchy.json if it exists (for testing)
+      window.addEventListener("load", () => {
+        fetch("hierarchy.json")
+          .then((response) => {
+            if (response.ok) {
+              return response.json();
+            }
+          })
+          .then((data) => {
+            if (data) {
+              treeData = data;
+              renderTree();
+              fileInfo.textContent = "Automatisch geladen: hierarchy.json";
+              controls.style.display = "block";
+              stats.style.display = "block";
+            }
+          })
+          .catch(() => {
+            // Ignore errors, file doesn't exist
+          });
+      });
+    </script>
+  </body>
+</html>

@@ -1,7 +1,7 @@
 default_language_version:
   python: python3.13
 
-exclude: "^wies/core/static/vendor/"
+exclude: "^(wies/core/static/vendor/|organization_analysis/)"
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
