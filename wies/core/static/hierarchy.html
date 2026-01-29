@@ -133,6 +133,11 @@
       li.tree-node.self-node > label {
         font-style: italic;
         color: #6c7a89;
+        font-weight: 400;
+      }
+
+      li.tree-node.self-node {
+        padding-left: 0;
       }
 
       /* Placement count badge */
@@ -301,9 +306,6 @@
       </div>
     </div>
     <script>
-      // ============================================================
-      // HIERARCHY DATA — edit this JSON to change the tree structure
-      // ============================================================
       const hierarchyData = {
         label: "Organization",
         nr_of_placements: 25,
@@ -313,10 +315,20 @@
             nr_of_placements: 32,
             children: [
               {
+                label: "Direct onder Min BZK",
+                nr_of_placements: 10,
+                self: true,
+              },
+              {
                 label:
                   "Directoraat-generaal Digitalisering en Overheidorganisatie (DGDOO)",
                 nr_of_placements: 20,
                 children: [
+                  {
+                    label: "Direct onder DGDOO",
+                    nr_of_placements: 8,
+                    self: true,
+                  },
                   {
                     label: "Directie Digitale Overheid",
                     nr_of_placements: 12,
@@ -338,16 +350,8 @@
         ],
       };
 
-      // ============================================================
-      // TREE RENDERING & CHECKBOX LOGIC
-      // ============================================================
-
       const container = document.getElementById("tree-container");
 
-      /**
-       * Build the DOM tree recursively from a data node.
-       * Returns the created <ul> element.
-       */
       function buildTree(node, parentLabel = "") {
         const ul = document.createElement("ul");
         ul.className = "tree-level";
@@ -368,7 +372,6 @@
         label.appendChild(checkbox);
         label.appendChild(document.createTextNode(node.label));
 
-        // Add placement count badge
         if (node.nr_of_placements !== undefined) {
           const badge = document.createElement("span");
           badge.className = "placement-badge";
@@ -376,7 +379,6 @@
           label.appendChild(badge);
         }
 
-        // Add info icon for self-nodes
         if (node.self && parentLabel) {
           const icon = document.createElement("span");
           icon.className = "info-icon";
@@ -385,12 +387,11 @@
             "data-tooltip",
             "Dit zijn opdrachten die direct onder " +
               parentLabel +
-              " vallen en niet onder 1 van de organisatie onderdelen eronder",
+              " vallen en niet onder een van de organisatie onderdelen eronder",
           );
           label.appendChild(icon);
         }
 
-        // Add fold/expand arrow BEFORE the label (outside it, so clicks don't toggle checkbox)
         if (node.children && node.children.length) {
           const toggle = document.createElement("span");
           toggle.className = "toggle";
@@ -404,7 +405,6 @@
 
         li.appendChild(label);
 
-        // Recursively add children
         if (node.children && node.children.length) {
           const childUl = document.createElement("ul");
           childUl.className = "tree-level";
@@ -421,11 +421,6 @@
         return ul;
       }
 
-      /**
-       * When a checkbox is toggled:
-       * - Cascade DOWN to all descendants
-       * - Cascade UP to update ancestor states
-       */
       function onCheckboxChange(node, li, checkbox) {
         const checked = checkbox.checked;
         // Cascade down
@@ -440,24 +435,17 @@
         updateHighlightClasses();
       }
 
-      /**
-       * Set all descendant checkboxes to the given state.
-       */
       function cascadeDown(li, checked) {
         const descendants = li.querySelectorAll('input[type="checkbox"]');
         descendants.forEach((cb) => {
           cb.checked = checked;
           cb.indeterminate = false;
         });
-        // Update classes for all descendant nodes
         li.querySelectorAll("li.tree-node").forEach((descendantLi) => {
           updateNodeClass(descendantLi);
         });
       }
 
-      /**
-       * Walk up the tree, updating parent checkboxes based on children state.
-       */
       function cascadeUp(startLi) {
         let currentLi = startLi;
 
@@ -472,7 +460,6 @@
           );
           if (!parentCheckbox) break;
 
-          // Get direct child checkboxes (one level down)
           const childUl = parentLi.querySelector(":scope > ul.tree-level");
           if (!childUl) break;
 
@@ -507,19 +494,9 @@
         }
       }
 
-      /**
-       * Update the CSS class on a node based on its checkbox state.
-       * (kept for cascadeDown/cascadeUp compatibility, but does nothing visible now)
-       */
       function updateNodeClass(li) {
-        // highlight is managed by updateHighlightClasses instead
       }
 
-      /**
-       * Walk the tree and apply the "checked" highlight class only to
-       * the highest checked ancestors — the same nodes that appear
-       * in the selection panel.
-       */
       function updateHighlightClasses() {
         const rootUl = document.querySelector(
           "#tree-container > ul.tree-level",
@@ -534,31 +511,21 @@
             );
             li.classList.remove("checked");
             if (cb && cb.checked && !parentIsChecked) {
-              // This is a top-level checked node — highlight it
               li.classList.add("checked");
-              // Recurse to ensure descendants are NOT highlighted (parent covers them)
               const childUl = li.querySelector(":scope > ul.tree-level");
               if (childUl) walkHighlight(childUl, true);
             } else if (!cb || !cb.checked) {
-              // Not checked — recurse into children to find checked descendants
               const childUl = li.querySelector(":scope > ul.tree-level");
               if (childUl) walkHighlight(childUl, false);
             }
-            // else: cb.checked && parentIsChecked — skip entirely (no highlight, no recurse)
           }
         }
       }
 
-      /**
-       * Rebuild the selection panel list.
-       * Shows only the highest checked ancestors — if a parent is checked,
-       * its descendants are not listed separately.
-       */
       function rebuildSelectionList() {
         const list = document.getElementById("selection-list");
         const items = [];
 
-        // Walk the tree top-down; collect checked nodes, skip their subtrees
         function walk(parentEl) {
           const childNodes = parentEl.querySelectorAll(":scope > li.tree-node");
           for (const li of childNodes) {
@@ -566,32 +533,43 @@
               ":scope > label > input[type='checkbox']",
             );
             if (cb && cb.checked) {
-              // This node is fully checked — add it, skip descendants
-              // Get only the text node(s), not the info-icon glyph
               const labelEl = li.querySelector(":scope > label");
               let labelText = "";
-              for (const child of labelEl.childNodes) {
-                if (child.nodeType === Node.TEXT_NODE)
-                  labelText += child.textContent;
+
+              if (li.classList.contains("self-node")) {
+                for (const child of labelEl.childNodes) {
+                  if (child.nodeType === Node.TEXT_NODE) {
+                    labelText = child.textContent.trim();
+                    break;
+                  }
+                }
+                const match = labelText.match(/^Direct onder (.+)$/);
+                if (match) {
+                  labelText = match[1] + " (direct)";
+                } else {
+                  labelText = labelText + " (direct)";
+                }
+              } else {
+                for (const child of labelEl.childNodes) {
+                  if (child.nodeType === Node.TEXT_NODE)
+                    labelText += child.textContent;
+                }
+                labelText = labelText.trim();
               }
-              if (li.classList.contains("self-node"))
-                labelText = labelText.trim() + " (direct)";
-              items.push(labelText.trim());
+
+              items.push(labelText);
             } else {
-              // Not checked (or indeterminate) — recurse into children
               const childUl = li.querySelector(":scope > ul.tree-level");
               if (childUl) walk(childUl);
             }
           }
         }
 
-        // Start from the root ul inside #tree-container
         const rootUl = document.querySelector(
           "#tree-container > ul.tree-level",
         );
         if (rootUl) walk(rootUl);
 
-        // Render
         list.innerHTML = "";
         if (items.length === 0) {
           const empty = document.createElement("li");
@@ -607,7 +585,6 @@
         }
       }
 
-      // Render the tree (skip the root node itself, show its children directly)
       const rootUl = document.createElement("ul");
       rootUl.className = "tree-level";
 
