@@ -124,10 +124,10 @@ Different,Name,duplicate@rijksoverheid.nl,Brand B"""
         assert user.first_name == "Original"
         assert user.last_name == "Name"
 
-    def test_csv_assignment_import_assigns_rijks_ict_gilde_label(self):
-        """Test: CSV placement import assigns Rijks ICT Gilde label to new colleagues"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,Test Org,,01-01-2025,31-12-2025,Python,John Doe,john@rijksoverheid.nl"""
+    def test_csv_assignment_import_with_brand_assigns_label(self):
+        """Test: CSV placement import with brand columns assigns brand labels to new colleagues"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,Test Org,,01-01-2025,31-12-2025,Python,John Doe,john@rijksoverheid.nl,Rijks ICT Gilde,Rijks ICT Gilde"""
 
         result = create_assignments_from_csv(csv_content)
 
@@ -147,6 +147,60 @@ Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,Test Org,,01-
         owner = Colleague.objects.get(email="owner@rijksoverheid.nl")
         assert rig_label in owner.labels.all()
 
+    def test_csv_placement_import_without_brand_no_label(self):
+        """Test: CSV placement import without brand columns or empty brands creates colleagues with no labels"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+Test Assignment,Test Description,Owner Name,owner@test.com,Test Org,,01-01-2025,31-12-2025,Python,John Doe,john@test.com,,"""
+
+        result = create_assignments_from_csv(csv_content)
+
+        assert result["success"]
+        assert result["colleagues_created"] > 0
+
+        # Verify colleagues have no labels
+        john = Colleague.objects.get(email="john@test.com")
+        assert john.labels.count() == 0
+
+        owner = Colleague.objects.get(email="owner@test.com")
+        assert owner.labels.count() == 0
+
+    def test_csv_placement_import_multiple_brands(self):
+        """Test: CSV placement import with different brands for owners vs colleagues"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+Assignment 1,Test,Owner A,ownera@test.com,Org,,01-01-2025,31-12-2025,Python,John Doe,john@test.com,Rijks ICT Gilde,Rijksconsultants
+Assignment 2,Test,Owner B,ownerb@test.com,Org,,01-01-2025,31-12-2025,Java,Jane Smith,jane@test.com,I-Interim Rijk,Rijks ICT Gilde"""
+
+        result = create_assignments_from_csv(csv_content)
+
+        assert result["success"]
+        assert result["colleagues_created"] == 4  # 2 owners + 2 placement colleagues
+
+        # Verify Merk category exists
+        merken_category = LabelCategory.objects.get(name="Merk")
+
+        # Verify brand labels were created
+        rig_label = Label.objects.get(name="Rijks ICT Gilde", category=merken_category)
+        rc_label = Label.objects.get(name="Rijksconsultants", category=merken_category)
+        iir_label = Label.objects.get(name="I-Interim Rijk", category=merken_category)
+
+        # Verify first row: owner has RIG, colleague has RC
+        john = Colleague.objects.get(email="john@test.com")
+        assert rc_label in john.labels.all()
+        assert rig_label not in john.labels.all()
+
+        owner_a = Colleague.objects.get(email="ownera@test.com")
+        assert rig_label in owner_a.labels.all()
+        assert rc_label not in owner_a.labels.all()
+
+        # Verify second row: owner has IIR, colleague has RIG
+        jane = Colleague.objects.get(email="jane@test.com")
+        assert rig_label in jane.labels.all()
+        assert iir_label not in jane.labels.all()
+
+        owner_b = Colleague.objects.get(email="ownerb@test.com")
+        assert iir_label in owner_b.labels.all()
+        assert rig_label not in owner_b.labels.all()
+
     def test_csv_assignment_import_existing_colleague_no_duplicate_label(self):
         """Test: Re-importing placement for existing colleague doesn't duplicate label"""
         # Pre-create colleague with label (use get_or_create to avoid conflicts)
@@ -158,15 +212,15 @@ Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,Test Org,,01-
         )
         colleague.labels.add(rig_label)
 
-        # Import placement with existing colleague
+        # Import placement with existing colleague and same brand
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-New Assignment,Description,,,Test Org,,01-01-2025,31-12-2025,Django,Existing Colleague,existing@rijksoverheid.nl"""
+New Assignment,Description,,,Test Org,,01-01-2025,31-12-2025,Django,Existing Colleague,existing@rijksoverheid.com"""
 
         result = create_assignments_from_csv(csv_content)
 
         assert result["success"]
 
-        # Verify colleague still has only one label instance
+        # Verify colleague still has only one label instance (no duplicate)
         colleague.refresh_from_db()
         assert colleague.labels.count() == 1
         assert rig_label in colleague.labels.all()

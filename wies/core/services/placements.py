@@ -52,7 +52,18 @@ def filter_placements_by_min_end_date(queryset, min_end_date):
 
 def create_assignments_from_csv(csv_content: str):
     """
-    Create colleagues, assignments, services and placements from csv
+    Create colleagues, assignments, services and placements from csv.
+
+    The CSV should contain the following required columns:
+    - assignment_name, assignment_description, assignment_owner, assignment_owner_email
+    - assignment_organization, assignment_ministry, assignment_start_date, assignment_end_date
+    - service_skill, placement_colleague_name, placement_colleague_email
+
+    Optional columns:
+    - owner_brand: If provided, assigns the brand label to newly created assignment owners.
+                   If empty or not provided, no brand label is assigned.
+    - colleague_brand: If provided, assigns the brand label to newly created placement colleagues.
+                       If empty or not provided, no brand label is assigned.
     """
 
     csv_reader = csv.DictReader(StringIO(csv_content))
@@ -80,11 +91,13 @@ def create_assignments_from_csv(csv_content: str):
 
     try:
         with transaction.atomic():
-            # Get or create the 'Rijks ICT Gilde' label for newly created colleagues
+            # Get or create the 'Merk' (Brand) label category
             merken_category, _ = LabelCategory.objects.get_or_create(
                 name="Merk", defaults={"color": DEFAULT_LABELS["Merk"]["color"]}
             )
-            rijks_ict_gilde_label, _ = Label.objects.get_or_create(name="Rijks ICT Gilde", category=merken_category)
+
+            # Cache for brand labels to avoid repeated database queries
+            label_mapping = {}
 
             colleagues_created = 0
             assignments_created = 0
@@ -93,6 +106,30 @@ def create_assignments_from_csv(csv_content: str):
             skills_created = 0
             ministries_created = 0
             for _, row in enumerate(csv_reader, start=2):  # Start at 2 (1 is header)
+                # Get owner brand label if specified in CSV
+                owner_brand_name = row.get("owner_brand", "").strip()
+                owner_brand_label = None
+                if owner_brand_name:
+                    if owner_brand_name in label_mapping:
+                        owner_brand_label = label_mapping[owner_brand_name]
+                    else:
+                        owner_brand_label, _ = Label.objects.get_or_create(
+                            name=owner_brand_name, category=merken_category
+                        )
+                        label_mapping[owner_brand_name] = owner_brand_label
+
+                # Get colleague brand label if specified in CSV
+                colleague_brand_name = row.get("colleague_brand", "").strip()
+                colleague_brand_label = None
+                if colleague_brand_name:
+                    if colleague_brand_name in label_mapping:
+                        colleague_brand_label = label_mapping[colleague_brand_name]
+                    else:
+                        colleague_brand_label, _ = Label.objects.get_or_create(
+                            name=colleague_brand_name, category=merken_category
+                        )
+                        label_mapping[colleague_brand_name] = colleague_brand_label
+
                 assignment_owner_email = row["assignment_owner_email"]
                 if assignment_owner_email != "":
                     validate_email(assignment_owner_email)
@@ -104,7 +141,8 @@ def create_assignments_from_csv(csv_content: str):
                             email=assignment_owner_email,
                             source="wies",
                         )
-                        owner.labels.add(rijks_ict_gilde_label)
+                        if owner_brand_label:
+                            owner.labels.add(owner_brand_label)
                         colleagues_created += 1
                 else:
                     owner = None
@@ -172,7 +210,8 @@ def create_assignments_from_csv(csv_content: str):
                         email=colleague_email,
                         source="wies",
                     )
-                    colleague.labels.add(rijks_ict_gilde_label)
+                    if colleague_brand_label:
+                        colleague.labels.add(colleague_brand_label)
                     colleagues_created += 1
 
                 _, created = Placement.objects.get_or_create(
