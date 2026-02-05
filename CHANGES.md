@@ -24,7 +24,7 @@ This files lists the changes during the lifetime of this project.
 - 162: Change formatting according to styling rules
 - 161: Fix that BM link no longer resets active filters
 - 163: Generalize assignment import to be brand independent
-- ?: Bump django security release
+- 181: Bump django security release
 
 ## 2026-01-19
 
