@@ -25,6 +25,7 @@ This files lists the changes during the lifetime of this project.
 - 161: Fix that BM link no longer resets active filters
 - 163: Generalize assignment import to be brand independent
 - 181: Bump django security release
+- 164: introduce actions to automatically deploy on tag and PR
 
 ## 2026-01-19
 
