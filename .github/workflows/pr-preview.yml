@@ -71,4 +71,3 @@ jobs:
           image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
           clone-from: main
           comment-on-pr: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}

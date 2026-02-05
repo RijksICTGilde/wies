@@ -31,5 +31,4 @@ jobs:
           container-org: rijksictgilde
           container-name: wies
           container-tag: ${{ env.IMAGE_TAG }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           update-pr-comment: true
