@@ -1,9 +1,6 @@
 {% extends "base.html" %}
-{% block title %}
-  Inloggen - Wies
-{% endblock title %}
 {% block header %}
-  {# No header on login page #}
+  <!-- No header on error pages -->
 {% endblock header %}
 {% block content %}
   <main class="rvo-max-width-layout rvo-max-width-layout--md rvo-max-width-layout-inline-padding--md">
@@ -14,15 +11,19 @@
         <div class="rvo-card rvo-card--padding-lg">
           <div class="rvo-layout-column rvo-layout-gap--lg rvo-layout-align-items--center">
             <div class="rvo-layout-column rvo-layout-gap--md rvo-layout-align-items--center">
-              <c-h2>Inloggen bij Wies</c-h2>
-              <c-alert kind="info">Login met je ODI e-mail adres (@rijksoverheid, @minbzk), niet dat van een eventuele opdrachtgever.</c-alert>
+              <c-h1>
+              {% block error_title %}
+                Fout
+              {% endblock error_title %}
+              </c-h1>
+              <p class="rvo-text">
+                {% block error_message %}
+                  Er is iets misgegaan.
+                {% endblock error_message %}
+              </p>
+              {% block error_extra %}
+              {% endblock error_extra %}
             </div>
-            <form method="post" action="{{ url('login') }}">
-              {{ get_csrf_hidden_input(request) }}
-              <c-button kind="primary" type="submit">
-              Inloggen SSO Rijk
-              </c-button>
-            </form>
           </div>
         </div>
       </div>

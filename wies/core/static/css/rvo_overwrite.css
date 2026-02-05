@@ -47,6 +47,14 @@
   gap: 0.25rem;
 }
 
+/* Wies logo in menubar */
+.rvo-menubar .wies-logo {
+  height: 1em;
+  width: auto;
+  vertical-align: text-bottom;
+  margin-right: 0.25rem;
+}
+
 /* Custom layout breedte voor plaatsingen pagina */
 .rvo-max-width-layout--placements {
   max-width: 1400px;

@@ -16,16 +16,21 @@ from django.db.models.functions import Concat
 from django.http import HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
+from django.utils import timezone
 from django.views.generic.list import ListView
 
 from .forms import LabelCategoryForm, LabelForm, UserForm
 from .models import Assignment, Colleague, Label, LabelCategory, Ministry, Placement, Service, Skill, User
-from .querysets import annotate_usage_counts
+from .querysets import annotate_placement_dates, annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
-from .services.placements import create_placements_from_csv, filter_placements_by_period
+from .services.placements import (
+    create_assignments_from_csv,
+    filter_placements_by_min_end_date,
+    filter_placements_by_period,
+)
 from .services.sync import sync_all_otys_iir_records
-from .services.users import create_user, create_users_from_csv, update_user
+from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
 logger = logging.getLogger(__name__)
 
@@ -50,15 +55,9 @@ oauth.register(
 
 @login_not_required  # login page cannot require login
 def login(request):
-    """Display login page or handle login action"""
-    if request.method == "GET":
-        # Show the login page
-        return render(request, "login.html")
-    if request.method == "POST":
-        # Handle login action
-        redirect_uri = request.build_absolute_uri(reverse_lazy("auth"))
-        return oauth.oidc.authorize_redirect(request, redirect_uri)
-    return None
+    """Redirect directly to Keycloak for authentication"""
+    redirect_uri = request.build_absolute_uri(reverse_lazy("auth"))
+    return oauth.oidc.authorize_redirect(request, redirect_uri)
 
 
 @login_not_required  # called by oidc, cannot have login
@@ -78,12 +77,16 @@ def auth(request):
         return redirect(request.build_absolute_uri(reverse("home")))
 
     logger.info("login not successful, access denied")
+    # Store email for no_access page
+    request.session["failed_login_email"] = email
     return redirect("/geen-toegang/")
 
 
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
 def no_access(request):
-    return render(request, "no_access.html")
+    email = request.session.pop("failed_login_email", None)
+    is_allowed_domain = email and is_allowed_email_domain(email)
+    return render(request, "no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
 
 
 @login_not_required  # logout should be accessible without login
@@ -180,10 +183,20 @@ class PlacementListView(ListView):
             if label_id != "":
                 qs = qs.filter(colleague__labels__id=int(label_id))
 
+        # filter out historical placements
+        qs = annotate_placement_dates(qs)
+        qs = filter_placements_by_min_end_date(qs, timezone.now().date())
+
         # Apply period filtering for overlapping periods
         periode = self.request.GET.get("periode")
-        if periode:
-            qs = filter_placements_by_period(qs, periode)
+        if periode and "_" in periode:
+            try:
+                period_from_str, period_to_str = periode.split("_", 1)
+                period_from = date.fromisoformat(period_from_str)
+                period_to = date.fromisoformat(period_to_str)
+                qs = filter_placements_by_period(qs, period_from, period_to)
+            except Value:
+                pass  # Invalid date format, ignore filter
 
         return qs.distinct()
 
@@ -201,7 +214,7 @@ class PlacementListView(ListView):
         params.update(request.GET)
         params.pop("collega", None)
         params.pop("opdracht", None)
-        return f"/plaatsingen/?{params.urlencode()}" if params else "/plaatsingen/"
+        return f"{reverse('home')}?{params.urlencode()}" if params else reverse("home")
 
     def _build_assignment_url(self, request, assignment_id):
         """Build assignment panel URL preserving current filters"""
@@ -209,19 +222,19 @@ class PlacementListView(ListView):
         params.update(request.GET)
         params.pop("opdracht", None)
         params["opdracht"] = assignment_id
-        return f"/plaatsingen/?{params.urlencode()}"
+        return f"{reverse('home')}?{params.urlencode()}"
 
     def _build_client_url(self, client_name):
         """Build client filter URL"""
         params = QueryDict(mutable=True)
         params["opdrachtgever"] = client_name
-        return f"/plaatsingen/?{params.urlencode()}"
+        return f"{reverse('home')}?{params.urlencode()}"
 
     def _build_ministry_url(self, ministry_id):
         """Build ministry filter URL"""
         params = QueryDict(mutable=True)
         params["ministerie"] = ministry_id
-        return f"/plaatsingen/?{params.urlencode()}"
+        return f"{reverse('home')}?{params.urlencode()}"
 
     def _build_colleague_url(self, colleague_id):
         """Build colleague panel URL preserving current filters"""
@@ -230,9 +243,9 @@ class PlacementListView(ListView):
         params.pop("collega", None)
         params.pop("opdracht", None)
         params["collega"] = colleague_id
-        return f"/plaatsingen/?{params.urlencode()}"
+        return f"{reverse('home')}?{params.urlencode()}"
 
-    def _get_colleague_assignments(self, colleague):
+    def _get_colleague_placements(self, colleague):
         """Get assignments for a colleague"""
         return (
             Placement.objects.filter(colleague=colleague)
@@ -253,7 +266,12 @@ class PlacementListView(ListView):
     def _get_colleague_panel_data(self, colleague):
         """Get colleague panel data for server-side rendering"""
 
-        colleague_assignments = self._get_colleague_assignments(colleague)
+        placement_qs = self._get_colleague_placements(colleague)
+
+        # filter out historical placements
+        placement_qs = annotate_placement_dates(placement_qs)
+        placement_qs = filter_placements_by_min_end_date(placement_qs, timezone.now().date())
+
         assignment_list = [
             {
                 "name": item["service__assignment__name"],
@@ -267,7 +285,7 @@ class PlacementListView(ListView):
                 "skill": item["service__skill__name"],
                 "assignment_url": self._build_assignment_url(self.request, item["service__assignment__id"]),
             }
-            for item in colleague_assignments
+            for item in placement_qs
         ]
 
         return {
@@ -283,6 +301,10 @@ class PlacementListView(ListView):
         placements_qs = Placement.objects.filter(service__assignment=assignment).select_related(
             "colleague", "service__skill"
         )
+
+        # filter out historical placements
+        placements_qs = annotate_placement_dates(placements_qs)
+        placements_qs = filter_placements_by_min_end_date(placements_qs, timezone.now().date())
 
         # Add colleague URLs to placements
         placements = []
@@ -819,23 +841,23 @@ def user_import_csv(request):
     ],
     raise_exception=True,
 )
-def placement_import_csv(request):
+def assignment_import_csv(request):
     """
-    Import placements from a CSV file.
+    Import assignments from a CSV file.
 
     GET: Display the import form
-    POST: Process the uploaded CSV file and create placements
-          (with related assignments, services, colleagues, and skills)
+    POST: Process the uploaded CSV file and create assignments
+          (with related services, placements, colleagues, and skills)
 
-    For expected CSV format, see create_placements_from_csv function
+    For expected CSV format, see create_assignment_from_csv function
     """
     if request.method == "GET":
-        return render(request, "placement_import.html")
+        return render(request, "assignment_import.html")
     if request.method == "POST":
         if "csv_file" not in request.FILES:
             return render(
                 request,
-                "placement_import.html",
+                "assignment_import.html",
                 {"result": {"success": False, "errors": ["Geen bestand geüpload. Upload een CSV-bestand."]}},
             )
 
@@ -844,7 +866,7 @@ def placement_import_csv(request):
         if not csv_file.name.endswith(".csv"):
             return render(
                 request,
-                "placement_import.html",
+                "assignment_import.html",
                 {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
             )
 
@@ -853,14 +875,14 @@ def placement_import_csv(request):
         except UnicodeDecodeError:
             return render(
                 request,
-                "placement_import.html",
+                "assignment_import.html",
                 {"result": {"success": False, "errors": ["Invalid CSV file encoding. Please use UTF-8."]}},
             )
 
-        result = create_placements_from_csv(csv_content)
+        result = create_assignments_from_csv(csv_content)
 
         # Return results in the form
-        return render(request, "placement_import.html", {"result": result})
+        return render(request, "assignment_import.html", {"result": result})
     return HttpResponse(status=405)
 
 
@@ -1262,3 +1284,75 @@ def assignment_edit_attribute(request, pk, attribute):
         )
 
     return HttpResponse(status=405)
+
+
+@login_not_required
+def error_400(request, exception=None):
+    return render(request, "400.html", status=400)
+
+
+@login_not_required
+def error_403(request, exception=None):
+    return render(request, "403.html", status=403)
+
+
+@login_not_required
+def error_404(request, exception=None):
+    return render(request, "404.html", status=404)
+
+
+@login_not_required
+def error_500(request):
+    return render(request, "500.html", status=500)
+
+
+@login_not_required
+def robots_txt(request):
+    """
+    Serve robots.txt to block crawlers and AI scrapers.
+    """
+    content = """# Disallow all crawlers
+User-agent: *
+Disallow: /
+
+# AI scrapers
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Claude-Web
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: cohere-ai
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: FacebookBot
+Disallow: /
+
+User-agent: Meta-ExternalAgent
+Disallow: /
+
+User-agent: Applebot-Extended
+Disallow: /
+"""
+    return HttpResponse(content, content_type="text/plain")

@@ -39,6 +39,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "wies.core.middleware.SecurityHeadersMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -84,6 +85,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
         "NAME": WRITABLE_FOLDER / "db.sqlite3",
+        "CONN_MAX_AGE": 60,
     }
 }
 
@@ -144,9 +146,9 @@ STORAGES = {
     },
 }
 
-SESSION_COOKIE_AGE = 24 * 60 * 60  # 24h in s
+SESSION_COOKIE_AGE = 8 * 60 * 60  # 8 hours (workday)
 
-LOGIN_URL = "/inloggen/"
+LOGIN_URL = "login"
 
 AUTHENTICATION_BACKENDS = [
     "wies.core.auth_backend.AuthBackend",
@@ -154,6 +156,9 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 AUTH_USER_MODEL = "core.User"
+
+# Allowed email domains for ODI users
+ALLOWED_EMAIL_DOMAINS = ["@rijksoverheid.nl", "@minbzk.nl"]
 
 # OTYS API settings
 OTYS_API_KEY = os.environ.get("OTYS_API_KEY", "")

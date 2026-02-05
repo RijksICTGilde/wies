@@ -1,6 +1,8 @@
 default_language_version:
   python: python3.13
 
+exclude: "^wies/core/static/vendor/"
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
@@ -32,7 +34,7 @@ repos:
         args: [--target-version, "6.0"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.13
+    rev: v0.14.14
     hooks:
       - id: ruff
         args: [--fix]
