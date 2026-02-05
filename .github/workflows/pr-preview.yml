@@ -1,12 +1,17 @@
-name: Build and Deploy
+name: PR Preview
 
 on:
-  push:
-    tags:
-      - "*"
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: pr-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 env:
   IMAGE_NAME: ghcr.io/rijksictgilde/wies
+  IMAGE_TAG: pr-${{ github.event.pull_request.number }}
+  DEPLOYMENT_NAME: pr-${{ github.event.pull_request.number }}
 
 jobs:
   build:
@@ -17,7 +22,7 @@ jobs:
       packages: write
 
     outputs:
-      version: ${{ github.ref_name }}
+      image: ${{ steps.meta.outputs.tags }}
 
     steps:
       - name: Checkout code
@@ -30,14 +35,16 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract metadata
+        id: meta
+        run: echo "tags=${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}" >> $GITHUB_OUTPUT
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: |
-            ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
-            ${{ env.IMAGE_NAME }}:latest
+          tags: ${{ steps.meta.outputs.tags }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -46,18 +53,21 @@ jobs:
     permissions:
       contents: read
       deployments: write
+      pull-requests: write
 
     environment:
-      name: production
+      name: pr-${{ github.event.pull_request.number }}
       url: ${{ steps.deploy.outputs.url }}
 
     steps:
       - name: Deploy to ZAD
         id: deploy
-        uses: RijksICTGilde/zad-actions/deploy@v1
+        uses: RijksICTGilde/zad-actions/deploy@v2
         with:
           api-key: ${{ secrets.ZAD_API_KEY }}
           project-id: wies
-          deployment-name: staging2
+          deployment-name: ${{ env.DEPLOYMENT_NAME }}
           component: frontend
-          image: ${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}
+          image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+          clone-from: staging2
+          comment-on-pr: true
