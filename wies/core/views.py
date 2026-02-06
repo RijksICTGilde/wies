@@ -133,6 +133,7 @@ class PlacementListView(ListView):
     model = Placement
     template_name = "placement_table.html"
     paginate_by = 50
+    page_kwarg = "pagina"
 
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
@@ -443,6 +444,7 @@ class UserListView(PermissionRequiredMixin, ListView):
     model = User
     template_name = "user_admin.html"
     paginate_by = 50
+    page_kwarg = "pagina"
     permission_required = "core.view_user"
 
     def get_queryset(self):
