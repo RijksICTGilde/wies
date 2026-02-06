@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - ?: fix pagination with 'pagina' kwarg
+- ?: (migration) introduce hierarchial organization structure
 - 176: Fix that externally managed assignment can not be edited
 - 176: Filter out historical placements
 - 172: Move dummy_data.json to wies/core/fixtures/
