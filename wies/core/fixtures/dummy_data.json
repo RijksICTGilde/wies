@@ -476,7 +476,7 @@
     "fields": {
       "name": "Ministerie van Algemene Zaken",
       "abbreviations": ["AZ"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1001",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1010",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -489,7 +489,7 @@
     "fields": {
       "name": "Ministerie van Asiel en Migratie",
       "abbreviations": ["AenM"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1002",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1162",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -502,7 +502,7 @@
     "fields": {
       "name": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "abbreviations": ["BZK"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1003",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1034",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -515,7 +515,7 @@
     "fields": {
       "name": "Ministerie van Buitenlandse Zaken",
       "abbreviations": ["BZ"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1004",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1013",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -528,7 +528,7 @@
     "fields": {
       "name": "Ministerie van Defensie",
       "abbreviations": ["Def"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1005",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1018",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -541,7 +541,7 @@
     "fields": {
       "name": "Ministerie van Economische Zaken",
       "abbreviations": ["EZ"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1006",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1045",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -554,7 +554,7 @@
     "fields": {
       "name": "Ministerie van Financiën",
       "abbreviations": ["Fin"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1007",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1090",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -567,7 +567,7 @@
     "fields": {
       "name": "Ministerie van Infrastructuur en Waterstaat",
       "abbreviations": ["IenW"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1008",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1130",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -580,7 +580,7 @@
     "fields": {
       "name": "Ministerie van Justitie en Veiligheid",
       "abbreviations": ["JenV"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1009",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1058",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -593,7 +593,7 @@
     "fields": {
       "name": "Ministerie van Klimaat en Groene Groei",
       "abbreviations": ["KGG"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1010",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1182",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -606,7 +606,7 @@
     "fields": {
       "name": "Ministerie van Landbouw, Visserij, Voedselzekerheid en Natuur",
       "abbreviations": ["LVVN"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1011",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1153",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -619,7 +619,7 @@
     "fields": {
       "name": "Ministerie van Onderwijs, Cultuur en Wetenschap",
       "abbreviations": ["OCW"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1012",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1109",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -632,7 +632,7 @@
     "fields": {
       "name": "Ministerie van Sociale Zaken en Werkgelegenheid",
       "abbreviations": ["SZW"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1013",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1073",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -645,7 +645,7 @@
     "fields": {
       "name": "Ministerie van Volksgezondheid, Welzijn en Sport",
       "abbreviations": ["VWS"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1014",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1025",
       "oin_number": null,
       "source_url": "",
       "parent": null,
@@ -658,7 +658,7 @@
     "fields": {
       "name": "Ministerie van Volkshuisvesting en Ruimtelijke Ordening",
       "abbreviations": ["VRO"],
-      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1015",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1171",
       "oin_number": null,
       "source_url": "",
       "parent": null,
