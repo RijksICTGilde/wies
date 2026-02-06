@@ -35,20 +35,12 @@
           {% endif %}
         </dd>
       {% endif %}
-      <dt>Opdrachtgever</dt>
+      <dt>Organisatie</dt>
       <dd>
-        <a href="{{ panel_data.client_url }}"
-           class="rvo-link"
-           title="Filter op {{ assignment.organization }}">{{ assignment.organization }}</a>
-      </dd>
-      <dt>Ministerie</dt>
-      <dd>
-        {% if assignment.ministry and panel_data.ministry_url %}
-          <a href="{{ panel_data.ministry_url }}"
-             class="rvo-link"
-             title="Filter op {{ assignment.ministry.name }}">{{ assignment.ministry.name }}</a>
+        {% if assignment.organizations.first() %}
+          {{ assignment.organizations.first().name }}
         {% else %}
-          <span class="rvo-text--italic rvo-text--subtle">Geen ministerie opgegeven</span>
+          <span class="rvo-text--italic rvo-text--subtle">Geen organisatie opgegeven</span>
         {% endif %}
       </dd>
       <dt>Periode</dt>
