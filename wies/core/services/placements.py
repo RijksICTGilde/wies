@@ -58,7 +58,7 @@ def create_assignments_from_csv(csv_content: str):
 
     The CSV should contain the following required columns:
     - assignment_name, assignment_description, assignment_owner, assignment_owner_email
-    - assignment_organization_tooi, assignment_start_date, assignment_end_date
+    - assignment_organization_abbreviation, assignment_start_date, assignment_end_date
     - service_skill, placement_colleague_name, placement_colleague_email
 
     Optional columns:
@@ -75,7 +75,7 @@ def create_assignments_from_csv(csv_content: str):
         "assignment_description",
         "assignment_owner",
         "assignment_owner_email",
-        "assignment_organization_tooi",
+        "assignment_organization_abbreviation",
         "assignment_start_date",
         "assignment_end_date",
         "service_skill",
@@ -148,11 +148,16 @@ def create_assignments_from_csv(csv_content: str):
                 else:
                     owner = None
 
-                # Get organization by tooi_identifier
-                organization_tooi = row["assignment_organization_tooi"]
+                # Get organization by abbreviation (case-insensitive)
+                organization_abbreviation = row["assignment_organization_abbreviation"]
                 organization = None
-                with contextlib.suppress(OrganizationUnit.DoesNotExist):  # Organization will remain None if not found
-                    organization = OrganizationUnit.objects.get(tooi_identifier=organization_tooi)
+                with contextlib.suppress(
+                    OrganizationUnit.DoesNotExist, OrganizationUnit.MultipleObjectsReturned
+                ):  # Organization will remain None if not found
+                    # Case-insensitive lookup in JSON array, returns first match
+                    organization = OrganizationUnit.objects.filter(
+                        abbreviations__icontains=organization_abbreviation
+                    ).first()
 
                 # parse dates into proper types
                 start_date_str = row["assignment_start_date"]
