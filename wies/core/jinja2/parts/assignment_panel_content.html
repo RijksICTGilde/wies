@@ -38,7 +38,7 @@
       <dt>Organisatie</dt>
       <dd>
         {% if assignment.organizations.first() %}
-          {{ assignment.organizations.first().name }}
+          {{ assignment.organizations.first().label }}
         {% else %}
           <span class="rvo-text--italic rvo-text--subtle">Geen organisatie opgegeven</span>
         {% endif %}

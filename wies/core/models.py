@@ -257,6 +257,7 @@ class OrganizationUnit(models.Model):
 
     # === Basic fields ===
     name = models.CharField(max_length=200, verbose_name="Naam")
+    label = models.CharField(max_length=200, blank=True)
     abbreviations = models.JSONField(  # first in list is main abbreviation
         default=list,
         blank=True,

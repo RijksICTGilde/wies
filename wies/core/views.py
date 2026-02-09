@@ -369,8 +369,8 @@ class PlacementListView(ListView):
             {"value": "", "label": ""},
         ]
         organization_value = ""
-        for org in OrganizationUnit.objects.order_by("name"):
-            organization_options.append({"value": str(org.id), "label": org.name})
+        for org in OrganizationUnit.objects.order_by("label"):
+            organization_options.append({"value": str(org.id), "label": org.label})
             if active_filters.get("organisatie") == str(org.id):
                 organization_options[-1]["selected"] = True
                 organization_value = str(org.id)
