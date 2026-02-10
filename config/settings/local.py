@@ -25,9 +25,3 @@ if (
     or OIDC_DISCOVERY_URL == "https://test.example.com/.well-known/openid-configuration"
 ):
     logger.warning("One of the OIDC envs is not set")
-
-# Auto-login: skip OIDC when SSO is unreachable (e.g. no VPN)
-SKIP_OIDC = os.environ.get("SKIP_OIDC", "false").lower() == "true"
-if SKIP_OIDC:
-    MIDDLEWARE = [m for m in MIDDLEWARE if m != "django.contrib.auth.middleware.LoginRequiredMiddleware"]  # noqa: F405
-    MIDDLEWARE.append("wies.core.middleware.AutoLoginMiddleware")
