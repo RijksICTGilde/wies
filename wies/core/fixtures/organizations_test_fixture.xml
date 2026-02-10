@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<p:overheidsorganisaties p:timestamp="2026-02-08T22:00:10.863+01:00" xmlns:p="https://organisaties.overheid.nl/static/schema/oo/export/2.6.9">
+  <p:organisaties>
+    <!-- Ministry with nested hierarchy -->
+    <p:organisatie p:systeemId="1001" p:resourceIdentifierTOOI="https://identifier.overheid.nl/tooi/id/ministerie/mnre1001">
+      <p:naam>Asiel en Migratie</p:naam>
+      <p:afkorting>AM</p:afkorting>
+      <p:afkorting>AenM</p:afkorting>
+      <p:types>
+        <p:type>Ministerie</p:type>
+      </p:types>
+      <p:organisaties>
+        <!-- DG level -->
+        <p:organisatie p:systeemId="1002" p:resourceIdentifierTOOI="https://identifier.overheid.nl/tooi/id/oorg/oorg1002">
+          <p:naam>Directoraat-Generaal Migratie</p:naam>
+          <p:afkorting>DGM</p:afkorting>
+          <p:types>
+            <p:type>Directoraat-Generaal</p:type>
+          </p:types>
+          <p:relatieMetMinisterie p:resourceIdentifierTOOI="https://identifier.overheid.nl/tooi/id/ministerie/mnre1001">Asiel en Migratie</p:relatieMetMinisterie>
+          <p:organisaties>
+            <!-- Directie level -->
+            <p:organisatie p:systeemId="1003">
+              <p:naam>Directie Asielzaken</p:naam>
+              <p:types>
+                <p:type>Directie</p:type>
+              </p:types>
+              <p:relatieMetMinisterie p:resourceIdentifierTOOI="https://identifier.overheid.nl/tooi/id/ministerie/mnre1001">Asiel en Migratie</p:relatieMetMinisterie>
+              <p:organisaties>
+                <!-- Afdeling level -->
+                <p:organisatie p:systeemId="1004">
+                  <p:naam>Afdeling Beleid</p:naam>
+                  <p:types>
+                    <p:type>Afdeling</p:type>
+                  </p:types>
+                  <p:relatieMetMinisterie p:resourceIdentifierTOOI="https://identifier.overheid.nl/tooi/id/ministerie/mnre1001">Asiel en Migratie</p:relatieMetMinisterie>
+                </p:organisatie>
+              </p:organisaties>
+            </p:organisatie>
+          </p:organisaties>
+        </p:organisatie>
+      </p:organisaties>
+    </p:organisatie>
+
+    <!-- Agentschap with ministry relation -->
+    <p:organisatie p:systeemId="2001" p:resourceIdentifierTOOI="https://identifier.overheid.nl/tooi/id/oorg/oorg2001">
+      <p:naam>Rijksdienst voor Identiteitsgegevens</p:naam>
+      <p:afkorting>RvIG</p:afkorting>
+      <p:types>
+        <p:type>Agentschap</p:type>
+      </p:types>
+      <p:relatieMetMinisterie p:systeemId="9632" p:resourceIdentifierTOOI="https://identifier.overheid.nl/tooi/id/ministerie/mnre1034">Binnenlandse Zaken en Koninkrijksrelaties</p:relatieMetMinisterie>
+    </p:organisatie>
+
+    <!-- Adviescollege without TOOI identifier -->
+    <p:organisatie p:systeemId="3001">
+      <p:naam>Testadviesraad</p:naam>
+      <p:types>
+        <p:type>Adviescollege</p:type>
+      </p:types>
+      <p:relatieMetMinisterie p:resourceIdentifierTOOI="https://identifier.overheid.nl/tooi/id/ministerie/mnre1034">Binnenlandse Zaken en Koninkrijksrelaties</p:relatieMetMinisterie>
+    </p:organisatie>
+
+    <!-- Organization without abbreviation or ministry relation -->
+    <p:organisatie p:systeemId="4001" p:resourceIdentifierTOOI="https://identifier.overheid.nl/tooi/id/oorg/oorg4001">
+      <p:naam>Testorganisatie Zonder Extras</p:naam>
+      <p:types>
+        <p:type>Organisatieonderdeel</p:type>
+      </p:types>
+    </p:organisatie>
+
+    <!-- Ministry with "Ministerie" already in name -->
+    <p:organisatie p:systeemId="5001" p:resourceIdentifierTOOI="https://identifier.overheid.nl/tooi/id/ministerie/mnre5001">
+      <p:naam>Ministerie van Buitenlandse Zaken</p:naam>
+      <p:afkorting>BZ</p:afkorting>
+      <p:types>
+        <p:type>Ministerie</p:type>
+      </p:types>
+    </p:organisatie>
+  </p:organisaties>
+</p:overheidsorganisaties>

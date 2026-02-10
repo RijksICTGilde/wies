@@ -265,7 +265,16 @@ class OrganizationUnit(models.Model):
         help_text='Lijst van afkortingen, bijv. ["BZK", "MinBZK"]',
     )
     organization_types = models.ManyToManyField("OrganizationType", blank=True)
-    related_ministry = models.ForeignKey("self", on_delete=models.PROTECT, null=True)
+    related_ministry_tooi = models.CharField(
+        max_length=200,
+        default="",
+        validators=[
+            RegexValidator(
+                regex=r"^https://identifier\.overheid\.nl/tooi/",
+                message="TOOI identifier moet een URI zijn (https://identifier.overheid.nl/tooi/...)",
+            )
+        ],
+    )
     parent = models.ForeignKey(
         "self",
         on_delete=models.PROTECT,
@@ -309,9 +318,13 @@ class OrganizationUnit(models.Model):
             "Niet verplicht. Zie: https://oinregister.logius.nl"
         ),
     )
+    system_id = models.CharField(
+        max_length=20,
+        default="",
+        help_text=("SysteemId - gebruikt op organisatie.overheid.nl voor resources"),
+    )
     # Source URL: link to organisaties.overheid.nl page
     source_url = models.URLField(
-        blank=True,
         default="",
         verbose_name="Bronpagina",
         help_text=(
