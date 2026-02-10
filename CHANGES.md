@@ -29,6 +29,7 @@ This files lists the changes during the lifetime of this project.
 - 177: Mobile friendly screens: full-screen overlays for filters, side panel and modals
 - 177: Refactor filter JS: extract shared functions to filter_utils.js
 - 177: Clean up CSS/JS: CSS custom properties, overlay close registry, extract modals.css
+- 181: Bump django security release
 
 ## 2026-01-19
 
