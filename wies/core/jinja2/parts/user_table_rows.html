@@ -3,10 +3,6 @@
       hx-get="{{ url('user-edit', args=[user.id]) }}"
       hx-target="#userFormModal"
       hx-swap="innerHTML"
-      hx-trigger="click, keydown[key=='Enter' || key==' ']"
-      tabindex="0"
-      role="button"
-      aria-label="Bewerk {{ user.first_name }} {{ user.last_name }}"
       title="Bewerk {{ user.first_name }} {{ user.last_name }}">
     <td class="rvo-table-cell">
       <div class="user-table-cell">
@@ -28,7 +24,8 @@
                   style="background-color: #e6f0ff;
                          color: #154273;
                          padding: 0.125rem 0.5rem;
-                         border-radius: 3px">
+                         border-radius: 0.25rem;
+                         white-space: nowrap">
               {% if group.name == 'Business Development Manager' %}
                 BDM
               {% else %}
@@ -49,9 +46,7 @@
 {% else %}
   <tr class="rvo-table-row">
     <td class="rvo-table-cell" colspan="2">
-      <div style="text-align: center; padding: 1rem;">
-        <span class="rvo-text--italic">Geen gebruikers gevonden.</span>
-      </div>
+      <span class="rvo-text--italic">Geen gebruikers gevonden.</span>
     </td>
   </tr>
 {% endfor %}

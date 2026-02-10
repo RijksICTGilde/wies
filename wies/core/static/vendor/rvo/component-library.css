@@ -4122,7 +4122,7 @@ textarea.utrecht-textbox {
   /*
    * Override the width of SVGs when they are hardcoded, and avoid oversized SVG icons.
    * For example:
-   *
+   * 
    *   <svg width="128px" height="128px">
    */
   /* stylelint-disable-next-line property-disallowed-list */

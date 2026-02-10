@@ -51,19 +51,6 @@ function toggleFilters() {
   }
 }
 
-function openColleaguePanel(colleagueId) {
-  const url = new URL(window.location);
-  url.searchParams.delete("opdracht");
-  url.searchParams.set("collega", colleagueId);
-  window.location.href = url.toString();
-}
-
-function openAssignmentPanel(assignmentId) {
-  const url = new URL(window.location);
-  url.searchParams.set("opdracht", assignmentId);
-  window.location.href = url.toString();
-}
-
 // Overlay close registry - page scripts register their close handlers here.
 // Handlers are checked in order; the first matching handler closes its overlay.
 const overlayCloseHandlers = [];
