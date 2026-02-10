@@ -67,5 +67,6 @@
 
 /* Adjust logo wordmark margin to center text with emblem */
 .rvo-logo__wordmark {
-  margin-top: 20px;
+  margin-top: auto;
+  margin-bottom: auto;
 }
