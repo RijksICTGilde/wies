@@ -38,8 +38,12 @@
         }
       });
 
-      dropdown.hidden = isOpen;
-      trigger.setAttribute("aria-expanded", String(!isOpen));
+      if (isOpen) {
+        closeDropdown(container);
+      } else {
+        dropdown.hidden = false;
+        trigger.setAttribute("aria-expanded", "true");
+      }
     });
 
     // Search filtering
@@ -62,14 +66,36 @@
       });
     }
 
-    // Checkbox change handler
+    // Checkbox change handler — only sync state, don't trigger HTMX yet
     checkboxes.forEach(function (cb) {
       cb.addEventListener("change", function () {
+        container.dataset.dirty = "true";
         syncHiddenInputs(container, name, hiddenContainer);
         updateTriggerText(container, trigger);
-        triggerFormChange(container);
       });
     });
+  }
+
+  function closeDropdown(container) {
+    const dropdown = container.querySelector(".multiselect__dropdown");
+    const trigger = container.querySelector(".multiselect__trigger");
+    const searchInput = container.querySelector(".multiselect__search");
+    if (dropdown) dropdown.hidden = true;
+    if (trigger) trigger.setAttribute("aria-expanded", "false");
+    // Reset search filter
+    if (searchInput) {
+      searchInput.value = "";
+      container
+        .querySelectorAll(".multiselect__option")
+        .forEach(function (opt) {
+          opt.style.display = "";
+        });
+    }
+    // Trigger HTMX only if selections changed
+    if (container.dataset.dirty === "true") {
+      container.dataset.dirty = "";
+      triggerFormChange(container);
+    }
   }
 
   function syncHiddenInputs(container, name, hiddenContainer) {
@@ -113,10 +139,7 @@
       document
         .querySelectorAll("[data-multiselect]")
         .forEach(function (container) {
-          const dropdown = container.querySelector(".multiselect__dropdown");
-          const trigger = container.querySelector(".multiselect__trigger");
-          if (dropdown) dropdown.hidden = true;
-          if (trigger) trigger.setAttribute("aria-expanded", "false");
+          closeDropdown(container);
         });
     }
   });
@@ -127,10 +150,7 @@
       document
         .querySelectorAll("[data-multiselect]")
         .forEach(function (container) {
-          const dropdown = container.querySelector(".multiselect__dropdown");
-          const trigger = container.querySelector(".multiselect__trigger");
-          if (dropdown) dropdown.hidden = true;
-          if (trigger) trigger.setAttribute("aria-expanded", "false");
+          closeDropdown(container);
         });
     }
   });
