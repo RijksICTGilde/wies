@@ -27,6 +27,10 @@
       </span>
     </button>
     <div class="multiselect__dropdown" role="listbox" hidden>
+      <input type="text"
+             class="multiselect__search utrecht-textbox utrecht-textbox--html-input"
+             placeholder="Zoeken..."
+             aria-label="Zoeken in {{ filter_group.label }}" />
       {% for option in filter_group.options %}
         {% if option.value != '' %}
           <label class="multiselect__option">

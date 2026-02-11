@@ -42,6 +42,26 @@
       trigger.setAttribute("aria-expanded", String(!isOpen));
     });
 
+    // Search filtering
+    const searchInput = container.querySelector(".multiselect__search");
+    if (searchInput) {
+      searchInput.addEventListener("input", function () {
+        const query = searchInput.value.toLowerCase();
+        container
+          .querySelectorAll(".multiselect__option")
+          .forEach(function (option) {
+            const label = option
+              .querySelector(".rvo-text")
+              .textContent.toLowerCase();
+            option.style.display = label.includes(query) ? "" : "none";
+          });
+      });
+      // Prevent keystrokes from bubbling to form/closing dropdown
+      searchInput.addEventListener("keydown", function (e) {
+        e.stopPropagation();
+      });
+    }
+
     // Checkbox change handler
     checkboxes.forEach(function (cb) {
       cb.addEventListener("change", function () {

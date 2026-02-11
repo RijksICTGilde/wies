@@ -74,6 +74,18 @@
   display: none;
 }
 
+/* Search input inside dropdown */
+.multiselect__search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--rvo-color-grijs-300);
+  padding: 0.5rem 0.75rem;
+  font-size: var(--rvo-font-size-md);
+}
+
 /* Individual option */
 .multiselect__option {
   display: flex;
