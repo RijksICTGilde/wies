@@ -19,6 +19,8 @@
             {% for filter_group in filter_groups %}
               {% if filter_group.type == 'select' %}
                 <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
+              {% elif filter_group.type == 'select-multi' %}
+                {% include "parts/multiselect_dropdown.html" %}
               {% elif filter_group.type == 'date_range' %}
                 <div class="filter-sidebar-date-range">
                   <span class="rvo-label">{{ filter_group.label }}</span>
@@ -98,30 +100,7 @@
           {% for filter_group in filter_groups %}
             {% if filter_group.type == 'select' %}
               {% set filter_value = active_filters.get(filter_group.name) %}
-              {# For label filters (multi-select), show multiple chips #}
-              {% if filter_group.name == 'labels' and filter_value %}
-                {% for label_id in filter_value %}
-                  {% for option in filter_group.options %}
-                    {% if option.value == label_id %}
-                      <div class="filter-chip filter-chip--label"
-                           data-filter-name="{{ filter_group.name }}"
-                           data-filter-value="{{ label_id }}"
-                           data-filter-type="select-multi"
-                           style="background-color: {{ option.category_color }}">
-                        <span class="filter-chip-label">{{ option.label }}</span>
-                        <button type="button"
-                                class="filter-chip-remove"
-                                aria-label="Verwijder filter"
-                                data-filter-name="{{ filter_group.name }}"
-                                data-filter-value="{{ label_id }}">
-                          <c-icon icon="kruis" color="grijs-700" size="sm" />
-                        </button>
-                      </div>
-                    {% endif %}
-                  {% endfor %}
-                {% endfor %}
-                {# For single-select filters #}
-              {% elif filter_value and filter_group.name != 'label' %}
+              {% if filter_value %}
                 {% for option in filter_group.options %}
                   {% if option.value == filter_value %}
                     <div class="filter-chip filter-chip--default"
@@ -136,6 +115,30 @@
                       </button>
                     </div>
                   {% endif %}
+                {% endfor %}
+              {% endif %}
+            {% elif filter_group.type == 'select-multi' %}
+              {% set filter_value = active_filters.get(filter_group.name) %}
+              {% if filter_value %}
+                {% for selected_id in filter_value %}
+                  {% for option in filter_group.options %}
+                    {% if option.value == selected_id %}
+                      <div class="filter-chip {% if option.category_color %}filter-chip--label{% else %}filter-chip--default{% endif %}"
+                           data-filter-name="{{ filter_group.name }}"
+                           data-filter-value="{{ selected_id }}"
+                           data-filter-type="select-multi"
+                           {% if option.category_color %}style="background-color: {{ option.category_color }}"{% endif %}>
+                        <span class="filter-chip-label">{{ option.label }}</span>
+                        <button type="button"
+                                class="filter-chip-remove"
+                                aria-label="Verwijder filter"
+                                data-filter-name="{{ filter_group.name }}"
+                                data-filter-value="{{ selected_id }}">
+                          <c-icon icon="kruis" color="grijs-700" size="sm" />
+                        </button>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
                 {% endfor %}
               {% endif %}
               {# Date range filter #}

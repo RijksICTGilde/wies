@@ -5,6 +5,8 @@ Usage:
 {% endwith %}
 #}
 <link rel="stylesheet" href="{{ static('css/generic_filter_bar.css') }}">
+<link rel="stylesheet" href="{{ static('css/multiselect_dropdown.css') }}">
+<script src="{{ static('js/multiselect_dropdown.js') }}"></script>
 {# Generic Compact Filters Section #}
 <form class="rvo-form filter-bar"
       hx-get="{{ url(url_name) }}"
@@ -64,6 +66,8 @@ Usage:
           {% for filter_group in filter_groups %}
             {% if filter_group.type == 'select' %}
               <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
+            {% elif filter_group.type == 'select-multi' %}
+              {% include "parts/multiselect_dropdown.html" %}
             {% elif filter_group.type == 'date_range' %}
               {# TODO jrc: c-date-range-field would be very nice #}
               <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">

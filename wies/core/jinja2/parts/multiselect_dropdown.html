@@ -1,0 +1,56 @@
+{# Multiselect dropdown component
+   Usage: {% include "parts/multiselect_dropdown.html" %}
+   Required context:
+     - filter_group.name: input name attribute
+     - filter_group.label: display label
+     - filter_group.options: list of {value, label, selected?, category_color?}
+     - filter_group.selected_values: list of currently selected values
+#}
+{% set selected_count = filter_group.selected_values|length %}
+<div class="utrecht-form-field rvo-form-field">
+  <div class="rvo-form-field__label">
+    <label class="rvo-label utrecht-form-label"
+           id="multiselect-label-{{ filter_group.label|replace(' ', '-') |lower }}">{{ filter_group.label }}</label>
+  </div>
+  <div class="multiselect"
+       data-multiselect
+       data-name="{{ filter_group.name }}">
+    <button type="button"
+            class="multiselect__trigger utrecht-select"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-labelledby="multiselect-label-{{ filter_group.label|replace(' ', '-') |lower }}">
+      <span class="multiselect__trigger-text">
+        {%- if selected_count > 0 -%}
+          {{ selected_count }} geselecteerd
+        {%- endif -%}
+      </span>
+    </button>
+    <div class="multiselect__dropdown" role="listbox" hidden>
+      <input type="text"
+             class="multiselect__search utrecht-textbox utrecht-textbox--html-input"
+             placeholder="Zoeken..."
+             aria-label="Zoeken in {{ filter_group.label }}" />
+      {% for option in filter_group.options %}
+        {% if option.value != '' %}
+          <label class="multiselect__option">
+            <input type="checkbox"
+                   class="rvo-checkbox__input multiselect__checkbox"
+                   value="{{ option.value }}"
+                   {% if option.value in filter_group.selected_values %}checked{% endif %} />
+            <span class="rvo-text">{{ option.label }}</span>
+          </label>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {# Hidden inputs for form submission - one per selected value #}
+    <div class="multiselect__hidden-inputs">
+      {% for val in filter_group.selected_values %}
+        <input type="hidden"
+               name="{{ filter_group.name }}"
+               value="{{ val }}"
+               data-filter-input />
+      {% endfor %}
+    </div>
+  </div>
+</div>

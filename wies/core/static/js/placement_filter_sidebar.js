@@ -19,17 +19,10 @@ document.addEventListener("DOMContentLoaded", function () {
         selectElement.selectedIndex = 0;
       }
     } else if (filterType === "select-multi") {
-      // For multi-select (label filters), find the correct dropdown
-      // There are multiple <select name="label"> elements (one per category)
-      const selectElements = form.querySelectorAll(`[name="${filterName}"]`);
-      selectElements.forEach((selectElement) => {
-        for (let i = 0; i < selectElement.options.length; i++) {
-          if (selectElement.options[i].value === filterValue) {
-            selectElement.selectedIndex = 0;
-            return;
-          }
-        }
-      });
+      // Uncheck in multiselect dropdown component and sync hidden inputs
+      if (typeof window.multiselectUncheck === "function") {
+        window.multiselectUncheck(filterName, filterValue);
+      }
     } else if (filterType === "date_range") {
       const fromInput = document.getElementById(`filter-${filterName}-from`);
       const toInput = document.getElementById(`filter-${filterName}-to`);

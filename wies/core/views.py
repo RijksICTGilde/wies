@@ -134,6 +134,7 @@ class PlacementListView(ListView):
     model = Placement
     template_name = "placement_table.html"
     paginate_by = 50
+    page_kwarg = "pagina"
 
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
@@ -169,8 +170,9 @@ class PlacementListView(ListView):
 
         # Filtering
 
-        if self.request.GET.get("rol"):
-            qs = qs.filter(service__skill__id=self.request.GET["rol"])
+        rol_filter = self.request.GET.getlist("rol")
+        if rol_filter:
+            qs = qs.filter(service__skill__id__in=rol_filter)
 
         if self.request.GET.get("opdrachtgever"):
             qs = qs.filter(service__assignment__organization=self.request.GET["opdrachtgever"])
@@ -340,10 +342,18 @@ class PlacementListView(ListView):
         context["search_filter"] = self.request.GET.get("zoek")
 
         active_filters = {}  # key: val
-        for filter_param in ["rol", "opdrachtgever", "ministerie", "periode"]:
+        for filter_param in ["opdrachtgever", "ministerie", "periode"]:
             val = self.request.GET.get(filter_param)
             if val:
                 active_filters[filter_param] = val
+
+        # rol filter supports multi-select
+        rol_filter = set()
+        for rol_id in self.request.GET.getlist("rol"):
+            if rol_id != "":
+                rol_filter.add(rol_id)
+        if len(rol_filter) > 0:
+            active_filters["rol"] = rol_filter
 
         # label filter supports multi-select
         label_filter = set()
@@ -366,30 +376,30 @@ class PlacementListView(ListView):
             options = [
                 {"value": "", "label": ""},
             ]
-            value = ""
+            selected_values = []
             for label in Label.objects.filter(category=category):
                 options.append({"value": str(label.id), "label": f"{label.name}", "category_color": category.color})
                 if str(label.id) in active_filters.get("labels", set()):
                     options[-1]["selected"] = True
-                    value = str(label.id)
+                    selected_values.append(str(label.id))
 
             filter_group = {
-                "type": "select",
+                "type": "select-multi",
                 "name": "labels",
                 "label": select_label,
                 "options": options,
-                "value": value,
+                "selected_values": selected_values,
             }
 
             label_filter_groups.append(filter_group)
 
         skill_options = [{"value": "", "label": ""}]
-        skill_value = ""
+        skill_selected_values = []
         for skill in Skill.objects.order_by("name"):
             skill_options.append({"value": str(skill.id), "label": skill.name})
-            if active_filters.get("rol") == str(skill.id):
+            if str(skill.id) in active_filters.get("rol", set()):
                 skill_options[-1]["selected"] = True
-                skill_value = str(skill.id)
+                skill_selected_values.append(str(skill.id))
 
         clients = [
             {"id": org, "name": org}
@@ -440,11 +450,11 @@ class PlacementListView(ListView):
                 "value": client_value,
             },
             {
-                "type": "select",
+                "type": "select-multi",
                 "name": "rol",
                 "label": "Rollen",
                 "options": skill_options,
-                "value": skill_value,
+                "selected_values": skill_selected_values,
             },
             *label_filter_groups,
             {
@@ -460,9 +470,9 @@ class PlacementListView(ListView):
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
             filter_params = []
-            for key, value in self.request.GET.items():
+            for key, values in self.request.GET.lists():
                 if key != "pagina":  # Exclude page param
-                    filter_params.append(f"{key}={value}")
+                    filter_params.extend(f"{key}={value}" for value in values)
             params_str = "&".join(filter_params)
             next_page = context["page_obj"].next_page_number()
             context["next_page_url"] = f"?pagina={next_page}" + (f"&{params_str}" if params_str else "")
@@ -564,21 +574,21 @@ class UserListView(PermissionRequiredMixin, ListView):
         for category in LabelCategory.objects.all():
             select_label = category.name
             options = [
-                {"value": "", "label": "Allemaal"},
+                {"value": "", "label": ""},
             ]
-            value = ""
+            selected_values = []
             for label in Label.objects.filter(category=category):
                 options.append({"value": str(label.id), "label": f"{label.name}"})
                 if str(label.id) in active_filters.get("labels", set()):
                     options[-1]["selected"] = True
-                    value = str(label.id)
+                    selected_values.append(str(label.id))
 
             filter_group = {
-                "type": "select",
+                "type": "select-multi",
                 "name": "labels",
                 "label": select_label,
                 "options": options,
-                "value": value,
+                "selected_values": selected_values,
             }
 
             label_filter_groups.append(filter_group)
@@ -619,9 +629,9 @@ class UserListView(PermissionRequiredMixin, ListView):
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
             filter_params = []
-            for key, value in self.request.GET.items():
+            for key, values in self.request.GET.lists():
                 if key != "pagina":
-                    filter_params.append(f"{key}={value}")
+                    filter_params.extend(f"{key}={value}" for value in values)
             params_str = "&".join(filter_params)
             next_page = context["page_obj"].next_page_number()
             context["next_page_url"] = f"?pagina={next_page}" + (f"&{params_str}" if params_str else "")

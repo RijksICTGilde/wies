@@ -104,6 +104,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
 
+      // Clear multiselect dropdowns
+      if (typeof window.multiselectClearAll === "function") {
+        window.multiselectClearAll(form);
+      }
+
       // Clear date range inputs
       form.querySelectorAll(".date-range-input").forEach((input) => {
         input.value = "";
@@ -138,9 +143,21 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let activeFilters = 0;
 
-    // Count active filters
+    // Count active select/hidden filters (exclude multiselect hidden inputs)
     form.querySelectorAll("[data-filter-input]").forEach((input) => {
+      // Skip hidden inputs inside multiselect containers (counted separately)
+      if (input.closest(".multiselect__hidden-inputs")) return;
       if (input.value !== "" && input.value !== "0") {
+        activeFilters++;
+      }
+    });
+
+    // Count multiselect groups that have selections
+    form.querySelectorAll("[data-multiselect]").forEach((container) => {
+      const checked = container.querySelectorAll(
+        ".multiselect__checkbox:checked",
+      );
+      if (checked.length > 0) {
         activeFilters++;
       }
     });

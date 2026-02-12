@@ -1,0 +1,115 @@
+/* Multiselect Dropdown Component */
+
+.multiselect {
+  position: relative;
+}
+
+/* Trigger button styled to match native <select> appearance */
+.multiselect__trigger {
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  padding-inline-end: 46px;
+}
+
+/* Blue square background — matches rvo-select-wrapper::before */
+.multiselect::before {
+  content: "";
+  display: block;
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--rvo-border-radius-sm);
+  background-color: var(--rvo-select-icon-background-color);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* White chevron icon — matches rvo-select-wrapper::after */
+.multiselect::after {
+  content: "";
+  display: block;
+  position: absolute;
+  right: 16px;
+  top: 7px;
+  width: 13px;
+  height: 32px;
+  background-color: white;
+  -webkit-mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
+  mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-size: 100%;
+  mask-size: 100%;
+  -webkit-mask-position: center center;
+  mask-position: center center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.multiselect__trigger-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Dropdown panel */
+.multiselect__dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--rvo-color-wit);
+  border: 1px solid var(--rvo-color-grijs-400);
+  border-top: none;
+  max-height: 240px;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.multiselect__dropdown[hidden] {
+  display: none;
+}
+
+/* Search input inside dropdown */
+.multiselect__search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--rvo-color-grijs-300);
+  padding: 0.5rem 0.75rem;
+  font-size: var(--rvo-font-size-md);
+}
+
+/* Individual option */
+.multiselect__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.multiselect__option:hover {
+  background-color: var(--rvo-color-grijs-100);
+}
+
+.multiselect__option .rvo-checkbox__input {
+  flex-shrink: 0;
+}
+
+.multiselect__option .rvo-text {
+  flex: 1;
+  font-size: var(--rvo-font-size-md);
+}
+
+/* Hidden inputs container */
+.multiselect__hidden-inputs {
+  display: none;
+}
