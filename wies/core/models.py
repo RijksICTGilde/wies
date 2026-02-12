@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.functions import Lower
 from django.utils import timezone
@@ -85,18 +86,6 @@ class Label(models.Model):
         return f"{self.name}"
 
 
-class Ministry(models.Model):
-    name = models.CharField(max_length=98)
-    abbreviation = models.CharField(max_length=10)
-
-    class Meta:
-        ordering = ["name"]
-        verbose_name_plural = "ministries"
-
-    def __str__(self):
-        return f"{self.name} ({self.abbreviation})"
-
-
 class Skill(models.Model):
     name = models.CharField(max_length=30, unique=True)
 
@@ -135,8 +124,12 @@ class Assignment(models.Model):
     # placements through foreignkey on Placement
     # services through foreignkey on Service
     status = models.CharField(max_length=20, choices=ASSIGNMENT_STATUS, default="LEAD")
-    organization = models.CharField(blank=True)
-    ministry = models.ForeignKey("Ministry", models.SET_NULL, null=True, blank=False)
+    organizations = models.ManyToManyField(
+        "OrganizationUnit",
+        through="AssignmentOrganizationUnit",
+        related_name="assignments",
+        verbose_name="Organisatie-eenheden",
+    )
     owner = models.ForeignKey("Colleague", models.SET_NULL, null=True, blank=False, related_name="owned_assignments")
     extra_info = models.TextField(blank=True, max_length=5000)
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
@@ -249,3 +242,124 @@ class Event(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.user_email})"
+
+
+class OrganizationType(models.Model):
+    name = models.CharField(max_length=30)
+    label = models.CharField(max_length=30)
+
+    def __str__(self):
+        return f"{self.label} ({self.name})"
+
+
+class OrganizationUnit(models.Model):
+    """Hierarchical organization model for Dutch government organizations."""
+
+    # === Basic fields ===
+    name = models.CharField(max_length=200, verbose_name="Naam")
+    label = models.CharField(max_length=200, blank=True)
+    abbreviations = models.JSONField(  # first in list is main abbreviation
+        default=list,
+        blank=True,
+        verbose_name="Afkortingen",
+        help_text='Lijst van afkortingen, bijv. ["BZK", "MinBZK"]',
+    )
+    organization_types = models.ManyToManyField("OrganizationType", blank=True)
+    related_ministry_tooi = models.CharField(
+        max_length=200,
+        default="",
+        validators=[
+            RegexValidator(
+                regex=r"^https://identifier\.overheid\.nl/tooi/",
+                message="TOOI identifier moet een URI zijn (https://identifier.overheid.nl/tooi/...)",
+            )
+        ],
+    )
+    parent = models.ForeignKey(
+        "self",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="children",
+        verbose_name="Bovenliggende organisatie",
+    )
+
+    # === External identifiers ===
+    # TOOI: primary identifier for sync with organisaties.overheid.nl
+    tooi_identifier = models.CharField(
+        max_length=200,
+        blank=True,
+        null=True,
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex=r"^https://identifier\.overheid\.nl/tooi/",
+                message="TOOI identifier moet een URI zijn (https://identifier.overheid.nl/tooi/...)",
+            )
+        ],
+        verbose_name="TOOI-identifier",
+        help_text=(
+            "Unieke URI uit organisaties.overheid.nl (bijv. "
+            "'https://identifier.overheid.nl/tooi/id/oorg/oorg10264'). "
+            "Zie: https://standaarden.overheid.nl/tooi/"
+        ),
+    )
+    # OIN: optional, for PKIoverheid digital authentication
+    oin_number = models.CharField(
+        max_length=20,
+        blank=True,
+        null=True,
+        unique=True,
+        validators=[RegexValidator(regex=r"^\d{20}$", message="OIN moet exact 20 cijfers zijn")],
+        verbose_name="OIN-nummer",
+        help_text=(
+            "Organisatie Identificatienummer - uniek 20-cijferig nummer uit het "
+            "Logius OIN-register. Wordt gebruikt voor digitale communicatie (PKIoverheid). "
+            "Niet verplicht. Zie: https://oinregister.logius.nl"
+        ),
+    )
+    system_id = models.CharField(
+        max_length=20,
+        default="",
+        help_text=("SysteemId - gebruikt op organisatie.overheid.nl voor resources"),
+    )
+    # Source URL: link to organisaties.overheid.nl page
+    source_url = models.URLField(
+        default="",
+        verbose_name="Bronpagina",
+        help_text=(
+            "URL naar de pagina op organisaties.overheid.nl. "
+            "Als deze is gevuld, komt de organisatie uit een externe bron "
+            "en zijn de gegevens niet bewerkbaar."
+        ),
+    )
+
+    class Meta:
+        ordering = ["name"]
+        verbose_name = "Organisatie-eenheid"
+        verbose_name_plural = "Organisatie-eenheden"
+        indexes = [
+            models.Index(fields=["parent"]),
+        ]
+
+    def __str__(self):
+        if self.abbreviation:
+            return f"{self.name} ({self.abbreviation})"
+        return self.name
+
+    @property
+    def abbreviation(self) -> str:
+        """Return the first abbreviation, or empty string if none."""
+        if self.abbreviations and len(self.abbreviations) > 0:
+            return self.abbreviations[0]
+        return ""
+
+
+class AssignmentOrganizationUnit(models.Model):
+    """Through table between Assignment and OrganizationUnit."""
+
+    assignment = models.ForeignKey("Assignment", on_delete=models.CASCADE, related_name="organization_relations")
+    organization = models.ForeignKey("OrganizationUnit", on_delete=models.PROTECT, related_name="assignment_relations")
+
+    def __str__(self):
+        return f"{self.assignment.name} - {self.organization.name}"

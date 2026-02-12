@@ -2,7 +2,7 @@ from django.contrib.auth.models import Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Assignment, Colleague, Label, LabelCategory, Ministry, Placement, Service, Skill, User
+from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service, Skill, User
 
 
 class LabelFilteringAndDisplayTest(TestCase):
@@ -66,10 +66,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.colleague3.labels.add(self.rig_label)
 
         # Create placements
-        self.ministry = Ministry.objects.create(name="Test Ministry", abbreviation="TM")
-        self.assignment = Assignment.objects.create(
-            name="Test Assignment", organization="Test Org", ministry=self.ministry, source="wies", status="INGEVULD"
-        )
+        self.assignment = Assignment.objects.create(name="Test Assignment", source="wies", status="INGEVULD")
         self.skill = Skill.objects.create(name="Python")
         self.service = Service.objects.create(assignment=self.assignment, skill=self.skill, source="wies")
 
