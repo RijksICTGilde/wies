@@ -8,7 +8,8 @@ import logging
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
-from urllib.request import urlopen
+
+import requests
 
 from wies.core.models import OrganizationType, OrganizationUnit
 
@@ -166,7 +167,6 @@ def sync_organization_tree(
             # if db org has tooi, new org does not have tooi
             # reject db org, since it's probably not the same one
             db_org = None
-            # TODO: write test for this
 
     organization_types = []
     if not dry_run:
@@ -267,8 +267,13 @@ def sync_organizations(
     # Fetch XML if not provided
     if xml_content is None:
         logger.info("Fetching organizations from %s", ORGANISATIES_OVERHEID_URL)
-        with urlopen(ORGANISATIES_OVERHEID_URL, timeout=120) as response:  # noqa: S310
-            xml_content = response.read()
+
+        response = requests.get(ORGANISATIES_OVERHEID_URL, timeout=120)
+        if response.status_code == 200:  # noqa: PLR2004 (status code is not magic)
+            xml_content = response.content
+        else:
+            logger.error("Unable to get xml content")
+            return None
 
     # Determine which types to sync
     filter_types = None
