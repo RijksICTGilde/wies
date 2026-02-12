@@ -1,3 +1,13 @@
+/* Admin sidebar menu styling */
+.sidebar__content .rvo-menubar {
+  margin: 0;
+  padding: 1.5rem 0 0 1.5rem;
+}
+
+.sidebar__content .rvo-menubar__item {
+  margin-bottom: 0.5rem;
+}
+
 /* Admin Header with Title and Action Button */
 .admin-header {
   display: flex;
