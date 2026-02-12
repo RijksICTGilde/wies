@@ -30,6 +30,7 @@ This files lists the changes during the lifetime of this project.
 - 177: Refactor filter JS: extract shared functions to filter_utils.js
 - 177: Clean up CSS/JS: CSS custom properties, overlay close registry, extract modals.css
 - 177: Add animations to panels and sidebar
+- 177: with env var SKIP_OIDC, skip login during development
 - 181: Bump django security release
 
 ## 2026-01-19
