@@ -22,7 +22,7 @@ Usage:
          class="search-field-wrapper">
       <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon" />
       {# TODO jrc: size attribute without value necessary to leave out sizing css #}
-      <c-input id="search" name="{{ search_field|default('search') }}" placeholder="{{ search_placeholder|default('Zoeken...') }}" value="{{ search_filter|default('') }}" aria-label="{{ search_placeholder|default('Zoeken') }}" size />
+      <c-input id="search" name="{{ search_field|default('search') }}" placeholder="{{ search_placeholder|default('Zoeken...') }}" value="{{ search_filter or '' }}" aria-label="{{ search_placeholder|default('Zoeken') }}" size />
     </div>
     {# Filters Button with indicator #}
     {# TODO jrc: below button cannot be changed into c-button, because it is manipulated by javascript, which only sees the raw css #}
@@ -107,5 +107,3 @@ Usage:
     </div>
   </div>
 </form>
-<script src="{{ static('js/filter_utils.js') }}"></script>
-<script src="{{ static('js/generic_filter_bar.js') }}"></script>

@@ -4,7 +4,7 @@
   <nav class="menubar__nav-section">
     <button type="button"
             class="menubar__mobile-toggle"
-            onclick="toggleMobileMenu()"
+            onclick="this.closest('.menubar').classList.toggle('menubar--mobile-open')"
             aria-label="Menu">
       <span class="menubar__mobile-toggle-icon menubar__mobile-toggle-icon--hamburger"></span>
       <span class="menubar__mobile-toggle-icon menubar__mobile-toggle-icon--close utrecht-icon rvo-icon rvo-icon-kruis rvo-icon--md"

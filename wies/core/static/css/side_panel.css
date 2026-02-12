@@ -19,9 +19,8 @@ dialog#side_panel {
   opacity: 0;
 }
 
-/* Opening animation - triggered by JS */
-dialog#side_panel.opening,
-dialog#side_panel[open]:not(.closing) {
+/* Opening animation - triggered by JS after rAF delay */
+dialog#side_panel.opening {
   transform: translateX(0) !important;
   opacity: 1;
 }

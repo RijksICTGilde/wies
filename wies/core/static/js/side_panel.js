@@ -29,12 +29,19 @@ document.addEventListener("DOMContentLoaded", function () {
       panel.classList.add("closing");
 
       // Wait for animation to finish before navigating
-      setTimeout(() => {
-        const url = new URL(window.location);
-        url.searchParams.delete("collega");
-        url.searchParams.delete("opdracht");
-        window.location.href = url.toString();
-      }, LAYOUT.ANIMATION_DURATION_MS); // Match transition duration in CSS
+      setTimeout(
+        () => {
+          const url = new URL(window.location);
+          url.searchParams.delete("collega");
+          url.searchParams.delete("opdracht");
+          window.location.href = url.toString();
+        },
+        parseInt(
+          getComputedStyle(document.documentElement).getPropertyValue(
+            "--animation-duration-ms",
+          ),
+        ) || 400,
+      );
     } else {
       // Fallback if panel doesn't exist
       const url = new URL(window.location);
@@ -47,6 +54,12 @@ document.addEventListener("DOMContentLoaded", function () {
   // Handle close button clicks
   const panel = document.getElementById("side_panel");
   if (panel) {
+    // Handle ESC: prevent native dialog close, navigate instead
+    panel.addEventListener("cancel", function (e) {
+      e.preventDefault();
+      closePanelWithFilters();
+    });
+
     const closeBtn = panel.querySelector(".modal-close-button");
     if (closeBtn) {
       closeBtn.addEventListener("click", function (e) {
@@ -63,13 +76,4 @@ document.addEventListener("DOMContentLoaded", function () {
       closePanelWithFilters();
     }
   });
-
-  // Register ESC handler via overlay close registry (layout.js)
-  registerOverlayClose(
-    () => {
-      const p = document.getElementById("side_panel");
-      return p && p.open;
-    },
-    () => closePanelWithFilters(),
-  );
 });

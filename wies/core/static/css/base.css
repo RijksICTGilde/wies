@@ -12,11 +12,6 @@ html {
   --layout-max-width: 1440px;
   --layout-gap: 1.5rem;
 
-  /* Breakpoint: mobile <= 800px, desktop >= 801px
-     CSS custom properties can't be used in @media queries, so 800px stays
-     hardcoded there. JS reads this variable as the single source of truth. */
-  --breakpoint-mobile: 800px;
-
   /* Animation timing for overlay transitions (sidebar, side panel, modals) */
   --animation-duration: 0.4s;
   --animation-duration-ms: 400; /* unitless for JS setTimeout */
@@ -453,6 +448,11 @@ html {
     pointer-events: auto;
     position: static;
     visibility: visible;
+    padding: 0;
+  }
+
+  .layout--mobile-filters-open .sidebar__content > * {
+    padding: var(--rvo-space-md);
   }
 
   .layout--mobile-filters-open .sidebar__toggle-row {
