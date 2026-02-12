@@ -1,21 +1,17 @@
 <div class="rvo-layout-column rvo-layout-gap--lg">
   <section>
-    <div class="rvo-card rvo-card--with-image rvo-card--with-image-sm rvo-card--outline rvo-card--padding--sm">
-      <div class="rvo-card__image-container">
+    <div class="card card--horizontal">
+      <div class="card__image">
         <img alt="Profielfoto van {{ colleague.name }}"
-             class="rvo-card__image rvo-card-img--sm"
              src="{{ static('img/placeholder-avatar.svg') }}" />
       </div>
-      <div class="rvo-card__content">
-        <div class="rvo-layout-column rvo-layout-gap--sm">
-          {# TODO: switch to components c-h3 #}
-          <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin rvo-heading--gap-xs">{{ colleague.name }}</h3>
-          <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
-            <span class="utrecht-icon rvo-icon rvo-icon-mail rvo-icon--md rvo-icon--hemelblauw"
-                  role="img"
-                  aria-label="E-mail"></span>
-            <a href="mailto:{{ colleague.email }}" class="rvo-link">{{ colleague.email }}</a>
-          </div>
+      <div class="card__content">
+        <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin rvo-heading--gap-xs">{{ colleague.name }}</h3>
+        <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
+          <span class="utrecht-icon rvo-icon rvo-icon-mail rvo-icon--md rvo-icon--hemelblauw"
+                role="img"
+                aria-label="E-mail"></span>
+          <a href="mailto:{{ colleague.email }}" class="rvo-link">{{ colleague.email }}</a>
         </div>
       </div>
     </div>
