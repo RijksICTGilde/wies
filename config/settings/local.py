@@ -27,6 +27,7 @@ if (
     logger.warning("One of the OIDC envs is not set")
 
 # Auto-login: skip OIDC when SSO is unreachable (e.g. no VPN)
+# uses DEV_EMAIL user if defined, otherwise first super admin
 SKIP_OIDC = os.environ.get("SKIP_OIDC", "false").lower() == "true"
 if SKIP_OIDC:
     MIDDLEWARE = [m for m in MIDDLEWARE if m != "django.contrib.auth.middleware.LoginRequiredMiddleware"]  # noqa: F405
