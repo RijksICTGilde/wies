@@ -24,17 +24,31 @@
           href="{{ static('@nl-rvo/assets/fonts/index.css') }}">
     <link rel="stylesheet" href="{{ static('css/rvo_overwrite.css') }}">
     <link rel="stylesheet" href="{{ static('css/base.css') }}">
+    <link rel="stylesheet" href="{{ static('css/modals.css') }}">
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
+    <script src="{{ static('js/filters.js') }}"></script>
     {% block extra_head %}
     {% endblock extra_head %}
   </head>
   <body class="rvo-theme">
     {% block header %}
-      {% include "parts/header.html" %}
+      {% include "parts/header_logo.html" %}
     {% endblock header %}
-    <div class="rvo-layout-column rvo-layout-gap--xl">
-      {% block content %}
-      {% endblock content %}
+    <div class="layout {% if request.GET.get('filters') == '0' %}layout--collapsed{% endif %}"
+         id="layout">
+      <div class="layout__body">
+        {% include "parts/menubar.html" %}
+        <aside class="sidebar">
+          {% block sidebar %}
+          {% endblock sidebar %}
+        </aside>
+        <main class="layout__main">
+          {% block content %}
+          {% endblock content %}
+        </main>
+      </div>
     </div>
+    {% block panel %}
+    {% endblock panel %}
   </body>
 </html>

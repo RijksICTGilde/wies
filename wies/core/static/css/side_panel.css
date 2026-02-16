@@ -10,13 +10,35 @@ dialog#side_panel {
   padding: 0 !important;
   border-radius: 0 !important;
   box-sizing: border-box !important;
-  transform: none !important;
   max-height: none !important;
+  /* Smooth slide-in animation */
+  transform: translateX(100%) !important;
+  transition:
+    transform var(--animation-duration) cubic-bezier(0.4, 0, 0.2, 1),
+    opacity var(--animation-duration) ease-out !important;
+  opacity: 0;
+}
+
+/* Opening animation - triggered by JS after rAF delay */
+dialog#side_panel.opening {
+  transform: translateX(0) !important;
+  opacity: 1;
+}
+
+/* Closing animation */
+dialog#side_panel.closing {
+  transform: translateX(100%) !important;
+  opacity: 0;
 }
 
 /* Dialog backdrop styling when using showModal() */
 dialog.rvo-dialog--inset-inline-end::backdrop {
   background-color: rgba(0, 0, 0, 0.3);
+  transition: opacity var(--animation-duration) ease-out;
+}
+
+dialog#side_panel.closing::backdrop {
+  opacity: 0;
 }
 
 /* Remove old overlay system - now using ::backdrop */
@@ -44,18 +66,39 @@ dialog.rvo-dialog--inset-inline-end::backdrop {
 
 .rvo-dialog__content {
   padding: var(--rvo-space-md);
-  max-height: calc(100vh - 120px);
   overflow-y: auto;
 }
 
-/* Mobile responsive */
-@media (max-width: 768px) {
-  .rvo-dialog--inset-inline-end {
-    width: 100vw;
-    left: 0;
-    right: 0;
-    max-width: none;
-    min-width: none;
+/* Desktop: set max-height */
+@media (min-width: 801px) {
+  .rvo-dialog__content {
+    max-height: calc(100vh - 120px);
+  }
+}
+
+/* Mobile responsive - full screen */
+@media (max-width: 800px) {
+  dialog#side_panel {
+    top: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+    left: 0 !important;
+    right: 0 !important;
+    max-width: none !important;
+    min-width: none !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .side-panel__header {
+    flex-shrink: 0;
+  }
+
+  .rvo-dialog__content {
+    flex: 1;
+    overflow-y: auto;
+    max-height: none;
   }
 
   .rvo-dialog__background::before {
@@ -66,11 +109,6 @@ dialog.rvo-dialog--inset-inline-end::backdrop {
     width: 100%;
     box-sizing: border-box;
     background: white;
-  }
-
-  .rvo-dialog__content {
-    height: calc(100vh - 80px);
-    overflow-y: auto;
   }
 }
 

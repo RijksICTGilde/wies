@@ -24,6 +24,13 @@ This files lists the changes during the lifetime of this project.
 - 162: Change formatting according to styling rules
 - 161: Fix that BM link no longer resets active filters
 - 163: Generalize assignment import to be brand independent
+- 177: Refactor app layout: grid-based structure with collapsible sidebar, menubar, mobile responsive
+- 177: Refactor base.html to use template includes (menubar, header_logo, filter_sidebar)
+- 177: Mobile friendly screens: full-screen overlays for filters, side panel and modals
+- 177: Refactor filter JS: extract shared functions to filter_utils.js
+- 177: Clean up CSS/JS: CSS custom properties, overlay close registry, extract modals.css
+- 177: Add animations to panels and sidebar
+- 177: with env var SKIP_OIDC, skip login during development
 - 181: Bump django security release
 
 ## 2026-01-19
