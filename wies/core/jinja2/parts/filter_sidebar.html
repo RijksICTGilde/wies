@@ -31,7 +31,9 @@
         {% if filter_group.type == 'select' %}
           <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
         {% elif filter_group.type == 'select-multi' %}
-          {% include "parts/multiselect_dropdown.html" %}
+          {% with name=filter_group.name, label=filter_group.label, options=filter_group.options, selected_values=filter_group.selected_values %}
+            {% include "parts/multi_select.html" %}
+          {% endwith %}
         {% elif filter_group.type == 'date_range' %}
           <div class="filter-sidebar-date-range">
             <span class="rvo-label filter-sidebar-label">{{ filter_group.label }}</span>

@@ -1,10 +1,9 @@
-/* Multiselect Dropdown Component */
+/* Multi-select component */
 
 .multiselect {
-  position: relative;
+  position: relative; /* anchor for ::before/::after chevron */
 }
 
-/* Trigger button styled to match native <select> appearance */
 .multiselect__trigger {
   width: 100%;
   cursor: pointer;
@@ -12,7 +11,13 @@
   padding-inline-end: 46px;
 }
 
-/* Blue square background — matches rvo-select-wrapper::before */
+.multiselect__trigger-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Blue square + white chevron — matches rvo-select-wrapper */
 .multiselect::before {
   content: "";
   display: block;
@@ -27,7 +32,6 @@
   z-index: 1;
 }
 
-/* White chevron icon — matches rvo-select-wrapper::after */
 .multiselect::after {
   content: "";
   display: block;
@@ -37,63 +41,58 @@
   width: 13px;
   height: 32px;
   background-color: white;
-  -webkit-mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
   mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
-  -webkit-mask-repeat: no-repeat;
   mask-repeat: no-repeat;
-  -webkit-mask-size: 100%;
   mask-size: 100%;
-  -webkit-mask-position: center center;
-  mask-position: center center;
+  mask-position: center;
   pointer-events: none;
   z-index: 2;
 }
 
-.multiselect__trigger-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Dropdown panel */
+/* Dropdown panel — fixed to escape overflow:hidden parents (modals) */
 .multiselect__dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 100;
+  position: fixed;
+  z-index: 10000;
   background: var(--rvo-color-wit);
   border: 1px solid var(--rvo-color-grijs-400);
   border-top: none;
-  max-height: 240px;
+  max-height: 400px;
   overflow-y: auto;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
-.multiselect__dropdown[hidden] {
-  display: none;
+.multiselect__search,
+.multiselect__clear {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-bottom: 1px solid var(--rvo-color-grijs-300);
+  font-size: var(--rvo-font-size-md);
 }
 
-/* Search input inside dropdown */
 .multiselect__search {
   position: sticky;
   top: 0;
   z-index: 1;
-  width: 100%;
-  border: none;
-  border-bottom: 1px solid var(--rvo-color-grijs-300);
-  padding: 0.5rem 0.75rem;
-  font-size: var(--rvo-font-size-md);
 }
 
-/* Individual option */
+.multiselect__clear {
+  background: none;
+  color: var(--rvo-color-hemelblauw);
+  cursor: pointer;
+  text-align: left;
+}
+
+.multiselect__clear:hover {
+  background-color: var(--rvo-color-grijs-100);
+}
+
 .multiselect__option {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   cursor: pointer;
-  transition: background-color 0.15s ease;
 }
 
 .multiselect__option:hover {
@@ -109,7 +108,6 @@
   font-size: var(--rvo-font-size-md);
 }
 
-/* Hidden inputs container */
 .multiselect__hidden-inputs {
   display: none;
 }

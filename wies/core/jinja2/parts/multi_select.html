@@ -1,0 +1,61 @@
+{# Multi-select component
+   Usage:
+     {% with name="roles", label="Rollen", options=options, selected_values=selected %}
+       {% include "parts/multi_select.html" %}
+     {% endwith %}
+   Context:
+     - name: input name attribute
+     - label: display label
+     - options: list of {value, label}
+     - selected_values: list of currently selected values
+#}
+{% set selected_count = selected_values|length %}
+<div class="utrecht-form-field rvo-form-field">
+  <div class="rvo-form-field__label">
+    <label class="rvo-label utrecht-form-label"
+           id="multiselect-label-{{ label|replace(' ', '-') |lower }}">{{ label }}</label>
+  </div>
+  <div class="multiselect" data-multiselect data-name="{{ name }}">
+    <button type="button"
+            class="multiselect__trigger utrecht-select"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-labelledby="multiselect-label-{{ label|replace(' ', '-') |lower }}">
+      <span class="multiselect__trigger-text">
+        {%- if selected_count == 1 -%}
+          {%- for option in options if option.value in selected_values -%}
+            {{ option.label }}
+          {%- endfor -%}
+        {%- elif selected_count > 1 -%}
+          {{ selected_count }} geselecteerd
+        {%- endif -%}
+      </span>
+    </button>
+    <div class="multiselect__dropdown" role="listbox" hidden>
+      <input type="text"
+             class="multiselect__search utrecht-textbox utrecht-textbox--html-input"
+             placeholder="Zoeken..."
+             aria-label="Zoeken in {{ label }}" />
+      <button type="button"
+              class="multiselect__clear"
+              {% if selected_count == 0 %}hidden{% endif %}>Wis selectie</button>
+      {% for option in options %}
+        {% if option.value != '' %}
+          <label class="multiselect__option">
+            <input type="checkbox"
+                   class="rvo-checkbox__input multiselect__checkbox"
+                   value="{{ option.value }}"
+                   {% if option.value in selected_values %}checked{% endif %} />
+            <span class="rvo-text">{{ option.label }}</span>
+          </label>
+        {% endif %}
+      {% endfor %}
+    </div>
+    {# Hidden inputs for form submission - one per selected value #}
+    <div class="multiselect__hidden-inputs">
+      {% for val in selected_values %}
+        <input type="hidden" name="{{ name }}" value="{{ val }}" data-filter-input />
+      {% endfor %}
+    </div>
+  </div>
+</div>

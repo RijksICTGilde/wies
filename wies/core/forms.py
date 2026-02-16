@@ -48,6 +48,7 @@ class RvoFormMixin:
         "TextInput": "rvo/forms/widgets/text.html",
         "EmailInput": "rvo/forms/widgets/email.html",
         "Select": "rvo/forms/widgets/select.html",
+        "SelectMultiple": "rvo/forms/widgets/select.html",
         "CheckboxSelectMultiple": "rvo/forms/widgets/checkbox_select.html",
         "RadioSelect": "rvo/forms/widgets/radio.html",
     }
@@ -168,13 +169,11 @@ class UserForm(RvoFormMixin, forms.ModelForm):
         for category in LabelCategory.objects.all():
             field_name = f"category_{category.name}"
 
-            initial = None
-            if instance and instance.labels.filter(category=category).exists():
-                initial = instance.labels.filter(
-                    category=category
-                ).first()  # this maps potential multiple in DB to single!
+            initial = []
+            if instance:
+                initial = list(instance.labels.filter(category=category).values_list("pk", flat=True))
 
-            self.fields[field_name] = forms.ModelChoiceField(
+            self.fields[field_name] = forms.ModelMultipleChoiceField(
                 label=category.name,
                 queryset=Label.objects.filter(category=category),
                 required=False,
@@ -187,14 +186,43 @@ class UserForm(RvoFormMixin, forms.ModelForm):
             # necessary because RVOForm init already ran and otherwise wrong templates are referenced
             self._configure_field_for_rvo(field_name)
 
+    def get_multi_select_data(self) -> dict[str, dict]:
+        """Return multi_select-compatible data for fields that use multi_select rendering."""
+        result = {}
+
+        groups_field = self.fields["groups"]
+        selected = [str(v) for v in (self.initial.get("groups") or self.data.getlist("groups", []))]
+        result["groups"] = {
+            "name": "groups",
+            "label": groups_field.label,
+            "options": [{"value": str(g.pk), "label": g.name} for g in groups_field.queryset],
+            "selected_values": selected,
+        }
+
+        # Label categories
+        for field_name in self._category_field_names:
+            field = self.fields[field_name]
+            initial = self.initial.get(field_name)
+            selected = [str(v) for v in self.data.getlist(field_name, [])] if self.data else []
+            if not selected and initial:
+                selected = [str(initial.pk if hasattr(initial, "pk") else initial)]
+            result[field_name] = {
+                "name": field_name,
+                "label": field.label,
+                "options": [{"value": str(opt.pk), "label": opt.name} for opt in field.queryset],
+                "selected_values": selected,
+            }
+
+        return result
+
     def clean(self):
         cleaned_data = super().clean()
 
         # combine selected labels into single label attribute
         cleaned_data["labels"] = []
         for category_field_name in self._category_field_names:
-            selected_label = cleaned_data.pop(category_field_name)
-            if selected_label is not None:
-                cleaned_data["labels"].append(selected_label)
+            selected_labels = cleaned_data.pop(category_field_name, None)
+            if selected_labels:
+                cleaned_data["labels"].extend(selected_labels)
 
         return cleaned_data
