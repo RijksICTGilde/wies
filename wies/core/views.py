@@ -20,7 +20,7 @@ from django.utils import timezone
 from django.views.generic.list import ListView
 
 from .forms import LabelCategoryForm, LabelForm, UserForm
-from .models import Assignment, Colleague, Label, LabelCategory, Ministry, Placement, Service, Skill, User
+from .models import Assignment, Colleague, Label, LabelCategory, OrganizationUnit, Placement, Service, Skill, User
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
@@ -30,6 +30,7 @@ from .services.placements import (
     filter_placements_by_period,
 )
 from .services.sync import sync_all_otys_iir_records
+from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
 logger = logging.getLogger(__name__)
@@ -101,6 +102,7 @@ def admin_db(request):
     context = {
         "assignment_count": Assignment.objects.count(),
         "colleague_count": Colleague.objects.count(),
+        "latest_tasks": get_latest_tasks(limit=3),
     }
     if request.method == "POST":
         action = request.POST.get("action")
@@ -111,7 +113,6 @@ def admin_db(request):
             Skill.objects.all().delete()
             Placement.objects.all().delete()
             Service.objects.all().delete()
-            Ministry.objects.all().delete()
             LabelCategory.objects.all().delete()
             Label.objects.all().delete()
         elif action == "load_data":
@@ -123,6 +124,25 @@ def admin_db(request):
         elif action == "sync_all_otys_records":
             sync_all_otys_iir_records()
             messages.success(request, "All records synced successfully from OTYS IIR")
+        elif action == "sync_organizations":
+            # Check if there's already an active task
+            if has_active_task("sync_organizations"):
+                messages.error(request, "Er is al een sync_organizations taak actief. Wacht tot deze is afgerond.")
+            else:
+                # Create a new task
+                create_task(
+                    command="sync_organizations",
+                    created_by=request.user,
+                    timeout_minutes=5,
+                )
+                messages.success(request, "Organisatiesynchronisatie is gestart")
+
+            # If this is an HTMX request, return partial HTML
+            if request.headers.get("HX-Request"):
+                context["latest_tasks"] = get_latest_tasks(limit=3)
+                return render(request, "parts/task_list.html", context)
+
+            return redirect("djadmin-db")
         return redirect("djadmin-db")
 
     return render(request, "admin_db.html", context)
@@ -134,11 +154,12 @@ class PlacementListView(ListView):
     model = Placement
     template_name = "placement_table.html"
     paginate_by = 50
+    page_kwarg = "pagina"
 
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
         qs = (
-            Placement.objects.select_related("colleague", "service", "service__skill", "service__assignment__ministry")
+            Placement.objects.select_related("colleague", "service", "service__skill")
             .prefetch_related("colleague__labels")
             .filter(service__assignment__status="INGEVULD")
             .order_by("-service__assignment__start_date")
@@ -150,9 +171,6 @@ class PlacementListView(ListView):
                 Q(colleague__name__icontains=search_filter)
                 | Q(service__assignment__name__icontains=search_filter)
                 | Q(service__assignment__extra_info__icontains=search_filter)
-                | Q(service__assignment__organization__icontains=search_filter)
-                | Q(service__assignment__ministry__name__icontains=search_filter)
-                | Q(service__assignment__ministry__abbreviation__icontains=search_filter)
             )
 
         order_mapping = {
@@ -172,11 +190,8 @@ class PlacementListView(ListView):
         if self.request.GET.get("rol"):
             qs = qs.filter(service__skill__id=self.request.GET["rol"])
 
-        if self.request.GET.get("opdrachtgever"):
-            qs = qs.filter(service__assignment__organization=self.request.GET["opdrachtgever"])
-
-        if self.request.GET.get("ministerie"):
-            qs = qs.filter(service__assignment__ministry__id=self.request.GET["ministerie"])
+        if self.request.GET.get("organisatie"):
+            qs = qs.filter(service__assignment__organizations__id=self.request.GET["organisatie"])
 
         # Label filter support multiselect
         for label_id in self.request.GET.getlist("labels"):
@@ -224,18 +239,6 @@ class PlacementListView(ListView):
         params["opdracht"] = assignment_id
         return f"{reverse('home')}?{params.urlencode()}"
 
-    def _build_client_url(self, client_name):
-        """Build client filter URL"""
-        params = QueryDict(mutable=True)
-        params["opdrachtgever"] = client_name
-        return f"{reverse('home')}?{params.urlencode()}"
-
-    def _build_ministry_url(self, ministry_id):
-        """Build ministry filter URL"""
-        params = QueryDict(mutable=True)
-        params["ministerie"] = ministry_id
-        return f"{reverse('home')}?{params.urlencode()}"
-
     def _build_colleague_url(self, colleague_id):
         """Build colleague panel URL preserving current filters"""
         params = QueryDict(mutable=True)
@@ -249,13 +252,11 @@ class PlacementListView(ListView):
         """Get assignments for a colleague"""
         return (
             Placement.objects.filter(colleague=colleague)
-            .select_related("service__assignment", "service__assignment__ministry", "service__skill")
+            .select_related("service__assignment", "service__skill")
             .values(
                 "id",
                 "service__assignment__id",
                 "service__assignment__name",
-                "service__assignment__organization",
-                "service__assignment__ministry__name",
                 "service__assignment__start_date",
                 "service__assignment__end_date",
                 "service__skill__name",
@@ -276,10 +277,6 @@ class PlacementListView(ListView):
             {
                 "name": item["service__assignment__name"],
                 "id": item["service__assignment__id"],
-                "organization": item["service__assignment__organization"],
-                "ministry": {"name": item["service__assignment__ministry__name"]}
-                if item["service__assignment__ministry__name"]
-                else None,
                 "start_date": item["service__assignment__start_date"],
                 "end_date": item["service__assignment__end_date"],
                 "skill": item["service__skill__name"],
@@ -321,8 +318,6 @@ class PlacementListView(ListView):
             "close_url": self._build_close_url(self.request),
             "assignment": assignment,
             "placements": placements,
-            "client_url": self._build_client_url(assignment.organization),
-            "ministry_url": self._build_ministry_url(assignment.ministry.id) if assignment.ministry else None,
             "user_can_edit": user_can_edit,
             "owner_url": self._build_colleague_url(assignment.owner.id) if assignment.owner else "",
         }
@@ -340,7 +335,7 @@ class PlacementListView(ListView):
         context["search_filter"] = self.request.GET.get("zoek")
 
         active_filters = {}  # key: val
-        for filter_param in ["rol", "opdrachtgever", "ministerie", "periode"]:
+        for filter_param in ["rol", "organisatie", "periode"]:
             val = self.request.GET.get(filter_param)
             if val:
                 active_filters[filter_param] = val
@@ -391,33 +386,15 @@ class PlacementListView(ListView):
                 skill_options[-1]["selected"] = True
                 skill_value = str(skill.id)
 
-        clients = [
-            {"id": org, "name": org}
-            for org in Assignment.objects.values_list("organization", flat=True)
-            .distinct()
-            .exclude(organization="")
-            .order_by("organization")
-        ]
-
-        client_options = [
+        organization_options = [
             {"value": "", "label": ""},
         ]
-        client_value = ""
-        for client in clients:
-            client_options.append({"value": client["id"], "label": client["name"]})
-            if active_filters.get("opdrachtgever") == str(client["id"]):
-                client_options[-1]["selected"] = True
-                client_value = str(client["id"])
-
-        ministry_options = [
-            {"value": "", "label": ""},
-        ]
-        ministry_value = ""
-        for ministry in Ministry.objects.order_by("name"):
-            ministry_options.append({"value": str(ministry.id), "label": ministry.name})
-            if active_filters.get("ministerie") == str(ministry.id):
-                ministry_options[-1]["selected"] = True
-                ministry_value = str(ministry.id)
+        organization_value = ""
+        for org in OrganizationUnit.objects.order_by("label"):
+            organization_options.append({"value": str(org.id), "label": org.label})
+            if active_filters.get("organisatie") == str(org.id):
+                organization_options[-1]["selected"] = True
+                organization_value = str(org.id)
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
@@ -427,17 +404,10 @@ class PlacementListView(ListView):
         context["filter_groups"] = [
             {
                 "type": "select",
-                "name": "ministerie",
-                "label": "Ministerie",
-                "options": ministry_options,
-                "value": ministry_value,
-            },
-            {
-                "type": "select",
-                "name": "opdrachtgever",
-                "label": "Opdrachtgever",
-                "options": client_options,
-                "value": client_value,
+                "name": "organisatie",
+                "label": "Organisatie",
+                "options": organization_options,
+                "value": organization_value,
             },
             {
                 "type": "select",
@@ -495,6 +465,7 @@ class UserListView(PermissionRequiredMixin, ListView):
     model = User
     template_name = "user_admin.html"
     paginate_by = 50
+    page_kwarg = "pagina"
     permission_required = "core.view_user"
 
     def get_queryset(self):
@@ -837,7 +808,6 @@ def user_import_csv(request):
         "core.add_service",
         "core.add_placement",
         "core.add_colleague",
-        "core.add_ministry",
     ],
     raise_exception=True,
 )

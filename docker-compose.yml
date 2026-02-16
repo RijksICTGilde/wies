@@ -10,3 +10,12 @@ services:
       - .:/app:z
     command: python manage.py runserver 0.0.0.0:8000
     env_file: .env
+  db_worker:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    container_name: wies-db-worker
+    volumes:
+      - .:/app:z
+    command: python manage.py db_worker
+    env_file: .env

@@ -6,7 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
 
-from wies.core.models import Assignment, Colleague, Ministry, Placement, Service, Skill, User
+from wies.core.models import Assignment, Colleague, Placement, Service, Skill, User
 from wies.core.views import PlacementListView
 
 
@@ -34,9 +34,8 @@ class PlacementImportTest(TestCase):
         add_service_perm = Permission.objects.get(codename="add_service")
         add_placement_perm = Permission.objects.get(codename="add_placement")
         add_colleague_perm = Permission.objects.get(codename="add_colleague")
-        add_ministry_perm = Permission.objects.get(codename="add_ministry")
         self.auth_user.user_permissions.add(
-            add_assignment_perm, add_service_perm, add_placement_perm, add_colleague_perm, add_ministry_perm
+            add_assignment_perm, add_service_perm, add_placement_perm, add_colleague_perm
         )
 
         # Create user without permissions
@@ -47,7 +46,7 @@ class PlacementImportTest(TestCase):
             last_name="Permission",
         )
 
-        # Create user with only some permissions (missing add_service and add_ministry)
+        # Create user with only some permissions (missing add_service)
         self.partial_perm_user = User.objects.create(
             username="partialuser",
             email="partial@rijksoverheid.nl",
@@ -67,7 +66,7 @@ class PlacementImportTest(TestCase):
         assert response.url.startswith("/inloggen/")
 
     def test_import_requires_all_permissions(self):
-        """Test that import requires all five add permissions (assignment, service, placement, colleague, ministry)"""
+        """Test that import requires all four add permissions (assignment, service, placement, colleague)"""
         # Test with no permissions
         self.client.force_login(self.no_perm_user)
         response = self.client.get(self.import_url)
@@ -124,8 +123,8 @@ class PlacementImportTest(TestCase):
         }
 
         self.client.force_login(self.auth_user)
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Test Description,John Owner,john@rijksoverheid.nl,Test Org,BZK,01-01-2024,31-12-2024,Python,Jane Colleague,jane@rijksoverheid.nl"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization_tooi,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
+Test Assignment,Test Description,John Owner,john@rijksoverheid.nl,,01-01-2024,31-12-2024,Python,Jane Colleague,jane@rijksoverheid.nl"""
         csv_file = self._create_csv_file(csv_content)
 
         response = self.client.post(self.import_url, {"csv_file": csv_file})
@@ -204,7 +203,6 @@ class PlacementListHistoricalFilterTest(TestCase):
         )
 
         # Create test ministry
-        self.ministry = Ministry.objects.create(name="Ministerie van BZK", abbreviation="BZK")
 
         # Create test colleague
         self.colleague = Colleague.objects.create(
@@ -221,7 +219,6 @@ class PlacementListHistoricalFilterTest(TestCase):
         assignment = Assignment.objects.create(
             name=f"Test Assignment {end_date}",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service = Service.objects.create(
@@ -319,7 +316,6 @@ class PlacementListHistoricalFilterTest(TestCase):
         assignment = Assignment.objects.create(
             name="Test Assignment Service Level",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service = Service.objects.create(
@@ -362,7 +358,6 @@ class PlacementListHistoricalFilterTest(TestCase):
         assignment = Assignment.objects.create(
             name="Test Assignment Level",
             status="INGEVULD",
-            ministry=self.ministry,
             start_date=date(2024, 1, 1),
             end_date=date(2024, 6, 14),  # Ends yesterday
             source="wies",
@@ -410,7 +405,6 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         )
 
         # Create test ministry
-        self.ministry = Ministry.objects.create(name="Ministerie van BZK", abbreviation="BZK")
 
         # Create test colleagues
         self.colleague1 = Colleague.objects.create(
@@ -439,7 +433,6 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         assignment = Assignment.objects.create(
             name="Test Assignment with Mixed Placements",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service = Service.objects.create(
@@ -496,7 +489,6 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         assignment = Assignment.objects.create(
             name="Test Assignment with Current Placement",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service = Service.objects.create(
@@ -547,7 +539,6 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         )
 
         # Create test ministry
-        self.ministry = Ministry.objects.create(name="Ministerie van BZK", abbreviation="BZK")
 
         # Create test colleague
         self.colleague = Colleague.objects.create(
@@ -571,7 +562,6 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         assignment_a = Assignment.objects.create(
             name="Test Assignment A (Historical)",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service_a = Service.objects.create(
@@ -593,7 +583,6 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         assignment_b = Assignment.objects.create(
             name="Test Assignment B (Current)",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service_b = Service.objects.create(
@@ -639,7 +628,6 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         assignment = Assignment.objects.create(
             name="Test Assignment Ending Today",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service = Service.objects.create(

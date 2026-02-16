@@ -2,6 +2,7 @@
 <html lang="nl">
   <head>
     <title>Database Admin</title>
+    <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
   </head>
   <body>
     <h1>
@@ -38,5 +39,15 @@
       <input type="hidden" name="action" value="sync_all_otys_records">
       <button type="submit">Sync all records from OTYS IIR</button>
     </form>
+    <h2>Synchroniseer Organisaties</h2>
+    <form method="post"
+          hx-post="{{ url('djadmin-db') }}"
+          hx-target="#task-list"
+          hx-swap="innerHTML">
+      {{ get_csrf_hidden_input(request) }}
+      <input type="hidden" name="action" value="sync_organizations">
+      <button type="submit">Synchroniseer Organisaties</button>
+    </form>
+    <div id="task-list">{% include "parts/task_list.html" %}</div>
   </body>
 </html>

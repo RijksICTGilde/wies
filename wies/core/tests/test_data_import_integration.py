@@ -126,8 +126,8 @@ Different,Name,duplicate@rijksoverheid.nl,Brand B"""
 
     def test_csv_assignment_import_with_brand_assigns_label(self):
         """Test: CSV placement import with brand columns assigns brand labels to new colleagues"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
-Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,Test Org,,01-01-2025,31-12-2025,Python,John Doe,john@rijksoverheid.nl,Rijks ICT Gilde,Rijks ICT Gilde"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization_abbreviation,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,31-12-2025,Python,John Doe,john@rijksoverheid.nl,Rijks ICT Gilde,Rijks ICT Gilde"""
 
         result = create_assignments_from_csv(csv_content)
 
@@ -149,8 +149,8 @@ Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,Test Org,,01-
 
     def test_csv_placement_import_without_brand_no_label(self):
         """Test: CSV placement import without brand columns or empty brands creates colleagues with no labels"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
-Test Assignment,Test Description,Owner Name,owner@test.com,Test Org,,01-01-2025,31-12-2025,Python,John Doe,john@test.com,,"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization_abbreviation,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+Test Assignment,Test Description,Owner Name,owner@test.com,,01-01-2025,31-12-2025,Python,John Doe,john@test.com,,"""
 
         result = create_assignments_from_csv(csv_content)
 
@@ -166,9 +166,9 @@ Test Assignment,Test Description,Owner Name,owner@test.com,Test Org,,01-01-2025,
 
     def test_csv_placement_import_multiple_brands(self):
         """Test: CSV placement import with different brands for owners vs colleagues"""
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
-Assignment 1,Test,Owner A,ownera@test.com,Org,,01-01-2025,31-12-2025,Python,John Doe,john@test.com,Rijks ICT Gilde,Rijksconsultants
-Assignment 2,Test,Owner B,ownerb@test.com,Org,,01-01-2025,31-12-2025,Java,Jane Smith,jane@test.com,I-Interim Rijk,Rijks ICT Gilde"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization_abbreviation,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+Assignment 1,Test,Owner A,ownera@test.com,,01-01-2025,31-12-2025,Python,John Doe,john@test.com,Rijks ICT Gilde,Rijksconsultants
+Assignment 2,Test,Owner B,ownerb@test.com,,01-01-2025,31-12-2025,Java,Jane Smith,jane@test.com,I-Interim Rijk,Rijks ICT Gilde"""
 
         result = create_assignments_from_csv(csv_content)
 
@@ -213,8 +213,8 @@ Assignment 2,Test,Owner B,ownerb@test.com,Org,,01-01-2025,31-12-2025,Java,Jane S
         colleague.labels.add(rig_label)
 
         # Import placement with existing colleague and same brand
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-New Assignment,Description,,,Test Org,,01-01-2025,31-12-2025,Django,Existing Colleague,existing@rijksoverheid.com"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization_abbreviation,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
+New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,existing@rijksoverheid.com"""
 
         result = create_assignments_from_csv(csv_content)
 

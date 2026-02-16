@@ -1,3 +1,4 @@
+import contextlib
 import csv
 import datetime
 from io import StringIO
@@ -10,10 +11,11 @@ from django.db.models import Q
 from wies.core.models import (
     DEFAULT_LABELS,
     Assignment,
+    AssignmentOrganizationUnit,
     Colleague,
     Label,
     LabelCategory,
-    Ministry,
+    OrganizationUnit,
     Placement,
     Service,
     Skill,
@@ -56,7 +58,7 @@ def create_assignments_from_csv(csv_content: str):
 
     The CSV should contain the following required columns:
     - assignment_name, assignment_description, assignment_owner, assignment_owner_email
-    - assignment_organization, assignment_ministry, assignment_start_date, assignment_end_date
+    - assignment_organization_abbreviation, assignment_start_date, assignment_end_date
     - service_skill, placement_colleague_name, placement_colleague_email
 
     Optional columns:
@@ -73,8 +75,7 @@ def create_assignments_from_csv(csv_content: str):
         "assignment_description",
         "assignment_owner",
         "assignment_owner_email",
-        "assignment_organization",
-        "assignment_ministry",
+        "assignment_organization_abbreviation",
         "assignment_start_date",
         "assignment_end_date",
         "service_skill",
@@ -104,7 +105,7 @@ def create_assignments_from_csv(csv_content: str):
             services_created = 0
             placements_created = 0
             skills_created = 0
-            ministries_created = 0
+            organizations_linked = 0
             for _, row in enumerate(csv_reader, start=2):  # Start at 2 (1 is header)
                 # Get owner brand label if specified in CSV
                 owner_brand_name = row.get("owner_brand", "").strip()
@@ -147,15 +148,16 @@ def create_assignments_from_csv(csv_content: str):
                 else:
                     owner = None
 
-                ministry_name = row["assignment_ministry"]
-                if ministry_name != "":
-                    ministry, created = Ministry.objects.get_or_create(
-                        name=ministry_name, defaults={"abbreviation": ministry_name}
-                    )
-                    if created:
-                        ministries_created += 1
-                else:
-                    ministry = None
+                # Get organization by abbreviation (case-insensitive)
+                organization_abbreviation = row["assignment_organization_abbreviation"]
+                organization = None
+                with contextlib.suppress(
+                    OrganizationUnit.DoesNotExist, OrganizationUnit.MultipleObjectsReturned
+                ):  # Organization will remain None if not found
+                    # Case-insensitive lookup in JSON array, returns first match
+                    organization = OrganizationUnit.objects.filter(
+                        abbreviations__icontains=organization_abbreviation
+                    ).first()
 
                 # parse dates into proper types
                 start_date_str = row["assignment_start_date"]
@@ -172,14 +174,17 @@ def create_assignments_from_csv(csv_content: str):
                         "end_date": end_date,
                         "extra_info": row["assignment_description"],
                         "owner": owner,
-                        "organization": row["assignment_organization"],
-                        "ministry": ministry,
                         "status": "INGEVULD",
                     },
                 )
 
                 if created:
                     assignments_created += 1
+
+                # Link organization to assignment if found
+                if organization and not assignment.organizations.filter(id=organization.id).exists():
+                    AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=organization)
+                    organizations_linked += 1
 
                 skill = row["service_skill"]
                 if skill != "":
@@ -233,7 +238,7 @@ def create_assignments_from_csv(csv_content: str):
             "assignments_created": assignments_created,
             "services_created": services_created,
             "skills_created": skills_created,
-            "ministries_created": ministries_created,
+            "organizations_linked": organizations_linked,
             "placements_created": placements_created,
             "errors": [],
         }

@@ -1,6 +1,17 @@
 from django.contrib import admin
 
-from .models import Assignment, Colleague, Label, LabelCategory, Ministry, Placement, Service, Skill, User
+from .models import (
+    Assignment,
+    Colleague,
+    Label,
+    LabelCategory,
+    OrganizationType,
+    OrganizationUnit,
+    Placement,
+    Service,
+    Skill,
+    User,
+)
 
 
 @admin.register(Assignment)
@@ -23,11 +34,6 @@ class SkillAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(Ministry)
-class MinistryAdmin(admin.ModelAdmin):
-    pass
-
-
 @admin.register(LabelCategory)
 class LabelCategoryAdmin(admin.ModelAdmin):
     pass
@@ -45,4 +51,14 @@ class PlacementAdmin(admin.ModelAdmin):
 
 @admin.register(Service)
 class ServiceAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(OrganizationType)
+class OrganizationTypeAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(OrganizationUnit)
+class OrganizationUnitAdmin(admin.ModelAdmin):
     pass
