@@ -564,7 +564,7 @@ class AssignmentListView(ListView):
                 skills.append(service.skill.name)
 
         return {
-            "panel_content_template": "parts/vacancy_panel_content.html",
+            "panel_content_template": "parts/requested_assignment_panel_content.html",
             "panel_title": assignment.name,
             "close_url": self._build_close_url(),
             "assignment": assignment,
