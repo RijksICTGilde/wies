@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "if [[ \"$TOOL_INPUT\" == *models.py* ]]; then echo '\u26a0\ufe0f  Model changed - remember to update dummy_data.json'; fi"
+            "command": "if [[ \"$TOOL_INPUT\" == *models.py* ]]; then echo '\u26a0\ufe0f  Model changed - remember to update scripts/generate_dummy_data.py (and regenerate base_dummy_data.json if Skills changed)'; fi"
           }
         ]
       }

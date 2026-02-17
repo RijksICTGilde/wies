@@ -20,9 +20,14 @@ setup:
   docker compose run --rm django python manage.py dropdb --noinput
   docker compose run --rm django python manage.py migrate
   docker compose run --rm django python manage.py setup
-  docker compose run --rm django python manage.py loaddata dummy_data
+  docker compose run --rm django python manage.py loaddata base_dummy_data
   docker compose run --rm django python manage.py createsuperuser --noinput
   docker compose run --rm django python manage.py add_developer_user
+
+# Generate and load full dummy data for performance testing (requires network or cached XML)
+load-full-data:
+  docker compose run --rm django python scripts/generate_dummy_data.py
+  docker compose run --rm django python manage.py loaddata full_dummy_data
 
 # Start up container
 up:

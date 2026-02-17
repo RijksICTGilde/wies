@@ -14,7 +14,8 @@ Language: Dutch UI, English code.
 
 ## Commands
 
-- `just setup` - Fresh environment
+- `just setup` - Fresh environment (loads base dummy data)
+- `just load-full-data` - Generate and load full dummy data (needs network or cached XML)
 - `just up` - Start containers
 - `just down` - Stop containers
 - `just test` - Run tests
@@ -33,9 +34,10 @@ Language: Dutch UI, English code.
 ### Model Changes
 
 1. Update the model in `wies/core/models.py`
-2. Update `dummy_data.json` to match new structure
-3. Do NOT run makemigrations - mention migration needed
-4. Update affected forms and views
+2. Update `scripts/generate_dummy_data.py` to match new model structure
+3. If Skills changed, regenerate `base_dummy_data.json` with `python scripts/generate_dummy_data.py --small`
+4. Do NOT run makemigrations - mention migration needed
+5. Update affected forms and views
 
 ### UI Changes
 
@@ -57,4 +59,5 @@ Language: Dutch UI, English code.
 - Forms: `wies/core/forms.py`
 - Templates: `wies/core/jinja2/`
 - Roles/Permissions: `wies/core/roles.py`
-- Dummy data: `dummy_data.json`
+- Base fixture: `wies/core/fixtures/base_dummy_data.json` (committed, small dataset)
+- Dummy data generator: `scripts/generate_dummy_data.py` (generates full_dummy_data.json)

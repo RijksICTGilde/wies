@@ -1,0 +1,56 @@
+.org-tree__list {
+  list-style: none;
+  padding-left: 1.25rem;
+  margin: 0;
+}
+
+.org-tree__list--root {
+  padding-left: 0;
+}
+
+.org-tree__item {
+  padding: 0.125rem 0;
+}
+
+.org-tree__details > .org-tree__list {
+  margin-top: 0.125rem;
+}
+
+.org-tree__summary {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  list-style: none;
+}
+
+.org-tree__summary::-webkit-details-marker {
+  display: none;
+}
+
+.org-tree__summary::marker {
+  display: none;
+  content: "";
+}
+
+.org-tree__chevron {
+  flex-shrink: 0;
+  transition: transform 0.15s ease;
+}
+
+details[open] > .org-tree__summary > .org-tree__chevron {
+  transform: rotate(90deg);
+}
+
+.org-tree__leaf {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0 0.25rem 1.25rem;
+}
+
+.org-tree__abbr {
+  color: var(--rvo-color-hemelblauw, #666);
+  font-size: 0.875rem;
+}

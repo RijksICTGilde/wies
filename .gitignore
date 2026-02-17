@@ -219,6 +219,9 @@ yarn-error.log*
 .npm-cache/
 
 staticfiles
+scripts/xml_cache/
+wies/core/fixtures/dummy_data.json
+wies/core/fixtures/full_dummy_data.json
 .bash_history
 .python_history
 /.idea/

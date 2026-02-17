@@ -115,9 +115,12 @@ def admin_db(request):
             Service.objects.all().delete()
             LabelCategory.objects.all().delete()
             Label.objects.all().delete()
-        elif action == "load_data":
-            management.call_command("loaddata", "dummy_data.json")
-            messages.success(request, "Data loaded successfully from dummy_data.json")
+        elif action == "load_base_data":
+            management.call_command("loaddata", "base_dummy_data.json")
+            messages.success(request, "Data geladen uit base_dummy_data.json")
+        elif action == "load_full_data":
+            management.call_command("loaddata", "full_dummy_data.json")
+            messages.success(request, "Data geladen uit full_dummy_data.json")
         elif action == "add_dev_user":
             management.call_command("add_developer_user")
             messages.success(request, "Developer user added")
@@ -854,6 +857,64 @@ def assignment_import_csv(request):
         # Return results in the form
         return render(request, "assignment_import.html", {"result": result})
     return HttpResponse(status=405)
+
+
+@permission_required("core.view_organizationunit", raise_exception=True)
+def organization_admin(request):
+    """Show all organization units in a collapsible tree, grouped by type."""
+    rows = OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations")
+
+    # Index all units as lightweight dicts
+    units_by_id: dict[int, dict] = {}
+    for row in rows:
+        row["tree_children"] = []
+        units_by_id[row["id"]] = row
+
+    # Build tree
+    roots: list[dict] = []
+    for unit in units_by_id.values():
+        parent_id = unit["parent_id"]
+        if parent_id and parent_id in units_by_id:
+            units_by_id[parent_id]["tree_children"].append(unit)
+        else:
+            roots.append(unit)
+
+    # Sort children at every level
+    def sort_key(u):
+        return u["label"] or u["name"]
+
+    for unit in units_by_id.values():
+        unit["tree_children"].sort(key=sort_key)
+    roots.sort(key=sort_key)
+
+    # Get organization types for root nodes only (via M2M through table)
+    root_ids = {u["id"] for u in roots}
+    type_links = (
+        OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
+        .select_related("organizationtype")
+        .values_list("organizationunit_id", "organizationtype__label")
+    )
+    root_types: dict[int, list[str]] = {}
+    for unit_id, type_label in type_links:
+        root_types.setdefault(unit_id, []).append(type_label)
+
+    # Group roots by organization type
+    grouped: dict[str, list[dict]] = {}
+    ungrouped: list[dict] = []
+    for unit in roots:
+        type_labels = root_types.get(unit["id"], [])
+        if type_labels:
+            for type_label in type_labels:
+                grouped.setdefault(type_label, []).append(unit)
+        else:
+            ungrouped.append(unit)
+
+    # Sort groups alphabetically, put ungrouped last
+    type_groups = [(name, units) for name, units in sorted(grouped.items())]
+    if ungrouped:
+        type_groups.append(("Overig", ungrouped))
+
+    return render(request, "organization_admin.html", {"type_groups": type_groups})
 
 
 @permission_required("core.view_labelcategory", raise_exception=True)
