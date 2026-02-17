@@ -30,6 +30,19 @@
       {% for filter_group in filter_groups %}
         {% if filter_group.type == 'select' %}
           <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
+        {% elif filter_group.type == 'date' %}
+          <div class="utrecht-form-field rvo-form-field">
+            <div class="rvo-form-field__label">
+              <label for="filter-{{ filter_group.name }}"
+                     class="rvo-label utrecht-form-label">{{ filter_group.label }}</label>
+            </div>
+            <input type="date"
+                   id="filter-{{ filter_group.name }}"
+                   name="{{ filter_group.name }}"
+                   class="utrecht-textbox utrecht-textbox--html-input"
+                   data-filter-input
+                   value="{%- if active_filters.get(filter_group.name) -%}{{ active_filters.get(filter_group.name) }}{%- endif -%}" />
+          </div>
         {% elif filter_group.type == 'date_range' %}
           <div class="filter-sidebar-date-range">
             <span class="rvo-label filter-sidebar-label">{{ filter_group.label }}</span>

@@ -531,13 +531,11 @@ class AssignmentListView(ListView):
         if self.request.GET.get("opdrachtgever"):
             qs = qs.filter(organization=self.request.GET["opdrachtgever"])
 
-        startdatum = self.request.GET.get("startdatum")
-        if startdatum and "_" in startdatum:
+        beschikbaar_vanaf = self.request.GET.get("beschikbaar_vanaf")
+        if beschikbaar_vanaf:
             try:
-                date_from_str, date_to_str = startdatum.split("_", 1)
-                date_from = date.fromisoformat(date_from_str)
-                date_to = date.fromisoformat(date_to_str)
-                qs = qs.filter(start_date__gte=date_from, start_date__lte=date_to)
+                vanaf_date = date.fromisoformat(beschikbaar_vanaf)
+                qs = qs.filter(start_date__gte=vanaf_date)
             except ValueError:
                 pass
 
@@ -557,6 +555,13 @@ class AssignmentListView(ListView):
         base = reverse("assignment-list")
         return f"{base}?{params.urlencode()}" if params else base
 
+    def _build_panel_url(self, assignment_id):
+        params = QueryDict(mutable=True)
+        params.update(self.request.GET)
+        params.pop("opdracht", None)
+        params["opdracht"] = assignment_id
+        return f"{reverse('assignment-list')}?{params.urlencode()}"
+
     def _get_vacancy_panel_data(self, assignment):
         skills = []
         for service in assignment.services.filter(skill__isnull=False).select_related("skill"):
@@ -574,23 +579,19 @@ class AssignmentListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        for assignment in context["object_list"]:
+            assignment.panel_url = self._build_panel_url(assignment.id)
+
         context["filter_target_url"] = reverse("assignment-list")
         context["search_field"] = "zoek"
         context["search_placeholder"] = "Zoek op opdracht of opdrachtgever..."
         context["search_filter"] = self.request.GET.get("zoek")
 
         active_filters = {}
-        for filter_param in ["rol", "opdrachtgever", "ministerie", "startdatum"]:
+        for filter_param in ["rol", "opdrachtgever", "ministerie", "beschikbaar_vanaf"]:
             val = self.request.GET.get(filter_param)
             if val:
                 active_filters[filter_param] = val
-
-        if active_filters.get("startdatum"):
-            datum_from, datum_to = active_filters["startdatum"].split("_")
-            active_filters["startdatum"] = {
-                "from": date.fromisoformat(datum_from),
-                "to": date.fromisoformat(datum_to),
-            }
 
         skill_options = [{"value": "", "label": ""}]
         skill_value = ""
@@ -651,12 +652,9 @@ class AssignmentListView(ListView):
                 "value": skill_value,
             },
             {
-                "type": "date_range",
-                "name": "startdatum",
-                "label": "Startdatum",
-                "from_label": "Van",
-                "to_label": "Tot",
-                "require_both": True,
+                "type": "date",
+                "name": "beschikbaar_vanaf",
+                "label": "Beschikbaar vanaf",
             },
         ]
 

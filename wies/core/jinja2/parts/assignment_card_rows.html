@@ -1,24 +1,24 @@
 {% for assignment in object_list %}
   <div class="rvo-card rvo-card--outline rvo-card--padding-md assignment-card assignment-card--clickable"
-       {% if assignment.source_url %} onclick="window.open('{{ assignment.source_url }}', '_blank')" {% else %} onclick="window.location.href='{{ url("assignment-list") }}?opdracht={{ assignment.id }}'" {% endif %}>
+       {% if assignment.source_url %} onclick="window.open('{{ assignment.source_url }}', '_blank')" {% else %} onclick="window.location.href='{{ assignment.panel_url }}'" {% endif %}>
     {% if assignment.start_date %}
       <span class="rvo-text rvo-text--sm rvo-text--subtle">Plaatsingsdatum: {{ assignment.start_date|datum_nl("j F Y") }}</span>
     {% endif %}
     <h3 class="rvo-text rvo-text--bold rvo-text--no-margins assignment-card__title">{{ assignment.name }}</h3>
     {% if assignment.organization or assignment.ministry %}
       <div class="assignment-card__org-row">
-        {% if assignment.organization %}
-          <a href="{{ url("assignment-list") }}?opdrachtgever={{ assignment.organization }}"
-             class="rvo-link rvo-text--sm"
-             onclick="event.stopPropagation()">{{ assignment.organization }}</a>
-        {% endif %}
-        {% if assignment.organization and assignment.ministry %}
-          <span class="assignment-card__org-separator" aria-hidden="true">/</span>
-        {% endif %}
         {% if assignment.ministry %}
           <a href="{{ url("assignment-list") }}?ministerie={{ assignment.ministry.id }}"
              class="rvo-link rvo-text--sm"
              onclick="event.stopPropagation()">{{ assignment.ministry.name }}</a>
+        {% endif %}
+        {% if assignment.organization and assignment.ministry %}
+          <span class="assignment-card__org-separator" aria-hidden="true">/</span>
+        {% endif %}
+        {% if assignment.organization %}
+          <a href="{{ url("assignment-list") }}?opdrachtgever={{ assignment.organization }}"
+             class="rvo-link rvo-text--sm"
+             onclick="event.stopPropagation()">{{ assignment.organization }}</a>
         {% endif %}
       </div>
     {% endif %}
