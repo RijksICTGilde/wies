@@ -557,7 +557,7 @@ html {
 }
 
 .menu-item--active {
-  font-weight: 600;
+  font-weight: bold;
   text-decoration: underline !important;
 }
 

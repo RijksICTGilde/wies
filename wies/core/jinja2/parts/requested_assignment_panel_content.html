@@ -53,6 +53,11 @@
         <dt>Business Manager</dt>
         <dd>
           {{ panel_data.assignment.owner }}
+          {% if panel_data.assignment.owner.email %}
+            <br>
+            <a href="mailto:{{ panel_data.assignment.owner.email }}"
+               class="rvo-link">{{ panel_data.assignment.owner.email }}</a>
+          {% endif %}
         </dd>
       {% endif %}
     </dl>
