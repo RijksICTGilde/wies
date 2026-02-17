@@ -19,6 +19,12 @@
             Wie zit waar?
           </a>
         </li>
+        <li>
+          <a href="{{ url('assignment-list') }}"
+             class="rvo-link rvo-link--no-underline rvo-link--logoblauw {% if '/aangevraagde-opdrachten/' in request.path %}menu-item--active{% endif %}">
+            Aangevraagde opdrachten
+          </a>
+        </li>
       </ul>
       <ul class="menubar__nav-right">
         {% if user.is_authenticated %}

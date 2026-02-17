@@ -1,0 +1,68 @@
+<div class="rvo-layout-column rvo-layout-gap--lg">
+  <section>
+    <h2>Opdracht gegevens</h2>
+    <dl class="rvo-data-list">
+      <dt>Opdracht naam</dt>
+      <dd>
+        {{ panel_data.assignment.name }}
+      </dd>
+      {% if panel_data.assignment.extra_info %}
+        <dt>Beschrijving</dt>
+        <dd>
+          {{ panel_data.assignment.extra_info }}
+        </dd>
+      {% endif %}
+      {% if panel_data.assignment.source not in ('wies', '') %}
+        <dt>Externe bron</dt>
+        <dd>
+          {% if panel_data.assignment.source_url %}
+            <a href="{{ panel_data.assignment.source_url }}"
+               target="_blank"
+               class="rvo-link">
+              {{ panel_data.assignment.get_source_display() }}
+              <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs"
+                    role="img"
+                    aria-label="Externe link"></span>
+            </a>
+          {% else %}
+            {{ panel_data.assignment.get_source_display() }}
+          {% endif %}
+        </dd>
+      {% endif %}
+      <dt>Opdrachtgever</dt>
+      <dd>
+        {{ panel_data.assignment.organization or '-' }}
+      </dd>
+      <dt>Ministerie</dt>
+      <dd>
+        {% if panel_data.assignment.ministry %}
+          {{ panel_data.assignment.ministry.name }}
+        {% else %}
+          <span class="rvo-text--italic rvo-text--subtle">Geen ministerie opgegeven</span>
+        {% endif %}
+      </dd>
+      <dt>Periode</dt>
+      <dd>
+        {% if panel_data.assignment.start_date or panel_data.assignment.end_date %}
+          {{ panel_data.assignment.start_date|datum_nl("j F Y") }} - {{ panel_data.assignment.end_date|datum_nl("j F Y") }}
+        {% else %}
+          <span class="rvo-text--italic rvo-text--subtle">Geen periode opgegeven</span>
+        {% endif %}
+      </dd>
+      {% if panel_data.assignment.owner %}
+        <dt>Business Manager</dt>
+        <dd>
+          {{ panel_data.assignment.owner }}
+        </dd>
+      {% endif %}
+    </dl>
+  </section>
+  {% if panel_data.skills %}
+    <section>
+      <h2>Gezochte rollen</h2>
+      <div class="rvo-layout-row rvo-layout-gap--sm" style="flex-wrap: wrap;">
+        {% for skill_name in panel_data.skills %}<span class="rvo-tag rvo-tag--default">{{ skill_name }}</span>{% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</div>

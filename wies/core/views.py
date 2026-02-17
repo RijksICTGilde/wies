@@ -11,7 +11,7 @@ from django.contrib.auth.decorators import login_not_required, permission_requir
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
-from django.db.models import Q, Value
+from django.db.models import Prefetch, Q, Value
 from django.db.models.functions import Concat
 from django.http import HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
@@ -134,6 +134,7 @@ class PlacementListView(ListView):
     model = Placement
     template_name = "placement_table.html"
     paginate_by = 50
+    page_kwarg = "pagina"
 
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
@@ -335,6 +336,7 @@ class PlacementListView(ListView):
         for placement in context["object_list"]:
             placement.colleague_url = self._build_colleague_url(placement.colleague.id)
 
+        context["filter_target_url"] = reverse("home")
         context["search_field"] = "zoek"
         context["search_placeholder"] = "Zoek op collega, opdracht of opdrachtgever..."
         context["search_filter"] = self.request.GET.get("zoek")
@@ -489,12 +491,208 @@ class PlacementListView(ListView):
         return context
 
 
+class AssignmentListView(ListView):
+    """View for vacancy assignments displayed as cards with infinite scroll pagination"""
+
+    model = Assignment
+    template_name = "assignment_card_grid.html"
+    paginate_by = 24
+    page_kwarg = "pagina"
+
+    def get_queryset(self):
+        qs = (
+            Assignment.objects.filter(status="VACATURE")
+            .select_related("ministry")
+            .prefetch_related(
+                Prefetch(
+                    "services",
+                    queryset=Service.objects.filter(skill__isnull=False).select_related("skill"),
+                    to_attr="services_with_skills",
+                )
+            )
+            .order_by("-start_date")
+        )
+
+        search_filter = self.request.GET.get("zoek")
+        if search_filter:
+            qs = qs.filter(
+                Q(name__icontains=search_filter)
+                | Q(organization__icontains=search_filter)
+                | Q(extra_info__icontains=search_filter)
+                | Q(ministry__name__icontains=search_filter)
+            )
+
+        if self.request.GET.get("rol"):
+            qs = qs.filter(services__skill__id=self.request.GET["rol"])
+
+        if self.request.GET.get("ministerie"):
+            qs = qs.filter(ministry__id=self.request.GET["ministerie"])
+
+        if self.request.GET.get("opdrachtgever"):
+            qs = qs.filter(organization=self.request.GET["opdrachtgever"])
+
+        startdatum = self.request.GET.get("startdatum")
+        if startdatum and "_" in startdatum:
+            try:
+                date_from_str, date_to_str = startdatum.split("_", 1)
+                date_from = date.fromisoformat(date_from_str)
+                date_to = date.fromisoformat(date_to_str)
+                qs = qs.filter(start_date__gte=date_from, start_date__lte=date_to)
+            except ValueError:
+                pass
+
+        return qs.distinct()
+
+    def get_template_names(self):
+        if "HX-Request" in self.request.headers:
+            if self.request.GET.get("pagina"):
+                return ["parts/assignment_card_rows.html"]
+            return ["parts/filter_and_card_container.html"]
+        return ["assignment_card_grid.html"]
+
+    def _build_close_url(self):
+        params = QueryDict(mutable=True)
+        params.update(self.request.GET)
+        params.pop("opdracht", None)
+        base = reverse("assignment-list")
+        return f"{base}?{params.urlencode()}" if params else base
+
+    def _get_vacancy_panel_data(self, assignment):
+        skills = []
+        for service in assignment.services.filter(skill__isnull=False).select_related("skill"):
+            if service.skill and service.skill.name not in skills:
+                skills.append(service.skill.name)
+
+        return {
+            "panel_content_template": "parts/vacancy_panel_content.html",
+            "panel_title": assignment.name,
+            "close_url": self._build_close_url(),
+            "assignment": assignment,
+            "skills": skills,
+        }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        context["filter_target_url"] = reverse("assignment-list")
+        context["search_field"] = "zoek"
+        context["search_placeholder"] = "Zoek op opdracht of opdrachtgever..."
+        context["search_filter"] = self.request.GET.get("zoek")
+
+        active_filters = {}
+        for filter_param in ["rol", "opdrachtgever", "ministerie", "startdatum"]:
+            val = self.request.GET.get(filter_param)
+            if val:
+                active_filters[filter_param] = val
+
+        if active_filters.get("startdatum"):
+            datum_from, datum_to = active_filters["startdatum"].split("_")
+            active_filters["startdatum"] = {
+                "from": date.fromisoformat(datum_from),
+                "to": date.fromisoformat(datum_to),
+            }
+
+        skill_options = [{"value": "", "label": ""}]
+        skill_value = ""
+        for skill in Skill.objects.order_by("name"):
+            skill_options.append({"value": str(skill.id), "label": skill.name})
+            if active_filters.get("rol") == str(skill.id):
+                skill_options[-1]["selected"] = True
+                skill_value = str(skill.id)
+
+        clients = [
+            {"id": org, "name": org}
+            for org in Assignment.objects.filter(status="VACATURE")
+            .values_list("organization", flat=True)
+            .distinct()
+            .exclude(organization="")
+            .order_by("organization")
+        ]
+
+        client_options = [{"value": "", "label": ""}]
+        client_value = ""
+        for client in clients:
+            client_options.append({"value": client["id"], "label": client["name"]})
+            if active_filters.get("opdrachtgever") == str(client["id"]):
+                client_options[-1]["selected"] = True
+                client_value = str(client["id"])
+
+        ministry_options = [{"value": "", "label": ""}]
+        ministry_value = ""
+        for ministry in Ministry.objects.order_by("name"):
+            ministry_options.append({"value": str(ministry.id), "label": ministry.name})
+            if active_filters.get("ministerie") == str(ministry.id):
+                ministry_options[-1]["selected"] = True
+                ministry_value = str(ministry.id)
+
+        context["active_filters"] = active_filters
+        context["active_filter_count"] = len(active_filters)
+
+        context["filter_groups"] = [
+            {
+                "type": "select",
+                "name": "ministerie",
+                "label": "Ministerie",
+                "options": ministry_options,
+                "value": ministry_value,
+            },
+            {
+                "type": "select",
+                "name": "opdrachtgever",
+                "label": "Opdrachtgever",
+                "options": client_options,
+                "value": client_value,
+            },
+            {
+                "type": "select",
+                "name": "rol",
+                "label": "Rollen",
+                "options": skill_options,
+                "value": skill_value,
+            },
+            {
+                "type": "date_range",
+                "name": "startdatum",
+                "label": "Startdatum",
+                "from_label": "Van",
+                "to_label": "Tot",
+                "require_both": True,
+            },
+        ]
+
+        # Build next page URL with all current filters
+        if context.get("page_obj") and context["page_obj"].has_next():
+            filter_params = []
+            for key, value in self.request.GET.items():
+                if key != "pagina":
+                    filter_params.append(f"{key}={value}")
+            params_str = "&".join(filter_params)
+            next_page = context["page_obj"].next_page_number()
+            context["next_page_url"] = f"?pagina={next_page}" + (f"&{params_str}" if params_str else "")
+        else:
+            context["next_page_url"] = None
+
+        # Side panel
+        assignment_id = self.request.GET.get("opdracht")
+        if assignment_id:
+            try:
+                assignment = Assignment.objects.select_related("ministry", "owner").get(
+                    id=assignment_id, status="VACATURE"
+                )
+                context["panel_data"] = self._get_vacancy_panel_data(assignment)
+            except Assignment.DoesNotExist:
+                pass
+
+        return context
+
+
 class UserListView(PermissionRequiredMixin, ListView):
     """View for user list with filtering and infinite scroll pagination"""
 
     model = User
     template_name = "user_admin.html"
     paginate_by = 50
+    page_kwarg = "pagina"
     permission_required = "core.view_user"
 
     def get_queryset(self):
