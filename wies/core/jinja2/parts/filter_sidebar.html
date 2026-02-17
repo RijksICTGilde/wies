@@ -28,7 +28,17 @@
   <div class="sidebar__content">
     <div class="rvo-layout-column rvo-layout-gap--md">
       {% for filter_group in filter_groups %}
-        {% if filter_group.type == 'select' %}
+        {% if filter_group.name == 'organisatie' %}
+          <div class="filter-sidebar-date-range">
+            <span class="rvo-label filter-sidebar-label">{{ filter_group.label }}</span>
+            <button type="button"
+                    class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md"
+                    hx-get="{{ url('opdrachtgever-modal') }}"
+                    hx-target="#opdrachtgeverModalContainer"
+                    hx-swap="innerHTML"
+                    hx-push-url="false">Selecteer opdrachtgever...</button>
+          </div>
+        {% elif filter_group.type == 'select' %}
           <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
         {% elif filter_group.type == 'date_range' %}
           <div class="filter-sidebar-date-range">

@@ -41,6 +41,7 @@ from wies.core.views import (
     login,
     logout,
     no_access,
+    opdrachtgever_modal,
     organization_admin,
     robots_txt,
     user_create,
@@ -83,6 +84,7 @@ urlpatterns = [
     path("instellingen/labels/categorie/<int:pk>/labels/aanmaken/", label_create),
     path("instellingen/labels/<int:pk>/bewerken/", label_edit, name="label-edit"),
     path("instellingen/labels/<int:pk>/verwijderen/", label_delete, name="label-delete"),
+    path("opdrachtgever-modal/", opdrachtgever_modal, name="opdrachtgever-modal"),
 ]
 
 # Custom error handlers

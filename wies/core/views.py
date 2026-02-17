@@ -1,4 +1,6 @@
+import json
 import logging
+from collections import Counter
 from datetime import date
 
 from authlib.integrations.django_client import OAuth
@@ -1387,3 +1389,128 @@ User-agent: Applebot-Extended
 Disallow: /
 """
     return HttpResponse(content, content_type="text/plain")
+
+
+def opdrachtgever_modal(request):
+    """Return the opdrachtgever tree selection modal (HTMX partial)."""
+    # Count active placements per OrganizationUnit (self-count only — direct link).
+    # We go from the Placement side to avoid complex subqueries.
+    active_placements = annotate_placement_dates(
+        Placement.objects.filter(service__assignment__status="INGEVULD")
+    ).filter(actual_end_date__gte=timezone.now().date())
+
+    org_ids = active_placements.values_list("service__assignment__organizations__id", flat=True)
+    org_self_counts: Counter[int] = Counter(org_id for org_id in org_ids if org_id is not None)
+
+    # Load all OrganizationUnits
+    all_orgs = list(OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations"))
+
+    # Build lightweight tree in Python
+    units_by_id: dict[int, dict] = {}
+    for org in all_orgs:
+        org["children_data"] = []
+        org["self_count"] = org_self_counts.get(org["id"], 0)
+        org["total_count"] = 0
+        units_by_id[org["id"]] = org
+
+    roots: list[dict] = []
+    for unit in units_by_id.values():
+        parent_id = unit["parent_id"]
+        if parent_id and parent_id in units_by_id:
+            units_by_id[parent_id]["children_data"].append(unit)
+        else:
+            roots.append(unit)
+
+    # Compute total counts bottom-up (self + all descendants)
+    def compute_total(node: dict) -> int:
+        total = node["self_count"]
+        for child in node["children_data"]:
+            total += compute_total(child)
+        node["total_count"] = total
+        return total
+
+    for root in roots:
+        compute_total(root)
+
+    # Prune branches with zero placements
+    def prune(node: dict) -> None:
+        node["children_data"] = [c for c in node["children_data"] if c["total_count"] > 0]
+        for child in node["children_data"]:
+            prune(child)
+
+    for root in roots:
+        prune(root)
+    roots = [r for r in roots if r["total_count"] > 0]
+
+    def sort_key(node: dict) -> str:
+        return node.get("label") or node.get("name") or ""
+
+    # Convert to JSON-serializable tree, injecting self-nodes
+    def to_json(node: dict) -> dict:
+        children_data = sorted(node["children_data"], key=sort_key)
+        children_json = []
+
+        has_children_with_placements = any(c["total_count"] > 0 for c in children_data)
+        if node["self_count"] > 0 and has_children_with_placements:
+            children_json.append(
+                {
+                    "id": f"self-{node['id']}",
+                    "label": node["label"] or node["name"],
+                    "abbreviations": node["abbreviations"] or [],
+                    "self": True,
+                    "nr_of_placements": node["self_count"],
+                }
+            )
+
+        children_json.extend(to_json(child) for child in children_data)
+
+        result: dict = {
+            "id": node["id"],
+            "label": node["label"] or node["name"],
+            "abbreviations": node["abbreviations"] or [],
+            "nr_of_placements": node["total_count"],
+        }
+        if children_json:
+            result["children"] = children_json
+        return result
+
+    # Group roots by OrganizationUnit type (same logic as organization_admin view)
+    root_ids = {u["id"] for u in roots}
+    type_links = (
+        OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
+        .select_related("organizationtype")
+        .values_list("organizationunit_id", "organizationtype__label")
+    )
+    root_types: dict[int, list[str]] = {}
+    for unit_id, type_label in type_links:
+        root_types.setdefault(unit_id, []).append(type_label)
+
+    grouped: dict[str, list[dict]] = {}
+    ungrouped: list[dict] = []
+    for unit in roots:
+        type_labels = root_types.get(unit["id"], [])
+        if type_labels:
+            for type_label in type_labels:
+                grouped.setdefault(type_label, []).append(unit)
+        else:
+            ungrouped.append(unit)
+
+    # Build hierarchy: group nodes (not selectable) containing the actual root orgs
+    hierarchy = []
+    for group_label in sorted(grouped.keys()):
+        group_units = sorted(grouped[group_label], key=sort_key)
+        total = sum(u["total_count"] for u in group_units)
+        hierarchy.append(
+            {
+                "id": f"group-{group_label}",
+                "label": group_label,
+                "nr_of_placements": total,
+                "group": True,
+                "children": [to_json(u) for u in group_units],
+            }
+        )
+    hierarchy.extend(to_json(unit) for unit in sorted(ungrouped, key=sort_key))
+
+    hierarchy_json = json.dumps(hierarchy)
+
+    return render(request, "parts/opdrachtgever_modal.html", {"hierarchy_json": hierarchy_json})
