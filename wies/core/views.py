@@ -1494,6 +1494,31 @@ def client_modal(request):
         else:
             ungrouped.append(unit)
 
+    # Singular → plural display names for organization type group headers.
+    # Types not listed here are already plural or invariant and are used as-is.
+    _type_plural: dict[str, str] = {
+        "Adviescollege": "Adviescolleges",
+        "Agentschap": "Agentschappen",
+        "Caribisch openbaar lichaam": "Caribische openbare lichamen",
+        "Externe commissie": "Externe commissies",
+        "Gemeente": "Gemeenten",
+        "Grensoverschrijdend regionaal samenwerkingsorgaan": "Grensoverschrijdende regionale samenwerkingsorganen",
+        "Hoog College van Staat": "Hoge Colleges van Staat",
+        "Inspectie": "Inspecties",
+        "Interdepartementale commissie": "Interdepartementale commissies",
+        "Koepelorganisatie": "Koepelorganisaties",
+        "Ministerie": "Ministeries",
+        "Openbaar lichaam voor beroep en bedrijf": "Openbare lichamen voor beroep en bedrijf",
+        "Organisatie met overheidsbemoeienis": "Organisaties met overheidsbemoeienis",
+        "Organisatieonderdeel": "Organisatieonderdelen",
+        "Overheidsstichting of -vereniging": "Overheidsstichtingen of -verenigingen",
+        "Provinciale Rekenkamer": "Provinciale Rekenkamers",
+        "Provincie": "Provincies",
+        "Regionaal samenwerkingsorgaan": "Regionale samenwerkingsorganen",
+        "Waterschap": "Waterschappen",
+        "Zelfstandig bestuursorgaan": "Zelfstandige bestuursorganen",
+    }
+
     # Build hierarchy: group nodes (not selectable) containing the actual root orgs
     hierarchy = []
     for group_label in sorted(grouped.keys()):
@@ -1502,7 +1527,7 @@ def client_modal(request):
         hierarchy.append(
             {
                 "id": f"group-{group_label}",
-                "label": group_label,
+                "label": _type_plural.get(group_label, group_label),
                 "nr_of_placements": total,
                 "group": True,
                 "children": [to_json(u) for u in group_units],
