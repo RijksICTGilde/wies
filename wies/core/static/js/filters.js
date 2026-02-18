@@ -60,6 +60,15 @@ function removeFilter(formSelector, filterName, filterType, filterValue) {
     if (toInput) toInput.value = "";
     if (hiddenInput) hiddenInput.value = "";
     if (validationMessage) validationMessage.style.display = "none";
+  } else if (filterType === "org") {
+    const orgInputsContainer = document.getElementById("org-filter-inputs");
+    if (orgInputsContainer) {
+      orgInputsContainer
+        .querySelectorAll(`input[name="${filterName}"]`)
+        .forEach((input) => {
+          if (input.value === filterValue) input.remove();
+        });
+    }
   }
 
   htmx.trigger(form, "change");
@@ -68,6 +77,9 @@ function removeFilter(formSelector, filterName, filterType, filterValue) {
 function clearAllFilters(formSelector) {
   const form = document.querySelector(formSelector);
   if (!form) return;
+
+  const orgInputsContainer = document.getElementById("org-filter-inputs");
+  if (orgInputsContainer) orgInputsContainer.innerHTML = "";
 
   form.querySelectorAll("[data-filter-input]").forEach((input) => {
     if (input.tagName === "SELECT") {

@@ -25,6 +25,7 @@ from .models import Assignment, Colleague, Label, LabelCategory, OrganizationUni
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
+from .services.organizations import get_org_descendant_ids
 from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
@@ -35,6 +36,30 @@ from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
 logger = logging.getLogger(__name__)
+
+# Singular → plural display names for organization type group headers.
+ORG_TYPE_PLURAL: dict[str, str] = {
+    "Adviescollege": "Adviescolleges",
+    "Agentschap": "Agentschappen",
+    "Caribisch openbaar lichaam": "Caribische openbare lichamen",
+    "Externe commissie": "Externe commissies",
+    "Gemeente": "Gemeenten",
+    "Grensoverschrijdend regionaal samenwerkingsorgaan": "Grensoverschrijdende regionale samenwerkingsorganen",
+    "Hoog College van Staat": "Hoge Colleges van Staat",
+    "Inspectie": "Inspecties",
+    "Interdepartementale commissie": "Interdepartementale commissies",
+    "Koepelorganisatie": "Koepelorganisaties",
+    "Ministerie": "Ministeries",
+    "Openbaar lichaam voor beroep en bedrijf": "Openbare lichamen voor beroep en bedrijf",
+    "Organisatie met overheidsbemoeienis": "Organisaties met overheidsbemoeienis",
+    "Organisatieonderdeel": "Organisatieonderdelen",
+    "Overheidsstichting of -vereniging": "Overheidsstichtingen of -verenigingen",
+    "Provinciale Rekenkamer": "Provinciale Rekenkamers",
+    "Provincie": "Provincies",
+    "Regionaal samenwerkingsorgaan": "Regionale samenwerkingsorganen",
+    "Waterschap": "Waterschappen",
+    "Zelfstandig bestuursorgaan": "Zelfstandige bestuursorganen",
+}
 
 
 def get_delete_context(delete_url_name, object_pk, object_name):
@@ -194,8 +219,24 @@ class PlacementListView(ListView):
         if self.request.GET.get("rol"):
             qs = qs.filter(service__skill__id=self.request.GET["rol"])
 
-        if self.request.GET.get("organisatie"):
-            qs = qs.filter(service__assignment__organizations__id=self.request.GET["organisatie"])
+        org_ids = [int(x) for x in self.request.GET.getlist("org") if x.isdigit()]
+        org_self_ids = [int(x) for x in self.request.GET.getlist("org_self") if x.isdigit()]
+        org_type_labels = [x for x in self.request.GET.getlist("org_type") if x]
+
+        if org_ids or org_self_ids or org_type_labels:
+            matching_ids: set[int] = set()
+            if org_ids:
+                matching_ids |= get_org_descendant_ids(org_ids)
+            if org_type_labels:
+                type_root_ids = list(
+                    OrganizationUnit.objects.filter(organization_types__label__in=org_type_labels).values_list(
+                        "id", flat=True
+                    )
+                )
+                matching_ids |= get_org_descendant_ids(type_root_ids)
+            if org_self_ids:
+                matching_ids |= set(org_self_ids)
+            qs = qs.filter(service__assignment__organizations__id__in=matching_ids)
 
         # Label filter support multiselect
         for label_id in self.request.GET.getlist("labels"):
@@ -338,8 +379,8 @@ class PlacementListView(ListView):
         context["search_placeholder"] = "Zoek op collega, opdracht of opdrachtgever..."
         context["search_filter"] = self.request.GET.get("zoek")
 
-        active_filters = {}  # key: val
-        for filter_param in ["rol", "organisatie", "periode"]:
+        active_filters: dict = {}
+        for filter_param in ["rol", "periode"]:
             val = self.request.GET.get(filter_param)
             if val:
                 active_filters[filter_param] = val
@@ -358,6 +399,53 @@ class PlacementListView(ListView):
                 "from": date.fromisoformat(periode_from),
                 "to": date.fromisoformat(periode_to),
             }
+
+        # Organization filter (multi-select via modal)
+        org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
+        org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
+        org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
+        if org_filter:
+            active_filters["org"] = org_filter
+        if org_self_filter:
+            active_filters["org_self"] = org_self_filter
+        if org_type_filter:
+            active_filters["org_type"] = org_type_filter
+
+        # Build chip display data for org filters
+        org_chip_data: list[dict] = []
+        if org_filter:
+            org_labels = dict(
+                OrganizationUnit.objects.filter(id__in=[int(x) for x in org_filter]).values_list("id", "label")
+            )
+            org_chip_data.extend(
+                {
+                    "param_name": "org",
+                    "param_value": org_id,
+                    "label": org_labels.get(int(org_id), f"Organisatie {org_id}"),
+                }
+                for org_id in org_filter
+            )
+        if org_self_filter:
+            org_self_labels = dict(
+                OrganizationUnit.objects.filter(id__in=[int(x) for x in org_self_filter]).values_list("id", "label")
+            )
+            for org_id in org_self_filter:
+                base_label = org_self_labels.get(int(org_id), f"Organisatie {org_id}")
+                org_chip_data.append(
+                    {
+                        "param_name": "org_self",
+                        "param_value": org_id,
+                        "label": f"{base_label} (direct)",
+                    }
+                )
+        org_chip_data.extend(
+            {
+                "param_name": "org_type",
+                "param_value": type_label,
+                "label": ORG_TYPE_PLURAL.get(type_label, type_label),
+            }
+            for type_label in org_type_filter
+        )
 
         label_filter_groups = []
         for category in LabelCategory.objects.all():
@@ -390,28 +478,17 @@ class PlacementListView(ListView):
                 skill_options[-1]["selected"] = True
                 skill_value = str(skill.id)
 
-        organization_options = [
-            {"value": "", "label": ""},
-        ]
-        organization_value = ""
-        for org in OrganizationUnit.objects.order_by("label"):
-            organization_options.append({"value": str(org.id), "label": org.label})
-            if active_filters.get("organisatie") == str(org.id):
-                organization_options[-1]["selected"] = True
-                organization_value = str(org.id)
-
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
+        context["org_chip_data"] = org_chip_data
 
         # TODO: this can be become an object to help defining correctly and performing extra preprocessing on context
         # introduce value_key, label_key:
         context["filter_groups"] = [
             {
-                "type": "select",
+                "type": "modal",
                 "name": "organisatie",
                 "label": "Organisatie",
-                "options": organization_options,
-                "value": organization_value,
             },
             {
                 "type": "select",
@@ -433,11 +510,9 @@ class PlacementListView(ListView):
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
-            filter_params = []
-            for key, value in self.request.GET.items():
-                if key != "pagina":  # Exclude page param
-                    filter_params.append(f"{key}={value}")
-            params_str = "&".join(filter_params)
+            params = self.request.GET.copy()
+            params.pop("pagina", None)
+            params_str = params.urlencode()
             next_page = context["page_obj"].next_page_number()
             context["next_page_url"] = f"?pagina={next_page}" + (f"&{params_str}" if params_str else "")
         else:
@@ -911,7 +986,7 @@ def organization_admin(request):
             ungrouped.append(unit)
 
     # Sort groups alphabetically, put ungrouped last
-    type_groups = [(name, units) for name, units in sorted(grouped.items())]
+    type_groups = [(ORG_TYPE_PLURAL.get(name, name), units) for name, units in sorted(grouped.items())]
     if ungrouped:
         type_groups.append(("Overig", ungrouped))
 
@@ -1494,31 +1569,6 @@ def client_modal(request):
         else:
             ungrouped.append(unit)
 
-    # Singular → plural display names for organization type group headers.
-    # Types not listed here are already plural or invariant and are used as-is.
-    _type_plural: dict[str, str] = {
-        "Adviescollege": "Adviescolleges",
-        "Agentschap": "Agentschappen",
-        "Caribisch openbaar lichaam": "Caribische openbare lichamen",
-        "Externe commissie": "Externe commissies",
-        "Gemeente": "Gemeenten",
-        "Grensoverschrijdend regionaal samenwerkingsorgaan": "Grensoverschrijdende regionale samenwerkingsorganen",
-        "Hoog College van Staat": "Hoge Colleges van Staat",
-        "Inspectie": "Inspecties",
-        "Interdepartementale commissie": "Interdepartementale commissies",
-        "Koepelorganisatie": "Koepelorganisaties",
-        "Ministerie": "Ministeries",
-        "Openbaar lichaam voor beroep en bedrijf": "Openbare lichamen voor beroep en bedrijf",
-        "Organisatie met overheidsbemoeienis": "Organisaties met overheidsbemoeienis",
-        "Organisatieonderdeel": "Organisatieonderdelen",
-        "Overheidsstichting of -vereniging": "Overheidsstichtingen of -verenigingen",
-        "Provinciale Rekenkamer": "Provinciale Rekenkamers",
-        "Provincie": "Provincies",
-        "Regionaal samenwerkingsorgaan": "Regionale samenwerkingsorganen",
-        "Waterschap": "Waterschappen",
-        "Zelfstandig bestuursorgaan": "Zelfstandige bestuursorganen",
-    }
-
     # Build hierarchy: group nodes (not selectable) containing the actual root orgs
     hierarchy = []
     for group_label in sorted(grouped.keys()):
@@ -1527,7 +1577,7 @@ def client_modal(request):
         hierarchy.append(
             {
                 "id": f"group-{group_label}",
-                "label": _type_plural.get(group_label, group_label),
+                "label": ORG_TYPE_PLURAL.get(group_label, group_label),
                 "nr_of_placements": total,
                 "group": True,
                 "children": [to_json(u) for u in group_units],
@@ -1535,4 +1585,27 @@ def client_modal(request):
         )
     hierarchy.extend(to_json(unit) for unit in sorted(ungrouped, key=sort_key))
 
-    return render(request, "parts/client_modal.html", {"hierarchy": hierarchy})
+    # Build current selections dict for state restoration in client_tree.js
+    # Maps tree node ID (string) → display label
+    current_selections: dict[str, str] = {}
+    for org_id in request.GET.getlist("org"):
+        if org_id.isdigit():
+            org = OrganizationUnit.objects.filter(id=org_id).values("label").first()
+            if not org:
+                continue
+            current_selections[org_id] = org["label"]
+    for org_id in request.GET.getlist("org_self"):
+        if org_id.isdigit():
+            org = OrganizationUnit.objects.filter(id=org_id).values("label").first()
+            if not org:
+                continue
+            current_selections[f"self-{org_id}"] = f"{org['label']} (direct)"
+    for type_label in request.GET.getlist("org_type"):
+        if type_label:
+            current_selections[f"group-{type_label}"] = ORG_TYPE_PLURAL.get(type_label, type_label)
+
+    return render(
+        request,
+        "parts/client_modal.html",
+        {"hierarchy": hierarchy, "current_selections": current_selections},
+    )

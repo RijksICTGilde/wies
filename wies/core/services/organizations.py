@@ -348,3 +348,24 @@ def sync_organizations(
     )
 
     return result
+
+
+def get_org_descendant_ids(root_ids: list[int]) -> set[int]:
+    """Return the set of IDs for the given roots and all their descendants.
+
+    Loads all OrganizationUnits once and traverses the tree in Python to avoid
+    recursive SQL — SQLite-friendly and fast for typical government org trees.
+    """
+    all_orgs = OrganizationUnit.objects.values_list("id", "parent_id")
+    children_map: dict[int, list[int]] = {}
+    for org_id, parent_id in all_orgs:
+        if parent_id is not None:
+            children_map.setdefault(parent_id, []).append(org_id)
+
+    result: set[int] = set()
+    queue = list(root_ids)
+    while queue:
+        current = queue.pop()
+        result.add(current)
+        queue.extend(children_map.get(current, []))
+    return result

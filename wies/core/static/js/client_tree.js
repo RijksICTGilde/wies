@@ -450,8 +450,36 @@
 
   if (applyBtn) {
     applyBtn.addEventListener("click", function () {
+      // Write explicit selections as hidden inputs into the sidebar form
+      const orgInputsContainer = document.getElementById("org-filter-inputs");
+      const sidebarForm = document.querySelector(".filter-sidebar-form");
+      if (orgInputsContainer) {
+        orgInputsContainer.innerHTML = "";
+        for (const [nodeId] of explicitSelections) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.dataset.filterInput = "";
+          if (nodeId.startsWith("self-")) {
+            input.name = "org_self";
+            input.value = nodeId.slice(5); // strip "self-"
+          } else if (nodeId.startsWith("group-")) {
+            input.name = "org_type";
+            input.value = nodeId.slice(6); // strip "group-"
+          } else {
+            input.name = "org";
+            input.value = nodeId;
+          }
+          orgInputsContainer.appendChild(input);
+        }
+      }
+
       const dialog = document.getElementById("clientModal");
       if (dialog) dialog.close();
+
+      // Trigger the sidebar form HTMX request to apply the filter
+      if (sidebarForm) {
+        htmx.trigger(sidebarForm, "change");
+      }
     });
   }
 
@@ -474,4 +502,36 @@
     .forEach(function (li) {
       li.classList.add("collapsed");
     });
+
+  // Restore selections from current query params (passed by server on modal open)
+  const selectionsEl = document.getElementById("client-current-selections");
+  const currentSelections = selectionsEl
+    ? JSON.parse(selectionsEl.textContent)
+    : {};
+  if (Object.keys(currentSelections).length > 0) {
+    for (const [nodeId, label] of Object.entries(currentSelections)) {
+      const treeLi = container.querySelector(`li[data-node-id="${nodeId}"]`);
+      if (treeLi) {
+        const cb = treeLi.querySelector(
+          ":scope > label > input[type='checkbox']",
+        );
+        if (cb) {
+          cb.checked = true;
+          cascadeDown(treeLi, true);
+          cascadeUp(treeLi);
+          // Expand ancestors so selected node is visible
+          let ancestor =
+            treeLi.parentElement && treeLi.parentElement.parentElement;
+          while (ancestor && ancestor.classList.contains("client-tree-node")) {
+            ancestor.classList.remove("collapsed");
+            ancestor =
+              ancestor.parentElement && ancestor.parentElement.parentElement;
+          }
+        }
+      }
+      explicitSelections.set(nodeId, label);
+    }
+    rebuildSelectionList();
+    updateHighlightClasses();
+  }
 })();

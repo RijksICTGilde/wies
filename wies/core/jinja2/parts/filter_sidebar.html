@@ -24,6 +24,18 @@
       hx-push-url="true"
       hx-trigger="change,input delay:500ms from:[data-filter-input]"
       hx-include="[data-filter-input]">
+  <!-- Hidden inputs for organization filter (updated by client_tree.js on apply) -->
+  <div id="org-filter-inputs">
+    {% for v in active_filters.get('org', []) %}
+      <input type="hidden" name="org" value="{{ v }}" data-filter-input>
+    {% endfor %}
+    {% for v in active_filters.get('org_self', []) %}
+      <input type="hidden" name="org_self" value="{{ v }}" data-filter-input>
+    {% endfor %}
+    {% for v in active_filters.get('org_type', []) %}
+      <input type="hidden" name="org_type" value="{{ v }}" data-filter-input>
+    {% endfor %}
+  </div>
   <!-- Filter Fields -->
   <div class="sidebar__content">
     <div class="rvo-layout-column rvo-layout-gap--md">
@@ -36,7 +48,8 @@
                     hx-get="{{ url('client-modal') }}"
                     hx-target="#clientModalContainer"
                     hx-swap="innerHTML"
-                    hx-push-url="false">Selecteer opdrachtgever...</button>
+                    hx-push-url="false"
+                    hx-include="#org-filter-inputs">Selecteer opdrachtgever...</button>
           </div>
         {% elif filter_group.type == 'select' %}
           <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
