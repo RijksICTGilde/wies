@@ -289,8 +289,10 @@
     for (const node of nodes) {
       // Group nodes are structural containers (e.g. ministry headers) and not
       // selectable themselves, so we skip them even if their name matches.
+      // Self-nodes are duplicates of their parent shown for "direct placements
+      // only" filtering; skip them too — the parent already appears in results.
       // Their children are still searched recursively.
-      if (!node.group && nodeMatches(node, q)) result.push(node);
+      if (!node.group && !node.self && nodeMatches(node, q)) result.push(node);
       if (node.children) collectMatches(node.children, q, result);
     }
   }
