@@ -76,7 +76,9 @@ just setup          # Set up fresh environment (base dummy data)
 just load-full-data # Generate and load full dummy data
 just up             # Start application
 just down           # Stop containers
-just test           # Run tests
+just test           # Run all tests (Django + JS)
+just test django    # Run Django tests only
+just test js        # Run JavaScript tests only
 just manage [...]   # Django manage.py commands
 just update-vendor  # Update vendor assets (htmx, RVO CSS)
 ```
@@ -121,7 +123,14 @@ Run all tests:
 just test
 ```
 
-Run specific tests:
+Run Django or JavaScript tests separately:
+
+```bash
+just test django
+just test js
+```
+
+Run specific Django tests:
 
 ```bash
 just manage test wies.core.tests.test_roles

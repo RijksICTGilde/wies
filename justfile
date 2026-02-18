@@ -64,8 +64,23 @@ rebuild-db:
 manage *args="--help":
   docker compose run --rm django python manage.py {{args}}
 
-test:
+# Run tests. Usage: just test, just test django, just test js
+test target="all":
+  #!/usr/bin/env sh
+  if [ "{{target}}" = "django" ] || [ "{{target}}" = "all" ]; then
+    just test-django
+  fi
+  if [ "{{target}}" = "js" ] || [ "{{target}}" = "all" ]; then
+    just test-js
+  fi
+
+# Run Django tests
+test-django:
   docker compose run --rm django uv run pytest
+
+# Run JavaScript tests
+test-js:
+  node --test "js_tests/**/*.test.js"
 
 # Run linting checks
 lint:

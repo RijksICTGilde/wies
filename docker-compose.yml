@@ -3,7 +3,6 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    container_name: wies-django
     ports:
       - 8000:8000
     volumes:
@@ -14,7 +13,6 @@ services:
     build:
       context: .
       dockerfile: ./Dockerfile
-    container_name: wies-db-worker
     volumes:
       - .:/app:z
     command: python manage.py db_worker

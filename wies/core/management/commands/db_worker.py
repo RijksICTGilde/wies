@@ -1,4 +1,5 @@
 import logging
+import signal
 import time
 
 from django.core import management
@@ -14,6 +15,14 @@ logger = logging.getLogger(__name__)
 class Command(BaseCommand):
     help = "Monitor task table and execute long running jobs"
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.shutdown = False
+
+    def handle_sigterm(self, signum, frame):
+        logger.info("Received shutdown signal, finishing current work...")
+        self.shutdown = True
+
     def add_arguments(self, parser):
         parser.add_argument(
             "--noinput",
@@ -23,9 +32,12 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
+        signal.signal(signal.SIGTERM, self.handle_sigterm)
+        signal.signal(signal.SIGINT, self.handle_sigterm)
+
         logger.info("DB worker started, monitoring for tasks...")
 
-        while True:
+        while not self.shutdown:
             time.sleep(1)
 
             # Mark any expired running tasks as failed
@@ -74,3 +86,5 @@ class Command(BaseCommand):
                         task.completed_at = timezone.now()
                         task.save(update_fields=["status", "error_message", "completed_at"])
                         logger.error("Task %s failed: %s", task.id, task.error_message)
+
+        logger.info("DB worker shut down gracefully.")

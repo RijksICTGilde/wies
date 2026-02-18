@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  test-django:
     runs-on: ubuntu-latest
 
     permissions:
@@ -46,3 +46,21 @@ jobs:
         with:
           name: coverage-report
           path: htmlcov/
+
+  test-js:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run JavaScript tests
+        run: node --test "js_tests/**/*.test.js"
