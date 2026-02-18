@@ -27,6 +27,7 @@ from wies.core.views import (
     assignment_edit_attribute,
     assignment_import_csv,
     auth,
+    client_modal,
     error_400,
     error_403,
     error_404,
@@ -41,7 +42,6 @@ from wies.core.views import (
     login,
     logout,
     no_access,
-    opdrachtgever_modal,
     organization_admin,
     robots_txt,
     user_create,
@@ -84,7 +84,7 @@ urlpatterns = [
     path("instellingen/labels/categorie/<int:pk>/labels/aanmaken/", label_create),
     path("instellingen/labels/<int:pk>/bewerken/", label_edit, name="label-edit"),
     path("instellingen/labels/<int:pk>/verwijderen/", label_delete, name="label-delete"),
-    path("opdrachtgever-modal/", opdrachtgever_modal, name="opdrachtgever-modal"),
+    path("client-modal/", client_modal, name="client-modal"),
 ]
 
 # Custom error handlers

@@ -1,4 +1,3 @@
-import json
 import logging
 from collections import Counter
 from datetime import date
@@ -1391,8 +1390,8 @@ Disallow: /
     return HttpResponse(content, content_type="text/plain")
 
 
-def opdrachtgever_modal(request):
-    """Return the opdrachtgever tree selection modal (HTMX partial)."""
+def client_modal(request):
+    """Return the client tree selection modal (HTMX partial)."""
     # Count active placements per OrganizationUnit (self-count only — direct link).
     # We go from the Placement side to avoid complex subqueries.
     active_placements = annotate_placement_dates(
@@ -1511,6 +1510,4 @@ def opdrachtgever_modal(request):
         )
     hierarchy.extend(to_json(unit) for unit in sorted(ungrouped, key=sort_key))
 
-    hierarchy_json = json.dumps(hierarchy)
-
-    return render(request, "parts/opdrachtgever_modal.html", {"hierarchy_json": hierarchy_json})
+    return render(request, "parts/client_modal.html", {"hierarchy": hierarchy})
