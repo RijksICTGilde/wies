@@ -4,10 +4,11 @@ When changing Django models:
 
 1. **Update model** in `wies/core/models.py`
 2. **Update `wies/core/management/commands/load_full_data.py`** to match new model structure
-3. **Do NOT run makemigrations** - just mention "migration needed"
-4. **Update forms** in `forms.py` if fields changed
-5. **Update views** if business logic affected
-6. **Run tests** to verify nothing breaks
+3. **Update `wies/core/fixtures/base_dummy_data.json`** if fields were added (required), renamed, or removed
+4. **Do NOT run makemigrations** - just mention "migration needed"
+5. **Update forms** in `forms.py` if fields changed
+6. **Update views** if business logic affected
+7. **Run tests** to verify nothing breaks
 
 ## Dummy Data
 

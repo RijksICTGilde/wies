@@ -11,7 +11,7 @@ When changing Django models in Wies, follow this workflow:
 
 1. **Update model** in `wies/core/models.py`
 2. **Update `wies/core/management/commands/load_full_data.py`** to match new model structure
-3. **If Skills changed**, regenerate base fixture via `just load-full-data`
+3. **Update `wies/core/fixtures/base_dummy_data.json`** if fields were added (required), renamed, or removed — otherwise `just setup` will break
 4. **Do NOT run makemigrations** - just mention "migration needed" to the user
 5. **Update forms** in `forms.py` if fields changed
 6. **Update views** if business logic affected
@@ -19,15 +19,14 @@ When changing Django models in Wies, follow this workflow:
 
 ## Dummy Data
 
-- `wies/core/fixtures/base_dummy_data.json` — small dataset, committed (generated with `--small`)
-- `wies/core/fixtures/full_dummy_data.json` — full dataset, gitignored (generated without flag)
-- `wies/core/management/commands/load_full_data.py` — generates full dataset
+- `wies/core/fixtures/base_dummy_data.json` — small dataset, committed (for `just setup`, no network needed)
+- `wies/core/management/commands/load_full_data.py` — generates full dataset via sync + ORM (for `just load-full-data`, needs network)
 
 ## Checklist
 
 - [ ] Model updated
 - [ ] load_full_data.py updated
-- [ ] Base fixture regenerated (if Skills changed)
+- [ ] Base fixture updated (if structural model change)
 - [ ] Migration mentioned (not executed)
 - [ ] Forms updated (if needed)
 - [ ] Views updated (if needed)
