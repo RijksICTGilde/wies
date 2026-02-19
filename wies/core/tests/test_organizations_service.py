@@ -3,7 +3,14 @@ from pathlib import Path
 
 from django.test import TestCase
 
-from wies.core.models import Event, OrganizationType, OrganizationUnit
+from wies.core.models import (
+    Assignment,
+    AssignmentOrganizationUnit,
+    Colleague,
+    Event,
+    OrganizationType,
+    OrganizationUnit,
+)
 from wies.core.services.organizations import parse_xml_hierarchical, sync_organization_tree, sync_organizations
 
 
@@ -792,7 +799,7 @@ class SyncOrganizationsDeactivationTest(TestCase):
         OrganizationType.objects.all().delete()
 
     def test_deactivates_unseen_external_orgs(self):
-        """Test that external orgs not in XML are deactivated after sync"""
+        """Test that external orgs not in XML are deactivated (and then cleaned up) after sync"""
         ghost = OrganizationUnit.objects.create(
             name="Ghost Org",
             source_url="https://organisaties.overheid.nl/99999/Ghost_Org/",
@@ -801,9 +808,11 @@ class SyncOrganizationsDeactivationTest(TestCase):
 
         result = sync_organizations(xml_content=self.xml_content, dry_run=False)
 
-        ghost.refresh_from_db()
-        assert ghost.is_active is False
+        # Ghost org was deactivated and then deleted (no links)
         assert result.deactivated >= 1
+        assert not OrganizationUnit.objects.filter(id=ghost.id).exists()
+        # Deactivation event should still exist
+        assert Event.objects.filter(name="OrgSync.deactivate", context__name="Ghost Org").exists()
 
     def test_does_not_deactivate_manual_orgs(self):
         """Test that manually added orgs (no source_url) are NOT deactivated"""
@@ -926,3 +935,97 @@ class SyncEventLoggingTest(TestCase):
 
         update_events = Event.objects.filter(name="OrgSync.update")
         assert update_events.count() == 0
+
+
+class SyncOrganizationsCleanupTest(TestCase):
+    """Tests for cleanup of inactive unlinked orgs after sync."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        fixture_path = Path(__file__).parent.parent / "fixtures" / "organizations_test_fixture.xml"
+        with fixture_path.open("rb") as f:
+            cls.xml_content = f.read()
+
+    def setUp(self):
+        OrganizationUnit.objects.all().delete()
+        OrganizationType.objects.all().delete()
+        Event.objects.all().delete()
+
+    def test_deletes_inactive_unlinked_org(self):
+        """Test that inactive org without children or assignments is deleted after sync"""
+        org = OrganizationUnit.objects.create(name="Dead Org", is_active=False)
+
+        result = sync_organizations(xml_content=self.xml_content, dry_run=False)
+
+        assert not OrganizationUnit.objects.filter(id=org.id).exists()
+        assert result.deleted >= 1
+
+    def test_does_not_delete_active_unlinked_org(self):
+        """Test that active org without links is NOT deleted"""
+        org = OrganizationUnit.objects.create(name="Active Org", is_active=True, source_url="")
+
+        sync_organizations(xml_content=self.xml_content, dry_run=False)
+
+        assert OrganizationUnit.objects.filter(id=org.id).exists()
+
+    def test_does_not_delete_inactive_org_with_assignments(self):
+        """Test that inactive org with assignment relations is NOT deleted"""
+        org = OrganizationUnit.objects.create(name="Linked Org", is_active=False)
+        colleague = Colleague.objects.create(name="Test", email="test@test.nl", source="MANUAL")
+        assignment = Assignment.objects.create(name="Test Assignment", owner=colleague, source="MANUAL")
+        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=org)
+
+        sync_organizations(xml_content=self.xml_content, dry_run=False)
+
+        assert OrganizationUnit.objects.filter(id=org.id).exists()
+
+    def test_does_not_delete_inactive_org_with_children(self):
+        """Test that inactive parent with a child is NOT deleted"""
+        parent = OrganizationUnit.objects.create(name="Inactive Parent", is_active=False)
+        OrganizationUnit.objects.create(name="Active Child", is_active=True, parent=parent)
+
+        sync_organizations(xml_content=self.xml_content, dry_run=False)
+
+        assert OrganizationUnit.objects.filter(id=parent.id).exists()
+
+    def test_cascading_cleanup_deletes_full_inactive_tree(self):
+        """Test that inactive parent + inactive child (no links) both get deleted"""
+        parent = OrganizationUnit.objects.create(name="Dead Parent", is_active=False)
+        child = OrganizationUnit.objects.create(name="Dead Child", is_active=False, parent=parent)
+
+        result = sync_organizations(xml_content=self.xml_content, dry_run=False)
+
+        assert not OrganizationUnit.objects.filter(id__in=[parent.id, child.id]).exists()
+        assert result.deleted >= 2
+
+    def test_delete_event_logged(self):
+        """Test that OrgSync.delete event is created for each deleted org"""
+        org = OrganizationUnit.objects.create(name="Dead Org", is_active=False)
+        org_id = org.id
+
+        sync_organizations(xml_content=self.xml_content, dry_run=False)
+
+        delete_events = Event.objects.filter(name="OrgSync.delete")
+        assert delete_events.count() >= 1
+        event = delete_events.filter(context__org_id=org_id).first()
+        assert event is not None
+        assert event.context["name"] == "Dead Org"
+        assert event.context["reason"] == "inactive_and_unlinked"
+
+    def test_no_cleanup_on_dry_run(self):
+        """Test that dry run does not delete inactive unlinked orgs"""
+        org = OrganizationUnit.objects.create(name="Dead Org", is_active=False)
+
+        sync_organizations(xml_content=self.xml_content, dry_run=True)
+
+        assert OrganizationUnit.objects.filter(id=org.id).exists()
+
+    def test_deleted_count_in_result(self):
+        """Test that result.deleted reflects the number of deleted orgs"""
+        for i in range(3):
+            OrganizationUnit.objects.create(name=f"Dead Org {i}", is_active=False)
+
+        result = sync_organizations(xml_content=self.xml_content, dry_run=False)
+
+        assert result.deleted >= 3

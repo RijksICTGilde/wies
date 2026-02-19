@@ -56,6 +56,7 @@ class SyncResult:
     updated: int = 0
     unchanged: int = 0
     deactivated: int = 0
+    deleted: int = 0
     errors: list[str] = field(default_factory=list)
 
     def __add__(self, other: "SyncResult") -> "SyncResult":
@@ -65,6 +66,7 @@ class SyncResult:
             updated=self.updated + other.updated,
             unchanged=self.unchanged + other.unchanged,
             deactivated=self.deactivated + other.deactivated,
+            deleted=self.deleted + other.deleted,
             errors=self.errors + other.errors,
         )
 
@@ -432,12 +434,42 @@ def sync_organizations(
         if orgs_to_deactivate:
             logger.info("Deactivated %d external orgs not seen in sync", len(orgs_to_deactivate))
 
+    # Delete inactive orgs not linked to anything (leaf-first loop)
+    if not dry_run:
+        total_deleted = 0
+        while True:
+            orgs_to_delete = list(
+                OrganizationUnit.objects.filter(is_active=False)
+                .exclude(assignment_relations__isnull=False)
+                .exclude(children__isnull=False)
+                .values_list("id", "tooi_identifier", "name")
+            )
+            if not orgs_to_delete:
+                break
+            for org_id, tooi, name in orgs_to_delete:
+                create_event(
+                    "",
+                    "OrgSync.delete",
+                    {
+                        "org_id": org_id,
+                        "tooi": tooi or "",
+                        "name": name,
+                        "reason": "inactive_and_unlinked",
+                    },
+                )
+            OrganizationUnit.objects.filter(id__in=[org[0] for org in orgs_to_delete]).delete()
+            total_deleted += len(orgs_to_delete)
+        result.deleted = total_deleted
+        if total_deleted:
+            logger.info("Deleted %d inactive unlinked orgs", total_deleted)
+
     logger.info(
-        "Sync completed: created=%s, updated=%s, unchanged=%s, deactivated=%s",
+        "Sync completed: created=%s, updated=%s, unchanged=%s, deactivated=%s, deleted=%s",
         result.created,
         result.updated,
         result.unchanged,
         result.deactivated,
+        result.deleted,
     )
 
     return result

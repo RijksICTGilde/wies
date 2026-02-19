@@ -49,7 +49,7 @@
           </td>
           <td>
             {% if task.result %}
-              Aangemaakt: {{ task.result.created }}, Bijgewerkt: {{ task.result.updated }}, Ongewijzigd: {{ task.result.unchanged }}
+              Aangemaakt: {{ task.result.created }}, Bijgewerkt: {{ task.result.updated }}, Ongewijzigd: {{ task.result.unchanged }}, Gedeactiveerd: {{ task.result.deactivated }}, Verwijderd: {{ task.result.deleted }}
             {% else %}
               -
             {% endif %}

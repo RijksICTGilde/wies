@@ -9,6 +9,7 @@ SUPPORTED_EVENT_NAMES = {
     "OrgSync.create",
     "OrgSync.update",
     "OrgSync.deactivate",
+    "OrgSync.delete",
 }
 
 
