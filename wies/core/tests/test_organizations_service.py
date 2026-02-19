@@ -187,6 +187,27 @@ class ParseXmlHierarchicalTest(TestCase):
         ministry = [org for org in result if org["name"] == "Asiel en Migratie"]
         assert len(ministry) == 1, "Organization without eindDatum should be kept"
 
+    def test_filters_excluded_organizations(self):
+        """Test that organizations with excluded names (intelligence services) are filtered out"""
+        result = parse_xml_hierarchical(self.xml_content)
+
+        names = [org["name"] for org in result]
+        assert "Algemene Inlichtingen- en Veiligheidsdienst" not in names
+
+    def test_filters_children_of_excluded_organizations(self):
+        """Test that children of excluded organizations are also filtered out"""
+        result = parse_xml_hierarchical(self.xml_content)
+
+        def all_names(orgs):
+            names = set()
+            for org in orgs:
+                names.add(org["name"])
+                names.update(all_names(org.get("children", [])))
+            return names
+
+        all_org_names = all_names(result)
+        assert "directie Inlichtingen" not in all_org_names
+
     def test_filters_inactive_parent_and_children(self):
         """Test that inactive parent organizations also filter out their children"""
         result = parse_xml_hierarchical(self.xml_content)

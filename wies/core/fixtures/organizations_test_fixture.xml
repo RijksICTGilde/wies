@@ -127,5 +127,22 @@
         <p:type>Adviescollege</p:type>
       </p:types>
     </p:organisatie>
+
+    <!-- Excluded organization (intelligence service) - should be filtered with all children -->
+    <p:organisatie p:systeemId="10001">
+      <p:naam>Algemene Inlichtingen- en Veiligheidsdienst</p:naam>
+      <p:afkorting>AIVD</p:afkorting>
+      <p:types>
+        <p:type>Organisatieonderdeel</p:type>
+      </p:types>
+      <p:organisaties>
+        <p:organisatie p:systeemId="10002">
+          <p:naam>directie Inlichtingen</p:naam>
+          <p:types>
+            <p:type>Organisatieonderdeel</p:type>
+          </p:types>
+        </p:organisatie>
+      </p:organisaties>
+    </p:organisatie>
   </p:organisaties>
 </p:overheidsorganisaties>

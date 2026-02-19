@@ -73,6 +73,22 @@ SMALL_ORG_PARENTS = {12: 6, 13: 7, 14: 11, 15: 8}  # child_pk → parent_pk
 # ── XML namespace (copied from wies/core/services/organizations.py) ───────────
 NS = {"p": "https://organisaties.overheid.nl/static/schema/oo/export/2.6.9"}
 
+# ── Excluded organizations (must match wies/core/services/organizations.py) ───
+EXCLUDED_ORG_NAMES: set[str] = {
+    "algemene inlichtingen- en veiligheidsdienst",
+    "militaire inlichtingen- en veiligheidsdienst",
+}
+EXCLUDED_ORG_ABBREVIATIONS: set[str] = {"aivd", "mivd"}
+
+
+def _is_excluded_org(name: str, abbreviations: list[str]) -> bool:
+    """Check if an organization should be excluded."""
+    name_lower = name.lower()
+    if any(excluded in name_lower for excluded in EXCLUDED_ORG_NAMES):
+        return True
+    return any(abbr.lower() in EXCLUDED_ORG_ABBREVIATIONS for abbr in abbreviations)
+
+
 # ── Skills (preserved from current fixture) ───────────────────────────────────
 SKILLS = [
     (1, "Backend development"),
@@ -451,6 +467,11 @@ def build_source_url(system_id: str, name: str) -> str:
 def parse_organization_element(org_elem: ET.Element) -> dict | None:
     """Parse a single organization element from XML (recursive)."""
     name = org_elem.findtext("p:naam", "", NS).strip()
+    abbreviations = [a.text.strip() for a in org_elem.findall("p:afkorting", NS) if a.text]
+
+    # Skip excluded organizations (intelligence services) and all their children
+    if _is_excluded_org(name, abbreviations):
+        return None
 
     einddatum_elem = org_elem.find("p:eindDatum", NS)
     if einddatum_elem is not None and einddatum_elem.text:
@@ -475,7 +496,6 @@ def parse_organization_element(org_elem: ET.Element) -> dict | None:
     if related_ministry_elem is not None:
         related_ministry_tooi = related_ministry_elem.get(f"{{{NS['p']}}}resourceIdentifierTOOI", "")
 
-    abbreviations = [a.text.strip() for a in org_elem.findall("p:afkorting", NS) if a.text]
     source_url = build_source_url(system_id, name)
 
     children = []

@@ -20,6 +20,22 @@ logger = logging.getLogger(__name__)
 ORGANISATIES_OVERHEID_URL = "https://organisaties.overheid.nl/archive/exportOO.xml"
 NS = {"p": "https://organisaties.overheid.nl/static/schema/oo/export/2.6.9"}
 
+# Organizations excluded from sync (intelligence services).
+# All comparisons are case-insensitive.
+EXCLUDED_ORG_NAMES: set[str] = {
+    "algemene inlichtingen- en veiligheidsdienst",
+    "militaire inlichtingen- en veiligheidsdienst",
+}
+EXCLUDED_ORG_ABBREVIATIONS: set[str] = {"aivd", "mivd"}
+
+
+def _is_excluded_org(name: str, abbreviations: list[str]) -> bool:
+    """Check if an organization should be excluded from sync."""
+    name_lower = name.lower()
+    if any(excluded in name_lower for excluded in EXCLUDED_ORG_NAMES):
+        return True
+    return any(abbr.lower() in EXCLUDED_ORG_ABBREVIATIONS for abbr in abbreviations)
+
 
 def build_source_url(system_id: str, name: str) -> str:
     """Build URL to organisaties.overheid.nl page."""
@@ -59,6 +75,11 @@ def parse_organization_element(
     Returns None if organization should be skipped (e.g., eindDatum in the past).
     """
     name = org_elem.findtext("p:naam", "", NS).strip()
+    abbreviations = [a.text.strip() for a in org_elem.findall("p:afkorting", NS) if a.text]
+
+    # Skip excluded organizations (intelligence services) and all their children
+    if _is_excluded_org(name, abbreviations):
+        return None
 
     # Skip organizations with eindDatum in the past (inactive/archived)
     einddatum_elem = org_elem.find("p:eindDatum", NS)
@@ -91,9 +112,6 @@ def parse_organization_element(
     related_ministry_elem = org_elem.find("p:relatieMetMinisterie", NS)
     if related_ministry_elem is not None:
         related_ministry_tooi = related_ministry_elem.get(f"{{{NS['p']}}}resourceIdentifierTOOI", "")
-
-    # Get abbreviations
-    abbreviations = [a.text.strip() for a in org_elem.findall("p:afkorting", NS) if a.text]
 
     # Build source URL
     source_url = build_source_url(system_id, name)
