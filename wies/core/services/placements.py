@@ -50,6 +50,16 @@ def filter_placements_by_min_end_date(queryset, min_end_date):
     return queryset.filter(Q(actual_end_date__gte=min_end_date) | Q(actual_end_date__isnull=True))
 
 
+def _validate_assignment_status(status: str, row_number: int) -> str:
+    status = status.strip().upper()
+    if status == "":
+        return "INGEVULD"
+    if status not in ("OPEN", "INGEVULD"):
+        msg = f"Ongeldige status '{status}' op regel {row_number}. Gebruik 'OPEN' of 'INGEVULD'."
+        raise ValueError(msg)
+    return status
+
+
 def create_assignments_from_csv(csv_content: str):
     """
     Create colleagues, assignments, services and placements from csv.
@@ -60,13 +70,15 @@ def create_assignments_from_csv(csv_content: str):
     - service_skill, placement_colleague_name, placement_colleague_email
 
     Optional columns:
+    - assignment_status: OPEN or INGEVULD (default: INGEVULD)
     - owner_brand: If provided, assigns the brand label to newly created assignment owners.
                    If empty or not provided, no brand label is assigned.
     - colleague_brand: If provided, assigns the brand label to newly created placement colleagues.
                        If empty or not provided, no brand label is assigned.
     """
 
-    csv_reader = csv.DictReader(StringIO(csv_content))
+    dialect = csv.Sniffer().sniff(csv_content[:1024], delimiters=",;")
+    csv_reader = csv.DictReader(StringIO(csv_content), delimiter=dialect.delimiter)
 
     required_columns = {
         "assignment_name",
@@ -163,6 +175,8 @@ def create_assignments_from_csv(csv_content: str):
                 start_date = parse_date_dmy(start_date_str) if start_date_str else None
                 end_date = parse_date_dmy(end_date_str) if end_date_str else None
 
+                assignment_status = _validate_assignment_status(row.get("assignment_status", ""), _)
+
                 # owner update or create
                 assignment, created = Assignment.objects.get_or_create(
                     source="wies",
@@ -174,7 +188,7 @@ def create_assignments_from_csv(csv_content: str):
                         "owner": owner,
                         "organization": row["assignment_organization"],
                         "ministry": ministry,
-                        "status": "INGEVULD",
+                        "status": assignment_status,
                     },
                 )
 
@@ -200,27 +214,28 @@ def create_assignments_from_csv(csv_content: str):
                 if created:
                     services_created += 1
 
-                colleague_email = row["placement_colleague_email"]
-                validate_email(colleague_email)
-                if Colleague.objects.filter(email=colleague_email).exists():
-                    colleague = Colleague.objects.get(email=colleague_email)
-                else:
-                    colleague = Colleague.objects.create(
-                        name=row["placement_colleague_name"],
-                        email=colleague_email,
+                colleague_email = row["placement_colleague_email"].strip()
+                if colleague_email:
+                    validate_email(colleague_email)
+                    if Colleague.objects.filter(email=colleague_email).exists():
+                        colleague = Colleague.objects.get(email=colleague_email)
+                    else:
+                        colleague = Colleague.objects.create(
+                            name=row["placement_colleague_name"],
+                            email=colleague_email,
+                            source="wies",
+                        )
+                        if colleague_brand_label:
+                            colleague.labels.add(colleague_brand_label)
+                        colleagues_created += 1
+
+                    _, created = Placement.objects.get_or_create(
+                        colleague=colleague,
+                        service=service,
                         source="wies",
                     )
-                    if colleague_brand_label:
-                        colleague.labels.add(colleague_brand_label)
-                    colleagues_created += 1
-
-                _, created = Placement.objects.get_or_create(
-                    colleague=colleague,
-                    service=service,
-                    source="wies",
-                )
-                if created:
-                    placements_created += 1
+                    if created:
+                        placements_created += 1
 
     except ValueError as e:
         return {"success": False, "errors": [str(e)]}

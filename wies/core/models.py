@@ -4,7 +4,7 @@ from django.db.models.functions import Lower
 from django.utils import timezone
 
 ASSIGNMENT_STATUS = {
-    "VACATURE": "VACATURE",
+    "OPEN": "OPEN",
     "INGEVULD": "INGEVULD",
 }
 

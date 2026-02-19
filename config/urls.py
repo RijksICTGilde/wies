@@ -67,7 +67,7 @@ urlpatterns = [
     path("geen-toegang/", no_access),
     path("uitloggen/", logout, name="logout"),
     path("auth/", auth, name="auth"),
-    path("aangevraagde-opdrachten/", AssignmentListView.as_view(), name="assignment-list"),
+    path("opdrachten/", AssignmentListView.as_view(), name="assignment-list"),
     path("opdrachten/importeren/", assignment_import_csv, name="assignment-import-csv"),
     path("opdrachten/<int:pk>/edit/<str:attribute>/", assignment_edit_attribute, name="assignment-edit-attribute"),
     path("instellingen/", RedirectView.as_view(pattern_name="admin-users", permanent=False), name="admin"),

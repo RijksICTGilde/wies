@@ -28,7 +28,7 @@ class AssignmentListViewTest(TestCase):
         # Vacancy assignment (should appear)
         self.vacancy = Assignment.objects.create(
             name="Open Vacature",
-            status="VACATURE",
+            status="OPEN",
             organization="Test Org",
             ministry=self.ministry,
             start_date=date(2025, 1, 1),
@@ -128,5 +128,5 @@ class AssignmentListViewTest(TestCase):
         response = self.client.get(self.list_url, {"opdracht": str(self.filled.id)})
         assert response.status_code == 200
         content = response.content.decode()
-        # The panel should not open for a non-VACATURE assignment
+        # The panel should not open for a non-OPEN assignment
         assert "panel_data" not in content or "side_panel-container" in content

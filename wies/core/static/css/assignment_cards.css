@@ -27,6 +27,13 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
+.assignment-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
 .assignment-card__title {
   font-size: 1.1rem;
 }
