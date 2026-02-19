@@ -7,7 +7,7 @@ html {
    ============================================================================ */
 
 :root {
-  --sidebar-width: 280px;
+  --sidebar-width: 320px;
   --sidebar-width-collapsed: 48px;
   --layout-max-width: 1440px;
   --layout-gap: 1.5rem;

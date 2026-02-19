@@ -1,7 +1,6 @@
 // Multi-select component
 (function () {
   var openDropdownId = null;
-  var openDropdownSearch = "";
 
   function positionDropdown(trigger, dropdown) {
     var rect = trigger.getBoundingClientRect();
@@ -49,26 +48,15 @@
   function closeDropdown(container) {
     var dropdown = container.querySelector(".multiselect__dropdown");
     var trigger = container.querySelector(".multiselect__trigger");
-    var searchInput = container.querySelector(".multiselect__search");
     if (dropdown) dropdown.hidden = true;
     if (trigger) trigger.setAttribute("aria-expanded", "false");
-    if (searchInput) {
-      searchInput.value = "";
-      container
-        .querySelectorAll(".multiselect__option")
-        .forEach(function (opt) {
-          opt.style.display = "";
-        });
-    }
   }
 
   function onSelectionChange(container) {
     syncState(container);
     // Save open state so it survives HTMX DOM swap, then trigger swap
     var trigger = container.querySelector(".multiselect__trigger");
-    var searchInput = container.querySelector(".multiselect__search");
     openDropdownId = trigger ? trigger.getAttribute("aria-labelledby") : null;
-    openDropdownSearch = searchInput ? searchInput.value : "";
     var form = container.closest("form");
     if (form && typeof htmx !== "undefined") htmx.trigger(form, "change");
   }
@@ -83,21 +71,12 @@
     if (!container) return;
 
     var dropdown = container.querySelector(".multiselect__dropdown");
-    var searchInput = container.querySelector(".multiselect__search");
     if (dropdown) {
       dropdown.hidden = false;
       positionDropdown(trigger, dropdown);
     }
     trigger.setAttribute("aria-expanded", "true");
-    if (searchInput) {
-      if (openDropdownSearch) {
-        searchInput.value = openDropdownSearch;
-        searchInput.dispatchEvent(new Event("input"));
-      }
-      searchInput.focus();
-    }
     openDropdownId = null;
-    openDropdownSearch = "";
   }
 
   function initMultiselect(container) {
@@ -106,7 +85,6 @@
 
     var trigger = container.querySelector(".multiselect__trigger");
     var dropdown = container.querySelector(".multiselect__dropdown");
-    var searchInput = container.querySelector(".multiselect__search");
     if (!trigger || !dropdown) return;
 
     trigger.addEventListener("click", function (e) {
@@ -124,30 +102,8 @@
         dropdown.hidden = false;
         positionDropdown(trigger, dropdown);
         trigger.setAttribute("aria-expanded", "true");
-        if (searchInput) searchInput.focus();
       }
     });
-
-    if (searchInput) {
-      searchInput.addEventListener("input", function () {
-        var query = searchInput.value.toLowerCase();
-        container
-          .querySelectorAll(".multiselect__option")
-          .forEach(function (option) {
-            var text = option
-              .querySelector(".rvo-text")
-              .textContent.toLowerCase();
-            option.style.display = text.includes(query) ? "" : "none";
-          });
-      });
-      // Prevent bubbling to form/htmx
-      searchInput.addEventListener("keydown", function (e) {
-        e.stopPropagation();
-      });
-      searchInput.addEventListener("change", function (e) {
-        e.stopPropagation();
-      });
-    }
 
     var clearButton = container.querySelector(".multiselect__clear");
     if (clearButton) {

@@ -1,0 +1,73 @@
+/* Checkbox filter component — inline checkboxes with toggle and counters */
+
+.checkbox-filter {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.checkbox-filter__label {
+  margin-bottom: 0.25rem;
+}
+
+.checkbox-filter__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.checkbox-filter__options[hidden] {
+  display: none;
+}
+
+.checkbox-filter__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.2rem 0;
+}
+
+.checkbox-filter__option:hover {
+  color: var(--rvo-color-hemelblauw);
+}
+
+.checkbox-filter__option .rvo-checkbox__input {
+  flex-shrink: 0;
+}
+
+.checkbox-filter__option-text {
+  flex: 1;
+  font-size: var(--rvo-font-size-md);
+}
+
+.checkbox-filter__count {
+  font-size: var(--rvo-font-size-sm);
+  color: var(--rvo-color-grijs-600);
+  flex-shrink: 0;
+}
+
+/* Toggle button — styled as rvo-link */
+.checkbox-filter__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  margin-top: 0.25rem;
+}
+
+.checkbox-filter__toggle-icon {
+  transition: transform 0.2s ease;
+}
+
+.checkbox-filter__toggle--expanded .checkbox-filter__toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* Hidden inputs */
+.checkbox-filter__hidden-inputs {
+  display: none;
+}

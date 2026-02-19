@@ -136,3 +136,9 @@
     </table>
   </div>
 </div>
+{# OOB swap: update sidebar filter fields (counts, selected states) — only for HTMX requests #}
+{% if request.headers.get('HX-Request') %}
+  {% with oob=true %}
+    {% include "parts/sidebar_filter_fields.html" %}
+  {% endwith %}
+{% endif %}

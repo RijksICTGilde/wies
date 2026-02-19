@@ -1,4 +1,5 @@
 import logging
+from collections import Counter
 from datetime import date
 
 from authlib.integrations.django_client import OAuth
@@ -370,6 +371,11 @@ class PlacementListView(ListView):
                 "to": date.fromisoformat(periode_to),
             }
 
+        # Count on a clean queryset (no distinct/annotations) using filtered placement IDs
+        count_qs = Placement.objects.filter(id__in=self.object_list.values_list("id", flat=True))
+        label_ids = count_qs.values_list("colleague__labels__id", flat=True)
+        label_counts = Counter(lid for lid in label_ids if lid is not None)
+
         label_filter_groups = []
         for category in LabelCategory.objects.all():
             select_label = category.name
@@ -378,7 +384,14 @@ class PlacementListView(ListView):
             ]
             selected_values = []
             for label in Label.objects.filter(category=category):
-                options.append({"value": str(label.id), "label": f"{label.name}", "category_color": category.color})
+                options.append(
+                    {
+                        "value": str(label.id),
+                        "label": f"{label.name}",
+                        "category_color": category.color,
+                        "count": label_counts.get(label.id, 0),
+                    }
+                )
                 if str(label.id) in active_filters.get("labels", set()):
                     options[-1]["selected"] = True
                     selected_values.append(str(label.id))
@@ -392,14 +405,17 @@ class PlacementListView(ListView):
             }
 
             label_filter_groups.append(filter_group)
+        skill_ids = count_qs.values_list("service__skill__id", flat=True)
+        skill_counts = Counter(sid for sid in skill_ids if sid is not None)
 
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
         for skill in Skill.objects.order_by("name"):
-            skill_options.append({"value": str(skill.id), "label": skill.name})
+            option = {"value": str(skill.id), "label": skill.name, "count": skill_counts.get(skill.id, 0)}
             if str(skill.id) in active_filters.get("rol", set()):
-                skill_options[-1]["selected"] = True
+                option["selected"] = True
                 skill_selected_values.append(str(skill.id))
+            skill_options.append(option)
 
         clients = [
             {"id": org, "name": org}
@@ -570,6 +586,11 @@ class UserListView(PermissionRequiredMixin, ListView):
         if role_filter:
             active_filters["rol"] = role_filter
 
+        # Count on clean queryset (no distinct) using filtered user IDs
+        user_count_qs = User.objects.filter(id__in=self.object_list.values_list("id", flat=True))
+        user_label_ids = user_count_qs.values_list("labels__id", flat=True)
+        user_label_counts = Counter(lid for lid in user_label_ids if lid is not None)
+
         label_filter_groups = []
         for category in LabelCategory.objects.all():
             select_label = category.name
@@ -578,7 +599,13 @@ class UserListView(PermissionRequiredMixin, ListView):
             ]
             selected_values = []
             for label in Label.objects.filter(category=category):
-                options.append({"value": str(label.id), "label": f"{label.name}"})
+                options.append(
+                    {
+                        "value": str(label.id),
+                        "label": f"{label.name}",
+                        "count": user_label_counts.get(label.id, 0),
+                    }
+                )
                 if str(label.id) in active_filters.get("labels", set()):
                     options[-1]["selected"] = True
                     selected_values.append(str(label.id))
@@ -642,8 +669,8 @@ class UserListView(PermissionRequiredMixin, ListView):
 
 
 def _user_form_context(form, **extra):
-    """Build render context for user form modal, including multi_select data."""
-    return {"content": form, "multi_selects": form.get_multi_select_data(), **extra}
+    """Build render context for user form modal."""
+    return {"content": form, **extra}
 
 
 @permission_required("core.add_user", raise_exception=True)

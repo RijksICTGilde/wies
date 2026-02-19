@@ -9,6 +9,7 @@ from django.template import engines
 
 from .models import Label, LabelCategory, User
 from .services.users import validate_email_domain
+from .widgets import MultiselectDropdown
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,7 @@ class RvoFormMixin:
         "Select": "rvo/forms/widgets/select.html",
         "SelectMultiple": "rvo/forms/widgets/select.html",
         "CheckboxSelectMultiple": "rvo/forms/widgets/checkbox_select.html",
+        "MultiselectDropdown": "rvo/forms/widgets/multiselect.html",
         "RadioSelect": "rvo/forms/widgets/radio.html",
     }
 
@@ -178,6 +180,7 @@ class UserForm(RvoFormMixin, forms.ModelForm):
                 queryset=Label.objects.filter(category=category),
                 required=False,
                 initial=initial,
+                widget=MultiselectDropdown(),
             )
 
             # used in clean
@@ -185,35 +188,6 @@ class UserForm(RvoFormMixin, forms.ModelForm):
 
             # necessary because RVOForm init already ran and otherwise wrong templates are referenced
             self._configure_field_for_rvo(field_name)
-
-    def get_multi_select_data(self) -> dict[str, dict]:
-        """Return multi_select-compatible data for fields that use multi_select rendering."""
-        result = {}
-
-        groups_field = self.fields["groups"]
-        selected = [str(v) for v in (self.initial.get("groups") or self.data.getlist("groups", []))]
-        result["groups"] = {
-            "name": "groups",
-            "label": groups_field.label,
-            "options": [{"value": str(g.pk), "label": g.name} for g in groups_field.queryset],
-            "selected_values": selected,
-        }
-
-        # Label categories
-        for field_name in self._category_field_names:
-            field = self.fields[field_name]
-            initial = self.initial.get(field_name)
-            selected = [str(v) for v in self.data.getlist(field_name, [])] if self.data else []
-            if not selected and initial:
-                selected = [str(initial.pk if hasattr(initial, "pk") else initial)]
-            result[field_name] = {
-                "name": field_name,
-                "label": field.label,
-                "options": [{"value": str(opt.pk), "label": opt.name} for opt in field.queryset],
-                "selected_values": selected,
-            }
-
-        return result
 
     def clean(self):
         cleaned_data = super().clean()

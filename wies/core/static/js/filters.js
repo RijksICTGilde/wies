@@ -41,6 +41,10 @@ function removeFilter(formSelector, filterName, filterType, filterValue) {
     if (typeof window.multiselectUncheck === "function") {
       window.multiselectUncheck(filterName, filterValue);
     }
+    // Also uncheck in checkbox filter component (sidebar)
+    if (typeof window.checkboxFilterUncheck === "function") {
+      window.checkboxFilterUncheck(filterName, filterValue);
+    }
   } else if (filterType === "date_range") {
     const fromInput = document.getElementById(`filter-${filterName}-from`);
     const toInput = document.getElementById(`filter-${filterName}-to`);
@@ -75,6 +79,11 @@ function clearAllFilters(formSelector) {
   // Clear multiselect dropdowns
   if (typeof window.multiselectClearAll === "function") {
     window.multiselectClearAll(form);
+  }
+
+  // Clear checkbox filters (sidebar)
+  if (typeof window.checkboxFilterClearAll === "function") {
+    window.checkboxFilterClearAll(form);
   }
 
   form.querySelectorAll('input[type="date"]').forEach((input) => {

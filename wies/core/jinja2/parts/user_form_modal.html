@@ -25,9 +25,7 @@
                 {{ content.first_name.as_field_group() }}
                 {{ content.last_name.as_field_group() }}
                 {{ content.email.as_field_group() }}
-                {% with name=multi_selects.groups.name, label=multi_selects.groups.label, options=multi_selects.groups.options, selected_values=multi_selects.groups.selected_values %}
-                  {% include "parts/multi_select.html" %}
-                {% endwith %}
+                {{ content.groups.as_field_group() }}
               </div>
             </div>
             {# Vertical divider #}
@@ -36,12 +34,8 @@
             <div class="user-form-column">
               <h3 class="utrecht-heading-3" style="margin-bottom: 1rem;">Labels</h3>
               <div>
-                {% for field_name, ms in multi_selects.items() %}
-                  {% if field_name.startswith('category_') %}
-                    {% with name=ms.name, label=ms.label, options=ms.options, selected_values=ms.selected_values %}
-                      {% include "parts/multi_select.html" %}
-                    {% endwith %}
-                  {% endif %}
+                {% for field_name in content.fields %}
+                  {% if field_name.startswith('category_') %}{{ content[field_name].as_field_group() }}{% endif %}
                 {% endfor %}
               </div>
             </div>
