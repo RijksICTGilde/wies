@@ -10,6 +10,7 @@ This files lists the changes during the lifetime of this project.
 - 185: (migration) introduce long running tasks through `db_worker` service
 - 185: fix pagination with 'pagina' kwarg
 - 185: (migration) introduce hierarchial organization structure and synchronization
+- 191 and others: bump ruff, gunicorn and cryptography (security)
 - 176: Fix that externally managed assignment can not be edited
 - 176: Filter out historical placements
 - 172: Move dummy_data.json to wies/core/fixtures/
