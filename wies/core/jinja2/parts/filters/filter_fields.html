@@ -7,7 +7,7 @@
       <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
     {% elif filter_group.type == 'select-multi' %}
       {% with name=filter_group.name, label=filter_group.label, options=filter_group.options, selected_values=filter_group.selected_values %}
-        {% include "parts/checkbox_filter.html" %}
+        {% include "parts/filters/checkbox_filter.html" %}
       {% endwith %}
     {% elif filter_group.type == 'date_range' %}
       <div class="filter-sidebar-date-range">

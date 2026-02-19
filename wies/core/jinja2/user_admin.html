@@ -2,8 +2,8 @@
 {% block extra_head %}
   <link rel="stylesheet" href="{{ static('css/user_admin.css') }}">
   <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
-  <link rel="stylesheet" href="{{ static('css/multi_select.css') }}">
-  <script src="{{ static('js/multi_select.js') }}"></script>
+  <link rel="stylesheet" href="{{ static('css/filters/filters.css') }}">
+  <script src="{{ static('js/filters/multi_select.js') }}"></script>
   <script src="{{ static('js/dialog.js') }}"></script>
 {% endblock extra_head %}
 {% block sidebar %}
@@ -13,7 +13,7 @@
   <div class="rvo-layout-column rvo-layout-gap--xl">
     <c-h1>Gebruikers</c-h1>
     {% with url_name="admin-users", target_selector="#user_table", primary_button=primary_button %}
-      {% include "parts/generic_filter_bar.html" %}
+      {% include "parts/filters/filter_bar.html" %}
     {% endwith %}
     {# Content #}
     <div id="user_table" class="rvo-table-container">{% include "parts/user_table.html" %}</div>

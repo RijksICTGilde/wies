@@ -1,0 +1,549 @@
+/* ============================================================================
+   Filters — shared, sidebar, bar, chips, checkbox, multiselect
+   ============================================================================ */
+
+/* ----------------------------------------------------------------------------
+   Search Field
+   ---------------------------------------------------------------------------- */
+.search-field-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.search-field-wrapper .search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.search-field-wrapper .utrecht-textbox {
+  height: 3rem;
+  padding-left: 2.5rem;
+  width: 100%;
+}
+
+/* ----------------------------------------------------------------------------
+   Filter Chips
+   ---------------------------------------------------------------------------- */
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: var(--rvo-font-size-sm, 0.875rem);
+  color: var(--rvo-color-grijs-800, #1f1f1f);
+}
+
+.filter-chip--label {
+  border: none;
+}
+
+.filter-chip--default {
+  background-color: var(--rvo-color-grijs-200, #e0e0e0);
+  border: 1px solid var(--rvo-color-grijs-300, #e6e6e6);
+}
+
+.filter-chip-label {
+  line-height: 1.2;
+}
+
+.filter-chip-remove {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color 0.2s ease;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.filter-chip-remove:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ----------------------------------------------------------------------------
+   Date Range Validation
+   ---------------------------------------------------------------------------- */
+.date-range-validation-message {
+  display: none;
+  color: #e17000;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* ----------------------------------------------------------------------------
+   Filter Bar (compact, used on user admin)
+   ---------------------------------------------------------------------------- */
+.filter-bar {
+  width: 100%;
+  margin-bottom: 0;
+}
+
+.filter-bar-bar {
+  display: flex;
+  gap: 0.75rem;
+  align-items: stretch;
+  margin-bottom: 1rem;
+  width: 100%;
+}
+
+/* Search field */
+.filter-bar-bar > .search-field-wrapper {
+  flex: 1 1 500px;
+  min-width: 300px;
+  max-width: 600px;
+  position: relative;
+}
+
+/* Filter button container - fixed width */
+.filter-bar-bar > .filter-button-container {
+  flex: 0 0 auto;
+}
+
+.filter-bar-bar .utrecht-select,
+.filter-bar-bar .utrecht-textbox,
+.filter-bar-bar .utrecht-button {
+  height: 3rem;
+}
+
+.filter-bar-bar .utrecht-button {
+  min-width: 110px;
+  position: relative;
+}
+
+/* Modal overlay - hidden by default */
+.modal-overlay {
+  display: none;
+}
+
+/* Modal close button styling */
+.modal-close {
+  background: none;
+  border: none;
+  padding: 0.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--rvo-color-logoblauw, #154273);
+  transition: background-color 0.2s ease;
+}
+
+.modal-close:hover {
+  background-color: var(--rvo-color-grijs-200, #e6e6e6);
+}
+
+.modal-close .utrecht-icon {
+  width: 20px;
+  height: 20px;
+}
+
+/* Mobile: transform modal into sidebar */
+@media (max-width: 800px) {
+  /* Adjust filter bar layout on mobile */
+  .filter-bar-bar {
+    flex-wrap: wrap;
+  }
+
+  .filter-bar-bar > .search-field-wrapper {
+    flex: 1 1 100%;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .modal-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background-color: rgba(0, 0, 0, 0);
+    transition: background-color 0.3s ease;
+    pointer-events: none;
+  }
+
+  .modal-overlay[style*="display: flex"] {
+    background-color: rgba(0, 0, 0, 0.3);
+    pointer-events: auto;
+  }
+
+  .modal-overlay .modal-content {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    transform: translateX(-100%);
+    transition: transform var(--animation-duration) cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: none !important;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-overlay[style*="display: flex"] .modal-content {
+    transform: translateX(0);
+  }
+
+  /* Style modal header as sidebar header */
+  .modal-overlay .modal-header {
+    background: var(--rvo-color-grijs-100, #f3f3f3);
+    padding: var(--rvo-space-md);
+    border-bottom: 1px solid var(--rvo-color-grijs-300, #c4c4c4);
+  }
+
+  .modal-overlay .modal-body {
+    flex: 1;
+    overflow-y: auto;
+    background: var(--rvo-color-grijs-100, #f3f3f3);
+  }
+
+  .modal-overlay .modal-footer {
+    background: var(--rvo-color-grijs-100, #f3f3f3);
+    border-top: 1px solid var(--rvo-color-grijs-300, #c4c4c4);
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Filter Sidebar (placements page)
+   ---------------------------------------------------------------------------- */
+.filter-layout-wrapper {
+  display: flex;
+  gap: 1.5rem;
+  width: 100%;
+  align-items: flex-start;
+}
+
+.filter-sidebar {
+  flex: 0 0 var(--sidebar-width);
+  width: var(--sidebar-width);
+  background: var(--rvo-color-grijs-100);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  align-self: stretch;
+  min-height: calc(100vh - 176px);
+}
+
+/* Sidebar Header */
+.filter-sidebar-header {
+  padding: 1.5rem 1.5rem 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  min-width: var(--sidebar-width);
+}
+
+.filter-sidebar-header h2 {
+  margin: 0;
+  white-space: nowrap;
+}
+
+/* Filter Chips and Search Container - Horizontal Layout */
+.filter-chips-and-search-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 3rem;
+}
+
+.active-filters-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  align-items: center;
+}
+
+/* Sidebar Body */
+.filter-sidebar-body {
+  padding: 1.5rem;
+  flex: 0 0 auto;
+  min-width: var(--sidebar-width);
+}
+
+/* Date Range Field Styling */
+.filter-sidebar-date-range {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-sidebar-date-range > .rvo-label {
+  font-weight: var(--rvo-font-weight-bold, 700);
+}
+
+/* Main Content Area */
+.filter-main-content {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* Page Header Layout */
+.layout__main__header {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.header-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.header-row--between {
+  justify-content: space-between;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.results-count {
+  margin: 0;
+  font-size: var(--rvo-font-size-md, 1rem);
+}
+
+.filter-chips-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  flex: 1;
+}
+
+/* Search Form */
+.filter-search-form {
+  flex: 0 0 auto;
+  width: 350px;
+}
+
+/* Responsive Design */
+@media (max-width: 800px) {
+  .filter-layout-wrapper {
+    flex-direction: column;
+  }
+
+  .filter-sidebar {
+    flex: 0 0 auto;
+    width: 100%;
+    max-height: none;
+    position: relative;
+    top: 0;
+  }
+
+  .header-row--between {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .filter-search-form {
+    flex: 1;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+   Checkbox Filter (inline checkboxes with toggle and counters)
+   ---------------------------------------------------------------------------- */
+.checkbox-filter {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.checkbox-filter__label {
+  margin-bottom: 0.25rem;
+}
+
+.checkbox-filter__options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.checkbox-filter__options[hidden] {
+  display: none;
+}
+
+.checkbox-filter__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  padding: 0.2rem 0;
+}
+
+.checkbox-filter__option:hover {
+  color: var(--rvo-color-hemelblauw);
+}
+
+.checkbox-filter__option .rvo-checkbox__input {
+  flex-shrink: 0;
+}
+
+.checkbox-filter__option-text {
+  flex: 1;
+  font-size: var(--rvo-font-size-md);
+}
+
+.checkbox-filter__count {
+  font-size: var(--rvo-font-size-sm);
+  color: var(--rvo-color-grijs-600);
+  flex-shrink: 0;
+}
+
+/* Toggle button — styled as rvo-link */
+.checkbox-filter__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  margin-top: 0.25rem;
+}
+
+.checkbox-filter__toggle-icon {
+  transition: transform 0.2s ease;
+}
+
+.checkbox-filter__toggle--expanded .checkbox-filter__toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* Hidden inputs */
+.checkbox-filter__hidden-inputs {
+  display: none;
+}
+
+/* ----------------------------------------------------------------------------
+   Multiselect (dropdown with checkboxes)
+   ---------------------------------------------------------------------------- */
+.multiselect {
+  position: relative; /* anchor for ::before/::after chevron */
+}
+
+.multiselect__trigger {
+  width: 100%;
+  cursor: pointer;
+  text-align: left;
+  padding-inline-end: 46px;
+}
+
+.multiselect__trigger-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Blue square + white chevron — matches rvo-select-wrapper */
+.multiselect::before {
+  content: "";
+  display: block;
+  position: absolute;
+  right: 7px;
+  top: 7px;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--rvo-border-radius-sm);
+  background-color: var(--rvo-select-icon-background-color);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.multiselect::after {
+  content: "";
+  display: block;
+  position: absolute;
+  right: 16px;
+  top: 7px;
+  width: 13px;
+  height: 32px;
+  background-color: white;
+  mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
+  mask-repeat: no-repeat;
+  mask-size: 100%;
+  mask-position: center;
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Dropdown panel — fixed to escape overflow:hidden parents (modals) */
+.multiselect__dropdown {
+  position: fixed;
+  z-index: 10000;
+  background: var(--rvo-color-wit);
+  border: 1px solid var(--rvo-color-grijs-400);
+  border-top: none;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.multiselect__clear {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-bottom: 1px solid var(--rvo-color-grijs-300);
+  font-size: var(--rvo-font-size-md);
+  background: none;
+  color: var(--rvo-color-hemelblauw);
+  cursor: pointer;
+  text-align: left;
+}
+
+.multiselect__clear:hover {
+  background-color: var(--rvo-color-grijs-100);
+}
+
+.multiselect__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+}
+
+.multiselect__option:hover {
+  background-color: var(--rvo-color-grijs-100);
+}
+
+.multiselect__option .rvo-checkbox__input {
+  flex-shrink: 0;
+}
+
+.multiselect__option .rvo-text {
+  flex: 1;
+  font-size: var(--rvo-font-size-md);
+}
+
+.multiselect__hidden-inputs {
+  display: none;
+}

@@ -668,11 +668,6 @@ class UserListView(PermissionRequiredMixin, ListView):
         return context
 
 
-def _user_form_context(form, **extra):
-    """Build render context for user form modal."""
-    return {"content": form, **extra}
-
-
 @permission_required("core.add_user", raise_exception=True)
 def user_create(request):
     """Handle user creation - GET returns form modal, POST processes creation"""
@@ -687,14 +682,14 @@ def user_create(request):
         return render(
             request,
             "parts/user_form_modal.html",
-            _user_form_context(
-                form,
-                form_post_url=form_post_url,
-                modal_title=modal_title,
-                form_button_label="Toevoegen",
-                modal_element_id=element_id,
-                target_element_id=element_id,
-            ),
+            {
+                "content": form,
+                "form_post_url": form_post_url,
+                "modal_title": modal_title,
+                "form_button_label": "Toevoegen",
+                "modal_element_id": element_id,
+                "target_element_id": element_id,
+            },
         )
     if request.method == "POST":
         form = UserForm(request.POST)
@@ -718,14 +713,14 @@ def user_create(request):
         return render(
             request,
             "parts/user_form_modal.html",
-            _user_form_context(
-                form,
-                form_post_url=form_post_url,
-                modal_title=modal_title,
-                form_button_label="Toevoegen",
-                modal_element_id=element_id,
-                target_element_id=element_id,
-            ),
+            {
+                "content": form,
+                "form_post_url": form_post_url,
+                "modal_title": modal_title,
+                "form_button_label": "Toevoegen",
+                "modal_element_id": element_id,
+                "target_element_id": element_id,
+            },
         )
     return HttpResponse(status=405)
 
@@ -744,17 +739,17 @@ def user_edit(request, pk):
         return render(
             request,
             "parts/user_form_modal.html",
-            _user_form_context(
-                form,
-                form_post_url=form_post_url,
-                modal_title=modal_title,
-                form_button_label="Opslaan",
-                modal_element_id=element_id,
-                target_element_id=element_id,
+            {
+                "content": form,
+                "form_post_url": form_post_url,
+                "modal_title": modal_title,
+                "form_button_label": "Opslaan",
+                "modal_element_id": element_id,
+                "target_element_id": element_id,
                 **get_delete_context(
                     "user-delete", edited_user.pk, f"{edited_user.first_name} {edited_user.last_name}"
                 ),
-            ),
+            },
         )
     if request.method == "POST":
         form = UserForm(request.POST, instance=edited_user)
@@ -779,17 +774,17 @@ def user_edit(request, pk):
         return render(
             request,
             "parts/user_form_modal.html",
-            _user_form_context(
-                form,
-                form_post_url=form_post_url,
-                modal_title=modal_title,
-                form_button_label="Opslaan",
-                modal_element_id=element_id,
-                target_element_id=element_id,
+            {
+                "content": form,
+                "form_post_url": form_post_url,
+                "modal_title": modal_title,
+                "form_button_label": "Opslaan",
+                "modal_element_id": element_id,
+                "target_element_id": element_id,
                 **get_delete_context(
                     "user-delete", edited_user.pk, f"{edited_user.first_name} {edited_user.last_name}"
                 ),
-            ),
+            },
         )
     return HttpResponse(status=405)
 

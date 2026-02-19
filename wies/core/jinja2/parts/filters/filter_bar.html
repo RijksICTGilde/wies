@@ -1,14 +1,10 @@
 {#
 Usage:
 {% with url_name="placements", target_selector="#placement-content" %}
-  {% include "parts/generic_filter_bar.html" %}
+  {% include "parts/filters/filter_bar.html" %}
 {% endwith %}
 #}
-<link rel="stylesheet" href="{{ static('css/filters.css') }}">
-<link rel="stylesheet" href="{{ static('css/generic_filter_bar.css') }}">
-<link rel="stylesheet" href="{{ static('css/multi_select.css') }}">
-<script src="{{ static('js/multi_select.js') }}"></script>
-{# Generic Compact Filters Section #}
+{# Compact Filters Section #}
 <form class="rvo-form filter-bar"
       hx-get="{{ url(url_name) }}"
       hx-target="{{ target_selector }}"
