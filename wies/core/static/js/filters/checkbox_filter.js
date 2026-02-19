@@ -46,7 +46,7 @@
           if (toggle) {
             toggle.classList.add("checkbox-filter__toggle--expanded");
             var textEl = toggle.querySelector(".checkbox-filter__toggle-text");
-            if (textEl) textEl.textContent = "Minder";
+            if (textEl) textEl.textContent = "Toon minder";
           }
         }
       });
@@ -69,7 +69,7 @@
     true,
   ); // capture phase
 
-  // Toggle "Meer"/"Minder" via event delegation
+  // Toggle "Toon meer"/"Toon minder" via event delegation
   document.addEventListener("click", function (e) {
     var toggleBtn = e.target.closest(".checkbox-filter__toggle");
     if (!toggleBtn) return;
@@ -84,7 +84,7 @@
     extraOptions.hidden = isExpanded;
     var textEl = toggleBtn.querySelector(".checkbox-filter__toggle-text");
     if (textEl) {
-      textEl.textContent = isExpanded ? "Meer" : "Minder";
+      textEl.textContent = isExpanded ? "Toon meer" : "Toon minder";
     }
     toggleBtn.classList.toggle(
       "checkbox-filter__toggle--expanded",
