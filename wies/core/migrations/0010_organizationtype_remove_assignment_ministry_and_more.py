@@ -110,6 +110,14 @@ class Migration(migrations.Migration):
                         verbose_name="Bronpagina",
                     ),
                 ),
+                (
+                    "is_active",
+                    models.BooleanField(
+                        default=True,
+                        help_text="Geeft aan of de organisatie nog actief is.",
+                        verbose_name="Actief",
+                    ),
+                ),
                 ("organization_types", models.ManyToManyField(blank=True, to="core.organizationtype")),
                 (
                     "parent",
@@ -167,5 +175,9 @@ class Migration(migrations.Migration):
         migrations.AddIndex(
             model_name="organizationunit",
             index=models.Index(fields=["parent"], name="core_organi_parent__64d754_idx"),
+        ),
+        migrations.AddIndex(
+            model_name="organizationunit",
+            index=models.Index(fields=["is_active"], name="core_organi_is_acti_d3dfb4_idx"),
         ),
     ]

@@ -14,6 +14,7 @@ import requests
 from django.utils import timezone
 
 from wies.core.models import OrganizationType, OrganizationUnit
+from wies.core.services.events import create_event
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +55,7 @@ class SyncResult:
     created: int = 0
     updated: int = 0
     unchanged: int = 0
+    deactivated: int = 0
     errors: list[str] = field(default_factory=list)
 
     def __add__(self, other: "SyncResult") -> "SyncResult":
@@ -62,6 +64,7 @@ class SyncResult:
             created=self.created + other.created,
             updated=self.updated + other.updated,
             unchanged=self.unchanged + other.unchanged,
+            deactivated=self.deactivated + other.deactivated,
             errors=self.errors + other.errors,
         )
 
@@ -71,8 +74,8 @@ def parse_organization_element(
 ) -> dict | None:
     """Parse a single organization element from XML.
 
-    Returns dict with organization data, including nested children.
-    Returns None if organization should be skipped (e.g., eindDatum in the past).
+    Returns dict with organization data, including nested children and is_active flag.
+    Returns None only for excluded organizations (e.g. intelligence services).
     """
     name = org_elem.findtext("p:naam", "", NS).strip()
     abbreviations = [a.text.strip() for a in org_elem.findall("p:afkorting", NS) if a.text]
@@ -81,15 +84,15 @@ def parse_organization_element(
     if _is_excluded_org(name, abbreviations):
         return None
 
-    # Skip organizations with eindDatum in the past (inactive/archived)
+    # Determine if organization is inactive based on eindDatum
+    is_active = True
     einddatum_elem = org_elem.find("p:eindDatum", NS)
     if einddatum_elem is not None and einddatum_elem.text:
         try:
             einddatum = datetime.fromisoformat(einddatum_elem.text.strip()).date()
             today = timezone.now().date()
             if einddatum < today:
-                # Organization is inactive, skip it and its children
-                return None
+                is_active = False
         except ValueError:
             # Invalid date format, log and continue processing
             logger.warning("Invalid eindDatum format for organization '%s': %s", name, einddatum_elem.text)
@@ -121,6 +124,9 @@ def parse_organization_element(
     for child_elem in org_elem.findall("p:organisaties/p:organisatie", NS):
         child_data = parse_organization_element(child_elem)
         if child_data:
+            # If parent is inactive, all children are also inactive
+            if not is_active:
+                child_data["is_active"] = False
             children.append(child_data)
 
     return {
@@ -133,15 +139,15 @@ def parse_organization_element(
         "source_url": source_url if source_url else None,
         "children": children,
         "related_ministry_tooi": related_ministry_tooi,
+        "is_active": is_active,
     }
 
 
-def parse_xml_hierarchical(xml_content: bytes, filter_types: list[str] | None = None) -> list[dict]:
+def parse_xml_hierarchical(xml_content: bytes) -> list[dict]:
     """Parse organizations from XML export with hierarchy.
 
     Args:
         xml_content: Raw XML bytes
-        filter_types: Optional list of root types to include (e.g., ["ministerie"])
 
     Returns:
         List of organization dicts with nested children
@@ -155,11 +161,6 @@ def parse_xml_hierarchical(xml_content: bytes, filter_types: list[str] | None = 
         if org_data is None:
             continue
 
-        # Filter by type if specified
-        # Check if any of the organization's types match the filter
-        if filter_types and not any(org_type in filter_types for org_type in org_data["org_type_names"]):
-            continue
-
         organizations.append(org_data)
 
     return organizations
@@ -170,6 +171,7 @@ def sync_organization_tree(
     parent: OrganizationUnit | None,
     *,
     dry_run: bool,
+    seen_ids: set[int] | None = None,
 ) -> SyncResult:
     """Recursively sync an organization and its children.
 
@@ -177,12 +179,14 @@ def sync_organization_tree(
         org_data: Dict with organization data and children
         parent: Parent OrganizationUnit (None for root)
         dry_run: If True, don't apply changes
+        seen_ids: Set to collect IDs of all orgs processed during sync
 
     Returns:
         SyncResult with counts
     """
     result = SyncResult()
     children = org_data.pop("children", [])
+    is_active = org_data.pop("is_active", True)
 
     # Find existing org by TOOI
     new_tooi = org_data.get("tooi_identifier")
@@ -201,6 +205,9 @@ def sync_organization_tree(
 
         # Search through all candidates to find one with matching types
         for candidate in candidates:
+            # Skip if both have TOOI but they differ (distinct organizations with same name)
+            if new_tooi and candidate.tooi_identifier and new_tooi != candidate.tooi_identifier:
+                continue
             # Skip if candidate has TOOI but incoming doesn't
             if not new_tooi and candidate.tooi_identifier:
                 continue
@@ -239,13 +246,22 @@ def sync_organization_tree(
             "oin_number": None,
             "system_id": org_data["system_id"],
             "source_url": org_data["source_url"],
+            "is_active": is_active,
         }
 
         if db_org:
-            has_changes = False
+            changes = {}
             for attribute, new_value in new_org_attributes.items():
-                if getattr(db_org, attribute) != new_value:
-                    has_changes = True
+                old_value = getattr(db_org, attribute)
+                if old_value != new_value:
+                    # Store parent as ID for JSON serialization
+                    if attribute == "parent":
+                        changes[attribute] = {
+                            "old": old_value.id if old_value else None,
+                            "new": new_value.id if new_value else None,
+                        }
+                    else:
+                        changes[attribute] = {"old": old_value, "new": new_value}
                 if not dry_run:
                     setattr(db_org, attribute, new_value)
 
@@ -255,20 +271,43 @@ def sync_organization_tree(
                 current_pks = set(getattr(db_org, m2m_field).values_list("pk", flat=True))
                 new_pks = {obj.pk for obj in new_value}
                 if current_pks != new_pks:
-                    has_changes = True
+                    changes[m2m_field] = {"old": sorted(current_pks), "new": sorted(new_pks)}
                 if not dry_run:
                     getattr(db_org, m2m_field).set(new_value)
 
-            if has_changes:
+            if changes:
                 if not dry_run:
                     db_org.save()
                     logger.info("Updated: %s", db_org)
+                    create_event(
+                        "",
+                        "OrgSync.update",
+                        {
+                            "org_id": db_org.id,
+                            "tooi": db_org.tooi_identifier or "",
+                            "changes": changes,
+                        },
+                    )
                 result.updated += 1
             else:
                 result.unchanged += 1
 
             new_org = db_org
         else:
+            # Don't create new records for inactive organizations
+            if not is_active:
+                logger.debug("Skipping creation of inactive org: %s", org_data["name"])
+                # Still recurse children — they may have existing DB records to update
+                for child_data in children:
+                    child_result = sync_organization_tree(
+                        child_data,
+                        parent=None,
+                        dry_run=dry_run,
+                        seen_ids=seen_ids,
+                    )
+                    result = result + child_result
+                return result
+
             # Create new organization
             # Log why we're creating instead of matching
             if new_tooi:
@@ -292,6 +331,15 @@ def sync_organization_tree(
                 for m2m_field, value in m2m_fields.items():
                     getattr(new_org, m2m_field).set(value)
                 logger.info("Created: %s", new_org)
+                create_event(
+                    "",
+                    "OrgSync.create",
+                    {
+                        "org_id": new_org.id,
+                        "tooi": new_org.tooi_identifier or "",
+                        "name": new_org.name,
+                    },
+                )
             else:
                 new_org = None
             result.created += 1
@@ -302,12 +350,17 @@ def sync_organization_tree(
         result.errors.append(error_msg)
         return result
 
+    # Track this org as seen during sync
+    if seen_ids is not None and new_org is not None:
+        seen_ids.add(new_org.id)
+
     # Recursively sync children
     for child_data in children:
         child_result = sync_organization_tree(
             child_data,
             parent=db_org if dry_run else new_org,
             dry_run=dry_run,
+            seen_ids=seen_ids,
         )
         result = result + child_result
 
@@ -317,14 +370,13 @@ def sync_organization_tree(
 def sync_organizations(
     *,
     xml_content: bytes | None = None,
-    filter_type: str | None = None,
+    url: str | None = None,
     dry_run: bool = False,
 ) -> SyncResult:
     """Sync organizations from XML to database.
 
     Args:
         xml_content: XML bytes (downloads from URL if not provided)
-        filter_type: Only sync this XML type (e.g., "Ministerie")
         dry_run: If True, don't apply changes
 
     Returns:
@@ -334,35 +386,58 @@ def sync_organizations(
 
     # Fetch XML if not provided
     if xml_content is None:
-        logger.info("Fetching organizations from %s", ORGANISATIES_OVERHEID_URL)
+        fetch_url = url or ORGANISATIES_OVERHEID_URL
+        logger.info("Fetching organizations from %s", fetch_url)
 
-        response = requests.get(ORGANISATIES_OVERHEID_URL, timeout=120)
+        response = requests.get(fetch_url, timeout=120)
         if response.status_code == 200:  # noqa: PLR2004 (status code is not magic)
             xml_content = response.content
         else:
             logger.error("Unable to get xml content")
             return None
 
-    # Determine which types to sync
-    filter_types = None
-    if filter_type:
-        filter_types = [filter_type]
-    # TODO: seems superfluous / weird
-
     # Parse XML with hierarchy
-    organizations = parse_xml_hierarchical(xml_content, filter_types)
+    organizations = parse_xml_hierarchical(xml_content)
     logger.info("Parsed %d root organizations from XML", len(organizations))
 
     # Sync each organization tree
+    seen_ids: set[int] = set()
     for org_data in organizations:
-        org_result = sync_organization_tree(org_data, parent=None, dry_run=dry_run)
+        org_result = sync_organization_tree(org_data, parent=None, dry_run=dry_run, seen_ids=seen_ids)
         result = result + org_result
 
+    # Deactivate external orgs not seen during a full sync
+    if not dry_run and seen_ids:
+        orgs_to_deactivate = list(
+            OrganizationUnit.objects.filter(is_active=True)
+            .exclude(source_url="")
+            .exclude(source_url__isnull=True)
+            .exclude(id__in=seen_ids)
+            .values_list("id", "tooi_identifier", "name")
+        )
+        if orgs_to_deactivate:
+            OrganizationUnit.objects.filter(id__in=[org[0] for org in orgs_to_deactivate]).update(is_active=False)
+            for org_id, tooi, name in orgs_to_deactivate:
+                create_event(
+                    "",
+                    "OrgSync.deactivate",
+                    {
+                        "org_id": org_id,
+                        "tooi": tooi or "",
+                        "name": name,
+                        "reason": "not_seen_in_sync",
+                    },
+                )
+        result.deactivated = len(orgs_to_deactivate)
+        if orgs_to_deactivate:
+            logger.info("Deactivated %d external orgs not seen in sync", len(orgs_to_deactivate))
+
     logger.info(
-        "Sync completed: created=%s, updated=%s, unchanged=%s",
+        "Sync completed: created=%s, updated=%s, unchanged=%s, deactivated=%s",
         result.created,
         result.updated,
         result.unchanged,
+        result.deactivated,
     )
 
     return result

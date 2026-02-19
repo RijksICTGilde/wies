@@ -10,7 +10,7 @@
   {% macro render_tree(children) %}
     <ul class="org-tree__list">
       {% for child in children %}
-        <li class="org-tree__item">
+        <li class="org-tree__item{% if not child.is_active %} org-tree__item--inactive{% endif %}">
           {% if child.tree_children %}
             <details class="org-tree__details">
               <summary class="org-tree__summary">
@@ -18,6 +18,7 @@
                       aria-hidden="true"></span>
                 <span class="org-tree__label">{{ child.label or child.name }}</span>
                 {% if child.abbreviations %}<span class="org-tree__abbr">({{ child.abbreviations[0] }})</span>{% endif %}
+                {% if not child.is_active %}<span class="org-tree__badge--inactive">(inactief)</span>{% endif %}
               </summary>
               {{ render_tree(child.tree_children) }}
             </details>
@@ -25,6 +26,7 @@
             <span class="org-tree__leaf">
               <span class="org-tree__label">{{ child.label or child.name }}</span>
               {% if child.abbreviations %}<span class="org-tree__abbr">({{ child.abbreviations[0] }})</span>{% endif %}
+              {% if not child.is_active %}<span class="org-tree__badge--inactive">(inactief)</span>{% endif %}
             </span>
           {% endif %}
         </li>

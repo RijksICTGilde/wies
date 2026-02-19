@@ -24,10 +24,9 @@ setup:
   docker compose run --rm django python manage.py createsuperuser --noinput
   docker compose run --rm django python manage.py add_developer_user
 
-# Generate and load full dummy data for performance testing (requires network or cached XML)
+# Generate full dummy data: sync organizations + create dummy colleagues/assignments/placements
 load-full-data:
-  docker compose run --rm django python scripts/generate_dummy_data.py
-  docker compose run --rm django python manage.py loaddata full_dummy_data
+  docker compose run --rm django python manage.py load_full_data
 
 # Start up container
 up:

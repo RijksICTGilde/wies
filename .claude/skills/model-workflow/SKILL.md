@@ -1,6 +1,6 @@
 ---
 name: model-workflow
-description: Django model change workflow for Wies. Use automatically when modifying models in wies/core/models.py to ensure generate_dummy_data.py is updated and migrations are mentioned.
+description: Django model change workflow for Wies. Use automatically when modifying models in wies/core/models.py to ensure load_full_data.py is updated and migrations are mentioned.
 ---
 
 # Model Change Workflow
@@ -10,8 +10,8 @@ When changing Django models in Wies, follow this workflow:
 ## Steps
 
 1. **Update model** in `wies/core/models.py`
-2. **Update `scripts/generate_dummy_data.py`** to match new model structure
-3. **If Skills changed**, regenerate base fixture: `python scripts/generate_dummy_data.py --small`
+2. **Update `wies/core/management/commands/load_full_data.py`** to match new model structure
+3. **If Skills changed**, regenerate base fixture via `just load-full-data`
 4. **Do NOT run makemigrations** - just mention "migration needed" to the user
 5. **Update forms** in `forms.py` if fields changed
 6. **Update views** if business logic affected
@@ -21,12 +21,12 @@ When changing Django models in Wies, follow this workflow:
 
 - `wies/core/fixtures/base_dummy_data.json` — small dataset, committed (generated with `--small`)
 - `wies/core/fixtures/full_dummy_data.json` — full dataset, gitignored (generated without flag)
-- `scripts/generate_dummy_data.py` — generates both fixtures
+- `wies/core/management/commands/load_full_data.py` — generates full dataset
 
 ## Checklist
 
 - [ ] Model updated
-- [ ] generate_dummy_data.py updated
+- [ ] load_full_data.py updated
 - [ ] Base fixture regenerated (if Skills changed)
 - [ ] Migration mentioned (not executed)
 - [ ] Forms updated (if needed)

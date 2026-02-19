@@ -963,7 +963,7 @@ def assignment_import_csv(request):
 @permission_required("core.view_organizationunit", raise_exception=True)
 def organization_admin(request):
     """Show all organization units in a collapsible tree, grouped by type."""
-    rows = OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations")
+    rows = OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations", "is_active")
 
     # Index all units as lightweight dicts
     units_by_id: dict[int, dict] = {}

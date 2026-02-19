@@ -334,12 +334,20 @@ class OrganizationUnit(models.Model):
         ),
     )
 
+    # === Status ===
+    is_active = models.BooleanField(
+        default=True,
+        verbose_name="Actief",
+        help_text="Geeft aan of de organisatie nog actief is.",
+    )
+
     class Meta:
         ordering = ["name"]
         verbose_name = "Organisatie-eenheid"
         verbose_name_plural = "Organisatie-eenheden"
         indexes = [
             models.Index(fields=["parent"]),
+            models.Index(fields=["is_active"]),
         ]
 
     def __str__(self):

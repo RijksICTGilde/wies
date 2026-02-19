@@ -64,7 +64,7 @@ wies/
 ├── config/
 │   └── settings/      # Django settings per environment
 ├── scripts/
-│   └── generate_dummy_data.py  # Generates dummy data fixtures
+│   └── load_full_data.py       # Generates dummy data fixtures
 └── wies/core/fixtures/
     └── base_dummy_data.json    # Small dev dataset (committed)
 ```

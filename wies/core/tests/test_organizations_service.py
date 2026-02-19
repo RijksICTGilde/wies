@@ -3,8 +3,8 @@ from pathlib import Path
 
 from django.test import TestCase
 
-from wies.core.models import OrganizationType, OrganizationUnit
-from wies.core.services.organizations import parse_xml_hierarchical, sync_organization_tree
+from wies.core.models import Event, OrganizationType, OrganizationUnit
+from wies.core.services.organizations import parse_xml_hierarchical, sync_organization_tree, sync_organizations
 
 
 class ParseXmlHierarchicalTest(TestCase):
@@ -22,8 +22,9 @@ class ParseXmlHierarchicalTest(TestCase):
         """Test that parsing returns a list"""
         result = parse_xml_hierarchical(self.xml_content)
         assert isinstance(result, list)
-        # 5 original + 1 future eindDatum + 2 same name different types (6001 filtered, 8001 filtered) = 8 active root orgs
-        assert len(result) == 8
+        # 5 original + 1 future eindDatum + 2 same name different types + 2 inactive (6001, 8001) = 10 root orgs
+        # (AIVD excluded completely)
+        assert len(result) == 10
 
     def test_ministry_label_generation(self):
         """Test that ministry without 'Ministerie' prefix gets it added"""
@@ -131,17 +132,6 @@ class ParseXmlHierarchicalTest(TestCase):
 
         assert org["related_ministry_tooi"] == ""
 
-    def test_filter_types_ministerie(self):
-        """Test that filter_types parameter filters correctly"""
-        result = parse_xml_hierarchical(self.xml_content, filter_types=["Ministerie"])
-
-        # Should only return ministries
-        assert len(result) == 2
-        assert all("Ministerie" in org["org_type_names"] for org in result)
-
-        names = {org["name"] for org in result}
-        assert names == {"Asiel en Migratie", "Ministerie van Buitenlandse Zaken"}
-
     def test_organization_types_extraction(self):
         """Test that organization types are correctly extracted"""
         result = parse_xml_hierarchical(self.xml_content)
@@ -163,29 +153,32 @@ class ParseXmlHierarchicalTest(TestCase):
         ministry = next(org for org in result if org["name"] == "Asiel en Migratie")
         assert ministry["system_id"] == "1001"
 
-    def test_filters_organizations_with_einddatum_in_past(self):
-        """Test that organizations with eindDatum in the past are filtered out"""
+    def test_inactive_org_has_is_active_false(self):
+        """Test that organizations with eindDatum in the past are returned with is_active=False"""
         result = parse_xml_hierarchical(self.xml_content)
 
-        # "Voormalige Testorganisatie" has eindDatum=2020-12-31, should be filtered
+        # "Voormalige Testorganisatie" has eindDatum=2020-12-31
         voormalige = [org for org in result if org["name"] == "Voormalige Testorganisatie"]
-        assert len(voormalige) == 0, "Organization with eindDatum in past should be filtered out"
+        assert len(voormalige) == 1, "Inactive org should be included in results"
+        assert voormalige[0]["is_active"] is False
 
     def test_keeps_organizations_with_einddatum_in_future(self):
-        """Test that organizations with eindDatum in the future are kept"""
+        """Test that organizations with eindDatum in the future have is_active=True"""
         result = parse_xml_hierarchical(self.xml_content)
 
-        # "Toekomstige Testorganisatie" has eindDatum=2099-12-31, should be kept
+        # "Toekomstige Testorganisatie" has eindDatum=2099-12-31, should be active
         toekomstig = [org for org in result if org["name"] == "Toekomstige Testorganisatie"]
-        assert len(toekomstig) == 1, "Organization with eindDatum in future should be kept"
+        assert len(toekomstig) == 1
+        assert toekomstig[0]["is_active"] is True
 
     def test_keeps_organizations_without_einddatum(self):
-        """Test that organizations without eindDatum are kept"""
+        """Test that organizations without eindDatum have is_active=True"""
         result = parse_xml_hierarchical(self.xml_content)
 
-        # "Asiel en Migratie" has no eindDatum, should be kept
+        # "Asiel en Migratie" has no eindDatum, should be active
         ministry = [org for org in result if org["name"] == "Asiel en Migratie"]
-        assert len(ministry) == 1, "Organization without eindDatum should be kept"
+        assert len(ministry) == 1
+        assert ministry[0]["is_active"] is True
 
     def test_filters_excluded_organizations(self):
         """Test that organizations with excluded names (intelligence services) are filtered out"""
@@ -208,17 +201,20 @@ class ParseXmlHierarchicalTest(TestCase):
         all_org_names = all_names(result)
         assert "directie Inlichtingen" not in all_org_names
 
-    def test_filters_inactive_parent_and_children(self):
-        """Test that inactive parent organizations also filter out their children"""
+    def test_inactive_parent_propagates_to_children(self):
+        """Test that inactive parent organizations propagate is_active=False to children"""
         result = parse_xml_hierarchical(self.xml_content)
 
-        # "Voormalig Directoraat" has eindDatum in past, should be filtered with children
+        # "Voormalig Directoraat" has eindDatum in past
         voormalig_dir = [org for org in result if org["name"] == "Voormalig Directoraat"]
-        assert len(voormalig_dir) == 0, "Inactive parent should be filtered"
+        assert len(voormalig_dir) == 1
+        assert voormalig_dir[0]["is_active"] is False
 
-        # Child should also not appear in any results
-        afdeling = [org for org in result if org["name"] == "Afdeling onder voormalig directoraat"]
-        assert len(afdeling) == 0, "Children of inactive parent should be filtered"
+        # Child should also be inactive
+        children = voormalig_dir[0]["children"]
+        assert len(children) == 1
+        assert children[0]["name"] == "Afdeling onder voormalig directoraat"
+        assert children[0]["is_active"] is False
 
 
 class SyncOrganizationTreeTest(TestCase):
@@ -230,8 +226,8 @@ class SyncOrganizationTreeTest(TestCase):
         super().setUpClass()
         fixture_path = Path(__file__).parent.parent / "fixtures" / "organizations_test_fixture.xml"
         with fixture_path.open("rb") as f:
-            xml_content = f.read()
-        cls.parsed_orgs = parse_xml_hierarchical(xml_content)
+            cls.xml_content = f.read()
+        cls.parsed_orgs = parse_xml_hierarchical(cls.xml_content)
 
     def setUp(self):
         """Clear database before each test"""
@@ -319,6 +315,7 @@ class SyncOrganizationTreeTest(TestCase):
             "source_url": "http://test.nl",
             "related_ministry_tooi": "",
             "children": [],
+            "is_active": True,
         }
 
         # First sync - creates the org
@@ -480,6 +477,7 @@ class SyncOrganizationTreeTest(TestCase):
             "source_url": "http://test.nl",
             "related_ministry_tooi": "",
             "children": [],
+            "is_active": True,
         }
 
         sync_organization_tree(org_data, parent=parent, dry_run=False)
@@ -698,3 +696,233 @@ class SyncOrganizationTreeTest(TestCase):
             name="Testorganisatie Meerdere Types", organization_types__name="Adviescollege"
         )
         assert agentschap_org.id != adviescollege_org.id
+
+    def test_does_not_merge_orgs_with_different_tooi(self):
+        """Test that two orgs with same name but different TOOIs are not merged"""
+        # Create existing org with one TOOI
+        existing = OrganizationUnit.objects.create(
+            name="Adviescollege toetsing regeldruk",
+            tooi_identifier="https://identifier.overheid.nl/tooi/id/oorg/oorg12362",
+            source_url="https://organisaties.overheid.nl/29819769/Adviescollege_toetsing_regeldruk/",
+        )
+
+        # Sync an org with same name but different TOOI
+        org_data = {
+            "name": "Adviescollege toetsing regeldruk",
+            "system_id": "28200254",
+            "label": "Adviescollege toetsing regeldruk",
+            "org_type_names": ["Adviescollege"],
+            "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10225",
+            "abbreviations": [],
+            "source_url": "https://organisaties.overheid.nl/28200254/Adviescollege_toetsing_regeldruk/",
+            "children": [],
+            "related_ministry_tooi": "",
+            "is_active": True,
+        }
+
+        result = sync_organization_tree(copy.deepcopy(org_data), parent=None, dry_run=False, seen_ids=set())
+
+        assert result.created == 1, "Should create a new org, not update the existing one"
+        assert OrganizationUnit.objects.count() == 2
+
+        # Existing org should be unchanged
+        existing.refresh_from_db()
+        assert existing.tooi_identifier == "https://identifier.overheid.nl/tooi/id/oorg/oorg12362"
+
+    # is_active handling
+
+    def test_updates_existing_org_to_inactive(self):
+        """Test that existing org with eindDatum in past gets is_active=False"""
+        org = OrganizationUnit.objects.create(
+            name="Voormalige Testorganisatie",
+            tooi_identifier="https://identifier.overheid.nl/tooi/id/oorg/oorg6001",
+            is_active=True,
+        )
+
+        parsed = parse_xml_hierarchical(self.xml_content)
+        voormalige = next(o for o in parsed if o["name"] == "Voormalige Testorganisatie")
+        sync_organization_tree(copy.deepcopy(voormalige), parent=None, dry_run=False, seen_ids=set())
+
+        org.refresh_from_db()
+        assert org.is_active is False
+
+    def test_does_not_create_new_inactive_org(self):
+        """Test that new org with is_active=False is NOT created"""
+        parsed = parse_xml_hierarchical(self.xml_content)
+        voormalige = next(o for o in parsed if o["name"] == "Voormalige Testorganisatie")
+
+        result = sync_organization_tree(copy.deepcopy(voormalige), parent=None, dry_run=False, seen_ids=set())
+
+        assert result.created == 0
+        assert OrganizationUnit.objects.filter(name="Voormalige Testorganisatie").count() == 0
+
+    def test_seen_ids_populated(self):
+        """Test that seen_ids set is populated during sync"""
+        ministry = next(o for o in self.parsed_orgs if o["name"] == "Asiel en Migratie")
+        seen_ids: set[int] = set()
+
+        sync_organization_tree(copy.deepcopy(ministry), parent=None, dry_run=False, seen_ids=seen_ids)
+
+        # ministry + DG + directie + afdeling = 4
+        assert len(seen_ids) == 4
+
+    def test_seen_ids_not_populated_for_skipped_inactive(self):
+        """Test that skipped inactive orgs don't add to seen_ids"""
+        parsed = parse_xml_hierarchical(self.xml_content)
+        voormalige = next(o for o in parsed if o["name"] == "Voormalige Testorganisatie")
+        seen_ids: set[int] = set()
+
+        sync_organization_tree(copy.deepcopy(voormalige), parent=None, dry_run=False, seen_ids=seen_ids)
+
+        assert len(seen_ids) == 0
+
+
+class SyncOrganizationsDeactivationTest(TestCase):
+    """Tests for deactivation of unseen external orgs after sync."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        fixture_path = Path(__file__).parent.parent / "fixtures" / "organizations_test_fixture.xml"
+        with fixture_path.open("rb") as f:
+            cls.xml_content = f.read()
+
+    def setUp(self):
+        OrganizationUnit.objects.all().delete()
+        OrganizationType.objects.all().delete()
+
+    def test_deactivates_unseen_external_orgs(self):
+        """Test that external orgs not in XML are deactivated after sync"""
+        ghost = OrganizationUnit.objects.create(
+            name="Ghost Org",
+            source_url="https://organisaties.overheid.nl/99999/Ghost_Org/",
+            is_active=True,
+        )
+
+        result = sync_organizations(xml_content=self.xml_content, dry_run=False)
+
+        ghost.refresh_from_db()
+        assert ghost.is_active is False
+        assert result.deactivated >= 1
+
+    def test_does_not_deactivate_manual_orgs(self):
+        """Test that manually added orgs (no source_url) are NOT deactivated"""
+        manual = OrganizationUnit.objects.create(
+            name="Manual Org",
+            source_url="",
+            is_active=True,
+        )
+
+        sync_organizations(xml_content=self.xml_content, dry_run=False)
+
+        manual.refresh_from_db()
+        assert manual.is_active is True
+
+    def test_does_not_deactivate_on_dry_run(self):
+        """Test that dry run doesn't deactivate orgs"""
+        ghost = OrganizationUnit.objects.create(
+            name="Ghost Org",
+            source_url="https://organisaties.overheid.nl/99999/Ghost_Org/",
+            is_active=True,
+        )
+
+        sync_organizations(xml_content=self.xml_content, dry_run=True)
+
+        ghost.refresh_from_db()
+        assert ghost.is_active is True
+
+
+class SyncEventLoggingTest(TestCase):
+    """Tests for event logging during organization sync."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        fixture_path = Path(__file__).parent.parent / "fixtures" / "organizations_test_fixture.xml"
+        with fixture_path.open("rb") as f:
+            cls.xml_content = f.read()
+
+    def setUp(self):
+        OrganizationUnit.objects.all().delete()
+        OrganizationType.objects.all().delete()
+        Event.objects.all().delete()
+
+    def test_create_event_logged(self):
+        """Test that creating a new org logs an OrgSync.create event"""
+        parsed = parse_xml_hierarchical(self.xml_content)
+        ministry = next(o for o in parsed if o["name"] == "Asiel en Migratie")
+
+        sync_organization_tree(copy.deepcopy(ministry), parent=None, dry_run=False, seen_ids=set())
+
+        create_events = Event.objects.filter(name="OrgSync.create")
+        assert create_events.count() >= 1
+        event = create_events.first()
+        assert event.user_email == ""
+        assert "org_id" in event.context
+        assert "name" in event.context
+
+    def test_update_event_logged(self):
+        """Test that updating an existing org logs an OrgSync.update event with changes"""
+        org = OrganizationUnit.objects.create(
+            name="Old Name",
+            tooi_identifier="https://identifier.overheid.nl/tooi/id/ministerie/mnre1001",
+            is_active=True,
+        )
+
+        parsed = parse_xml_hierarchical(self.xml_content)
+        ministry = next(o for o in parsed if o["name"] == "Asiel en Migratie")
+
+        sync_organization_tree(copy.deepcopy(ministry), parent=None, dry_run=False, seen_ids=set())
+
+        update_events = Event.objects.filter(name="OrgSync.update")
+        assert update_events.count() == 1
+        event = update_events.first()
+        assert event.context["org_id"] == org.id
+        assert "name" in event.context["changes"]
+        assert event.context["changes"]["name"]["old"] == "Old Name"
+        assert event.context["changes"]["name"]["new"] == "Asiel en Migratie"
+
+    def test_deactivate_event_logged(self):
+        """Test that deactivating unseen orgs logs OrgSync.deactivate events"""
+        ghost = OrganizationUnit.objects.create(
+            name="Ghost Org",
+            source_url="https://organisaties.overheid.nl/99999/Ghost_Org/",
+            is_active=True,
+        )
+
+        sync_organizations(xml_content=self.xml_content, dry_run=False)
+
+        deactivate_events = Event.objects.filter(name="OrgSync.deactivate")
+        assert deactivate_events.count() >= 1
+        ghost_event = deactivate_events.filter(context__org_id=ghost.id).first()
+        assert ghost_event is not None
+        assert ghost_event.context["name"] == "Ghost Org"
+        assert ghost_event.context["reason"] == "not_seen_in_sync"
+
+    def test_no_events_on_dry_run(self):
+        """Test that dry run does not create any sync events"""
+        OrganizationUnit.objects.create(
+            name="Ghost Org",
+            source_url="https://organisaties.overheid.nl/99999/Ghost_Org/",
+            is_active=True,
+        )
+
+        sync_organizations(xml_content=self.xml_content, dry_run=True)
+
+        sync_events = Event.objects.filter(name__startswith="OrgSync.")
+        assert sync_events.count() == 0
+
+    def test_no_event_when_unchanged(self):
+        """Test that no update event is logged when org data hasn't changed"""
+        parsed = parse_xml_hierarchical(self.xml_content)
+        ministry = next(o for o in parsed if o["name"] == "Asiel en Migratie")
+
+        # First sync creates the org
+        sync_organization_tree(copy.deepcopy(ministry), parent=None, dry_run=False, seen_ids=set())
+        Event.objects.all().delete()
+
+        # Second sync with same data should not log update
+        sync_organization_tree(copy.deepcopy(ministry), parent=None, dry_run=False, seen_ids=set())
+
+        update_events = Event.objects.filter(name="OrgSync.update")
+        assert update_events.count() == 0

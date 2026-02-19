@@ -54,3 +54,13 @@ details[open] > .org-tree__summary > .org-tree__chevron {
   color: var(--rvo-color-hemelblauw, #666);
   font-size: 0.875rem;
 }
+
+.org-tree__item--inactive .org-tree__label {
+  color: var(--rvo-color-grijs-500, #64748b);
+  font-style: italic;
+}
+
+.org-tree__badge--inactive {
+  color: var(--rvo-color-grijs-500, #64748b);
+  font-size: 0.85em;
+}

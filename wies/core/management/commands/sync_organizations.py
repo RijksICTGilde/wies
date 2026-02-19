@@ -17,10 +17,13 @@ class Command(BaseCommand):
         super().__init__(*args, **kwargs)
         self.result = None
 
+    def add_arguments(self, parser):
+        parser.add_argument("--url", type=str, help="Custom XML URL (e.g. a dated archive)")
+
     def handle(self, *args, **options):
         """Execute organization sync and store result in self.result."""
         try:
-            result = sync_organizations()
+            result = sync_organizations(url=options.get("url"))
         except Exception as e:
             logger.exception("Sync failed")
 
