@@ -9,12 +9,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if (panel) {
       panel.showModal();
 
-      // Handle ESC key to close panel completely
-      panel.addEventListener("keydown", function (e) {
-        if (e.key === "Escape") {
-          e.preventDefault(); // Prevent default dialog close
-          closePanelWithFilters();
-        }
+      // Trigger animation after a tiny delay to ensure initial state is rendered
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          panel.classList.add("opening");
+        });
       });
     }
   } else {
@@ -24,15 +23,43 @@ document.addEventListener("DOMContentLoaded", function () {
 
   // Close panel with filter preservation
   function closePanelWithFilters() {
-    const url = new URL(window.location);
-    url.searchParams.delete("collega");
-    url.searchParams.delete("opdracht");
-    window.location.href = url.toString();
+    const panel = document.getElementById("side_panel");
+    if (panel) {
+      // Add closing class for animation
+      panel.classList.add("closing");
+
+      // Wait for animation to finish before navigating
+      setTimeout(
+        () => {
+          const url = new URL(window.location);
+          url.searchParams.delete("collega");
+          url.searchParams.delete("opdracht");
+          window.location.href = url.toString();
+        },
+        parseInt(
+          getComputedStyle(document.documentElement).getPropertyValue(
+            "--animation-duration-ms",
+          ),
+        ) || 400,
+      );
+    } else {
+      // Fallback if panel doesn't exist
+      const url = new URL(window.location);
+      url.searchParams.delete("collega");
+      url.searchParams.delete("opdracht");
+      window.location.href = url.toString();
+    }
   }
 
   // Handle close button clicks
   const panel = document.getElementById("side_panel");
   if (panel) {
+    // Handle ESC: prevent native dialog close, navigate instead
+    panel.addEventListener("cancel", function (e) {
+      e.preventDefault();
+      closePanelWithFilters();
+    });
+
     const closeBtn = panel.querySelector(".modal-close-button");
     if (closeBtn) {
       closeBtn.addEventListener("click", function (e) {
