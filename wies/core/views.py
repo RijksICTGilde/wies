@@ -189,7 +189,7 @@ class PlacementListView(ListView):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
         qs = (
             Placement.objects.select_related("colleague", "service", "service__skill")
-            .prefetch_related("colleague__labels")
+            .prefetch_related("colleague__labels", "service__assignment__organizations")
             .filter(service__assignment__status="INGEVULD")
             .order_by("-service__assignment__start_date")
         )
