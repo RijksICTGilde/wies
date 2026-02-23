@@ -426,15 +426,19 @@ class PlacementListView(ListView):
             }
 
         # Organization filter (multi-select via modal)
+        active_org_filter_count = 0
         org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
         org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
         org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
         if org_filter:
             active_filters["org"] = org_filter
+            active_org_filter_count += len(org_filter)
         if org_self_filter:
             active_filters["org_self"] = org_self_filter
+            active_org_filter_count += len(org_self_filter)
         if org_type_filter:
             active_filters["org_type"] = org_type_filter
+            active_org_filter_count += len(org_type_filter)
 
         # Build chip display data for org filters
         org_chip_data: list[dict] = []
@@ -505,6 +509,7 @@ class PlacementListView(ListView):
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
+        context["active_org_filter_count"] = active_org_filter_count
         context["org_chip_data"] = org_chip_data
 
         # TODO: this can be become an object to help defining correctly and performing extra preprocessing on context

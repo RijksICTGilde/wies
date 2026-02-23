@@ -42,7 +42,24 @@
       {% for filter_group in filter_groups %}
         {% if filter_group.name == 'organisatie' %}
           <span class="rvo-label filter-sidebar-label">{{ filter_group.label }}</span>
-          <c-button kind="secondary" icon="delta-naar-rechts" iconPlacement="after" hx-get="{{ url('client-modal') }}" hx-target="#clientModalContainer" hx-swap="innerHTML" hx-push-url="false" hx-include="#org-filter-inputs">Selecteer</c-button>
+          <button id="org-filter-button"
+                  class="utrecht-button utrecht-button--rvo-md utrecht-button--icon-after utrecht-button--secondary-action"
+                  data-roos-component="button"
+                  type="button"
+                  hx-get="/client-modal/"
+                  hx-target="#clientModalContainer"
+                  hx-swap="innerHTML"
+                  hx-push-url="false"
+                  hx-include="#org-filter-inputs">
+            {% if active_org_filter_count == 0 %}
+              &nbsp
+            {% else %}
+              Opdrachtgever(s) geselecteerd
+            {% endif %}
+            <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--md rvo-icon--wit"
+                  role="img"
+                  aria-label=""></span>
+          </button>
         {% elif filter_group.type == 'select' %}
           <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
         {% elif filter_group.type == 'date_range' %}

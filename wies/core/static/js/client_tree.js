@@ -296,6 +296,7 @@
       var dialog = document.getElementById("clientModal");
       if (dialog) dialog.close();
 
+      updateOrgFilterButtonText();
       if (sidebarForm) {
         htmx.trigger(sidebarForm, "change");
       }

@@ -22,6 +22,20 @@ function toggleFilters() {
 // Shared utilities
 // ============================================================================
 
+function updateOrgFilterButtonText() {
+  const button = document.getElementById("org-filter-button");
+  if (!button) return;
+  const count = document.querySelectorAll(
+    '#org-filter-inputs input[type="hidden"]',
+  ).length;
+  const iconSpan = button.querySelector("span");
+  Array.from(button.childNodes).forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE) node.remove();
+  });
+  const text = count === 0 ? "\u00A0" : "Opdrachtgever(s) geselecteerd";
+  button.insertBefore(document.createTextNode(text), iconSpan);
+}
+
 function removeFilter(formSelector, filterName, filterType, filterValue) {
   const form = document.querySelector(formSelector);
   if (!form) return;
@@ -80,6 +94,7 @@ function clearAllFilters(formSelector) {
 
   const orgInputsContainer = document.getElementById("org-filter-inputs");
   if (orgInputsContainer) orgInputsContainer.innerHTML = "";
+  updateOrgFilterButtonText();
 
   form.querySelectorAll("[data-filter-input]").forEach((input) => {
     if (input.tagName === "SELECT") {
@@ -190,6 +205,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.addEventListener("htmx:afterSwap", function (event) {
       if (event.detail.target.id === "filter-and-table-container") {
         setupDateRangeListeners(sidebarFormSelector);
+        updateOrgFilterButtonText();
       }
     });
   }
