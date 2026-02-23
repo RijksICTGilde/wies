@@ -217,15 +217,9 @@ li.client-tree-node.self-node > label {
   font-weight: 600;
   font-style: normal;
   border-radius: 9px;
-  background: var(--rvo-color-grijs-200, #e8ecf0);
   color: var(--rvo-color-grijs-600, #5d6d7e);
   flex-shrink: 0;
   margin-left: auto;
-}
-
-li.client-tree-node.checked > label > .client-placement-badge {
-  background: #d4e8f7;
-  color: var(--rvo-color-logoblauw, #2980b9);
 }
 
 /* Checked highlight */

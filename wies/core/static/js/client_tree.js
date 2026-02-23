@@ -74,7 +74,7 @@
     if (node.nr_of_placements !== undefined) {
       var badge = document.createElement("span");
       badge.className = "client-placement-badge";
-      badge.textContent = node.nr_of_placements;
+      badge.textContent = "(" + node.nr_of_placements + ")";
       label.appendChild(badge);
     }
 

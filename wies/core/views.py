@@ -513,12 +513,12 @@ class PlacementListView(ListView):
             {
                 "type": "modal",
                 "name": "organisatie",
-                "label": "Organisatie",
+                "label": "Opdrachtgever",
             },
             {
                 "type": "select",
                 "name": "rol",
-                "label": "Rollen",
+                "label": "Rol",
                 "options": skill_options,
                 "value": skill_value,
             },
