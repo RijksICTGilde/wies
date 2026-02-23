@@ -2,6 +2,7 @@
 {% block extra_head %}
   <link rel="stylesheet" href="{{ static('css/admin_organizations.css') }}">
   <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
+  <link rel="stylesheet" href="{{ static('css/filters.css') }}">
 {% endblock extra_head %}
 {% block sidebar %}
   {% include "parts/admin_sidebar.html" %}
@@ -10,7 +11,9 @@
   {% macro render_tree(children) %}
     <ul class="org-tree__list">
       {% for child in children %}
-        <li class="org-tree__item{% if not child.is_active %} org-tree__item--inactive{% endif %}">
+        <li class="org-tree__item{% if not child.is_active %} org-tree__item--inactive{% endif %}"
+            data-label="{{ (child.label or child.name)|lower }}"
+            {% if child.abbreviations %}data-abbr="{{ child.abbreviations|join(',') |lower }}"{% endif %}>
           {% if child.tree_children %}
             <details class="org-tree__details">
               <summary class="org-tree__summary">
@@ -24,6 +27,7 @@
             </details>
           {% else %}
             <span class="org-tree__leaf">
+              <span class="org-tree__chevron-spacer"></span>
               <span class="org-tree__label">{{ child.label or child.name }}</span>
               {% if child.abbreviations %}<span class="org-tree__abbr">({{ child.abbreviations[0] }})</span>{% endif %}
               {% if not child.is_active %}<span class="org-tree__badge--inactive">(inactief)</span>{% endif %}
@@ -35,9 +39,15 @@
   {% endmacro %}
   <div class="rvo-layout-column rvo-layout-gap--xl">
     <c-h1>Organisaties</c-h1>
-    <ul class="org-tree__list org-tree__list--root">
+    <div class="search-field-wrapper" style="max-width: 400px;">
+      <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon" />
+      <c-input id="org-search" placeholder="Zoeken..." aria-label="Zoeken in organisaties" size />
+    </div>
+    <p id="org-search-empty" class="org-tree__empty" style="display: none;">Geen organisaties gevonden.</p>
+    <ul class="org-tree__list org-tree__list--root" id="org-tree-root">
       {% for type_name, units in type_groups %}
-        <li class="org-tree__item">
+        <li class="org-tree__item org-tree__item--group"
+            data-label="{{ type_name|lower }}">
           <details class="org-tree__details">
             <summary class="org-tree__summary">
               <span class="org-tree__chevron utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--sm"
@@ -51,4 +61,5 @@
       {% endfor %}
     </ul>
   </div>
+  <script src="{{ static('js/admin_org_search.js') }}"></script>
 {% endblock content %}
