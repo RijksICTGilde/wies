@@ -4,6 +4,7 @@ import time
 
 from django.core import management
 from django.core.management.base import BaseCommand
+from django.db import transaction
 from django.utils import timezone
 
 from wies.core.models import Task
@@ -45,16 +46,21 @@ class Command(BaseCommand):
             if expired_count > 0:
                 logger.warning("Marked %s expired task(s) as failed", expired_count)
 
-            # Fetch the oldest pending task
-            task = Task.objects.filter(status="pending").order_by("created_at").first()
+            # Fetch the oldest pending task and atomically claim it
+            with transaction.atomic():
+                task = Task.objects.filter(status="pending").order_by("created_at").first()
+                if task:
+                    claimed = Task.objects.filter(id=task.id, status="pending").update(
+                        status="running", started_at=timezone.now()
+                    )
+
+                    if not claimed:
+                        continue  # another worker got it
+
+                    task.refresh_from_db()
 
             if task:
                 logger.info("Processing task %s: %s", task.id, task.command)
-
-                # Mark task as running
-                task.status = "running"
-                task.started_at = timezone.now()
-                task.save(update_fields=["status", "started_at"])
 
                 # Instantiate and execute the management command for this task
                 # wrapped in try, except for extra protection. worker should not stop

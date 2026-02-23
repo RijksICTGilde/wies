@@ -60,7 +60,7 @@ def has_active_task(command: str) -> bool:
         return True
 
     # Check for running tasks that haven't expired
-    running_tasks = Task.objects.filter(command=command, status="running").select_for_update(skip_locked=True)
+    running_tasks = Task.objects.filter(command=command, status="running")
     return any(not task.is_expired() for task in running_tasks)
 
 
