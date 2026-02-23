@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 185: improve docker-compose: remove container names, handle SIGTERM/SIGINT
 - 185: introduce js testing. `just test` runs both, `just test django` / `just test js` run individually
 - 185: introduce tree visualization of organization structure on admin page
 - 185: introduce small starting dataset and add `just load-full-data` for loading large dataset
