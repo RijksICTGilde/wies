@@ -477,6 +477,15 @@ class Command(BaseCommand):
         rng = random.Random(42)  # noqa: S311
         today = datetime.now(tz=UTC).date()
 
+        # ── 0. Clean up existing dummy data ──────────────────────────────
+        self.stdout.write("Cleaning up existing data...")
+        Placement.objects.all().delete()
+        Service.objects.all().delete()
+        Assignment.objects.all().delete()
+        Colleague.objects.all().delete()
+        OrganizationUnit.objects.update(parent=None)
+        OrganizationUnit.objects.all().delete()
+
         # ── 1. Organizations (via sync service) ──────────────────────────
         self.stdout.write("Syncing organizations from organisaties.overheid.nl...")
         result = sync_organizations()

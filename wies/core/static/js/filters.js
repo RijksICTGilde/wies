@@ -32,7 +32,7 @@ function updateOrgFilterButtonText() {
   Array.from(button.childNodes).forEach((node) => {
     if (node.nodeType === Node.TEXT_NODE) node.remove();
   });
-  const text = count === 0 ? "\u00A0" : "Opdrachtgever(s) geselecteerd";
+  const text = count === 0 ? "" : "Opdrachtgever(s) geselecteerd";
   button.insertBefore(document.createTextNode(text), iconSpan);
 }
 
