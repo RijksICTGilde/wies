@@ -51,11 +51,7 @@
                   hx-swap="innerHTML"
                   hx-push-url="false"
                   hx-include="#org-filter-inputs">
-            {% if active_org_filter_count == 0 %}
-              &nbsp
-            {% else %}
-              Opdrachtgever(s) geselecteerd
-            {% endif %}
+            {% if active_org_filter_count > 0 %}Opdrachtgever(s) geselecteerd{% endif %}
             <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--md rvo-icon--wit"
                   role="img"
                   aria-label=""></span>

@@ -68,6 +68,7 @@
 
 #org-filter-button > .utrecht-icon {
   background-color: var(--rvo-color-logoblauw);
+  margin-inline-start: auto;
 }
 
 /* Date Range Field Styling */
