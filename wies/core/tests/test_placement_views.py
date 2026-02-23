@@ -850,3 +850,126 @@ class PlacementOrganizationFilterTest(TestCase):
 
         assert p_correct.id in ids, "Placement with correct org and skill should be included"
         assert p_wrong_skill.id not in ids, "Placement with wrong skill should be excluded"
+
+
+class PlacementSearchTest(TestCase):
+    """Tests for the 'zoek' search parameter in PlacementListView."""
+
+    def setUp(self):
+        self.auth_user = User.objects.create(
+            username="testuser",
+            email="test@rijksoverheid.nl",
+        )
+        self.skill = Skill.objects.create(name="Test Skill")
+        self.org = OrganizationUnit.objects.create(
+            name="Rijkswaterstaat",
+            label="RWS Hoofdkantoor",
+            abbreviations=["RWS"],
+        )
+
+    def _create_placement(self, colleague_name="Test Colleague", assignment_name="Test Assignment", org=None):
+        """Create an active placement with the given parameters."""
+        colleague = Colleague.objects.create(
+            name=colleague_name,
+            email=f"{colleague_name.replace(' ', '')}@rijksoverheid.nl",
+            source="wies",
+        )
+        assignment = Assignment.objects.create(
+            name=assignment_name,
+            status="INGEVULD",
+            source="wies",
+            start_date=date(2025, 1, 1),
+            end_date=date(2030, 1, 1),
+        )
+        if org:
+            AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=org)
+        service = Service.objects.create(
+            assignment=assignment,
+            description="Service",
+            skill=self.skill,
+            source="wies",
+        )
+        return Placement.objects.create(
+            colleague=colleague,
+            service=service,
+            period_source="ASSIGNMENT",
+            source="wies",
+        )
+
+    def _search(self, query):
+        factory = RequestFactory()
+        request = factory.get("/", {"zoek": query})
+        request.user = self.auth_user
+        view = PlacementListView()
+        view.request = request
+        return view.get_queryset()
+
+    def test_search_by_colleague_name(self):
+        p = self._create_placement(colleague_name="Jan de Vries")
+        qs = self._search("Jan de Vries")
+        assert p.id in list(qs.values_list("id", flat=True))
+
+    def test_search_by_assignment_name(self):
+        p = self._create_placement(assignment_name="Cloud Migratie Project")
+        qs = self._search("Cloud Migratie")
+        assert p.id in list(qs.values_list("id", flat=True))
+
+    def test_search_by_organization_name(self):
+        p = self._create_placement(org=self.org)
+        other = self._create_placement(colleague_name="Andere Collega")
+        qs = self._search("Rijkswaterstaat")
+        ids = list(qs.values_list("id", flat=True))
+        assert p.id in ids
+        assert other.id not in ids
+
+    def test_search_by_organization_label(self):
+        p = self._create_placement(org=self.org)
+        qs = self._search("RWS Hoofdkantoor")
+        assert p.id in list(qs.values_list("id", flat=True))
+
+    def test_search_by_organization_abbreviation(self):
+        p = self._create_placement(org=self.org)
+        qs = self._search("RWS")
+        assert p.id in list(qs.values_list("id", flat=True))
+
+    def test_search_by_organization_abbreviation_case_insensitive(self):
+        p = self._create_placement(org=self.org)
+        qs = self._search("rws")
+        assert p.id in list(qs.values_list("id", flat=True))
+
+    def test_search_no_duplicates_with_multiple_matching_orgs(self):
+        """Assignment with multiple matching orgs should return the placement only once."""
+        org2 = OrganizationUnit.objects.create(
+            name="RWS Oost-Nederland",
+            label="RWS ON",
+        )
+        colleague = Colleague.objects.create(
+            name="Duplicate Test",
+            email="dup@rijksoverheid.nl",
+            source="wies",
+        )
+        assignment = Assignment.objects.create(
+            name="Multi Org Assignment",
+            status="INGEVULD",
+            source="wies",
+            start_date=date(2025, 1, 1),
+            end_date=date(2030, 1, 1),
+        )
+        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=self.org)
+        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=org2)
+        service = Service.objects.create(
+            assignment=assignment,
+            description="Service",
+            skill=self.skill,
+            source="wies",
+        )
+        p = Placement.objects.create(
+            colleague=colleague,
+            service=service,
+            period_source="ASSIGNMENT",
+            source="wies",
+        )
+
+        qs = self._search("RWS")
+        ids = list(qs.values_list("id", flat=True))
+        assert ids.count(p.id) == 1, "Placement should appear exactly once despite multiple matching orgs"
