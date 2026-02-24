@@ -39,17 +39,25 @@ down:
 up-jrc-m:
   docker compose run -v /Users/matthijs/jinja-roos-components:/app/jinja-roos-components --service-ports django sh -c "uv pip install -e ./jinja-roos-components && python manage.py runserver 0.0.0.0:8000"
 
-# setup-production:
-#  docker build . -t wies
-#   # optionally: remove db-sqlite file
+# build for production:
+#
+# docker build --target web -t wies .
+#
+# docker build --target worker -t wies-worker .
 
-# up-production:
-#   echo "Starting up container..."
+# run like production:
+#
 # docker run --rm \
 # --env-file .env \
 # -p 8000:8000 \
 # -v ./db:/app/db \
 # wies
+#
+# docker run --rm \
+# --env-file .env \
+# -v ./db:/app/db \
+# wies-worker
+
 
 # Rebuild db
 rebuild-db:
