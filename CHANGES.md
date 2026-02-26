@@ -5,7 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 188: Scaling image on colleague card
-- ?: fix pagination
+- 201: fix pagination
 
 ## 2026-02-25
 
