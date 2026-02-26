@@ -121,7 +121,7 @@ dialog#side_panel.closing::backdrop {
 
 .card--horizontal {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: 100px 1fr;
 }
 
 .card--horizontal .card__image {
