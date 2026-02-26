@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ...
+- 188: Scaling image on colleague card
 
 ## 2026-02-25
 
@@ -38,7 +38,6 @@ This files lists the changes during the lifetime of this project.
 - 177: Add animations to panels and sidebar
 - 177: with env var SKIP_OIDC, skip login during development
 - 181: Bump django security release
-- 188: Scaling image on colleague card
 
 ## 2026-01-19
 
