@@ -64,7 +64,7 @@ RUN groupadd --gid 1000 app \
 # Install (required) system dependencies
 RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
   # Devcontainer dependencies and utils
-  sudo git bash-completion vim \
+  sudo git bash-completion vim libpq5 \
   # Cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
@@ -88,8 +88,6 @@ RUN rm -rf /app/docker && \
 
 # patch original faulty index.css
 RUN mv overwrite_index.css node_modules/@nl-rvo/assets/index.css
-
-RUN mkdir -p /data/db_data && chown -R app:app /data
 
 RUN python manage.py collectstatic
 

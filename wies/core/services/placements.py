@@ -150,7 +150,7 @@ def create_assignments_from_csv(csv_content: str):
                 ministry_name = row["assignment_ministry"]
                 if ministry_name != "":
                     ministry, created = Ministry.objects.get_or_create(
-                        name=ministry_name, defaults={"abbreviation": ministry_name}
+                        name=ministry_name, defaults={"abbreviation": ministry_name[:10]}
                     )
                     if created:
                         ministries_created += 1

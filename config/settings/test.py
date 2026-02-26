@@ -28,16 +28,6 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
 
-# DATABASE
-# ----------------------------------------------------------------------------------------------------------------------
-# Use in-memory SQLite for faster tests
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": ":memory:",
-    },
-}
-
 # CACHES
 # ----------------------------------------------------------------------------------------------------------------------
 CACHES = {

@@ -37,14 +37,12 @@ up-jrc-m:
 
 # setup-production:
 #  docker build . -t wies
-#   # optionally: remove db-sqlite file
 
 # up-production:
 #   echo "Starting up container..."
 # docker run --rm \
 # --env-file .env \
 # -p 8000:8000 \
-# -v ./db:/app/db \
 # wies
 
 # Rebuild db
