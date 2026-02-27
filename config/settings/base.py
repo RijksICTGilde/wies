@@ -89,6 +89,7 @@ DATABASES = {
         "HOST": os.environ.get("DATABASE_SERVER_HOST", "localhost"),
         "PORT": os.environ.get("DATABASE_SERVER_PORT", "5432"),
         "CONN_MAX_AGE": 60,
+        "CONN_HEALTH_CHECKS": True,
     }
 }
 

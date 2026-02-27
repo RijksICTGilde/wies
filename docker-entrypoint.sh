@@ -11,4 +11,4 @@ echo "Database is ready."
 python manage.py migrate
 python manage.py setup
 python manage.py createsuperuser --noinput
-gunicorn -b 0.0.0.0:8000 config.wsgi
+gunicorn -b 0.0.0.0:8000 -w 2 config.wsgi
