@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
+set -e
 
 echo "Waiting for database..."
-python manage.py check --database default 2>/dev/null
-while [ $? -ne 0 ]; do
+until python manage.py check --database default 2>/dev/null; do
   sleep 1
-  python manage.py check --database default 2>/dev/null
 done
 echo "Database is ready."
 
