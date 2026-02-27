@@ -4,7 +4,6 @@ Test settings for running pytest.
 Key differences from local:
 - DEBUG = False (like production)
 - Faster password hasher
-- In-memory SQLite database
 - No OIDC warnings
 """
 
