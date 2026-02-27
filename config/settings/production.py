@@ -49,7 +49,7 @@ LOGGING = {
 # DATABASE
 # ----------------------------------------------------------------------------------------------------------------------
 # Enable persistent connections in production (gunicorn workers, managed Postgres)
-DATABASES["default"]["CONN_MAX_AGE"] = 60  # noqa: F405
+DATABASES["default"]["CONN_MAX_AGE"] = 600  # noqa: F405
 DATABASES["default"]["CONN_HEALTH_CHECKS"] = True  # noqa: F405
 
 # for authlib OIDC connection
