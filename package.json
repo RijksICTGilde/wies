@@ -4,7 +4,7 @@
   "description": "Frontend assets for Wies project",
   "main": "index.js",
   "dependencies": {
-    "@nl-rvo/assets": "1.0.0-alpha.360"
+    "@nl-rvo/assets": "1.0.0"
   },
   "author": "Ruben Rouwhof",
   "license": "MIT"
