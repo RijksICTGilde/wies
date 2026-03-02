@@ -35,15 +35,27 @@ down:
 up-jrc-m:
   docker compose run -v /Users/matthijs/jinja-roos-components:/app/jinja-roos-components --service-ports django sh -c "uv pip install -e ./jinja-roos-components && python manage.py runserver 0.0.0.0:8000"
 
-# setup-production:
+# setup-production django:
+#
 #  docker build . -t wies
+#  docker network create wies-network
 
-# up-production:
-#   echo "Starting up container..."
+# up-production django:
+#
 # docker run --rm \
 # --env-file .env \
 # -p 8000:8000 \
+# --network wies-network \
 # wies
+
+# up-production postgres:
+#
+# docker run --rm \
+# --env-file .env \
+# -p 5432:5432 \
+# --network wies-network \
+# --name postgres \
+# postgres:17
 
 # Rebuild db
 rebuild-db:

@@ -64,7 +64,7 @@ RUN groupadd --gid 1000 app \
 # Install (required) system dependencies
 RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
   # Devcontainer dependencies and utils
-  sudo git bash-completion vim libpq5 \
+  sudo git bash-completion vim \
   # Cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
