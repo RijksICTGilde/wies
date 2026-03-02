@@ -5,7 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 200: switch to PostgreSQL
-- 200: run 2 workers in production
+- 200: run multiple workers in production
 - 188: Scaling image on colleague card
 - 201: fix pagination
 
