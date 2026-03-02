@@ -2,10 +2,7 @@ services:
   postgres:
     image: postgres:17
     container_name: wies-postgres
-    environment:
-      POSTGRES_DB: wies
-      POSTGRES_USER: wies
-      POSTGRES_PASSWORD: wies
+    env_file: .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
