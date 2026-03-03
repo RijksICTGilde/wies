@@ -215,7 +215,7 @@ def create_assignments_from_csv(csv_content: str):
                     services_created += 1
 
                 colleague_email = row["placement_colleague_email"].strip()
-                if colleague_email:
+                if colleague_email and assignment_status != "OPEN":
                     validate_email(colleague_email)
                     if Colleague.objects.filter(email=colleague_email).exists():
                         colleague = Colleague.objects.get(email=colleague_email)

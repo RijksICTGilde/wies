@@ -47,7 +47,6 @@ This files lists the changes during the lifetime of this project.
 - 181: Bump django security release
 - Add "Aangevraagde opdrachten" page with card grid, filters, search, and side panel
 - Make filter sidebar reusable across pages
-- Fix pagination (page_kwarg) for all list views
 
 ## 2026-01-19
 

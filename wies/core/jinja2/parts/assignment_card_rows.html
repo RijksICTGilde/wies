@@ -1,21 +1,19 @@
 {% for assignment in object_list %}
   <div class="rvo-card rvo-card--outline rvo-card--padding-md assignment-card assignment-card--clickable"
-       {% if assignment.source_url %} onclick="window.open('{{ assignment.source_url }}', '_blank')" {% else %} onclick="window.location.href='{{ assignment.panel_url }}'" {% endif %}>
+       onclick="window.location.href='{{ assignment.panel_url }}'">
     <div class="assignment-card__header">
       {% if assignment.start_date %}
         <span class="rvo-text rvo-text--sm rvo-text--subtle">Plaatsingsdatum: {{ assignment.start_date|datum_nl("j F Y") }}</span>
       {% endif %}
-      {% if assignment.status == "OPEN" %}
-        <span class="rvo-tag rvo-tag--info">Open</span>
-      {% elif assignment.status == "INGEVULD" %}
-        <span class="rvo-tag rvo-tag--success">Ingevuld</span>
+      {% if assignment.status %}
+        <span class="rvo-tag {{ status_tag_class(assignment.status) }}">{{ assignment.get_status_display() }}</span>
       {% endif %}
     </div>
     <h3 class="rvo-text rvo-text--bold rvo-text--no-margins assignment-card__title">{{ assignment.name }}</h3>
     {% if assignment.organization or assignment.ministry %}
       <div class="assignment-card__org-row">
         {% if assignment.ministry %}
-          <a href="{{ url("assignment-list") }}?ministerie={{ assignment.ministry.id }}"
+          <a href="{{ assignment.ministry_filter_url }}"
              class="rvo-link rvo-text--sm"
              onclick="event.stopPropagation()">{{ assignment.ministry.name }}</a>
         {% endif %}
@@ -23,7 +21,7 @@
           <span class="assignment-card__org-separator" aria-hidden="true">/</span>
         {% endif %}
         {% if assignment.organization %}
-          <a href="{{ url("assignment-list") }}?opdrachtgever={{ assignment.organization }}"
+          <a href="{{ assignment.organization_filter_url }}"
              class="rvo-link rvo-text--sm"
              onclick="event.stopPropagation()">{{ assignment.organization }}</a>
         {% endif %}
@@ -54,16 +52,7 @@
       </div>
     {% endif %}
     <div class="assignment-card__actions">
-      {% if assignment.source_url %}
-        <span class="rvo-link rvo-link--with-icon">
-          Lees meer
-          <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs"
-                role="img"
-                aria-label="Externe link"></span>
-        </span>
-      {% else %}
-        <span class="rvo-link">Lees meer</span>
-      {% endif %}
+      <span class="rvo-link">Lees meer</span>
     </div>
   </div>
 {% else %}

@@ -572,7 +572,7 @@ class AssignmentListView(ListView):
                     to_attr="services_with_skills",
                 )
             )
-            .order_by("-start_date")
+            .order_by("-pk")
         )
 
         search_filter = self.request.GET.get("zoek")
@@ -641,8 +641,13 @@ class AssignmentListView(ListView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
+        base_url = reverse("assignment-list")
         for assignment in context["object_list"]:
             assignment.panel_url = self._build_panel_url(assignment.id)
+            if assignment.ministry:
+                assignment.ministry_filter_url = f"{base_url}?ministerie={assignment.ministry.id}"
+            if assignment.organization:
+                assignment.organization_filter_url = f"{base_url}?opdrachtgever={assignment.organization}"
 
         context["filter_target_url"] = reverse("assignment-list")
         context["search_field"] = "zoek"
