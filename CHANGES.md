@@ -4,6 +4,12 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 188: Scaling image on colleague card
+- 201: fix pagination
+
+## 2026-02-25
+
+- 199: add db export and import functions for db migration
 - 191 and others: bump ruff, gunicorn and cryptography (security)
 - 176: Fix that externally managed assignment can not be edited
 - 176: Filter out historical placements
