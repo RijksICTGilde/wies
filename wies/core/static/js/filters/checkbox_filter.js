@@ -3,6 +3,8 @@
 (function () {
   // Track which filter groups are manually expanded (survives OOB swaps)
   var expandedGroups = new Set();
+  // Track which filter groups are manually collapsed (survives OOB swaps)
+  var collapsedGroups = new Set();
 
   function getGroupKey(container) {
     var legend = container.querySelector(".checkbox-filter__label");
@@ -32,22 +34,42 @@
     });
   }
 
-  // Restore expanded state after OOB swap (for groups without selected extra options)
-  function restoreExpandedState() {
+  // Restore expanded/collapsed state after OOB swap
+  function restoreState() {
     document
       .querySelectorAll("[data-checkbox-filter]")
       .forEach(function (container) {
         var key = getGroupKey(container);
-        if (!expandedGroups.has(key)) return;
-        var extra = container.querySelector(".checkbox-filter__options--extra");
-        var toggle = container.querySelector(".checkbox-filter__toggle");
-        if (extra && extra.hidden) {
-          extra.hidden = false;
-          if (toggle) {
-            toggle.classList.add("checkbox-filter__toggle--expanded");
-            var textEl = toggle.querySelector(".checkbox-filter__toggle-text");
-            if (textEl) textEl.textContent = "Toon minder";
+
+        // Restore "Toon meer" expanded state
+        if (expandedGroups.has(key)) {
+          var extra = container.querySelector(
+            ".checkbox-filter__options--extra",
+          );
+          var toggle = container.querySelector(".checkbox-filter__toggle");
+          if (extra && extra.hidden) {
+            extra.hidden = false;
+            if (toggle) {
+              toggle.classList.add("checkbox-filter__toggle--expanded");
+              var textEl = toggle.querySelector(
+                ".checkbox-filter__toggle-text",
+              );
+              if (textEl) textEl.textContent = "Toon minder";
+              var iconEl = toggle.querySelector(
+                ".checkbox-filter__toggle-icon",
+              );
+              if (iconEl) iconEl.textContent = "\u2212";
+            }
           }
+        }
+
+        // Restore collapsed state
+        if (collapsedGroups.has(key)) {
+          var body = container.querySelector(".checkbox-filter__body");
+          var header = container.querySelector(".checkbox-filter__header");
+          if (body) body.hidden = true;
+          if (header)
+            header.classList.add("checkbox-filter__header--collapsed");
         }
       });
   }
@@ -84,6 +106,14 @@
         "checkbox-filter__header--collapsed",
         isCollapsed,
       );
+
+      // Track collapsed state
+      var key = getGroupKey(container);
+      if (isCollapsed) {
+        collapsedGroups.delete(key);
+      } else {
+        collapsedGroups.add(key);
+      }
       return;
     }
 
@@ -151,6 +181,6 @@
       });
   };
 
-  // Restore expanded state after OOB swap
-  document.addEventListener("htmx:afterSettle", restoreExpandedState);
+  // Restore state after OOB swap
+  document.addEventListener("htmx:afterSettle", restoreState);
 })();

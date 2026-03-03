@@ -398,7 +398,8 @@
 .checkbox-filter__header-icon {
   transition: transform 0.2s ease;
   flex-shrink: 0;
-  color: var(--rvo-color-zwart, #000);
+  color: var(--rvo-color-logoblauw, #154273);
+  margin-right: 0.35rem;
 }
 
 .checkbox-filter__header--collapsed .checkbox-filter__header-icon {
@@ -449,7 +450,8 @@
   color: var(--rvo-color-grijs-600);
   flex-shrink: 0;
   margin-left: auto;
-  padding-right: 0.35rem;
+  width: calc(20px + 0.7rem);
+  text-align: center;
 }
 
 /* Toggle button — styled as link */
