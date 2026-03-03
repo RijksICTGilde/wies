@@ -13,54 +13,65 @@
 {% set visible = real_options[:3] %}
 {% set extra = real_options[3:] %}
 <fieldset class="checkbox-filter" data-checkbox-filter data-name="{{ name }}">
-  <legend class="checkbox-filter__label rvo-label">{{ label }}</legend>
-  <div class="checkbox-filter__options">
-    {% for option in visible %}
-      <label class="rvo-checkbox checkbox-filter__option">
-        <input type="checkbox"
-               class="rvo-checkbox__input checkbox-filter__checkbox"
-               value="{{ option.value }}"
-               {% if option.value in selected_values %}checked{% endif %} />
-        <span class="checkbox-filter__option-text">{{ option.label }}</span>
-        {% if option.count is defined %}<span class="checkbox-filter__count">({{ option.count }})</span>{% endif %}
-      </label>
-    {% endfor %}
-  </div>
-  {% if extra %}
-    {% set has_selected_extra = extra|selectattr('value', 'in', selected_values)|list|length > 0 %}
-    <div class="checkbox-filter__options checkbox-filter__options--extra"
-         {% if not has_selected_extra %}hidden{% endif %}>
-      {% for option in extra %}
+  <button type="button" class="checkbox-filter__header">
+    <legend class="checkbox-filter__label rvo-label">{{ label }}</legend>
+    <svg class="checkbox-filter__header-icon"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2.5"
+         width="20"
+         height="20">
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  </button>
+  <div class="checkbox-filter__body">
+    <div class="checkbox-filter__options">
+      {% for option in visible %}
         <label class="rvo-checkbox checkbox-filter__option">
           <input type="checkbox"
                  class="rvo-checkbox__input checkbox-filter__checkbox"
                  value="{{ option.value }}"
                  {% if option.value in selected_values %}checked{% endif %} />
           <span class="checkbox-filter__option-text">{{ option.label }}</span>
-          {% if option.count is defined %}<span class="checkbox-filter__count">({{ option.count }})</span>{% endif %}
+          {% if option.count is defined %}<span class="checkbox-filter__count">{{ option.count }}</span>{% endif %}
         </label>
       {% endfor %}
     </div>
-    <button type="button"
-            class="rvo-link checkbox-filter__toggle{% if has_selected_extra %} checkbox-filter__toggle--expanded{% endif %}">
-      <span class="checkbox-filter__toggle-text">
-        {% if has_selected_extra %}
-          Toon minder
-        {% else %}
-          Toon meer
-        {% endif %}
-      </span>
-      <svg class="checkbox-filter__toggle-icon"
-           viewBox="0 0 24 24"
-           fill="none"
-           stroke="currentColor"
-           stroke-width="2"
-           width="16"
-           height="16">
-        <path d="M6 9l6 6 6-6" />
-      </svg>
-    </button>
-  {% endif %}
+    {% if extra %}
+      {% set has_selected_extra = extra|selectattr('value', 'in', selected_values)|list|length > 0 %}
+      <div class="checkbox-filter__options checkbox-filter__options--extra"
+           {% if not has_selected_extra %}hidden{% endif %}>
+        {% for option in extra %}
+          <label class="rvo-checkbox checkbox-filter__option">
+            <input type="checkbox"
+                   class="rvo-checkbox__input checkbox-filter__checkbox"
+                   value="{{ option.value }}"
+                   {% if option.value in selected_values %}checked{% endif %} />
+            <span class="checkbox-filter__option-text">{{ option.label }}</span>
+            {% if option.count is defined %}<span class="checkbox-filter__count">{{ option.count }}</span>{% endif %}
+          </label>
+        {% endfor %}
+      </div>
+      <button type="button"
+              class="checkbox-filter__toggle{% if has_selected_extra %} checkbox-filter__toggle--expanded{% endif %}">
+        <span class="checkbox-filter__toggle-icon">
+          {% if has_selected_extra %}
+            −
+          {% else %}
+            +
+          {% endif %}
+        </span>
+        <span class="checkbox-filter__toggle-text">
+          {% if has_selected_extra %}
+            Toon minder
+          {% else %}
+            Toon meer
+          {% endif %}
+        </span>
+      </button>
+    {% endif %}
+  </div>
   {# Hidden inputs for form submission - one per selected value #}
   <div class="checkbox-filter__hidden-inputs">
     {% for val in selected_values %}

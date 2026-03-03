@@ -374,11 +374,43 @@
 .checkbox-filter {
   border: none;
   padding: 0;
-  margin: 0;
+  margin: 0 0 0.5rem 0;
+}
+
+.checkbox-filter__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 0;
+  margin-bottom: 0.25rem;
+  cursor: pointer;
+}
+
+.checkbox-filter__header:focus,
+.checkbox-filter__header:active,
+.checkbox-filter__header:hover {
+  outline: none;
+}
+
+.checkbox-filter__header-icon {
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  color: var(--rvo-color-zwart, #000);
+}
+
+.checkbox-filter__header--collapsed .checkbox-filter__header-icon {
+  transform: rotate(180deg);
+}
+
+.checkbox-filter__body[hidden] {
+  display: none;
 }
 
 .checkbox-filter__label {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;
 }
 
 .checkbox-filter__options {
@@ -416,22 +448,39 @@
   font-size: var(--rvo-font-size-sm);
   color: var(--rvo-color-grijs-600);
   flex-shrink: 0;
+  margin-left: auto;
+  padding-right: 0.35rem;
 }
 
-/* Toggle button — styled as rvo-link */
+/* Toggle button — styled as link */
 .checkbox-filter__toggle {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
   background: none;
   border: none;
+  color: var(--rvo-link-color, #007bc7);
+  text-decoration: none;
+  font-weight: normal;
+  font-size: var(--rvo-font-size-md);
   cursor: pointer;
   padding: 0.25rem 0;
   margin-top: 0.25rem;
 }
 
 .checkbox-filter__toggle-icon {
-  transition: transform 0.2s ease;
+  font-size: 1.2em;
+}
+
+.checkbox-filter__toggle-text {
+  text-decoration: underline;
+}
+
+.checkbox-filter__toggle:focus,
+.checkbox-filter__toggle:active,
+.checkbox-filter__toggle:hover {
+  outline: none;
+  color: var(--rvo-link-color, #007bc7);
 }
 
 .checkbox-filter__toggle--expanded .checkbox-filter__toggle-icon {

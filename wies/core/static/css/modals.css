@@ -59,6 +59,7 @@
 
 .user-form-column {
   flex: 1;
+  min-width: 0;
 }
 
 .user-form-column > div {

@@ -69,8 +69,25 @@
     true,
   ); // capture phase
 
-  // Toggle "Toon meer"/"Toon minder" via event delegation
+  // Toggle section collapse via header chevron
   document.addEventListener("click", function (e) {
+    var headerBtn = e.target.closest(".checkbox-filter__header");
+    if (headerBtn) {
+      e.preventDefault();
+      var container = headerBtn.closest("[data-checkbox-filter]");
+      if (!container) return;
+      var body = container.querySelector(".checkbox-filter__body");
+      if (!body) return;
+      var isCollapsed = body.hidden;
+      body.hidden = !isCollapsed;
+      headerBtn.classList.toggle(
+        "checkbox-filter__header--collapsed",
+        isCollapsed,
+      );
+      return;
+    }
+
+    // Toggle "Toon meer"/"Toon minder" via event delegation
     var toggleBtn = e.target.closest(".checkbox-filter__toggle");
     if (!toggleBtn) return;
     e.preventDefault();
@@ -85,6 +102,10 @@
     var textEl = toggleBtn.querySelector(".checkbox-filter__toggle-text");
     if (textEl) {
       textEl.textContent = isExpanded ? "Toon meer" : "Toon minder";
+    }
+    var iconEl = toggleBtn.querySelector(".checkbox-filter__toggle-icon");
+    if (iconEl) {
+      iconEl.textContent = isExpanded ? "+" : "\u2212";
     }
     toggleBtn.classList.toggle(
       "checkbox-filter__toggle--expanded",

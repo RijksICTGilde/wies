@@ -49,7 +49,6 @@ class RvoFormMixin:
         "TextInput": "rvo/forms/widgets/text.html",
         "EmailInput": "rvo/forms/widgets/email.html",
         "Select": "rvo/forms/widgets/select.html",
-        "SelectMultiple": "rvo/forms/widgets/select.html",
         "CheckboxSelectMultiple": "rvo/forms/widgets/checkbox_select.html",
         "MultiselectDropdown": "rvo/forms/widgets/multiselect.html",
         "RadioSelect": "rvo/forms/widgets/radio.html",
