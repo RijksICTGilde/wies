@@ -1,5 +1,7 @@
 import logging
+import tempfile
 from datetime import date
+from pathlib import Path
 
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
@@ -120,6 +122,66 @@ def admin_db(request):
         elif action == "add_dev_user":
             management.call_command("add_developer_user")
             messages.success(request, "Developer user added")
+        elif action == "export_data":
+            # Use dumpdata's native --output argument with temp file
+            with tempfile.NamedTemporaryFile(mode="r", suffix=".json", delete=False) as tmp:
+                tmp_path = tmp.name
+
+            try:
+                # dumpdata writes directly to file using --output argument
+                management.call_command("dumpdata", "--natural-foreign", "--natural-primary", output=tmp_path)
+
+                # Read the JSON file
+                json_data = Path(tmp_path).read_text()
+
+                response = HttpResponse(json_data, content_type="application/json")
+                response["Content-Disposition"] = 'attachment; filename="wies_datadump.json"'
+                return response
+            finally:
+                # Clean up temp file
+                Path(tmp_path).unlink(missing_ok=True)
+        elif action == "import_data":
+            # Handle database import from uploaded JSON file
+            if "json_file" not in request.FILES:
+                messages.error(request, "Geen bestand geüpload. Upload een JSON-bestand.")
+                return redirect("djadmin-db")
+
+            json_file = request.FILES["json_file"]
+
+            # Validate file extension
+            if not json_file.name.endswith(".json"):
+                messages.error(request, "Ongeldig bestandstype. Upload een JSON-bestand.")
+                return redirect("djadmin-db")
+
+            # Save uploaded file to temp location
+            with tempfile.NamedTemporaryFile(mode="wb", suffix=".json", delete=False) as tmp:
+                tmp_path = tmp.name
+                for chunk in json_file.chunks():
+                    tmp.write(chunk)
+
+            try:
+                # Clear existing data before import to avoid PK conflicts
+                # Same clearing logic as "clear_data" action
+                Assignment.objects.all().delete()
+                Colleague.objects.all().delete()
+                Skill.objects.all().delete()
+                Placement.objects.all().delete()
+                Service.objects.all().delete()
+                Ministry.objects.all().delete()
+                LabelCategory.objects.all().delete()
+                Label.objects.all().delete()
+
+                # Load data using Django's loaddata command
+                management.call_command("loaddata", tmp_path)
+                messages.success(request, "Database succesvol geïmporteerd")
+            except Exception as e:  # noqa: BLE001
+                # Catch all exceptions to show user-friendly error message
+                messages.error(request, f"Import mislukt: {e!s}")
+            finally:
+                # Clean up temp file
+                Path(tmp_path).unlink(missing_ok=True)
+
+            return redirect("djadmin-db")
         elif action == "sync_all_otys_records":
             sync_all_otys_iir_records()
             messages.success(request, "All records synced successfully from OTYS IIR")

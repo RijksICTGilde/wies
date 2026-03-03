@@ -101,9 +101,9 @@ Test Assignment,Description,Owner,owner@rijksoverheid.nl,Org,Ministerie van Test
         result = create_assignments_from_csv(csv_content)
         assert result["success"]
         assert result["ministries_created"] == 1
-        # Verify ministry was created with name as both name and abbreviation
+        # Verify ministry was created with truncated abbreviation (max 10 chars)
         ministry = Ministry.objects.get(name="Ministerie van Test")
-        assert ministry.abbreviation == "Ministerie van Test"
+        assert ministry.abbreviation == "Ministerie"
 
     # Business Logic Tests
     def test_multiple_services_per_assignment(self):
