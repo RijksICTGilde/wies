@@ -14,7 +14,7 @@ from django.contrib.auth.models import Group
 from django.core import management
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
-from django.http import HttpResponse, QueryDict
+from django.http import Http404, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
@@ -973,7 +973,9 @@ def assignment_import_csv(request):
 
 @permission_required("core.view_organizationunit", raise_exception=True)
 def organization_admin(request):
-    """Show all organization units in a collapsible tree, grouped by type."""
+    """Show all organization units in a collapsible tree, grouped by type. Only available in DEBUG mode."""
+    if not settings.DEBUG:
+        raise Http404
     rows = OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations", "end_date")
 
     # Index all units as lightweight dicts

@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.urls import reverse
@@ -63,6 +64,7 @@ def environment(**options):
             "get_csrf_hidden_input": get_csrf_hidden_input,
             "get_toggle_sort_url": get_toggle_sort_url,
             "get_sort_state": get_sort_state,
+            "DEBUG": settings.DEBUG,
         }
     )
     env.filters["datum_nl"] = datum_nl

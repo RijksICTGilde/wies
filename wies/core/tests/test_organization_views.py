@@ -1,11 +1,12 @@
 from django.contrib.auth.models import Permission
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 
 from wies.core.models import OrganizationUnit, User
 
 
+@override_settings(DEBUG=True)
 class OrganizationAdminViewTest(TestCase):
-    """Test the organization admin view"""
+    """Test the organization admin view (only available in DEBUG mode)"""
 
     def setUp(self):
         self.client = Client()
