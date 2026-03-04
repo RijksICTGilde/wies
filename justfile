@@ -16,8 +16,8 @@ setup:
   npm ci  # for enable exploration in static assets
   cp overwrite_index.css node_modules/@nl-rvo/assets/index.css  # mimick build
   if [ ! -f .env ]; then cp .env.local.example .env; fi
+  docker compose down -v
   docker compose build
-  docker compose run --rm django python manage.py dropdb --noinput
   docker compose run --rm django python manage.py migrate
   docker compose run --rm django python manage.py setup
   docker compose run --rm django python manage.py loaddata base_dummy_data
