@@ -146,9 +146,6 @@ def admin_db(request):
         elif action == "load_base_data":
             management.call_command("loaddata", "base_dummy_data.json")
             messages.success(request, "Data geladen uit base_dummy_data.json")
-        elif action == "load_full_data":
-            management.call_command("loaddata", "full_dummy_data.json")
-            messages.success(request, "Data geladen uit full_dummy_data.json")
         elif action == "add_dev_user":
             management.call_command("add_developer_user")
             messages.success(request, "Developer user added")
