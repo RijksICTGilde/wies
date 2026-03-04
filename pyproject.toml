@@ -4,7 +4,7 @@ dynamic = ["version"]
 requires-python = ">=3.13"
 dependencies = [
   "django==6.0.3",
-  "whitenoise==6.11.0",
+  "whitenoise==6.12.0",
   "gunicorn==25.1.0",
   "Authlib==1.6.6",
   "requests==2.32.5",
