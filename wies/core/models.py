@@ -245,8 +245,8 @@ class Event(models.Model):
 
 
 class OrganizationType(models.Model):
-    name = models.CharField(max_length=30)
-    label = models.CharField(max_length=30)
+    name = models.CharField(max_length=100)
+    label = models.CharField(max_length=100)
 
     def __str__(self):
         return f"{self.label} ({self.name})"
