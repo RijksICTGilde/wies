@@ -5,7 +5,7 @@ Language: Dutch UI, English code.
 
 ## Tech Stack
 
-- Django 5.2 with SQLite
+- Django 6 with PostgreSQL
 - Jinja2 templates with jinja-roos-components (https://github.com/RijksICTGilde/jinja-roos-components)
 - RVO CSS classes for layout/styling (nl-design-system/rvo)
 - HTMX for interactivity

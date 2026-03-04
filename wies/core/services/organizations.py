@@ -472,7 +472,7 @@ def get_org_descendant_ids(root_ids: list[int]) -> set[int]:
     """Return the set of IDs for the given roots and all their descendants.
 
     Loads all OrganizationUnits once and traverses the tree in Python to avoid
-    recursive SQL — SQLite-friendly and fast for typical government org trees.
+    recursive SQL — fast for typical government org trees.
     """
     all_orgs = OrganizationUnit.objects.values_list("id", "parent_id")
     children_map: dict[int, list[int]] = {}
