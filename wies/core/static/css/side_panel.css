@@ -128,7 +128,27 @@ dialog#side_panel.closing::backdrop {
 
 /* Sidepanel data list styling */
 .rvo-dialog .rvo-data-list {
-  grid-template-columns: 200px 1fr !important;
+  grid-template-columns: 160px 1fr !important;
+}
+
+/* Organisation breadcrumb in detail panel */
+.org-breadcrumb {
+  line-height: 1.5;
+}
+
+.org-breadcrumb__ancestor {
+  color: var(--rvo-color-zwart, #000);
+  text-decoration: underline;
+}
+
+.org-breadcrumb__ancestor:hover {
+  text-decoration: underline;
+  color: var(--rvo-color-logoblauw, #154273);
+}
+
+.org-breadcrumb__separator {
+  color: var(--rvo-color-grijs-400, #aab4be);
+  margin: 0 0.15rem;
 }
 
 /* Placement details header - used in side panel */

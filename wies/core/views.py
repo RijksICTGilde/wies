@@ -1632,7 +1632,7 @@ def client_modal(request):
             org = OrganizationUnit.objects.filter(id=org_id).values("label").first()
             if not org:
                 continue
-            current_selections[f"self-{org_id}"] = f"{org['label']} (direct)"
+            current_selections[f"self-{org_id}"] = f'Direct onder "{org["label"]}"'
     for type_label in request.GET.getlist("org_type"):
         if type_label:
             current_selections[f"group-{type_label}"] = ORG_TYPE_PLURAL.get(type_label, type_label)

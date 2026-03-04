@@ -71,6 +71,11 @@
   margin-inline-start: auto;
 }
 
+#org-filter-button.org-filter-button--active {
+  background-color: #fff;
+  color: var(--rvo-color-logoblauw);
+}
+
 /* Date Range Field Styling */
 .filter-sidebar-date-range {
   display: flex;

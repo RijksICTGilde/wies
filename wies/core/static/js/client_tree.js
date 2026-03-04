@@ -34,7 +34,7 @@
       var toggle = document.createElement("button");
       toggle.type = "button";
       toggle.className = "client-toggle";
-      toggle.textContent = "▼";
+      toggle.textContent = "›";
       toggle.title = "Uitklappen/inklappen";
       toggle.setAttribute("aria-label", "Uitklappen/inklappen");
       toggle.addEventListener("click", function () {
@@ -68,13 +68,16 @@
     });
     label.appendChild(checkbox);
 
-    var labelText = document.createTextNode(node.label);
+    var displayText = node.self
+      ? 'Direct onder "' + node.label + '"'
+      : node.label;
+    var labelText = document.createTextNode(displayText);
     label.appendChild(labelText);
 
     if (node.nr_of_placements !== undefined) {
       var badge = document.createElement("span");
       badge.className = "client-placement-badge";
-      badge.textContent = "(" + node.nr_of_placements + ")";
+      badge.textContent = node.nr_of_placements;
       label.appendChild(badge);
     }
 
@@ -108,16 +111,27 @@
     });
     updateHighlightClasses();
     rebuildSelectionList();
-    syncFlatList();
+    updateResultsCount();
+  }
+
+  function updateResultsCount() {
+    var resultsEl = document.getElementById("client-results-count");
+    if (!resultsEl) return;
+    // Sum placements from explicitly selected nodes
+    var total = 0;
+    treeState.explicitSelections.forEach(function (label, nodeId) {
+      var node = treeState.getNode(nodeId);
+      if (node && node.nr_of_placements !== undefined) {
+        total += node.nr_of_placements;
+      }
+    });
+    resultsEl.textContent = total > 0 ? total + " plaatsingen" : "";
   }
 
   function updateHighlightClasses() {
     domNodes.forEach(function (li, nodeId) {
-      if (treeState.explicitSelections.has(nodeId)) {
-        li.classList.add("checked");
-      } else {
-        li.classList.remove("checked");
-      }
+      var isExplicit = treeState.explicitSelections.has(nodeId);
+      li.classList.toggle("checked", isExplicit);
     });
   }
 
@@ -127,6 +141,15 @@
 
   function rebuildSelectionList() {
     selectionList.innerHTML = "";
+
+    // Update count badge
+    var countEl = document.getElementById("client-selection-count");
+    if (countEl) {
+      var count = treeState.explicitSelections.size;
+      countEl.textContent = count;
+      countEl.style.display = count > 0 ? "" : "none";
+    }
+
     if (treeState.explicitSelections.size === 0) {
       var empty = document.createElement("li");
       empty.className = "client-modal__empty-state";
@@ -140,6 +163,7 @@
         li.className = "client-modal__selection-item";
         var span = document.createElement("span");
         span.textContent = text;
+        span.title = text;
         li.appendChild(span);
         var removeBtn = document.createElement("button");
         removeBtn.type = "button";
@@ -162,93 +186,64 @@
   }
 
   // ============================================================
-  // SEARCH FILTERING — flat list mode
+  // SEARCH FILTERING — tree mode
   // ============================================================
-
-  var flatList = null;
-
-  function renderFlatList(matches) {
-    if (flatList) flatList.remove();
-    flatList = document.createElement("ul");
-    flatList.id = "client-flat-list";
-    flatList.className = "client-flat-list";
-
-    if (matches.length === 0) {
-      var empty = document.createElement("li");
-      empty.className = "client-modal__empty-state";
-      empty.textContent = "Geen resultaten";
-      flatList.appendChild(empty);
-    } else {
-      for (var i = 0; i < matches.length; i++) {
-        var node = matches[i];
-        var li = document.createElement("li");
-        var label = document.createElement("label");
-        var checkbox = document.createElement("input");
-        checkbox.type = "checkbox";
-        var stateNode = treeState.getNode(node.id);
-        checkbox.checked = stateNode ? stateNode.checked : false;
-        checkbox.dataset.nodeId = String(node.id);
-        checkbox.addEventListener(
-          "change",
-          (function (id, cb) {
-            return function () {
-              if (cb.checked) {
-                treeState.check(id);
-              } else {
-                treeState.uncheck(id);
-              }
-              syncAllDOM();
-            };
-          })(node.id, checkbox),
-        );
-        if (treeState.explicitSelections.has(String(node.id))) {
-          li.classList.add("explicit");
-        }
-        label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(node.label));
-        if (node.abbreviations && node.abbreviations.length) {
-          var abbr = document.createElement("span");
-          abbr.className = "client-abbreviation";
-          abbr.textContent = node.abbreviations[0];
-          label.appendChild(abbr);
-        }
-        li.appendChild(label);
-        flatList.appendChild(li);
-      }
-    }
-
-    container.appendChild(flatList);
-  }
-
-  function syncFlatList() {
-    if (!flatList) return;
-    flatList.querySelectorAll("input[type='checkbox']").forEach(function (cb) {
-      var nodeId = cb.dataset.nodeId;
-      var stateNode = treeState.getNode(nodeId);
-      if (stateNode) cb.checked = stateNode.checked;
-      cb.closest("li").classList.toggle(
-        "explicit",
-        treeState.explicitSelections.has(nodeId),
-      );
-    });
-  }
 
   function filterTree(query) {
     var q = query.toLowerCase().trim();
-    var rootUl = container.querySelector(":scope > ul.client-tree-level");
 
     if (!q) {
-      if (rootUl) rootUl.style.display = "";
-      if (flatList) {
-        flatList.remove();
-        flatList = null;
-      }
+      // Show all nodes, restore collapsed state
+      domNodes.forEach(function (li) {
+        li.classList.remove("search-hidden");
+        li.classList.remove("search-match");
+      });
+      container
+        .querySelectorAll("li.client-tree-node.has-children")
+        .forEach(function (li) {
+          li.classList.add("collapsed");
+        });
+      updateResultsCount();
       return;
     }
 
-    if (rootUl) rootUl.style.display = "none";
-    var matches = TreeState.collectMatches(data, q);
-    renderFlatList(matches);
+    // Hide all nodes and uncollapse everything (visibility controlled by search-hidden only)
+    domNodes.forEach(function (li) {
+      li.classList.add("search-hidden");
+      li.classList.remove("search-match");
+      li.classList.remove("collapsed");
+    });
+
+    // Find matching nodes and mark them + their ancestors visible
+    treeState.nodes.forEach(function (node) {
+      var matches = false;
+      if (node.label && node.label.toLowerCase().includes(q)) matches = true;
+      if (!matches && node.abbreviations) {
+        for (var i = 0; i < node.abbreviations.length; i++) {
+          if (node.abbreviations[i].toLowerCase().includes(q)) {
+            matches = true;
+            break;
+          }
+        }
+      }
+      if (matches) {
+        var li = domNodes.get(node.id);
+        if (li) {
+          li.classList.remove("search-hidden");
+          li.classList.add("search-match");
+        }
+        // Show ancestors
+        var ancestor = node.parent;
+        while (ancestor) {
+          var ancestorLi = domNodes.get(ancestor.id);
+          if (ancestorLi) {
+            ancestorLi.classList.remove("search-hidden");
+          }
+          ancestor = ancestor.parent;
+        }
+      }
+    });
+    updateResultsCount();
   }
 
   // ============================================================
@@ -265,6 +260,16 @@
     clearBtn.addEventListener("click", function () {
       treeState.clearAll();
       syncAllDOM();
+
+      var orgInputsContainer = document.getElementById("org-filter-inputs");
+      var sidebarForm = document.querySelector(".filter-sidebar-form");
+      if (orgInputsContainer) orgInputsContainer.innerHTML = "";
+
+      var dialog = document.getElementById("clientModal");
+      if (dialog) dialog.close();
+
+      updateOrgFilterButtonText();
+      if (sidebarForm) htmx.trigger(sidebarForm, "change");
     });
   }
 

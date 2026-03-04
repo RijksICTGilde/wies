@@ -240,7 +240,7 @@ TreeState.collectMatches = function (nodes, q, result) {
 
 TreeState.prototype._getLabel = function (node) {
   var text = node.label;
-  if (node.self) text += " (direct)";
+  if (node.self) text = 'Direct onder "' + text + '"';
   return text;
 };
 

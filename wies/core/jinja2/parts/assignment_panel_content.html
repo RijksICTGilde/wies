@@ -38,15 +38,15 @@
       <dt>Organisatie</dt>
       <dd>
         {% if panel_data.org_breadcrumb %}
-          <a href="{{ panel_data.org_breadcrumb.url }}" class="rvo-link">{{ panel_data.org_breadcrumb.label }}</a>
-          {% if panel_data.org_breadcrumb.ancestors %}
-            <div class="rvo-text--sm rvo-text--subtle">
+          <div class="org-breadcrumb">
+            {% if panel_data.org_breadcrumb.ancestors %}
               {% for ancestor in panel_data.org_breadcrumb.ancestors %}
-                <a href="{{ ancestor.url }}" class="rvo-link">{{ ancestor.label }}</a>
-                {% if not loop.last %}›{% endif %}
+                <a href="{{ ancestor.url }}" class="org-breadcrumb__ancestor">{{ ancestor.label }}</a>
+                <span class="org-breadcrumb__separator">›</span>
               {% endfor %}
-            </div>
-          {% endif %}
+            {% endif %}
+            <a href="{{ panel_data.org_breadcrumb.url }}" class="rvo-link">{{ panel_data.org_breadcrumb.label }}</a>
+          </div>
         {% else %}
           <span class="rvo-text--italic rvo-text--subtle">Geen organisatie opgegeven</span>
         {% endif %}
