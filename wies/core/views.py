@@ -1621,18 +1621,18 @@ def client_modal(request):
     # Build current selections dict for state restoration in client_tree.js
     # Maps tree node ID (string) → display label
     current_selections: dict[str, str] = {}
-    for org_id in request.GET.getlist("org"):
-        if org_id.isdigit():
-            org = OrganizationUnit.objects.filter(id=org_id).values("label").first()
-            if not org:
-                continue
-            current_selections[org_id] = org["label"]
-    for org_id in request.GET.getlist("org_self"):
-        if org_id.isdigit():
-            org = OrganizationUnit.objects.filter(id=org_id).values("label").first()
-            if not org:
-                continue
-            current_selections[f"self-{org_id}"] = f'Direct onder "{org["label"]}"'
+
+    # normal orgs
+    org_ids = [org_id for org_id in request.GET.getlist("org") if org_id.isdigit()]
+    for org in OrganizationUnit.objects.filter(id__in=org_ids).values("id", "label"):
+        current_selections[org["id"]] = org["label"]
+
+    # self-node orgs
+    self_org_ids = [org_id for org_id in request.GET.getlist("org_self") if org_id.isdigit()]
+    for org in OrganizationUnit.objects.filter(id__in=self_org_ids).values("id", "label"):
+        current_selections[org[f"self-{org['id']}"]] = f'Direct onder "{org["label"]}"'
+
+    # type-node orgs
     for type_label in request.GET.getlist("org_type"):
         if type_label:
             current_selections[f"group-{type_label}"] = ORG_TYPE_PLURAL.get(type_label, type_label)

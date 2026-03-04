@@ -251,8 +251,13 @@
   // ============================================================
 
   if (searchInput) {
+    var debounceTimer;
     searchInput.addEventListener("input", function () {
-      filterTree(this.value);
+      var value = this.value;
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(function () {
+        filterTree(value);
+      }, 300);
     });
   }
 
