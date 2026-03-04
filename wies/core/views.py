@@ -25,7 +25,7 @@ from .models import Assignment, Colleague, Label, LabelCategory, OrganizationUni
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
-from .services.organizations import get_org_descendant_ids
+from .services.organizations import get_excluded_org_ids, get_org_descendant_ids
 from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
@@ -187,12 +187,15 @@ class PlacementListView(ListView):
 
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
+        excluded_org_ids = get_excluded_org_ids()
         qs = (
             Placement.objects.select_related("colleague", "service", "service__skill")
             .prefetch_related("colleague__labels", "service__assignment__organizations")
             .filter(service__assignment__status="INGEVULD")
             .order_by("-service__assignment__start_date")
         )
+        if excluded_org_ids:
+            qs = qs.exclude(service__assignment__organizations__id__in=excluded_org_ids)
 
         search_filter = self.request.GET.get("zoek")
         if search_filter:
@@ -1500,17 +1503,25 @@ Disallow: /
 
 def client_modal(request):
     """Return the client tree selection modal (HTMX partial)."""
+    excluded_org_ids = get_excluded_org_ids()
+
     # Count active placements per OrganizationUnit (self-count only — direct link).
     # We go from the Placement side to avoid complex subqueries.
     active_placements = annotate_placement_dates(
         Placement.objects.filter(service__assignment__status="INGEVULD")
     ).filter(actual_end_date__gte=timezone.now().date())
+    if excluded_org_ids:
+        active_placements = active_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
 
     org_ids = active_placements.values_list("service__assignment__organizations__id", flat=True)
     org_self_counts: Counter[int] = Counter(org_id for org_id in org_ids if org_id is not None)
 
-    # Load all OrganizationUnits
-    all_orgs = list(OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations"))
+    # Load all OrganizationUnits (excluding hidden organizations)
+    all_orgs = list(
+        OrganizationUnit.objects.exclude(id__in=excluded_org_ids).values(
+            "id", "parent_id", "name", "label", "abbreviations"
+        )
+    )
 
     # Build lightweight tree in Python
     units_by_id: dict[int, dict] = {}

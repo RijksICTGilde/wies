@@ -11,6 +11,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 
 import requests
+from django.db.models import Q
 from django.utils import timezone
 
 from wies.core.models import OrganizationType, OrganizationUnit
@@ -28,14 +29,6 @@ EXCLUDED_ORG_NAMES: set[str] = {
     "militaire inlichtingen- en veiligheidsdienst",
 }
 EXCLUDED_ORG_ABBREVIATIONS: set[str] = {"aivd", "mivd"}
-
-
-def _is_excluded_org(name: str, abbreviations: list[str]) -> bool:
-    """Check if an organization should be excluded from sync."""
-    name_lower = name.lower()
-    if any(excluded in name_lower for excluded in EXCLUDED_ORG_NAMES):
-        return True
-    return any(abbr.lower() in EXCLUDED_ORG_ABBREVIATIONS for abbr in abbreviations)
 
 
 def build_source_url(system_id: str, name: str) -> str:
@@ -77,14 +70,9 @@ def parse_organization_element(
     """Parse a single organization element from XML.
 
     Returns dict with organization data, including nested children and is_active flag.
-    Returns None only for excluded organizations (e.g. intelligence services).
     """
     name = org_elem.findtext("p:naam", "", NS).strip()
     abbreviations = [a.text.strip() for a in org_elem.findall("p:afkorting", NS) if a.text]
-
-    # Skip excluded organizations (intelligence services) and all their children
-    if _is_excluded_org(name, abbreviations):
-        return None
 
     # Determine if organization is inactive based on eindDatum
     is_active = True
@@ -494,3 +482,22 @@ def get_org_descendant_ids(root_ids: list[int]) -> set[int]:
         result.add(current)
         queue.extend(children_map.get(current, []))
     return result
+
+
+def get_excluded_org_ids() -> set[int]:
+    """Return IDs of organizations that should be hidden from display (e.g. intelligence services).
+
+    Matches organizations by name or abbreviation against the exclusion lists,
+    then includes all their descendants.
+    """
+    name_q = Q()
+    for name in EXCLUDED_ORG_NAMES:
+        name_q |= Q(name__icontains=name)
+    abbr_q = Q()
+    for abbr in EXCLUDED_ORG_ABBREVIATIONS:
+        abbr_q |= Q(abbreviations__icontains=abbr)
+
+    excluded_root_ids = list(OrganizationUnit.objects.filter(name_q | abbr_q).values_list("id", flat=True))
+    if not excluded_root_ids:
+        return set()
+    return get_org_descendant_ids(excluded_root_ids)

@@ -11,7 +11,12 @@ from wies.core.models import (
     OrganizationType,
     OrganizationUnit,
 )
-from wies.core.services.organizations import parse_xml_hierarchical, sync_organization_tree, sync_organizations
+from wies.core.services.organizations import (
+    get_excluded_org_ids,
+    parse_xml_hierarchical,
+    sync_organization_tree,
+    sync_organizations,
+)
 
 
 class ParseXmlHierarchicalTest(TestCase):
@@ -29,9 +34,8 @@ class ParseXmlHierarchicalTest(TestCase):
         """Test that parsing returns a list"""
         result = parse_xml_hierarchical(self.xml_content)
         assert isinstance(result, list)
-        # 5 original + 1 future eindDatum + 2 same name different types + 2 inactive (6001, 8001) = 10 root orgs
-        # (AIVD excluded completely)
-        assert len(result) == 10
+        # 5 original + 1 future eindDatum + 2 same name different types + 2 inactive (6001, 8001) + 1 AIVD = 11 root orgs
+        assert len(result) == 11
 
     def test_ministry_label_generation(self):
         """Test that ministry without 'Ministerie' prefix gets it added"""
@@ -186,27 +190,6 @@ class ParseXmlHierarchicalTest(TestCase):
         ministry = [org for org in result if org["name"] == "Asiel en Migratie"]
         assert len(ministry) == 1
         assert ministry[0]["is_active"] is True
-
-    def test_filters_excluded_organizations(self):
-        """Test that organizations with excluded names (intelligence services) are filtered out"""
-        result = parse_xml_hierarchical(self.xml_content)
-
-        names = [org["name"] for org in result]
-        assert "Algemene Inlichtingen- en Veiligheidsdienst" not in names
-
-    def test_filters_children_of_excluded_organizations(self):
-        """Test that children of excluded organizations are also filtered out"""
-        result = parse_xml_hierarchical(self.xml_content)
-
-        def all_names(orgs):
-            names = set()
-            for org in orgs:
-                names.add(org["name"])
-                names.update(all_names(org.get("children", [])))
-            return names
-
-        all_org_names = all_names(result)
-        assert "directie Inlichtingen" not in all_org_names
 
     def test_inactive_parent_propagates_to_children(self):
         """Test that inactive parent organizations propagate is_active=False to children"""
@@ -1029,3 +1012,51 @@ class SyncOrganizationsCleanupTest(TestCase):
         result = sync_organizations(xml_content=self.xml_content, dry_run=False)
 
         assert result.deleted >= 3
+
+
+class GetExcludedOrgIdsTest(TestCase):
+    """Tests for get_excluded_org_ids — display-time filtering of intelligence services."""
+
+    def setUp(self):
+        OrganizationUnit.objects.all().delete()
+
+    def test_excludes_org_matched_by_name(self):
+        """Test that organizations matching excluded names are returned"""
+        aivd = OrganizationUnit.objects.create(
+            name="Algemene Inlichtingen- en Veiligheidsdienst",
+        )
+        excluded = get_excluded_org_ids()
+        assert aivd.id in excluded
+
+    def test_excludes_org_matched_by_abbreviation(self):
+        """Test that organizations matching excluded abbreviations are returned"""
+        mivd = OrganizationUnit.objects.create(
+            name="Some Other Name",
+            abbreviations=["MIVD"],
+        )
+        excluded = get_excluded_org_ids()
+        assert mivd.id in excluded
+
+    def test_excludes_descendants(self):
+        """Test that children of excluded orgs are also returned"""
+        aivd = OrganizationUnit.objects.create(
+            name="Algemene Inlichtingen- en Veiligheidsdienst",
+        )
+        child = OrganizationUnit.objects.create(name="directie Inlichtingen", parent=aivd)
+        grandchild = OrganizationUnit.objects.create(name="Afdeling X", parent=child)
+
+        excluded = get_excluded_org_ids()
+        assert {aivd.id, child.id, grandchild.id} <= excluded
+
+    def test_does_not_exclude_unrelated_orgs(self):
+        """Test that normal organizations are not excluded"""
+        OrganizationUnit.objects.create(name="Algemene Inlichtingen- en Veiligheidsdienst")
+        normal = OrganizationUnit.objects.create(name="Ministerie van Financien")
+
+        excluded = get_excluded_org_ids()
+        assert normal.id not in excluded
+
+    def test_returns_empty_when_no_match(self):
+        """Test that empty set is returned when no orgs match"""
+        OrganizationUnit.objects.create(name="Ministerie van Financien")
+        assert get_excluded_org_ids() == set()

@@ -243,7 +243,7 @@ describe("explicitSelections", function () {
     ts.check("self-10");
     assert.equal(
       ts.explicitSelections.get("self-10"),
-      "Ministerie van Financien (direct)",
+      'Direct onder "Ministerie van Financien"',
     );
   });
 });
