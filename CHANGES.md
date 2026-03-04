@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ...
+- bump django to 6.0.3
 
 ## 2026-03-03
 
