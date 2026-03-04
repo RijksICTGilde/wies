@@ -13,8 +13,9 @@
 {% set visible = real_options[:3] %}
 {% set extra = real_options[3:] %}
 <fieldset class="checkbox-filter" data-checkbox-filter data-name="{{ name }}">
+  <legend class="checkbox-filter__legend-sr-only">{{ label }}</legend>
   <button type="button" class="checkbox-filter__header">
-    <legend class="checkbox-filter__label rvo-label">{{ label }}</legend>
+    <span class="checkbox-filter__label rvo-label">{{ label }}</span>
     <svg class="checkbox-filter__header-icon"
          viewBox="0 0 24 24"
          fill="none"

@@ -104,7 +104,7 @@
       body.hidden = !isCollapsed;
       headerBtn.classList.toggle(
         "checkbox-filter__header--collapsed",
-        isCollapsed,
+        !isCollapsed,
       );
 
       // Track collapsed state
