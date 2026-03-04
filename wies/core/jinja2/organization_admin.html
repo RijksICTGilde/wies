@@ -11,7 +11,7 @@
   {% macro render_tree(children) %}
     <ul class="org-tree__list">
       {% for child in children %}
-        <li class="org-tree__item{% if not child.is_active %} org-tree__item--inactive{% endif %}"
+        <li class="org-tree__item{% if child.is_inactive %} org-tree__item--inactive{% endif %}"
             data-label="{{ (child.label or child.name)|lower }}"
             {% if child.abbreviations %}data-abbr="{{ child.abbreviations|join(',') |lower }}"{% endif %}>
           {% if child.tree_children %}
@@ -21,7 +21,7 @@
                       aria-hidden="true"></span>
                 <span class="org-tree__label">{{ child.label or child.name }}</span>
                 {% if child.abbreviations %}<span class="org-tree__abbr">({{ child.abbreviations[0] }})</span>{% endif %}
-                {% if not child.is_active %}<span class="org-tree__badge--inactive">(inactief)</span>{% endif %}
+                {% if child.is_inactive %}<span class="org-tree__badge--inactive">(inactief)</span>{% endif %}
               </summary>
               {{ render_tree(child.tree_children) }}
             </details>
@@ -30,7 +30,7 @@
               <span class="org-tree__chevron-spacer"></span>
               <span class="org-tree__label">{{ child.label or child.name }}</span>
               {% if child.abbreviations %}<span class="org-tree__abbr">({{ child.abbreviations[0] }})</span>{% endif %}
-              {% if not child.is_active %}<span class="org-tree__badge--inactive">(inactief)</span>{% endif %}
+              {% if child.is_inactive %}<span class="org-tree__badge--inactive">(inactief)</span>{% endif %}
             </span>
           {% endif %}
         </li>

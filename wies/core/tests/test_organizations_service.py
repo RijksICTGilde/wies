@@ -1,7 +1,9 @@
 import copy
+from datetime import date
 from pathlib import Path
 
 from django.test import TestCase
+from django.utils import timezone
 
 from wies.core.models import (
     Assignment,
@@ -164,47 +166,47 @@ class ParseXmlHierarchicalTest(TestCase):
         ministry = next(org for org in result if org["name"] == "Asiel en Migratie")
         assert ministry["system_id"] == "1001"
 
-    def test_inactive_org_has_is_active_false(self):
-        """Test that organizations with eindDatum in the past are returned with is_active=False"""
+    def test_inactive_org_has_end_date_set(self):
+        """Test that organizations with eindDatum in the past are returned with end_date set"""
         result = parse_xml_hierarchical(self.xml_content)
 
         # "Voormalige Testorganisatie" has eindDatum=2020-12-31
         voormalige = [org for org in result if org["name"] == "Voormalige Testorganisatie"]
         assert len(voormalige) == 1, "Inactive org should be included in results"
-        assert voormalige[0]["is_active"] is False
+        assert voormalige[0]["end_date"] == date(2020, 12, 31)
 
     def test_keeps_organizations_with_einddatum_in_future(self):
-        """Test that organizations with eindDatum in the future have is_active=True"""
+        """Test that organizations with eindDatum in the future have end_date set to that date"""
         result = parse_xml_hierarchical(self.xml_content)
 
-        # "Toekomstige Testorganisatie" has eindDatum=2099-12-31, should be active
+        # "Toekomstige Testorganisatie" has eindDatum=2099-12-31, should still store the date
         toekomstig = [org for org in result if org["name"] == "Toekomstige Testorganisatie"]
         assert len(toekomstig) == 1
-        assert toekomstig[0]["is_active"] is True
+        assert toekomstig[0]["end_date"] == date(2099, 12, 31)
 
     def test_keeps_organizations_without_einddatum(self):
-        """Test that organizations without eindDatum have is_active=True"""
+        """Test that organizations without eindDatum have end_date=None"""
         result = parse_xml_hierarchical(self.xml_content)
 
-        # "Asiel en Migratie" has no eindDatum, should be active
+        # "Asiel en Migratie" has no eindDatum
         ministry = [org for org in result if org["name"] == "Asiel en Migratie"]
         assert len(ministry) == 1
-        assert ministry[0]["is_active"] is True
+        assert ministry[0]["end_date"] is None
 
-    def test_inactive_parent_propagates_to_children(self):
-        """Test that inactive parent organizations propagate is_active=False to children"""
+    def test_inactive_parent_propagates_end_date_to_children(self):
+        """Test that inactive parent organizations propagate end_date to children"""
         result = parse_xml_hierarchical(self.xml_content)
 
         # "Voormalig Directoraat" has eindDatum in past
         voormalig_dir = [org for org in result if org["name"] == "Voormalig Directoraat"]
         assert len(voormalig_dir) == 1
-        assert voormalig_dir[0]["is_active"] is False
+        assert voormalig_dir[0]["end_date"] is not None
 
-        # Child should also be inactive
+        # Child should also have end_date set
         children = voormalig_dir[0]["children"]
         assert len(children) == 1
         assert children[0]["name"] == "Afdeling onder voormalig directoraat"
-        assert children[0]["is_active"] is False
+        assert children[0]["end_date"] is not None
 
 
 class SyncOrganizationTreeTest(TestCase):
@@ -305,7 +307,7 @@ class SyncOrganizationTreeTest(TestCase):
             "source_url": "http://test.nl",
             "related_ministry_tooi": "",
             "children": [],
-            "is_active": True,
+            "end_date": None,
         }
 
         # First sync - creates the org
@@ -467,7 +469,7 @@ class SyncOrganizationTreeTest(TestCase):
             "source_url": "http://test.nl",
             "related_ministry_tooi": "",
             "children": [],
-            "is_active": True,
+            "end_date": None,
         }
 
         sync_organization_tree(org_data, parent=parent, dry_run=False)
@@ -707,7 +709,7 @@ class SyncOrganizationTreeTest(TestCase):
             "source_url": "https://organisaties.overheid.nl/28200254/Adviescollege_toetsing_regeldruk/",
             "children": [],
             "related_ministry_tooi": "",
-            "is_active": True,
+            "end_date": None,
         }
 
         result = sync_organization_tree(copy.deepcopy(org_data), parent=None, dry_run=False, seen_ids=set())
@@ -719,14 +721,13 @@ class SyncOrganizationTreeTest(TestCase):
         existing.refresh_from_db()
         assert existing.tooi_identifier == "https://identifier.overheid.nl/tooi/id/oorg/oorg12362"
 
-    # is_active handling
+    # end_date handling
 
     def test_updates_existing_org_to_inactive(self):
-        """Test that existing org with eindDatum in past gets is_active=False"""
+        """Test that existing org with eindDatum in past gets end_date set"""
         org = OrganizationUnit.objects.create(
             name="Voormalige Testorganisatie",
             tooi_identifier="https://identifier.overheid.nl/tooi/id/oorg/oorg6001",
-            is_active=True,
         )
 
         parsed = parse_xml_hierarchical(self.xml_content)
@@ -734,10 +735,10 @@ class SyncOrganizationTreeTest(TestCase):
         sync_organization_tree(copy.deepcopy(voormalige), parent=None, dry_run=False, seen_ids=set())
 
         org.refresh_from_db()
-        assert org.is_active is False
+        assert org.end_date is not None
 
     def test_does_not_create_new_inactive_org(self):
-        """Test that new org with is_active=False is NOT created"""
+        """Test that new org with end_date in the past is NOT created"""
         parsed = parse_xml_hierarchical(self.xml_content)
         voormalige = next(o for o in parsed if o["name"] == "Voormalige Testorganisatie")
 
@@ -786,7 +787,6 @@ class SyncOrganizationsDeactivationTest(TestCase):
         ghost = OrganizationUnit.objects.create(
             name="Ghost Org",
             source_url="https://organisaties.overheid.nl/99999/Ghost_Org/",
-            is_active=True,
         )
 
         result = sync_organizations(xml_content=self.xml_content, dry_run=False)
@@ -802,26 +802,24 @@ class SyncOrganizationsDeactivationTest(TestCase):
         manual = OrganizationUnit.objects.create(
             name="Manual Org",
             source_url="",
-            is_active=True,
         )
 
         sync_organizations(xml_content=self.xml_content, dry_run=False)
 
         manual.refresh_from_db()
-        assert manual.is_active is True
+        assert manual.end_date is None
 
     def test_does_not_deactivate_on_dry_run(self):
         """Test that dry run doesn't deactivate orgs"""
         ghost = OrganizationUnit.objects.create(
             name="Ghost Org",
             source_url="https://organisaties.overheid.nl/99999/Ghost_Org/",
-            is_active=True,
         )
 
         sync_organizations(xml_content=self.xml_content, dry_run=True)
 
         ghost.refresh_from_db()
-        assert ghost.is_active is True
+        assert ghost.end_date is None
 
 
 class SyncEventLoggingTest(TestCase):
@@ -858,7 +856,6 @@ class SyncEventLoggingTest(TestCase):
         org = OrganizationUnit.objects.create(
             name="Old Name",
             tooi_identifier="https://identifier.overheid.nl/tooi/id/ministerie/mnre1001",
-            is_active=True,
         )
 
         parsed = parse_xml_hierarchical(self.xml_content)
@@ -879,7 +876,6 @@ class SyncEventLoggingTest(TestCase):
         ghost = OrganizationUnit.objects.create(
             name="Ghost Org",
             source_url="https://organisaties.overheid.nl/99999/Ghost_Org/",
-            is_active=True,
         )
 
         sync_organizations(xml_content=self.xml_content, dry_run=False)
@@ -896,7 +892,6 @@ class SyncEventLoggingTest(TestCase):
         OrganizationUnit.objects.create(
             name="Ghost Org",
             source_url="https://organisaties.overheid.nl/99999/Ghost_Org/",
-            is_active=True,
         )
 
         sync_organizations(xml_content=self.xml_content, dry_run=True)
@@ -937,7 +932,7 @@ class SyncOrganizationsCleanupTest(TestCase):
 
     def test_deletes_inactive_unlinked_org(self):
         """Test that inactive org without children or assignments is deleted after sync"""
-        org = OrganizationUnit.objects.create(name="Dead Org", is_active=False)
+        org = OrganizationUnit.objects.create(name="Dead Org", end_date=timezone.now().date())
 
         result = sync_organizations(xml_content=self.xml_content, dry_run=False)
 
@@ -946,7 +941,7 @@ class SyncOrganizationsCleanupTest(TestCase):
 
     def test_does_not_delete_active_unlinked_org(self):
         """Test that active org without links is NOT deleted"""
-        org = OrganizationUnit.objects.create(name="Active Org", is_active=True, source_url="")
+        org = OrganizationUnit.objects.create(name="Active Org", source_url="")
 
         sync_organizations(xml_content=self.xml_content, dry_run=False)
 
@@ -954,7 +949,7 @@ class SyncOrganizationsCleanupTest(TestCase):
 
     def test_does_not_delete_inactive_org_with_assignments(self):
         """Test that inactive org with assignment relations is NOT deleted"""
-        org = OrganizationUnit.objects.create(name="Linked Org", is_active=False)
+        org = OrganizationUnit.objects.create(name="Linked Org", end_date=timezone.now().date())
         colleague = Colleague.objects.create(name="Test", email="test@test.nl", source="MANUAL")
         assignment = Assignment.objects.create(name="Test Assignment", owner=colleague, source="MANUAL")
         AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=org)
@@ -965,8 +960,8 @@ class SyncOrganizationsCleanupTest(TestCase):
 
     def test_does_not_delete_inactive_org_with_children(self):
         """Test that inactive parent with a child is NOT deleted"""
-        parent = OrganizationUnit.objects.create(name="Inactive Parent", is_active=False)
-        OrganizationUnit.objects.create(name="Active Child", is_active=True, parent=parent)
+        parent = OrganizationUnit.objects.create(name="Inactive Parent", end_date=timezone.now().date())
+        OrganizationUnit.objects.create(name="Active Child", parent=parent)
 
         sync_organizations(xml_content=self.xml_content, dry_run=False)
 
@@ -974,8 +969,8 @@ class SyncOrganizationsCleanupTest(TestCase):
 
     def test_cascading_cleanup_deletes_full_inactive_tree(self):
         """Test that inactive parent + inactive child (no links) both get deleted"""
-        parent = OrganizationUnit.objects.create(name="Dead Parent", is_active=False)
-        child = OrganizationUnit.objects.create(name="Dead Child", is_active=False, parent=parent)
+        parent = OrganizationUnit.objects.create(name="Dead Parent", end_date=timezone.now().date())
+        child = OrganizationUnit.objects.create(name="Dead Child", end_date=timezone.now().date(), parent=parent)
 
         result = sync_organizations(xml_content=self.xml_content, dry_run=False)
 
@@ -984,7 +979,7 @@ class SyncOrganizationsCleanupTest(TestCase):
 
     def test_delete_event_logged(self):
         """Test that OrgSync.delete event is created for each deleted org"""
-        org = OrganizationUnit.objects.create(name="Dead Org", is_active=False)
+        org = OrganizationUnit.objects.create(name="Dead Org", end_date=timezone.now().date())
         org_id = org.id
 
         sync_organizations(xml_content=self.xml_content, dry_run=False)
@@ -998,7 +993,7 @@ class SyncOrganizationsCleanupTest(TestCase):
 
     def test_no_cleanup_on_dry_run(self):
         """Test that dry run does not delete inactive unlinked orgs"""
-        org = OrganizationUnit.objects.create(name="Dead Org", is_active=False)
+        org = OrganizationUnit.objects.create(name="Dead Org", end_date=timezone.now().date())
 
         sync_organizations(xml_content=self.xml_content, dry_run=True)
 
@@ -1007,7 +1002,7 @@ class SyncOrganizationsCleanupTest(TestCase):
     def test_deleted_count_in_result(self):
         """Test that result.deleted reflects the number of deleted orgs"""
         for i in range(3):
-            OrganizationUnit.objects.create(name=f"Dead Org {i}", is_active=False)
+            OrganizationUnit.objects.create(name=f"Dead Org {i}", end_date=timezone.now().date())
 
         result = sync_organizations(xml_content=self.xml_content, dry_run=False)
 

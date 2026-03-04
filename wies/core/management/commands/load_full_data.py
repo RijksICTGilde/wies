@@ -494,7 +494,7 @@ class Command(BaseCommand):
             f"unchanged={result.unchanged}, deactivated={result.deactivated}"
         )
 
-        org_count = OrganizationUnit.objects.filter(is_active=True).count()
+        org_count = OrganizationUnit.objects.filter(end_date__isnull=True).count()
         self.stdout.write(f"  Active organizations: {org_count}")
 
         # ── 2. Skills ────────────────────────────────────────────────────

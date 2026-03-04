@@ -974,11 +974,13 @@ def assignment_import_csv(request):
 @permission_required("core.view_organizationunit", raise_exception=True)
 def organization_admin(request):
     """Show all organization units in a collapsible tree, grouped by type."""
-    rows = OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations", "is_active")
+    rows = OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations", "end_date")
 
     # Index all units as lightweight dicts
+    today = timezone.now().date()
     units_by_id: dict[int, dict] = {}
     for row in rows:
+        row["is_inactive"] = row["end_date"] is not None and row["end_date"] <= today
         row["tree_children"] = []
         units_by_id[row["id"]] = row
 

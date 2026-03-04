@@ -70,5 +70,5 @@ class OrganizationTypeAdmin(admin.ModelAdmin):
 @admin.register(OrganizationUnit)
 class OrganizationUnitAdmin(admin.ModelAdmin):
     search_fields = ["name"]
-    list_display = ["name", "is_active"]
-    list_filter = ["is_active"]
+    list_display = ["name", "end_date"]
+    list_filter = ["end_date"]

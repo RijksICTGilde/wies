@@ -69,20 +69,17 @@ def parse_organization_element(
 ) -> dict | None:
     """Parse a single organization element from XML.
 
-    Returns dict with organization data, including nested children and is_active flag.
+    Returns dict with organization data, including nested children and end_date.
     """
     name = org_elem.findtext("p:naam", "", NS).strip()
     abbreviations = [a.text.strip() for a in org_elem.findall("p:afkorting", NS) if a.text]
 
-    # Determine if organization is inactive based on eindDatum
-    is_active = True
+    # Parse eindDatum into end_date
+    end_date = None
     einddatum_elem = org_elem.find("p:eindDatum", NS)
     if einddatum_elem is not None and einddatum_elem.text:
         try:
-            einddatum = datetime.fromisoformat(einddatum_elem.text.strip()).date()
-            today = timezone.now().date()
-            if einddatum < today:
-                is_active = False
+            end_date = datetime.fromisoformat(einddatum_elem.text.strip()).date()
         except ValueError:
             # Invalid date format, log and continue processing
             logger.warning("Invalid eindDatum format for organization '%s': %s", name, einddatum_elem.text)
@@ -114,9 +111,11 @@ def parse_organization_element(
     for child_elem in org_elem.findall("p:organisaties/p:organisatie", NS):
         child_data = parse_organization_element(child_elem)
         if child_data:
-            # If parent is inactive, all children are also inactive
-            if not is_active:
-                child_data["is_active"] = False
+            # Propagate parent's end_date to children without an earlier one
+            if end_date is not None:
+                child_end = child_data.get("end_date")
+                if child_end is None or child_end > end_date:
+                    child_data["end_date"] = end_date
             children.append(child_data)
 
     return {
@@ -129,7 +128,7 @@ def parse_organization_element(
         "source_url": source_url if source_url else None,
         "children": children,
         "related_ministry_tooi": related_ministry_tooi,
-        "is_active": is_active,
+        "end_date": end_date,
     }
 
 
@@ -176,7 +175,7 @@ def sync_organization_tree(
     """
     result = SyncResult()
     children = org_data.pop("children", [])
-    is_active = org_data.pop("is_active", True)
+    end_date = org_data.pop("end_date", None)
 
     # Find existing org by TOOI
     new_tooi = org_data.get("tooi_identifier")
@@ -236,7 +235,7 @@ def sync_organization_tree(
             "oin_number": None,
             "system_id": org_data["system_id"],
             "source_url": org_data["source_url"],
-            "is_active": is_active,
+            "end_date": end_date,
         }
 
         if db_org:
@@ -244,11 +243,16 @@ def sync_organization_tree(
             for attribute, new_value in new_org_attributes.items():
                 old_value = getattr(db_org, attribute)
                 if old_value != new_value:
-                    # Store parent as ID for JSON serialization
+                    # Ensure JSON-serializable values for event logging
                     if attribute == "parent":
                         changes[attribute] = {
                             "old": old_value.id if old_value else None,
                             "new": new_value.id if new_value else None,
+                        }
+                    elif attribute == "end_date":
+                        changes[attribute] = {
+                            "old": old_value.isoformat() if old_value else None,
+                            "new": new_value.isoformat() if new_value else None,
                         }
                     else:
                         changes[attribute] = {"old": old_value, "new": new_value}
@@ -285,7 +289,7 @@ def sync_organization_tree(
             new_org = db_org
         else:
             # Don't create new records for inactive organizations
-            if not is_active:
+            if end_date is not None and end_date < timezone.now().date():
                 logger.debug("Skipping creation of inactive org: %s", org_data["name"])
                 # Still recurse children — they may have existing DB records to update
                 for child_data in children:
@@ -397,16 +401,17 @@ def sync_organizations(
         result = result + org_result
 
     # Deactivate external orgs not seen during a full sync
+    today = timezone.now().date()
     if not dry_run and seen_ids:
         orgs_to_deactivate = list(
-            OrganizationUnit.objects.filter(is_active=True)
+            OrganizationUnit.objects.filter(Q(end_date__isnull=True) | Q(end_date__gt=today))
             .exclude(source_url="")
             .exclude(source_url__isnull=True)
             .exclude(id__in=seen_ids)
             .values_list("id", "tooi_identifier", "name")
         )
         if orgs_to_deactivate:
-            OrganizationUnit.objects.filter(id__in=[org[0] for org in orgs_to_deactivate]).update(is_active=False)
+            OrganizationUnit.objects.filter(id__in=[org[0] for org in orgs_to_deactivate]).update(end_date=today)
             for org_id, tooi, name in orgs_to_deactivate:
                 create_event(
                     "",
@@ -427,7 +432,7 @@ def sync_organizations(
         total_deleted = 0
         while True:
             orgs_to_delete = list(
-                OrganizationUnit.objects.filter(is_active=False)
+                OrganizationUnit.objects.filter(end_date__lte=today)
                 .exclude(assignment_relations__isnull=False)
                 .exclude(children__isnull=False)
                 .values_list("id", "tooi_identifier", "name")

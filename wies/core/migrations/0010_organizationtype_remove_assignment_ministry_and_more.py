@@ -111,11 +111,12 @@ class Migration(migrations.Migration):
                     ),
                 ),
                 (
-                    "is_active",
-                    models.BooleanField(
-                        default=True,
-                        help_text="Geeft aan of de organisatie nog actief is.",
-                        verbose_name="Actief",
+                    "end_date",
+                    models.DateField(
+                        null=True,
+                        blank=True,
+                        help_text="Datum waarop de organisatie is opgeheven.",
+                        verbose_name="Einddatum",
                     ),
                 ),
                 ("organization_types", models.ManyToManyField(blank=True, to="core.organizationtype")),
@@ -178,6 +179,6 @@ class Migration(migrations.Migration):
         ),
         migrations.AddIndex(
             model_name="organizationunit",
-            index=models.Index(fields=["is_active"], name="core_organi_is_acti_d3dfb4_idx"),
+            index=models.Index(fields=["end_date"], name="core_organi_end_dat_bbd933_idx"),
         ),
     ]

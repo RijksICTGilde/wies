@@ -335,10 +335,11 @@ class OrganizationUnit(models.Model):
     )
 
     # === Status ===
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name="Actief",
-        help_text="Geeft aan of de organisatie nog actief is.",
+    end_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Einddatum",
+        help_text="Datum waarop de organisatie is opgeheven.",
     )
 
     class Meta:
@@ -347,7 +348,7 @@ class OrganizationUnit(models.Model):
         verbose_name_plural = "Organisatie-eenheden"
         indexes = [
             models.Index(fields=["parent"]),
-            models.Index(fields=["is_active"]),
+            models.Index(fields=["end_date"]),
         ]
 
     def __str__(self):
