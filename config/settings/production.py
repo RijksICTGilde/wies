@@ -1,6 +1,7 @@
 import os
 
 from .base import *  # noqa: F403
+from .base import DATABASES
 
 # GENERAL
 # ----------------------------------------------------------------------------------------------------------------------
@@ -45,6 +46,12 @@ LOGGING = {
         },
     },
 }
+
+# DATABASE
+# ----------------------------------------------------------------------------------------------------------------------
+# Enable persistent connections in production (gunicorn workers, managed Postgres)
+DATABASES["default"]["CONN_MAX_AGE"] = 600
+DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 
 # for authlib OIDC connection
 OIDC_CLIENT_ID = os.environ["OIDC_CLIENT_ID"]

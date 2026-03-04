@@ -38,6 +38,19 @@
       <input type="hidden" name="action" value="add_developer_user">
       <button type="submit">Add dev user</button>
     </form>
+    <h2>Download database dump</h2>
+    <form method="post">
+      {{ get_csrf_hidden_input(request) }}
+      <input type="hidden" name="action" value="export_data">
+      <button type="submit">Download database dump</button>
+    </form>
+    <h2>Upload database dump</h2>
+    <form method="post" enctype="multipart/form-data">
+      {{ get_csrf_hidden_input(request) }}
+      <input type="hidden" name="action" value="import_data">
+      <input type="file" name="json_file" accept=".json" required>
+      <button type="submit">Upload database dump</button>
+    </form>
     <h2>Sync all records from OTYS IIR</h2>
     <form method="post">
       {{ get_csrf_hidden_input(request) }}

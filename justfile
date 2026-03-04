@@ -36,28 +36,27 @@ up:
 down:
   docker compose down
 
-up-jrc-m:
-  docker compose run -v /Users/matthijs/jinja-roos-components:/app/jinja-roos-components --service-ports django sh -c "uv pip install -e ./jinja-roos-components && python manage.py runserver 0.0.0.0:8000"
+up-jrc:
+  docker compose run -v /Users/$USER/jinja-roos-components:/app/jinja-roos-components --service-ports django sh -c "uv pip install -e ./jinja-roos-components && python manage.py runserver 0.0.0.0:8000"
 
-# build for production:
-#
-# docker build --target web -t wies .
-#
-# docker build --target worker -t wies-worker .
+setup-production:
+  docker build . -t wies .
+  docker build --target worker -t wies-worker .
+  docker network create wies-network
 
-# run like production:
-#
-# docker run --rm \
-# --env-file .env \
-# -p 8000:8000 \
-# -v ./db:/app/db \
-# wies
-#
-# docker run --rm \
-# --env-file .env \
-# -v ./db:/app/db \
-# wies-worker
+# to check if container runs properly. not directly used in production
+up-production-postgres:
+  docker run --rm --env-file .env -p 5432:5432 --network wies-network --name postgres postgres:17
 
+# make sure to run up-production-postgres first
+# to check if container runs properly. not directly used in production
+up-production-django:
+  docker run --rm  --env-file .env -p 8000:8000 --network wies-network wies
+
+# make sure to run up-production-postgres first
+# to check if container runs properly. not directly used in production
+up-production-worker:
+  docker run --rm --env-file .env --network wies-network wies-worker
 
 # Rebuild db
 rebuild-db:

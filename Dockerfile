@@ -89,8 +89,6 @@ RUN rm -rf /app/docker && \
 # patch original faulty index.css
 RUN mv overwrite_index.css node_modules/@nl-rvo/assets/index.css
 
-RUN mkdir -p /data/db_data && chown -R app:app /data
-
 RUN python manage.py collectstatic
 
 USER app
