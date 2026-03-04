@@ -40,9 +40,9 @@ up-jrc:
   docker compose run -v /Users/$USER/jinja-roos-components:/app/jinja-roos-components --service-ports django sh -c "uv pip install -e ./jinja-roos-components && python manage.py runserver 0.0.0.0:8000"
 
 setup-production:
-  docker build . -t wies .
+  docker build --target web -t wies .
   docker build --target worker -t wies-worker .
-  docker network create wies-network
+  docker network create wies-network 2>/dev/null || true
 
 # to check if container runs properly. not directly used in production
 up-production-postgres:
