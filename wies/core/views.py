@@ -701,7 +701,6 @@ class AssignmentListView(ListView):
     def get_queryset(self):
         qs = (
             Assignment.objects.filter(status="OPEN")
-            .select_related("ministry")
             .prefetch_related(
                 Prefetch(
                     "services",
@@ -854,7 +853,7 @@ class AssignmentListView(ListView):
         assignment_id = self.request.GET.get("opdracht")
         if assignment_id:
             try:
-                assignment = Assignment.objects.select_related("ministry", "owner").get(id=assignment_id, status="OPEN")
+                assignment = Assignment.objects.select_related("owner").get(id=assignment_id, status="OPEN")
                 context["panel_data"] = self._get_vacancy_panel_data(assignment)
             except Assignment.DoesNotExist:
                 pass
