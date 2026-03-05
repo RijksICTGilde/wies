@@ -93,8 +93,8 @@ class RvoFormMixinTest(TestCase):
         email_label = email_label_match.group(0)
         assert "rvo-label--required" in email_label
 
-        # brand is optional - should NOT have rvo-label--required
-        groups_label_match = re.search(r'<label[^>]*for="id_groups"[^>]*>(.*?)</label>', rendered, re.DOTALL)
+        # groups is optional - should NOT have rvo-label--required
+        groups_label_match = re.search(r'<label[^>]*id="label-groups"[^>]*>(.*?)</label>', rendered, re.DOTALL)
         assert groups_label_match is not None
         brand_label = groups_label_match.group(0)
         assert "rvo-label--required" not in brand_label
