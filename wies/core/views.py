@@ -311,7 +311,7 @@ class PlacementListView(ListView):
         exclude_filter can be: "rol", "org", or a category_id (int) for labels.
         """
         if exclude_filter != "rol":
-            rol_filter = self.request.GET.getlist("rol")
+            rol_filter = [x for x in self.request.GET.getlist("rol") if x.isdigit()]
             if rol_filter:
                 qs = qs.filter(service__skill__id__in=rol_filter)
 
@@ -507,7 +507,7 @@ class PlacementListView(ListView):
         # rol filter supports multi-select
         rol_filter = set()
         for rol_id in self.request.GET.getlist("rol"):
-            if rol_id != "":
+            if rol_id.isdigit():
                 rol_filter.add(rol_id)
         if len(rol_filter) > 0:
             active_filters["rol"] = rol_filter
@@ -663,10 +663,8 @@ class PlacementListView(ListView):
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
             params = self.request.GET.copy()
-            params.pop("pagina", None)
-            params_str = params.urlencode()
-            next_page = context["page_obj"].next_page_number()
-            context["next_page_url"] = f"?pagina={next_page}" + (f"&{params_str}" if params_str else "")
+            params["pagina"] = context["page_obj"].next_page_number()
+            context["next_page_url"] = f"?{params.urlencode()}"
         else:
             context["next_page_url"] = None
 
@@ -987,7 +985,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         # Role filter
         if exclude_filter != "rol":
             role_filter = self.request.GET.get("rol")
-            if role_filter:
+            if role_filter and role_filter.isdigit():
                 qs = qs.filter(groups__id=role_filter)
 
         return qs
@@ -1030,7 +1028,7 @@ class UserListView(PermissionRequiredMixin, ListView):
             active_filters["labels"] = label_filter
 
         role_filter = self.request.GET.get("rol")
-        if role_filter:
+        if role_filter and role_filter.isdigit():
             active_filters["rol"] = role_filter
 
         # For each label category, count on queryset excluding that category's filter
@@ -1102,13 +1100,9 @@ class UserListView(PermissionRequiredMixin, ListView):
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
-            filter_params = []
-            for key, values in self.request.GET.lists():
-                if key != "pagina":
-                    filter_params.extend(f"{key}={value}" for value in values)
-            params_str = "&".join(filter_params)
-            next_page = context["page_obj"].next_page_number()
-            context["next_page_url"] = f"?pagina={next_page}" + (f"&{params_str}" if params_str else "")
+            params = self.request.GET.copy()
+            params["pagina"] = context["page_obj"].next_page_number()
+            context["next_page_url"] = f"?{params.urlencode()}"
         else:
             context["next_page_url"] = None
 
