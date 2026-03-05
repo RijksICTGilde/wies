@@ -719,8 +719,9 @@ class AssignmentListView(ListView):
                 | Q(organizations__name__icontains=search_filter)
             )
 
-        if self.request.GET.get("rol"):
-            qs = qs.filter(services__skill__id=self.request.GET["rol"])
+        rol_filter = self.request.GET.getlist("rol")
+        if rol_filter:
+            qs = qs.filter(services__skill__id__in=rol_filter)
 
         # Organization hierarchy filter
         org_ids = [int(x) for x in self.request.GET.getlist("org") if x.isdigit()]
@@ -802,18 +803,26 @@ class AssignmentListView(ListView):
         context["search_filter"] = self.request.GET.get("zoek")
 
         active_filters = {}
-        for filter_param in ["rol", "beschikbaar_vanaf"]:
-            val = self.request.GET.get(filter_param)
-            if val:
-                active_filters[filter_param] = val
+        beschikbaar_vanaf = self.request.GET.get("beschikbaar_vanaf")
+        if beschikbaar_vanaf:
+            active_filters["beschikbaar_vanaf"] = beschikbaar_vanaf
+
+        # rol filter supports multi-select
+        rol_filter = set()
+        for rol_id in self.request.GET.getlist("rol"):
+            if rol_id != "":
+                rol_filter.add(rol_id)
+        if len(rol_filter) > 0:
+            active_filters["rol"] = rol_filter
 
         skill_options = [{"value": "", "label": ""}]
-        skill_value = ""
+        skill_selected_values = []
         for skill in Skill.objects.order_by("name"):
-            skill_options.append({"value": str(skill.id), "label": skill.name})
-            if active_filters.get("rol") == str(skill.id):
-                skill_options[-1]["selected"] = True
-                skill_value = str(skill.id)
+            option = {"value": str(skill.id), "label": skill.name}
+            if str(skill.id) in active_filters.get("rol", set()):
+                option["selected"] = True
+                skill_selected_values.append(str(skill.id))
+            skill_options.append(option)
 
         # Organization filter (multi-select via modal)
         active_org_filter_count = 0
@@ -878,11 +887,11 @@ class AssignmentListView(ListView):
                 "label": "Opdrachtgever",
             },
             {
-                "type": "select",
+                "type": "select-multi",
                 "name": "rol",
                 "label": "Rollen",
                 "options": skill_options,
-                "value": skill_value,
+                "selected_values": skill_selected_values,
             },
             {
                 "type": "date",
