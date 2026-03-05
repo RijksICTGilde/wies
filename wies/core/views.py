@@ -243,8 +243,8 @@ class PlacementListView(ListView):
     paginate_by = 50
     page_kwarg = "pagina"
 
-    def get_queryset(self):
-        """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
+    def _get_base_queryset(self):
+        """Base queryset with search, ordering, and date filters applied."""
         excluded_org_ids = get_excluded_org_ids()
         qs = (
             Placement.objects.select_related("colleague", "service", "service__skill")
@@ -278,35 +278,6 @@ class PlacementListView(ListView):
             if order_by:
                 qs = qs.order_by(order_by)
 
-        # Filtering
-
-        if self.request.GET.get("rol"):
-            qs = qs.filter(service__skill__id=self.request.GET["rol"])
-
-        org_ids = [int(x) for x in self.request.GET.getlist("org") if x.isdigit()]
-        org_self_ids = [int(x) for x in self.request.GET.getlist("org_self") if x.isdigit()]
-        org_type_labels = [x for x in self.request.GET.getlist("org_type") if x]
-
-        if org_ids or org_self_ids or org_type_labels:
-            matching_ids: set[int] = set()
-            if org_ids:
-                matching_ids |= get_org_descendant_ids(org_ids)
-            if org_type_labels:
-                type_root_ids = list(
-                    OrganizationUnit.objects.filter(organization_types__label__in=org_type_labels).values_list(
-                        "id", flat=True
-                    )
-                )
-                matching_ids |= get_org_descendant_ids(type_root_ids)
-            if org_self_ids:
-                matching_ids |= set(org_self_ids)
-            qs = qs.filter(service__assignment__organizations__id__in=matching_ids)
-
-        # Label filter support multiselect
-        for label_id in self.request.GET.getlist("labels"):
-            if label_id != "":
-                qs = qs.filter(colleague__labels__id=int(label_id))
-
         # filter out historical placements
         qs = annotate_placement_dates(qs)
         qs = filter_placements_by_min_end_date(qs, timezone.now().date())
@@ -322,6 +293,63 @@ class PlacementListView(ListView):
             except Value:
                 pass  # Invalid date format, ignore filter
 
+        return qs
+
+    def _get_labels_by_category(self):
+        """Parse selected label IDs grouped by category."""
+        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid]
+        if not label_ids:
+            return {}
+        labels_by_category = {}
+        for label in Label.objects.filter(id__in=label_ids).values("id", "category_id"):
+            labels_by_category.setdefault(label["category_id"], []).append(label["id"])
+        return labels_by_category
+
+    def _apply_filters(self, qs, *, exclude_filter=None):
+        """Apply all selection filters, optionally excluding one filter type.
+
+        exclude_filter can be: "rol", "org", or a category_id (int) for labels.
+        """
+        if exclude_filter != "rol":
+            rol_filter = self.request.GET.getlist("rol")
+            if rol_filter:
+                qs = qs.filter(service__skill__id__in=rol_filter)
+
+        if exclude_filter != "org":
+            org_ids = [int(x) for x in self.request.GET.getlist("org") if x.isdigit()]
+            org_self_ids = [int(x) for x in self.request.GET.getlist("org_self") if x.isdigit()]
+            org_type_labels = [x for x in self.request.GET.getlist("org_type") if x]
+
+            if org_ids or org_self_ids or org_type_labels:
+                matching_ids: set[int] = set()
+                if org_ids:
+                    matching_ids |= get_org_descendant_ids(org_ids)
+                if org_type_labels:
+                    type_root_ids = list(
+                        OrganizationUnit.objects.filter(organization_types__label__in=org_type_labels).values_list(
+                            "id", flat=True
+                        )
+                    )
+                    matching_ids |= get_org_descendant_ids(type_root_ids)
+                if org_self_ids:
+                    matching_ids |= set(org_self_ids)
+                qs = qs.filter(service__assignment__organizations__id__in=matching_ids)
+
+        # Label filter: OR within category, AND between categories
+        labels_by_category = self._get_labels_by_category()
+        for cat_id, cat_label_ids in labels_by_category.items():
+            if exclude_filter != cat_id:
+                qs = qs.filter(colleague__labels__id__in=cat_label_ids)
+
+        return qs
+
+    def get_queryset(self):
+        """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
+        qs = self._get_base_queryset()
+        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid]
+        if label_ids and not self._get_labels_by_category():
+            return Placement.objects.none()
+        qs = self._apply_filters(qs)
         return qs.distinct()
 
     def get_template_names(self):
@@ -459,6 +487,7 @@ class PlacementListView(ListView):
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
+        context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
 
         # Add colleague URLs to placement objects
         for placement in context["object_list"]:
@@ -469,10 +498,18 @@ class PlacementListView(ListView):
         context["search_filter"] = self.request.GET.get("zoek")
 
         active_filters: dict = {}
-        for filter_param in ["rol", "periode"]:
+        for filter_param in ["periode"]:
             val = self.request.GET.get(filter_param)
             if val:
                 active_filters[filter_param] = val
+
+        # rol filter supports multi-select
+        rol_filter = set()
+        for rol_id in self.request.GET.getlist("rol"):
+            if rol_id != "":
+                rol_filter.add(rol_id)
+        if len(rol_filter) > 0:
+            active_filters["rol"] = rol_filter
 
         # label filter supports multi-select
         label_filter = set()
@@ -540,36 +577,56 @@ class PlacementListView(ListView):
             for type_label in org_type_filter
         )
 
+        # For each filter category, count on a queryset excluding that category's filter
+        base_qs = self._get_base_queryset()
+
         label_filter_groups = []
         for category in LabelCategory.objects.all():
-            select_label = category.name
-            options = [
-                {"value": "", "label": ""},
-            ]
-            value = ""
+            # Count with all filters EXCEPT this label category
+            cat_filtered_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
+            cat_placement_qs = Placement.objects.filter(id__in=cat_filtered_qs.values_list("id", flat=True))
+            cat_label_ids = cat_placement_qs.values_list("colleague__labels__id", flat=True)
+            cat_label_counts = Counter(lid for lid in cat_label_ids if lid is not None)
+
+            options = [{"value": "", "label": ""}]
+            selected_values = []
             for label in Label.objects.filter(category=category):
-                options.append({"value": str(label.id), "label": f"{label.name}", "category_color": category.color})
+                options.append(
+                    {
+                        "value": str(label.id),
+                        "label": f"{label.name}",
+                        "category_color": category.color,
+                        "count": cat_label_counts.get(label.id, 0),
+                    }
+                )
                 if str(label.id) in active_filters.get("labels", set()):
                     options[-1]["selected"] = True
-                    value = str(label.id)
+                    selected_values.append(str(label.id))
 
-            filter_group = {
-                "type": "select",
-                "name": "labels",
-                "label": select_label,
-                "options": options,
-                "value": value,
-            }
+            label_filter_groups.append(
+                {
+                    "type": "select-multi",
+                    "name": "labels",
+                    "label": category.name,
+                    "options": options,
+                    "selected_values": selected_values,
+                }
+            )
 
-            label_filter_groups.append(filter_group)
+        # Skill/role counts: exclude role filter
+        skill_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
+        skill_placement_qs = Placement.objects.filter(id__in=skill_filtered_qs.values_list("id", flat=True))
+        skill_ids = skill_placement_qs.values_list("service__skill__id", flat=True)
+        skill_counts = Counter(sid for sid in skill_ids if sid is not None)
 
         skill_options = [{"value": "", "label": ""}]
-        skill_value = ""
+        skill_selected_values = []
         for skill in Skill.objects.order_by("name"):
-            skill_options.append({"value": str(skill.id), "label": skill.name})
-            if active_filters.get("rol") == str(skill.id):
-                skill_options[-1]["selected"] = True
-                skill_value = str(skill.id)
+            option = {"value": str(skill.id), "label": skill.name, "count": skill_counts.get(skill.id, 0)}
+            if str(skill.id) in active_filters.get("rol", set()):
+                option["selected"] = True
+                skill_selected_values.append(str(skill.id))
+            skill_options.append(option)
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
@@ -585,11 +642,11 @@ class PlacementListView(ListView):
                 "label": "Opdrachtgever",
             },
             {
-                "type": "select",
+                "type": "select-multi",
                 "name": "rol",
                 "label": "Rol",
                 "options": skill_options,
-                "value": skill_value,
+                "selected_values": skill_selected_values,
             },
             *label_filter_groups,
             {
@@ -641,8 +698,8 @@ class UserListView(PermissionRequiredMixin, ListView):
     page_kwarg = "pagina"
     permission_required = "core.view_user"
 
-    def get_queryset(self):
-        """Apply filters to users queryset - exclude superusers"""
+    def _get_base_queryset(self):
+        """Base queryset with search applied."""
         qs = (
             User.objects.prefetch_related("groups", "labels__category")
             .filter(is_superuser=False)
@@ -660,16 +717,44 @@ class UserListView(PermissionRequiredMixin, ListView):
                 | Q(email__icontains=search_filter)
             )
 
-        # Label filter support multiselect
-        for label_id in self.request.GET.getlist("labels"):
-            if label_id != "":
-                qs = qs.filter(labels__id__contains=label_id)
+        return qs
+
+    def _get_labels_by_category(self):
+        """Parse selected label IDs grouped by category."""
+        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid]
+        if not label_ids:
+            return {}
+        labels_by_category = {}
+        for label in Label.objects.filter(id__in=label_ids).values("id", "category_id"):
+            labels_by_category.setdefault(label["category_id"], []).append(label["id"])
+        return labels_by_category
+
+    def _apply_filters(self, qs, *, exclude_filter=None):
+        """Apply all selection filters, optionally excluding one filter type.
+
+        exclude_filter can be: "rol", or a category_id (int) for labels.
+        """
+        # Label filter: OR within category, AND between categories
+        labels_by_category = self._get_labels_by_category()
+        for cat_id, cat_label_ids in labels_by_category.items():
+            if exclude_filter != cat_id:
+                qs = qs.filter(labels__id__in=cat_label_ids)
 
         # Role filter
-        role_filter = self.request.GET.get("rol")
-        if role_filter:
-            qs = qs.filter(groups__id=role_filter)
+        if exclude_filter != "rol":
+            role_filter = self.request.GET.get("rol")
+            if role_filter:
+                qs = qs.filter(groups__id=role_filter)
 
+        return qs
+
+    def get_queryset(self):
+        """Apply filters to users queryset - exclude superusers"""
+        qs = self._get_base_queryset()
+        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid]
+        if label_ids and not self._get_labels_by_category():
+            return User.objects.none()
+        qs = self._apply_filters(qs)
         return qs.distinct()
 
     def get_template_names(self):
@@ -704,28 +789,39 @@ class UserListView(PermissionRequiredMixin, ListView):
         if role_filter:
             active_filters["rol"] = role_filter
 
+        # For each label category, count on queryset excluding that category's filter
+        base_qs = self._get_base_queryset()
+
         label_filter_groups = []
         for category in LabelCategory.objects.all():
-            select_label = category.name
-            options = [
-                {"value": "", "label": "Allemaal"},
-            ]
-            value = ""
+            cat_filtered_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
+            cat_user_qs = User.objects.filter(id__in=cat_filtered_qs.values_list("id", flat=True))
+            cat_label_ids = cat_user_qs.values_list("labels__id", flat=True)
+            cat_label_counts = Counter(lid for lid in cat_label_ids if lid is not None)
+
+            options = [{"value": "", "label": ""}]
+            selected_values = []
             for label in Label.objects.filter(category=category):
-                options.append({"value": str(label.id), "label": f"{label.name}"})
+                options.append(
+                    {
+                        "value": str(label.id),
+                        "label": f"{label.name}",
+                        "count": cat_label_counts.get(label.id, 0),
+                    }
+                )
                 if str(label.id) in active_filters.get("labels", set()):
                     options[-1]["selected"] = True
-                    value = str(label.id)
+                    selected_values.append(str(label.id))
 
-            filter_group = {
-                "type": "select",
-                "name": "labels",
-                "label": select_label,
-                "options": options,
-                "value": value,
-            }
-
-            label_filter_groups.append(filter_group)
+            label_filter_groups.append(
+                {
+                    "type": "select-multi",
+                    "name": "labels",
+                    "label": category.name,
+                    "options": options,
+                    "selected_values": selected_values,
+                }
+            )
 
         role_options = [
             {"value": "", "label": "Alle rollen"},
@@ -763,9 +859,9 @@ class UserListView(PermissionRequiredMixin, ListView):
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
             filter_params = []
-            for key, value in self.request.GET.items():
+            for key, values in self.request.GET.lists():
                 if key != "pagina":
-                    filter_params.append(f"{key}={value}")
+                    filter_params.extend(f"{key}={value}" for value in values)
             params_str = "&".join(filter_params)
             next_page = context["page_obj"].next_page_number()
             context["next_page_url"] = f"?pagina={next_page}" + (f"&{params_str}" if params_str else "")

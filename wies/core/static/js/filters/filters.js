@@ -1,7 +1,8 @@
 // Filter functionality for all pages
 // Handles: chip removal, date range validation, filter modal, filter sidebar
 
-function toggleFilters() {
+document.addEventListener("click", function (e) {
+  if (!e.target.closest("[data-toggle-filters]")) return;
   const layout = document.getElementById("layout");
 
   // Toggle both classes - CSS media queries determine which one takes effect
@@ -16,7 +17,7 @@ function toggleFilters() {
     url.searchParams.delete("filters");
   }
   history.replaceState({}, "", url);
-}
+});
 
 // ============================================================================
 // Shared utilities
@@ -28,13 +29,15 @@ function updateOrgFilterButtonText() {
   const count = document.querySelectorAll(
     '#org-filter-inputs input[type="hidden"]',
   ).length;
-  const iconSpan = button.querySelector("span");
-  Array.from(button.childNodes).forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE) node.remove();
-  });
-  const text = count === 0 ? "" : count + " geselecteerd";
-  button.classList.toggle("org-filter-button--active", count > 0);
-  button.insertBefore(document.createTextNode(text), iconSpan);
+  const textSpan = button.querySelector(".org-filter-trigger__text");
+  if (textSpan) {
+    if (count === 0) {
+      textSpan.innerHTML =
+        '<span class="org-filter-trigger__placeholder">Selecteer</span>';
+    } else {
+      textSpan.textContent = count + " geselecteerd";
+    }
+  }
 }
 
 function removeFilter(formSelector, filterName, filterType, filterValue) {
@@ -52,15 +55,14 @@ function removeFilter(formSelector, filterName, filterType, filterValue) {
       selectElement.selectedIndex = 0;
     }
   } else if (filterType === "select-multi") {
-    const selectElements = form.querySelectorAll(`[name="${filterName}"]`);
-    selectElements.forEach((selectElement) => {
-      for (let i = 0; i < selectElement.options.length; i++) {
-        if (selectElement.options[i].value === filterValue) {
-          selectElement.selectedIndex = 0;
-          return;
-        }
-      }
-    });
+    // Uncheck in multiselect dropdown component and sync hidden inputs
+    if (typeof window.multiselectUncheck === "function") {
+      window.multiselectUncheck(filterName, filterValue);
+    }
+    // Also uncheck in checkbox filter component (sidebar)
+    if (typeof window.checkboxFilterUncheck === "function") {
+      window.checkboxFilterUncheck(filterName, filterValue);
+    }
   } else if (filterType === "date_range") {
     const fromInput = document.getElementById(`filter-${filterName}-from`);
     const toInput = document.getElementById(`filter-${filterName}-to`);
@@ -104,6 +106,16 @@ function clearAllFilters(formSelector) {
       input.value = "";
     }
   });
+
+  // Clear multiselect dropdowns
+  if (typeof window.multiselectClearAll === "function") {
+    window.multiselectClearAll(form);
+  }
+
+  // Clear checkbox filters (sidebar)
+  if (typeof window.checkboxFilterClearAll === "function") {
+    window.checkboxFilterClearAll(form);
+  }
 
   form.querySelectorAll('input[type="date"]').forEach((input) => {
     input.value = "";

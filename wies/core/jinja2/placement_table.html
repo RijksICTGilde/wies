@@ -1,16 +1,15 @@
 {% extends "base.html" %}
 {% block extra_head %}
   <link rel="stylesheet" href="{{ static('css/placements.css') }}">
-  <link rel="stylesheet" href="{{ static('css/filters.css') }}">
-  <link rel="stylesheet"
-        href="{{ static('css/placement_filter_sidebar.css') }}">
+  <link rel="stylesheet" href="{{ static('css/filters/filters.css') }}">
   <link rel="stylesheet" href="{{ static('css/side_panel.css') }}">
   <link rel="stylesheet" href="{{ static('css/client_modal.css') }}">
+  <script src="{{ static('js/filters/checkbox_filter.js') }}"></script>
   <script src="{{ static('js/dialog.js') }}"></script>
   <script src="{{ static('js/side_panel.js') }}"></script>
 {% endblock extra_head %}
 {% block sidebar %}
-  {% include "parts/filter_sidebar.html" %}
+  {% include "parts/filters/filter_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
   {% include "parts/filter_and_table_container.html" %}
