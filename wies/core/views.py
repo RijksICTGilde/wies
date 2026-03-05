@@ -715,7 +715,6 @@ class AssignmentListView(ListView):
         if search_filter:
             qs = qs.filter(
                 Q(name__icontains=search_filter)
-                | Q(organization__icontains=search_filter)
                 | Q(extra_info__icontains=search_filter)
                 | Q(organizations__name__icontains=search_filter)
             )
@@ -723,8 +722,24 @@ class AssignmentListView(ListView):
         if self.request.GET.get("rol"):
             qs = qs.filter(services__skill__id=self.request.GET["rol"])
 
-        if self.request.GET.get("opdrachtgever"):
-            qs = qs.filter(organizations__id=self.request.GET["opdrachtgever"])
+        # Organization hierarchy filter
+        org_ids = [int(x) for x in self.request.GET.getlist("org") if x.isdigit()]
+        org_self_ids = [int(x) for x in self.request.GET.getlist("org_self") if x.isdigit()]
+        org_type_labels = [x for x in self.request.GET.getlist("org_type") if x]
+        if org_ids or org_self_ids or org_type_labels:
+            matching_ids: set[int] = set()
+            if org_ids:
+                matching_ids |= get_org_descendant_ids(org_ids)
+            if org_type_labels:
+                type_root_ids = list(
+                    OrganizationUnit.objects.filter(organization_types__label__in=org_type_labels).values_list(
+                        "id", flat=True
+                    )
+                )
+                matching_ids |= get_org_descendant_ids(type_root_ids)
+            if org_self_ids:
+                matching_ids |= set(org_self_ids)
+            qs = qs.filter(organizations__id__in=matching_ids)
 
         beschikbaar_vanaf = self.request.GET.get("beschikbaar_vanaf")
         if beschikbaar_vanaf:
@@ -779,7 +794,7 @@ class AssignmentListView(ListView):
             assignment.panel_url = self._build_panel_url(assignment.id)
             first_org = assignment.organizations.first()
             if first_org:
-                assignment.organization_filter_url = f"{base_url}?opdrachtgever={first_org.id}"
+                assignment.organization_filter_url = f"{base_url}?org_self={first_org.id}"
 
         context["filter_target_url"] = reverse("assignment-list")
         context["search_field"] = "zoek"
@@ -787,7 +802,7 @@ class AssignmentListView(ListView):
         context["search_filter"] = self.request.GET.get("zoek")
 
         active_filters = {}
-        for filter_param in ["rol", "opdrachtgever", "beschikbaar_vanaf"]:
+        for filter_param in ["rol", "beschikbaar_vanaf"]:
             val = self.request.GET.get(filter_param)
             if val:
                 active_filters[filter_param] = val
@@ -800,28 +815,67 @@ class AssignmentListView(ListView):
                 skill_options[-1]["selected"] = True
                 skill_value = str(skill.id)
 
-        client_orgs = (
-            OrganizationUnit.objects.filter(assignment_relations__assignment__status="OPEN").distinct().order_by("name")
-        )
+        # Organization filter (multi-select via modal)
+        active_org_filter_count = 0
+        org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
+        org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
+        org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
+        if org_filter:
+            active_filters["org"] = org_filter
+            active_org_filter_count += len(org_filter)
+        if org_self_filter:
+            active_filters["org_self"] = org_self_filter
+            active_org_filter_count += len(org_self_filter)
+        if org_type_filter:
+            active_filters["org_type"] = org_type_filter
+            active_org_filter_count += len(org_type_filter)
 
-        client_options = [{"value": "", "label": ""}]
-        client_value = ""
-        for org in client_orgs:
-            client_options.append({"value": str(org.id), "label": org.name})
-            if active_filters.get("opdrachtgever") == str(org.id):
-                client_options[-1]["selected"] = True
-                client_value = str(org.id)
+        # Build chip display data for org filters
+        org_chip_data: list[dict] = []
+        if org_filter:
+            org_labels = dict(
+                OrganizationUnit.objects.filter(id__in=[int(x) for x in org_filter]).values_list("id", "label")
+            )
+            org_chip_data.extend(
+                {
+                    "param_name": "org",
+                    "param_value": org_id,
+                    "label": org_labels.get(int(org_id), f"Organisatie {org_id}"),
+                }
+                for org_id in org_filter
+            )
+        if org_self_filter:
+            org_self_labels = dict(
+                OrganizationUnit.objects.filter(id__in=[int(x) for x in org_self_filter]).values_list("id", "label")
+            )
+            for org_id in org_self_filter:
+                base_label = org_self_labels.get(int(org_id), f"Organisatie {org_id}")
+                org_chip_data.append(
+                    {
+                        "param_name": "org_self",
+                        "param_value": org_id,
+                        "label": f"{base_label} (direct)",
+                    }
+                )
+        org_chip_data.extend(
+            {
+                "param_name": "org_type",
+                "param_value": type_label,
+                "label": ORG_TYPE_PLURAL.get(type_label, type_label),
+            }
+            for type_label in org_type_filter
+        )
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
+        context["active_org_filter_count"] = active_org_filter_count
+        context["org_chip_data"] = org_chip_data
 
         context["filter_groups"] = [
             {
-                "type": "select",
-                "name": "opdrachtgever",
+                "type": "modal",
+                "name": "organisatie",
                 "label": "Opdrachtgever",
-                "options": client_options,
-                "value": client_value,
             },
             {
                 "type": "select",

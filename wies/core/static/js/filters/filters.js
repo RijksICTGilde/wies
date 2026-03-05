@@ -63,6 +63,9 @@ function removeFilter(formSelector, filterName, filterType, filterValue) {
     if (typeof window.checkboxFilterUncheck === "function") {
       window.checkboxFilterUncheck(filterName, filterValue);
     }
+  } else if (filterType === "date") {
+    const dateInput = document.getElementById(`filter-${filterName}`);
+    if (dateInput) dateInput.value = "";
   } else if (filterType === "date_range") {
     const fromInput = document.getElementById(`filter-${filterName}-from`);
     const toInput = document.getElementById(`filter-${filterName}-to`);
