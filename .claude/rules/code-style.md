@@ -12,6 +12,7 @@
 - Use `verbose_name` for Dutch field labels
 - ForeignKey: use `related_name` and `on_delete=models.CASCADE`
 - Querysets in `querysets.py` for complex queries
+- Use `django.utils.timezone.now()` for current time (not `datetime.now()` or `datetime.utcnow()`)
 
 ## Templates (Jinja2)
 

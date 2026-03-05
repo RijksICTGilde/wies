@@ -1,0 +1,3725 @@
+[
+  {
+    "model": "core.skill",
+    "pk": 1,
+    "fields": {
+      "name": "Backend development"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 2,
+    "fields": {
+      "name": "Frontend development"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 3,
+    "fields": {
+      "name": "Product owner"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 4,
+    "fields": {
+      "name": "UX designer"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 5,
+    "fields": {
+      "name": "AI Consultant"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 6,
+    "fields": {
+      "name": "AI Jurist"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 7,
+    "fields": {
+      "name": "Researcher"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 8,
+    "fields": {
+      "name": "Data engineer"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 9,
+    "fields": {
+      "name": "Project leader"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 10,
+    "fields": {
+      "name": "(Interim) Manager"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 11,
+    "fields": {
+      "name": "Procesbegeleider"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 12,
+    "fields": {
+      "name": "Organisatieadviseur"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 13,
+    "fields": {
+      "name": "Programmamanager"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 14,
+    "fields": {
+      "name": "Beleidsadviseur"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 15,
+    "fields": {
+      "name": "Kwartiermaker"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 16,
+    "fields": {
+      "name": "Verandermanager"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 17,
+    "fields": {
+      "name": "I-Adviseur"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 18,
+    "fields": {
+      "name": "CIO"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 19,
+    "fields": {
+      "name": "Solution Architect"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 20,
+    "fields": {
+      "name": "Cybersecurity Specialist"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 21,
+    "fields": {
+      "name": "Data Architect"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 22,
+    "fields": {
+      "name": "Privacy Officer"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 23,
+    "fields": {
+      "name": "Scrum Master"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 24,
+    "fields": {
+      "name": "Business Analist"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 25,
+    "fields": {
+      "name": "DevOps Engineer"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 27,
+    "fields": {
+      "name": "Test Manager"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 28,
+    "fields": {
+      "name": "Information Manager"
+    }
+  },
+  {
+    "model": "core.skill",
+    "pk": 29,
+    "fields": {
+      "name": "Process Analyst"
+    }
+  },
+  {
+    "model": "core.organizationtype",
+    "pk": 1,
+    "fields": {
+      "name": "ministerie",
+      "label": "Ministerie"
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 1,
+    "fields": {
+      "name": "Algemene Zaken",
+      "label": "Ministerie van Algemene Zaken",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": null,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 2,
+    "fields": {
+      "name": "Binnenlandse Zaken en Koninkrijksrelaties",
+      "label": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": null,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 3,
+    "fields": {
+      "name": "Buitenlandse Zaken",
+      "label": "Ministerie van Buitenlandse Zaken",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": null,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 4,
+    "fields": {
+      "name": "Defensie",
+      "label": "Ministerie van Defensie",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": null,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 5,
+    "fields": {
+      "name": "Economische Zaken",
+      "label": "Ministerie van Economische Zaken",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": null,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 6,
+    "fields": {
+      "name": "Financiën",
+      "label": "Ministerie van Financiën",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": null,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 7,
+    "fields": {
+      "name": "Infrastructuur en Waterstaat",
+      "label": "Ministerie van Infrastructuur en Waterstaat",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": null,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 8,
+    "fields": {
+      "name": "Justitie en Veiligheid",
+      "label": "Ministerie van Justitie en Veiligheid",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": null,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 9,
+    "fields": {
+      "name": "Onderwijs, Cultuur en Wetenschap",
+      "label": "Ministerie van Onderwijs, Cultuur en Wetenschap",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": null,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 10,
+    "fields": {
+      "name": "Sociale Zaken en Werkgelegenheid",
+      "label": "Ministerie van Sociale Zaken en Werkgelegenheid",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": null,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 11,
+    "fields": {
+      "name": "Volksgezondheid, Welzijn en Sport",
+      "label": "Ministerie van Volksgezondheid, Welzijn en Sport",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": null,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 12,
+    "fields": {
+      "name": "Belastingdienst",
+      "label": "Belastingdienst",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": 6,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 13,
+    "fields": {
+      "name": "Rijkswaterstaat",
+      "label": "Rijkswaterstaat",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": 7,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 14,
+    "fields": {
+      "name": "RIVM",
+      "label": "RIVM",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": 11,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit",
+    "pk": 15,
+    "fields": {
+      "name": "Dienst Justitiële Inrichtingen",
+      "label": "Dienst Justitiële Inrichtingen",
+      "abbreviations": [],
+      "tooi_identifier": null,
+      "oin_number": null,
+      "system_id": "",
+      "source_url": "",
+      "parent": 8,
+      "related_ministry_tooi": ""
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 1,
+    "fields": {
+      "organizationunit_id": 1,
+      "organizationtype_id": 1
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 2,
+    "fields": {
+      "organizationunit_id": 2,
+      "organizationtype_id": 1
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 3,
+    "fields": {
+      "organizationunit_id": 3,
+      "organizationtype_id": 1
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 4,
+    "fields": {
+      "organizationunit_id": 4,
+      "organizationtype_id": 1
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 5,
+    "fields": {
+      "organizationunit_id": 5,
+      "organizationtype_id": 1
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 6,
+    "fields": {
+      "organizationunit_id": 6,
+      "organizationtype_id": 1
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 7,
+    "fields": {
+      "organizationunit_id": 7,
+      "organizationtype_id": 1
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 8,
+    "fields": {
+      "organizationunit_id": 8,
+      "organizationtype_id": 1
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 9,
+    "fields": {
+      "organizationunit_id": 9,
+      "organizationtype_id": 1
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 10,
+    "fields": {
+      "organizationunit_id": 10,
+      "organizationtype_id": 1
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 11,
+    "fields": {
+      "organizationunit_id": 11,
+      "organizationtype_id": 1
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 1,
+    "fields": {
+      "name": "Kees van den Berg",
+      "email": "kees.van.den.berg@rijksoverheid.nl",
+      "skills": [5, 8, 9],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 2,
+    "fields": {
+      "name": "Stijn Ben Ali",
+      "email": "stijn.ben.ali@rijksoverheid.nl",
+      "skills": [1, 2],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 3,
+    "fields": {
+      "name": "Anna Demir",
+      "email": "anna.demir@rijksoverheid.nl",
+      "skills": [1, 7, 18],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 4,
+    "fields": {
+      "name": "Sara de Haan",
+      "email": "sara.de.haan@rijksoverheid.nl",
+      "skills": [9, 19],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 5,
+    "fields": {
+      "name": "Pieter de Wit",
+      "email": "pieter.de.wit@rijksoverheid.nl",
+      "skills": [9, 11, 14],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 6,
+    "fields": {
+      "name": "Diana Bos",
+      "email": "diana.bos@rijksoverheid.nl",
+      "skills": [13],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 7,
+    "fields": {
+      "name": "Marieke Achahbar",
+      "email": "marieke.achahbar@rijksoverheid.nl",
+      "skills": [2, 27],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 8,
+    "fields": {
+      "name": "Rick Scholten",
+      "email": "rick.scholten@rijksoverheid.nl",
+      "skills": [18],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 9,
+    "fields": {
+      "name": "Renate Santos",
+      "email": "renate.santos@rijksoverheid.nl",
+      "skills": [23],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 10,
+    "fields": {
+      "name": "Sophie Willems",
+      "email": "sophie.willems@rijksoverheid.nl",
+      "skills": [29],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 11,
+    "fields": {
+      "name": "Rob Scholten",
+      "email": "rob.scholten@rijksoverheid.nl",
+      "skills": [15, 21],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 12,
+    "fields": {
+      "name": "Dirk Kuiper",
+      "email": "dirk.kuiper@rijksoverheid.nl",
+      "skills": [7, 22],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 13,
+    "fields": {
+      "name": "Mark Achahbar",
+      "email": "mark.achahbar@rijksoverheid.nl",
+      "skills": [6, 18, 24],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 14,
+    "fields": {
+      "name": "Aisha Scholten",
+      "email": "aisha.scholten@rijksoverheid.nl",
+      "skills": [21, 23],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 15,
+    "fields": {
+      "name": "Wendy Visser",
+      "email": "wendy.visser@rijksoverheid.nl",
+      "skills": [28],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 16,
+    "fields": {
+      "name": "Anke Molenaar",
+      "email": "anke.molenaar@rijksoverheid.nl",
+      "skills": [3, 7],
+      "labels": [],
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 17,
+    "fields": {
+      "name": "Anke Jacobs",
+      "email": "anke.jacobs@rijksoverheid.nl",
+      "skills": [13, 16, 21],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 18,
+    "fields": {
+      "name": "Laura van Leeuwen",
+      "email": "laura.van.leeuwen@rijksoverheid.nl",
+      "skills": [24],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 19,
+    "fields": {
+      "name": "Laura Popov",
+      "email": "laura.popov@rijksoverheid.nl",
+      "skills": [13, 19],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 20,
+    "fields": {
+      "name": "Vincent Nguyen",
+      "email": "vincent.nguyen@rijksoverheid.nl",
+      "skills": [3, 25],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 21,
+    "fields": {
+      "name": "Kees Brouwer",
+      "email": "kees.brouwer@rijksoverheid.nl",
+      "skills": [6, 22, 27],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 22,
+    "fields": {
+      "name": "Bas van Vliet",
+      "email": "bas.van.vliet@rijksoverheid.nl",
+      "skills": [15, 20],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 23,
+    "fields": {
+      "name": "Willem Vos",
+      "email": "willem.vos@rijksoverheid.nl",
+      "skills": [9, 18, 25],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 24,
+    "fields": {
+      "name": "Suzanne Vos",
+      "email": "suzanne.vos@rijksoverheid.nl",
+      "skills": [6, 14],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 25,
+    "fields": {
+      "name": "Laura Demir",
+      "email": "laura.demir@rijksoverheid.nl",
+      "skills": [17],
+      "labels": [],
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 26,
+    "fields": {
+      "name": "Esther Demir",
+      "email": "esther.demir@rijksoverheid.nl",
+      "skills": [5, 7, 12],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 27,
+    "fields": {
+      "name": "Carlos de Jong",
+      "email": "carlos.de.jong@rijksoverheid.nl",
+      "skills": [1, 11, 16],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 28,
+    "fields": {
+      "name": "Renate Maas",
+      "email": "renate.maas@rijksoverheid.nl",
+      "skills": [2],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 29,
+    "fields": {
+      "name": "Niels de Boer",
+      "email": "niels.de.boer@rijksoverheid.nl",
+      "skills": [3, 16, 28],
+      "labels": [],
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 30,
+    "fields": {
+      "name": "Stefan Hendriks",
+      "email": "stefan.hendriks@rijksoverheid.nl",
+      "skills": [6, 16, 18],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 31,
+    "fields": {
+      "name": "Hanna Jacobs",
+      "email": "hanna.jacobs@rijksoverheid.nl",
+      "skills": [23, 24, 25],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 32,
+    "fields": {
+      "name": "Miriam Molenaar",
+      "email": "miriam.molenaar@rijksoverheid.nl",
+      "skills": [12, 15, 21],
+      "labels": [],
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 33,
+    "fields": {
+      "name": "Hassan Peters",
+      "email": "hassan.peters@rijksoverheid.nl",
+      "skills": [8],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 34,
+    "fields": {
+      "name": "Thomas Ben Ali",
+      "email": "thomas.ben.ali@rijksoverheid.nl",
+      "skills": [1, 8, 19],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 35,
+    "fields": {
+      "name": "Erik Vermeer",
+      "email": "erik.vermeer@rijksoverheid.nl",
+      "skills": [2],
+      "labels": [],
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 36,
+    "fields": {
+      "name": "Mark Nguyen",
+      "email": "mark.nguyen@rijksoverheid.nl",
+      "skills": [9],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 37,
+    "fields": {
+      "name": "Wout Singh",
+      "email": "wout.singh@rijksoverheid.nl",
+      "skills": [24],
+      "labels": [],
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 38,
+    "fields": {
+      "name": "Amina van der Veen",
+      "email": "amina.van.der.veen@rijksoverheid.nl",
+      "skills": [14, 27],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 39,
+    "fields": {
+      "name": "Martijn Bosman",
+      "email": "martijn.bosman@rijksoverheid.nl",
+      "skills": [14, 15],
+      "labels": [],
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 40,
+    "fields": {
+      "name": "Jeroen de Groot",
+      "email": "jeroen.de.groot@rijksoverheid.nl",
+      "skills": [13],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 41,
+    "fields": {
+      "name": "Henk van der Veen",
+      "email": "henk.van.der.veen@rijksoverheid.nl",
+      "skills": [7],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 42,
+    "fields": {
+      "name": "Vincent Hermans",
+      "email": "vincent.hermans@rijksoverheid.nl",
+      "skills": [9],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 43,
+    "fields": {
+      "name": "Joost van der Heijden",
+      "email": "joost.van.der.heijden@rijksoverheid.nl",
+      "skills": [2, 4, 21],
+      "labels": [],
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 44,
+    "fields": {
+      "name": "Daan Mulder",
+      "email": "daan.mulder@rijksoverheid.nl",
+      "skills": [6],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 45,
+    "fields": {
+      "name": "Mariam Jacobs",
+      "email": "mariam.jacobs@rijksoverheid.nl",
+      "skills": [2, 6],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 46,
+    "fields": {
+      "name": "Naomi de Bruijn",
+      "email": "naomi.de.bruijn@rijksoverheid.nl",
+      "skills": [10, 14],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 47,
+    "fields": {
+      "name": "Wei Brouwer",
+      "email": "wei.brouwer@rijksoverheid.nl",
+      "skills": [10],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 48,
+    "fields": {
+      "name": "Marco Popov",
+      "email": "marco.popov@rijksoverheid.nl",
+      "skills": [2, 18, 24],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 49,
+    "fields": {
+      "name": "Kevin Popov",
+      "email": "kevin.popov@rijksoverheid.nl",
+      "skills": [17, 29],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.colleague",
+    "pk": 50,
+    "fields": {
+      "name": "Marco Nguyen",
+      "email": "marco.nguyen@rijksoverheid.nl",
+      "skills": [29],
+      "labels": [],
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 1,
+    "fields": {
+      "name": "Opzet Data Platform Onderwijs",
+      "start_date": "2024-10-15",
+      "end_date": "2026-03-02",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 6,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 2,
+    "fields": {
+      "name": "Proof of Concept Managementinformatie Informatiebeveiliging",
+      "start_date": "2024-11-11",
+      "end_date": "2026-08-26",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 43,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 3,
+    "fields": {
+      "name": "Optimalisatie Open Data",
+      "start_date": "2023-04-13",
+      "end_date": "2023-07-16",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 35,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 4,
+    "fields": {
+      "name": "Doorontwikkeling Architectuur Digitale Toegankelijkheid",
+      "start_date": "2022-01-14",
+      "end_date": "2023-07-08",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 29,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 5,
+    "fields": {
+      "name": "Uitrol Zaaksysteem Digitale Overheid",
+      "start_date": "2026-05-24",
+      "end_date": "2028-02-14",
+      "status": "VACATURE",
+      "extra_info": "",
+      "owner": 9,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 6,
+    "fields": {
+      "name": "Algoritmeregister Dienstverleningsportaal",
+      "start_date": "2024-07-26",
+      "end_date": "2026-08-10",
+      "status": "VACATURE",
+      "extra_info": "",
+      "owner": 14,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 7,
+    "fields": {
+      "name": "Handhaving Cloudinfrastructuur",
+      "start_date": "2024-11-01",
+      "end_date": "2026-05-05",
+      "status": "VACATURE",
+      "extra_info": "",
+      "owner": 3,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 8,
+    "fields": {
+      "name": "Wonen Ketenintegratie",
+      "start_date": "2024-11-12",
+      "end_date": "2026-10-31",
+      "status": "VACATURE",
+      "extra_info": "",
+      "owner": 36,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 9,
+    "fields": {
+      "name": "Doorontwikkeling Portaal Handhaving",
+      "start_date": "2022-12-16",
+      "end_date": "2023-12-20",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 9,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 10,
+    "fields": {
+      "name": "Opzet Zaaksysteem Vergunningen",
+      "start_date": "2022-08-10",
+      "end_date": "2023-05-10",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 50,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 11,
+    "fields": {
+      "name": "Vernieuwing Ketenintegratie Cybersecurity",
+      "start_date": "2023-06-03",
+      "end_date": "2023-12-31",
+      "status": "VACATURE",
+      "extra_info": "",
+      "owner": 12,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 12,
+    "fields": {
+      "name": "Optimalisatie Managementinformatie Bedrijfsvoering",
+      "start_date": "2023-11-27",
+      "end_date": "2024-07-10",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 3,
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 13,
+    "fields": {
+      "name": "Opzet Wetgevingskalender",
+      "start_date": "2025-06-03",
+      "end_date": "2026-08-25",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 2,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 14,
+    "fields": {
+      "name": "Circulaire Economie Managementinformatie",
+      "start_date": "2024-04-29",
+      "end_date": "2026-09-14",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 44,
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 15,
+    "fields": {
+      "name": "Vernieuwing Zorgdata",
+      "start_date": "2022-04-21",
+      "end_date": "2023-10-12",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 17,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 16,
+    "fields": {
+      "name": "Optimalisatie Burgerzaken",
+      "start_date": "2026-05-03",
+      "end_date": "2027-06-18",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 37,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 17,
+    "fields": {
+      "name": "Infrastructuur Registratie",
+      "start_date": "2025-08-03",
+      "end_date": "2027-05-06",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 24,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 18,
+    "fields": {
+      "name": "Uitrol Meldingensysteem Personeelsplanning",
+      "start_date": "2023-09-19",
+      "end_date": "2024-11-21",
+      "status": "LEAD",
+      "extra_info": "",
+      "owner": 43,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 19,
+    "fields": {
+      "name": "Burgerzaken Dashboard",
+      "start_date": "2024-06-27",
+      "end_date": "2026-10-20",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 40,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 20,
+    "fields": {
+      "name": "Integratie Klimaatadaptatie",
+      "start_date": "2024-12-25",
+      "end_date": "2026-07-04",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 29,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 21,
+    "fields": {
+      "name": "Open Data Architectuur",
+      "start_date": "2026-05-13",
+      "end_date": "2027-01-31",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 33,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 22,
+    "fields": {
+      "name": "Personeelsplanning Werkplek",
+      "start_date": "2026-03-28",
+      "end_date": "2027-02-21",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 13,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 23,
+    "fields": {
+      "name": "Ontwikkeling Wonen",
+      "start_date": "2022-08-28",
+      "end_date": "2023-07-17",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 45,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 24,
+    "fields": {
+      "name": "Transitie Werkplek Digitale Toegankelijkheid",
+      "start_date": "2026-01-22",
+      "end_date": "2026-04-27",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 45,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 25,
+    "fields": {
+      "name": "Modernisering Inkoop en Aanbesteding",
+      "start_date": "2026-07-05",
+      "end_date": "2027-02-04",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 30,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 26,
+    "fields": {
+      "name": "Financieel Beheer Meldingensysteem",
+      "start_date": "2026-04-01",
+      "end_date": "2027-09-26",
+      "status": "LEAD",
+      "extra_info": "",
+      "owner": 28,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 27,
+    "fields": {
+      "name": "Opzet Financieel Beheer",
+      "start_date": "2024-12-01",
+      "end_date": "2025-10-17",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 41,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 28,
+    "fields": {
+      "name": "Uitrol Werkplek Begrotingscyclus",
+      "start_date": "2024-10-19",
+      "end_date": "2026-10-30",
+      "status": "VACATURE",
+      "extra_info": "",
+      "owner": 22,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 29,
+    "fields": {
+      "name": "Algoritmeregister Informatiesysteem",
+      "start_date": "2024-10-11",
+      "end_date": "2026-06-05",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 27,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignment",
+    "pk": 30,
+    "fields": {
+      "name": "Herontwerp Bedrijfsvoering",
+      "start_date": "2024-09-16",
+      "end_date": "2026-02-18",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 49,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 1,
+    "fields": {
+      "assignment": 1,
+      "organization": 14
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 2,
+    "fields": {
+      "assignment": 2,
+      "organization": 15
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 3,
+    "fields": {
+      "assignment": 3,
+      "organization": 15
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 4,
+    "fields": {
+      "assignment": 4,
+      "organization": 13
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 5,
+    "fields": {
+      "assignment": 5,
+      "organization": 14
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 6,
+    "fields": {
+      "assignment": 6,
+      "organization": 12
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 7,
+    "fields": {
+      "assignment": 7,
+      "organization": 15
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 8,
+    "fields": {
+      "assignment": 8,
+      "organization": 15
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 9,
+    "fields": {
+      "assignment": 9,
+      "organization": 12
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 10,
+    "fields": {
+      "assignment": 10,
+      "organization": 12
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 11,
+    "fields": {
+      "assignment": 11,
+      "organization": 15
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 12,
+    "fields": {
+      "assignment": 12,
+      "organization": 15
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 13,
+    "fields": {
+      "assignment": 13,
+      "organization": 14
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 14,
+    "fields": {
+      "assignment": 14,
+      "organization": 13
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 15,
+    "fields": {
+      "assignment": 15,
+      "organization": 14
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 16,
+    "fields": {
+      "assignment": 16,
+      "organization": 15
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 17,
+    "fields": {
+      "assignment": 17,
+      "organization": 15
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 18,
+    "fields": {
+      "assignment": 18,
+      "organization": 12
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 19,
+    "fields": {
+      "assignment": 19,
+      "organization": 12
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 20,
+    "fields": {
+      "assignment": 20,
+      "organization": 14
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 21,
+    "fields": {
+      "assignment": 21,
+      "organization": 12
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 22,
+    "fields": {
+      "assignment": 22,
+      "organization": 12
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 23,
+    "fields": {
+      "assignment": 23,
+      "organization": 13
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 24,
+    "fields": {
+      "assignment": 24,
+      "organization": 12
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 25,
+    "fields": {
+      "assignment": 25,
+      "organization": 13
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 26,
+    "fields": {
+      "assignment": 26,
+      "organization": 12
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 27,
+    "fields": {
+      "assignment": 27,
+      "organization": 13
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 28,
+    "fields": {
+      "assignment": 28,
+      "organization": 14
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 29,
+    "fields": {
+      "assignment": 29,
+      "organization": 13
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 30,
+    "fields": {
+      "assignment": 30,
+      "organization": 12
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 1,
+    "fields": {
+      "assignment": 17,
+      "description": "Ketenbeheer",
+      "skill": 14,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 2,
+    "fields": {
+      "assignment": 15,
+      "description": "Test management",
+      "skill": 12,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 3,
+    "fields": {
+      "assignment": 22,
+      "description": "Scrum mastering",
+      "skill": 5,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 4,
+    "fields": {
+      "assignment": 9,
+      "description": "Programmamanagement",
+      "skill": 21,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 5,
+    "fields": {
+      "assignment": 18,
+      "description": "AI consultancy",
+      "skill": null,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 6,
+    "fields": {
+      "assignment": 16,
+      "description": "Cloud migratie",
+      "skill": 24,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 7,
+    "fields": {
+      "assignment": 14,
+      "description": "Full-stack ontwikkeling",
+      "skill": 28,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 8,
+    "fields": {
+      "assignment": 28,
+      "description": "Product ownership",
+      "skill": 25,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 9,
+    "fields": {
+      "assignment": 24,
+      "description": "Backend ontwikkeling",
+      "skill": 11,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 10,
+    "fields": {
+      "assignment": 2,
+      "description": "UX/UI ontwerp",
+      "skill": 16,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 11,
+    "fields": {
+      "assignment": 23,
+      "description": "DevOps implementatie",
+      "skill": 9,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 12,
+    "fields": {
+      "assignment": 11,
+      "description": "Procesoptimalisatie",
+      "skill": 1,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 13,
+    "fields": {
+      "assignment": 5,
+      "description": "Scrum mastering",
+      "skill": 24,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 14,
+    "fields": {
+      "assignment": 20,
+      "description": "Beleidsadvies",
+      "skill": 23,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 15,
+    "fields": {
+      "assignment": 12,
+      "description": "Backend ontwikkeling",
+      "skill": 27,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 16,
+    "fields": {
+      "assignment": 26,
+      "description": "Projectleiding",
+      "skill": 23,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 17,
+    "fields": {
+      "assignment": 8,
+      "description": "Verandermanagement",
+      "skill": 16,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 18,
+    "fields": {
+      "assignment": 3,
+      "description": "Verandermanagement",
+      "skill": 24,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 19,
+    "fields": {
+      "assignment": 7,
+      "description": "Architectuur advies",
+      "skill": 9,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 20,
+    "fields": {
+      "assignment": 21,
+      "description": "Security advies",
+      "skill": 7,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 21,
+    "fields": {
+      "assignment": 13,
+      "description": "Kwartiermaking",
+      "skill": 25,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 22,
+    "fields": {
+      "assignment": 30,
+      "description": "Programmamanagement",
+      "skill": 16,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 23,
+    "fields": {
+      "assignment": 29,
+      "description": "Procesoptimalisatie",
+      "skill": null,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 24,
+    "fields": {
+      "assignment": 1,
+      "description": "Ketenbeheer",
+      "skill": null,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 25,
+    "fields": {
+      "assignment": 19,
+      "description": "Architectuur advies",
+      "skill": 6,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 26,
+    "fields": {
+      "assignment": 4,
+      "description": "Frontend ontwikkeling",
+      "skill": 9,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 27,
+    "fields": {
+      "assignment": 10,
+      "description": "Data analyse",
+      "skill": 23,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 28,
+    "fields": {
+      "assignment": 6,
+      "description": "Backend ontwikkeling",
+      "skill": 4,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 29,
+    "fields": {
+      "assignment": 27,
+      "description": "Security advies",
+      "skill": 15,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 30,
+    "fields": {
+      "assignment": 25,
+      "description": "Beleidsadvies",
+      "skill": 29,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 31,
+    "fields": {
+      "assignment": 3,
+      "description": "Cloud migratie",
+      "skill": 3,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 32,
+    "fields": {
+      "assignment": 2,
+      "description": "Cloud migratie",
+      "skill": 27,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 33,
+    "fields": {
+      "assignment": 3,
+      "description": "Data engineering",
+      "skill": null,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 34,
+    "fields": {
+      "assignment": 20,
+      "description": "DevOps implementatie",
+      "skill": 27,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 35,
+    "fields": {
+      "assignment": 23,
+      "description": "Architectuur advies",
+      "skill": 15,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 36,
+    "fields": {
+      "assignment": 20,
+      "description": "Frontend ontwikkeling",
+      "skill": 20,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 37,
+    "fields": {
+      "assignment": 4,
+      "description": "UX/UI ontwerp",
+      "skill": null,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 38,
+    "fields": {
+      "assignment": 14,
+      "description": "Projectleiding",
+      "skill": 6,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 39,
+    "fields": {
+      "assignment": 3,
+      "description": "Product ownership",
+      "skill": 14,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 40,
+    "fields": {
+      "assignment": 22,
+      "description": "Architectuur advies",
+      "skill": 8,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 41,
+    "fields": {
+      "assignment": 21,
+      "description": "Programmamanagement",
+      "skill": 8,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 42,
+    "fields": {
+      "assignment": 29,
+      "description": "UX/UI ontwerp",
+      "skill": 27,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 43,
+    "fields": {
+      "assignment": 24,
+      "description": "Programmamanagement",
+      "skill": 5,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 44,
+    "fields": {
+      "assignment": 3,
+      "description": "Architectuur advies",
+      "skill": 27,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 45,
+    "fields": {
+      "assignment": 25,
+      "description": "Product ownership",
+      "skill": null,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 46,
+    "fields": {
+      "assignment": 15,
+      "description": "Procesoptimalisatie",
+      "skill": 9,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 47,
+    "fields": {
+      "assignment": 21,
+      "description": "Scrum mastering",
+      "skill": 2,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 48,
+    "fields": {
+      "assignment": 27,
+      "description": "Projectleiding",
+      "skill": 3,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 49,
+    "fields": {
+      "assignment": 25,
+      "description": "AI consultancy",
+      "skill": 1,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 50,
+    "fields": {
+      "assignment": 14,
+      "description": "AI consultancy",
+      "skill": 25,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 51,
+    "fields": {
+      "assignment": 23,
+      "description": "Machine learning",
+      "skill": 9,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 52,
+    "fields": {
+      "assignment": 20,
+      "description": "Full-stack ontwikkeling",
+      "skill": 16,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 53,
+    "fields": {
+      "assignment": 20,
+      "description": "Data engineering",
+      "skill": 22,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 54,
+    "fields": {
+      "assignment": 16,
+      "description": "Architectuur advies",
+      "skill": 16,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 55,
+    "fields": {
+      "assignment": 19,
+      "description": "Frontend ontwikkeling",
+      "skill": 18,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 56,
+    "fields": {
+      "assignment": 16,
+      "description": "AI consultancy",
+      "skill": 4,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 57,
+    "fields": {
+      "assignment": 23,
+      "description": "Onderzoek en analyse",
+      "skill": 1,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 58,
+    "fields": {
+      "assignment": 21,
+      "description": "Procesoptimalisatie",
+      "skill": 7,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 59,
+    "fields": {
+      "assignment": 22,
+      "description": "Frontend ontwikkeling",
+      "skill": 25,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 60,
+    "fields": {
+      "assignment": 24,
+      "description": "Product ownership",
+      "skill": 10,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 61,
+    "fields": {
+      "assignment": 22,
+      "description": "DevOps implementatie",
+      "skill": 21,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 62,
+    "fields": {
+      "assignment": 10,
+      "description": "Verandermanagement",
+      "skill": 1,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 63,
+    "fields": {
+      "assignment": 13,
+      "description": "Data engineering",
+      "skill": null,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 64,
+    "fields": {
+      "assignment": 4,
+      "description": "Beleidsadvies",
+      "skill": 5,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 65,
+    "fields": {
+      "assignment": 15,
+      "description": "Scrum mastering",
+      "skill": 9,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 66,
+    "fields": {
+      "assignment": 22,
+      "description": "Data analyse",
+      "skill": 18,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 67,
+    "fields": {
+      "assignment": 27,
+      "description": "Full-stack ontwikkeling",
+      "skill": 5,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 68,
+    "fields": {
+      "assignment": 20,
+      "description": "Procesoptimalisatie",
+      "skill": 27,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 69,
+    "fields": {
+      "assignment": 1,
+      "description": "Ketenbeheer",
+      "skill": 10,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 70,
+    "fields": {
+      "assignment": 30,
+      "description": "Product ownership",
+      "skill": 5,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 71,
+    "fields": {
+      "assignment": 17,
+      "description": "Verandermanagement",
+      "skill": 25,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 72,
+    "fields": {
+      "assignment": 16,
+      "description": "Projectleiding",
+      "skill": 23,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 73,
+    "fields": {
+      "assignment": 13,
+      "description": "Frontend ontwikkeling",
+      "skill": 14,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 74,
+    "fields": {
+      "assignment": 22,
+      "description": "Agile coaching",
+      "skill": 27,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 75,
+    "fields": {
+      "assignment": 30,
+      "description": "Data analyse",
+      "skill": 21,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 76,
+    "fields": {
+      "assignment": 2,
+      "description": "Security advies",
+      "skill": 19,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 77,
+    "fields": {
+      "assignment": 21,
+      "description": "Backend ontwikkeling",
+      "skill": 15,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 78,
+    "fields": {
+      "assignment": 20,
+      "description": "Full-stack ontwikkeling",
+      "skill": 5,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 79,
+    "fields": {
+      "assignment": 14,
+      "description": "Agile coaching",
+      "skill": 23,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 80,
+    "fields": {
+      "assignment": 16,
+      "description": "Verandermanagement",
+      "skill": 29,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 81,
+    "fields": {
+      "assignment": 16,
+      "description": "Beleidsadvies",
+      "skill": 25,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 82,
+    "fields": {
+      "assignment": 2,
+      "description": "Test management",
+      "skill": 8,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 83,
+    "fields": {
+      "assignment": 15,
+      "description": "Interim management",
+      "skill": null,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 84,
+    "fields": {
+      "assignment": 4,
+      "description": "Data engineering",
+      "skill": 23,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 85,
+    "fields": {
+      "assignment": 15,
+      "description": "Frontend ontwikkeling",
+      "skill": null,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 86,
+    "fields": {
+      "assignment": 2,
+      "description": "Scrum mastering",
+      "skill": 12,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 87,
+    "fields": {
+      "assignment": 23,
+      "description": "Informatiemanagement",
+      "skill": 22,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 88,
+    "fields": {
+      "assignment": 10,
+      "description": "Agile coaching",
+      "skill": 29,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 89,
+    "fields": {
+      "assignment": 13,
+      "description": "Data analyse",
+      "skill": 19,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 90,
+    "fields": {
+      "assignment": 29,
+      "description": "Onderzoek en analyse",
+      "skill": 9,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 91,
+    "fields": {
+      "assignment": 21,
+      "description": "Onderzoek en analyse",
+      "skill": null,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 92,
+    "fields": {
+      "assignment": 3,
+      "description": "Cloud migratie",
+      "skill": 12,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 93,
+    "fields": {
+      "assignment": 20,
+      "description": "Architectuur advies",
+      "skill": 15,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 94,
+    "fields": {
+      "assignment": 19,
+      "description": "Projectleiding",
+      "skill": 4,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 95,
+    "fields": {
+      "assignment": 17,
+      "description": "Architectuur advies",
+      "skill": 23,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 96,
+    "fields": {
+      "assignment": 30,
+      "description": "Cloud migratie",
+      "skill": 1,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 97,
+    "fields": {
+      "assignment": 2,
+      "description": "Interim management",
+      "skill": null,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 98,
+    "fields": {
+      "assignment": 15,
+      "description": "DevOps implementatie",
+      "skill": 8,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 99,
+    "fields": {
+      "assignment": 13,
+      "description": "Programmamanagement",
+      "skill": 20,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 100,
+    "fields": {
+      "assignment": 30,
+      "description": "Test management",
+      "skill": 5,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 101,
+    "fields": {
+      "assignment": 29,
+      "description": "Informatiemanagement",
+      "skill": 10,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 102,
+    "fields": {
+      "assignment": 25,
+      "description": "Full-stack ontwikkeling",
+      "skill": 5,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 103,
+    "fields": {
+      "assignment": 16,
+      "description": "UX/UI ontwerp",
+      "skill": 6,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 104,
+    "fields": {
+      "assignment": 24,
+      "description": "Procesoptimalisatie",
+      "skill": 12,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 105,
+    "fields": {
+      "assignment": 14,
+      "description": "Ketenbeheer",
+      "skill": 9,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 106,
+    "fields": {
+      "assignment": 15,
+      "description": "Informatiemanagement",
+      "skill": 11,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 107,
+    "fields": {
+      "assignment": 3,
+      "description": "Onderzoek en analyse",
+      "skill": 8,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.service",
+    "pk": 108,
+    "fields": {
+      "assignment": 19,
+      "description": "Informatiemanagement",
+      "skill": null,
+      "period_source": "ASSIGNMENT",
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 1,
+    "fields": {
+      "colleague": 48,
+      "service": 22,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 2,
+    "fields": {
+      "colleague": 16,
+      "service": 84,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 3,
+    "fields": {
+      "colleague": 25,
+      "service": 3,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 4,
+    "fields": {
+      "colleague": 38,
+      "service": 40,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 5,
+    "fields": {
+      "colleague": 8,
+      "service": 94,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 6,
+    "fields": {
+      "colleague": 9,
+      "service": 37,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 7,
+    "fields": {
+      "colleague": 13,
+      "service": 48,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 8,
+    "fields": {
+      "colleague": 39,
+      "service": 71,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 9,
+    "fields": {
+      "colleague": 35,
+      "service": 100,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 10,
+    "fields": {
+      "colleague": 23,
+      "service": 41,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 11,
+    "fields": {
+      "colleague": 1,
+      "service": 36,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 12,
+    "fields": {
+      "colleague": 47,
+      "service": 66,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 13,
+    "fields": {
+      "colleague": 37,
+      "service": 25,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 14,
+    "fields": {
+      "colleague": 32,
+      "service": 47,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 15,
+    "fields": {
+      "colleague": 41,
+      "service": 93,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 16,
+    "fields": {
+      "colleague": 34,
+      "service": 97,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 17,
+    "fields": {
+      "colleague": 34,
+      "service": 33,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 18,
+    "fields": {
+      "colleague": 11,
+      "service": 75,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 19,
+    "fields": {
+      "colleague": 20,
+      "service": 24,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 20,
+    "fields": {
+      "colleague": 45,
+      "service": 4,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 21,
+    "fields": {
+      "colleague": 19,
+      "service": 46,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 22,
+    "fields": {
+      "colleague": 2,
+      "service": 27,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 23,
+    "fields": {
+      "colleague": 2,
+      "service": 78,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 24,
+    "fields": {
+      "colleague": 2,
+      "service": 62,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 25,
+    "fields": {
+      "colleague": 18,
+      "service": 56,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 26,
+    "fields": {
+      "colleague": 33,
+      "service": 58,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 27,
+    "fields": {
+      "colleague": 12,
+      "service": 80,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 28,
+    "fields": {
+      "colleague": 43,
+      "service": 89,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 29,
+    "fields": {
+      "colleague": 36,
+      "service": 79,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 30,
+    "fields": {
+      "colleague": 4,
+      "service": 65,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 31,
+    "fields": {
+      "colleague": 50,
+      "service": 35,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 32,
+    "fields": {
+      "colleague": 44,
+      "service": 63,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 33,
+    "fields": {
+      "colleague": 3,
+      "service": 67,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 34,
+    "fields": {
+      "colleague": 42,
+      "service": 88,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 35,
+    "fields": {
+      "colleague": 6,
+      "service": 34,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 36,
+    "fields": {
+      "colleague": 6,
+      "service": 108,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 37,
+    "fields": {
+      "colleague": 5,
+      "service": 102,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 38,
+    "fields": {
+      "colleague": 31,
+      "service": 11,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 39,
+    "fields": {
+      "colleague": 10,
+      "service": 101,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 40,
+    "fields": {
+      "colleague": 24,
+      "service": 106,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 41,
+    "fields": {
+      "colleague": 24,
+      "service": 51,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 42,
+    "fields": {
+      "colleague": 17,
+      "service": 30,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 43,
+    "fields": {
+      "colleague": 40,
+      "service": 60,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 44,
+    "fields": {
+      "colleague": 49,
+      "service": 10,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 45,
+    "fields": {
+      "colleague": 49,
+      "service": 77,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 46,
+    "fields": {
+      "colleague": 21,
+      "service": 96,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 47,
+    "fields": {
+      "colleague": 7,
+      "service": 98,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 48,
+    "fields": {
+      "colleague": 46,
+      "service": 50,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 49,
+    "fields": {
+      "colleague": 26,
+      "service": 86,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 50,
+    "fields": {
+      "colleague": 30,
+      "service": 57,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "otys_iir",
+      "source_id": ""
+    }
+  }
+]

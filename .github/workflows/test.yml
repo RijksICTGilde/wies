@@ -13,11 +13,26 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  test:
+  test-django:
     runs-on: ubuntu-latest
 
     permissions:
       contents: read
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: wies
+          POSTGRES_USER: wies
+          POSTGRES_PASSWORD: wies
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
 
     steps:
       - name: Checkout code
@@ -32,6 +47,12 @@ jobs:
         run: uv sync --frozen
 
       - name: Run tests with coverage
+        env:
+          POSTGRES_HOST: localhost
+          POSTGRES_PORT: 5432
+          POSTGRES_USER: wies
+          POSTGRES_PASSWORD: wies
+          POSTGRES_DB: wies
         run: uv run pytest --cov-report=html
 
       - name: Coverage summary
@@ -46,3 +67,21 @@ jobs:
         with:
           name: coverage-report
           path: htmlcov/
+
+  test-js:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Run JavaScript tests
+        run: node --test "js_tests/**/*.test.js"

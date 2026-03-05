@@ -2,7 +2,7 @@ from django.contrib.auth.models import Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Assignment, Colleague, Ministry, Placement, Service, User
+from wies.core.models import Assignment, Colleague, Placement, Service, User
 
 
 class AssignmentEditAttributeTest(TestCase):
@@ -11,12 +11,6 @@ class AssignmentEditAttributeTest(TestCase):
     def setUp(self):
         """Create test data"""
         self.client = Client()
-
-        # Create ministry (required for assignment)
-        self.ministry = Ministry.objects.create(
-            name="Test Ministry",
-            abbreviation="TM",
-        )
 
         # Create users
         self.user_with_permission = User.objects.create(
@@ -67,7 +61,6 @@ class AssignmentEditAttributeTest(TestCase):
         # Create assignment with long extra_info (>300 chars for foldable testing)
         self.assignment = Assignment.objects.create(
             name="Test Assignment",
-            ministry=self.ministry,
             owner=self.owner_colleague,
             extra_info="Lorem ipsum dolor sit amet, consectetur adipiscing elit. " * 10,  # Long text
             source="wies",  # Editable source
@@ -76,7 +69,6 @@ class AssignmentEditAttributeTest(TestCase):
         # Create external assignment (not editable)
         self.external_assignment = Assignment.objects.create(
             name="External Assignment",
-            ministry=self.ministry,
             owner=self.owner_colleague,
             source="otys_iir",  # External source - not editable
         )

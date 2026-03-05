@@ -16,13 +16,18 @@ setup:
   npm ci  # for enable exploration in static assets
   cp overwrite_index.css node_modules/@nl-rvo/assets/index.css  # mimick build
   if [ ! -f .env ]; then cp .env.local.example .env; fi
+  docker compose down -v
   docker compose build
-  docker compose run --rm django python manage.py dropdb --noinput
   docker compose run --rm django python manage.py migrate
   docker compose run --rm django python manage.py setup
-  docker compose run --rm django python manage.py loaddata dummy_data
+  docker compose run --rm django python manage.py loaddata base_dummy_data
+  docker compose run --rm django python manage.py assign_random_labels_to_colleagues
   docker compose run --rm django python manage.py createsuperuser --noinput
   docker compose run --rm django python manage.py add_developer_user
+
+# Generate full dummy data: sync organizations + create dummy colleagues/assignments/placements
+load-full-data:
+  docker compose run --rm django python manage.py load_full_data
 
 # Start up container
 up:
@@ -32,20 +37,27 @@ up:
 down:
   docker compose down
 
-up-jrc-m:
-  docker compose run -v /Users/matthijs/jinja-roos-components:/app/jinja-roos-components --service-ports django sh -c "uv pip install -e ./jinja-roos-components && python manage.py runserver 0.0.0.0:8000"
+up-jrc:
+  docker compose run -v /Users/$USER/jinja-roos-components:/app/jinja-roos-components --service-ports django sh -c "uv pip install -e ./jinja-roos-components && python manage.py runserver 0.0.0.0:8000"
 
-# setup-production:
-#  docker build . -t wies
-#   # optionally: remove db-sqlite file
+setup-production:
+  docker build --target web -t wies .
+  docker build --target worker -t wies-worker .
+  docker network create wies-network 2>/dev/null || true
 
-# up-production:
-#   echo "Starting up container..."
-# docker run --rm \
-# --env-file .env \
-# -p 8000:8000 \
-# -v ./db:/app/db \
-# wies
+# to check if container runs properly. not directly used in production
+up-production-postgres:
+  docker run --rm --env-file .env -p 5432:5432 --network wies-network --name postgres postgres:17
+
+# make sure to run up-production-postgres first
+# to check if container runs properly. not directly used in production
+up-production-django:
+  docker run --rm  --env-file .env -p 8000:8000 --network wies-network wies
+
+# make sure to run up-production-postgres first
+# to check if container runs properly. not directly used in production
+up-production-worker:
+  docker run --rm --env-file .env --network wies-network wies-worker
 
 # Rebuild db
 rebuild-db:
@@ -59,8 +71,23 @@ rebuild-db:
 manage *args="--help":
   docker compose run --rm django python manage.py {{args}}
 
-test:
+# Run tests. Usage: just test, just test django, just test js
+test target="all":
+  #!/usr/bin/env sh
+  if [ "{{target}}" = "django" ] || [ "{{target}}" = "all" ]; then
+    just test-django
+  fi
+  if [ "{{target}}" = "js" ] || [ "{{target}}" = "all" ]; then
+    just test-js
+  fi
+
+# Run Django tests
+test-django:
   docker compose run --rm django uv run pytest
+
+# Run JavaScript tests
+test-js:
+  node --test "js_tests/**/*.test.js"
 
 # Run linting checks
 lint:

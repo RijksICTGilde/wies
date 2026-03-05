@@ -17,7 +17,6 @@ import jinja_roos_components
 from django.utils.translation import gettext_lazy
 
 # env vars
-WRITABLE_FOLDER = Path(os.environ.get("WRITABLE_FOLDER", ""))  # in deployment these should be explicitly mountable
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -83,9 +82,12 @@ TEMPLATES = [
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": WRITABLE_FOLDER / "db.sqlite3",
-        "CONN_MAX_AGE": 60,
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("POSTGRES_DB", "wies"),
+        "USER": os.environ.get("POSTGRES_USER", "wies"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "wies"),
+        "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+        "PORT": os.environ.get("POSTGRES_PORT", "5432"),
     }
 }
 

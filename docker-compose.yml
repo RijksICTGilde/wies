@@ -1,12 +1,44 @@
 services:
+  postgres:
+    image: postgres:17
+    container_name: wies-postgres
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wies"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   django:
     build:
       context: .
       dockerfile: ./Dockerfile
-    container_name: wies-django
+      target: web
     ports:
-      - 8000:8000
+      - 8080:8080
     volumes:
       - .:/app:z
-    command: python manage.py runserver 0.0.0.0:8000
+    command: python manage.py runserver 0.0.0.0:8080
     env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+  db_worker:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      target: worker
+    volumes:
+      - .:/app:z
+    command: python manage.py db_worker
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

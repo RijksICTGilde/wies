@@ -5,7 +5,7 @@ Language: Dutch UI, English code.
 
 ## Tech Stack
 
-- Django 5.2 with SQLite
+- Django 6 with PostgreSQL
 - Jinja2 templates with jinja-roos-components (https://github.com/RijksICTGilde/jinja-roos-components)
 - RVO CSS classes for layout/styling (nl-design-system/rvo)
 - HTMX for interactivity
@@ -14,7 +14,8 @@ Language: Dutch UI, English code.
 
 ## Commands
 
-- `just setup` - Fresh environment
+- `just setup` - Fresh environment (loads base dummy data)
+- `just load-full-data` - Sync organizations + generate dummy data (needs network)
 - `just up` - Start containers
 - `just down` - Stop containers
 - `just test` - Run tests
@@ -33,7 +34,7 @@ Language: Dutch UI, English code.
 ### Model Changes
 
 1. Update the model in `wies/core/models.py`
-2. Update `dummy_data.json` to match new structure
+2. Update `wies/core/management/commands/load_full_data.py` to match new model structure
 3. Do NOT run makemigrations - mention migration needed
 4. Update affected forms and views
 
@@ -57,4 +58,5 @@ Language: Dutch UI, English code.
 - Forms: `wies/core/forms.py`
 - Templates: `wies/core/jinja2/`
 - Roles/Permissions: `wies/core/roles.py`
-- Dummy data: `dummy_data.json`
+- Base fixture: `wies/core/fixtures/base_dummy_data.json` (committed, small dataset)
+- Dummy data generator: `wies/core/management/commands/load_full_data.py` (management command)
