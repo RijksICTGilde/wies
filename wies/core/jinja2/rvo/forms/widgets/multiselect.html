@@ -1,0 +1,59 @@
+{# Multiselect dropdown widget - renders the custom dropdown component.
+   Receives standard Django widget context (widget.name, widget.optgroups, widget.attrs).
+#}
+{% set selected_values = [] %}
+{% for group_name, group_choices, group_index in widget.optgroups %}
+  {% for option in group_choices %}
+    {% if option.selected %}
+      {% set _ = selected_values.append(option.value|string) %}
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+{% set selected_count = selected_values|length %}
+{% set label_id = 'label-' ~ widget.name %}
+<div class="multiselect" data-multiselect data-name="{{ widget.name }}">
+  <button type="button"
+          class="multiselect__trigger utrecht-select"
+          aria-haspopup="listbox"
+          aria-expanded="false"
+          aria-labelledby="{{ label_id }}">
+    <span class="multiselect__trigger-text">
+      {%- if selected_count == 1 -%}
+        {%- for group_name, group_choices, group_index in widget.optgroups -%}
+          {%- for option in group_choices -%}
+            {%- if option.selected %}{{ option.label }}
+            {% endif -%}
+          {%- endfor -%}
+        {%- endfor -%}
+      {%- elif selected_count > 1 -%}
+        {{ selected_count }} geselecteerd
+      {%- endif -%}
+    </span>
+  </button>
+  <div class="multiselect__dropdown" role="listbox" hidden>
+    <button type="button"
+            class="multiselect__clear"
+            {% if selected_count == 0 %}hidden{% endif %}>Wis selectie</button>
+    {% for group_name, group_choices, group_index in widget.optgroups %}
+      {% for option in group_choices %}
+        {% if option.value|string != '' %}
+          <label class="multiselect__option">
+            <input type="checkbox"
+                   class="rvo-checkbox__input multiselect__checkbox"
+                   value="{{ option.value }}"
+                   {% if option.selected %}checked{% endif %} />
+            <span class="rvo-text">{{ option.label }}</span>
+          </label>
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+  </div>
+  <div class="multiselect__hidden-inputs">
+    {% for val in selected_values %}
+      <input type="hidden"
+             name="{{ widget.name }}"
+             value="{{ val }}"
+             data-filter-input />
+    {% endfor %}
+  </div>
+</div>

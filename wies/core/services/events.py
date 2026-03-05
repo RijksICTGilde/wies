@@ -6,6 +6,10 @@ SUPPORTED_EVENT_NAMES = {
     "User.delete",
     "Login.success",
     "Login.fail",
+    "OrgSync.create",
+    "OrgSync.update",
+    "OrgSync.deactivate",
+    "OrgSync.delete",
 }
 
 

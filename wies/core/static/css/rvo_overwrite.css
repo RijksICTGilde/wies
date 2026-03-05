@@ -33,6 +33,14 @@
   mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
 }
 
+/* Checkbox checkmark fix — CSS custom properties with url() resolve relative
+   to the *using* stylesheet, not the *defining* one, so var(--rvo-icon-vinkje)
+   from icons/index.css breaks when used in component-library.css. */
+.rvo-checkbox__input:checked::after {
+  -webkit-mask-image: url("/static/@nl-rvo/assets/icons/functioneel/vinkje.svg");
+  mask-image: url("/static/@nl-rvo/assets/icons/functioneel/vinkje.svg");
+}
+
 /* Sidebar full page height */
 .rvo-sidebar-layout__container {
   min-height: calc(100vh - 200px);

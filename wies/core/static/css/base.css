@@ -2,12 +2,22 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* Prevent flicker during HTMX swaps */
+#filter-and-table-container,
+#sidebar-filter-fields {
+  min-height: 100px;
+}
+
+.htmx-swapping {
+  opacity: 1 !important;
+}
+
 /* ============================================================================
    App Layout - Grid-based application structure
    ============================================================================ */
 
 :root {
-  --sidebar-width: 280px;
+  --sidebar-width: 320px;
   --sidebar-width-collapsed: 48px;
   --layout-max-width: 1440px;
   --layout-gap: 1.5rem;

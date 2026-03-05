@@ -1,7 +1,8 @@
 // Filter functionality for all pages
 // Handles: chip removal, date range validation, filter modal, filter sidebar
 
-function toggleFilters() {
+document.addEventListener("click", function (e) {
+  if (!e.target.closest("[data-toggle-filters]")) return;
   const layout = document.getElementById("layout");
 
   // Toggle both classes - CSS media queries determine which one takes effect
@@ -16,11 +17,28 @@ function toggleFilters() {
     url.searchParams.delete("filters");
   }
   history.replaceState({}, "", url);
-}
+});
 
 // ============================================================================
 // Shared utilities
 // ============================================================================
+
+function updateOrgFilterButtonText() {
+  const button = document.getElementById("org-filter-button");
+  if (!button) return;
+  const count = document.querySelectorAll(
+    '#org-filter-inputs input[type="hidden"]',
+  ).length;
+  const textSpan = button.querySelector(".org-filter-trigger__text");
+  if (textSpan) {
+    if (count === 0) {
+      textSpan.innerHTML =
+        '<span class="org-filter-trigger__placeholder">Selecteer</span>';
+    } else {
+      textSpan.textContent = count + " geselecteerd";
+    }
+  }
+}
 
 function removeFilter(formSelector, filterName, filterType, filterValue) {
   const form = document.querySelector(formSelector);
@@ -37,15 +55,14 @@ function removeFilter(formSelector, filterName, filterType, filterValue) {
       selectElement.selectedIndex = 0;
     }
   } else if (filterType === "select-multi") {
-    const selectElements = form.querySelectorAll(`[name="${filterName}"]`);
-    selectElements.forEach((selectElement) => {
-      for (let i = 0; i < selectElement.options.length; i++) {
-        if (selectElement.options[i].value === filterValue) {
-          selectElement.selectedIndex = 0;
-          return;
-        }
-      }
-    });
+    // Uncheck in multiselect dropdown component and sync hidden inputs
+    if (typeof window.multiselectUncheck === "function") {
+      window.multiselectUncheck(filterName, filterValue);
+    }
+    // Also uncheck in checkbox filter component (sidebar)
+    if (typeof window.checkboxFilterUncheck === "function") {
+      window.checkboxFilterUncheck(filterName, filterValue);
+    }
   } else if (filterType === "date_range") {
     const fromInput = document.getElementById(`filter-${filterName}-from`);
     const toInput = document.getElementById(`filter-${filterName}-to`);
@@ -60,6 +77,15 @@ function removeFilter(formSelector, filterName, filterType, filterValue) {
     if (toInput) toInput.value = "";
     if (hiddenInput) hiddenInput.value = "";
     if (validationMessage) validationMessage.style.display = "none";
+  } else if (filterType === "org") {
+    const orgInputsContainer = document.getElementById("org-filter-inputs");
+    if (orgInputsContainer) {
+      orgInputsContainer
+        .querySelectorAll(`input[name="${filterName}"]`)
+        .forEach((input) => {
+          if (input.value === filterValue) input.remove();
+        });
+    }
   }
 
   htmx.trigger(form, "change");
@@ -69,6 +95,10 @@ function clearAllFilters(formSelector) {
   const form = document.querySelector(formSelector);
   if (!form) return;
 
+  const orgInputsContainer = document.getElementById("org-filter-inputs");
+  if (orgInputsContainer) orgInputsContainer.innerHTML = "";
+  updateOrgFilterButtonText();
+
   form.querySelectorAll("[data-filter-input]").forEach((input) => {
     if (input.tagName === "SELECT") {
       input.selectedIndex = 0;
@@ -76,6 +106,16 @@ function clearAllFilters(formSelector) {
       input.value = "";
     }
   });
+
+  // Clear multiselect dropdowns
+  if (typeof window.multiselectClearAll === "function") {
+    window.multiselectClearAll(form);
+  }
+
+  // Clear checkbox filters (sidebar)
+  if (typeof window.checkboxFilterClearAll === "function") {
+    window.checkboxFilterClearAll(form);
+  }
 
   form.querySelectorAll('input[type="date"]').forEach((input) => {
     input.value = "";
@@ -178,6 +218,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.addEventListener("htmx:afterSwap", function (event) {
       if (event.detail.target.id === "filter-and-table-container") {
         setupDateRangeListeners(sidebarFormSelector);
+        updateOrgFilterButtonText();
       }
     });
   }
@@ -277,5 +318,37 @@ document.addEventListener("DOMContentLoaded", function () {
     if (menubar && menubar.classList.contains("menubar--mobile-open")) {
       menubar.classList.remove("menubar--mobile-open");
     }
+  });
+
+  // --------------------------------------------------------------------------
+  // Search clear buttons
+  // --------------------------------------------------------------------------
+  function initSearchClear(wrapper) {
+    var input = wrapper.querySelector(".utrecht-textbox");
+    var clearBtn = wrapper.querySelector(".search-clear");
+    if (!input || !clearBtn) return;
+
+    function updateVisibility() {
+      wrapper.classList.toggle("has-value", input.value.length > 0);
+    }
+
+    input.addEventListener("input", updateVisibility);
+    updateVisibility();
+
+    clearBtn.addEventListener("click", function () {
+      input.value = "";
+      wrapper.classList.remove("has-value");
+      input.focus();
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  }
+
+  document.querySelectorAll(".search-field-wrapper").forEach(initSearchClear);
+
+  // Re-init after HTMX swaps
+  document.body.addEventListener("htmx:afterSettle", function (event) {
+    event.detail.target
+      .querySelectorAll(".search-field-wrapper")
+      .forEach(initSearchClear);
   });
 });
