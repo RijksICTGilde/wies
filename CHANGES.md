@@ -4,6 +4,12 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- bump django to 6.0.3
+
+## 2026-03-03
+
+- 200: switch to PostgreSQL
+- 200: run multiple workers in production
 - 188: Scaling image on colleague card
 - 201: fix pagination
 
