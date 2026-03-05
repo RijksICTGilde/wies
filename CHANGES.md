@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+## 2026-03-03_2
+
 - fix startup script not crashing on existing superuser
 - fix django container properly waiting for db availability
 
