@@ -119,7 +119,7 @@ def create_assignments_from_csv(csv_content: str):
             organizations_linked = 0
             for _, row in enumerate(csv_reader, start=2):  # Start at 2 (1 is header)
                 # Get owner brand label if specified in CSV
-                owner_brand_name = row.get("owner_brand", "").strip()
+                owner_brand_name = (row.get("owner_brand") or "").strip()
                 owner_brand_label = None
                 if owner_brand_name:
                     if owner_brand_name in label_mapping:
@@ -131,7 +131,7 @@ def create_assignments_from_csv(csv_content: str):
                         label_mapping[owner_brand_name] = owner_brand_label
 
                 # Get colleague brand label if specified in CSV
-                colleague_brand_name = row.get("colleague_brand", "").strip()
+                colleague_brand_name = (row.get("colleague_brand") or "").strip()
                 colleague_brand_label = None
                 if colleague_brand_name:
                     if colleague_brand_name in label_mapping:
@@ -160,18 +160,18 @@ def create_assignments_from_csv(csv_content: str):
                     owner = None
 
                 # Get organization by source URL from organisaties.overheid.nl
-                organization_url = row["assignment_organization_url"].strip()
+                organization_url = (row["assignment_organization_url"] or "").strip()
                 organization = None
                 if organization_url:
                     organization = OrganizationUnit.objects.filter(source_url=organization_url).first()
 
                 # parse dates into proper types
-                start_date_str = row["assignment_start_date"]
-                end_date_str = row["assignment_end_date"]
+                start_date_str = row["assignment_start_date"] or ""
+                end_date_str = row["assignment_end_date"] or ""
                 start_date = parse_date_dmy(start_date_str) if start_date_str else None
                 end_date = parse_date_dmy(end_date_str) if end_date_str else None
 
-                assignment_status = _validate_assignment_status(row.get("assignment_status", ""), _)
+                assignment_status = _validate_assignment_status(row.get("assignment_status") or "", _)
 
                 # owner update or create
                 assignment, created = Assignment.objects.get_or_create(
@@ -213,7 +213,7 @@ def create_assignments_from_csv(csv_content: str):
                 if created:
                     services_created += 1
 
-                colleague_email = row["placement_colleague_email"].strip()
+                colleague_email = (row["placement_colleague_email"] or "").strip()
                 if colleague_email and assignment_status != "OPEN":
                     validate_email(colleague_email)
                     if Colleague.objects.filter(email=colleague_email).exists():
