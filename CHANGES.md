@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+## 2026-03-03_3
+
+- fix gunicorn, not using control socket
+
 ## 2026-03-03_2
 
 - fix startup script not crashing on existing superuser
