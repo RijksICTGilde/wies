@@ -887,6 +887,7 @@ class AssignmentListView(ListView):
         context["active_filter_count"] = len(active_filters)
         context["active_org_filter_count"] = active_org_filter_count
         context["org_chip_data"] = org_chip_data
+        context["client_modal_count_mode"] = "assignments"
 
         context["filter_groups"] = [
             {
@@ -1905,17 +1906,24 @@ Disallow: /
 def client_modal(request):
     """Return the client tree selection modal (HTMX partial)."""
     excluded_org_ids = get_excluded_org_ids()
+    count_mode = request.GET.get("count_mode", "placements")
 
-    # Count active placements per OrganizationUnit (self-count only — direct link).
-    # We go from the Placement side to avoid complex subqueries.
-    active_placements = annotate_placement_dates(
-        Placement.objects.filter(service__assignment__status="INGEVULD")
-    ).filter(actual_end_date__gte=timezone.now().date())
-    if excluded_org_ids:
-        active_placements = active_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
-
-    org_ids = active_placements.values_list("service__assignment__organizations__id", flat=True)
-    org_self_counts: Counter[int] = Counter(org_id for org_id in org_ids if org_id is not None)
+    if count_mode == "assignments":
+        # Count open assignments per OrganizationUnit
+        assignment_qs = Assignment.objects.filter(status="OPEN")
+        if excluded_org_ids:
+            assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
+        org_id_list = assignment_qs.values_list("organizations__id", flat=True)
+        org_self_counts: Counter[int] = Counter(org_id for org_id in org_id_list if org_id is not None)
+    else:
+        # Count active placements per OrganizationUnit (self-count only — direct link).
+        active_placements = annotate_placement_dates(
+            Placement.objects.filter(service__assignment__status="INGEVULD")
+        ).filter(actual_end_date__gte=timezone.now().date())
+        if excluded_org_ids:
+            active_placements = active_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
+        org_id_list = active_placements.values_list("service__assignment__organizations__id", flat=True)
+        org_self_counts: Counter[int] = Counter(org_id for org_id in org_id_list if org_id is not None)
 
     # Load all OrganizationUnits (excluding hidden organizations)
     all_orgs = list(

@@ -11,7 +11,7 @@
         <button id="org-filter-button"
                 class="org-filter-trigger"
                 type="button"
-                hx-get="/client-modal/"
+                hx-get="/client-modal/?count_mode={{ client_modal_count_mode | default("placements") }}"
                 hx-target="#clientModalContainer"
                 hx-swap="innerHTML"
                 hx-push-url="false"

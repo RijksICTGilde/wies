@@ -3,7 +3,7 @@ from datetime import date
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Assignment, Ministry, Service, Skill, User
+from wies.core.models import Assignment, AssignmentOrganizationUnit, OrganizationUnit, Service, Skill, User
 
 
 class AssignmentListViewTest(TestCase):
@@ -20,8 +20,8 @@ class AssignmentListViewTest(TestCase):
             last_name="User",
         )
 
-        self.ministry = Ministry.objects.create(name="Ministerie van BZK", abbreviation="BZK")
-        self.ministry2 = Ministry.objects.create(name="Ministerie van EZK", abbreviation="EZK")
+        self.org = OrganizationUnit.objects.create(name="Test Org", label="Test Org")
+        self.org2 = OrganizationUnit.objects.create(name="Other Org", label="Other Org")
         self.skill = Skill.objects.create(name="Python Developer")
         self.skill2 = Skill.objects.create(name="Data Engineer")
 
@@ -29,12 +29,11 @@ class AssignmentListViewTest(TestCase):
         self.vacancy = Assignment.objects.create(
             name="Open Vacature",
             status="OPEN",
-            organization="Test Org",
-            ministry=self.ministry,
             start_date=date(2025, 1, 1),
             end_date=date(2025, 12, 31),
             source="wies",
         )
+        AssignmentOrganizationUnit.objects.create(assignment=self.vacancy, organization=self.org)
         Service.objects.create(
             assignment=self.vacancy,
             description="Service 1",
@@ -46,10 +45,9 @@ class AssignmentListViewTest(TestCase):
         self.filled = Assignment.objects.create(
             name="Ingevulde Opdracht",
             status="INGEVULD",
-            organization="Other Org",
-            ministry=self.ministry,
             source="wies",
         )
+        AssignmentOrganizationUnit.objects.create(assignment=self.filled, organization=self.org)
 
     def test_login_required(self):
         response = self.client.get(self.list_url)
@@ -84,23 +82,13 @@ class AssignmentListViewTest(TestCase):
         content = response.content.decode()
         assert "Open Vacature" not in content
 
-    def test_filter_by_ministerie(self):
+    def test_filter_by_org(self):
         self.client.force_login(self.auth_user)
-        response = self.client.get(self.list_url, {"ministerie": str(self.ministry.id)})
+        response = self.client.get(self.list_url, {"org_self": str(self.org.id)})
         content = response.content.decode()
         assert "Open Vacature" in content
 
-        response = self.client.get(self.list_url, {"ministerie": str(self.ministry2.id)})
-        content = response.content.decode()
-        assert "Open Vacature" not in content
-
-    def test_filter_by_opdrachtgever(self):
-        self.client.force_login(self.auth_user)
-        response = self.client.get(self.list_url, {"opdrachtgever": "Test Org"})
-        content = response.content.decode()
-        assert "Open Vacature" in content
-
-        response = self.client.get(self.list_url, {"opdrachtgever": "Nonexistent"})
+        response = self.client.get(self.list_url, {"org_self": str(self.org2.id)})
         content = response.content.decode()
         assert "Open Vacature" not in content
 
