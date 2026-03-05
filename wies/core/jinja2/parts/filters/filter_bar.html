@@ -138,11 +138,9 @@ Usage:
                        name="{{ filter_group.name }}"
                        data-filter-input />
                 <div id="{{ filter_group.name }}-validation-message"
-                     class="date-range-validation-message"
-                     style="display: none;
-                            color: #e17000;
-                            font-size: 0.875rem;
-                            margin-top: 0.25rem">Beide datums zijn vereist voor een geldige periode filter.</div>
+                     class="date-range-validation-message">
+                  Beide datums zijn vereist voor een geldige periode filter.
+                </div>
               {% endif %}
             {% endif %}
           {% endfor %}

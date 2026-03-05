@@ -22,7 +22,36 @@
 .search-field-wrapper .utrecht-textbox {
   height: 3rem;
   padding-left: 2.5rem;
+  padding-right: 2.5rem;
   width: 100%;
+}
+
+.search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  color: var(--rvo-color-grijs-500, #7f8c8d);
+  font-size: 1.1rem;
+  line-height: 1;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.search-clear:hover {
+  color: var(--rvo-color-grijs-700, #2c3e50);
+  background: var(--rvo-color-grijs-200, #dce3ea);
+}
+
+.search-field-wrapper.has-value .search-clear {
+  display: flex;
 }
 
 /* ----------------------------------------------------------------------------
@@ -74,7 +103,7 @@
    ---------------------------------------------------------------------------- */
 .date-range-validation-message {
   display: none;
-  color: #e17000;
+  color: var(--rvo-color-warning, #e17000);
   font-size: 0.875rem;
   margin-top: 0.25rem;
 }
@@ -237,43 +266,61 @@
   min-height: calc(100vh - 176px);
 }
 
-/* Sidebar Header */
-.filter-sidebar-header {
-  padding: 1.5rem 1.5rem 0 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
-  min-width: var(--sidebar-width);
+/* Organization Filter — styled like a select/input field */
+.org-filter-section {
+  margin-bottom: 0.5rem;
 }
 
-.filter-sidebar-header h2 {
-  margin: 0;
+.org-filter-section .rvo-label {
+  font-size: 1.05rem;
+}
+
+.org-filter-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--utrecht-textbox-min-block-size, 3rem);
+  padding-inline: var(--utrecht-textbox-padding-inline-start, 0.75rem);
+  font-size: var(--rvo-font-size-md, 1rem);
+  background: var(--rvo-color-wit, white);
+  border: 1px solid var(--rvo-color-grijs-600);
+  border-radius: var(--rvo-border-radius-sm, 4px);
+  cursor: pointer;
+  position: relative;
+  padding-right: 32px;
+}
+
+.org-filter-trigger:hover {
+  border-color: var(--rvo-color-logoblauw);
+}
+
+.org-filter-trigger__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* Filter Chips and Search Container - Horizontal Layout */
-.filter-chips-and-search-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  min-height: 3rem;
+.org-filter-trigger__placeholder {
+  color: var(--rvo-link-color, #007bc7);
+  text-decoration: underline;
 }
 
-.active-filters-chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  flex: 1 1 auto;
-  align-items: center;
-}
-
-/* Sidebar Body */
-.filter-sidebar-body {
-  padding: 1.5rem;
-  flex: 0 0 auto;
-  min-width: var(--sidebar-width);
+/* Chevron — inline SVG, same size as checkbox filter headers (20px) */
+.org-filter-trigger::after {
+  content: "";
+  display: block;
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  background-color: var(--rvo-color-logoblauw);
+  mask-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2.5' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M9 6l6 6-6 6'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-size: 100%;
+  mask-position: center;
+  pointer-events: none;
 }
 
 /* Date Range Field Styling */
@@ -285,15 +332,7 @@
 
 .filter-sidebar-date-range > .rvo-label {
   font-weight: var(--rvo-font-weight-bold, 700);
-}
-
-/* Main Content Area */
-.filter-main-content {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
+  font-size: 1.05rem;
 }
 
 /* Page Header Layout */
@@ -424,6 +463,7 @@
 
 .checkbox-filter__label {
   margin-bottom: 0;
+  font-size: 1.05rem;
 }
 
 .checkbox-filter__options {

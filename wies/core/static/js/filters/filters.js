@@ -1,7 +1,8 @@
 // Filter functionality for all pages
 // Handles: chip removal, date range validation, filter modal, filter sidebar
 
-function toggleFilters() {
+document.addEventListener("click", function (e) {
+  if (!e.target.closest("[data-toggle-filters]")) return;
   const layout = document.getElementById("layout");
 
   // Toggle both classes - CSS media queries determine which one takes effect
@@ -16,7 +17,7 @@ function toggleFilters() {
     url.searchParams.delete("filters");
   }
   history.replaceState({}, "", url);
-}
+});
 
 // ============================================================================
 // Shared utilities
@@ -28,13 +29,15 @@ function updateOrgFilterButtonText() {
   const count = document.querySelectorAll(
     '#org-filter-inputs input[type="hidden"]',
   ).length;
-  const iconSpan = button.querySelector("span");
-  Array.from(button.childNodes).forEach((node) => {
-    if (node.nodeType === Node.TEXT_NODE) node.remove();
-  });
-  const text = count === 0 ? "" : count + " geselecteerd";
-  button.classList.toggle("org-filter-button--active", count > 0);
-  button.insertBefore(document.createTextNode(text), iconSpan);
+  const textSpan = button.querySelector(".org-filter-trigger__text");
+  if (textSpan) {
+    if (count === 0) {
+      textSpan.innerHTML =
+        '<span class="org-filter-trigger__placeholder">Selecteer</span>';
+    } else {
+      textSpan.textContent = count + " geselecteerd";
+    }
+  }
 }
 
 function removeFilter(formSelector, filterName, filterType, filterValue) {

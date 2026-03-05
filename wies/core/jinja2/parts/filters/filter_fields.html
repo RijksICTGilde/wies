@@ -4,21 +4,21 @@
      {% if oob %}hx-swap-oob="true"{% endif %}>
   {% for filter_group in filter_groups %}
     {% if filter_group.type == 'modal' %}
-      <span class="rvo-label filter-sidebar-label">{{ filter_group.label }}</span>
-      <button id="org-filter-button"
-              class="utrecht-button utrecht-button--rvo-md utrecht-button--icon-after utrecht-button--secondary-action"
-              data-roos-component="button"
-              type="button"
-              hx-get="/client-modal/"
-              hx-target="#clientModalContainer"
-              hx-swap="innerHTML"
-              hx-push-url="false"
-              hx-include="#org-filter-inputs">
-        {% if active_org_filter_count > 0 %}{{ active_org_filter_count }} geselecteerd{% endif %}
-        <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--md rvo-icon--wit"
-              role="img"
-              aria-label=""></span>
-      </button>
+      <div class="utrecht-form-field rvo-form-field org-filter-section">
+        <div class="rvo-form-field__label">
+          <label class="rvo-label utrecht-form-label">{{ filter_group.label }}</label>
+        </div>
+        <button id="org-filter-button"
+                class="org-filter-trigger"
+                type="button"
+                hx-get="/client-modal/"
+                hx-target="#clientModalContainer"
+                hx-swap="innerHTML"
+                hx-push-url="false"
+                hx-include="#org-filter-inputs">
+          <span class="org-filter-trigger__text">{%- if active_org_filter_count > 0 -%}{{ active_org_filter_count }} geselecteerd{%- else -%}<span class="org-filter-trigger__placeholder">Selecteer</span>{%- endif -%}</span>
+        </button>
+      </div>
     {% elif filter_group.type == 'select' %}
       <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
     {% elif filter_group.type == 'select-multi' %}
@@ -27,7 +27,7 @@
       {% endwith %}
     {% elif filter_group.type == 'date_range' %}
       <div class="filter-sidebar-date-range">
-        <span class="rvo-label filter-sidebar-label">{{ filter_group.label }}</span>
+        <span class="rvo-label">{{ filter_group.label }}</span>
         <div class="rvo-layout-column rvo-layout-gap--sm">
           <div class="utrecht-form-field rvo-form-field">
             <div class="rvo-form-field__label">
