@@ -6,10 +6,8 @@ This files lists the changes during the lifetime of this project.
 
 - 185: improve docker-compose: remove container names, handle SIGTERM/SIGINT, change to port 8080
 - 185: introduce js testing. `just test` runs both, `just test django` / `just test js` run individually
-- 185: introduce tree visualization of organization structure on admin page
 - 185: introduce small starting dataset and add `just load-full-data` for loading large dataset
 - 185: (migration) introduce long running tasks through `db_worker` service
-- 185: fix pagination with 'pagina' kwarg
 - 185: (migration) introduce hierarchial organization structure and synchronization
 - bump django to 6.0.3
 
