@@ -11,6 +11,15 @@ This files lists the changes during the lifetime of this project.
 - 185: (migration) introduce hierarchial organization structure and synchronization
 - bump django to 6.0.3
 
+## 2026-03-03_3
+
+- fix gunicorn, not using control socket
+
+## 2026-03-03_2
+
+- fix startup script not crashing on existing superuser
+- fix django container properly waiting for db availability
+
 ## 2026-03-03
 
 - 200: switch to PostgreSQL
