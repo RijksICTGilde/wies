@@ -311,7 +311,7 @@ class PlacementListView(ListView):
         exclude_filter can be: "rol", "org", or a category_id (int) for labels.
         """
         if exclude_filter != "rol":
-            rol_filter = [int(x) for x in self.request.GET.getlist("rol") if x.isdigit()]
+            rol_filter = [x for x in self.request.GET.getlist("rol") if x.isdigit()]
             if rol_filter:
                 qs = qs.filter(service__skill__id__in=rol_filter)
 
@@ -507,7 +507,7 @@ class PlacementListView(ListView):
         rol_filter = set()
         for rol_id in self.request.GET.getlist("rol"):
             if rol_id.isdigit():
-                rol_filter.add(int(rol_id))
+                rol_filter.add(rol_id)
         if len(rol_filter) > 0:
             active_filters["rol"] = rol_filter
 
@@ -742,7 +742,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         if exclude_filter != "rol":
             role_filter = self.request.GET.get("rol")
             if role_filter and role_filter.isdigit():
-                qs = qs.filter(groups__id=int(role_filter))
+                qs = qs.filter(groups__id=role_filter)
 
         return qs
 
