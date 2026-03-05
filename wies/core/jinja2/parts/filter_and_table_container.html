@@ -25,6 +25,7 @@
           <div class="search-field-wrapper">
             <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon" />
             <c-input id="search" name="zoek" placeholder="Zoeken..." value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" aria-label="Zoeken" data-filter-input size />
+            <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
           </div>
         </form>
       </div>
@@ -36,6 +37,22 @@
       </p>
       <!-- Active Filter Chips -->
       <div class="filter-chips-container">
+        {# Organization filter chips #}
+        {% for chip in org_chip_data %}
+          <div class="filter-chip filter-chip--default"
+               data-filter-name="{{ chip.param_name }}"
+               data-filter-type="org"
+               data-filter-value="{{ chip.param_value }}">
+            <span>{{ chip.label }}</span>
+            <button type="button"
+                    class="filter-chip-remove"
+                    aria-label="Verwijder filter"
+                    data-filter-name="{{ chip.param_name }}"
+                    data-filter-value="{{ chip.param_value }}">
+              <c-icon icon="kruis" color="grijs-700" size="sm" />
+            </button>
+          </div>
+        {% endfor %}
         {# Search filter chip #}
         {% if search_filter %}
           <div class="filter-chip filter-chip--default"

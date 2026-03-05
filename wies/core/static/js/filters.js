@@ -22,6 +22,21 @@ function toggleFilters() {
 // Shared utilities
 // ============================================================================
 
+function updateOrgFilterButtonText() {
+  const button = document.getElementById("org-filter-button");
+  if (!button) return;
+  const count = document.querySelectorAll(
+    '#org-filter-inputs input[type="hidden"]',
+  ).length;
+  const iconSpan = button.querySelector("span");
+  Array.from(button.childNodes).forEach((node) => {
+    if (node.nodeType === Node.TEXT_NODE) node.remove();
+  });
+  const text = count === 0 ? "" : count + " geselecteerd";
+  button.classList.toggle("org-filter-button--active", count > 0);
+  button.insertBefore(document.createTextNode(text), iconSpan);
+}
+
 function removeFilter(formSelector, filterName, filterType, filterValue) {
   const form = document.querySelector(formSelector);
   if (!form) return;
@@ -60,6 +75,15 @@ function removeFilter(formSelector, filterName, filterType, filterValue) {
     if (toInput) toInput.value = "";
     if (hiddenInput) hiddenInput.value = "";
     if (validationMessage) validationMessage.style.display = "none";
+  } else if (filterType === "org") {
+    const orgInputsContainer = document.getElementById("org-filter-inputs");
+    if (orgInputsContainer) {
+      orgInputsContainer
+        .querySelectorAll(`input[name="${filterName}"]`)
+        .forEach((input) => {
+          if (input.value === filterValue) input.remove();
+        });
+    }
   }
 
   htmx.trigger(form, "change");
@@ -68,6 +92,10 @@ function removeFilter(formSelector, filterName, filterType, filterValue) {
 function clearAllFilters(formSelector) {
   const form = document.querySelector(formSelector);
   if (!form) return;
+
+  const orgInputsContainer = document.getElementById("org-filter-inputs");
+  if (orgInputsContainer) orgInputsContainer.innerHTML = "";
+  updateOrgFilterButtonText();
 
   form.querySelectorAll("[data-filter-input]").forEach((input) => {
     if (input.tagName === "SELECT") {
@@ -178,6 +206,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.addEventListener("htmx:afterSwap", function (event) {
       if (event.detail.target.id === "filter-and-table-container") {
         setupDateRangeListeners(sidebarFormSelector);
+        updateOrgFilterButtonText();
       }
     });
   }
@@ -277,5 +306,37 @@ document.addEventListener("DOMContentLoaded", function () {
     if (menubar && menubar.classList.contains("menubar--mobile-open")) {
       menubar.classList.remove("menubar--mobile-open");
     }
+  });
+
+  // --------------------------------------------------------------------------
+  // Search clear buttons
+  // --------------------------------------------------------------------------
+  function initSearchClear(wrapper) {
+    var input = wrapper.querySelector(".utrecht-textbox");
+    var clearBtn = wrapper.querySelector(".search-clear");
+    if (!input || !clearBtn) return;
+
+    function updateVisibility() {
+      wrapper.classList.toggle("has-value", input.value.length > 0);
+    }
+
+    input.addEventListener("input", updateVisibility);
+    updateVisibility();
+
+    clearBtn.addEventListener("click", function () {
+      input.value = "";
+      wrapper.classList.remove("has-value");
+      input.focus();
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  }
+
+  document.querySelectorAll(".search-field-wrapper").forEach(initSearchClear);
+
+  // Re-init after HTMX swaps
+  document.body.addEventListener("htmx:afterSettle", function (event) {
+    event.detail.target
+      .querySelectorAll(".search-field-wrapper")
+      .forEach(initSearchClear);
   });
 });

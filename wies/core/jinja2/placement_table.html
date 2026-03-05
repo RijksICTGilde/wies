@@ -5,6 +5,7 @@
   <link rel="stylesheet"
         href="{{ static('css/placement_filter_sidebar.css') }}">
   <link rel="stylesheet" href="{{ static('css/side_panel.css') }}">
+  <link rel="stylesheet" href="{{ static('css/client_modal.css') }}">
   <script src="{{ static('js/dialog.js') }}"></script>
   <script src="{{ static('js/side_panel.js') }}"></script>
 {% endblock extra_head %}
@@ -22,4 +23,5 @@
       {% include "parts/side_panel.html" %}
     {% endif %}
   </div>
+  <div id="clientModalContainer"></div>
 {% endblock panel %}

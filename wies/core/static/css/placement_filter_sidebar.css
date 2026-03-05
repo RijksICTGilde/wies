@@ -57,6 +57,20 @@
   min-width: var(--sidebar-width);
 }
 
+/* Organization Filter Button */
+#org-filter-button {
+  max-inline-size: none;
+  justify-content: space-between;
+  color: var(--rvo-color-logoblauw);
+  border-color: var(--rvo-color-logoblauw);
+  font-size: 100%;
+}
+
+#org-filter-button > .utrecht-icon {
+  background-color: var(--rvo-color-logoblauw);
+  margin-inline-start: auto;
+}
+
 /* Date Range Field Styling */
 .filter-sidebar-date-range {
   display: flex;

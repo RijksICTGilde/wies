@@ -2,7 +2,16 @@ from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
 
-from wies.core.models import Assignment, Colleague, Label, LabelCategory, Ministry, Placement, Service, User
+from wies.core.models import (
+    Assignment,
+    Colleague,
+    Label,
+    LabelCategory,
+    OrganizationUnit,
+    Placement,
+    Service,
+    User,
+)
 
 
 def user_can_edit_assignment(user, assignment):
@@ -55,6 +64,7 @@ def setup_roles():
                 ["view_labelcategory", "add_labelcategory", "change_labelcategory", "delete_labelcategory"],
             ),
             (Label, ["view_label", "add_label", "change_label", "delete_label"]),
+            (OrganizationUnit, ["view_organizationunit"]),
         ],
         "Consultant": [],
         "Business Development Manager": [
@@ -62,7 +72,6 @@ def setup_roles():
             (Service, ["add_service"]),
             (Placement, ["add_placement"]),
             (Colleague, ["add_colleague"]),
-            (Ministry, ["add_ministry"]),
         ],
     }
 

@@ -18,7 +18,36 @@
 .search-field-wrapper .utrecht-textbox {
   height: 3rem;
   padding-left: 2.5rem;
+  padding-right: 2.5rem;
   width: 100%;
+}
+
+.search-clear {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  color: var(--rvo-color-grijs-500, #7f8c8d);
+  font-size: 1.1rem;
+  line-height: 1;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.search-clear:hover {
+  color: var(--rvo-color-grijs-700, #2c3e50);
+  background: var(--rvo-color-grijs-200, #dce3ea);
+}
+
+.search-field-wrapper.has-value .search-clear {
+  display: flex;
 }
 
 /* Filter Chips */

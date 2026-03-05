@@ -1,5 +1,6 @@
 import logging
 import tempfile
+from collections import Counter
 from datetime import date
 from pathlib import Path
 
@@ -15,26 +16,52 @@ from django.contrib.auth.models import Group
 from django.core import management
 from django.db.models import Q, Value
 from django.db.models.functions import Concat
-from django.http import HttpResponse, QueryDict
+from django.http import Http404, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic.list import ListView
 
 from .forms import LabelCategoryForm, LabelForm, UserForm
-from .models import Assignment, Colleague, Label, LabelCategory, Ministry, Placement, Service, Skill, User
+from .models import Assignment, Colleague, Label, LabelCategory, OrganizationUnit, Placement, Service, Skill, User
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
+from .services.organizations import get_excluded_org_ids, get_org_descendant_ids
 from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
     filter_placements_by_period,
 )
 from .services.sync import sync_all_otys_iir_records
+from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
 logger = logging.getLogger(__name__)
+
+# Singular → plural display names for organization type group headers.
+ORG_TYPE_PLURAL: dict[str, str] = {
+    "Adviescollege": "Adviescolleges",
+    "Agentschap": "Agentschappen",
+    "Caribisch openbaar lichaam": "Caribische openbare lichamen",
+    "Externe commissie": "Externe commissies",
+    "Gemeente": "Gemeenten",
+    "Grensoverschrijdend regionaal samenwerkingsorgaan": "Grensoverschrijdende regionale samenwerkingsorganen",
+    "Hoog College van Staat": "Hoge Colleges van Staat",
+    "Inspectie": "Inspecties",
+    "Interdepartementale commissie": "Interdepartementale commissies",
+    "Koepelorganisatie": "Koepelorganisaties",
+    "Ministerie": "Ministeries",
+    "Openbaar lichaam voor beroep en bedrijf": "Openbare lichamen voor beroep en bedrijf",
+    "Organisatie met overheidsbemoeienis": "Organisaties met overheidsbemoeienis",
+    "Organisatieonderdeel": "Organisatieonderdelen",
+    "Overheidsstichting of -vereniging": "Overheidsstichtingen of -verenigingen",
+    "Provinciale Rekenkamer": "Provinciale Rekenkamers",
+    "Provincie": "Provincies",
+    "Regionaal samenwerkingsorgaan": "Regionale samenwerkingsorganen",
+    "Waterschap": "Waterschappen",
+    "Zelfstandig bestuursorgaan": "Zelfstandige bestuursorganen",
+}
 
 
 def get_delete_context(delete_url_name, object_pk, object_name):
@@ -103,6 +130,7 @@ def admin_db(request):
     context = {
         "assignment_count": Assignment.objects.count(),
         "colleague_count": Colleague.objects.count(),
+        "latest_tasks": get_latest_tasks(limit=3),
     }
     if request.method == "POST":
         action = request.POST.get("action")
@@ -113,12 +141,11 @@ def admin_db(request):
             Skill.objects.all().delete()
             Placement.objects.all().delete()
             Service.objects.all().delete()
-            Ministry.objects.all().delete()
             LabelCategory.objects.all().delete()
             Label.objects.all().delete()
-        elif action == "load_data":
-            management.call_command("loaddata", "dummy_data.json")
-            messages.success(request, "Data loaded successfully from dummy_data.json")
+        elif action == "load_base_data":
+            management.call_command("loaddata", "base_dummy_data.json")
+            messages.success(request, "Data geladen uit base_dummy_data.json")
         elif action == "add_dev_user":
             management.call_command("add_developer_user")
             messages.success(request, "Developer user added")
@@ -167,7 +194,6 @@ def admin_db(request):
                 Skill.objects.all().delete()
                 Placement.objects.all().delete()
                 Service.objects.all().delete()
-                Ministry.objects.all().delete()
                 LabelCategory.objects.all().delete()
                 Label.objects.all().delete()
 
@@ -185,6 +211,25 @@ def admin_db(request):
         elif action == "sync_all_otys_records":
             sync_all_otys_iir_records()
             messages.success(request, "All records synced successfully from OTYS IIR")
+        elif action == "sync_organizations":
+            # Check if there's already an active task
+            if has_active_task("sync_organizations"):
+                messages.error(request, "Er is al een sync_organizations taak actief. Wacht tot deze is afgerond.")
+            else:
+                # Create a new task
+                create_task(
+                    command="sync_organizations",
+                    created_by=request.user,
+                    timeout_minutes=5,
+                )
+                messages.success(request, "Organisatiesynchronisatie is gestart")
+
+            # If this is an HTMX request, return partial HTML
+            if request.headers.get("HX-Request"):
+                context["latest_tasks"] = get_latest_tasks(limit=3)
+                return render(request, "parts/task_list.html", context)
+
+            return redirect("djadmin-db")
         return redirect("djadmin-db")
 
     return render(request, "admin_db.html", context)
@@ -200,12 +245,15 @@ class PlacementListView(ListView):
 
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
+        excluded_org_ids = get_excluded_org_ids()
         qs = (
-            Placement.objects.select_related("colleague", "service", "service__skill", "service__assignment__ministry")
-            .prefetch_related("colleague__labels")
+            Placement.objects.select_related("colleague", "service", "service__skill")
+            .prefetch_related("colleague__labels", "service__assignment__organizations")
             .filter(service__assignment__status="INGEVULD")
             .order_by("-service__assignment__start_date")
         )
+        if excluded_org_ids:
+            qs = qs.exclude(service__assignment__organizations__id__in=excluded_org_ids)
 
         search_filter = self.request.GET.get("zoek")
         if search_filter:
@@ -213,9 +261,9 @@ class PlacementListView(ListView):
                 Q(colleague__name__icontains=search_filter)
                 | Q(service__assignment__name__icontains=search_filter)
                 | Q(service__assignment__extra_info__icontains=search_filter)
-                | Q(service__assignment__organization__icontains=search_filter)
-                | Q(service__assignment__ministry__name__icontains=search_filter)
-                | Q(service__assignment__ministry__abbreviation__icontains=search_filter)
+                | Q(service__assignment__organizations__name__icontains=search_filter)
+                | Q(service__assignment__organizations__label__icontains=search_filter)
+                | Q(service__assignment__organizations__abbreviations__icontains=search_filter)
             )
 
         order_mapping = {
@@ -235,11 +283,24 @@ class PlacementListView(ListView):
         if self.request.GET.get("rol"):
             qs = qs.filter(service__skill__id=self.request.GET["rol"])
 
-        if self.request.GET.get("opdrachtgever"):
-            qs = qs.filter(service__assignment__organization=self.request.GET["opdrachtgever"])
+        org_ids = [int(x) for x in self.request.GET.getlist("org") if x.isdigit()]
+        org_self_ids = [int(x) for x in self.request.GET.getlist("org_self") if x.isdigit()]
+        org_type_labels = [x for x in self.request.GET.getlist("org_type") if x]
 
-        if self.request.GET.get("ministerie"):
-            qs = qs.filter(service__assignment__ministry__id=self.request.GET["ministerie"])
+        if org_ids or org_self_ids or org_type_labels:
+            matching_ids: set[int] = set()
+            if org_ids:
+                matching_ids |= get_org_descendant_ids(org_ids)
+            if org_type_labels:
+                type_root_ids = list(
+                    OrganizationUnit.objects.filter(organization_types__label__in=org_type_labels).values_list(
+                        "id", flat=True
+                    )
+                )
+                matching_ids |= get_org_descendant_ids(type_root_ids)
+            if org_self_ids:
+                matching_ids |= set(org_self_ids)
+            qs = qs.filter(service__assignment__organizations__id__in=matching_ids)
 
         # Label filter support multiselect
         for label_id in self.request.GET.getlist("labels"):
@@ -287,18 +348,6 @@ class PlacementListView(ListView):
         params["opdracht"] = assignment_id
         return f"{reverse('home')}?{params.urlencode()}"
 
-    def _build_client_url(self, client_name):
-        """Build client filter URL"""
-        params = QueryDict(mutable=True)
-        params["opdrachtgever"] = client_name
-        return f"{reverse('home')}?{params.urlencode()}"
-
-    def _build_ministry_url(self, ministry_id):
-        """Build ministry filter URL"""
-        params = QueryDict(mutable=True)
-        params["ministerie"] = ministry_id
-        return f"{reverse('home')}?{params.urlencode()}"
-
     def _build_colleague_url(self, colleague_id):
         """Build colleague panel URL preserving current filters"""
         params = QueryDict(mutable=True)
@@ -312,13 +361,11 @@ class PlacementListView(ListView):
         """Get assignments for a colleague"""
         return (
             Placement.objects.filter(colleague=colleague)
-            .select_related("service__assignment", "service__assignment__ministry", "service__skill")
+            .select_related("service__assignment", "service__skill")
             .values(
                 "id",
                 "service__assignment__id",
                 "service__assignment__name",
-                "service__assignment__organization",
-                "service__assignment__ministry__name",
                 "service__assignment__start_date",
                 "service__assignment__end_date",
                 "service__skill__name",
@@ -339,10 +386,6 @@ class PlacementListView(ListView):
             {
                 "name": item["service__assignment__name"],
                 "id": item["service__assignment__id"],
-                "organization": item["service__assignment__organization"],
-                "ministry": {"name": item["service__assignment__ministry__name"]}
-                if item["service__assignment__ministry__name"]
-                else None,
                 "start_date": item["service__assignment__start_date"],
                 "end_date": item["service__assignment__end_date"],
                 "skill": item["service__skill__name"],
@@ -358,6 +401,26 @@ class PlacementListView(ListView):
             "colleague": colleague,
             "assignment_list": assignment_list,
         }
+
+    @staticmethod
+    def _get_org_breadcrumb(org: OrganizationUnit) -> dict:
+        """Build breadcrumb data for an organization: label + clickable ancestor path."""
+        # Walk up to build ancestor chain (excluding the org itself)
+        ancestors = []
+        current = org.parent
+        while current:
+            label = current.abbreviation or current.label or current.name
+            ancestors.append({"label": label, "url": f"/?org={current.id}"})
+            current = current.parent
+        ancestors.reverse()  # root → ... → direct parent
+
+        # Determine if this org is a "self-node": has children with assignment links
+        is_self = org.children.filter(assignment_relations__isnull=False).exists()
+
+        label = org.label or org.name
+        url = f"/?org_self={org.id}" if is_self else f"/?org={org.id}"
+
+        return {"label": label, "url": url, "ancestors": ancestors}
 
     def _get_assignment_panel_data(self, assignment, colleague):
         """Get assignment panel data for server-side rendering"""
@@ -378,16 +441,19 @@ class PlacementListView(ListView):
         # Check if user can edit assignment
         user_can_edit = user_can_edit_assignment(self.request.user, assignment)
 
+        # Build organization breadcrumb
+        org = assignment.organizations.select_related("parent__parent__parent__parent").first()
+        org_breadcrumb = self._get_org_breadcrumb(org) if org else None
+
         return {
             "panel_content_template": "parts/assignment_panel_content.html",
             "panel_title": assignment.name,
             "close_url": self._build_close_url(self.request),
             "assignment": assignment,
             "placements": placements,
-            "client_url": self._build_client_url(assignment.organization),
-            "ministry_url": self._build_ministry_url(assignment.ministry.id) if assignment.ministry else None,
             "user_can_edit": user_can_edit,
             "owner_url": self._build_colleague_url(assignment.owner.id) if assignment.owner else "",
+            "org_breadcrumb": org_breadcrumb,
         }
 
     def get_context_data(self, **kwargs):
@@ -402,8 +468,8 @@ class PlacementListView(ListView):
         context["search_placeholder"] = "Zoek op collega, opdracht of opdrachtgever..."
         context["search_filter"] = self.request.GET.get("zoek")
 
-        active_filters = {}  # key: val
-        for filter_param in ["rol", "opdrachtgever", "ministerie", "periode"]:
+        active_filters: dict = {}
+        for filter_param in ["rol", "periode"]:
             val = self.request.GET.get(filter_param)
             if val:
                 active_filters[filter_param] = val
@@ -422,6 +488,57 @@ class PlacementListView(ListView):
                 "from": date.fromisoformat(periode_from),
                 "to": date.fromisoformat(periode_to),
             }
+
+        # Organization filter (multi-select via modal)
+        active_org_filter_count = 0
+        org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
+        org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
+        org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
+        if org_filter:
+            active_filters["org"] = org_filter
+            active_org_filter_count += len(org_filter)
+        if org_self_filter:
+            active_filters["org_self"] = org_self_filter
+            active_org_filter_count += len(org_self_filter)
+        if org_type_filter:
+            active_filters["org_type"] = org_type_filter
+            active_org_filter_count += len(org_type_filter)
+
+        # Build chip display data for org filters
+        org_chip_data: list[dict] = []
+        if org_filter:
+            org_labels = dict(
+                OrganizationUnit.objects.filter(id__in=[int(x) for x in org_filter]).values_list("id", "label")
+            )
+            org_chip_data.extend(
+                {
+                    "param_name": "org",
+                    "param_value": org_id,
+                    "label": org_labels.get(int(org_id), f"Organisatie {org_id}"),
+                }
+                for org_id in org_filter
+            )
+        if org_self_filter:
+            org_self_labels = dict(
+                OrganizationUnit.objects.filter(id__in=[int(x) for x in org_self_filter]).values_list("id", "label")
+            )
+            for org_id in org_self_filter:
+                base_label = org_self_labels.get(int(org_id), f"Organisatie {org_id}")
+                org_chip_data.append(
+                    {
+                        "param_name": "org_self",
+                        "param_value": org_id,
+                        "label": f"{base_label} (direct)",
+                    }
+                )
+        org_chip_data.extend(
+            {
+                "param_name": "org_type",
+                "param_value": type_label,
+                "label": ORG_TYPE_PLURAL.get(type_label, type_label),
+            }
+            for type_label in org_type_filter
+        )
 
         label_filter_groups = []
         for category in LabelCategory.objects.all():
@@ -454,58 +571,23 @@ class PlacementListView(ListView):
                 skill_options[-1]["selected"] = True
                 skill_value = str(skill.id)
 
-        clients = [
-            {"id": org, "name": org}
-            for org in Assignment.objects.values_list("organization", flat=True)
-            .distinct()
-            .exclude(organization="")
-            .order_by("organization")
-        ]
-
-        client_options = [
-            {"value": "", "label": ""},
-        ]
-        client_value = ""
-        for client in clients:
-            client_options.append({"value": client["id"], "label": client["name"]})
-            if active_filters.get("opdrachtgever") == str(client["id"]):
-                client_options[-1]["selected"] = True
-                client_value = str(client["id"])
-
-        ministry_options = [
-            {"value": "", "label": ""},
-        ]
-        ministry_value = ""
-        for ministry in Ministry.objects.order_by("name"):
-            ministry_options.append({"value": str(ministry.id), "label": ministry.name})
-            if active_filters.get("ministerie") == str(ministry.id):
-                ministry_options[-1]["selected"] = True
-                ministry_value = str(ministry.id)
-
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
+        context["active_org_filter_count"] = active_org_filter_count
+        context["org_chip_data"] = org_chip_data
 
         # TODO: this can be become an object to help defining correctly and performing extra preprocessing on context
         # introduce value_key, label_key:
         context["filter_groups"] = [
             {
-                "type": "select",
-                "name": "ministerie",
-                "label": "Ministerie",
-                "options": ministry_options,
-                "value": ministry_value,
-            },
-            {
-                "type": "select",
-                "name": "opdrachtgever",
+                "type": "modal",
+                "name": "organisatie",
                 "label": "Opdrachtgever",
-                "options": client_options,
-                "value": client_value,
             },
             {
                 "type": "select",
                 "name": "rol",
-                "label": "Rollen",
+                "label": "Rol",
                 "options": skill_options,
                 "value": skill_value,
             },
@@ -522,11 +604,9 @@ class PlacementListView(ListView):
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
-            filter_params = []
-            for key, value in self.request.GET.items():
-                if key != "pagina":  # Exclude page param
-                    filter_params.append(f"{key}={value}")
-            params_str = "&".join(filter_params)
+            params = self.request.GET.copy()
+            params.pop("pagina", None)
+            params_str = params.urlencode()
             next_page = context["page_obj"].next_page_number()
             context["next_page_url"] = f"?pagina={next_page}" + (f"&{params_str}" if params_str else "")
         else:
@@ -901,7 +981,6 @@ def user_import_csv(request):
         "core.add_service",
         "core.add_placement",
         "core.add_colleague",
-        "core.add_ministry",
     ],
     raise_exception=True,
 )
@@ -948,6 +1027,68 @@ def assignment_import_csv(request):
         # Return results in the form
         return render(request, "assignment_import.html", {"result": result})
     return HttpResponse(status=405)
+
+
+@permission_required("core.view_organizationunit", raise_exception=True)
+def organization_admin(request):
+    """Show all organization units in a collapsible tree, grouped by type. Only available in DEBUG mode."""
+    if not settings.DEBUG:
+        raise Http404
+    rows = OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations", "end_date")
+
+    # Index all units as lightweight dicts
+    today = timezone.now().date()
+    units_by_id: dict[int, dict] = {}
+    for row in rows:
+        row["is_inactive"] = row["end_date"] is not None and row["end_date"] <= today
+        row["tree_children"] = []
+        units_by_id[row["id"]] = row
+
+    # Build tree
+    roots: list[dict] = []
+    for unit in units_by_id.values():
+        parent_id = unit["parent_id"]
+        if parent_id and parent_id in units_by_id:
+            units_by_id[parent_id]["tree_children"].append(unit)
+        else:
+            roots.append(unit)
+
+    # Sort children at every level
+    def sort_key(u):
+        return u["label"] or u["name"]
+
+    for unit in units_by_id.values():
+        unit["tree_children"].sort(key=sort_key)
+    roots.sort(key=sort_key)
+
+    # Get organization types for root nodes only (via M2M through table)
+    root_ids = {u["id"] for u in roots}
+    type_links = (
+        OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
+        .select_related("organizationtype")
+        .values_list("organizationunit_id", "organizationtype__label")
+    )
+    root_types: dict[int, list[str]] = {}
+    for unit_id, type_label in type_links:
+        root_types.setdefault(unit_id, []).append(type_label)
+
+    # Group roots by organization type
+    grouped: dict[str, list[dict]] = {}
+    ungrouped: list[dict] = []
+    for unit in roots:
+        type_labels = root_types.get(unit["id"], [])
+        if type_labels:
+            for type_label in type_labels:
+                grouped.setdefault(type_label, []).append(unit)
+        else:
+            ungrouped.append(unit)
+
+    # Sort groups alphabetically, put ungrouped last
+    type_groups = [(ORG_TYPE_PLURAL.get(name, name), units) for name, units in sorted(grouped.items())]
+    if ungrouped:
+        type_groups.append(("Overig", ungrouped))
+
+    return render(request, "organization_admin.html", {"type_groups": type_groups})
 
 
 @permission_required("core.view_labelcategory", raise_exception=True)
@@ -1420,3 +1561,157 @@ User-agent: Applebot-Extended
 Disallow: /
 """
     return HttpResponse(content, content_type="text/plain")
+
+
+def client_modal(request):
+    """Return the client tree selection modal (HTMX partial)."""
+    excluded_org_ids = get_excluded_org_ids()
+
+    # Count active placements per OrganizationUnit (self-count only — direct link).
+    # We go from the Placement side to avoid complex subqueries.
+    active_placements = annotate_placement_dates(
+        Placement.objects.filter(service__assignment__status="INGEVULD")
+    ).filter(actual_end_date__gte=timezone.now().date())
+    if excluded_org_ids:
+        active_placements = active_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
+
+    org_ids = active_placements.values_list("service__assignment__organizations__id", flat=True)
+    org_self_counts: Counter[int] = Counter(org_id for org_id in org_ids if org_id is not None)
+
+    # Load all OrganizationUnits (excluding hidden organizations)
+    all_orgs = list(
+        OrganizationUnit.objects.exclude(id__in=excluded_org_ids).values(
+            "id", "parent_id", "name", "label", "abbreviations"
+        )
+    )
+
+    # Build lightweight tree in Python
+    units_by_id: dict[int, dict] = {}
+    for org in all_orgs:
+        org["children_data"] = []
+        org["self_count"] = org_self_counts.get(org["id"], 0)
+        org["total_count"] = 0
+        units_by_id[org["id"]] = org
+
+    roots: list[dict] = []
+    for unit in units_by_id.values():
+        parent_id = unit["parent_id"]
+        if parent_id and parent_id in units_by_id:
+            units_by_id[parent_id]["children_data"].append(unit)
+        else:
+            roots.append(unit)
+
+    # Compute total counts bottom-up (self + all descendants)
+    def compute_total(node: dict) -> int:
+        total = node["self_count"]
+        for child in node["children_data"]:
+            total += compute_total(child)
+        node["total_count"] = total
+        return total
+
+    for root in roots:
+        compute_total(root)
+
+    # Prune branches with zero placements
+    def prune(node: dict) -> None:
+        node["children_data"] = [c for c in node["children_data"] if c["total_count"] > 0]
+        for child in node["children_data"]:
+            prune(child)
+
+    for root in roots:
+        prune(root)
+    roots = [r for r in roots if r["total_count"] > 0]
+
+    def sort_key(node: dict) -> str:
+        return node.get("label") or node.get("name") or ""
+
+    # Convert to JSON-serializable tree, injecting self-nodes
+    def to_json(node: dict) -> dict:
+        children_data = sorted(node["children_data"], key=sort_key)
+        children_json = []
+
+        has_children_with_placements = any(c["total_count"] > 0 for c in children_data)
+        if node["self_count"] > 0 and has_children_with_placements:
+            children_json.append(
+                {
+                    "id": f"self-{node['id']}",
+                    "label": node["label"] or node["name"],
+                    "abbreviations": node["abbreviations"] or [],
+                    "self": True,
+                    "nr_of_placements": node["self_count"],
+                }
+            )
+
+        children_json.extend(to_json(child) for child in children_data)
+
+        result: dict = {
+            "id": node["id"],
+            "label": node["label"] or node["name"],
+            "abbreviations": node["abbreviations"] or [],
+            "nr_of_placements": node["total_count"],
+        }
+        if children_json:
+            result["children"] = children_json
+        return result
+
+    # Group roots by OrganizationUnit type (same logic as organization_admin view)
+    root_ids = {u["id"] for u in roots}
+    type_links = (
+        OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
+        .select_related("organizationtype")
+        .values_list("organizationunit_id", "organizationtype__label")
+    )
+    root_types: dict[int, list[str]] = {}
+    for unit_id, type_label in type_links:
+        root_types.setdefault(unit_id, []).append(type_label)
+
+    grouped: dict[str, list[dict]] = {}
+    ungrouped: list[dict] = []
+    for unit in roots:
+        type_labels = root_types.get(unit["id"], [])
+        if type_labels:
+            for type_label in type_labels:
+                grouped.setdefault(type_label, []).append(unit)
+        else:
+            ungrouped.append(unit)
+
+    # Build hierarchy: group nodes (not selectable) containing the actual root orgs
+    hierarchy = []
+    for group_label in sorted(grouped.keys()):
+        group_units = sorted(grouped[group_label], key=sort_key)
+        total = sum(u["total_count"] for u in group_units)
+        hierarchy.append(
+            {
+                "id": f"group-{group_label}",
+                "label": ORG_TYPE_PLURAL.get(group_label, group_label),
+                "nr_of_placements": total,
+                "group": True,
+                "children": [to_json(u) for u in group_units],
+            }
+        )
+    hierarchy.extend(to_json(unit) for unit in sorted(ungrouped, key=sort_key))
+
+    # Build current selections dict for state restoration in client_tree.js
+    # Maps tree node ID (string) → display label
+    current_selections: dict[str, str] = {}
+
+    # normal orgs
+    org_ids = [org_id for org_id in request.GET.getlist("org") if org_id.isdigit()]
+    for org in OrganizationUnit.objects.filter(id__in=org_ids).values("id", "label"):
+        current_selections[org["id"]] = org["label"]
+
+    # self-node orgs
+    self_org_ids = [org_id for org_id in request.GET.getlist("org_self") if org_id.isdigit()]
+    for org in OrganizationUnit.objects.filter(id__in=self_org_ids).values("id", "label"):
+        current_selections[org[f"self-{org['id']}"]] = f'Direct onder "{org["label"]}"'
+
+    # type-node orgs
+    for type_label in request.GET.getlist("org_type"):
+        if type_label:
+            current_selections[f"group-{type_label}"] = ORG_TYPE_PLURAL.get(type_label, type_label)
+
+    return render(
+        request,
+        "parts/client_modal.html",
+        {"hierarchy": hierarchy, "current_selections": current_selections},
+    )

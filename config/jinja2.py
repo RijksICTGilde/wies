@@ -1,8 +1,9 @@
+from django.conf import settings
 from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.urls import reverse
 from django.utils.formats import date_format
-from django.utils.html import format_html
+from django.utils.html import format_html, json_script
 from jinja2 import Environment
 from jinja_roos_components import setup_components
 
@@ -63,8 +64,10 @@ def environment(**options):
             "get_csrf_hidden_input": get_csrf_hidden_input,
             "get_toggle_sort_url": get_toggle_sort_url,
             "get_sort_state": get_sort_state,
+            "DEBUG": settings.DEBUG,
         }
     )
     env.filters["datum_nl"] = datum_nl
+    env.filters["json_script"] = json_script
 
     return env

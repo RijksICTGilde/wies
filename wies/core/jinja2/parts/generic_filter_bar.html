@@ -23,6 +23,7 @@ Usage:
       <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon" />
       {# TODO jrc: size attribute without value necessary to leave out sizing css #}
       <c-input id="search" name="{{ search_field|default('search') }}" placeholder="{{ search_placeholder|default('Zoeken...') }}" value="{{ search_filter or '' }}" aria-label="{{ search_placeholder|default('Zoeken') }}" size />
+      <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
     </div>
     {# Filters Button with indicator #}
     {# TODO jrc: below button cannot be changed into c-button, because it is manipulated by javascript, which only sees the raw css #}
