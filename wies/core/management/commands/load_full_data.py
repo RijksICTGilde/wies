@@ -19,6 +19,7 @@ from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    LabelCategory,
     OrganizationType,
     OrganizationUnit,
     Placement,
@@ -43,6 +44,8 @@ SOURCE_WEIGHTS = {"otys_iir": 85, "wies": 15}
 SERVICE_SKILL_PROBABILITY = 0.9
 SINGLE_PLACEMENT_THRESHOLD = 0.80
 DOUBLE_PLACEMENT_THRESHOLD = 0.95
+MULTI_LABEL_PROBABILITY = 0.3
+MAX_LABELS_PER_CATEGORY = 2
 
 # ── Skills ───────────────────────────────────────────────────────────────────
 SKILLS = [
@@ -531,6 +534,20 @@ class Command(BaseCommand):
             colleague.skills.set(chosen_skills)
             colleagues.append(colleague)
         self.stdout.write(f"Colleagues: {len(colleagues)}")
+
+        # ── 4b. Colleague labels ─────────────────────────────────────────
+        labels_by_category = {category: list(category.labels.all()) for category in LabelCategory.objects.all()}
+        labels_by_category = {k: v for k, v in labels_by_category.items() if v}
+
+        if labels_by_category:
+            for colleague in colleagues:
+                colleague_labels = []
+                for labels in labels_by_category.values():
+                    has_enough = len(labels) >= MAX_LABELS_PER_CATEGORY
+                    n = MAX_LABELS_PER_CATEGORY if has_enough and rng.random() < MULTI_LABEL_PROBABILITY else 1
+                    colleague_labels.extend(rng.sample(labels, n))
+                colleague.labels.set(colleague_labels)
+            self.stdout.write("Colleague labels assigned")
 
         # ── 5. Assignments ───────────────────────────────────────────────
         assignments = []
