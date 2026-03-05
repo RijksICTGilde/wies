@@ -698,19 +698,8 @@ class AssignmentListView(ListView):
     paginate_by = 24
     page_kwarg = "pagina"
 
-    def get_queryset(self):
-        qs = (
-            Assignment.objects.filter(status="OPEN")
-            .prefetch_related(
-                Prefetch(
-                    "services",
-                    queryset=Service.objects.filter(skill__isnull=False).select_related("skill"),
-                    to_attr="services_with_skills",
-                )
-            )
-            .order_by("-pk")
-        )
-
+    def _get_base_queryset(self):
+        qs = Assignment.objects.filter(status="OPEN").order_by("-pk")
         search_filter = self.request.GET.get("zoek")
         if search_filter:
             qs = qs.filter(
@@ -718,30 +707,6 @@ class AssignmentListView(ListView):
                 | Q(extra_info__icontains=search_filter)
                 | Q(organizations__name__icontains=search_filter)
             )
-
-        rol_filter = self.request.GET.getlist("rol")
-        if rol_filter:
-            qs = qs.filter(services__skill__id__in=rol_filter)
-
-        # Organization hierarchy filter
-        org_ids = [int(x) for x in self.request.GET.getlist("org") if x.isdigit()]
-        org_self_ids = [int(x) for x in self.request.GET.getlist("org_self") if x.isdigit()]
-        org_type_labels = [x for x in self.request.GET.getlist("org_type") if x]
-        if org_ids or org_self_ids or org_type_labels:
-            matching_ids: set[int] = set()
-            if org_ids:
-                matching_ids |= get_org_descendant_ids(org_ids)
-            if org_type_labels:
-                type_root_ids = list(
-                    OrganizationUnit.objects.filter(organization_types__label__in=org_type_labels).values_list(
-                        "id", flat=True
-                    )
-                )
-                matching_ids |= get_org_descendant_ids(type_root_ids)
-            if org_self_ids:
-                matching_ids |= set(org_self_ids)
-            qs = qs.filter(organizations__id__in=matching_ids)
-
         beschikbaar_vanaf = self.request.GET.get("beschikbaar_vanaf")
         if beschikbaar_vanaf:
             try:
@@ -749,8 +714,45 @@ class AssignmentListView(ListView):
                 qs = qs.filter(start_date__gte=vanaf_date)
             except ValueError:
                 pass
+        return qs
 
-        return qs.distinct()
+    def _apply_filters(self, qs, *, exclude_filter=None):
+        if exclude_filter != "rol":
+            rol_filter = self.request.GET.getlist("rol")
+            if rol_filter:
+                qs = qs.filter(services__skill__id__in=rol_filter)
+
+        if exclude_filter != "org":
+            org_ids = [int(x) for x in self.request.GET.getlist("org") if x.isdigit()]
+            org_self_ids = [int(x) for x in self.request.GET.getlist("org_self") if x.isdigit()]
+            org_type_labels = [x for x in self.request.GET.getlist("org_type") if x]
+            if org_ids or org_self_ids or org_type_labels:
+                matching_ids: set[int] = set()
+                if org_ids:
+                    matching_ids |= get_org_descendant_ids(org_ids)
+                if org_type_labels:
+                    type_root_ids = list(
+                        OrganizationUnit.objects.filter(organization_types__label__in=org_type_labels).values_list(
+                            "id", flat=True
+                        )
+                    )
+                    matching_ids |= get_org_descendant_ids(type_root_ids)
+                if org_self_ids:
+                    matching_ids |= set(org_self_ids)
+                qs = qs.filter(organizations__id__in=matching_ids)
+
+        return qs
+
+    def get_queryset(self):
+        qs = self._get_base_queryset()
+        qs = self._apply_filters(qs)
+        return qs.distinct().prefetch_related(
+            Prefetch(
+                "services",
+                queryset=Service.objects.filter(skill__isnull=False).select_related("skill"),
+                to_attr="services_with_skills",
+            )
+        )
 
     def get_template_names(self):
         if "HX-Request" in self.request.headers:
@@ -815,10 +817,16 @@ class AssignmentListView(ListView):
         if len(rol_filter) > 0:
             active_filters["rol"] = rol_filter
 
+        # Skill/role counts: exclude role filter for cross-filtering
+        base_qs = self._get_base_queryset()
+        skill_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
+        skill_ids = skill_filtered_qs.values_list("services__skill__id", flat=True)
+        skill_counts = Counter(sid for sid in skill_ids if sid is not None)
+
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
         for skill in Skill.objects.order_by("name"):
-            option = {"value": str(skill.id), "label": skill.name}
+            option = {"value": str(skill.id), "label": skill.name, "count": skill_counts.get(skill.id, 0)}
             if str(skill.id) in active_filters.get("rol", set()):
                 option["selected"] = True
                 skill_selected_values.append(str(skill.id))
