@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+## 2026-03-05
+
 - 189: Add multi-select checkbox filters
 - 189: Add multi-select dropdown in user create/edit modal
 - 189: Add reusable multi_select component with search, clear, and keyboard support
