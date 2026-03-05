@@ -28,7 +28,11 @@ document.addEventListener("htmx:afterSwap", function (e) {
 // Listen for closeModal trigger from server
 document.addEventListener("closeModal", function () {
   // Close any open modal dialogs
-  const modalContainers = ["labelFormModal", "userFormModal"];
+  const modalContainers = [
+    "labelFormModal",
+    "userFormModal",
+    "clientModalContainer",
+  ];
   modalContainers.forEach((modalId) => {
     const modalContainer = document.getElementById(modalId);
     if (modalContainer) {

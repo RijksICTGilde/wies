@@ -1,5 +1,21 @@
 {# Active filter chips — rendered inside the header row #}
 <div class="filter-chips-container">
+  {# Organization filter chips #}
+  {% for chip in org_chip_data %}
+    <div class="filter-chip filter-chip--default"
+         data-filter-name="{{ chip.param_name }}"
+         data-filter-type="org"
+         data-filter-value="{{ chip.param_value }}">
+      <span>{{ chip.label }}</span>
+      <button type="button"
+              class="filter-chip-remove"
+              aria-label="Verwijder filter"
+              data-filter-name="{{ chip.param_name }}"
+              data-filter-value="{{ chip.param_value }}">
+        <c-icon icon="kruis" color="grijs-700" size="sm" />
+      </button>
+    </div>
+  {% endfor %}
   {# Search filter chip #}
   {% if search_filter %}
     <div class="filter-chip filter-chip--default"

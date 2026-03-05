@@ -4,7 +4,7 @@ Internal tool for managing colleague placements within the Dutch government. Wie
 
 ## Tech Stack
 
-- **Backend**: Django 6 with SQLite
+- **Backend**: Django 6 with PostgreSQL
 - **Templates**: Jinja2 with [jinja-roos-components](https://github.com/RijksICTGilde/jinja-roos-components)
 - **Styling**: [RVO Design System](https://github.com/nl-design-system/rvo) (Dutch government design system)
 - **Interactivity**: HTMX
@@ -23,10 +23,16 @@ Internal tool for managing colleague placements within the Dutch government. Wie
 
 ### Setup
 
-Installs dependencies, sets up database with dummy data, creates `.env`:
+Installs dependencies, sets up database with base dummy data, creates `.env`:
 
 ```bash
 just setup
+```
+
+Optionally, generate and load full dummy data for performance testing (requires network):
+
+```bash
+just load-full-data
 ```
 
 Then update `.env`:
@@ -57,16 +63,22 @@ wies/
 │       └── parts/     # Reusable template partials
 ├── config/
 │   └── settings/      # Django settings per environment
-└── dummy_data.json    # Test data for development
+├── scripts/
+│   └── load_full_data.py       # Generates dummy data fixtures
+└── wies/core/fixtures/
+    └── base_dummy_data.json    # Small dev dataset (committed)
 ```
 
 ### Commands
 
 ```bash
-just setup          # Set up fresh environment
+just setup          # Set up fresh environment (base dummy data)
+just load-full-data # Generate and load full dummy data
 just up             # Start application
 just down           # Stop containers
-just test           # Run tests
+just test           # Run all tests (Django + JS)
+just test django    # Run Django tests only
+just test js        # Run JavaScript tests only
 just manage [...]   # Django manage.py commands
 just update-vendor  # Update vendor assets (htmx, RVO CSS)
 ```
@@ -111,7 +123,14 @@ Run all tests:
 just test
 ```
 
-Run specific tests:
+Run Django or JavaScript tests separately:
+
+```bash
+just test django
+just test js
+```
+
+Run specific Django tests:
 
 ```bash
 just manage test wies.core.tests.test_roles
@@ -122,7 +141,7 @@ just manage test wies.core.tests.test_roles
 Not linked in the UI:
 
 - `/djadmin/` - Django admin
-- `/djadmin/db/` - Drop database and load dummy data
+- `/djadmin/db/` - Database admin (clear data, load fixtures, sync)
 - `/plaatsingen/import/` - Import placements from CSV
 
 ## Architecture

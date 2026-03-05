@@ -25,6 +25,18 @@
       hx-push-url="true"
       hx-trigger="change,input delay:500ms from:[data-filter-input]"
       hx-include="[data-filter-input]">
+  <!-- Hidden inputs for organization filter (updated by client_tree.js on apply) -->
+  <div id="org-filter-inputs">
+    {% for v in active_filters.get('org', []) %}
+      <input type="hidden" name="org" value="{{ v }}" data-filter-input>
+    {% endfor %}
+    {% for v in active_filters.get('org_self', []) %}
+      <input type="hidden" name="org_self" value="{{ v }}" data-filter-input>
+    {% endfor %}
+    {% for v in active_filters.get('org_type', []) %}
+      <input type="hidden" name="org_type" value="{{ v }}" data-filter-input>
+    {% endfor %}
+  </div>
   <!-- Filter Fields -->
   <div class="sidebar__content">{% include "parts/filters/filter_fields.html" %}</div>
 </form>

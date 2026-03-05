@@ -17,7 +17,7 @@
 
 /* Wider modal for user forms with two columns */
 .modal-dialog--wide {
-  max-width: 800px;
+  max-width: 960px;
 }
 
 .modal-dialog::backdrop {
