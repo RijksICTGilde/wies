@@ -34,8 +34,8 @@
             <div class="user-form-column">
               <h3 class="utrecht-heading-3" style="margin-bottom: 1rem;">Labels</h3>
               <div>
-                {% for field in content %}
-                  {% if field.name.startswith('category_') %}{{ field.as_field_group() }}{% endif %}
+                {% for field_name in content.fields %}
+                  {% if field_name.startswith('category_') %}{{ content[field_name].as_field_group() }}{% endif %}
                 {% endfor %}
               </div>
             </div>

@@ -60,6 +60,17 @@
               Gebruikers
             </a>
           </li>
+          {% if DEBUG %}
+            <li class="menubar__submenu-item">
+              <a href="{{ url('organization-admin') }}"
+                 class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw {% if '/organisaties/' in request.path %}menu-item--active{% endif %}">
+                <span class="utrecht-icon rvo-icon rvo-icon-publicatie rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before"
+                      role="img"
+                      aria-label="Opdrachtgevers"></span>
+                Opdrachtgevers
+              </a>
+            </li>
+          {% endif %}
           <li class="menubar__submenu-item">
             <a href="{{ url('label-admin') }}"
                class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw {% if '/labels/' in request.path %}menu-item--active{% endif %}">

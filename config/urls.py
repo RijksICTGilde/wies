@@ -27,6 +27,7 @@ from wies.core.views import (
     assignment_edit_attribute,
     assignment_import_csv,
     auth,
+    client_modal,
     error_400,
     error_403,
     error_404,
@@ -41,6 +42,7 @@ from wies.core.views import (
     login,
     logout,
     no_access,
+    organization_admin,
     robots_txt,
     user_create,
     user_delete,
@@ -74,6 +76,7 @@ urlpatterns = [
     path("instellingen/gebruikers/<int:pk>/bewerken/", user_edit, name="user-edit"),
     path("instellingen/gebruikers/<int:pk>/verwijderen/", user_delete, name="user-delete"),
     path("instellingen/gebruikers/importeren/", user_import_csv, name="user-import-csv"),
+    path("instellingen/organisaties/", organization_admin, name="organization-admin"),
     path("instellingen/labels/", label_admin, name="label-admin"),
     path("instellingen/labels/categorie/aanmaken/", label_category_create, name="label-category-create"),
     path("instellingen/labels/categorie/<int:pk>/bewerken/", label_category_edit, name="label-category-edit"),
@@ -81,6 +84,7 @@ urlpatterns = [
     path("instellingen/labels/categorie/<int:pk>/labels/aanmaken/", label_create),
     path("instellingen/labels/<int:pk>/bewerken/", label_edit, name="label-edit"),
     path("instellingen/labels/<int:pk>/verwijderen/", label_delete, name="label-delete"),
+    path("client-modal/", client_modal, name="client-modal"),
 ]
 
 # Custom error handlers

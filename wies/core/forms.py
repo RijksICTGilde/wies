@@ -9,6 +9,7 @@ from django.template import engines
 
 from .models import Label, LabelCategory, User
 from .services.users import validate_email_domain
+from .widgets import MultiselectDropdown
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +50,7 @@ class RvoFormMixin:
         "EmailInput": "rvo/forms/widgets/email.html",
         "Select": "rvo/forms/widgets/select.html",
         "CheckboxSelectMultiple": "rvo/forms/widgets/checkbox_select.html",
+        "MultiselectDropdown": "rvo/forms/widgets/multiselect.html",
         "RadioSelect": "rvo/forms/widgets/radio.html",
     }
 
@@ -168,17 +170,16 @@ class UserForm(RvoFormMixin, forms.ModelForm):
         for category in LabelCategory.objects.all():
             field_name = f"category_{category.name}"
 
-            initial = None
-            if instance and instance.labels.filter(category=category).exists():
-                initial = instance.labels.filter(
-                    category=category
-                ).first()  # this maps potential multiple in DB to single!
+            initial = []
+            if instance:
+                initial = list(instance.labels.filter(category=category).values_list("pk", flat=True))
 
-            self.fields[field_name] = forms.ModelChoiceField(
+            self.fields[field_name] = forms.ModelMultipleChoiceField(
                 label=category.name,
                 queryset=Label.objects.filter(category=category),
                 required=False,
                 initial=initial,
+                widget=MultiselectDropdown(),
             )
 
             # used in clean
@@ -193,8 +194,8 @@ class UserForm(RvoFormMixin, forms.ModelForm):
         # combine selected labels into single label attribute
         cleaned_data["labels"] = []
         for category_field_name in self._category_field_names:
-            selected_label = cleaned_data.pop(category_field_name)
-            if selected_label is not None:
-                cleaned_data["labels"].append(selected_label)
+            selected_labels = cleaned_data.pop(category_field_name, None)
+            if selected_labels:
+                cleaned_data["labels"].extend(selected_labels)
 
         return cleaned_data

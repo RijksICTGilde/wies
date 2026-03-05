@@ -1,0 +1,42 @@
+<div class="sidebar__toggle-row">
+  <h3 class="sidebar__title">
+    <span class="sidebar__title-text">Filters</span>
+  </h3>
+  <button type="button"
+          class="sidebar-toggle"
+          data-toggle-filters
+          aria-label="Toggle filters">
+    <svg class="sidebar-toggle__icon sidebar-toggle__icon--chevron"
+         viewBox="0 0 24 24"
+         fill="none"
+         stroke="currentColor"
+         stroke-width="2">
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+    <span class="sidebar-toggle__icon sidebar-toggle__icon--close utrecht-icon rvo-icon rvo-icon-kruis rvo-icon--md"
+          role="img"
+          aria-label="Sluiten"></span>
+  </button>
+</div>
+<form class="rvo-form filter-sidebar-form"
+      hx-get="{{ url('home') }}"
+      hx-target="#filter-and-table-container"
+      hx-swap="innerHTML settle:0"
+      hx-push-url="true"
+      hx-trigger="change,input delay:500ms from:[data-filter-input]"
+      hx-include="[data-filter-input]">
+  <!-- Hidden inputs for organization filter (updated by client_tree.js on apply) -->
+  <div id="org-filter-inputs">
+    {% for v in active_filters.get('org', []) %}
+      <input type="hidden" name="org" value="{{ v }}" data-filter-input>
+    {% endfor %}
+    {% for v in active_filters.get('org_self', []) %}
+      <input type="hidden" name="org_self" value="{{ v }}" data-filter-input>
+    {% endfor %}
+    {% for v in active_filters.get('org_type', []) %}
+      <input type="hidden" name="org_type" value="{{ v }}" data-filter-input>
+    {% endfor %}
+  </div>
+  <!-- Filter Fields -->
+  <div class="sidebar__content">{% include "parts/filters/filter_fields.html" %}</div>
+</form>

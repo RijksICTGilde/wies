@@ -7,7 +7,13 @@ document.addEventListener("htmx:afterSwap", function (e) {
     // Auto-show dialog when HTMX loads content
     if (dialog.innerHTML.trim()) {
       dialog.showModal();
+      document.documentElement.style.overflow = "hidden";
     }
+
+    // Unlock scroll when dialog closes
+    dialog.addEventListener("close", function () {
+      document.documentElement.style.overflow = "";
+    });
 
     // Add close button listeners for .close elements (PR #116 style)
     const closeElements = dialog.querySelectorAll(".close");
@@ -22,7 +28,11 @@ document.addEventListener("htmx:afterSwap", function (e) {
 // Listen for closeModal trigger from server
 document.addEventListener("closeModal", function () {
   // Close any open modal dialogs
-  const modalContainers = ["labelFormModal", "userFormModal"];
+  const modalContainers = [
+    "labelFormModal",
+    "userFormModal",
+    "clientModalContainer",
+  ];
   modalContainers.forEach((modalId) => {
     const modalContainer = document.getElementById(modalId);
     if (modalContainer) {
