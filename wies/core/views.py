@@ -487,6 +487,7 @@ class PlacementListView(ListView):
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
+        context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
 
         # Add colleague URLs to placement objects
         for placement in context["object_list"]:
@@ -582,9 +583,9 @@ class PlacementListView(ListView):
         label_filter_groups = []
         for category in LabelCategory.objects.all():
             # Count with all filters EXCEPT this label category
-            cat_count_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
-            cat_count_qs = Placement.objects.filter(id__in=cat_count_qs.values_list("id", flat=True))
-            cat_label_ids = cat_count_qs.values_list("colleague__labels__id", flat=True)
+            cat_filtered_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
+            cat_placement_qs = Placement.objects.filter(id__in=cat_filtered_qs.values_list("id", flat=True))
+            cat_label_ids = cat_placement_qs.values_list("colleague__labels__id", flat=True)
             cat_label_counts = Counter(lid for lid in cat_label_ids if lid is not None)
 
             options = [{"value": "", "label": ""}]
@@ -613,9 +614,9 @@ class PlacementListView(ListView):
             )
 
         # Skill/role counts: exclude role filter
-        skill_count_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
-        skill_count_qs = Placement.objects.filter(id__in=skill_count_qs.values_list("id", flat=True))
-        skill_ids = skill_count_qs.values_list("service__skill__id", flat=True)
+        skill_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
+        skill_placement_qs = Placement.objects.filter(id__in=skill_filtered_qs.values_list("id", flat=True))
+        skill_ids = skill_placement_qs.values_list("service__skill__id", flat=True)
         skill_counts = Counter(sid for sid in skill_ids if sid is not None)
 
         skill_options = [{"value": "", "label": ""}]
@@ -793,9 +794,9 @@ class UserListView(PermissionRequiredMixin, ListView):
 
         label_filter_groups = []
         for category in LabelCategory.objects.all():
-            cat_count_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
-            cat_count_qs = User.objects.filter(id__in=cat_count_qs.values_list("id", flat=True))
-            cat_label_ids = cat_count_qs.values_list("labels__id", flat=True)
+            cat_filtered_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
+            cat_user_qs = User.objects.filter(id__in=cat_filtered_qs.values_list("id", flat=True))
+            cat_label_ids = cat_user_qs.values_list("labels__id", flat=True)
             cat_label_counts = Counter(lid for lid in cat_label_ids if lid is not None)
 
             options = [{"value": "", "label": ""}]
