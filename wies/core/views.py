@@ -662,10 +662,8 @@ class PlacementListView(ListView):
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
             params = self.request.GET.copy()
-            params.pop("pagina", None)
-            params_str = params.urlencode()
-            next_page = context["page_obj"].next_page_number()
-            context["next_page_url"] = f"?pagina={next_page}" + (f"&{params_str}" if params_str else "")
+            params["pagina"] = context["page_obj"].next_page_number()
+            context["next_page_url"] = f"?{params.urlencode()}"
         else:
             context["next_page_url"] = None
 
@@ -858,13 +856,9 @@ class UserListView(PermissionRequiredMixin, ListView):
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
-            filter_params = []
-            for key, values in self.request.GET.lists():
-                if key != "pagina":
-                    filter_params.extend(f"{key}={value}" for value in values)
-            params_str = "&".join(filter_params)
-            next_page = context["page_obj"].next_page_number()
-            context["next_page_url"] = f"?pagina={next_page}" + (f"&{params_str}" if params_str else "")
+            params = self.request.GET.copy()
+            params["pagina"] = context["page_obj"].next_page_number()
+            context["next_page_url"] = f"?{params.urlencode()}"
         else:
             context["next_page_url"] = None
 
