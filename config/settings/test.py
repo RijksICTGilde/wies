@@ -4,7 +4,6 @@ Test settings for running pytest.
 Key differences from local:
 - DEBUG = False (like production)
 - Faster password hasher
-- In-memory SQLite database
 - No OIDC warnings
 """
 
@@ -27,16 +26,6 @@ OIDC_DISCOVERY_URL = None
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
-
-# DATABASE
-# ----------------------------------------------------------------------------------------------------------------------
-# Use in-memory SQLite for faster tests
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": ":memory:",
-    },
-}
 
 # CACHES
 # ----------------------------------------------------------------------------------------------------------------------

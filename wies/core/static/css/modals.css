@@ -11,12 +11,13 @@
   width: 90vw;
   max-height: 90vh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   background: white;
 }
 
 /* Wider modal for user forms with two columns */
 .modal-dialog--wide {
-  max-width: 800px;
+  max-width: 960px;
 }
 
 .modal-dialog::backdrop {
@@ -58,6 +59,7 @@
 
 .user-form-column {
   flex: 1;
+  min-width: 0;
 }
 
 .user-form-column > div {

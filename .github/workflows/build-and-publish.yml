@@ -24,11 +24,22 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push web image
         uses: docker/build-push-action@v6
         with:
           context: .
+          target: web
           push: true
           tags: |
             ghcr.io/rijksictgilde/wies:${{ github.ref_name }}
             ghcr.io/rijksictgilde/wies:latest
+
+      - name: Build and push worker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: worker
+          push: true
+          tags: |
+            ghcr.io/rijksictgilde/wies-worker:${{ github.ref_name }}
+            ghcr.io/rijksictgilde/wies-worker:latest

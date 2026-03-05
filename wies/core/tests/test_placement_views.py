@@ -6,7 +6,17 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
 
-from wies.core.models import Assignment, Colleague, Ministry, Placement, Service, Skill, User
+from wies.core.models import (
+    Assignment,
+    AssignmentOrganizationUnit,
+    Colleague,
+    OrganizationUnit,
+    Placement,
+    Service,
+    Skill,
+    User,
+)
+from wies.core.services.organizations import get_org_descendant_ids
 from wies.core.views import PlacementListView
 
 
@@ -34,9 +44,8 @@ class PlacementImportTest(TestCase):
         add_service_perm = Permission.objects.get(codename="add_service")
         add_placement_perm = Permission.objects.get(codename="add_placement")
         add_colleague_perm = Permission.objects.get(codename="add_colleague")
-        add_ministry_perm = Permission.objects.get(codename="add_ministry")
         self.auth_user.user_permissions.add(
-            add_assignment_perm, add_service_perm, add_placement_perm, add_colleague_perm, add_ministry_perm
+            add_assignment_perm, add_service_perm, add_placement_perm, add_colleague_perm
         )
 
         # Create user without permissions
@@ -47,7 +56,7 @@ class PlacementImportTest(TestCase):
             last_name="Permission",
         )
 
-        # Create user with only some permissions (missing add_service and add_ministry)
+        # Create user with only some permissions (missing add_service)
         self.partial_perm_user = User.objects.create(
             username="partialuser",
             email="partial@rijksoverheid.nl",
@@ -67,7 +76,7 @@ class PlacementImportTest(TestCase):
         assert response.url.startswith("/inloggen/")
 
     def test_import_requires_all_permissions(self):
-        """Test that import requires all five add permissions (assignment, service, placement, colleague, ministry)"""
+        """Test that import requires all four add permissions (assignment, service, placement, colleague)"""
         # Test with no permissions
         self.client.force_login(self.no_perm_user)
         response = self.client.get(self.import_url)
@@ -124,8 +133,8 @@ class PlacementImportTest(TestCase):
         }
 
         self.client.force_login(self.auth_user)
-        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization,assignment_ministry,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-Test Assignment,Test Description,John Owner,john@rijksoverheid.nl,Test Org,BZK,01-01-2024,31-12-2024,Python,Jane Colleague,jane@rijksoverheid.nl"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_organization_tooi,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
+Test Assignment,Test Description,John Owner,john@rijksoverheid.nl,,01-01-2024,31-12-2024,Python,Jane Colleague,jane@rijksoverheid.nl"""
         csv_file = self._create_csv_file(csv_content)
 
         response = self.client.post(self.import_url, {"csv_file": csv_file})
@@ -204,7 +213,6 @@ class PlacementListHistoricalFilterTest(TestCase):
         )
 
         # Create test ministry
-        self.ministry = Ministry.objects.create(name="Ministerie van BZK", abbreviation="BZK")
 
         # Create test colleague
         self.colleague = Colleague.objects.create(
@@ -221,7 +229,6 @@ class PlacementListHistoricalFilterTest(TestCase):
         assignment = Assignment.objects.create(
             name=f"Test Assignment {end_date}",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service = Service.objects.create(
@@ -319,7 +326,6 @@ class PlacementListHistoricalFilterTest(TestCase):
         assignment = Assignment.objects.create(
             name="Test Assignment Service Level",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service = Service.objects.create(
@@ -362,7 +368,6 @@ class PlacementListHistoricalFilterTest(TestCase):
         assignment = Assignment.objects.create(
             name="Test Assignment Level",
             status="INGEVULD",
-            ministry=self.ministry,
             start_date=date(2024, 1, 1),
             end_date=date(2024, 6, 14),  # Ends yesterday
             source="wies",
@@ -410,7 +415,6 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         )
 
         # Create test ministry
-        self.ministry = Ministry.objects.create(name="Ministerie van BZK", abbreviation="BZK")
 
         # Create test colleagues
         self.colleague1 = Colleague.objects.create(
@@ -439,7 +443,6 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         assignment = Assignment.objects.create(
             name="Test Assignment with Mixed Placements",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service = Service.objects.create(
@@ -496,7 +499,6 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         assignment = Assignment.objects.create(
             name="Test Assignment with Current Placement",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service = Service.objects.create(
@@ -547,7 +549,6 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         )
 
         # Create test ministry
-        self.ministry = Ministry.objects.create(name="Ministerie van BZK", abbreviation="BZK")
 
         # Create test colleague
         self.colleague = Colleague.objects.create(
@@ -571,7 +572,6 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         assignment_a = Assignment.objects.create(
             name="Test Assignment A (Historical)",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service_a = Service.objects.create(
@@ -593,7 +593,6 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         assignment_b = Assignment.objects.create(
             name="Test Assignment B (Current)",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service_b = Service.objects.create(
@@ -639,7 +638,6 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         assignment = Assignment.objects.create(
             name="Test Assignment Ending Today",
             status="INGEVULD",
-            ministry=self.ministry,
             source="wies",
         )
         service = Service.objects.create(
@@ -671,3 +669,307 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         assignment_ids = [a["id"] for a in assignment_list]
         assert len(assignment_ids) == 1, "Panel should contain the assignment with placement ending today"
         assert assignment.id in assignment_ids, "Assignment with placement ending today should be included"
+
+
+class OrgDescendantHelperTest(TestCase):
+    """Unit tests for get_org_descendant_ids helper function."""
+
+    def test_returns_root_when_no_children(self):
+        org = OrganizationUnit.objects.create(name="Lone Org", label="Lone Org")
+        result = get_org_descendant_ids([org.id])
+        assert result == {org.id}
+
+    def test_includes_all_descendants(self):
+        parent = OrganizationUnit.objects.create(name="Parent", label="Parent")
+        child = OrganizationUnit.objects.create(name="Child", label="Child", parent=parent)
+        grandchild = OrganizationUnit.objects.create(name="Grandchild", label="Grandchild", parent=child)
+        result = get_org_descendant_ids([parent.id])
+        assert result == {parent.id, child.id, grandchild.id}
+
+    def test_multiple_roots(self):
+        a = OrganizationUnit.objects.create(name="A", label="A")
+        b = OrganizationUnit.objects.create(name="B", label="B")
+        child_a = OrganizationUnit.objects.create(name="Child A", label="Child A", parent=a)
+        result = get_org_descendant_ids([a.id, b.id])
+        assert result == {a.id, b.id, child_a.id}
+
+    def test_empty_roots(self):
+        result = get_org_descendant_ids([])
+        assert result == set()
+
+
+class PlacementOrganizationFilterTest(TestCase):
+    """Tests for organization filtering in PlacementListView."""
+
+    def setUp(self):
+        self.auth_user = User.objects.create(
+            username="testuser",
+            email="test@rijksoverheid.nl",
+        )
+        self.skill = Skill.objects.create(name="Test Skill")
+
+        # Build a 3-level org hierarchy: ministry -> dept -> team
+        self.ministry = OrganizationUnit.objects.create(name="Ministry A", label="Ministry A")
+        self.dept = OrganizationUnit.objects.create(name="Dept B", label="Dept B", parent=self.ministry)
+        self.team = OrganizationUnit.objects.create(name="Team C", label="Team C", parent=self.dept)
+        self.other_org = OrganizationUnit.objects.create(name="Other Org", label="Other Org")
+
+    def _create_placement_for_org(self, org, suffix=""):
+        """Create an active placement directly linked to the given org."""
+        colleague = Colleague.objects.create(
+            name=f"Colleague {org.name}{suffix}",
+            email=f"c-{org.id}-{suffix}@rijksoverheid.nl",
+            source="wies",
+        )
+        assignment = Assignment.objects.create(
+            name=f"Assignment {org.name}{suffix}",
+            status="INGEVULD",
+            source="wies",
+            start_date=date(2025, 1, 1),
+            end_date=date(2030, 1, 1),
+        )
+        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=org)
+        service = Service.objects.create(
+            assignment=assignment,
+            description="Service",
+            skill=self.skill,
+            source="wies",
+        )
+        return Placement.objects.create(
+            colleague=colleague,
+            service=service,
+            period_source="ASSIGNMENT",
+            source="wies",
+        )
+
+    def _get_queryset(self, params: dict):
+        factory = RequestFactory()
+        request = factory.get("/", params)
+        request.user = self.auth_user
+        view = PlacementListView()
+        view.request = request
+        return view.get_queryset()
+
+    def test_no_org_filter_returns_all(self):
+        """Without org params, all active placements are returned."""
+        p1 = self._create_placement_for_org(self.ministry)
+        p2 = self._create_placement_for_org(self.other_org)
+        qs = self._get_queryset({})
+        ids = list(qs.values_list("id", flat=True))
+        assert p1.id in ids
+        assert p2.id in ids
+
+    def test_org_filter_includes_descendants(self):
+        """org=ministry includes placements on ministry, dept, and team."""
+        p_ministry = self._create_placement_for_org(self.ministry)
+        p_dept = self._create_placement_for_org(self.dept)
+        p_team = self._create_placement_for_org(self.team)
+        p_other = self._create_placement_for_org(self.other_org)
+
+        qs = self._get_queryset({"org": str(self.ministry.id)})
+        ids = list(qs.values_list("id", flat=True))
+
+        assert p_ministry.id in ids, "Ministry placement should be included"
+        assert p_dept.id in ids, "Dept placement should be included via descendant"
+        assert p_team.id in ids, "Team placement should be included via descendant"
+        assert p_other.id not in ids, "Other org placement should be excluded"
+
+    def test_org_filter_on_middle_node(self):
+        """org=dept includes dept and team but not ministry."""
+        self._create_placement_for_org(self.ministry)
+        p_dept = self._create_placement_for_org(self.dept)
+        p_team = self._create_placement_for_org(self.team)
+        p_other = self._create_placement_for_org(self.other_org)
+
+        qs = self._get_queryset({"org": str(self.dept.id)})
+        ids = list(qs.values_list("id", flat=True))
+
+        assert p_dept.id in ids
+        assert p_team.id in ids
+        assert p_other.id not in ids
+
+    def test_org_self_filter_excludes_descendants(self):
+        """org_self=ministry only includes direct placements on ministry."""
+        p_ministry = self._create_placement_for_org(self.ministry)
+        p_dept = self._create_placement_for_org(self.dept)
+        p_team = self._create_placement_for_org(self.team)
+
+        qs = self._get_queryset({"org_self": str(self.ministry.id)})
+        ids = list(qs.values_list("id", flat=True))
+
+        assert p_ministry.id in ids, "Direct ministry placement should be included"
+        assert p_dept.id not in ids, "Dept placement should be excluded for org_self"
+        assert p_team.id not in ids, "Team placement should be excluded for org_self"
+
+    def test_overlapping_org_and_org_self_no_duplicates(self):
+        """org=X and org_self=X together return results without duplicates."""
+        p_ministry = self._create_placement_for_org(self.ministry)
+        p_dept = self._create_placement_for_org(self.dept)
+
+        qs = self._get_queryset({"org": str(self.ministry.id), "org_self": str(self.ministry.id)})
+        ids = list(qs.values_list("id", flat=True))
+
+        # No duplicates
+        assert len(ids) == len(set(ids)), "No duplicate placement rows should appear"
+        assert p_ministry.id in ids
+        assert p_dept.id in ids
+
+    def test_multiple_org_params_union(self):
+        """Multiple org params return the union of their trees."""
+        p_ministry = self._create_placement_for_org(self.ministry)
+        p_other = self._create_placement_for_org(self.other_org)
+
+        qs = self._get_queryset({"org": [str(self.ministry.id), str(self.other_org.id)]})
+        ids = list(qs.values_list("id", flat=True))
+
+        assert p_ministry.id in ids
+        assert p_other.id in ids
+
+    def test_org_filter_combined_with_skill_filter(self):
+        """org filter combined with rol filter applies both constraints."""
+        other_skill = Skill.objects.create(name="Other Skill")
+
+        p_correct = self._create_placement_for_org(self.ministry)  # skill=self.skill
+        # Create a placement for ministry but with other_skill
+        colleague2 = Colleague.objects.create(name="C2", email="c2@rijksoverheid.nl", source="wies")
+        assignment2 = Assignment.objects.create(
+            name="Assignment2",
+            status="INGEVULD",
+            source="wies",
+            start_date=date(2025, 1, 1),
+            end_date=date(2030, 1, 1),
+        )
+        AssignmentOrganizationUnit.objects.create(assignment=assignment2, organization=self.ministry)
+        service2 = Service.objects.create(assignment=assignment2, description="S2", skill=other_skill, source="wies")
+        p_wrong_skill = Placement.objects.create(
+            colleague=colleague2, service=service2, period_source="ASSIGNMENT", source="wies"
+        )
+
+        qs = self._get_queryset({"org": str(self.ministry.id), "rol": str(self.skill.id)})
+        ids = list(qs.values_list("id", flat=True))
+
+        assert p_correct.id in ids, "Placement with correct org and skill should be included"
+        assert p_wrong_skill.id not in ids, "Placement with wrong skill should be excluded"
+
+
+class PlacementSearchTest(TestCase):
+    """Tests for the 'zoek' search parameter in PlacementListView."""
+
+    def setUp(self):
+        self.auth_user = User.objects.create(
+            username="testuser",
+            email="test@rijksoverheid.nl",
+        )
+        self.skill = Skill.objects.create(name="Test Skill")
+        self.org = OrganizationUnit.objects.create(
+            name="Rijkswaterstaat",
+            label="RWS Hoofdkantoor",
+            abbreviations=["RWS"],
+        )
+
+    def _create_placement(self, colleague_name="Test Colleague", assignment_name="Test Assignment", org=None):
+        """Create an active placement with the given parameters."""
+        colleague = Colleague.objects.create(
+            name=colleague_name,
+            email=f"{colleague_name.replace(' ', '')}@rijksoverheid.nl",
+            source="wies",
+        )
+        assignment = Assignment.objects.create(
+            name=assignment_name,
+            status="INGEVULD",
+            source="wies",
+            start_date=date(2025, 1, 1),
+            end_date=date(2030, 1, 1),
+        )
+        if org:
+            AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=org)
+        service = Service.objects.create(
+            assignment=assignment,
+            description="Service",
+            skill=self.skill,
+            source="wies",
+        )
+        return Placement.objects.create(
+            colleague=colleague,
+            service=service,
+            period_source="ASSIGNMENT",
+            source="wies",
+        )
+
+    def _search(self, query):
+        factory = RequestFactory()
+        request = factory.get("/", {"zoek": query})
+        request.user = self.auth_user
+        view = PlacementListView()
+        view.request = request
+        return view.get_queryset()
+
+    def test_search_by_colleague_name(self):
+        p = self._create_placement(colleague_name="Jan de Vries")
+        qs = self._search("Jan de Vries")
+        assert p.id in list(qs.values_list("id", flat=True))
+
+    def test_search_by_assignment_name(self):
+        p = self._create_placement(assignment_name="Cloud Migratie Project")
+        qs = self._search("Cloud Migratie")
+        assert p.id in list(qs.values_list("id", flat=True))
+
+    def test_search_by_organization_name(self):
+        p = self._create_placement(org=self.org)
+        other = self._create_placement(colleague_name="Andere Collega")
+        qs = self._search("Rijkswaterstaat")
+        ids = list(qs.values_list("id", flat=True))
+        assert p.id in ids
+        assert other.id not in ids
+
+    def test_search_by_organization_label(self):
+        p = self._create_placement(org=self.org)
+        qs = self._search("RWS Hoofdkantoor")
+        assert p.id in list(qs.values_list("id", flat=True))
+
+    def test_search_by_organization_abbreviation(self):
+        p = self._create_placement(org=self.org)
+        qs = self._search("RWS")
+        assert p.id in list(qs.values_list("id", flat=True))
+
+    def test_search_by_organization_abbreviation_case_insensitive(self):
+        p = self._create_placement(org=self.org)
+        qs = self._search("rws")
+        assert p.id in list(qs.values_list("id", flat=True))
+
+    def test_search_no_duplicates_with_multiple_matching_orgs(self):
+        """Assignment with multiple matching orgs should return the placement only once."""
+        org2 = OrganizationUnit.objects.create(
+            name="RWS Oost-Nederland",
+            label="RWS ON",
+        )
+        colleague = Colleague.objects.create(
+            name="Duplicate Test",
+            email="dup@rijksoverheid.nl",
+            source="wies",
+        )
+        assignment = Assignment.objects.create(
+            name="Multi Org Assignment",
+            status="INGEVULD",
+            source="wies",
+            start_date=date(2025, 1, 1),
+            end_date=date(2030, 1, 1),
+        )
+        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=self.org)
+        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=org2)
+        service = Service.objects.create(
+            assignment=assignment,
+            description="Service",
+            skill=self.skill,
+            source="wies",
+        )
+        p = Placement.objects.create(
+            colleague=colleague,
+            service=service,
+            period_source="ASSIGNMENT",
+            source="wies",
+        )
+
+        qs = self._search("RWS")
+        ids = list(qs.values_list("id", flat=True))
+        assert ids.count(p.id) == 1, "Placement should appear exactly once despite multiple matching orgs"
