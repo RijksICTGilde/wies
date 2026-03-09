@@ -956,7 +956,7 @@ class PlacementSearchTest(TestCase):
             end_date=date(2030, 1, 1),
         )
         AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=self.org)
-        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=org2)
+        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=org2, role="INVOLVED")
         service = Service.objects.create(
             assignment=assignment,
             description="Service",

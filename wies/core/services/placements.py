@@ -177,7 +177,10 @@ def create_assignments_from_csv(csv_content: str):
 
                 # Link organization to assignment if found
                 if organization and not assignment.organizations.filter(id=organization.id).exists():
-                    AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=organization)
+                    role = "PRIMARY" if not assignment.organizations.exists() else "INVOLVED"
+                    AssignmentOrganizationUnit.objects.create(
+                        assignment=assignment, organization=organization, role=role
+                    )
                     organizations_linked += 1
 
                 skill = row["service_skill"]

@@ -1555,7 +1555,8 @@
     "pk": 1,
     "fields": {
       "assignment": 1,
-      "organization": 14
+      "organization": 14,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1563,7 +1564,8 @@
     "pk": 2,
     "fields": {
       "assignment": 2,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1571,7 +1573,8 @@
     "pk": 3,
     "fields": {
       "assignment": 3,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1579,7 +1582,8 @@
     "pk": 4,
     "fields": {
       "assignment": 4,
-      "organization": 13
+      "organization": 13,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1587,7 +1591,8 @@
     "pk": 5,
     "fields": {
       "assignment": 5,
-      "organization": 14
+      "organization": 14,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1595,7 +1600,8 @@
     "pk": 6,
     "fields": {
       "assignment": 6,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1603,7 +1609,8 @@
     "pk": 7,
     "fields": {
       "assignment": 7,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1611,7 +1618,8 @@
     "pk": 8,
     "fields": {
       "assignment": 8,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1619,7 +1627,8 @@
     "pk": 9,
     "fields": {
       "assignment": 9,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1627,7 +1636,8 @@
     "pk": 10,
     "fields": {
       "assignment": 10,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1635,7 +1645,8 @@
     "pk": 11,
     "fields": {
       "assignment": 11,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1643,7 +1654,8 @@
     "pk": 12,
     "fields": {
       "assignment": 12,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1651,7 +1663,8 @@
     "pk": 13,
     "fields": {
       "assignment": 13,
-      "organization": 14
+      "organization": 14,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1659,7 +1672,8 @@
     "pk": 14,
     "fields": {
       "assignment": 14,
-      "organization": 13
+      "organization": 13,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1667,7 +1681,8 @@
     "pk": 15,
     "fields": {
       "assignment": 15,
-      "organization": 14
+      "organization": 14,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1675,7 +1690,8 @@
     "pk": 16,
     "fields": {
       "assignment": 16,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1683,7 +1699,8 @@
     "pk": 17,
     "fields": {
       "assignment": 17,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1691,7 +1708,8 @@
     "pk": 18,
     "fields": {
       "assignment": 18,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1699,7 +1717,8 @@
     "pk": 19,
     "fields": {
       "assignment": 19,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1707,7 +1726,8 @@
     "pk": 20,
     "fields": {
       "assignment": 20,
-      "organization": 14
+      "organization": 14,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1715,7 +1735,8 @@
     "pk": 21,
     "fields": {
       "assignment": 21,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1723,7 +1744,8 @@
     "pk": 22,
     "fields": {
       "assignment": 22,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1731,7 +1753,8 @@
     "pk": 23,
     "fields": {
       "assignment": 23,
-      "organization": 13
+      "organization": 13,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1739,7 +1762,8 @@
     "pk": 24,
     "fields": {
       "assignment": 24,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1747,7 +1771,8 @@
     "pk": 25,
     "fields": {
       "assignment": 25,
-      "organization": 13
+      "organization": 13,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1755,7 +1780,8 @@
     "pk": 26,
     "fields": {
       "assignment": 26,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1763,7 +1789,8 @@
     "pk": 27,
     "fields": {
       "assignment": 27,
-      "organization": 13
+      "organization": 13,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1771,7 +1798,8 @@
     "pk": 28,
     "fields": {
       "assignment": 28,
-      "organization": 14
+      "organization": 14,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1779,7 +1807,8 @@
     "pk": 29,
     "fields": {
       "assignment": 29,
-      "organization": 13
+      "organization": 13,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1787,7 +1816,8 @@
     "pk": 30,
     "fields": {
       "assignment": 30,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1795,7 +1825,8 @@
     "pk": 31,
     "fields": {
       "assignment": 31,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1803,7 +1834,8 @@
     "pk": 32,
     "fields": {
       "assignment": 31,
-      "organization": 13
+      "organization": 13,
+      "role": "INVOLVED"
     }
   },
   {
@@ -1811,7 +1843,8 @@
     "pk": 33,
     "fields": {
       "assignment": 31,
-      "organization": 14
+      "organization": 14,
+      "role": "INVOLVED"
     }
   },
   {

@@ -14,11 +14,11 @@
     <td class="rvo-table-cell">
       <div class="placement-assignment">
         <span class="rvo-text--bold">{{ placement.service.assignment.name }}</span>
-        {% set orgs = placement.service.assignment.organizations.all() %}
-        {% if orgs %}
+        {% set clients = placement.service.assignment.sorted_clients %}
+        {% if clients %}
           <div class="rvo-text--sm rvo-text--subtle">
-            {{ orgs[0].name }}
-            {% if orgs|length > 1 %}(+{{ orgs|length - 1 }}){% endif %}
+            {{ clients[0].organization.name }}
+            {% if clients|length > 1 %}(+{{ clients|length - 1 }} meer){% endif %}
           </div>
         {% endif %}
       </div>

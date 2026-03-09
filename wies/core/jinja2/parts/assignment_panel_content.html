@@ -40,7 +40,7 @@
           <dt>
             {% if loop.first %}
               Opdrachtgever
-              {% if panel_data.org_breadcrumbs|length > 1 %}s{% endif %}
+              {%- if panel_data.org_breadcrumbs|length > 1 %}s{% endif %}
             {% endif %}
           </dt>
           <dd>
@@ -52,6 +52,9 @@
                 {% endfor %}
               {% endif %}
               <a href="{{ org_breadcrumb.url }}" class="rvo-link">{{ org_breadcrumb.label }}</a>
+              {% if org_breadcrumb.role == "PRIMARY" and panel_data.org_breadcrumbs|length > 1 %}
+                <span class="rvo-text--subtle rvo-text--sm">(primair)</span>
+              {% endif %}
             </div>
           </dd>
         {% endfor %}

@@ -364,11 +364,38 @@ class OrganizationUnit(models.Model):
         return ""
 
 
+class OrganizationUnitRole(models.TextChoices):
+    """Role of an organization unit in relation to an assignment."""
+
+    PRIMARY = "PRIMARY", "Primaire opdrachtgever"
+    INVOLVED = "INVOLVED", "Betrokken partij"
+
+
 class AssignmentOrganizationUnit(models.Model):
-    """Through table between Assignment and OrganizationUnit."""
+    """Through table between Assignment and OrganizationUnit with role.
+
+    Each assignment can have multiple organization units with different roles:
+    - PRIMARY: The main client responsible for the assignment (max 1 per assignment)
+    - INVOLVED: Other organizations involved in the assignment
+    """
 
     assignment = models.ForeignKey("Assignment", on_delete=models.CASCADE, related_name="organization_relations")
     organization = models.ForeignKey("OrganizationUnit", on_delete=models.PROTECT, related_name="assignment_relations")
+    role = models.CharField(
+        max_length=20,
+        choices=OrganizationUnitRole,
+        default=OrganizationUnitRole.PRIMARY,
+        verbose_name="Rol",
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["assignment"],
+                condition=models.Q(role="PRIMARY"),
+                name="unique_primary_per_assignment",
+            )
+        ]
 
     def __str__(self):
         return f"{self.assignment.name} - {self.organization.name}"
