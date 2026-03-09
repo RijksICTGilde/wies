@@ -4,12 +4,30 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+## 2026-03-06
+
+- add endpoint to worker container for health checks
+
+## 2026-03-05
+
+- 189: Add multi-select checkbox filters
+- 189: Add multi-select dropdown in user create/edit modal
+- 189: Add reusable multi_select component with search, clear, and keyboard support
 - 185: improve docker-compose: remove container names, handle SIGTERM/SIGINT, change to port 8080
 - 185: introduce js testing. `just test` runs both, `just test django` / `just test js` run individually
 - 185: introduce small starting dataset and add `just load-full-data` for loading large dataset
 - 185: (migration) introduce long running tasks through `db_worker` service
 - 185: (migration) introduce hierarchial organization structure and synchronization
 - bump django to 6.0.3
+
+## 2026-03-03_3
+
+- fix gunicorn, not using control socket
+
+## 2026-03-03_2
+
+- fix startup script not crashing on existing superuser
+- fix django container properly waiting for db availability
 
 ## 2026-03-03
 
@@ -49,9 +67,6 @@ This files lists the changes during the lifetime of this project.
 - 177: Clean up CSS/JS: CSS custom properties, overlay close registry, extract modals.css
 - 177: Add animations to panels and sidebar
 - 177: with env var SKIP_OIDC, skip login during development
-- 189: Add multi-select checkbox filters
-- 189: Add multi-select dropdown in user create/edit modal
-- 189: Add reusable multi_select component with search, clear, and keyboard support
 - 181: Bump django security release
 - Add "Aangevraagde opdrachten" page with card grid, filters, search, and side panel
 - Make filter sidebar reusable across pages

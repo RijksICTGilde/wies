@@ -52,7 +52,7 @@ up-production-postgres:
 # make sure to run up-production-postgres first
 # to check if container runs properly. not directly used in production
 up-production-django:
-  docker run --rm  --env-file .env -p 8000:8000 --network wies-network wies
+  docker run --rm  --env-file .env -e DJANGO_SETTINGS_MODULE=config.settings.local -p 8000:8000 --network wies-network wies
 
 # make sure to run up-production-postgres first
 # to check if container runs properly. not directly used in production
