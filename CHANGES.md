@@ -4,6 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 220: support multiple organizations per assignment
+- 220: (migration) add AssignmentOrganizationUnit.role (PRIMARY, INVOLVED)
+
 ## 2026-03-06
 
 - add endpoint to worker container for health checks
