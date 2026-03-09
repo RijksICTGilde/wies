@@ -4,6 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 192: Add assignments page with organization hierarchy filter, multiselect role filter, and compact card layout
+- 192: Support importing OPEN assignments via CSV
+
 ## 2026-03-06
 
 - add endpoint to worker container for health checks
@@ -68,8 +71,6 @@ This files lists the changes during the lifetime of this project.
 - 177: Add animations to panels and sidebar
 - 177: with env var SKIP_OIDC, skip login during development
 - 181: Bump django security release
-- Add "Aangevraagde opdrachten" page with card grid, filters, search, and side panel
-- Make filter sidebar reusable across pages
 
 ## 2026-01-19
 

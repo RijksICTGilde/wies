@@ -235,6 +235,23 @@ def admin_db(request):
     return render(request, "admin_db.html", context)
 
 
+def get_org_breadcrumb(org: OrganizationUnit, base_url: str = "/") -> dict:
+    """Build breadcrumb data for an organization: label + clickable ancestor path."""
+    ancestors = []
+    current = org.parent
+    while current:
+        label = current.abbreviation or current.label or current.name
+        ancestors.append({"label": label, "url": f"{base_url}?org={current.id}"})
+        current = current.parent
+    ancestors.reverse()
+
+    is_self = org.children.filter(assignment_relations__isnull=False).exists()
+    label = org.label or org.name
+    url = f"{base_url}?org_self={org.id}" if is_self else f"{base_url}?org={org.id}"
+
+    return {"label": label, "url": url, "ancestors": ancestors}
+
+
 class PlacementListView(ListView):
     """View for placements table view with infinite scroll pagination"""
 
@@ -430,26 +447,6 @@ class PlacementListView(ListView):
             "assignment_list": assignment_list,
         }
 
-    @staticmethod
-    def _get_org_breadcrumb(org: OrganizationUnit) -> dict:
-        """Build breadcrumb data for an organization: label + clickable ancestor path."""
-        # Walk up to build ancestor chain (excluding the org itself)
-        ancestors = []
-        current = org.parent
-        while current:
-            label = current.abbreviation or current.label or current.name
-            ancestors.append({"label": label, "url": f"/?org={current.id}"})
-            current = current.parent
-        ancestors.reverse()  # root → ... → direct parent
-
-        # Determine if this org is a "self-node": has children with assignment links
-        is_self = org.children.filter(assignment_relations__isnull=False).exists()
-
-        label = org.label or org.name
-        url = f"/?org_self={org.id}" if is_self else f"/?org={org.id}"
-
-        return {"label": label, "url": url, "ancestors": ancestors}
-
     def _get_assignment_panel_data(self, assignment, colleague):
         """Get assignment panel data for server-side rendering"""
         placements_qs = Placement.objects.filter(service__assignment=assignment).select_related(
@@ -471,7 +468,7 @@ class PlacementListView(ListView):
 
         # Build organization breadcrumb
         org = assignment.organizations.select_related("parent__parent__parent__parent").first()
-        org_breadcrumb = self._get_org_breadcrumb(org) if org else None
+        org_breadcrumb = get_org_breadcrumb(org) if org else None
 
         return {
             "panel_content_template": "parts/assignment_panel_content.html",
@@ -779,12 +776,18 @@ class AssignmentListView(ListView):
             if service.skill and service.skill.name not in skills:
                 skills.append(service.skill.name)
 
+        # Build organization breadcrumb
+        base_url = reverse("assignment-list")
+        org = assignment.organizations.select_related("parent__parent__parent__parent").first()
+        org_breadcrumb = get_org_breadcrumb(org, base_url) if org else None
+
         return {
             "panel_content_template": "parts/requested_assignment_panel_content.html",
             "panel_title": assignment.name,
             "close_url": self._build_close_url(),
             "assignment": assignment,
             "skills": skills,
+            "org_breadcrumb": org_breadcrumb,
         }
 
     def get_context_data(self, **kwargs):
@@ -794,9 +797,8 @@ class AssignmentListView(ListView):
         base_url = reverse("assignment-list")
         for assignment in context["object_list"]:
             assignment.panel_url = self._build_panel_url(assignment.id)
-            first_org = assignment.organizations.first()
-            if first_org:
-                assignment.organization_filter_url = f"{base_url}?org_self={first_org.id}"
+            first_org = assignment.organizations.select_related("parent__parent__parent__parent").first()
+            assignment.org_breadcrumb = get_org_breadcrumb(first_org, base_url) if first_org else None
 
         context["filter_target_url"] = reverse("assignment-list")
         context["search_field"] = "zoek"
@@ -806,7 +808,10 @@ class AssignmentListView(ListView):
         active_filters = {}
         beschikbaar_vanaf = self.request.GET.get("beschikbaar_vanaf")
         if beschikbaar_vanaf:
-            active_filters["beschikbaar_vanaf"] = beschikbaar_vanaf
+            try:
+                active_filters["beschikbaar_vanaf"] = date.fromisoformat(beschikbaar_vanaf)
+            except ValueError:
+                active_filters["beschikbaar_vanaf"] = beschikbaar_vanaf
 
         # rol filter supports multi-select
         rol_filter = set()

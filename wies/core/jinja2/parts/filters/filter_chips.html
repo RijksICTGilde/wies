@@ -79,7 +79,7 @@
       <div class="filter-chip filter-chip--default"
            data-filter-name="{{ filter_group.name }}"
            data-filter-type="date">
-        <span>Vanaf {{ active_filters.get(filter_group.name) }}</span>
+        <span>Vanaf {{ active_filters.get(filter_group.name) |datum_nl('j F Y') }}</span>
         <button type="button"
                 class="filter-chip-remove"
                 aria-label="Verwijder filter"

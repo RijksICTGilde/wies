@@ -1,60 +1,41 @@
 {% for assignment in object_list %}
-  <div class="rvo-card rvo-card--outline rvo-card--padding-md assignment-card assignment-card--clickable"
-       onclick="window.location.href='{{ assignment.panel_url }}'">
+  <article class="rvo-card rvo-card--outline rvo-card--padding-md assignment-card assignment-card--clickable"
+           tabindex="0"
+           role="link"
+           aria-label="{{ assignment.name }}"
+           onclick="window.location.href='{{ assignment.panel_url }}'"
+           onkeydown="if(event.key==='Enter')window.location.href='{{ assignment.panel_url }}'">
     <div class="assignment-card__header">
-      {% if assignment.start_date %}
-        <span class="rvo-text rvo-text--sm rvo-text--subtle">Plaatsingsdatum: {{ assignment.start_date|datum_nl("j F Y") }}</span>
-      {% endif %}
+      <h3 class="rvo-text rvo-text--bold rvo-text--no-margins assignment-card__title">{{ assignment.name }}</h3>
       {% if assignment.status %}
         <span class="rvo-tag {{ status_tag_class(assignment.status) }}">{{ assignment.get_status_display() }}</span>
       {% endif %}
     </div>
-    <h3 class="rvo-text rvo-text--bold rvo-text--no-margins assignment-card__title">{{ assignment.name }}</h3>
-    {% if assignment.organization or assignment.ministry %}
-      <div class="assignment-card__org-row">
-        {% if assignment.ministry %}
-          <a href="{{ assignment.ministry_filter_url }}"
-             class="rvo-link rvo-text--sm"
-             onclick="event.stopPropagation()">{{ assignment.ministry.name }}</a>
-        {% endif %}
-        {% if assignment.organization and assignment.ministry %}
-          <span class="assignment-card__org-separator" aria-hidden="true">/</span>
-        {% endif %}
-        {% if assignment.organization %}
-          <a href="{{ assignment.organization_filter_url }}"
-             class="rvo-link rvo-text--sm"
-             onclick="event.stopPropagation()">{{ assignment.organization }}</a>
-        {% endif %}
-      </div>
+    {% if assignment.org_breadcrumb %}
+      <span class="rvo-text rvo-text--sm">{{ assignment.org_breadcrumb.label }}</span>
     {% endif %}
     {% if assignment.start_date or assignment.end_date %}
-      <div class="assignment-card__meta">
-        <span class="assignment-card__meta-item">
-          <span class="utrecht-icon rvo-icon rvo-icon-klok rvo-icon--sm"
-                role="img"
-                aria-label="Periode"></span>
-          {{ assignment.start_date|datum_nl("N Y") }}
-          {% if assignment.end_date %}- {{ assignment.end_date|datum_nl("N Y") }}{% endif %}
-        </span>
-      </div>
+      <span class="assignment-card__meta-item rvo-text rvo-text--sm rvo-text--subtle">
+        <span class="utrecht-icon rvo-icon rvo-icon-klok rvo-icon--sm"
+              role="img"
+              aria-label="Periode"></span>
+        {{ assignment.start_date|datum_nl("N Y") }}
+        {% if assignment.end_date %}- {{ assignment.end_date|datum_nl("N Y") }}{% endif %}
+      </span>
     {% endif %}
     {% if assignment.services_with_skills %}
-      <div class="assignment-card__skills">
-        <span class="rvo-text rvo-text--sm rvo-text--subtle">Gezochte rol:</span>
-        <div class="assignment-card__tags">
-          {% for service in assignment.services_with_skills[:3] %}
-            <span class="rvo-tag rvo-tag--default">{{ service.skill.name }}</span>
-          {% endfor %}
-          {% if assignment.services_with_skills|length > 3 %}
-            <span class="rvo-tag rvo-tag--default">+{{ assignment.services_with_skills|length - 3 }} meer</span>
-          {% endif %}
-        </div>
+      <div class="assignment-card__tags"
+           role="list"
+           aria-label="Gezochte rollen">
+        {% for service in assignment.services_with_skills[:3] %}
+          <span class="rvo-tag rvo-tag--default" role="listitem">{{ service.skill.name }}</span>
+        {% endfor %}
+        {% if assignment.services_with_skills|length > 3 %}
+          <span class="rvo-tag rvo-tag--default" role="listitem">+{{ assignment.services_with_skills|length - 3 }} meer</span>
+        {% endif %}
       </div>
     {% endif %}
-    <div class="assignment-card__actions">
-      <span class="rvo-link">Lees meer</span>
-    </div>
-  </div>
+  </article>
 {% else %}
   <div class="assignment-card-grid__empty">
     <span class="rvo-text--italic rvo-text--subtle">Geen openstaande opdrachten gevonden.</span>
