@@ -435,17 +435,37 @@ class PlacementListView(ListView):
         placement_qs = annotate_placement_dates(placement_qs)
         placement_qs = filter_placements_by_min_end_date(placement_qs, timezone.now().date())
 
-        assignment_list = [
-            {
-                "name": item["service__assignment__name"],
-                "id": item["service__assignment__id"],
-                "start_date": item["service__assignment__start_date"],
-                "end_date": item["service__assignment__end_date"],
-                "skill": item["service__skill__name"],
-                "assignment_url": self._build_assignment_url(self.request, item["service__assignment__id"]),
-            }
-            for item in placement_qs
-        ]
+        # Build dict keyed by assignment id, merging placement roles and BM role
+        assignments_by_id = {}
+        for item in placement_qs:
+            aid = item["service__assignment__id"]
+            if aid not in assignments_by_id:
+                assignments_by_id[aid] = {
+                    "name": item["service__assignment__name"],
+                    "id": aid,
+                    "tags": [],
+                    "assignment_url": self._build_assignment_url(self.request, aid),
+                }
+            skill = item["service__skill__name"]
+            if skill:
+                assignments_by_id[aid]["tags"].append(skill)
+
+        today = timezone.now().date()
+        bm_assignments = (
+            Assignment.objects.filter(owner=colleague).exclude(end_date__lt=today).values_list("id", "name")
+        )
+        for aid, name in bm_assignments:
+            if aid in assignments_by_id:
+                assignments_by_id[aid]["tags"].append("Business Manager")
+            else:
+                assignments_by_id[aid] = {
+                    "name": name,
+                    "id": aid,
+                    "tags": ["Business Manager"],
+                    "assignment_url": self._build_assignment_url(self.request, aid),
+                }
+
+        assignment_list = sorted(assignments_by_id.values(), key=lambda a: a["name"])
 
         return {
             "panel_content_template": "parts/colleague_panel_content.html",
