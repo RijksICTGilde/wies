@@ -209,7 +209,7 @@
     "fields": {
       "name": "Algemene Zaken",
       "label": "Ministerie van Algemene Zaken",
-      "abbreviations": [],
+      "abbreviations": ["AZ"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -224,7 +224,7 @@
     "fields": {
       "name": "Binnenlandse Zaken en Koninkrijksrelaties",
       "label": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "abbreviations": [],
+      "abbreviations": ["BZK"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -239,7 +239,7 @@
     "fields": {
       "name": "Buitenlandse Zaken",
       "label": "Ministerie van Buitenlandse Zaken",
-      "abbreviations": [],
+      "abbreviations": ["BuZa"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -254,7 +254,7 @@
     "fields": {
       "name": "Defensie",
       "label": "Ministerie van Defensie",
-      "abbreviations": [],
+      "abbreviations": ["Def"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -269,7 +269,7 @@
     "fields": {
       "name": "Economische Zaken",
       "label": "Ministerie van Economische Zaken",
-      "abbreviations": [],
+      "abbreviations": ["EZ"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -284,7 +284,7 @@
     "fields": {
       "name": "Financiën",
       "label": "Ministerie van Financiën",
-      "abbreviations": [],
+      "abbreviations": ["FIN"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -299,7 +299,7 @@
     "fields": {
       "name": "Infrastructuur en Waterstaat",
       "label": "Ministerie van Infrastructuur en Waterstaat",
-      "abbreviations": [],
+      "abbreviations": ["IenW"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -314,7 +314,7 @@
     "fields": {
       "name": "Justitie en Veiligheid",
       "label": "Ministerie van Justitie en Veiligheid",
-      "abbreviations": [],
+      "abbreviations": ["JenV"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -329,7 +329,7 @@
     "fields": {
       "name": "Onderwijs, Cultuur en Wetenschap",
       "label": "Ministerie van Onderwijs, Cultuur en Wetenschap",
-      "abbreviations": [],
+      "abbreviations": ["OCW"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -344,7 +344,7 @@
     "fields": {
       "name": "Sociale Zaken en Werkgelegenheid",
       "label": "Ministerie van Sociale Zaken en Werkgelegenheid",
-      "abbreviations": [],
+      "abbreviations": ["SZW"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -359,7 +359,7 @@
     "fields": {
       "name": "Volksgezondheid, Welzijn en Sport",
       "label": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "abbreviations": [],
+      "abbreviations": ["VWS"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -374,7 +374,7 @@
     "fields": {
       "name": "Belastingdienst",
       "label": "Belastingdienst",
-      "abbreviations": [],
+      "abbreviations": ["BD"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -389,7 +389,7 @@
     "fields": {
       "name": "Rijkswaterstaat",
       "label": "Rijkswaterstaat",
-      "abbreviations": [],
+      "abbreviations": ["RWS"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -403,8 +403,8 @@
     "pk": 14,
     "fields": {
       "name": "RIVM",
-      "label": "RIVM",
-      "abbreviations": [],
+      "label": "Rijksinstituut voor Volksgezondheid en Milieu",
+      "abbreviations": ["RIVM"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -419,7 +419,7 @@
     "fields": {
       "name": "Dienst Justitiële Inrichtingen",
       "label": "Dienst Justitiële Inrichtingen",
-      "abbreviations": [],
+      "abbreviations": ["DJI"],
       "tooi_identifier": null,
       "oin_number": null,
       "system_id": "",
@@ -1537,6 +1537,20 @@
     }
   },
   {
+    "model": "core.assignment",
+    "pk": 31,
+    "fields": {
+      "name": "Multi org",
+      "start_date": "2025-01-01",
+      "end_date": "2026-12-31",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 6,
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
     "model": "core.assignmentorganizationunit",
     "pk": 1,
     "fields": {
@@ -1774,6 +1788,30 @@
     "fields": {
       "assignment": 30,
       "organization": 12
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 31,
+    "fields": {
+      "assignment": 31,
+      "organization": 12
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 32,
+    "fields": {
+      "assignment": 31,
+      "organization": 13
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 33,
+    "fields": {
+      "assignment": 31,
+      "organization": 14
     }
   },
   {
@@ -3073,6 +3111,18 @@
     }
   },
   {
+    "model": "core.service",
+    "pk": 109,
+    "fields": {
+      "assignment": 31,
+      "description": "Backend development",
+      "skill": 1,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
     "model": "core.placement",
     "pk": 1,
     "fields": {
@@ -3719,6 +3769,19 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 51,
+    "fields": {
+      "colleague": 14,
+      "service": 109,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "wies",
       "source_id": ""
     }
   }

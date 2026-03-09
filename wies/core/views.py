@@ -469,9 +469,9 @@ class PlacementListView(ListView):
         # Check if user can edit assignment
         user_can_edit = user_can_edit_assignment(self.request.user, assignment)
 
-        # Build organization breadcrumb
-        org = assignment.organizations.select_related("parent__parent__parent__parent").first()
-        org_breadcrumb = self._get_org_breadcrumb(org) if org else None
+        # Build organization breadcrumbs
+        orgs = assignment.organizations.select_related("parent__parent__parent__parent")
+        org_breadcrumbs = [self._get_org_breadcrumb(org) for org in orgs]
 
         return {
             "panel_content_template": "parts/assignment_panel_content.html",
@@ -481,7 +481,7 @@ class PlacementListView(ListView):
             "placements": placements,
             "user_can_edit": user_can_edit,
             "owner_url": self._build_colleague_url(assignment.owner.id) if assignment.owner else "",
-            "org_breadcrumb": org_breadcrumb,
+            "org_breadcrumbs": org_breadcrumbs,
         }
 
     def get_context_data(self, **kwargs):
