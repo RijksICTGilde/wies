@@ -119,3 +119,9 @@
   <!-- Assignment Cards Grid -->
   <div class="assignment-card-grid" id="assignment_card_grid">{% include "parts/assignment_card_rows.html" %}</div>
 </div>
+{# OOB swap: update sidebar filter fields (counts, selected states) — only for HTMX requests #}
+{% if render_filter_fields_oob %}
+  {% with oob=true %}
+    {% include "parts/filters/filter_fields.html" %}
+  {% endwith %}
+{% endif %}

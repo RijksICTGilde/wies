@@ -789,6 +789,7 @@ class AssignmentListView(ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
 
         base_url = reverse("assignment-list")
         for assignment in context["object_list"]:
