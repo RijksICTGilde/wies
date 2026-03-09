@@ -482,7 +482,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         panel_data = view._get_assignment_panel_data(assignment, self.colleague1)  # noqa: SLF001 (private member access)
 
         # Verify only current placement is in panel data
-        placement_ids = [p.id for p in panel_data["placements"]]
+        placement_ids = [p.id for s in panel_data["services"] for p in s.current_placements]
         assert len(placement_ids) == 1, "Panel should contain only 1 (current) placement"
         assert current_placement.id in placement_ids, "Current placement should be in panel"
         assert historical_placement.id not in placement_ids, "Historical placement should be excluded"
@@ -528,7 +528,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         panel_data = view._get_assignment_panel_data(assignment, self.colleague1)  # noqa: SLF001 (private member access)
 
         # Verify placement ending today is included
-        placement_ids = [p.id for p in panel_data["placements"]]
+        placement_ids = [p.id for s in panel_data["services"] for p in s.current_placements]
         assert len(placement_ids) == 1, "Panel should contain the placement ending today"
         assert placement.id in placement_ids, "Placement ending today should be included"
 

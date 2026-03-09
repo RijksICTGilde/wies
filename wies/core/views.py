@@ -27,7 +27,7 @@ from .models import Assignment, Colleague, Label, LabelCategory, OrganizationUni
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
-from .services.organizations import get_excluded_org_ids, get_org_descendant_ids
+from .services.organizations import get_excluded_org_ids, get_org_breadcrumb, get_org_descendant_ids
 from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
@@ -235,23 +235,6 @@ def admin_db(request):
     return render(request, "admin_db.html", context)
 
 
-def get_org_breadcrumb(org: OrganizationUnit, base_url: str = "/") -> dict:
-    """Build breadcrumb data for an organization: label + clickable ancestor path."""
-    ancestors = []
-    current = org.parent
-    while current:
-        label = current.abbreviation or current.label or current.name
-        ancestors.append({"label": label, "url": f"{base_url}?org={current.id}"})
-        current = current.parent
-    ancestors.reverse()
-
-    is_self = org.children.filter(assignment_relations__isnull=False).exists()
-    label = org.label or org.name
-    url = f"{base_url}?org_self={org.id}" if is_self else f"{base_url}?org={org.id}"
-
-    return {"label": label, "url": url, "ancestors": ancestors}
-
-
 class PlacementListView(ListView):
     """View for placements table view with infinite scroll pagination"""
 
@@ -449,19 +432,22 @@ class PlacementListView(ListView):
 
     def _get_assignment_panel_data(self, assignment, colleague):
         """Get assignment panel data for server-side rendering"""
-        placements_qs = Placement.objects.filter(service__assignment=assignment).select_related(
-            "colleague", "service__skill"
+        # Fetch services with their current placements
+        services = assignment.services.select_related("skill").prefetch_related(
+            Prefetch(
+                "placements",
+                queryset=filter_placements_by_min_end_date(
+                    annotate_placement_dates(Placement.objects.select_related("colleague")),
+                    timezone.now().date(),
+                ),
+                to_attr="current_placements",
+            )
         )
 
-        # filter out historical placements
-        placements_qs = annotate_placement_dates(placements_qs)
-        placements_qs = filter_placements_by_min_end_date(placements_qs, timezone.now().date())
-
         # Add colleague URLs to placements
-        placements = []
-        for placement in placements_qs:
-            placement.colleague_url = self._build_colleague_url(placement.colleague.id)
-            placements.append(placement)
+        for service in services:
+            for placement in service.current_placements:
+                placement.colleague_url = self._build_colleague_url(placement.colleague.id)
 
         # Check if user can edit assignment
         user_can_edit = user_can_edit_assignment(self.request.user, assignment)
@@ -475,7 +461,7 @@ class PlacementListView(ListView):
             "panel_title": assignment.name,
             "close_url": self._build_close_url(self.request),
             "assignment": assignment,
-            "placements": placements,
+            "services": services,
             "user_can_edit": user_can_edit,
             "owner_url": self._build_colleague_url(assignment.owner.id) if assignment.owner else "",
             "org_breadcrumb": org_breadcrumb,
@@ -630,6 +616,7 @@ class PlacementListView(ListView):
         context["active_filter_count"] = len(active_filters)
         context["active_org_filter_count"] = active_org_filter_count
         context["org_chip_data"] = org_chip_data
+        context["client_modal_count_mode"] = "placements"
 
         # TODO: this can be become an object to help defining correctly and performing extra preprocessing on context
         # introduce value_key, label_key:
@@ -694,7 +681,7 @@ class AssignmentListView(ListView):
     page_kwarg = "pagina"
 
     def _get_base_queryset(self):
-        qs = Assignment.objects.filter(status="OPEN").order_by("-pk")
+        qs = Assignment.objects.filter(status="OPEN").order_by("-start_date")
         search_filter = self.request.GET.get("zoek")
         if search_filter:
             qs = qs.filter(
@@ -771,10 +758,17 @@ class AssignmentListView(ListView):
         return f"{reverse('assignment-list')}?{params.urlencode()}"
 
     def _get_vacancy_panel_data(self, assignment):
-        skills = []
-        for service in assignment.services.filter(skill__isnull=False).select_related("skill"):
-            if service.skill and service.skill.name not in skills:
-                skills.append(service.skill.name)
+        # Fetch services with their current placements
+        services = assignment.services.select_related("skill").prefetch_related(
+            Prefetch(
+                "placements",
+                queryset=filter_placements_by_min_end_date(
+                    annotate_placement_dates(Placement.objects.select_related("colleague")),
+                    timezone.now().date(),
+                ),
+                to_attr="current_placements",
+            )
+        )
 
         # Build organization breadcrumb
         base_url = reverse("assignment-list")
@@ -782,12 +776,13 @@ class AssignmentListView(ListView):
         org_breadcrumb = get_org_breadcrumb(org, base_url) if org else None
 
         return {
-            "panel_content_template": "parts/requested_assignment_panel_content.html",
+            "panel_content_template": "parts/assignment_panel_content.html",
             "panel_title": assignment.name,
             "close_url": self._build_close_url(),
             "assignment": assignment,
-            "skills": skills,
+            "services": services,
             "org_breadcrumb": org_breadcrumb,
+            "owner_url": reverse("home") + f"?collega={assignment.owner.id}" if assignment.owner else "",
         }
 
     def get_context_data(self, **kwargs):
@@ -902,7 +897,7 @@ class AssignmentListView(ListView):
             {
                 "type": "select-multi",
                 "name": "rol",
-                "label": "Rollen",
+                "label": "Rol",
                 "options": skill_options,
                 "selected_values": skill_selected_values,
             },
@@ -915,13 +910,9 @@ class AssignmentListView(ListView):
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
-            filter_params = []
-            for key, value in self.request.GET.items():
-                if key != "pagina":
-                    filter_params.append(f"{key}={value}")
-            params_str = "&".join(filter_params)
-            next_page = context["page_obj"].next_page_number()
-            context["next_page_url"] = f"?pagina={next_page}" + (f"&{params_str}" if params_str else "")
+            params = self.request.GET.copy()
+            params["pagina"] = context["page_obj"].next_page_number()
+            context["next_page_url"] = f"?{params.urlencode()}"
         else:
             context["next_page_url"] = None
 
