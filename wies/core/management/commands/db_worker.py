@@ -1,6 +1,9 @@
+import json
 import logging
 import signal
+import threading
 import time
+from http.server import BaseHTTPRequestHandler, HTTPServer
 
 from django.core import management
 from django.core.management.base import BaseCommand
@@ -12,6 +15,31 @@ from wies.core.services.tasks import mark_expired_tasks_as_failed
 
 logger = logging.getLogger(__name__)
 
+HEARTBEAT_TIMEOUT_SECONDS = 300
+
+
+def make_health_handler(command_instance):
+    """Factory that creates a health check handler with access to the worker state."""
+
+    class HealthHandler(BaseHTTPRequestHandler):
+        def do_GET(self):
+            elapsed = time.monotonic() - command_instance.last_heartbeat
+            if elapsed < HEARTBEAT_TIMEOUT_SECONDS:
+                self._respond(200, {"status": "healthy"})
+            else:
+                self._respond(503, {"status": "unhealthy", "reason": f"loop stalled for {elapsed:.0f}s"})
+
+        def _respond(self, status_code, body):
+            self.send_response(status_code)
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(body).encode())
+
+        def log_message(self, *args):
+            pass
+
+    return HealthHandler
+
 
 class Command(BaseCommand):
     help = "Monitor task table and execute long running jobs"
@@ -19,6 +47,7 @@ class Command(BaseCommand):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.shutdown = False
+        self.last_heartbeat = time.monotonic()
 
     def handle_sigterm(self, signum, frame):
         logger.info("Received shutdown signal, finishing current work...")
@@ -36,10 +65,17 @@ class Command(BaseCommand):
         signal.signal(signal.SIGTERM, self.handle_sigterm)
         signal.signal(signal.SIGINT, self.handle_sigterm)
 
+        handler = make_health_handler(self)
+        server = HTTPServer(("0.0.0.0", 8080), handler)  # noqa: S104 (ok to bind to all interfaces)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        logger.info("Health check server started on port 8080")
+
         logger.info("DB worker started, monitoring for tasks...")
 
         while not self.shutdown:
             time.sleep(1)
+            self.last_heartbeat = time.monotonic()
 
             # Mark any expired running tasks as failed
             expired_count = mark_expired_tasks_as_failed()
@@ -61,6 +97,7 @@ class Command(BaseCommand):
 
             if task:
                 logger.info("Processing task %s: %s", task.id, task.command)
+                self.last_heartbeat = time.monotonic()
 
                 # Instantiate and execute the management command for this task
                 # wrapped in try, except for extra protection. worker should not stop
