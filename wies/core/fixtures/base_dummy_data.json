@@ -204,16 +204,32 @@
     }
   },
   {
+    "model": "core.organizationtype",
+    "pk": 2,
+    "fields": {
+      "name": "organisatieonderdeel",
+      "label": "Organisatieonderdeel"
+    }
+  },
+  {
+    "model": "core.organizationtype",
+    "pk": 3,
+    "fields": {
+      "name": "agentschap",
+      "label": "Agentschap"
+    }
+  },
+  {
     "model": "core.organizationunit",
     "pk": 1,
     "fields": {
       "name": "Algemene Zaken",
       "label": "Ministerie van Algemene Zaken",
       "abbreviations": ["AZ"],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1010",
+      "oin_number": "null",
+      "system_id": "123",
+      "source_url": "https://organisaties.overheid.nl/123/Algemene_Zaken",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -225,10 +241,10 @@
       "name": "Binnenlandse Zaken en Koninkrijksrelaties",
       "label": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
       "abbreviations": ["BZK"],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1034",
+      "oin_number": "00000001003214345000",
+      "system_id": "9632",
+      "source_url": "https://organisaties.overheid.nl/9632/Binnenlandse_Zaken_en_Koninkrijksrelaties",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -240,10 +256,10 @@
       "name": "Buitenlandse Zaken",
       "label": "Ministerie van Buitenlandse Zaken",
       "abbreviations": ["BuZa"],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1013",
+      "oin_number": "00000001003227406000",
+      "system_id": "2515",
+      "source_url": "https://organisaties.overheid.nl/2515/Buitenlandse_Zaken",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -255,10 +271,10 @@
       "name": "Defensie",
       "label": "Ministerie van Defensie",
       "abbreviations": ["Def"],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1018",
+      "oin_number": "I0000003273709850000",
+      "system_id": "4958",
+      "source_url": "https://organisaties.overheid.nl/4958/Defensie",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -270,10 +286,10 @@
       "name": "Economische Zaken",
       "label": "Ministerie van Economische Zaken",
       "abbreviations": ["EZ"],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1045",
+      "oin_number": "00000001003214369000",
+      "system_id": "10621",
+      "source_url": "https://organisaties.overheid.nl/10621/Economische_Zaken_en_Klimaat",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -285,10 +301,10 @@
       "name": "Financiën",
       "label": "Ministerie van Financiën",
       "abbreviations": ["FIN"],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1090",
+      "oin_number": "00000001003214394000",
+      "system_id": "68820",
+      "source_url": "https://organisaties.overheid.nl/68820/Financien",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -300,10 +316,10 @@
       "name": "Infrastructuur en Waterstaat",
       "label": "Ministerie van Infrastructuur en Waterstaat",
       "abbreviations": ["IenW"],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1130",
+      "oin_number": "00000001003214321000",
+      "system_id": "112773",
+      "source_url": "https://organisaties.overheid.nl/112773/Infrastructuur_en_Waterstaat",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -315,10 +331,10 @@
       "name": "Justitie en Veiligheid",
       "label": "Ministerie van Justitie en Veiligheid",
       "abbreviations": ["JenV"],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1058",
+      "oin_number": "00000003273808340000",
+      "system_id": "11906",
+      "source_url": "https://organisaties.overheid.nl/11906/Justitie_en_Veiligheid",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -330,10 +346,10 @@
       "name": "Onderwijs, Cultuur en Wetenschap",
       "label": "Ministerie van Onderwijs, Cultuur en Wetenschap",
       "abbreviations": ["OCW"],
-      "tooi_identifier": null,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1109",
       "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "system_id": "71852",
+      "source_url": "https://organisaties.overheid.nl/71852/Onderwijs_Cultuur_en_Wetenschap",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -345,10 +361,10 @@
       "name": "Sociale Zaken en Werkgelegenheid",
       "label": "Ministerie van Sociale Zaken en Werkgelegenheid",
       "abbreviations": ["SZW"],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1073",
+      "oin_number": "00000001003227522000",
+      "system_id": "19087",
+      "source_url": "https://organisaties.overheid.nl/19087/Sociale_Zaken_en_Werkgelegenheid",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -360,10 +376,10 @@
       "name": "Volksgezondheid, Welzijn en Sport",
       "label": "Ministerie van Volksgezondheid, Welzijn en Sport",
       "abbreviations": ["VWS"],
-      "tooi_identifier": null,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1025",
       "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "system_id": "8591",
+      "source_url": "https://organisaties.overheid.nl/8591/Volksgezondheid_Welzijn_en_Sport",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -372,15 +388,15 @@
     "model": "core.organizationunit",
     "pk": 12,
     "fields": {
-      "name": "Belastingdienst",
-      "label": "Belastingdienst",
-      "abbreviations": ["BD"],
-      "tooi_identifier": null,
+      "name": "Directoraat-generaal Belastingdienst",
+      "label": "Directoraat-generaal Belastingdienst",
+      "abbreviations": ["DGBD"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg12368",
       "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "system_id": "68888",
+      "source_url": "https://organisaties.overheid.nl/68888/Directoraat-generaal_Belastingdienst",
       "parent": 6,
-      "related_ministry_tooi": ""
+      "related_ministry_tooi": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1090"
     }
   },
   {
@@ -390,12 +406,12 @@
       "name": "Rijkswaterstaat",
       "label": "Rijkswaterstaat",
       "abbreviations": ["RWS"],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
-      "parent": 7,
-      "related_ministry_tooi": ""
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10004",
+      "oin_number": "00000001821699180000",
+      "system_id": "112990",
+      "source_url": "https://organisaties.overheid.nl/112990/Rijkswaterstaat",
+      "parent": null,
+      "related_ministry_tooi": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1130"
     }
   },
   {
@@ -405,12 +421,12 @@
       "name": "RIVM",
       "label": "Rijksinstituut voor Volksgezondheid en Milieu",
       "abbreviations": ["RIVM"],
-      "tooi_identifier": null,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10123",
       "oin_number": null,
-      "system_id": "",
-      "source_url": "",
-      "parent": 11,
-      "related_ministry_tooi": ""
+      "system_id": "66101",
+      "source_url": "https://organisaties.overheid.nl/66101/Rijksinstituut_voor_Volksgezondheid_en_Milieu",
+      "parent": null,
+      "related_ministry_tooi": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1025"
     }
   },
   {
@@ -420,12 +436,12 @@
       "name": "Dienst Justitiële Inrichtingen",
       "label": "Dienst Justitiële Inrichtingen",
       "abbreviations": ["DJI"],
-      "tooi_identifier": null,
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10114",
       "oin_number": null,
-      "system_id": "",
-      "source_url": "",
-      "parent": 8,
-      "related_ministry_tooi": ""
+      "system_id": "13080",
+      "source_url": "https://organisaties.overheid.nl/13080/Dienst_Justitiele_Inrichtingen",
+      "parent": null,
+      "related_ministry_tooi": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1058"
     }
   },
   {
@@ -514,6 +530,38 @@
     "fields": {
       "organizationunit_id": 11,
       "organizationtype_id": 1
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 12,
+    "fields": {
+      "organizationunit_id": 12,
+      "organizationtype_id": 2
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 13,
+    "fields": {
+      "organizationunit_id": 13,
+      "organizationtype_id": 3
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 14,
+    "fields": {
+      "organizationunit_id": 14,
+      "organizationtype_id": 3
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 15,
+    "fields": {
+      "organizationunit_id": 15,
+      "organizationtype_id": 3
     }
   },
   {
