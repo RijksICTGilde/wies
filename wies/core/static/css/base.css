@@ -561,13 +561,18 @@ html {
     var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
 }
 
+.user-avatar--vacant {
+  background-color: var(--rvo-color-grijs-200);
+  color: var(--rvo-color-grijs-600);
+}
+
 .user-info {
   display: flex;
   flex-direction: column;
 }
 
 .menu-item--active {
-  font-weight: 600;
+  font-weight: bold;
   text-decoration: underline !important;
 }
 

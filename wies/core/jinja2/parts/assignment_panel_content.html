@@ -2,36 +2,36 @@
   <section>
     <h2>Opdracht gegevens</h2>
     <dl class="rvo-data-list">
-      {# Editable assignment name field #}
       <dt>Opdracht naam</dt>
       <dd>
         <div id="assignment-name-content">
-          {% with target_element="assignment-name-content", field_value=assignment.name, field_label="Opdracht naam", edit_url=url("assignment-edit-attribute", args=[assignment.id, "name"]), user_can_edit=panel_data.user_can_edit %}
+          {% with target_element="assignment-name-content", field_value=panel_data.assignment.name, field_label="Opdracht naam", edit_url=url("assignment-edit-attribute", args=[panel_data.assignment.id, "name"]), user_can_edit=panel_data.user_can_edit %}
             {% include "parts/editable_text_field.html" %}
           {% endwith %}
         </div>
       </dd>
-      {# Editable assignment description field #}
       <dt>Beschrijving</dt>
       <dd>
         <div id="assignment-extra-info-content">
-          {% with target_element="assignment-extra-info-content", field_value=assignment.extra_info, field_label="Beschrijving", edit_url=url("assignment-edit-attribute", args=[assignment.id, "extra_info"]), user_can_edit=panel_data.user_can_edit, expanded=false %}
+          {% with target_element="assignment-extra-info-content", field_value=panel_data.assignment.extra_info, field_label="Beschrijving", edit_url=url("assignment-edit-attribute", args=[panel_data.assignment.id, "extra_info"]), user_can_edit=panel_data.user_can_edit, expanded=false %}
             {% include "parts/editable_textarea_field.html" %}
           {% endwith %}
         </div>
       </dd>
-      {% if assignment.source not in ('wies', '') %}
+      {% if panel_data.assignment.source not in ('wies', '') %}
         <dt>Externe bron</dt>
         <dd>
-          {% if assignment.source_url %}
-            <a href="{{ assignment.source_url }}" target="_blank" class="rvo-link">
-              {{ assignment.get_source_display() }}
+          {% if panel_data.assignment.source_url %}
+            <a href="{{ panel_data.assignment.source_url }}"
+               target="_blank"
+               class="rvo-link">
+              {{ panel_data.assignment.get_source_display() }}
               <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs"
                     role="img"
                     aria-label="Externe link"></span>
             </a>
           {% else %}
-            {{ assignment.get_source_display() }}
+            {{ panel_data.assignment.get_source_display() }}
           {% endif %}
         </dd>
       {% endif %}
@@ -66,53 +66,73 @@
       {% endif %}
       <dt>Periode</dt>
       <dd>
-        {% if assignment.start_date or assignment.end_date %}
-          {{ assignment.start_date|datum_nl("j F Y") }} - {{ assignment.end_date|datum_nl("j F Y") }}
+        {% if panel_data.assignment.start_date or panel_data.assignment.end_date %}
+          {{ panel_data.assignment.start_date|datum_nl("j F Y") }} - {{ panel_data.assignment.end_date|datum_nl("j F Y") }}
         {% else %}
           <span class="rvo-text--italic rvo-text--subtle">Geen periode opgegeven</span>
         {% endif %}
       </dd>
-      <dt>Business Manager</dt>
-      <dd>
-        <a href="{{ panel_data.owner_url }}" class="rvo-link">{{ assignment.owner }}</a>
-      </dd>
+      {% if panel_data.assignment.created_at %}
+        <dt>Plaatsingsdatum</dt>
+        <dd>
+          {{ panel_data.assignment.created_at|datum_nl("j F Y") }}
+        </dd>
+      {% endif %}
+      {% if panel_data.assignment.owner %}
+        <dt>Business Manager</dt>
+        <dd>
+          {{ panel_data.assignment.owner.name }}
+          {% if panel_data.assignment.owner.email %}
+            <br>
+            <a href="mailto:{{ panel_data.assignment.owner.email }}"
+               class="rvo-link">{{ panel_data.assignment.owner.email }}</a>
+          {% endif %}
+        </dd>
+      {% endif %}
     </dl>
   </section>
-  <section>
-    <h2>Team</h2>
-    {% if panel_data.placements %}
+  {% if panel_data.services %}
+    <section>
+      <h2>Team</h2>
       <div class="rvo-item-list">
-        {% for placement in panel_data.placements %}
-          <a href="{{ placement.colleague_url }}"
-             class="rvo-item-list__item clickable-row"
-             style="text-decoration: none;
-                    color: inherit"
-             title="Bekijk {{ placement.colleague.name }}">
-            <div class="placement-details-header">
-              <div class="user-table-cell">
-                <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>
-                <div class="user-info">
-                  <strong>{{ placement.colleague.name }}</strong>
+        {% for service in panel_data.services %}
+          {% if service.current_placements %}
+            {% for placement in service.current_placements %}
+              <a href="{{ placement.colleague_url }}"
+                 class="rvo-item-list__item clickable-row"
+                 style="text-decoration: none;
+                        color: inherit"
+                 title="Bekijk {{ placement.colleague.name }}">
+                <div class="placement-details-header">
+                  <div class="user-table-cell">
+                    <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>
+                    <div class="user-info">
+                      <strong>{{ placement.colleague.name }}</strong>
+                    </div>
+                  </div>
+                  <div>
+                    {% if service.skill %}<span class="rvo-tag rvo-tag--default">{{ service.skill.name }}</span>{% endif %}
+                  </div>
+                </div>
+              </a>
+            {% endfor %}
+          {% else %}
+            <div class="rvo-item-list__item">
+              <div class="placement-details-header">
+                <div class="user-table-cell">
+                  <div class="user-avatar user-avatar--vacant">?</div>
+                  <div class="user-info">
+                    <span class="rvo-text--italic rvo-text--subtle">Open</span>
+                  </div>
+                </div>
+                <div>
+                  {% if service.skill %}<span class="rvo-tag rvo-tag--default">{{ service.skill.name }}</span>{% endif %}
                 </div>
               </div>
-              <div>
-                {% if placement.service.skill %}
-                  <span class="rvo-tag rvo-tag--default">{{ placement.service.skill.name }}</span>
-                {% endif %}
-              </div>
             </div>
-          </a>
+          {% endif %}
         {% endfor %}
       </div>
-    {% else %}
-      <div class="rvo-card rvo-card--outline rvo-card--padding-md">
-        <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center">
-          <span class="utrecht-icon rvo-icon rvo-icon-info rvo-icon--xs"
-                role="img"
-                aria-label="Informatie"></span>
-          <span class="rvo-text--italic rvo-text--subtle">Geen team leden gevonden voor deze opdracht.</span>
-        </div>
-      </div>
-    {% endif %}
-  </section>
+    </section>
+  {% endif %}
 </div>

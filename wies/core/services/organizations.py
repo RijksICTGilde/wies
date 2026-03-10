@@ -506,3 +506,20 @@ def get_excluded_org_ids() -> set[int]:
     if not excluded_root_ids:
         return set()
     return get_org_descendant_ids(excluded_root_ids)
+
+
+def get_org_breadcrumb(org: OrganizationUnit, base_url: str = "/") -> dict:
+    """Build breadcrumb data for an organization: label + clickable ancestor path."""
+    ancestors = []
+    current = org.parent
+    while current:
+        label = current.abbreviation or current.label or current.name
+        ancestors.append({"label": label, "url": f"{base_url}?org={current.id}"})
+        current = current.parent
+    ancestors.reverse()
+
+    is_self = org.children.filter(assignment_relations__isnull=False).exists()
+    label = org.label or org.name
+    url = f"{base_url}?org_self={org.id}" if is_self else f"{base_url}?org={org.id}"
+
+    return {"label": label, "url": url, "ancestors": ancestors}

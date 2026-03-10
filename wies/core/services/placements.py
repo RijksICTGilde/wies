@@ -51,6 +51,16 @@ def filter_placements_by_min_end_date(queryset, min_end_date):
     return queryset.filter(Q(actual_end_date__gte=min_end_date) | Q(actual_end_date__isnull=True))
 
 
+def _validate_assignment_status(status: str, row_number: int) -> str:
+    status = status.strip().upper()
+    if status == "":
+        return "INGEVULD"
+    if status not in ("OPEN", "INGEVULD"):
+        msg = f"Ongeldige status '{status}' op regel {row_number}. Gebruik 'OPEN' of 'INGEVULD'."
+        raise ValueError(msg)
+    return status
+
+
 def create_assignments_from_csv(csv_content: str):
     """
     Create colleagues, assignments, services and placements from csv.
@@ -61,6 +71,7 @@ def create_assignments_from_csv(csv_content: str):
     - service_skill, placement_colleague_name, placement_colleague_email
 
     Optional columns:
+    - assignment_status: OPEN or INGEVULD (default: INGEVULD)
     - client_1_url: URL from organisaties.overheid.nl. Becomes PRIMARY client.
     - client_2_url: URL from organisaties.overheid.nl. Becomes INVOLVED client.
     - client_3_url: URL from organisaties.overheid.nl. Becomes INVOLVED client.
@@ -70,7 +81,8 @@ def create_assignments_from_csv(csv_content: str):
                        If empty or not provided, no brand label is assigned.
     """
 
-    csv_reader = csv.DictReader(StringIO(csv_content))
+    dialect = csv.Sniffer().sniff(csv_content[:1024], delimiters=",;")
+    csv_reader = csv.DictReader(StringIO(csv_content), delimiter=dialect.delimiter)
 
     required_columns = {
         "assignment_name",
@@ -109,7 +121,7 @@ def create_assignments_from_csv(csv_content: str):
             organizations_linked = 0
             for _, row in enumerate(csv_reader, start=2):  # Start at 2 (1 is header)
                 # Get owner brand label if specified in CSV
-                owner_brand_name = row.get("owner_brand", "").strip()
+                owner_brand_name = (row.get("owner_brand") or "").strip()
                 owner_brand_label = None
                 if owner_brand_name:
                     if owner_brand_name in label_mapping:
@@ -121,7 +133,7 @@ def create_assignments_from_csv(csv_content: str):
                         label_mapping[owner_brand_name] = owner_brand_label
 
                 # Get colleague brand label if specified in CSV
-                colleague_brand_name = row.get("colleague_brand", "").strip()
+                colleague_brand_name = (row.get("colleague_brand") or "").strip()
                 colleague_brand_label = None
                 if colleague_brand_name:
                     if colleague_brand_name in label_mapping:
@@ -157,10 +169,12 @@ def create_assignments_from_csv(csv_content: str):
                 ]
 
                 # parse dates into proper types
-                start_date_str = row["assignment_start_date"]
-                end_date_str = row["assignment_end_date"]
+                start_date_str = row["assignment_start_date"] or ""
+                end_date_str = row["assignment_end_date"] or ""
                 start_date = parse_date_dmy(start_date_str) if start_date_str else None
                 end_date = parse_date_dmy(end_date_str) if end_date_str else None
+
+                assignment_status = _validate_assignment_status(row.get("assignment_status") or "", _)
 
                 # owner update or create
                 assignment, created = Assignment.objects.get_or_create(
@@ -171,7 +185,7 @@ def create_assignments_from_csv(csv_content: str):
                         "end_date": end_date,
                         "extra_info": row["assignment_description"],
                         "owner": owner,
-                        "status": "INGEVULD",
+                        "status": assignment_status,
                     },
                 )
 
@@ -208,27 +222,28 @@ def create_assignments_from_csv(csv_content: str):
                 if created:
                     services_created += 1
 
-                colleague_email = row["placement_colleague_email"]
-                validate_email(colleague_email)
-                if Colleague.objects.filter(email=colleague_email).exists():
-                    colleague = Colleague.objects.get(email=colleague_email)
-                else:
-                    colleague = Colleague.objects.create(
-                        name=row["placement_colleague_name"],
-                        email=colleague_email,
+                colleague_email = (row["placement_colleague_email"] or "").strip()
+                if colleague_email and assignment_status != "OPEN":
+                    validate_email(colleague_email)
+                    if Colleague.objects.filter(email=colleague_email).exists():
+                        colleague = Colleague.objects.get(email=colleague_email)
+                    else:
+                        colleague = Colleague.objects.create(
+                            name=row["placement_colleague_name"],
+                            email=colleague_email,
+                            source="wies",
+                        )
+                        if colleague_brand_label:
+                            colleague.labels.add(colleague_brand_label)
+                        colleagues_created += 1
+
+                    _, created = Placement.objects.get_or_create(
+                        colleague=colleague,
+                        service=service,
                         source="wies",
                     )
-                    if colleague_brand_label:
-                        colleague.labels.add(colleague_brand_label)
-                    colleagues_created += 1
-
-                _, created = Placement.objects.get_or_create(
-                    colleague=colleague,
-                    service=service,
-                    source="wies",
-                )
-                if created:
-                    placements_created += 1
+                    if created:
+                        placements_created += 1
 
     except ValueError as e:
         return {"success": False, "errors": [str(e)]}

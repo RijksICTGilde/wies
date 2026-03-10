@@ -11,7 +11,7 @@
         <button id="org-filter-button"
                 class="org-filter-trigger"
                 type="button"
-                hx-get="/client-modal/"
+                hx-get="/client-modal/?count_mode={{ client_modal_count_mode }}"
                 hx-target="#clientModalContainer"
                 hx-swap="innerHTML"
                 hx-push-url="false"
@@ -25,6 +25,19 @@
       {% with name=filter_group.name, label=filter_group.label, options=filter_group.options, selected_values=filter_group.selected_values %}
         {% include "parts/filters/checkbox_filter.html" %}
       {% endwith %}
+    {% elif filter_group.type == 'date' %}
+      <div class="utrecht-form-field rvo-form-field">
+        <div class="rvo-form-field__label">
+          <label for="filter-{{ filter_group.name }}"
+                 class="rvo-label utrecht-form-label">{{ filter_group.label }}</label>
+        </div>
+        <input type="date"
+               id="filter-{{ filter_group.name }}"
+               name="{{ filter_group.name }}"
+               class="utrecht-textbox utrecht-textbox--html-input"
+               data-filter-input
+               value="{%- if active_filters.get(filter_group.name) -%}{{ active_filters.get(filter_group.name) }}{%- endif -%}" />
+      </div>
     {% elif filter_group.type == 'date_range' %}
       <div class="filter-sidebar-date-range">
         <span class="rvo-label">{{ filter_group.label }}</span>

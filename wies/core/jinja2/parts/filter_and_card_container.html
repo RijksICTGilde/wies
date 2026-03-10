@@ -1,0 +1,49 @@
+{# HTMX partial: Updates the main content area when filters change #}
+<div id="filter-and-table-container">
+  <!-- Page Header -->
+  <div class="layout__main__header">
+    <!-- Row 1: Title + Search -->
+    <div class="header-row header-row--between">
+      <c-h1 noMargins>Opdrachten</c-h1>
+      <div class="header-actions">
+        <!-- Mobile filter toggle -->
+        <button type="button"
+                class="utrecht-button utrecht-button--secondary-action utrecht-button--rvo-md utrecht-button--icon-before rvo-button mobile-filter-toggle"
+                data-toggle-filters>
+          <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before"
+                role="img"
+                aria-label=""></span>
+          Filters
+        </button>
+        <!-- Search Field -->
+        <form class="rvo-form filter-search-form"
+              hx-get="{{ filter_target_url }}"
+              hx-target="#filter-and-table-container"
+              hx-push-url="true"
+              hx-trigger="change,input delay:500ms from:[data-filter-input]"
+              hx-include="[data-filter-input]">
+          <div class="search-field-wrapper">
+            <c-icon icon="zoek" color="logoblauw" size="md" class="search-icon" />
+            <c-input id="search" name="zoek" placeholder="Zoeken..." value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" aria-label="Zoeken" data-filter-input size />
+          </div>
+        </form>
+      </div>
+    </div>
+    <!-- Row 2: Result count + Active Filter Chips -->
+    <div class="header-row">
+      <p class="results-count">
+        <b>{{ page_obj.paginator.count }}</b> resultaten
+      </p>
+      <!-- Active Filter Chips -->
+      {% include "parts/filters/filter_chips.html" %}
+    </div>
+  </div>
+  <!-- Assignment Cards Grid -->
+  <div class="assignment-card-grid" id="assignment_card_grid">{% include "parts/assignment_card_rows.html" %}</div>
+</div>
+{# OOB swap: update sidebar filter fields (counts, selected states) — only for HTMX requests #}
+{% if render_filter_fields_oob %}
+  {% with oob=true %}
+    {% include "parts/filters/filter_fields.html" %}
+  {% endwith %}
+{% endif %}

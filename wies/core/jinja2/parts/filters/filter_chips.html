@@ -75,6 +75,18 @@
           {% endfor %}
         {% endfor %}
       {% endif %}
+    {% elif filter_group.type == 'date' and active_filters.get(filter_group.name) %}
+      <div class="filter-chip filter-chip--default"
+           data-filter-name="{{ filter_group.name }}"
+           data-filter-type="date">
+        <span>Vanaf {{ active_filters.get(filter_group.name) |datum_nl('j F Y') }}</span>
+        <button type="button"
+                class="filter-chip-remove"
+                aria-label="Verwijder filter"
+                data-filter-name="{{ filter_group.name }}">
+          <c-icon icon="kruis" color="grijs-700" size="sm" />
+        </button>
+      </div>
       {# Date range filter #}
     {% elif filter_group.type == 'date_range' and active_filters.get(filter_group.name) %}
       <div class="filter-chip filter-chip--default"

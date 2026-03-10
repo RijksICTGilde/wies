@@ -38,7 +38,7 @@ from .models import (
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
-from .services.organizations import get_excluded_org_ids, get_org_descendant_ids
+from .services.organizations import get_excluded_org_ids, get_org_breadcrumb, get_org_descendant_ids
 from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
@@ -477,19 +477,22 @@ class PlacementListView(ListView):
 
     def _get_assignment_panel_data(self, assignment, colleague):
         """Get assignment panel data for server-side rendering"""
-        placements_qs = Placement.objects.filter(service__assignment=assignment).select_related(
-            "colleague", "service__skill"
+        # Fetch services with their current placements
+        services = assignment.services.select_related("skill").prefetch_related(
+            Prefetch(
+                "placements",
+                queryset=filter_placements_by_min_end_date(
+                    annotate_placement_dates(Placement.objects.select_related("colleague")),
+                    timezone.now().date(),
+                ),
+                to_attr="current_placements",
+            )
         )
 
-        # filter out historical placements
-        placements_qs = annotate_placement_dates(placements_qs)
-        placements_qs = filter_placements_by_min_end_date(placements_qs, timezone.now().date())
-
         # Add colleague URLs to placements
-        placements = []
-        for placement in placements_qs:
-            placement.colleague_url = self._build_colleague_url(placement.colleague.id)
-            placements.append(placement)
+        for service in services:
+            for placement in service.current_placements:
+                placement.colleague_url = self._build_colleague_url(placement.colleague.id)
 
         # Check if user can edit assignment
         user_can_edit = user_can_edit_assignment(self.request.user, assignment)
@@ -510,7 +513,7 @@ class PlacementListView(ListView):
             "panel_title": assignment.name,
             "close_url": self._build_close_url(self.request),
             "assignment": assignment,
-            "placements": placements,
+            "services": services,
             "user_can_edit": user_can_edit,
             "owner_url": self._build_colleague_url(assignment.owner.id) if assignment.owner else "",
             "org_breadcrumbs": org_breadcrumbs,
@@ -525,6 +528,7 @@ class PlacementListView(ListView):
         for placement in context["object_list"]:
             placement.colleague_url = self._build_colleague_url(placement.colleague.id)
 
+        context["filter_target_url"] = reverse("home")
         context["search_field"] = "zoek"
         context["search_placeholder"] = "Zoek op collega, opdracht of opdrachtgever..."
         context["search_filter"] = self.request.GET.get("zoek")
@@ -664,6 +668,7 @@ class PlacementListView(ListView):
         context["active_filter_count"] = len(active_filters)
         context["active_org_filter_count"] = active_org_filter_count
         context["org_chip_data"] = org_chip_data
+        context["client_modal_count_mode"] = "placements"
 
         # TODO: this can be become an object to help defining correctly and performing extra preprocessing on context
         # introduce value_key, label_key:
@@ -716,6 +721,264 @@ class PlacementListView(ListView):
                 context["panel_data"] = self._get_assignment_panel_data(assignment, colleague)
             except (Colleague.DoesNotExist, Assignment.DoesNotExist):
                 pass
+        return context
+
+
+class AssignmentListView(ListView):
+    """View for vacancy assignments displayed as cards with infinite scroll pagination"""
+
+    model = Assignment
+    template_name = "assignment_card_grid.html"
+    paginate_by = 24
+    page_kwarg = "pagina"
+
+    def _get_base_queryset(self):
+        qs = Assignment.objects.filter(status="OPEN").order_by("-created_at")
+        search_filter = self.request.GET.get("zoek")
+        if search_filter:
+            qs = qs.filter(
+                Q(name__icontains=search_filter)
+                | Q(extra_info__icontains=search_filter)
+                | Q(organizations__name__icontains=search_filter)
+                | Q(organizations__label__icontains=search_filter)
+                | Q(organizations__abbreviations__icontains=search_filter)
+            )
+        beschikbaar_vanaf = self.request.GET.get("beschikbaar_vanaf")
+        if beschikbaar_vanaf:
+            try:
+                vanaf_date = date.fromisoformat(beschikbaar_vanaf)
+                qs = qs.filter(start_date__gte=vanaf_date)
+            except ValueError:
+                pass
+        return qs
+
+    def _apply_filters(self, qs, *, exclude_filter=None):
+        if exclude_filter != "rol":
+            rol_filter = self.request.GET.getlist("rol")
+            if rol_filter:
+                qs = qs.filter(services__skill__id__in=rol_filter)
+
+        if exclude_filter != "org":
+            org_ids = [int(x) for x in self.request.GET.getlist("org") if x.isdigit()]
+            org_self_ids = [int(x) for x in self.request.GET.getlist("org_self") if x.isdigit()]
+            org_type_labels = [x for x in self.request.GET.getlist("org_type") if x]
+            if org_ids or org_self_ids or org_type_labels:
+                matching_ids: set[int] = set()
+                if org_ids:
+                    matching_ids |= get_org_descendant_ids(org_ids)
+                if org_type_labels:
+                    type_root_ids = list(
+                        OrganizationUnit.objects.filter(organization_types__label__in=org_type_labels).values_list(
+                            "id", flat=True
+                        )
+                    )
+                    matching_ids |= get_org_descendant_ids(type_root_ids)
+                if org_self_ids:
+                    matching_ids |= set(org_self_ids)
+                qs = qs.filter(organizations__id__in=matching_ids)
+
+        return qs
+
+    def get_queryset(self):
+        qs = self._get_base_queryset()
+        qs = self._apply_filters(qs)
+        return qs.distinct().prefetch_related(
+            Prefetch(
+                "services",
+                queryset=Service.objects.filter(skill__isnull=False).select_related("skill"),
+                to_attr="services_with_skills",
+            )
+        )
+
+    def get_template_names(self):
+        if "HX-Request" in self.request.headers:
+            if self.request.GET.get("pagina"):
+                return ["parts/assignment_card_rows.html"]
+            return ["parts/filter_and_card_container.html"]
+        return ["assignment_card_grid.html"]
+
+    def _build_close_url(self):
+        params = QueryDict(mutable=True)
+        params.update(self.request.GET)
+        params.pop("opdracht", None)
+        base = reverse("assignment-list")
+        return f"{base}?{params.urlencode()}" if params else base
+
+    def _build_panel_url(self, assignment_id):
+        params = QueryDict(mutable=True)
+        params.update(self.request.GET)
+        params.pop("opdracht", None)
+        params["opdracht"] = assignment_id
+        return f"{reverse('assignment-list')}?{params.urlencode()}"
+
+    def _get_vacancy_panel_data(self, assignment):
+        # Fetch services with their current placements
+        services = assignment.services.select_related("skill").prefetch_related(
+            Prefetch(
+                "placements",
+                queryset=filter_placements_by_min_end_date(
+                    annotate_placement_dates(Placement.objects.select_related("colleague")),
+                    timezone.now().date(),
+                ),
+                to_attr="current_placements",
+            )
+        )
+
+        # Build organization breadcrumb
+        base_url = reverse("assignment-list")
+        org = assignment.organizations.select_related("parent__parent__parent__parent").first()
+        org_breadcrumb = get_org_breadcrumb(org, base_url) if org else None
+
+        return {
+            "panel_content_template": "parts/assignment_panel_content.html",
+            "panel_title": assignment.name,
+            "close_url": self._build_close_url(),
+            "assignment": assignment,
+            "services": services,
+            "org_breadcrumb": org_breadcrumb,
+            "owner_url": reverse("home") + f"?collega={assignment.owner.id}" if assignment.owner else "",
+        }
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
+
+        base_url = reverse("assignment-list")
+        for assignment in context["object_list"]:
+            assignment.panel_url = self._build_panel_url(assignment.id)
+            first_org = assignment.organizations.select_related("parent__parent__parent__parent").first()
+            assignment.org_breadcrumb = get_org_breadcrumb(first_org, base_url) if first_org else None
+
+        context["filter_target_url"] = reverse("assignment-list")
+        context["search_field"] = "zoek"
+        context["search_placeholder"] = "Zoek op opdracht of opdrachtgever..."
+        context["search_filter"] = self.request.GET.get("zoek")
+
+        active_filters = {}
+        beschikbaar_vanaf = self.request.GET.get("beschikbaar_vanaf")
+        if beschikbaar_vanaf:
+            try:
+                active_filters["beschikbaar_vanaf"] = date.fromisoformat(beschikbaar_vanaf)
+            except ValueError:
+                active_filters["beschikbaar_vanaf"] = beschikbaar_vanaf
+
+        # rol filter supports multi-select
+        rol_filter = set()
+        for rol_id in self.request.GET.getlist("rol"):
+            if rol_id != "":
+                rol_filter.add(rol_id)
+        if len(rol_filter) > 0:
+            active_filters["rol"] = rol_filter
+
+        # Skill/role counts: exclude role filter for cross-filtering
+        base_qs = self._get_base_queryset()
+        skill_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
+        skill_ids = skill_filtered_qs.values_list("services__skill__id", flat=True)
+        skill_counts = Counter(sid for sid in skill_ids if sid is not None)
+
+        skill_options = [{"value": "", "label": ""}]
+        skill_selected_values = []
+        for skill in Skill.objects.order_by("name"):
+            option = {"value": str(skill.id), "label": skill.name, "count": skill_counts.get(skill.id, 0)}
+            if str(skill.id) in active_filters.get("rol", set()):
+                option["selected"] = True
+                skill_selected_values.append(str(skill.id))
+            skill_options.append(option)
+
+        # Organization filter (multi-select via modal)
+        active_org_filter_count = 0
+        org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
+        org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
+        org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
+        if org_filter:
+            active_filters["org"] = org_filter
+            active_org_filter_count += len(org_filter)
+        if org_self_filter:
+            active_filters["org_self"] = org_self_filter
+            active_org_filter_count += len(org_self_filter)
+        if org_type_filter:
+            active_filters["org_type"] = org_type_filter
+            active_org_filter_count += len(org_type_filter)
+
+        # Build chip display data for org filters
+        org_chip_data: list[dict] = []
+        if org_filter:
+            org_labels = dict(
+                OrganizationUnit.objects.filter(id__in=[int(x) for x in org_filter]).values_list("id", "label")
+            )
+            org_chip_data.extend(
+                {
+                    "param_name": "org",
+                    "param_value": org_id,
+                    "label": org_labels.get(int(org_id), f"Organisatie {org_id}"),
+                }
+                for org_id in org_filter
+            )
+        if org_self_filter:
+            org_self_labels = dict(
+                OrganizationUnit.objects.filter(id__in=[int(x) for x in org_self_filter]).values_list("id", "label")
+            )
+            for org_id in org_self_filter:
+                base_label = org_self_labels.get(int(org_id), f"Organisatie {org_id}")
+                org_chip_data.append(
+                    {
+                        "param_name": "org_self",
+                        "param_value": org_id,
+                        "label": f"{base_label} (direct)",
+                    }
+                )
+        org_chip_data.extend(
+            {
+                "param_name": "org_type",
+                "param_value": type_label,
+                "label": ORG_TYPE_PLURAL.get(type_label, type_label),
+            }
+            for type_label in org_type_filter
+        )
+
+        context["active_filters"] = active_filters
+        context["active_filter_count"] = len(active_filters)
+        context["active_org_filter_count"] = active_org_filter_count
+        context["org_chip_data"] = org_chip_data
+        context["client_modal_count_mode"] = "open_assignments"
+
+        context["filter_groups"] = [
+            {
+                "type": "modal",
+                "name": "organisatie",
+                "label": "Opdrachtgever",
+            },
+            {
+                "type": "select-multi",
+                "name": "rol",
+                "label": "Rol",
+                "options": skill_options,
+                "selected_values": skill_selected_values,
+            },
+            {
+                "type": "date",
+                "name": "beschikbaar_vanaf",
+                "label": "Beschikbaar vanaf",
+            },
+        ]
+
+        # Build next page URL with all current filters
+        if context.get("page_obj") and context["page_obj"].has_next():
+            params = self.request.GET.copy()
+            params["pagina"] = context["page_obj"].next_page_number()
+            context["next_page_url"] = f"?{params.urlencode()}"
+        else:
+            context["next_page_url"] = None
+
+        # Side panel
+        assignment_id = self.request.GET.get("opdracht")
+        if assignment_id:
+            try:
+                assignment = Assignment.objects.select_related("owner").get(id=assignment_id, status="OPEN")
+                context["panel_data"] = self._get_vacancy_panel_data(assignment)
+            except Assignment.DoesNotExist:
+                pass
+
         return context
 
 
@@ -1688,17 +1951,24 @@ Disallow: /
 def client_modal(request):
     """Return the client tree selection modal (HTMX partial)."""
     excluded_org_ids = get_excluded_org_ids()
+    count_mode = request.GET.get("count_mode", "placements")
 
-    # Count active placements per OrganizationUnit (self-count only — direct link).
-    # We go from the Placement side to avoid complex subqueries.
-    active_placements = annotate_placement_dates(
-        Placement.objects.filter(service__assignment__status="INGEVULD")
-    ).filter(actual_end_date__gte=timezone.now().date())
-    if excluded_org_ids:
-        active_placements = active_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
-
-    org_ids = active_placements.values_list("service__assignment__organizations__id", flat=True)
-    org_self_counts: Counter[int] = Counter(org_id for org_id in org_ids if org_id is not None)
+    if count_mode == "open_assignments":
+        # Count open assignments per OrganizationUnit
+        assignment_qs = Assignment.objects.filter(status="OPEN")
+        if excluded_org_ids:
+            assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
+        org_id_list = assignment_qs.values_list("organizations__id", flat=True)
+        org_self_counts: Counter[int] = Counter(org_id for org_id in org_id_list if org_id is not None)
+    else:
+        # Count active placements per OrganizationUnit (self-count only — direct link).
+        active_placements = annotate_placement_dates(
+            Placement.objects.filter(service__assignment__status="INGEVULD")
+        ).filter(actual_end_date__gte=timezone.now().date())
+        if excluded_org_ids:
+            active_placements = active_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
+        org_id_list = active_placements.values_list("service__assignment__organizations__id", flat=True)
+        org_self_counts: Counter[int] = Counter(org_id for org_id in org_id_list if org_id is not None)
 
     # Load all OrganizationUnits (excluding hidden organizations)
     all_orgs = list(

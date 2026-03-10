@@ -5,7 +5,7 @@ from django.db.models.functions import Lower
 from django.utils import timezone
 
 ASSIGNMENT_STATUS = {
-    "VACATURE": "VACATURE",
+    "OPEN": "OPEN",
     "INGEVULD": "INGEVULD",
 }
 
@@ -123,7 +123,7 @@ class Assignment(models.Model):
     end_date = models.DateField(null=True, blank=True)
     # placements through foreignkey on Placement
     # services through foreignkey on Service
-    status = models.CharField(max_length=20, choices=ASSIGNMENT_STATUS, default="LEAD")
+    status = models.CharField(max_length=20, choices=ASSIGNMENT_STATUS, default="OPEN")
     organizations = models.ManyToManyField(
         "OrganizationUnit",
         through="AssignmentOrganizationUnit",
@@ -135,6 +135,7 @@ class Assignment(models.Model):
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
 
     def __str__(self):
         return self.name
