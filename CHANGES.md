@@ -6,6 +6,7 @@ This files lists the changes during the lifetime of this project.
 
 - 220: support multiple organizations per assignment
 - 220: (migration) add AssignmentOrganizationUnit.role (PRIMARY, INVOLVED)
+- 220: make dummy data correct
 
 ## 2026-03-06
 
