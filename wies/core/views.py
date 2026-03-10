@@ -681,13 +681,15 @@ class AssignmentListView(ListView):
     page_kwarg = "pagina"
 
     def _get_base_queryset(self):
-        qs = Assignment.objects.filter(status="OPEN").order_by("-start_date")
+        qs = Assignment.objects.filter(status="OPEN").order_by("-created_at")
         search_filter = self.request.GET.get("zoek")
         if search_filter:
             qs = qs.filter(
                 Q(name__icontains=search_filter)
                 | Q(extra_info__icontains=search_filter)
                 | Q(organizations__name__icontains=search_filter)
+                | Q(organizations__label__icontains=search_filter)
+                | Q(organizations__abbreviations__icontains=search_filter)
             )
         beschikbaar_vanaf = self.request.GET.get("beschikbaar_vanaf")
         if beschikbaar_vanaf:
@@ -886,7 +888,7 @@ class AssignmentListView(ListView):
         context["active_filter_count"] = len(active_filters)
         context["active_org_filter_count"] = active_org_filter_count
         context["org_chip_data"] = org_chip_data
-        context["client_modal_count_mode"] = "assignments"
+        context["client_modal_count_mode"] = "open_assignments"
 
         context["filter_groups"] = [
             {
@@ -1899,7 +1901,7 @@ def client_modal(request):
     excluded_org_ids = get_excluded_org_ids()
     count_mode = request.GET.get("count_mode", "placements")
 
-    if count_mode == "assignments":
+    if count_mode == "open_assignments":
         # Count open assignments per OrganizationUnit
         assignment_qs = Assignment.objects.filter(status="OPEN")
         if excluded_org_ids:

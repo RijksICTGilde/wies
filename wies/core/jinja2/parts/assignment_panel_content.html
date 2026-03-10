@@ -4,29 +4,19 @@
     <dl class="rvo-data-list">
       <dt>Opdracht naam</dt>
       <dd>
-        {% if panel_data.user_can_edit %}
-          <div id="assignment-name-content">
-            {% with target_element="assignment-name-content", field_value=panel_data.assignment.name, field_label="Opdracht naam", edit_url=url("assignment-edit-attribute", args=[panel_data.assignment.id, "name"]), user_can_edit=panel_data.user_can_edit %}
-              {% include "parts/editable_text_field.html" %}
-            {% endwith %}
-          </div>
-        {% else %}
-          {{ panel_data.assignment.name }}
-        {% endif %}
+        <div id="assignment-name-content">
+          {% with target_element="assignment-name-content", field_value=panel_data.assignment.name, field_label="Opdracht naam", edit_url=url("assignment-edit-attribute", args=[panel_data.assignment.id, "name"]), user_can_edit=panel_data.user_can_edit %}
+            {% include "parts/editable_text_field.html" %}
+          {% endwith %}
+        </div>
       </dd>
       <dt>Beschrijving</dt>
       <dd>
-        {% if panel_data.user_can_edit %}
-          <div id="assignment-extra-info-content">
-            {% with target_element="assignment-extra-info-content", field_value=panel_data.assignment.extra_info, field_label="Beschrijving", edit_url=url("assignment-edit-attribute", args=[panel_data.assignment.id, "extra_info"]), user_can_edit=panel_data.user_can_edit, expanded=false %}
-              {% include "parts/editable_textarea_field.html" %}
-            {% endwith %}
-          </div>
-        {% elif panel_data.assignment.extra_info %}
-          {{ panel_data.assignment.extra_info }}
-        {% else %}
-          <span class="rvo-text--italic rvo-text--subtle">Geen beschrijving</span>
-        {% endif %}
+        <div id="assignment-extra-info-content">
+          {% with target_element="assignment-extra-info-content", field_value=panel_data.assignment.extra_info, field_label="Beschrijving", edit_url=url("assignment-edit-attribute", args=[panel_data.assignment.id, "extra_info"]), user_can_edit=panel_data.user_can_edit, expanded=false %}
+            {% include "parts/editable_textarea_field.html" %}
+          {% endwith %}
+        </div>
       </dd>
       {% if panel_data.assignment.source not in ('wies', '') %}
         <dt>Externe bron</dt>
@@ -69,13 +59,20 @@
           <span class="rvo-text--italic rvo-text--subtle">Geen periode opgegeven</span>
         {% endif %}
       </dd>
+      {% if panel_data.assignment.created_at %}
+        <dt>Plaatsingsdatum</dt>
+        <dd>
+          {{ panel_data.assignment.created_at|datum_nl("j F Y") }}
+        </dd>
+      {% endif %}
       {% if panel_data.assignment.owner %}
         <dt>Business Manager</dt>
         <dd>
-          {% if panel_data.owner_url %}
-            <a href="{{ panel_data.owner_url }}" class="rvo-link">{{ panel_data.assignment.owner }}</a>
-          {% else %}
-            {{ panel_data.assignment.owner }}
+          {{ panel_data.assignment.owner.name }}
+          {% if panel_data.assignment.owner.email %}
+            <br>
+            <a href="mailto:{{ panel_data.assignment.owner.email }}"
+               class="rvo-link">{{ panel_data.assignment.owner.email }}</a>
           {% endif %}
         </dd>
       {% endif %}
