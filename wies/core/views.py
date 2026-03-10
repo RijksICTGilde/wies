@@ -445,16 +445,29 @@ class PlacementListView(ListView):
                     "id": aid,
                     "tags": [],
                     "assignment_url": self._build_assignment_url(self.request, aid),
+                    "start_date": item.get("actual_start_date"),
+                    "end_date": item.get("actual_end_date"),
                 }
+            else:
+                # Widen the period range across multiple placements
+                existing = assignments_by_id[aid]
+                start = item.get("actual_start_date")
+                end = item.get("actual_end_date")
+                if start and (existing["start_date"] is None or start < existing["start_date"]):
+                    existing["start_date"] = start
+                if end and (existing["end_date"] is None or end > existing["end_date"]):
+                    existing["end_date"] = end
             skill = item["service__skill__name"]
             if skill:
                 assignments_by_id[aid]["tags"].append(skill)
 
         today = timezone.now().date()
         bm_assignments = (
-            Assignment.objects.filter(owner=colleague).exclude(end_date__lt=today).values_list("id", "name")
+            Assignment.objects.filter(owner=colleague)
+            .exclude(end_date__lt=today)
+            .values_list("id", "name", "start_date", "end_date")
         )
-        for aid, name in bm_assignments:
+        for aid, name, start_date, end_date in bm_assignments:
             if aid in assignments_by_id:
                 assignments_by_id[aid]["tags"].append("Business Manager")
             else:
@@ -463,6 +476,8 @@ class PlacementListView(ListView):
                     "id": aid,
                     "tags": ["Business Manager"],
                     "assignment_url": self._build_assignment_url(self.request, aid),
+                    "start_date": start_date,
+                    "end_date": end_date,
                 }
 
         assignment_list = sorted(assignments_by_id.values(), key=lambda a: a["name"])
