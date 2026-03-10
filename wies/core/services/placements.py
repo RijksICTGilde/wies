@@ -67,11 +67,14 @@ def create_assignments_from_csv(csv_content: str):
 
     The CSV should contain the following required columns:
     - assignment_name, assignment_description, assignment_owner, assignment_owner_email
-    - assignment_organization_abbreviation, assignment_start_date, assignment_end_date
+    - assignment_start_date, assignment_end_date
     - service_skill, placement_colleague_name, placement_colleague_email
 
     Optional columns:
     - assignment_status: OPEN or INGEVULD (default: INGEVULD)
+    - client_1_url: URL from organisaties.overheid.nl. Becomes PRIMARY client.
+    - client_2_url: URL from organisaties.overheid.nl. Becomes INVOLVED client.
+    - client_3_url: URL from organisaties.overheid.nl. Becomes INVOLVED client.
     - owner_brand: If provided, assigns the brand label to newly created assignment owners.
                    If empty or not provided, no brand label is assigned.
     - colleague_brand: If provided, assigns the brand label to newly created placement colleagues.
@@ -86,7 +89,6 @@ def create_assignments_from_csv(csv_content: str):
         "assignment_description",
         "assignment_owner",
         "assignment_owner_email",
-        "assignment_organization_url",
         "assignment_start_date",
         "assignment_end_date",
         "service_skill",
@@ -159,11 +161,12 @@ def create_assignments_from_csv(csv_content: str):
                 else:
                     owner = None
 
-                # Get organization by source URL from organisaties.overheid.nl
-                organization_url = (row["assignment_organization_url"] or "").strip()
-                organization = None
-                if organization_url:
-                    organization = OrganizationUnit.objects.filter(source_url=organization_url).first()
+                # Collect client URLs (all optional)
+                client_urls = [
+                    (row.get("client_1_url", "").strip(), "PRIMARY"),
+                    (row.get("client_2_url", "").strip(), "INVOLVED"),
+                    (row.get("client_3_url", "").strip(), "INVOLVED"),
+                ]
 
                 # parse dates into proper types
                 start_date_str = row["assignment_start_date"] or ""
@@ -189,10 +192,16 @@ def create_assignments_from_csv(csv_content: str):
                 if created:
                     assignments_created += 1
 
-                # Link organization to assignment if found
-                if organization and not assignment.organizations.filter(id=organization.id).exists():
-                    AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=organization)
-                    organizations_linked += 1
+                # Link organizations to assignment
+                for url, role in client_urls:
+                    if not url:
+                        continue
+                    organization = OrganizationUnit.objects.filter(source_url=url).first()
+                    if organization and not assignment.organizations.filter(id=organization.id).exists():
+                        AssignmentOrganizationUnit.objects.create(
+                            assignment=assignment, organization=organization, role=role
+                        )
+                        organizations_linked += 1
 
                 skill = row["service_skill"]
                 if skill != "":

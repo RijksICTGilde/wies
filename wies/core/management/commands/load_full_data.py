@@ -583,6 +583,7 @@ class Command(BaseCommand):
             AssignmentOrganizationUnit.objects.create(
                 assignment=assignment,
                 organization_id=org_pk,
+                role="PRIMARY",
             )
 
         # ── 7. Services ──────────────────────────────────────────────────

@@ -204,16 +204,32 @@
     }
   },
   {
+    "model": "core.organizationtype",
+    "pk": 2,
+    "fields": {
+      "name": "organisatieonderdeel",
+      "label": "Organisatieonderdeel"
+    }
+  },
+  {
+    "model": "core.organizationtype",
+    "pk": 3,
+    "fields": {
+      "name": "agentschap",
+      "label": "Agentschap"
+    }
+  },
+  {
     "model": "core.organizationunit",
     "pk": 1,
     "fields": {
       "name": "Algemene Zaken",
       "label": "Ministerie van Algemene Zaken",
-      "abbreviations": [],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "abbreviations": ["AZ"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1010",
+      "oin_number": "null",
+      "system_id": "123",
+      "source_url": "https://organisaties.overheid.nl/123/Algemene_Zaken",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -224,11 +240,11 @@
     "fields": {
       "name": "Binnenlandse Zaken en Koninkrijksrelaties",
       "label": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "abbreviations": [],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "abbreviations": ["BZK"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1034",
+      "oin_number": "00000001003214345000",
+      "system_id": "9632",
+      "source_url": "https://organisaties.overheid.nl/9632/Binnenlandse_Zaken_en_Koninkrijksrelaties",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -239,11 +255,11 @@
     "fields": {
       "name": "Buitenlandse Zaken",
       "label": "Ministerie van Buitenlandse Zaken",
-      "abbreviations": [],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "abbreviations": ["BuZa"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1013",
+      "oin_number": "00000001003227406000",
+      "system_id": "2515",
+      "source_url": "https://organisaties.overheid.nl/2515/Buitenlandse_Zaken",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -254,11 +270,11 @@
     "fields": {
       "name": "Defensie",
       "label": "Ministerie van Defensie",
-      "abbreviations": [],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "abbreviations": ["Def"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1018",
+      "oin_number": "I0000003273709850000",
+      "system_id": "4958",
+      "source_url": "https://organisaties.overheid.nl/4958/Defensie",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -269,11 +285,11 @@
     "fields": {
       "name": "Economische Zaken",
       "label": "Ministerie van Economische Zaken",
-      "abbreviations": [],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "abbreviations": ["EZ"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1045",
+      "oin_number": "00000001003214369000",
+      "system_id": "10621",
+      "source_url": "https://organisaties.overheid.nl/10621/Economische_Zaken_en_Klimaat",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -284,11 +300,11 @@
     "fields": {
       "name": "Financiën",
       "label": "Ministerie van Financiën",
-      "abbreviations": [],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "abbreviations": ["FIN"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1090",
+      "oin_number": "00000001003214394000",
+      "system_id": "68820",
+      "source_url": "https://organisaties.overheid.nl/68820/Financien",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -299,11 +315,11 @@
     "fields": {
       "name": "Infrastructuur en Waterstaat",
       "label": "Ministerie van Infrastructuur en Waterstaat",
-      "abbreviations": [],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "abbreviations": ["IenW"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1130",
+      "oin_number": "00000001003214321000",
+      "system_id": "112773",
+      "source_url": "https://organisaties.overheid.nl/112773/Infrastructuur_en_Waterstaat",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -314,11 +330,11 @@
     "fields": {
       "name": "Justitie en Veiligheid",
       "label": "Ministerie van Justitie en Veiligheid",
-      "abbreviations": [],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "abbreviations": ["JenV"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1058",
+      "oin_number": "00000003273808340000",
+      "system_id": "11906",
+      "source_url": "https://organisaties.overheid.nl/11906/Justitie_en_Veiligheid",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -329,11 +345,11 @@
     "fields": {
       "name": "Onderwijs, Cultuur en Wetenschap",
       "label": "Ministerie van Onderwijs, Cultuur en Wetenschap",
-      "abbreviations": [],
-      "tooi_identifier": null,
+      "abbreviations": ["OCW"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1109",
       "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "system_id": "71852",
+      "source_url": "https://organisaties.overheid.nl/71852/Onderwijs_Cultuur_en_Wetenschap",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -344,11 +360,11 @@
     "fields": {
       "name": "Sociale Zaken en Werkgelegenheid",
       "label": "Ministerie van Sociale Zaken en Werkgelegenheid",
-      "abbreviations": [],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "abbreviations": ["SZW"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1073",
+      "oin_number": "00000001003227522000",
+      "system_id": "19087",
+      "source_url": "https://organisaties.overheid.nl/19087/Sociale_Zaken_en_Werkgelegenheid",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -359,11 +375,11 @@
     "fields": {
       "name": "Volksgezondheid, Welzijn en Sport",
       "label": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "abbreviations": [],
-      "tooi_identifier": null,
+      "abbreviations": ["VWS"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1025",
       "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "system_id": "8591",
+      "source_url": "https://organisaties.overheid.nl/8591/Volksgezondheid_Welzijn_en_Sport",
       "parent": null,
       "related_ministry_tooi": ""
     }
@@ -372,15 +388,15 @@
     "model": "core.organizationunit",
     "pk": 12,
     "fields": {
-      "name": "Belastingdienst",
-      "label": "Belastingdienst",
-      "abbreviations": [],
-      "tooi_identifier": null,
+      "name": "Directoraat-generaal Belastingdienst",
+      "label": "Directoraat-generaal Belastingdienst",
+      "abbreviations": ["DGBD"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg12368",
       "oin_number": null,
-      "system_id": "",
-      "source_url": "",
+      "system_id": "68888",
+      "source_url": "https://organisaties.overheid.nl/68888/Directoraat-generaal_Belastingdienst",
       "parent": 6,
-      "related_ministry_tooi": ""
+      "related_ministry_tooi": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1090"
     }
   },
   {
@@ -389,13 +405,13 @@
     "fields": {
       "name": "Rijkswaterstaat",
       "label": "Rijkswaterstaat",
-      "abbreviations": [],
-      "tooi_identifier": null,
-      "oin_number": null,
-      "system_id": "",
-      "source_url": "",
-      "parent": 7,
-      "related_ministry_tooi": ""
+      "abbreviations": ["RWS"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10004",
+      "oin_number": "00000001821699180000",
+      "system_id": "112990",
+      "source_url": "https://organisaties.overheid.nl/112990/Rijkswaterstaat",
+      "parent": null,
+      "related_ministry_tooi": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1130"
     }
   },
   {
@@ -403,14 +419,14 @@
     "pk": 14,
     "fields": {
       "name": "RIVM",
-      "label": "RIVM",
-      "abbreviations": [],
-      "tooi_identifier": null,
+      "label": "Rijksinstituut voor Volksgezondheid en Milieu",
+      "abbreviations": ["RIVM"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10123",
       "oin_number": null,
-      "system_id": "",
-      "source_url": "",
-      "parent": 11,
-      "related_ministry_tooi": ""
+      "system_id": "66101",
+      "source_url": "https://organisaties.overheid.nl/66101/Rijksinstituut_voor_Volksgezondheid_en_Milieu",
+      "parent": null,
+      "related_ministry_tooi": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1025"
     }
   },
   {
@@ -419,13 +435,13 @@
     "fields": {
       "name": "Dienst Justitiële Inrichtingen",
       "label": "Dienst Justitiële Inrichtingen",
-      "abbreviations": [],
-      "tooi_identifier": null,
+      "abbreviations": ["DJI"],
+      "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10114",
       "oin_number": null,
-      "system_id": "",
-      "source_url": "",
-      "parent": 8,
-      "related_ministry_tooi": ""
+      "system_id": "13080",
+      "source_url": "https://organisaties.overheid.nl/13080/Dienst_Justitiele_Inrichtingen",
+      "parent": null,
+      "related_ministry_tooi": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1058"
     }
   },
   {
@@ -514,6 +530,38 @@
     "fields": {
       "organizationunit_id": 11,
       "organizationtype_id": 1
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 12,
+    "fields": {
+      "organizationunit_id": 12,
+      "organizationtype_id": 2
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 13,
+    "fields": {
+      "organizationunit_id": 13,
+      "organizationtype_id": 3
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 14,
+    "fields": {
+      "organizationunit_id": 14,
+      "organizationtype_id": 3
+    }
+  },
+  {
+    "model": "core.organizationunit_organization_types",
+    "pk": 15,
+    "fields": {
+      "organizationunit_id": 15,
+      "organizationtype_id": 3
     }
   },
   {
@@ -1537,11 +1585,26 @@
     }
   },
   {
+    "model": "core.assignment",
+    "pk": 31,
+    "fields": {
+      "name": "Multi org",
+      "start_date": "2025-01-01",
+      "end_date": "2026-12-31",
+      "status": "INGEVULD",
+      "extra_info": "",
+      "owner": 6,
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
     "model": "core.assignmentorganizationunit",
     "pk": 1,
     "fields": {
       "assignment": 1,
-      "organization": 14
+      "organization": 14,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1549,7 +1612,8 @@
     "pk": 2,
     "fields": {
       "assignment": 2,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1557,7 +1621,8 @@
     "pk": 3,
     "fields": {
       "assignment": 3,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1565,7 +1630,8 @@
     "pk": 4,
     "fields": {
       "assignment": 4,
-      "organization": 13
+      "organization": 13,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1573,7 +1639,8 @@
     "pk": 5,
     "fields": {
       "assignment": 5,
-      "organization": 14
+      "organization": 14,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1581,7 +1648,8 @@
     "pk": 6,
     "fields": {
       "assignment": 6,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1589,7 +1657,8 @@
     "pk": 7,
     "fields": {
       "assignment": 7,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1597,7 +1666,8 @@
     "pk": 8,
     "fields": {
       "assignment": 8,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1605,7 +1675,8 @@
     "pk": 9,
     "fields": {
       "assignment": 9,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1613,7 +1684,8 @@
     "pk": 10,
     "fields": {
       "assignment": 10,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1621,7 +1693,8 @@
     "pk": 11,
     "fields": {
       "assignment": 11,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1629,7 +1702,8 @@
     "pk": 12,
     "fields": {
       "assignment": 12,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1637,7 +1711,8 @@
     "pk": 13,
     "fields": {
       "assignment": 13,
-      "organization": 14
+      "organization": 14,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1645,7 +1720,8 @@
     "pk": 14,
     "fields": {
       "assignment": 14,
-      "organization": 13
+      "organization": 13,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1653,7 +1729,8 @@
     "pk": 15,
     "fields": {
       "assignment": 15,
-      "organization": 14
+      "organization": 14,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1661,7 +1738,8 @@
     "pk": 16,
     "fields": {
       "assignment": 16,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1669,7 +1747,8 @@
     "pk": 17,
     "fields": {
       "assignment": 17,
-      "organization": 15
+      "organization": 15,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1677,7 +1756,8 @@
     "pk": 18,
     "fields": {
       "assignment": 18,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1685,7 +1765,8 @@
     "pk": 19,
     "fields": {
       "assignment": 19,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1693,7 +1774,8 @@
     "pk": 20,
     "fields": {
       "assignment": 20,
-      "organization": 14
+      "organization": 14,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1701,7 +1783,8 @@
     "pk": 21,
     "fields": {
       "assignment": 21,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1709,7 +1792,8 @@
     "pk": 22,
     "fields": {
       "assignment": 22,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1717,7 +1801,8 @@
     "pk": 23,
     "fields": {
       "assignment": 23,
-      "organization": 13
+      "organization": 13,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1725,7 +1810,8 @@
     "pk": 24,
     "fields": {
       "assignment": 24,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1733,7 +1819,8 @@
     "pk": 25,
     "fields": {
       "assignment": 25,
-      "organization": 13
+      "organization": 13,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1741,7 +1828,8 @@
     "pk": 26,
     "fields": {
       "assignment": 26,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1749,7 +1837,8 @@
     "pk": 27,
     "fields": {
       "assignment": 27,
-      "organization": 13
+      "organization": 13,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1757,7 +1846,8 @@
     "pk": 28,
     "fields": {
       "assignment": 28,
-      "organization": 14
+      "organization": 14,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1765,7 +1855,8 @@
     "pk": 29,
     "fields": {
       "assignment": 29,
-      "organization": 13
+      "organization": 13,
+      "role": "PRIMARY"
     }
   },
   {
@@ -1773,7 +1864,35 @@
     "pk": 30,
     "fields": {
       "assignment": 30,
-      "organization": 12
+      "organization": 12,
+      "role": "PRIMARY"
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 31,
+    "fields": {
+      "assignment": 31,
+      "organization": 12,
+      "role": "PRIMARY"
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 32,
+    "fields": {
+      "assignment": 31,
+      "organization": 13,
+      "role": "INVOLVED"
+    }
+  },
+  {
+    "model": "core.assignmentorganizationunit",
+    "pk": 33,
+    "fields": {
+      "assignment": 31,
+      "organization": 14,
+      "role": "INVOLVED"
     }
   },
   {
@@ -3073,6 +3192,18 @@
     }
   },
   {
+    "model": "core.service",
+    "pk": 109,
+    "fields": {
+      "assignment": 31,
+      "description": "Backend development",
+      "skill": 1,
+      "period_source": "ASSIGNMENT",
+      "source": "wies",
+      "source_id": ""
+    }
+  },
+  {
     "model": "core.placement",
     "pk": 1,
     "fields": {
@@ -3719,6 +3850,19 @@
       "specific_start_date": null,
       "specific_end_date": null,
       "source": "otys_iir",
+      "source_id": ""
+    }
+  },
+  {
+    "model": "core.placement",
+    "pk": 51,
+    "fields": {
+      "colleague": 14,
+      "service": 109,
+      "period_source": "SERVICE",
+      "specific_start_date": null,
+      "specific_end_date": null,
+      "source": "wies",
       "source_id": ""
     }
   }
