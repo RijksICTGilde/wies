@@ -35,22 +35,35 @@
           {% endif %}
         </dd>
       {% endif %}
-      <dt>Organisatie</dt>
-      <dd>
-        {% if panel_data.org_breadcrumb %}
-          <div class="org-breadcrumb">
-            {% if panel_data.org_breadcrumb.ancestors %}
-              {% for ancestor in panel_data.org_breadcrumb.ancestors %}
-                <a href="{{ ancestor.url }}" class="org-breadcrumb__ancestor">{{ ancestor.label }}</a>
-                <span class="org-breadcrumb__separator">›</span>
-              {% endfor %}
+      {% if panel_data.org_breadcrumbs %}
+        {% for org_breadcrumb in panel_data.org_breadcrumbs %}
+          <dt>
+            {% if loop.first %}
+              Opdrachtgever
+              {%- if panel_data.org_breadcrumbs|length > 1 %}s{% endif %}
             {% endif %}
-            <a href="{{ panel_data.org_breadcrumb.url }}" class="rvo-link">{{ panel_data.org_breadcrumb.label }}</a>
-          </div>
-        {% else %}
+          </dt>
+          <dd>
+            <div class="org-breadcrumb">
+              {% if org_breadcrumb.ancestors %}
+                {% for ancestor in org_breadcrumb.ancestors %}
+                  <a href="{{ ancestor.url }}" class="org-breadcrumb__ancestor">{{ ancestor.label }}</a>
+                  <span class="org-breadcrumb__separator">›</span>
+                {% endfor %}
+              {% endif %}
+              <a href="{{ org_breadcrumb.url }}" class="rvo-link">{{ org_breadcrumb.label }}</a>
+              {% if org_breadcrumb.role == "PRIMARY" and panel_data.org_breadcrumbs|length > 1 %}
+                <span class="rvo-text--subtle rvo-text--sm">(primair)</span>
+              {% endif %}
+            </div>
+          </dd>
+        {% endfor %}
+      {% else %}
+        <dt>Opdrachtgever</dt>
+        <dd>
           <span class="rvo-text--italic rvo-text--subtle">Geen organisatie opgegeven</span>
-        {% endif %}
-      </dd>
+        </dd>
+      {% endif %}
       <dt>Periode</dt>
       <dd>
         {% if assignment.start_date or assignment.end_date %}

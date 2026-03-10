@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_not_required, permission_requir
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
-from django.db.models import Q, Value
+from django.db.models import Case, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.http import Http404, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
@@ -23,7 +23,18 @@ from django.utils import timezone
 from django.views.generic.list import ListView
 
 from .forms import LabelCategoryForm, LabelForm, UserForm
-from .models import Assignment, Colleague, Label, LabelCategory, OrganizationUnit, Placement, Service, Skill, User
+from .models import (
+    Assignment,
+    AssignmentOrganizationUnit,
+    Colleague,
+    Label,
+    LabelCategory,
+    OrganizationUnit,
+    Placement,
+    Service,
+    Skill,
+    User,
+)
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
@@ -248,7 +259,21 @@ class PlacementListView(ListView):
         excluded_org_ids = get_excluded_org_ids()
         qs = (
             Placement.objects.select_related("colleague", "service", "service__skill")
-            .prefetch_related("colleague__labels", "service__assignment__organizations")
+            .prefetch_related(
+                "colleague__labels",
+                Prefetch(
+                    "service__assignment__organization_relations",
+                    queryset=AssignmentOrganizationUnit.objects.annotate(
+                        role_order=Case(
+                            When(role="PRIMARY", then=0),
+                            default=1,
+                        )
+                    )
+                    .order_by("role_order")
+                    .select_related("organization"),
+                    to_attr="sorted_clients",
+                ),
+            )
             .filter(service__assignment__status="INGEVULD")
             .order_by("-service__assignment__start_date")
         )
@@ -469,9 +494,16 @@ class PlacementListView(ListView):
         # Check if user can edit assignment
         user_can_edit = user_can_edit_assignment(self.request.user, assignment)
 
-        # Build organization breadcrumb
-        org = assignment.organizations.select_related("parent__parent__parent__parent").first()
-        org_breadcrumb = self._get_org_breadcrumb(org) if org else None
+        # Build organization breadcrumbs (primary first, then involved)
+        primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
+            "organization__parent__parent__parent__parent"
+        )
+        involved = assignment.organization_relations.filter(role="INVOLVED").select_related(
+            "organization__parent__parent__parent__parent"
+        )
+        org_breadcrumbs = [
+            {**self._get_org_breadcrumb(rel.organization), "role": rel.role} for rel in [*primary, *involved]
+        ]
 
         return {
             "panel_content_template": "parts/assignment_panel_content.html",
@@ -481,7 +513,7 @@ class PlacementListView(ListView):
             "placements": placements,
             "user_can_edit": user_can_edit,
             "owner_url": self._build_colleague_url(assignment.owner.id) if assignment.owner else "",
-            "org_breadcrumb": org_breadcrumb,
+            "org_breadcrumbs": org_breadcrumbs,
         }
 
     def get_context_data(self, **kwargs):
