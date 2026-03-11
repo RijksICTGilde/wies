@@ -78,7 +78,7 @@ jobs:
           deployment-name: ${{ env.DEPLOYMENT_NAME }}
           component: frontend
           image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          clone-from: staging2
+          clone-from: staging
           comment-on-pr: true
 
       - name: Deploy worker to ZAD
@@ -89,3 +89,4 @@ jobs:
           deployment-name: ${{ env.DEPLOYMENT_NAME }}
           component: worker
           image: ${{ env.IMAGE_NAME }}-worker:${{ env.IMAGE_TAG }}
+          clone-from: staging
