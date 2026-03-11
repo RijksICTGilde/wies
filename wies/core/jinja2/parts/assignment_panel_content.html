@@ -81,7 +81,11 @@
       {% if panel_data.assignment.owner %}
         <dt>Business Manager</dt>
         <dd>
-          {{ panel_data.assignment.owner.name }}
+          {% if panel_data.owner_url %}
+            <a href="{{ panel_data.owner_url }}" class="rvo-link">{{ panel_data.assignment.owner.name }}</a>
+          {% else %}
+            {{ panel_data.assignment.owner.name }}
+          {% endif %}
           {% if panel_data.assignment.owner.email %}
             <br>
             <a href="mailto:{{ panel_data.assignment.owner.email }}"
