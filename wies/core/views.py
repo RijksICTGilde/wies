@@ -871,7 +871,6 @@ class AssignmentListView(ListView):
             "assignment": assignment,
             "services": services,
             "org_breadcrumb": org_breadcrumb,
-            "owner_url": reverse("home") + f"?collega={assignment.owner.id}" if assignment.owner else "",
         }
 
     def get_context_data(self, **kwargs):
