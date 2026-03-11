@@ -78,8 +78,8 @@ jobs:
           deployment-name: ${{ env.DEPLOYMENT_NAME }}
           components: |
             [
-              {"name": "frontend", "image": ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}},
-              {"name": "worker", "image": ${{ env.IMAGE_NAME }}-worker:${{ env.IMAGE_TAG }}}
+              {"name": "frontend", "image": "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"},
+              {"name": "worker", "image": "${{ env.IMAGE_NAME }}-worker:${{ env.IMAGE_TAG }}"}
             ]
           clone-from: staging
           comment-on-pr: true
