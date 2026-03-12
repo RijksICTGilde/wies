@@ -832,10 +832,17 @@ class AssignmentListView(ListView):
             )
         )
 
-        # Build organization breadcrumb
+        # Build organization breadcrumbs from organization_relations
         base_url = reverse("assignment-list")
-        org = assignment.organizations.select_related("parent__parent__parent__parent").first()
-        org_breadcrumb = get_org_breadcrumb(org, base_url) if org else None
+        primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
+            "organization__parent__parent__parent__parent"
+        )
+        involved = assignment.organization_relations.filter(role="INVOLVED").select_related(
+            "organization__parent__parent__parent__parent"
+        )
+        org_breadcrumbs = [
+            {**get_org_breadcrumb(rel.organization, base_url), "role": rel.role} for rel in [*primary, *involved]
+        ]
 
         return {
             "panel_content_template": "parts/assignment_panel_content.html",
@@ -843,7 +850,7 @@ class AssignmentListView(ListView):
             "close_url": self._build_close_url(),
             "assignment": assignment,
             "services": services,
-            "org_breadcrumb": org_breadcrumb,
+            "org_breadcrumbs": org_breadcrumbs,
             "owner_url": reverse("home") + f"?collega={assignment.owner.id}" if assignment.owner else "",
         }
 
