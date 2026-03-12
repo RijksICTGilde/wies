@@ -380,6 +380,10 @@ class PlacementListView(ListView):
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if "HX-Request" in self.request.headers:
+            if self.request.headers.get("HX-Target") == "side_panel-container":
+                return ["parts/side_panel_response.html"]
+            if self.request.headers.get("HX-Target") == "side_panel-content":
+                return ["parts/side_panel_content_response.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/placement_table_rows.html"]
             return ["parts/filter_and_table_container.html"]
@@ -792,6 +796,10 @@ class AssignmentListView(ListView):
 
     def get_template_names(self):
         if "HX-Request" in self.request.headers:
+            if self.request.headers.get("HX-Target") == "side_panel-container":
+                return ["parts/side_panel_response.html"]
+            if self.request.headers.get("HX-Target") == "side_panel-content":
+                return ["parts/side_panel_content_response.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/assignment_card_rows.html"]
             return ["parts/filter_and_card_container.html"]

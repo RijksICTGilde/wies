@@ -190,7 +190,13 @@ function setupDateRangeListeners(formSelector) {
 
 document.addEventListener("DOMContentLoaded", function () {
   // Handle back button navigation - reload page to sync filters with URL
+  // Skip reload when side panel handles its own popstate (panel open/close)
   window.addEventListener("popstate", function () {
+    const url = new URL(window.location);
+    const panel = document.getElementById("side_panel");
+    const hasPanelParam =
+      url.searchParams.has("collega") || url.searchParams.has("opdracht");
+    if (hasPanelParam || (panel && panel.open)) return;
     window.location.href = window.location.href;
   });
 

@@ -3,8 +3,10 @@
            tabindex="0"
            role="link"
            aria-label="{{ assignment.name }}"
-           onclick="window.location.href='{{ assignment.panel_url }}'"
-           onkeydown="if(event.key==='Enter')window.location.href='{{ assignment.panel_url }}'">
+           hx-get="{{ assignment.panel_url }}"
+           hx-target="#side_panel-container"
+           onkeydown="if(event.key==='Enter')htmx.trigger(this,'click')"
+           style="cursor: pointer">
     <div class="assignment-card__header">
       <h3 class="rvo-text rvo-text--bold rvo-text--no-margins assignment-card__title">{{ assignment.name }}</h3>
       {% if assignment.status %}
