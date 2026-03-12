@@ -12,6 +12,8 @@ This files lists the changes during the lifetime of this project.
 - 220: support multiple organizations per assignment
 - 220: (migration) add AssignmentOrganizationUnit.role (PRIMARY, INVOLVED)
 - 220: make dummy data correct
+- 283: Implement HTMX for content swap in side panel
+- 283: Align 'Toon meer' button with filterbar
 
 ## 2026-03-06
 

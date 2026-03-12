@@ -99,6 +99,8 @@
           {% if service.current_placements %}
             {% for placement in service.current_placements %}
               <a href="{{ placement.colleague_url }}"
+                 hx-get="{{ placement.colleague_url }}"
+                 hx-target="#side_panel-content"
                  class="rvo-item-list__item clickable-row"
                  style="text-decoration: none;
                         color: inherit"
