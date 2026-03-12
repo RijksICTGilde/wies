@@ -63,21 +63,15 @@ jobs:
       url: ${{ steps.deploy.outputs.url }}
 
     steps:
-      - name: Deploy frontend to ZAD
+      - name: Deploy to ZAD
         id: deploy
         uses: RijksICTGilde/zad-actions/deploy@v2
         with:
           api-key: ${{ secrets.ZAD_API_KEY }}
           project-id: wies
           deployment-name: staging2
-          component: frontend
-          image: ${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}
-
-      - name: Deploy worker to ZAD
-        uses: RijksICTGilde/zad-actions/deploy@v2
-        with:
-          api-key: ${{ secrets.ZAD_API_KEY }}
-          project-id: wies
-          deployment-name: staging2
-          component: worker
-          image: ${{ env.IMAGE_NAME }}-worker:${{ needs.build.outputs.version }}
+          components: |
+            [
+              {"name": "frontend", "image": "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}"},
+              {"name": "worker", "image": "${{ env.IMAGE_NAME }}-worker:${{ needs.build.outputs.version }}"}
+            ]
