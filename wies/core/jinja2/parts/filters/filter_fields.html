@@ -16,7 +16,7 @@
                 hx-swap="innerHTML"
                 hx-push-url="false"
                 hx-include="#org-filter-inputs">
-          <span class="org-filter-trigger__text">{%- if active_org_filter_count > 0 -%}{{ active_org_filter_count }} geselecteerd{%- else -%}<span class="org-filter-trigger__placeholder">Selecteer</span>{%- endif -%}</span>
+          <span class="org-filter-trigger__text">{%- if active_org_filter_count == 1 -%}{{ active_org_filter_label }}{%- elif active_org_filter_count > 1 -%}{{ active_org_filter_count }} geselecteerd{%- else -%}<span class="org-filter-trigger__placeholder">Selecteer</span>{%- endif -%}</span>
         </button>
       </div>
     {% elif filter_group.type == 'select' %}

@@ -671,6 +671,7 @@ class PlacementListView(ListView):
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
         context["active_org_filter_count"] = active_org_filter_count
+        context["active_org_filter_label"] = org_chip_data[0]["label"] if len(org_chip_data) == 1 else ""
         context["org_chip_data"] = org_chip_data
         context["client_modal_count_mode"] = "placements"
 
@@ -954,6 +955,7 @@ class AssignmentListView(ListView):
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
         context["active_org_filter_count"] = active_org_filter_count
+        context["active_org_filter_label"] = org_chip_data[0]["label"] if len(org_chip_data) == 1 else ""
         context["org_chip_data"] = org_chip_data
         context["client_modal_count_mode"] = "open_assignments"
 

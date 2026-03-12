@@ -26,16 +26,18 @@ document.addEventListener("click", function (e) {
 function updateOrgFilterButtonText() {
   const button = document.getElementById("org-filter-button");
   if (!button) return;
-  const count = document.querySelectorAll(
+  const inputs = document.querySelectorAll(
     '#org-filter-inputs input[type="hidden"]',
-  ).length;
+  );
   const textSpan = button.querySelector(".org-filter-trigger__text");
   if (textSpan) {
-    if (count === 0) {
+    if (inputs.length === 0) {
       textSpan.innerHTML =
         '<span class="org-filter-trigger__placeholder">Selecteer</span>';
+    } else if (inputs.length === 1) {
+      textSpan.textContent = inputs[0].dataset.label || "1 geselecteerd";
     } else {
-      textSpan.textContent = count + " geselecteerd";
+      textSpan.textContent = inputs.length + " geselecteerd";
     }
   }
 }
