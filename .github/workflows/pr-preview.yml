@@ -71,21 +71,16 @@ jobs:
     steps:
       - name: Deploy frontend to ZAD
         id: deploy
-        uses: RijksICTGilde/zad-actions/deploy@v2
+        uses: GliderGeek/zad-actions/deploy@feature/support-mulitple-component-deploy
         with:
           api-key: ${{ secrets.ZAD_API_KEY }}
           project-id: wies
           deployment-name: ${{ env.DEPLOYMENT_NAME }}
-          component: frontend
+          components: |
+            [
+              {"name": "frontend", "image": "${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}"},
+              {"name": "worker", "image": "${{ env.IMAGE_NAME }}-worker:${{ env.IMAGE_TAG }}"}
+            ]
           image: ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          clone-from: staging2
+          clone-from: staging
           comment-on-pr: true
-
-      - name: Deploy worker to ZAD
-        uses: RijksICTGilde/zad-actions/deploy@v2
-        with:
-          api-key: ${{ secrets.ZAD_API_KEY }}
-          project-id: wies
-          deployment-name: ${{ env.DEPLOYMENT_NAME }}
-          component: worker
-          image: ${{ env.IMAGE_NAME }}-worker:${{ env.IMAGE_TAG }}
