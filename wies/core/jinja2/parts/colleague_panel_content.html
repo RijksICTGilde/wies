@@ -46,9 +46,17 @@
                     color: inherit">
             <div class="rvo-card__content">
               <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin">{{ assignment.name }}</h3>
-              {% if assignment.skill %}
+              {% if assignment.start_date or assignment.end_date %}
+                <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
+                  <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm rvo-icon--rvo-grijs-700"
+                        role="img"
+                        aria-label="Periode"></span>
+                  <span class="rvo-text--subtle rvo-text--sm">{{ assignment.start_date|datum_nl("N y") }} - {{ assignment.end_date|datum_nl("N y") }}</span>
+                </div>
+              {% endif %}
+              {% if assignment.tags %}
                 <div class="assignment-skill-tag">
-                  <span class="rvo-tag rvo-tag--default">{{ assignment.skill }}</span>
+                  {% for tag in assignment.tags %}<span class="rvo-tag rvo-tag--default">{{ tag }}</span>{% endfor %}
                 </div>
               {% endif %}
             </div>

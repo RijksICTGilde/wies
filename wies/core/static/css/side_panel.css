@@ -158,6 +158,9 @@ dialog#side_panel::backdrop {
 
 /* Assignment skill tag spacing */
 .assignment-skill-tag {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-top: 8px;
 }
 
