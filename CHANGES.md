@@ -6,6 +6,8 @@ This files lists the changes during the lifetime of this project.
 
 - 221: include business manager assignments in colleague sidepanel
 - 221: show period on assignment cards in colleague side panel
+- 241: also delete organizationunits from admin db
+- 164: introduce actions to automatically deploy on tag and PR
 - 192: Add assignments page with organization hierarchy filter, multiselect role filter, and compact card layout
 - 192: Support importing OPEN assignments via CSV
 - 192: (migration) change VACATURE -> OPEN

@@ -1,0 +1,77 @@
+name: Build and Deploy
+
+on:
+  push:
+    tags:
+      - "*"
+
+env:
+  IMAGE_NAME: ghcr.io/rijksictgilde/wies
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      packages: write
+
+    outputs:
+      version: ${{ github.ref_name }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: web
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
+            ${{ env.IMAGE_NAME }}:latest
+
+      - name: Build and push worker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: worker
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}-worker:${{ github.ref_name }}
+            ${{ env.IMAGE_NAME }}-worker:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    permissions:
+      contents: read
+      deployments: write
+
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Deploy to ZAD
+        id: deploy
+        uses: GliderGeek/zad-actions/deploy@feature/support-mulitple-component-deploy
+        with:
+          api-key: ${{ secrets.ZAD_API_KEY }}
+          project-id: wies
+          deployment-name: staging2
+          components: |
+            [
+              {"name": "frontend", "image": "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}"},
+              {"name": "worker", "image": "${{ env.IMAGE_NAME }}-worker:${{ needs.build.outputs.version }}"}
+            ]
