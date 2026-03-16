@@ -210,6 +210,9 @@ dialog#side_panel.closing::backdrop {
 
 /* Assignment skill tag spacing - used in side panel */
 .assignment-skill-tag {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
   margin-top: 8px;
 }
 
