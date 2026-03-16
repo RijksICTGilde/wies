@@ -13,6 +13,7 @@ This files lists the changes during the lifetime of this project.
 - 220: make dummy data correct
 - 283: Implement HTMX for content swap in side panel
 - 283: Align 'Toon meer' button with filterbar
+- 283: Fix bug opdrachtgever not appearing
 
 ## 2026-03-06
 
