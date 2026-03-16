@@ -29,6 +29,7 @@ from .models import (
     Colleague,
     Label,
     LabelCategory,
+    OrganizationType,
     OrganizationUnit,
     Placement,
     Service,
@@ -141,6 +142,7 @@ def admin_db(request):
     context = {
         "assignment_count": Assignment.objects.count(),
         "colleague_count": Colleague.objects.count(),
+        "organization_count": OrganizationUnit.objects.count(),
         "latest_tasks": get_latest_tasks(limit=3),
     }
     if request.method == "POST":
@@ -154,6 +156,10 @@ def admin_db(request):
             Service.objects.all().delete()
             LabelCategory.objects.all().delete()
             Label.objects.all().delete()
+            OrganizationUnit.objects.update(parent=None)
+            OrganizationUnit.objects.all().delete()
+            OrganizationType.objects.all().delete()
+
         elif action == "load_base_data":
             management.call_command("loaddata", "base_dummy_data.json")
             messages.success(request, "Data geladen uit base_dummy_data.json")
@@ -207,6 +213,9 @@ def admin_db(request):
                 Service.objects.all().delete()
                 LabelCategory.objects.all().delete()
                 Label.objects.all().delete()
+                OrganizationUnit.objects.update(parent=None)
+                OrganizationUnit.objects.all().delete()
+                OrganizationType.objects.all().delete()
 
                 # Load data using Django's loaddata command
                 management.call_command("loaddata", tmp_path)
