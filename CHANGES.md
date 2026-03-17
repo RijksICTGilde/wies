@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ...
+
+## 2026-03-17
+
 - 221: include business manager assignments in colleague sidepanel
 - 221: show period on assignment cards in colleague side panel
 - 241: also delete organizationunits from admin db
