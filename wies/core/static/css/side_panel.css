@@ -11,8 +11,17 @@ dialog#side_panel {
   border-radius: 0 !important;
   box-sizing: border-box !important;
   max-height: none !important;
-  transform: none !important;
-  opacity: 1 !important;
+  animation: panel-slide-in var(--animation-duration)
+    cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes panel-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 
 dialog#side_panel::backdrop {
