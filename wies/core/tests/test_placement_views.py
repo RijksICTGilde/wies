@@ -479,7 +479,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
 
         view = PlacementListView()
         view.request = request
-        panel_data = view._get_assignment_panel_data(assignment, self.colleague1)  # noqa: SLF001 (private member access)
+        panel_data = view._get_assignment_panel_data(assignment)  # noqa: SLF001 (private member access)
 
         # Verify only current placement is in panel data
         placement_ids = [p.id for s in panel_data["services"] for p in s.current_placements]
@@ -525,7 +525,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
 
         view = PlacementListView()
         view.request = request
-        panel_data = view._get_assignment_panel_data(assignment, self.colleague1)  # noqa: SLF001 (private member access)
+        panel_data = view._get_assignment_panel_data(assignment)  # noqa: SLF001 (private member access)
 
         # Verify placement ending today is included
         placement_ids = [p.id for s in panel_data["services"] for p in s.current_placements]

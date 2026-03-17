@@ -82,7 +82,10 @@
         <dt>Business Manager</dt>
         <dd>
           {% if panel_data.owner_url %}
-            <a href="{{ panel_data.owner_url }}" class="rvo-link">{{ panel_data.assignment.owner.name }}</a>
+            <a href="{{ panel_data.owner_url }}"
+               hx-get="{{ panel_data.owner_url }}"
+               hx-target="#side_panel-content"
+               class="rvo-link">{{ panel_data.assignment.owner.name }}</a>
           {% else %}
             {{ panel_data.assignment.owner.name }}
           {% endif %}
@@ -103,6 +106,8 @@
           {% if service.current_placements %}
             {% for placement in service.current_placements %}
               <a href="{{ placement.colleague_url }}"
+                 hx-get="{{ placement.colleague_url }}"
+                 hx-target="#side_panel-content"
                  class="rvo-item-list__item clickable-row"
                  style="text-decoration: none;
                         color: inherit"
