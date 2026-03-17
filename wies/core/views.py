@@ -763,7 +763,7 @@ class PlacementListView(ListView):
                 colleague = Colleague.objects.get(id=colleague_id)
                 assignment = Assignment.objects.get(id=assignment_id)
                 context["panel_data"] = self._get_assignment_panel_data(assignment, colleague)
-            except (Colleague.DoesNotExist, Assignment.DoesNotExist):
+            except Colleague.DoesNotExist, Assignment.DoesNotExist:
                 pass
         return context
 
