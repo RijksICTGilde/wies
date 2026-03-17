@@ -603,7 +603,7 @@
   width: 13px;
   height: 32px;
   background-color: white;
-  mask-image: url("/static/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
+  mask-image: url("/static/roos/dist/@nl-rvo/assets/icons/functioneel/delta-omlaag.svg");
   mask-repeat: no-repeat;
   mask-size: 100%;
   mask-position: center;

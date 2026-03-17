@@ -10,6 +10,8 @@ This files lists the changes during the lifetime of this project.
 - 246: bump ruff to 0.15.6
 - 246: bump GitHub Actions: login-action v4, build-push-action v7, setup-node v6
 - 246: bump jinja-roos-components (RVO design-tokens 2.2.0, component-library 4.19.0, @nl-rvo/assets 1.0.0)
+- 246: remove vendored RVO CSS and npm dependency — now served via jinja-roos-components
+- 246: remove Node.js build stage from Dockerfile
 - 246: migrate button classes from utrecht-button to rvo-button
 - 246: rename color token logoblauw to lintblauw
 - 221: include business manager assignments in colleague sidepanel
