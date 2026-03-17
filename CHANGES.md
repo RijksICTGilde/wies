@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 247: fix migration that there's only a single primary client
 - 283: Implement HTMX for content swap in side panel
 - 283: Align 'Toon meer' button with filterbar
 - 283: Fix bug opdrachtgever not appearing on 'open opdrachten'
