@@ -73,6 +73,16 @@
   margin-left: calc(var(--sidebar-width) + 0.75rem);
 }
 
+/* Disable scrollbars on tables — our fixed-layout tables don't overflow */
+.rvo-table--responsive {
+  overflow: visible !important;
+}
+
+/* Vertically center cell content (vendor sets baseline) */
+.rvo-table-cell {
+  vertical-align: middle;
+}
+
 /* Adjust logo wordmark margin to center text with emblem */
 .rvo-logo__wordmark {
   margin-top: auto;

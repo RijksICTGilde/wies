@@ -347,7 +347,7 @@ wheels = [
 [[package]]
 name = "jinja-roos-components"
 version = "0.3"
-source = { git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=0.3#13e4480531b5b2752cac298d1a85c90396af2cca" }
+source = { git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=bump-dependencies#e9537874f9802011dfe6fbc7dbf050838202b954" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "jinja2" },
@@ -866,7 +866,7 @@ requires-dist = [
     { name = "authlib", specifier = "==1.6.9" },
     { name = "django", specifier = "==6.0.3" },
     { name = "gunicorn", specifier = "==25.1.0" },
-    { name = "jinja-roos-components", git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=0.3" },
+    { name = "jinja-roos-components", git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=bump-dependencies" },
     { name = "jinja2", specifier = "==3.1.6" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.2.0" },
     { name = "requests", specifier = "==2.32.5" },

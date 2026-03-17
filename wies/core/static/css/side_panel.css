@@ -5,6 +5,7 @@ dialog#side_panel {
   height: 100vh !important;
   min-height: 100vh !important;
   width: 900px !important;
+  max-width: none !important;
   margin: 0 !important;
   border: none !important;
   padding: 0 !important;
@@ -181,7 +182,7 @@ dialog#side_panel.closing::backdrop {
 
 .org-breadcrumb__ancestor:hover {
   text-decoration: underline;
-  color: var(--rvo-color-logoblauw, #154273);
+  color: var(--rvo-color-lintblauw, #154273);
 }
 
 .org-breadcrumb__separator {
