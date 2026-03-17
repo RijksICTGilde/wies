@@ -4,13 +4,17 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ...
+
+## 2026-03-17_2
+
 - 247: fix migration that there's only a single primary client
 - 283: Implement HTMX for content swap in side panel
 - 283: Align 'Toon meer' button with filterbar
 - 283: Fix bug opdrachtgever not appearing on 'open opdrachten'
 - 283: Show single org in filter when only 1 selected
 
-## 2026-03-17
+## 2026-03-17 (invalid, use 2026-03-17_2)
 
 - 221: include business manager assignments in colleague sidepanel
 - 221: show period on assignment cards in colleague side panel
