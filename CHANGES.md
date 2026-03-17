@@ -7,6 +7,8 @@ This files lists the changes during the lifetime of this project.
 - bump htmx to 2.0.8
 - bump Python to 3.14
 - bump Debian base image to trixie (Debian 13)
+- bump ruff to 0.15.6
+- bump GitHub Actions: login-action v4, build-push-action v7, setup-node v6
 - 221: include business manager assignments in colleague sidepanel
 - 221: show period on assignment cards in colleague side panel
 - 241: also delete organizationunits from admin db

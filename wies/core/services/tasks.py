@@ -1,7 +1,11 @@
 """Service functions for managing background tasks."""
 
-from django.db.models import QuerySet
+from typing import TYPE_CHECKING
+
 from django.utils import timezone
+
+if TYPE_CHECKING:
+    from django.db.models import QuerySet
 
 from wies.core.models import Task, User
 
