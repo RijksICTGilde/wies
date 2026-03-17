@@ -1,5 +1,5 @@
 FROM ghcr.io/astral-sh/uv:0.8.0 AS uv
-FROM docker.io/python:3.13-slim-bookworm AS python
+FROM docker.io/python:3.14-slim-trixie AS python
 
 
 ENV PYTHONDONTWRITEBYTECODE=1

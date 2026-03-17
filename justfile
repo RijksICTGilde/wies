@@ -1,7 +1,7 @@
 export COMPOSE_FILE := "docker-compose.yml"
 
 # Vendor package versies
-HTMX_VERSION := "2.0.6"
+HTMX_VERSION := "2.0.8"
 RVO_DESIGN_TOKENS_VERSION := "1.11.0"
 RVO_COMPONENT_LIBRARY_VERSION := "4.11.1"
 

@@ -4,6 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- bump htmx to 2.0.8
+- bump Python to 3.14
+- bump Debian base image to trixie (Debian 13)
 - 221: include business manager assignments in colleague sidepanel
 - 221: show period on assignment cards in colleague side panel
 - 241: also delete organizationunits from admin db
