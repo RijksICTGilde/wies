@@ -392,7 +392,13 @@ class PlacementListView(ListView):
             if self.request.headers.get("HX-Target") == "side_panel-container":
                 return ["parts/side_panel.html"]
             if self.request.headers.get("HX-Target") == "side_panel-content":
-                return ["parts/side_panel_content_response.html"]
+                colleague_id = self.request.GET.get("collega")
+                assignment_id = self.request.GET.get("opdracht")
+
+                if colleague_id and not assignment_id:
+                    return ["parts/colleague_panel_content.html"]
+                if colleague_id and assignment_id:
+                    return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/placement_table_rows.html"]
             return ["parts/filter_and_table_container.html"]
@@ -523,7 +529,7 @@ class PlacementListView(ListView):
 
         return {"label": label, "url": url, "ancestors": ancestors}
 
-    def _get_assignment_panel_data(self, assignment, colleague):
+    def _get_assignment_panel_data(self, assignment):
         """Get assignment panel data for server-side rendering"""
         # Fetch services with their current placements
         services = assignment.services.select_related("skill").prefetch_related(
@@ -765,9 +771,8 @@ class PlacementListView(ListView):
                 pass
         elif colleague_id and assignment_id:
             try:
-                colleague = Colleague.objects.get(id=colleague_id)
                 assignment = Assignment.objects.get(id=assignment_id)
-                context["panel_data"] = self._get_assignment_panel_data(assignment, colleague)
+                context["panel_data"] = self._get_assignment_panel_data(assignment)
             except (Colleague.DoesNotExist, Assignment.DoesNotExist):
                 pass
         return context
@@ -844,7 +849,7 @@ class AssignmentListView(ListView):
             if self.request.headers.get("HX-Target") == "side_panel-container":
                 return ["parts/side_panel.html"]
             if self.request.headers.get("HX-Target") == "side_panel-content":
-                return ["parts/side_panel_content_response.html"]
+                return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/assignment_card_rows.html"]
             return ["parts/filter_and_card_container.html"]
@@ -896,7 +901,7 @@ class AssignmentListView(ListView):
             "assignment": assignment,
             "services": services,
             "org_breadcrumbs": org_breadcrumbs,
-            "owner_url": reverse("home") + f"?collega={assignment.owner.id}" if assignment.owner else "",
+            "owner_url": "",
         }
 
     def get_context_data(self, **kwargs):
