@@ -1,16 +1,20 @@
 <dialog class="rvo-dialog rvo-dialog--wit rvo-dialog--inset-inline-end"
         aria-label="{{ panel_data.panel_title }}"
+        closedby="any"
         id="side_panel">
   <div class="side-panel__header">
     <button type="button"
             class="rvo-button rvo-button--tertiary rvo-button--size-md rvo-button--icon-before"
-            onclick="history.back()">
+            onclick="panelBack()">
       <span class="utrecht-icon rvo-icon rvo-icon-terug rvo-icon--md rvo-link__icon--before"
             role="img"
             aria-label="Terug"></span>
       Terug
     </button>
-    <button autofocus type="button" class="modal-close-button">×</button>
+    <button autofocus
+            type="button"
+            class="modal-close-button"
+            onclick="closeSidePanel()">×</button>
   </div>
-  <div class="rvo-dialog__content">{% include panel_data.panel_content_template %}</div>
+  <div id="side_panel-content" class="rvo-dialog__content">{% include panel_data.panel_content_template %}</div>
 </dialog>

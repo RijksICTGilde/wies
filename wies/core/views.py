@@ -389,6 +389,16 @@ class PlacementListView(ListView):
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if "HX-Request" in self.request.headers:
+            if self.request.headers.get("HX-Target") == "side_panel-container":
+                return ["parts/side_panel.html"]
+            if self.request.headers.get("HX-Target") == "side_panel-content":
+                colleague_id = self.request.GET.get("collega")
+                assignment_id = self.request.GET.get("opdracht")
+
+                if colleague_id and not assignment_id:
+                    return ["parts/colleague_panel_content.html"]
+                if colleague_id and assignment_id:
+                    return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/placement_table_rows.html"]
             return ["parts/filter_and_table_container.html"]
@@ -519,7 +529,7 @@ class PlacementListView(ListView):
 
         return {"label": label, "url": url, "ancestors": ancestors}
 
-    def _get_assignment_panel_data(self, assignment, colleague):
+    def _get_assignment_panel_data(self, assignment):
         """Get assignment panel data for server-side rendering"""
         # Fetch services with their current placements
         services = assignment.services.select_related("skill").prefetch_related(
@@ -711,6 +721,7 @@ class PlacementListView(ListView):
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
         context["active_org_filter_count"] = active_org_filter_count
+        context["active_org_filter_label"] = org_chip_data[0]["label"] if len(org_chip_data) == 1 else ""
         context["org_chip_data"] = org_chip_data
         context["client_modal_count_mode"] = "placements"
 
@@ -760,9 +771,8 @@ class PlacementListView(ListView):
                 pass
         elif colleague_id and assignment_id:
             try:
-                colleague = Colleague.objects.get(id=colleague_id)
                 assignment = Assignment.objects.get(id=assignment_id)
-                context["panel_data"] = self._get_assignment_panel_data(assignment, colleague)
+                context["panel_data"] = self._get_assignment_panel_data(assignment)
             except Colleague.DoesNotExist, Assignment.DoesNotExist:
                 pass
         return context
@@ -836,6 +846,10 @@ class AssignmentListView(ListView):
 
     def get_template_names(self):
         if "HX-Request" in self.request.headers:
+            if self.request.headers.get("HX-Target") == "side_panel-container":
+                return ["parts/side_panel.html"]
+            if self.request.headers.get("HX-Target") == "side_panel-content":
+                return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/assignment_card_rows.html"]
             return ["parts/filter_and_card_container.html"]
@@ -868,10 +882,17 @@ class AssignmentListView(ListView):
             )
         )
 
-        # Build organization breadcrumb
+        # Build organization breadcrumbs from organization_relations
         base_url = reverse("assignment-list")
-        org = assignment.organizations.select_related("parent__parent__parent__parent").first()
-        org_breadcrumb = get_org_breadcrumb(org, base_url) if org else None
+        primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
+            "organization__parent__parent__parent__parent"
+        )
+        involved = assignment.organization_relations.filter(role="INVOLVED").select_related(
+            "organization__parent__parent__parent__parent"
+        )
+        org_breadcrumbs = [
+            {**get_org_breadcrumb(rel.organization, base_url), "role": rel.role} for rel in [*primary, *involved]
+        ]
 
         return {
             "panel_content_template": "parts/assignment_panel_content.html",
@@ -879,7 +900,8 @@ class AssignmentListView(ListView):
             "close_url": self._build_close_url(),
             "assignment": assignment,
             "services": services,
-            "org_breadcrumb": org_breadcrumb,
+            "org_breadcrumbs": org_breadcrumbs,
+            "owner_url": "",
         }
 
     def get_context_data(self, **kwargs):
@@ -982,6 +1004,7 @@ class AssignmentListView(ListView):
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
         context["active_org_filter_count"] = active_org_filter_count
+        context["active_org_filter_label"] = org_chip_data[0]["label"] if len(org_chip_data) == 1 else ""
         context["org_chip_data"] = org_chip_data
         context["client_modal_count_mode"] = "open_assignments"
 

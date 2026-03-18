@@ -1,6 +1,7 @@
 {% for placement in object_list %}
   <tr class="rvo-table-row clickable-row"
-      onclick="window.location.href='{{ placement.colleague_url }}'"
+      hx-get="{{ placement.colleague_url }}"
+      hx-target="#side_panel-container"
       style="cursor: pointer">
     <td class="rvo-table-cell">
       <div class="user-table-cell">
