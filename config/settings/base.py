@@ -131,7 +131,6 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 STATICFILES_DIRS = [
-    BASE_DIR / "node_modules",
     Path(jinja_roos_components.__file__).parent / "static",  # dir 'roos'
 ]
 

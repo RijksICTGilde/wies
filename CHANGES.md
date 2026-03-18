@@ -4,6 +4,27 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 246: bump htmx to 2.0.8
+- 246: bump Python to 3.14
+- 246: bump Debian base image to trixie (Debian 13)
+- 246: bump ruff to 0.15.6
+- 246: bump GitHub Actions: login-action v4, build-push-action v7, setup-node v6
+- 246: bump jinja-roos-components (RVO design-tokens 2.2.0, component-library 4.19.0, @nl-rvo/assets 1.0.0)
+- 246: remove vendored RVO CSS and npm dependency — now served via jinja-roos-components
+- 246: remove Node.js build stage from Dockerfile
+- 246: migrate button classes from utrecht-button to rvo-button
+- 246: rename color token logoblauw to lintblauw
+
+## 2026-03-17_2
+
+- 247: fix migration that there's only a single primary client
+- 283: Implement HTMX for content swap in side panel
+- 283: Align 'Toon meer' button with filterbar
+- 283: Fix bug opdrachtgever not appearing on 'open opdrachten'
+- 283: Show single org in filter when only 1 selected
+
+## 2026-03-17 (invalid, use 2026-03-17_2)
+
 - 221: include business manager assignments in colleague sidepanel
 - 221: show period on assignment cards in colleague side panel
 - 241: also delete organizationunits from admin db

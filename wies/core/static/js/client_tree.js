@@ -286,9 +286,11 @@
         orgInputsContainer.innerHTML = "";
         for (var entry of treeState.explicitSelections) {
           var nodeId = entry[0];
+          var label = entry[1];
           var input = document.createElement("input");
           input.type = "hidden";
           input.dataset.filterInput = "";
+          input.dataset.label = label;
           if (nodeId.startsWith("self-")) {
             input.name = "org_self";
             input.value = nodeId.slice(5);

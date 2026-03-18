@@ -1,3 +1,4 @@
+{% set colleague = panel_data.colleague %}
 <div class="rvo-layout-column rvo-layout-gap--lg">
   <section>
     <div class="card card--horizontal">
@@ -39,6 +40,8 @@
       <div class="rvo-layout-column rvo-layout-gap--sm">
         {% for assignment in panel_data.assignment_list %}
           <a href="{{ assignment.assignment_url }}"
+             hx-get="{{ assignment.assignment_url }}"
+             hx-target="#side_panel-content"
              class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row"
              style="text-decoration: none;
                     color: inherit">

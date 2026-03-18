@@ -90,13 +90,13 @@ Date input:
 ## Icons
 
 ```jinja2
-<c-icon icon="zoek" color="logoblauw" size="md" />
+<c-icon icon="zoek" color="lintblauw" size="md" />
 <c-icon icon="kruis" color="grijs-700" size="sm" />
 ```
 
 Common icons: `zoek`, `kruis`, `user`, `instellingen`
 Sizes: `sm`, `md`, `lg`
-Colors: `logoblauw`, `grijs-700`
+Colors: `lintblauw`, `grijs-700`
 
 ## Modal Dialogs
 
@@ -167,8 +167,8 @@ Max-width container:
 For links with icons, use RVO classes (not jinja-roos-components):
 
 ```jinja2
-<a href="{{ url }}" class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--logoblauw">
-  <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--logoblauw rvo-link__icon--before"
+<a href="{{ url }}" class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw">
+  <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
         role="img" aria-label="User"></span>
   {{ label }}
 </a>

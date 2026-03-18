@@ -38,7 +38,7 @@ def sync_all_otys_iir_records():
                 vacancy_procedures[vacancy_uid] = procedures
                 time.sleep(0.1)  # not hammer server
                 logger.debug("Found %d procedures for vacancy %s", len(procedures), vacancy_uid)
-            except (OSError, ValueError):
+            except OSError, ValueError:
                 logger.warning("Failed to fetch procedures for vacancy %s", vacancy_uid, exc_info=True)
                 vacancy_procedures[vacancy_uid] = []
 

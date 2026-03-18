@@ -183,7 +183,7 @@ html {
   gap: var(--rvo-space-sm);
   font-weight: 700;
   font-size: var(--rvo-font-size-2xl, 1.5rem);
-  color: var(--rvo-color-logoblauw, #154273);
+  color: var(--rvo-color-lintblauw, #154273);
   white-space: nowrap;
   overflow: hidden;
   margin: 0;
@@ -247,7 +247,7 @@ html {
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  color: var(--rvo-color-logoblauw, #154273);
+  color: var(--rvo-color-lintblauw, #154273);
   transition: background-color 0.2s ease;
 }
 
@@ -284,7 +284,7 @@ html {
   justify-content: center;
   position: relative;
   border-radius: 4px;
-  color: var(--rvo-color-logoblauw, #154273);
+  color: var(--rvo-color-lintblauw, #154273);
   transition: background-color 0.2s ease;
   width: 40px;
   height: 40px;
@@ -312,7 +312,7 @@ html {
   display: block;
   width: 20px;
   height: 2px;
-  background-color: var(--rvo-color-logoblauw, #154273);
+  background-color: var(--rvo-color-lintblauw, #154273);
   position: absolute;
   left: 0;
 }
@@ -328,8 +328,8 @@ html {
 /* Middle line using background */
 .menubar__mobile-toggle-icon--hamburger {
   background: linear-gradient(
-    var(--rvo-color-logoblauw, #154273) 0%,
-    var(--rvo-color-logoblauw, #154273) 100%
+    var(--rvo-color-lintblauw, #154273) 0%,
+    var(--rvo-color-lintblauw, #154273) 100%
   );
   background-position: center;
   background-repeat: no-repeat;
@@ -555,7 +555,7 @@ html {
   align-items: center;
   justify-content: center;
   font-weight: var(--rvo-font-weight-semibold);
-  color: var(--rvo-color-logoblauw);
+  color: var(--rvo-color-lintblauw);
   font-family:
     var(--rvo-font-sans-serif-font-family),
     var(--rvo-font-sans-serif-fallback-font-family), sans-serif;

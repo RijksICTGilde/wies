@@ -26,16 +26,18 @@ document.addEventListener("click", function (e) {
 function updateOrgFilterButtonText() {
   const button = document.getElementById("org-filter-button");
   if (!button) return;
-  const count = document.querySelectorAll(
+  const inputs = document.querySelectorAll(
     '#org-filter-inputs input[type="hidden"]',
-  ).length;
+  );
   const textSpan = button.querySelector(".org-filter-trigger__text");
   if (textSpan) {
-    if (count === 0) {
+    if (inputs.length === 0) {
       textSpan.innerHTML =
         '<span class="org-filter-trigger__placeholder">Selecteer</span>';
+    } else if (inputs.length === 1) {
+      textSpan.textContent = inputs[0].dataset.label || "1 geselecteerd";
     } else {
-      textSpan.textContent = count + " geselecteerd";
+      textSpan.textContent = inputs.length + " geselecteerd";
     }
   }
 }
@@ -190,7 +192,13 @@ function setupDateRangeListeners(formSelector) {
 
 document.addEventListener("DOMContentLoaded", function () {
   // Handle back button navigation - reload page to sync filters with URL
+  // Skip reload when side panel handles its own popstate (panel open/close)
   window.addEventListener("popstate", function () {
+    const url = new URL(window.location);
+    const panel = document.getElementById("side_panel");
+    const hasPanelParam =
+      url.searchParams.has("collega") || url.searchParams.has("opdracht");
+    if (hasPanelParam || (panel && panel.open)) return;
     window.location.href = window.location.href;
   });
 
@@ -289,10 +297,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (activeFilters > 0) {
         filterText.textContent = `Filters (${activeFilters})`;
-        filterButton.classList.add("utrecht-button--active");
+        filterButton.classList.add("filter-button--active");
       } else {
         filterText.textContent = "Filters";
-        filterButton.classList.remove("utrecht-button--active");
+        filterButton.classList.remove("filter-button--active");
       }
     }
 
