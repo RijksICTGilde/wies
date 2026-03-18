@@ -14,6 +14,7 @@ This files lists the changes during the lifetime of this project.
 - 246: remove Node.js build stage from Dockerfile
 - 246: migrate button classes from utrecht-button to rvo-button
 - 246: rename color token logoblauw to lintblauw
+- 253: persist filter and sort parameters in URL
 
 ## 2026-03-17_2
 
