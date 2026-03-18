@@ -12,7 +12,7 @@ sort_state can be: 'ascending', 'descending', or None
     hx-get="{{ get_toggle_sort_url(request, field) }}"
     hx-target="{{ target }}"
     hx-swap="outerHTML"
-    hx-push-url="true">
+    hx-replace-url="true">
   <div class="rvo-table-header__sortable-container">
     {{ label }}
     <svg width="39"
