@@ -70,7 +70,7 @@
   font-size: 0.75rem;
   font-weight: 700;
   border-radius: 11px;
-  background: var(--rvo-color-logoblauw, #154273);
+  background: var(--rvo-color-lintblauw, #154273);
   color: #fff;
 }
 
@@ -183,11 +183,11 @@ li.client-tree-node > label input[type="checkbox"] {
   height: 16px;
   flex-shrink: 0;
   cursor: pointer;
-  accent-color: var(--rvo-color-logoblauw-600, #738eab);
+  accent-color: var(--rvo-color-lintblauw-600, #738eab);
 }
 
 li.client-tree-node.checked > label input[type="checkbox"] {
-  accent-color: var(--rvo-color-logoblauw, #154273);
+  accent-color: var(--rvo-color-lintblauw, #154273);
 }
 
 /* Fold/expand toggle */
@@ -263,7 +263,7 @@ li.client-tree-node.self-node > label {
 
 /* Checked highlight */
 li.client-tree-node.checked > label {
-  color: var(--rvo-color-logoblauw, #2980b9);
+  color: var(--rvo-color-lintblauw, #2980b9);
   font-weight: 700;
 }
 

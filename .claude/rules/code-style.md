@@ -2,7 +2,7 @@
 
 ## Python
 
-- Python 3.13+ with type hints on public functions
+- Python 3.14+ with type hints on public functions
 - Use `uv` for package management
 - Format with `ruff format`, lint with `ruff check --fix`
 

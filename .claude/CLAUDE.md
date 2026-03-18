@@ -23,7 +23,7 @@ Language: Dutch UI, English code.
 
 ## Code Style
 
-- Python 3.13+ with type hints
+- Python 3.14+ with type hints
 - Django models in `wies/core/models.py`
 - Views in `wies/core/views.py`
 - Forms use RVOMixin for styling

@@ -297,10 +297,10 @@ document.addEventListener("DOMContentLoaded", function () {
 
       if (activeFilters > 0) {
         filterText.textContent = `Filters (${activeFilters})`;
-        filterButton.classList.add("utrecht-button--active");
+        filterButton.classList.add("filter-button--active");
       } else {
         filterText.textContent = "Filters";
-        filterButton.classList.remove("utrecht-button--active");
+        filterButton.classList.remove("filter-button--active");
       }
     }
 

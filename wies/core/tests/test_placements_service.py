@@ -36,7 +36,7 @@ class ParseDateDmyTest(TestCase):
 
     def test_invalid_date_raises_error(self):
         """Test that invalid date raises ValueError"""
-        with pytest.raises(ValueError, match=r"day is out of range"):
+        with pytest.raises(ValueError, match=r"day is out of range|must be in range"):
             parse_date_dmy("31-02-2025")  # February 31st doesn't exist
 
 
@@ -65,6 +65,7 @@ Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,2025-01-01,28-02-
             or "format" in error_message
             or "match" in error_message
             or "day is out of range" in error_message
+            or "must be in range" in error_message
         )
 
     # Core Validation Tests

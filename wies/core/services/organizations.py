@@ -52,7 +52,7 @@ class SyncResult:
     deleted: int = 0
     errors: list[str] = field(default_factory=list)
 
-    def __add__(self, other: "SyncResult") -> "SyncResult":
+    def __add__(self, other: SyncResult) -> SyncResult:
         """Combine two SyncResults."""
         return SyncResult(
             created=self.created + other.created,
