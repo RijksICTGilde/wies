@@ -1,0 +1,13 @@
+{% if org_suggestions %}
+  <ul class="search-suggestions" role="listbox">
+    <li class="search-suggestions__header">Bedoelde je:</li>
+    {% for org in org_suggestions %}
+      <li>
+        <button type="button"
+                class="search-suggestion"
+                data-org-id="{{ org.id }}"
+                data-org-label="{{ org.label or org.name }}">{{ org.label or org.name }}</button>
+      </li>
+    {% endfor %}
+  </ul>
+{% endif %}

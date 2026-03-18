@@ -25,6 +25,12 @@
       hx-push-url="true"
       hx-trigger="change,input delay:500ms from:[data-filter-input]"
       hx-include="[data-filter-input]">
+  <!-- Hidden input for search filter (updated by JS on Enter) -->
+  <input type="hidden"
+         id="search-filter-value"
+         name="zoek"
+         value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}"
+         data-filter-input />
   <!-- Hidden inputs for organization filter (updated by client_tree.js on apply) -->
   <div id="org-filter-inputs">
     {% for chip in org_chip_data %}

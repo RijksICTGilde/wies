@@ -48,9 +48,9 @@ function removeFilter(formSelector, filterName, filterType, filterValue) {
 
   if (filterType === "zoek") {
     const searchInput = document.querySelector("#search");
-    if (searchInput) {
-      searchInput.value = "";
-    }
+    if (searchInput) searchInput.value = "";
+    const hiddenSearch = document.getElementById("search-filter-value");
+    if (hiddenSearch) hiddenSearch.value = "";
   } else if (filterType === "select") {
     const selectElement = form.querySelector(`[name="${filterName}"]`);
     if (selectElement) {
@@ -350,7 +350,16 @@ document.addEventListener("DOMContentLoaded", function () {
       input.value = "";
       wrapper.classList.remove("has-value");
       input.focus();
-      input.dispatchEvent(new Event("input", { bubbles: true }));
+      // Clear suggestions dropdown
+      var suggestionsContainer = wrapper.querySelector(
+        "#search-suggestions-container",
+      );
+      if (suggestionsContainer) suggestionsContainer.innerHTML = "";
+      // Clear hidden search filter and refresh results
+      var hiddenSearch = document.getElementById("search-filter-value");
+      if (hiddenSearch) hiddenSearch.value = "";
+      var sidebarForm = document.querySelector(".filter-sidebar-form");
+      if (sidebarForm) htmx.trigger(sidebarForm, "change");
     });
   }
 
@@ -361,5 +370,66 @@ document.addEventListener("DOMContentLoaded", function () {
     event.detail.target
       .querySelectorAll(".search-field-wrapper")
       .forEach(initSearchClear);
+  });
+
+  // --------------------------------------------------------------------------
+  // Search submit on Enter: move value to hidden input, clear visible input
+  // --------------------------------------------------------------------------
+  document.body.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    var input = e.target.closest("#search");
+    if (!input) return;
+    e.preventDefault();
+
+    var value = input.value.trim();
+    if (!value) return;
+
+    // Move value to hidden filter input and clear visible input
+    var hiddenSearch = document.getElementById("search-filter-value");
+    if (hiddenSearch) hiddenSearch.value = value;
+    input.value = "";
+    var wrapper = input.closest(".search-field-wrapper");
+    if (wrapper) wrapper.classList.remove("has-value");
+
+    // Clear suggestions
+    var suggestionsContainer = document.getElementById(
+      "search-suggestions-container",
+    );
+    if (suggestionsContainer) suggestionsContainer.innerHTML = "";
+
+    // Trigger sidebar form to fire HTMX request with the search value
+    var form = document.querySelector(".filter-sidebar-form");
+    if (form) htmx.trigger(form, "change");
+  });
+
+  // --------------------------------------------------------------------------
+  // Search org suggestions: click to activate as org filter
+  // --------------------------------------------------------------------------
+  document.body.addEventListener("click", function (e) {
+    var btn = e.target.closest(".search-suggestion");
+    if (!btn) return;
+
+    var orgId = btn.dataset.orgId;
+    var orgLabel = btn.dataset.orgLabel;
+
+    // Clear search input
+    var searchInput = document.querySelector("#search");
+    if (searchInput) searchInput.value = "";
+
+    // Add org filter hidden input
+    var container = document.getElementById("org-filter-inputs");
+    if (container) {
+      var input = document.createElement("input");
+      input.type = "hidden";
+      input.name = "org";
+      input.value = orgId;
+      input.setAttribute("data-filter-input", "");
+      input.setAttribute("data-label", orgLabel);
+      container.appendChild(input);
+    }
+
+    // Trigger filter form change to fire HTMX request
+    var form = document.querySelector(".filter-sidebar-form");
+    if (form) htmx.trigger(form, "change");
   });
 });

@@ -914,62 +914,8 @@ class PlacementSearchTest(TestCase):
         qs = self._search("Cloud Migratie")
         assert p.id in list(qs.values_list("id", flat=True))
 
-    def test_search_by_organization_name(self):
-        p = self._create_placement(org=self.org)
-        other = self._create_placement(colleague_name="Andere Collega")
+    def test_search_does_not_match_organization_name(self):
+        """Text search no longer matches org names — use the org filter suggestion instead."""
+        self._create_placement(org=self.org)
         qs = self._search("Rijkswaterstaat")
-        ids = list(qs.values_list("id", flat=True))
-        assert p.id in ids
-        assert other.id not in ids
-
-    def test_search_by_organization_label(self):
-        p = self._create_placement(org=self.org)
-        qs = self._search("RWS Hoofdkantoor")
-        assert p.id in list(qs.values_list("id", flat=True))
-
-    def test_search_by_organization_abbreviation(self):
-        p = self._create_placement(org=self.org)
-        qs = self._search("RWS")
-        assert p.id in list(qs.values_list("id", flat=True))
-
-    def test_search_by_organization_abbreviation_case_insensitive(self):
-        p = self._create_placement(org=self.org)
-        qs = self._search("rws")
-        assert p.id in list(qs.values_list("id", flat=True))
-
-    def test_search_no_duplicates_with_multiple_matching_orgs(self):
-        """Assignment with multiple matching orgs should return the placement only once."""
-        org2 = OrganizationUnit.objects.create(
-            name="RWS Oost-Nederland",
-            label="RWS ON",
-        )
-        colleague = Colleague.objects.create(
-            name="Duplicate Test",
-            email="dup@rijksoverheid.nl",
-            source="wies",
-        )
-        assignment = Assignment.objects.create(
-            name="Multi Org Assignment",
-            status="INGEVULD",
-            source="wies",
-            start_date=date(2025, 1, 1),
-            end_date=date(2030, 1, 1),
-        )
-        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=self.org)
-        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=org2, role="INVOLVED")
-        service = Service.objects.create(
-            assignment=assignment,
-            description="Service",
-            skill=self.skill,
-            source="wies",
-        )
-        p = Placement.objects.create(
-            colleague=colleague,
-            service=service,
-            period_source="ASSIGNMENT",
-            source="wies",
-        )
-
-        qs = self._search("RWS")
-        ids = list(qs.values_list("id", flat=True))
-        assert ids.count(p.id) == 1, "Placement should appear exactly once despite multiple matching orgs"
+        assert not qs.exists()
