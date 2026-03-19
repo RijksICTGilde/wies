@@ -19,7 +19,7 @@ setup:
   docker compose run --rm django python manage.py loaddata base_dummy_data
   docker compose run --rm django python manage.py assign_random_labels_to_colleagues
   docker compose run --rm django python manage.py createsuperuser --noinput
-  docker compose run --rm django python manage.py add_developer_user
+  docker compose run --rm django python manage.py ensure_initial_user
 
 # Generate full dummy data: sync organizations + create dummy colleagues/assignments/placements
 load-full-data:

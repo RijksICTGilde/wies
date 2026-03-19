@@ -16,7 +16,7 @@ class AutoLoginMiddleware:
 
     def __call__(self, request):
         if not request.user.is_authenticated:
-            dev_email = os.environ.get("DEV_EMAIL", "")
+            dev_email = os.environ.get("INITIAL_USER_EMAIL", "")
             user = None
             if dev_email:
                 user = User.objects.filter(email=dev_email).first()

@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 245: enable loading initial user via env var (also in production)
 - 246: bump htmx to 2.0.8
 - 246: bump Python to 3.14
 - 246: bump Debian base image to trixie (Debian 13)
@@ -14,6 +15,7 @@ This files lists the changes during the lifetime of this project.
 - 246: remove Node.js build stage from Dockerfile
 - 246: migrate button classes from utrecht-button to rvo-button
 - 246: rename color token logoblauw to lintblauw
+- 253: persist filter and sort parameters in URL
 
 ## 2026-03-17_2
 

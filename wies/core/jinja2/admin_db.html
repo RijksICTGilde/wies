@@ -29,12 +29,6 @@
       <input type="hidden" name="action" value="load_base_data">
       <button type="submit">Load base_dummy_data</button>
     </form>
-    <h2>Add developer user</h2>
-    <form method="post">
-      {{ get_csrf_hidden_input(request) }}
-      <input type="hidden" name="action" value="add_developer_user">
-      <button type="submit">Add dev user</button>
-    </form>
     <h2>Download database dump</h2>
     <form method="post">
       {{ get_csrf_hidden_input(request) }}
