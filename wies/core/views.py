@@ -163,9 +163,6 @@ def admin_db(request):
         elif action == "load_base_data":
             management.call_command("loaddata", "base_dummy_data.json")
             messages.success(request, "Data geladen uit base_dummy_data.json")
-        elif action == "add_dev_user":
-            management.call_command("add_developer_user")
-            messages.success(request, "Developer user added")
         elif action == "export_data":
             # Use dumpdata's native --output argument with temp file
             with tempfile.NamedTemporaryFile(mode="r", suffix=".json", delete=False) as tmp:
