@@ -297,6 +297,7 @@ class PlacementListView(ListView):
                 Q(colleague__name__icontains=search_filter)
                 | Q(service__assignment__name__icontains=search_filter)
                 | Q(service__assignment__extra_info__icontains=search_filter)
+                | Q(service__assignment__organizations__label__icontains=search_filter)
             )
 
         order_mapping = {

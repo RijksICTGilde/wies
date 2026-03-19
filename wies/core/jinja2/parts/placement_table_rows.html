@@ -18,7 +18,7 @@
         {% set clients = placement.service.assignment.sorted_clients %}
         {% if clients %}
           <div class="rvo-text--sm rvo-text--subtle">
-            {{ clients[0].organization.name }}
+            {{ clients[0].organization.label or clients[0].organization.name }}
             {% if clients|length > 1 %}(+{{ clients|length - 1 }} meer){% endif %}
           </div>
         {% endif %}
