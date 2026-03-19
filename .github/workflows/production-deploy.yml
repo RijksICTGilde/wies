@@ -65,11 +65,11 @@ jobs:
     steps:
       - name: Deploy to ZAD
         id: deploy
-        uses: GliderGeek/zad-actions/deploy@feature/support-mulitple-component-deploy
+        uses: RijksICTGilde/zad-actions/deploy@fix-multicomponent-urls-output
         with:
           api-key: ${{ secrets.ZAD_API_KEY }}
           project-id: wies
-          deployment-name: staging2
+          deployment-name: productie
           components: |
             [
               {"name": "frontend", "image": "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.version }}"},
