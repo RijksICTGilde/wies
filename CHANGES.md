@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 245: enable loading initial user via env var (also in production)
 - 246: bump htmx to 2.0.8
 - 246: bump Python to 3.14
 - 246: bump Debian base image to trixie (Debian 13)
