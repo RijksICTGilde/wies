@@ -20,7 +20,7 @@
               hx-get="{{ url('home') }}"
               hx-target="#filter-and-table-container"
               hx-swap="innerHTML settle:0"
-              hx-push-url="true"
+              hx-replace-url="true"
               hx-trigger="change,input delay:500ms from:[data-filter-input]"
               hx-include="[data-filter-input]">
           <div class="search-field-wrapper">
