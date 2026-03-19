@@ -914,8 +914,14 @@ class PlacementSearchTest(TestCase):
         qs = self._search("Cloud Migratie")
         assert p.id in list(qs.values_list("id", flat=True))
 
+    def test_search_matches_organization_label(self):
+        """Text search matches organization label."""
+        p = self._create_placement(org=self.org)
+        qs = self._search("RWS Hoofdkantoor")
+        assert p.id in list(qs.values_list("id", flat=True))
+
     def test_search_does_not_match_organization_name(self):
-        """Text search no longer matches org names — use the org filter suggestion instead."""
+        """Text search does not match org name field — only label is searched."""
         self._create_placement(org=self.org)
         qs = self._search("Rijkswaterstaat")
         assert not qs.exists()
