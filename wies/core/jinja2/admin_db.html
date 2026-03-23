@@ -50,7 +50,7 @@
     </form>
     <h2>Synchroniseer Organisaties</h2>
     <form method="post"
-          hx-post="{{ url('djadmin-db') }}"
+          hx-post="{{ url('staff') }}"
           hx-target="#task-list"
           hx-swap="innerHTML">
       {{ get_csrf_hidden_input(request) }}
