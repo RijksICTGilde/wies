@@ -403,6 +403,36 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // --------------------------------------------------------------------------
+  // Close suggestions dropdown on click-outside or Escape; reopen on focus
+  // --------------------------------------------------------------------------
+  document.body.addEventListener("click", function (e) {
+    var container = document.getElementById("search-suggestions-container");
+    if (!container) return;
+    if (e.target.closest(".search-field-wrapper")) {
+      // Clicking inside the search area: show suggestions if hidden
+      container.hidden = false;
+    } else {
+      container.hidden = true;
+    }
+  });
+
+  document.body.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    var container = document.getElementById("search-suggestions-container");
+    if (container && !container.hidden && container.innerHTML.trim()) {
+      container.hidden = true;
+      e.stopPropagation();
+    }
+  });
+
+  // When HTMX swaps in new suggestions, ensure the container is visible
+  document.body.addEventListener("htmx:afterSwap", function (e) {
+    if (e.detail.target.id === "search-suggestions-container") {
+      e.detail.target.hidden = false;
+    }
+  });
+
+  // --------------------------------------------------------------------------
   // Search org suggestions: click to activate as org filter
   // --------------------------------------------------------------------------
   document.body.addEventListener("click", function (e) {
