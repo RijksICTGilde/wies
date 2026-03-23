@@ -39,7 +39,6 @@ NUM_PLACEMENTS = 800
 ACTIVE_RATIO = 0.85
 RIJKSOVERHEID_RATIO = 0.90
 
-ASSIGNMENT_STATUS_WEIGHTS = {"INGEVULD": 70, "OPEN": 30}
 SOURCE_WEIGHTS = {"otys_iir": 85, "wies": 15}
 SERVICE_SKILL_PROBABILITY = 0.9
 SINGLE_PLACEMENT_THRESHOLD = 0.80
@@ -551,10 +550,8 @@ class Command(BaseCommand):
 
         # ── 5. Assignments ───────────────────────────────────────────────
         assignments = []
-        assignment_statuses: dict[int, str] = {}
 
         for _ in range(NUM_ASSIGNMENTS):
-            status = weighted_choice(rng, ASSIGNMENT_STATUS_WEIGHTS)
             is_active = rng.random() < ACTIVE_RATIO
             start, end = active_dates(rng, today) if is_active else historic_dates(rng, today)
 
@@ -562,14 +559,12 @@ class Command(BaseCommand):
                 name=generate_assignment_name(rng),
                 start_date=start,
                 end_date=end,
-                status=status,
                 extra_info="",
                 owner=rng.choice(colleagues),
                 source=weighted_choice(rng, SOURCE_WEIGHTS),
                 source_id="",
             )
             assignments.append(assignment)
-            assignment_statuses[assignment.id] = status
         self.stdout.write(f"Assignments: {len(assignments)}")
 
         # ── 6. Assignment ↔ Organization links ───────────────────────────
@@ -587,7 +582,7 @@ class Command(BaseCommand):
             )
 
         # ── 7. Services ──────────────────────────────────────────────────
-        assignment_services: dict[int, list[Service]] = {a.id: [] for a in assignments}
+        all_services: list[Service] = []
 
         # First pass: each assignment gets at least 1 service
         shuffled_assignments = list(assignments)
@@ -603,16 +598,12 @@ class Command(BaseCommand):
                 source=weighted_choice(rng, SOURCE_WEIGHTS),
                 source_id="",
             )
-            assignment_services[assignment.id].append(service)
+            all_services.append(service)
 
-        # Second pass: add extra services to INGEVULD assignments for enough placements
-        ingevuld_assignments = [a for a in assignments if assignment_statuses[a.id] == "INGEVULD"]
+        # Second pass: add extra services until we have enough for placements
         target_placeable = NUM_PLACEMENTS + 50
-        current_placeable = sum(
-            len(svcs) for a_id, svcs in assignment_services.items() if assignment_statuses[a_id] == "INGEVULD"
-        )
-        while current_placeable < target_placeable:
-            assignment = rng.choice(ingevuld_assignments)
+        while len(all_services) < target_placeable:
+            assignment = rng.choice(assignments)
             skill = rng.choice(skills) if rng.random() < SERVICE_SKILL_PROBABILITY else None
             service = Service.objects.create(
                 assignment=assignment,
@@ -622,17 +613,12 @@ class Command(BaseCommand):
                 source=weighted_choice(rng, SOURCE_WEIGHTS),
                 source_id="",
             )
-            assignment_services[assignment.id].append(service)
-            current_placeable += 1
+            all_services.append(service)
 
-        total_services = Service.objects.count()
-        self.stdout.write(f"Services: {total_services}")
+        self.stdout.write(f"Services: {len(all_services)}")
 
         # ── 8. Placements ────────────────────────────────────────────────
-        placeable_services = []
-        for a_id, svcs in assignment_services.items():
-            if assignment_statuses[a_id] == "INGEVULD":
-                placeable_services.extend(svcs)
+        placeable_services = list(all_services)
         rng.shuffle(placeable_services)
 
         # Determine how many placements each colleague gets

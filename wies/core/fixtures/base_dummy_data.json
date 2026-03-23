@@ -1171,7 +1171,6 @@
       "name": "Opzet Data Platform Onderwijs",
       "start_date": "2024-10-15",
       "end_date": "2026-03-02",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 6,
       "source": "otys_iir",
@@ -1185,7 +1184,6 @@
       "name": "Proof of Concept Managementinformatie Informatiebeveiliging",
       "start_date": "2024-11-11",
       "end_date": "2026-08-26",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 43,
       "source": "otys_iir",
@@ -1199,7 +1197,6 @@
       "name": "Optimalisatie Open Data",
       "start_date": "2023-04-13",
       "end_date": "2023-07-16",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 35,
       "source": "otys_iir",
@@ -1213,7 +1210,6 @@
       "name": "Doorontwikkeling Architectuur Digitale Toegankelijkheid",
       "start_date": "2022-01-14",
       "end_date": "2023-07-08",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 29,
       "source": "otys_iir",
@@ -1227,7 +1223,6 @@
       "name": "Uitrol Zaaksysteem Digitale Overheid",
       "start_date": "2026-05-24",
       "end_date": "2028-02-14",
-      "status": "OPEN",
       "extra_info": "",
       "owner": 9,
       "source": "otys_iir",
@@ -1241,7 +1236,6 @@
       "name": "Algoritmeregister Dienstverleningsportaal",
       "start_date": "2024-07-26",
       "end_date": "2026-08-10",
-      "status": "OPEN",
       "extra_info": "",
       "owner": 14,
       "source": "otys_iir",
@@ -1255,7 +1249,6 @@
       "name": "Handhaving Cloudinfrastructuur",
       "start_date": "2024-11-01",
       "end_date": "2026-05-05",
-      "status": "OPEN",
       "extra_info": "",
       "owner": 3,
       "source": "otys_iir",
@@ -1269,7 +1262,6 @@
       "name": "Wonen Ketenintegratie",
       "start_date": "2024-11-12",
       "end_date": "2026-10-31",
-      "status": "OPEN",
       "extra_info": "",
       "owner": 36,
       "source": "otys_iir",
@@ -1283,7 +1275,6 @@
       "name": "Doorontwikkeling Portaal Handhaving",
       "start_date": "2022-12-16",
       "end_date": "2023-12-20",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 9,
       "source": "otys_iir",
@@ -1297,7 +1288,6 @@
       "name": "Opzet Zaaksysteem Vergunningen",
       "start_date": "2022-08-10",
       "end_date": "2023-05-10",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 50,
       "source": "otys_iir",
@@ -1311,7 +1301,6 @@
       "name": "Vernieuwing Ketenintegratie Cybersecurity",
       "start_date": "2023-06-03",
       "end_date": "2023-12-31",
-      "status": "OPEN",
       "extra_info": "",
       "owner": 12,
       "source": "otys_iir",
@@ -1325,7 +1314,6 @@
       "name": "Optimalisatie Managementinformatie Bedrijfsvoering",
       "start_date": "2023-11-27",
       "end_date": "2024-07-10",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 3,
       "source": "wies",
@@ -1339,7 +1327,6 @@
       "name": "Opzet Wetgevingskalender",
       "start_date": "2025-06-03",
       "end_date": "2026-08-25",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 2,
       "source": "otys_iir",
@@ -1353,7 +1340,6 @@
       "name": "Circulaire Economie Managementinformatie",
       "start_date": "2024-04-29",
       "end_date": "2026-09-14",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 44,
       "source": "wies",
@@ -1367,7 +1353,6 @@
       "name": "Vernieuwing Zorgdata",
       "start_date": "2022-04-21",
       "end_date": "2023-10-12",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 17,
       "source": "otys_iir",
@@ -1381,7 +1366,6 @@
       "name": "Optimalisatie Burgerzaken",
       "start_date": "2026-05-03",
       "end_date": "2027-06-18",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 37,
       "source": "otys_iir",
@@ -1395,7 +1379,6 @@
       "name": "Infrastructuur Registratie",
       "start_date": "2025-08-03",
       "end_date": "2027-05-06",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 24,
       "source": "otys_iir",
@@ -1409,7 +1392,6 @@
       "name": "Uitrol Meldingensysteem Personeelsplanning",
       "start_date": "2023-09-19",
       "end_date": "2024-11-21",
-      "status": "OPEN",
       "extra_info": "",
       "owner": 43,
       "source": "otys_iir",
@@ -1423,7 +1405,6 @@
       "name": "Burgerzaken Dashboard",
       "start_date": "2024-06-27",
       "end_date": "2026-10-20",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 40,
       "source": "otys_iir",
@@ -1437,7 +1418,6 @@
       "name": "Integratie Klimaatadaptatie",
       "start_date": "2024-12-25",
       "end_date": "2026-07-04",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 29,
       "source": "otys_iir",
@@ -1451,7 +1431,6 @@
       "name": "Open Data Architectuur",
       "start_date": "2026-05-13",
       "end_date": "2027-01-31",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 33,
       "source": "otys_iir",
@@ -1465,7 +1444,6 @@
       "name": "Personeelsplanning Werkplek",
       "start_date": "2026-03-28",
       "end_date": "2027-02-21",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 13,
       "source": "otys_iir",
@@ -1479,7 +1457,6 @@
       "name": "Ontwikkeling Wonen",
       "start_date": "2022-08-28",
       "end_date": "2023-07-17",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 45,
       "source": "otys_iir",
@@ -1493,7 +1470,6 @@
       "name": "Transitie Werkplek Digitale Toegankelijkheid",
       "start_date": "2026-01-22",
       "end_date": "2026-04-27",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 45,
       "source": "otys_iir",
@@ -1507,7 +1483,6 @@
       "name": "Modernisering Inkoop en Aanbesteding",
       "start_date": "2026-07-05",
       "end_date": "2027-02-04",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 30,
       "source": "otys_iir",
@@ -1521,7 +1496,6 @@
       "name": "Financieel Beheer Meldingensysteem",
       "start_date": "2026-04-01",
       "end_date": "2027-09-26",
-      "status": "OPEN",
       "extra_info": "",
       "owner": 28,
       "source": "otys_iir",
@@ -1535,7 +1509,6 @@
       "name": "Opzet Financieel Beheer",
       "start_date": "2024-12-01",
       "end_date": "2025-10-17",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 41,
       "source": "otys_iir",
@@ -1549,7 +1522,6 @@
       "name": "Uitrol Werkplek Begrotingscyclus",
       "start_date": "2024-10-19",
       "end_date": "2026-10-30",
-      "status": "OPEN",
       "extra_info": "",
       "owner": 22,
       "source": "otys_iir",
@@ -1563,7 +1535,6 @@
       "name": "Algoritmeregister Informatiesysteem",
       "start_date": "2024-10-11",
       "end_date": "2026-06-05",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 27,
       "source": "otys_iir",
@@ -1577,7 +1548,6 @@
       "name": "Herontwerp Bedrijfsvoering",
       "start_date": "2024-09-16",
       "end_date": "2026-02-18",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 49,
       "source": "otys_iir",
@@ -1591,7 +1561,6 @@
       "name": "Multi org",
       "start_date": "2025-01-01",
       "end_date": "2026-12-31",
-      "status": "INGEVULD",
       "extra_info": "",
       "owner": 6,
       "source": "wies",
@@ -1904,7 +1873,8 @@
       "skill": 14,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -1916,7 +1886,8 @@
       "skill": 12,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -1928,7 +1899,8 @@
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -1940,7 +1912,8 @@
       "skill": 21,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -1952,7 +1925,8 @@
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -1964,7 +1938,8 @@
       "skill": 24,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -1976,7 +1951,8 @@
       "skill": 28,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -1988,7 +1964,8 @@
       "skill": 25,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2000,7 +1977,8 @@
       "skill": 11,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2012,7 +1990,8 @@
       "skill": 16,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2024,7 +2003,8 @@
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2036,7 +2016,8 @@
       "skill": 1,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2048,7 +2029,8 @@
       "skill": 24,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2060,7 +2042,8 @@
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2072,7 +2055,8 @@
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2084,7 +2068,8 @@
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2096,7 +2081,8 @@
       "skill": 16,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2108,7 +2094,8 @@
       "skill": 24,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2120,7 +2107,8 @@
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2132,7 +2120,8 @@
       "skill": 7,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2144,7 +2133,8 @@
       "skill": 25,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2156,7 +2146,8 @@
       "skill": 16,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2168,7 +2159,8 @@
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2180,7 +2172,8 @@
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2192,7 +2185,8 @@
       "skill": 6,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2204,7 +2198,8 @@
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2216,7 +2211,8 @@
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2228,7 +2224,8 @@
       "skill": 4,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2240,7 +2237,8 @@
       "skill": 15,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2252,7 +2250,8 @@
       "skill": 29,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2264,7 +2263,8 @@
       "skill": 3,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2276,7 +2276,8 @@
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2288,7 +2289,8 @@
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2300,7 +2302,8 @@
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2312,7 +2315,8 @@
       "skill": 15,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2324,7 +2328,8 @@
       "skill": 20,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2336,7 +2341,8 @@
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2348,7 +2354,8 @@
       "skill": 6,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2360,7 +2367,8 @@
       "skill": 14,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2372,7 +2380,8 @@
       "skill": 8,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2384,7 +2393,8 @@
       "skill": 8,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2396,7 +2406,8 @@
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2408,7 +2419,8 @@
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2420,7 +2432,8 @@
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2432,7 +2445,8 @@
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2444,7 +2458,8 @@
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2456,7 +2471,8 @@
       "skill": 2,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2468,7 +2484,8 @@
       "skill": 3,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2480,7 +2497,8 @@
       "skill": 1,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2492,7 +2510,8 @@
       "skill": 25,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2504,7 +2523,8 @@
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2516,7 +2536,8 @@
       "skill": 16,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2528,7 +2549,8 @@
       "skill": 22,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2540,7 +2562,8 @@
       "skill": 16,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2552,7 +2575,8 @@
       "skill": 18,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2564,7 +2588,8 @@
       "skill": 4,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2576,7 +2601,8 @@
       "skill": 1,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2588,7 +2614,8 @@
       "skill": 7,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2600,7 +2627,8 @@
       "skill": 25,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2612,7 +2640,8 @@
       "skill": 10,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2624,7 +2653,8 @@
       "skill": 21,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2636,7 +2666,8 @@
       "skill": 1,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2648,7 +2679,8 @@
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2660,7 +2692,8 @@
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2672,7 +2705,8 @@
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2684,7 +2718,8 @@
       "skill": 18,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2696,7 +2731,8 @@
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2708,7 +2744,8 @@
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2720,7 +2757,8 @@
       "skill": 10,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2732,7 +2770,8 @@
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2744,7 +2783,8 @@
       "skill": 25,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2756,7 +2796,8 @@
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2768,7 +2809,8 @@
       "skill": 14,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2780,7 +2822,8 @@
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2792,7 +2835,8 @@
       "skill": 21,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2804,7 +2848,8 @@
       "skill": 19,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2816,7 +2861,8 @@
       "skill": 15,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2828,7 +2874,8 @@
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2840,7 +2887,8 @@
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2852,7 +2900,8 @@
       "skill": 29,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2864,7 +2913,8 @@
       "skill": 25,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2876,7 +2926,8 @@
       "skill": 8,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2888,7 +2939,8 @@
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2900,7 +2952,8 @@
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2912,7 +2965,8 @@
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2924,7 +2978,8 @@
       "skill": 12,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2936,7 +2991,8 @@
       "skill": 22,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2948,7 +3004,8 @@
       "skill": 29,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2960,7 +3017,8 @@
       "skill": 19,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2972,7 +3030,8 @@
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2984,7 +3043,8 @@
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -2996,7 +3056,8 @@
       "skill": 12,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3008,7 +3069,8 @@
       "skill": 15,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3020,7 +3082,8 @@
       "skill": 4,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3032,7 +3095,8 @@
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3044,7 +3108,8 @@
       "skill": 1,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3056,7 +3121,8 @@
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3068,7 +3134,8 @@
       "skill": 8,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3080,7 +3147,8 @@
       "skill": 20,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3092,7 +3160,8 @@
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3104,7 +3173,8 @@
       "skill": 10,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3116,7 +3186,8 @@
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3128,7 +3199,8 @@
       "skill": 6,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3140,7 +3212,8 @@
       "skill": 12,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3152,7 +3225,8 @@
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3164,7 +3238,8 @@
       "skill": 11,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3176,7 +3251,8 @@
       "skill": 8,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3188,7 +3264,8 @@
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {
@@ -3200,7 +3277,8 @@
       "skill": 1,
       "period_source": "ASSIGNMENT",
       "source": "wies",
-      "source_id": ""
+      "source_id": "",
+      "status": "OPEN"
     }
   },
   {

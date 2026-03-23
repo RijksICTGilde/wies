@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ?: (migration) change status from assignment to service: (CONCEPT, OPEN, GESLOTEN)
 - 251: fix that placement table shows org labels instead of org names
 - 251: confirm search by enter press
 - 251: add search suggestions: organizations found by abbreviation
