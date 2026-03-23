@@ -7,6 +7,7 @@ This files lists the changes during the lifetime of this project.
 - 251: fix that placement table shows org labels instead of org names
 - 251: confirm search by enter press
 - 251: add search suggestions: organizations found by abbreviation
+- 253: use zad-actions v3
 - 245: enable loading initial user via env var (also in production)
 - 246: bump htmx to 2.0.8
 - 246: bump Python to 3.14
