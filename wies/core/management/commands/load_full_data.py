@@ -40,7 +40,6 @@ ACTIVE_RATIO = 0.85
 RIJKSOVERHEID_RATIO = 0.90
 
 SOURCE_WEIGHTS = {"otys_iir": 85, "wies": 15}
-SERVICE_SKILL_PROBABILITY = 0.9
 SINGLE_PLACEMENT_THRESHOLD = 0.80
 DOUBLE_PLACEMENT_THRESHOLD = 0.95
 MULTI_LABEL_PROBABILITY = 0.3
@@ -589,7 +588,7 @@ class Command(BaseCommand):
         rng.shuffle(shuffled_assignments)
 
         for assignment in shuffled_assignments:
-            skill = rng.choice(skills) if rng.random() < SERVICE_SKILL_PROBABILITY else None
+            skill = rng.choice(skills)
             service = Service.objects.create(
                 assignment=assignment,
                 description=rng.choice(SERVICE_DESCRIPTIONS),
@@ -604,7 +603,7 @@ class Command(BaseCommand):
         target_placeable = NUM_PLACEMENTS + 50
         while len(all_services) < target_placeable:
             assignment = rng.choice(assignments)
-            skill = rng.choice(skills) if rng.random() < SERVICE_SKILL_PROBABILITY else None
+            skill = rng.choice(skills)
             service = Service.objects.create(
                 assignment=assignment,
                 description=rng.choice(SERVICE_DESCRIPTIONS),

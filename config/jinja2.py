@@ -53,17 +53,6 @@ def get_sort_state(request, field):
     return None
 
 
-STATUS_TAG_CLASSES = {
-    "OPEN": "rvo-tag--info",
-    "INGEVULD": "rvo-tag--success",
-}
-
-
-def status_tag_class(status):
-    """Return the RVO tag CSS class for a given assignment status."""
-    return STATUS_TAG_CLASSES.get(status, "rvo-tag--default")
-
-
 def environment(**options):
     env = Environment(**options)  # noqa: S701 - autoescape handled by Django
     setup_components(env)
@@ -75,7 +64,6 @@ def environment(**options):
             "get_csrf_hidden_input": get_csrf_hidden_input,
             "get_toggle_sort_url": get_toggle_sort_url,
             "get_sort_state": get_sort_state,
-            "status_tag_class": status_tag_class,
             "DEBUG": settings.DEBUG,
         }
     )

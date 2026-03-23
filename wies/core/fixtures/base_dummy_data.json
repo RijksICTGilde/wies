@@ -1922,7 +1922,7 @@
     "fields": {
       "assignment": 18,
       "description": "AI consultancy",
-      "skill": null,
+      "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
       "source_id": "",
@@ -2156,7 +2156,7 @@
     "fields": {
       "assignment": 29,
       "description": "Procesoptimalisatie",
-      "skill": null,
+      "skill": 29,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
       "source_id": "",
@@ -2442,7 +2442,7 @@
     "fields": {
       "assignment": 25,
       "description": "Product ownership",
-      "skill": null,
+      "skill": 3,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
       "source_id": "",
@@ -2936,7 +2936,7 @@
     "fields": {
       "assignment": 15,
       "description": "Interim management",
-      "skill": null,
+      "skill": 10,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
       "source_id": "",
@@ -2962,7 +2962,7 @@
     "fields": {
       "assignment": 15,
       "description": "Frontend ontwikkeling",
-      "skill": null,
+      "skill": 2,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
       "source_id": "",
@@ -3040,7 +3040,7 @@
     "fields": {
       "assignment": 21,
       "description": "Onderzoek en analyse",
-      "skill": null,
+      "skill": 7,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
       "source_id": "",
