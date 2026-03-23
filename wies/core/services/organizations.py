@@ -508,6 +508,34 @@ def get_excluded_org_ids() -> set[int]:
     return get_org_descendant_ids(excluded_root_ids)
 
 
+_MIN_ABBREVIATION_SEARCH_LENGTH = 2
+_MAX_ABBREVIATION_RESULTS = 5
+
+
+def find_orgs_by_abbreviation(search_term: str) -> list[dict]:
+    """Find active orgs where an abbreviation exactly matches the search term (case-insensitive).
+
+    Uses icontains as a fast pre-filter, then checks for exact element match in Python.
+    """
+    term = search_term.strip()
+    if len(term) < _MIN_ABBREVIATION_SEARCH_LENGTH:
+        return []
+    excluded_ids = get_excluded_org_ids()
+    qs = OrganizationUnit.objects.filter(
+        abbreviations__icontains=term,
+    ).filter(Q(end_date__isnull=True) | Q(end_date__gt=timezone.now().date()))
+    if excluded_ids:
+        qs = qs.exclude(id__in=excluded_ids)
+    term_lower = term.lower()
+    results = []
+    for org in qs.values("id", "label", "name", "abbreviations"):
+        if any(abbr.lower() == term_lower for abbr in (org["abbreviations"] or [])):
+            results.append({"id": org["id"], "label": org["label"], "name": org["name"]})
+            if len(results) >= _MAX_ABBREVIATION_RESULTS:
+                break
+    return results
+
+
 def get_org_breadcrumb(org: OrganizationUnit, base_url: str = "/") -> dict:
     """Build breadcrumb data for an organization: label + clickable ancestor path."""
     ancestors = []

@@ -418,7 +418,7 @@
     "model": "core.organizationunit",
     "pk": 14,
     "fields": {
-      "name": "RIVM",
+      "name": "Rijksinstituut voor Volksgezondheid en Milieu",
       "label": "Rijksinstituut voor Volksgezondheid en Milieu",
       "abbreviations": ["RIVM"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10123",

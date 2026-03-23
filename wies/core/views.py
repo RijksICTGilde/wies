@@ -39,7 +39,12 @@ from .models import (
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .roles import user_can_edit_assignment
 from .services.events import create_event
-from .services.organizations import get_excluded_org_ids, get_org_breadcrumb, get_org_descendant_ids
+from .services.organizations import (
+    find_orgs_by_abbreviation,
+    get_excluded_org_ids,
+    get_org_breadcrumb,
+    get_org_descendant_ids,
+)
 from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
@@ -292,9 +297,7 @@ class PlacementListView(ListView):
                 Q(colleague__name__icontains=search_filter)
                 | Q(service__assignment__name__icontains=search_filter)
                 | Q(service__assignment__extra_info__icontains=search_filter)
-                | Q(service__assignment__organizations__name__icontains=search_filter)
                 | Q(service__assignment__organizations__label__icontains=search_filter)
-                | Q(service__assignment__organizations__abbreviations__icontains=search_filter)
             )
 
         order_mapping = {
@@ -2009,6 +2012,13 @@ User-agent: Applebot-Extended
 Disallow: /
 """
     return HttpResponse(content, content_type="text/plain")
+
+
+def search_suggestions(request):
+    """Return org abbreviation suggestions for the search input (HTMX partial)."""
+    term = request.GET.get("zoek", "")
+    orgs = find_orgs_by_abbreviation(term)
+    return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs})
 
 
 def client_modal(request):

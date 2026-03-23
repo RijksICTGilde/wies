@@ -55,6 +55,47 @@
 }
 
 /* ----------------------------------------------------------------------------
+   Search Suggestions Dropdown
+   ---------------------------------------------------------------------------- */
+.search-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  background: white;
+  border: 1px solid var(--rvo-color-grijs-300, #c5ced6);
+  border-top: none;
+  border-radius: 0 0 4px 4px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.search-suggestions__header {
+  padding: 8px 12px 4px;
+  font-size: 0.85rem;
+  color: var(--rvo-color-grijs-600, #475e75);
+}
+
+.search-suggestion {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--rvo-color-hemelblauw, #007bc7);
+}
+
+.search-suggestion:hover {
+  background: var(--rvo-color-grijs-100, #ebf0f3);
+}
+
+/* ----------------------------------------------------------------------------
    Filter Chips
    ---------------------------------------------------------------------------- */
 .filter-chip {
@@ -371,6 +412,9 @@
   display: flex;
   gap: 1rem;
   align-items: center;
+  flex: 1 1 0;
+  justify-content: flex-end;
+  max-width: 400px;
 }
 
 .results-count {

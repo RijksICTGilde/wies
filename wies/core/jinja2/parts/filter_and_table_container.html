@@ -16,19 +16,12 @@
           Filters
         </button>
         <!-- Search Field -->
-        <form class="rvo-form filter-search-form"
-              hx-get="{{ url('home') }}"
-              hx-target="#filter-and-table-container"
-              hx-swap="innerHTML settle:0"
-              hx-replace-url="true"
-              hx-trigger="change,input delay:500ms from:[data-filter-input]"
-              hx-include="[data-filter-input]">
-          <div class="search-field-wrapper">
-            <c-icon icon="zoek" color="lintblauw" size="md" class="search-icon" />
-            <c-input id="search" name="zoek" placeholder="Zoeken..." value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" aria-label="Zoeken" data-filter-input size />
-            <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
-          </div>
-        </form>
+        <div class="search-field-wrapper">
+          <c-icon icon="zoek" color="lintblauw" size="md" class="search-icon" />
+          <c-input id="search" name="zoek" placeholder="Zoeken..." aria-label="Zoeken" size hx-get="{{ url('search-suggestions') }}" hx-trigger="input delay:300ms" hx-target="#search-suggestions-container" hx-swap="innerHTML" />
+          <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
+          <div id="search-suggestions-container"></div>
+        </div>
       </div>
     </div>
     <!-- Row 2: Result count + Active Filter Chips -->
