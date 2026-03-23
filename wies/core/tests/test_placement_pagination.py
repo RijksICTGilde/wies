@@ -43,7 +43,6 @@ class TestPlacementPagination:
 
             assignment = Assignment.objects.create(
                 name=f"Test Assignment {i}",
-                status="INGEVULD",
                 start_date=today - timedelta(days=30),
                 end_date=today + timedelta(days=30),  # Current assignment
                 source="wies",
@@ -111,7 +110,6 @@ class TestPlacementPagination:
 
             assignment = Assignment.objects.create(
                 name=f"Test Assignment {i}",
-                status="INGEVULD",
                 start_date=today - timedelta(days=60) if not is_current else today - timedelta(days=30),
                 end_date=today - timedelta(days=1) if not is_current else today + timedelta(days=30),
                 source="wies",

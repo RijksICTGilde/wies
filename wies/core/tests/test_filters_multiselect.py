@@ -51,7 +51,6 @@ class FilterCombiningTestBase(TestCase):
 
         assignment = Assignment.objects.create(
             name=f"Assignment for {colleague_name}",
-            status="INGEVULD",
             source="wies",
             start_date=date(2025, 1, 1),
             end_date=date(2030, 1, 1),

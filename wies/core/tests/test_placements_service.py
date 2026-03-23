@@ -247,16 +247,25 @@ Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-
         assert placement.colleague is not None
         assert placement.colleague.email == "john@rijksoverheid.nl"
 
-    def test_assignment_status_is_ingevuld(self):
-        """Test that assignments created from CSV have status INGEVULD since they have placements"""
+    def test_service_status_defaults_to_open(self):
+        """Test that services created from CSV have status OPEN by default"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John Doe,john@rijksoverheid.nl,,"""
 
         result = create_assignments_from_csv(csv_content)
         assert result["success"]
 
-        assignment = Assignment.objects.get(name="Test Assignment", source="wies")
-        assert assignment.status == "INGEVULD"
+        service = Service.objects.get(assignment__name="Test Assignment", source="wies")
+        assert service.status == "OPEN"
+
+    def test_placement_created_regardless_of_service_status(self):
+        """Test that placements are always created when colleague email is provided"""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
+Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John Doe,john@rijksoverheid.nl,,"""
+
+        result = create_assignments_from_csv(csv_content)
+        assert result["success"]
+        assert result["placements_created"] == 1
 
     def test_organization_source_url_matching(self):
         """Test that organizations are matched by source_url from organisaties.overheid.nl"""
