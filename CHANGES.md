@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 265: fix opdrachten filter to only consider skills on open services
 - 265: make search bar on assignments page same as on wiezitwaar page
 - 262: make sidepanels the same between 2 pages
 - 262: (migration) change status from assignment to service: (CONCEPT, OPEN, GESLOTEN)
