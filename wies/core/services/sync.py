@@ -106,7 +106,6 @@ def sync_all_otys_iir_records():
             # Create or update Assignment
             assignment_data = {
                 "name": assignment_name.strip(),
-                "status": "INGEVULD",
                 "source_url": f"{settings.OTYS_URL}/us/modular.html#/vacancies/{vacancy_uid}",
             }
 

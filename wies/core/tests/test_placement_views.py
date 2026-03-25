@@ -17,7 +17,7 @@ from wies.core.models import (
     User,
 )
 from wies.core.services.organizations import get_org_descendant_ids
-from wies.core.views import PlacementListView
+from wies.core.views import PlacementListView, _build_assignment_panel_data, _build_colleague_panel_data
 
 
 class PlacementImportTest(TestCase):
@@ -228,7 +228,6 @@ class PlacementListHistoricalFilterTest(TestCase):
         """Helper to create a placement with specific end date at placement level"""
         assignment = Assignment.objects.create(
             name=f"Test Assignment {end_date}",
-            status="INGEVULD",
             source="wies",
         )
         service = Service.objects.create(
@@ -325,7 +324,6 @@ class PlacementListHistoricalFilterTest(TestCase):
         # Create assignment and service with service-specific dates
         assignment = Assignment.objects.create(
             name="Test Assignment Service Level",
-            status="INGEVULD",
             source="wies",
         )
         service = Service.objects.create(
@@ -367,7 +365,6 @@ class PlacementListHistoricalFilterTest(TestCase):
         # Create assignment with dates in the past
         assignment = Assignment.objects.create(
             name="Test Assignment Level",
-            status="INGEVULD",
             start_date=date(2024, 1, 1),
             end_date=date(2024, 6, 14),  # Ends yesterday
             source="wies",
@@ -442,7 +439,6 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         # Create assignment
         assignment = Assignment.objects.create(
             name="Test Assignment with Mixed Placements",
-            status="INGEVULD",
             source="wies",
         )
         service = Service.objects.create(
@@ -477,9 +473,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        view = PlacementListView()
-        view.request = request
-        panel_data = view._get_assignment_panel_data(assignment)  # noqa: SLF001 (private member access)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         # Verify only current placement is in panel data
         placement_ids = [p.id for s in panel_data["services"] for p in s.current_placements]
@@ -498,7 +492,6 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         # Create assignment
         assignment = Assignment.objects.create(
             name="Test Assignment with Current Placement",
-            status="INGEVULD",
             source="wies",
         )
         service = Service.objects.create(
@@ -523,9 +516,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        view = PlacementListView()
-        view.request = request
-        panel_data = view._get_assignment_panel_data(assignment)  # noqa: SLF001 (private member access)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         # Verify placement ending today is included
         placement_ids = [p.id for s in panel_data["services"] for p in s.current_placements]
@@ -571,7 +562,6 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         # Create assignment A with historical placement
         assignment_a = Assignment.objects.create(
             name="Test Assignment A (Historical)",
-            status="INGEVULD",
             source="wies",
         )
         service_a = Service.objects.create(
@@ -592,7 +582,6 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         # Create assignment B with current placement
         assignment_b = Assignment.objects.create(
             name="Test Assignment B (Current)",
-            status="INGEVULD",
             source="wies",
         )
         service_b = Service.objects.create(
@@ -615,9 +604,7 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        view = PlacementListView()
-        view.request = request
-        panel_data = view._get_colleague_panel_data(self.colleague)  # noqa: SLF001 (private member access)
+        panel_data = _build_colleague_panel_data(self.colleague, request)
 
         # Verify only current assignment is in panel data
         assignment_list = panel_data["assignment_list"]
@@ -637,7 +624,6 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         # Create assignment with placement ending today
         assignment = Assignment.objects.create(
             name="Test Assignment Ending Today",
-            status="INGEVULD",
             source="wies",
         )
         service = Service.objects.create(
@@ -660,9 +646,7 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        view = PlacementListView()
-        view.request = request
-        panel_data = view._get_colleague_panel_data(self.colleague)  # noqa: SLF001 (private member access)
+        panel_data = _build_colleague_panel_data(self.colleague, request)
 
         # Verify assignment ending today is included
         assignment_list = panel_data["assignment_list"]
@@ -723,7 +707,6 @@ class PlacementOrganizationFilterTest(TestCase):
         )
         assignment = Assignment.objects.create(
             name=f"Assignment {org.name}{suffix}",
-            status="INGEVULD",
             source="wies",
             start_date=date(2025, 1, 1),
             end_date=date(2030, 1, 1),
@@ -834,7 +817,6 @@ class PlacementOrganizationFilterTest(TestCase):
         colleague2 = Colleague.objects.create(name="C2", email="c2@rijksoverheid.nl", source="wies")
         assignment2 = Assignment.objects.create(
             name="Assignment2",
-            status="INGEVULD",
             source="wies",
             start_date=date(2025, 1, 1),
             end_date=date(2030, 1, 1),
@@ -876,7 +858,6 @@ class PlacementSearchTest(TestCase):
         )
         assignment = Assignment.objects.create(
             name=assignment_name,
-            status="INGEVULD",
             source="wies",
             start_date=date(2025, 1, 1),
             end_date=date(2030, 1, 1),
