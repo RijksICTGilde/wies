@@ -142,7 +142,7 @@ def logout(request):
     return redirect(reverse("login"))
 
 
-@user_passes_test(lambda u: u.is_authenticated and u.email in settings.STAFF_EMAILS, login_url="/geen-toegang/")
+@user_passes_test(lambda u: u.is_authenticated and u.email.lower() in settings.STAFF_EMAILS, login_url="/geen-toegang/")
 def staff(request):
     context = {
         "assignment_count": Assignment.objects.count(),
