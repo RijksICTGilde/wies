@@ -66,7 +66,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.colleague3.labels.add(self.rig_label)
 
         # Create placements
-        self.assignment = Assignment.objects.create(name="Test Assignment", source="wies", status="INGEVULD")
+        self.assignment = Assignment.objects.create(name="Test Assignment", source="wies")
         self.skill = Skill.objects.create(name="Python")
         self.service = Service.objects.create(assignment=self.assignment, skill=self.skill, source="wies")
 

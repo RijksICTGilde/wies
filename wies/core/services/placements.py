@@ -51,16 +51,6 @@ def filter_placements_by_min_end_date(queryset, min_end_date):
     return queryset.filter(Q(actual_end_date__gte=min_end_date) | Q(actual_end_date__isnull=True))
 
 
-def _validate_assignment_status(status: str, row_number: int) -> str:
-    status = status.strip().upper()
-    if status == "":
-        return "INGEVULD"
-    if status not in ("OPEN", "INGEVULD"):
-        msg = f"Ongeldige status '{status}' op regel {row_number}. Gebruik 'OPEN' of 'INGEVULD'."
-        raise ValueError(msg)
-    return status
-
-
 def create_assignments_from_csv(csv_content: str):
     """
     Create colleagues, assignments, services and placements from csv.
@@ -71,7 +61,6 @@ def create_assignments_from_csv(csv_content: str):
     - service_skill, placement_colleague_name, placement_colleague_email
 
     Optional columns:
-    - assignment_status: OPEN or INGEVULD (default: INGEVULD)
     - client_1_url: URL from organisaties.overheid.nl. Becomes PRIMARY client.
     - client_2_url: URL from organisaties.overheid.nl. Becomes INVOLVED client.
     - client_3_url: URL from organisaties.overheid.nl. Becomes INVOLVED client.
@@ -174,9 +163,6 @@ def create_assignments_from_csv(csv_content: str):
                 start_date = parse_date_dmy(start_date_str) if start_date_str else None
                 end_date = parse_date_dmy(end_date_str) if end_date_str else None
 
-                assignment_status = _validate_assignment_status(row.get("assignment_status") or "", _)
-
-                # owner update or create
                 assignment, created = Assignment.objects.get_or_create(
                     source="wies",
                     name=row["assignment_name"],
@@ -185,7 +171,6 @@ def create_assignments_from_csv(csv_content: str):
                         "end_date": end_date,
                         "extra_info": row["assignment_description"],
                         "owner": owner,
-                        "status": assignment_status,
                     },
                 )
 
@@ -223,7 +208,7 @@ def create_assignments_from_csv(csv_content: str):
                     services_created += 1
 
                 colleague_email = (row["placement_colleague_email"] or "").strip()
-                if colleague_email and assignment_status != "OPEN":
+                if colleague_email:
                     validate_email(colleague_email)
                     if Colleague.objects.filter(email=colleague_email).exists():
                         colleague = Colleague.objects.get(email=colleague_email)

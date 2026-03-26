@@ -3,7 +3,16 @@ from datetime import date
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Assignment, AssignmentOrganizationUnit, OrganizationUnit, Service, Skill, User
+from wies.core.models import (
+    Assignment,
+    AssignmentOrganizationUnit,
+    Colleague,
+    OrganizationUnit,
+    Placement,
+    Service,
+    Skill,
+    User,
+)
 
 
 class AssignmentListViewTest(TestCase):
@@ -25,10 +34,9 @@ class AssignmentListViewTest(TestCase):
         self.skill = Skill.objects.create(name="Python Developer")
         self.skill2 = Skill.objects.create(name="Data Engineer")
 
-        # Vacancy assignment (should appear)
+        # Vacancy assignment (has unfilled OPEN service → should appear)
         self.vacancy = Assignment.objects.create(
             name="Open Vacature",
-            status="OPEN",
             start_date=date(2025, 1, 1),
             end_date=date(2025, 12, 31),
             source="wies",
@@ -38,16 +46,25 @@ class AssignmentListViewTest(TestCase):
             assignment=self.vacancy,
             description="Service 1",
             skill=self.skill,
+            status="OPEN",
             source="wies",
         )
 
-        # Filled assignment (should NOT appear)
+        # Filled assignment (all services have placements → should NOT appear)
         self.filled = Assignment.objects.create(
             name="Ingevulde Opdracht",
-            status="INGEVULD",
             source="wies",
         )
         AssignmentOrganizationUnit.objects.create(assignment=self.filled, organization=self.org)
+        filled_service = Service.objects.create(
+            assignment=self.filled,
+            description="Filled Service",
+            skill=self.skill,
+            status="OPEN",
+            source="wies",
+        )
+        colleague = Colleague.objects.create(name="Test Colleague", email="col@test.nl", source="wies")
+        Placement.objects.create(colleague=colleague, service=filled_service, source="wies")
 
     def test_login_required(self):
         response = self.client.get(self.list_url)
@@ -111,10 +128,46 @@ class AssignmentListViewTest(TestCase):
         content = response.content.decode()
         assert "side_panel" in content
 
-    def test_side_panel_ignores_filled_assignment(self):
+    def test_side_panel_opens_for_any_assignment(self):
         self.client.force_login(self.auth_user)
         response = self.client.get(self.list_url, {"opdracht": str(self.filled.id)})
         assert response.status_code == 200
         content = response.content.decode()
-        # The panel should not open for a non-OPEN assignment
-        assert "panel_data" not in content or "side_panel-container" in content
+        assert "side_panel" in content
+
+    def test_concept_services_not_shown(self):
+        """Assignment with only CONCEPT services should NOT appear on opdrachten page"""
+        concept_assignment = Assignment.objects.create(name="Concept Opdracht", source="wies")
+        Service.objects.create(
+            assignment=concept_assignment, description="Concept Service", status="CONCEPT", source="wies"
+        )
+        self.client.force_login(self.auth_user)
+        response = self.client.get(self.list_url)
+        content = response.content.decode()
+        assert "Concept Opdracht" not in content
+
+    def test_all_open_services_filled_not_shown(self):
+        """Assignment where all OPEN services have placements should NOT appear"""
+        self.client.force_login(self.auth_user)
+        response = self.client.get(self.list_url)
+        content = response.content.decode()
+        assert "Ingevulde Opdracht" not in content
+
+    def test_mix_of_filled_and_unfilled_services(self):
+        """Assignment with both filled and unfilled OPEN services should appear"""
+        mix_assignment = Assignment.objects.create(name="Mix Opdracht", source="wies")
+        # One filled service
+        filled_svc = Service.objects.create(
+            assignment=mix_assignment, description="Filled", skill=self.skill, status="OPEN", source="wies"
+        )
+        colleague = Colleague.objects.create(name="Mix Col", email="mix@test.nl", source="wies")
+        Placement.objects.create(colleague=colleague, service=filled_svc, source="wies")
+        # One unfilled service
+        Service.objects.create(
+            assignment=mix_assignment, description="Unfilled", skill=self.skill2, status="OPEN", source="wies"
+        )
+
+        self.client.force_login(self.auth_user)
+        response = self.client.get(self.list_url)
+        content = response.content.decode()
+        assert "Mix Opdracht" in content

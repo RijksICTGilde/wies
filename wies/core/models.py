@@ -4,9 +4,10 @@ from django.db import models
 from django.db.models.functions import Lower
 from django.utils import timezone
 
-ASSIGNMENT_STATUS = {
-    "OPEN": "OPEN",
-    "INGEVULD": "INGEVULD",
+SERVICE_STATUS = {
+    "CONCEPT": "Concept",
+    "OPEN": "Open",
+    "GESLOTEN": "Gesloten",
 }
 
 SOURCE_CHOICES = {
@@ -123,7 +124,6 @@ class Assignment(models.Model):
     end_date = models.DateField(null=True, blank=True)
     # placements through foreignkey on Placement
     # services through foreignkey on Service
-    status = models.CharField(max_length=20, choices=ASSIGNMENT_STATUS, default="OPEN")
     organizations = models.ManyToManyField(
         "OrganizationUnit",
         through="AssignmentOrganizationUnit",
@@ -205,6 +205,7 @@ class Service(models.Model):
     specific_start_date = models.DateField(null=True, blank=True)  # do not use directly, see property below
     specific_end_date = models.DateField(null=True, blank=True)  # do not use directly, see property below
     # placements via reverse relation
+    status = models.CharField(max_length=20, choices=SERVICE_STATUS, default="OPEN")
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(blank=True)  # only for non wies

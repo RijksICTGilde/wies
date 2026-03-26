@@ -9,9 +9,7 @@
            style="cursor: pointer">
     <div class="assignment-card__header">
       <h3 class="rvo-text rvo-text--bold rvo-text--no-margins assignment-card__title">{{ assignment.name }}</h3>
-      {% if assignment.status %}
-        <span class="rvo-tag {{ status_tag_class(assignment.status) }}">{{ assignment.get_status_display() }}</span>
-      {% endif %}
+      <span class="rvo-tag rvo-tag--info">Open</span>
     </div>
     {% if assignment.org_breadcrumb %}
       <span class="rvo-text rvo-text--sm">{{ assignment.org_breadcrumb.label }}</span>

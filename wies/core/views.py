@@ -14,7 +14,7 @@ from django.contrib.auth.decorators import login_not_required, permission_requir
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
-from django.db.models import Case, Prefetch, Q, Value, When
+from django.db.models import Case, Exists, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.http import Http404, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
@@ -86,6 +86,159 @@ def get_delete_context(delete_url_name, object_pk, object_name):
     return {
         "delete_url": reverse(delete_url_name, args=[object_pk]),
         "delete_confirm_message": f"Weet je zeker dat je {object_name} wilt verwijderen?",
+    }
+
+
+def _build_panel_url(request, **overrides):
+    """Build a URL on the current path, preserving filters but replacing panel params."""
+    params = QueryDict(mutable=True)
+    params.update(request.GET)
+    params.pop("pagina", None)
+    params.pop("collega", None)
+    params.pop("opdracht", None)
+    for key, value in overrides.items():
+        params[key] = value
+    return f"{request.path}?{params.urlencode()}"
+
+
+def _build_close_url(request):
+    """Build close URL preserving current filters."""
+    params = QueryDict(mutable=True)
+    params.update(request.GET)
+    params.pop("pagina", None)
+    params.pop("collega", None)
+    params.pop("opdracht", None)
+    return f"{request.path}?{params.urlencode()}" if params else request.path
+
+
+def _build_assignment_panel_data(assignment, request):
+    """Shared helper to build assignment panel context data for both views."""
+    today = timezone.now().date()
+
+    # Vacancy services: OPEN and never had any placement
+    vacancy_services = list(
+        assignment.services.filter(
+            status="OPEN",
+            placements__isnull=True,
+        ).select_related("skill")
+    )
+    for service in vacancy_services:
+        service.current_placements = []
+
+    # Services with current placements (regardless of status)
+    filled_services = list(
+        assignment.services.select_related("skill").prefetch_related(
+            Prefetch(
+                "placements",
+                queryset=filter_placements_by_min_end_date(
+                    annotate_placement_dates(Placement.objects.select_related("colleague")),
+                    today,
+                ),
+                to_attr="current_placements",
+            )
+        )
+    )
+    filled_services = [s for s in filled_services if s.current_placements]
+
+    for service in filled_services:
+        for placement in service.current_placements:
+            placement.colleague_url = _build_panel_url(request, collega=placement.colleague.id)
+
+    # Vacancies first, then filled
+    services = vacancy_services + filled_services
+
+    primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
+        "organization__parent__parent__parent__parent"
+    )
+    involved = assignment.organization_relations.filter(role="INVOLVED").select_related(
+        "organization__parent__parent__parent__parent"
+    )
+    org_breadcrumbs = [
+        {**get_org_breadcrumb(rel.organization, request.path), "role": rel.role} for rel in [*primary, *involved]
+    ]
+
+    return {
+        "panel_content_template": "parts/assignment_panel_content.html",
+        "panel_title": assignment.name,
+        "close_url": _build_close_url(request),
+        "assignment": assignment,
+        "services": services,
+        "user_can_edit": user_can_edit_assignment(request.user, assignment),
+        "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
+        "org_breadcrumbs": org_breadcrumbs,
+    }
+
+
+def _build_colleague_panel_data(colleague, request):
+    """Shared helper to build colleague panel context data for both views."""
+    placement_qs = (
+        Placement.objects.filter(colleague=colleague)
+        .select_related("service__assignment", "service__skill")
+        .values(
+            "id",
+            "service__assignment__id",
+            "service__assignment__name",
+            "service__assignment__start_date",
+            "service__assignment__end_date",
+            "service__skill__name",
+        )
+        .distinct()
+    )
+
+    placement_qs = annotate_placement_dates(placement_qs)
+    placement_qs = filter_placements_by_min_end_date(placement_qs, timezone.now().date())
+
+    assignments_by_id = {}
+    for item in placement_qs:
+        aid = item["service__assignment__id"]
+        if aid not in assignments_by_id:
+            assignments_by_id[aid] = {
+                "name": item["service__assignment__name"],
+                "id": aid,
+                "tags": [],
+                "assignment_url": _build_panel_url(request, opdracht=aid),
+                "start_date": item.get("actual_start_date"),
+                "end_date": item.get("actual_end_date"),
+            }
+        else:
+            existing = assignments_by_id[aid]
+            start = item.get("actual_start_date")
+            end = item.get("actual_end_date")
+            if start and (existing["start_date"] is None or start < existing["start_date"]):
+                existing["start_date"] = start
+            if end and (existing["end_date"] is None or end > existing["end_date"]):
+                existing["end_date"] = end
+        skill = item["service__skill__name"]
+        if skill:
+            assignments_by_id[aid]["tags"].append(skill)
+
+    today = timezone.now().date()
+    bm_assignments = (
+        Assignment.objects.filter(owner=colleague)
+        .exclude(end_date__lt=today)
+        .values_list("id", "name", "start_date", "end_date")
+    )
+    for aid, name, start_date, end_date in bm_assignments:
+        if aid in assignments_by_id:
+            assignments_by_id[aid]["tags"].append("Business Manager")
+        else:
+            assignments_by_id[aid] = {
+                "name": name,
+                "id": aid,
+                "tags": ["Business Manager"],
+                "assignment_url": _build_panel_url(request, opdracht=aid),
+                "start_date": start_date,
+                "end_date": end_date,
+            }
+
+    assignment_list = sorted(assignments_by_id.values(), key=lambda a: a["name"])
+
+    return {
+        "panel_content_template": "parts/colleague_panel_content.html",
+        "panel_title": colleague.name,
+        "close_url": _build_close_url(request),
+        "colleague": colleague,
+        "assignment_list": assignment_list,
     }
 
 
@@ -285,7 +438,6 @@ class PlacementListView(ListView):
                     to_attr="sorted_clients",
                 ),
             )
-            .filter(service__assignment__status="INGEVULD")
             .order_by("-service__assignment__start_date")
         )
         if excluded_org_ids:
@@ -397,181 +549,12 @@ class PlacementListView(ListView):
 
                 if colleague_id and not assignment_id:
                     return ["parts/colleague_panel_content.html"]
-                if colleague_id and assignment_id:
+                if assignment_id:
                     return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/placement_table_rows.html"]
             return ["parts/filter_and_table_container.html"]
         return ["placement_table.html"]
-
-    def _build_close_url(self, request):
-        """Build close URL preserving current filters"""
-        params = QueryDict(mutable=True)
-        params.update(request.GET)
-        params.pop("collega", None)
-        params.pop("opdracht", None)
-        return f"{reverse('home')}?{params.urlencode()}" if params else reverse("home")
-
-    def _build_assignment_url(self, request, assignment_id):
-        """Build assignment panel URL preserving current filters"""
-        params = QueryDict(mutable=True)
-        params.update(request.GET)
-        params.pop("opdracht", None)
-        params["opdracht"] = assignment_id
-        return f"{reverse('home')}?{params.urlencode()}"
-
-    def _build_colleague_url(self, colleague_id):
-        """Build colleague panel URL preserving current filters"""
-        params = QueryDict(mutable=True)
-        params.update(self.request.GET)
-        params.pop("collega", None)
-        params.pop("opdracht", None)
-        params["collega"] = colleague_id
-        return f"{reverse('home')}?{params.urlencode()}"
-
-    def _get_colleague_placements(self, colleague):
-        """Get assignments for a colleague"""
-        return (
-            Placement.objects.filter(colleague=colleague)
-            .select_related("service__assignment", "service__skill")
-            .values(
-                "id",
-                "service__assignment__id",
-                "service__assignment__name",
-                "service__assignment__start_date",
-                "service__assignment__end_date",
-                "service__skill__name",
-            )
-            .distinct()
-        )
-
-    def _get_colleague_panel_data(self, colleague):
-        """Get colleague panel data for server-side rendering"""
-
-        placement_qs = self._get_colleague_placements(colleague)
-
-        # filter out historical placements
-        placement_qs = annotate_placement_dates(placement_qs)
-        placement_qs = filter_placements_by_min_end_date(placement_qs, timezone.now().date())
-
-        # Build dict keyed by assignment id, merging placement roles and BM role
-        assignments_by_id = {}
-        for item in placement_qs:
-            aid = item["service__assignment__id"]
-            if aid not in assignments_by_id:
-                assignments_by_id[aid] = {
-                    "name": item["service__assignment__name"],
-                    "id": aid,
-                    "tags": [],
-                    "assignment_url": self._build_assignment_url(self.request, aid),
-                    "start_date": item.get("actual_start_date"),
-                    "end_date": item.get("actual_end_date"),
-                }
-            else:
-                # Widen the period range across multiple placements
-                existing = assignments_by_id[aid]
-                start = item.get("actual_start_date")
-                end = item.get("actual_end_date")
-                if start and (existing["start_date"] is None or start < existing["start_date"]):
-                    existing["start_date"] = start
-                if end and (existing["end_date"] is None or end > existing["end_date"]):
-                    existing["end_date"] = end
-            skill = item["service__skill__name"]
-            if skill:
-                assignments_by_id[aid]["tags"].append(skill)
-
-        today = timezone.now().date()
-        bm_assignments = (
-            Assignment.objects.filter(owner=colleague)
-            .exclude(end_date__lt=today)
-            .values_list("id", "name", "start_date", "end_date")
-        )
-        for aid, name, start_date, end_date in bm_assignments:
-            if aid in assignments_by_id:
-                assignments_by_id[aid]["tags"].append("Business Manager")
-            else:
-                assignments_by_id[aid] = {
-                    "name": name,
-                    "id": aid,
-                    "tags": ["Business Manager"],
-                    "assignment_url": self._build_assignment_url(self.request, aid),
-                    "start_date": start_date,
-                    "end_date": end_date,
-                }
-
-        assignment_list = sorted(assignments_by_id.values(), key=lambda a: a["name"])
-
-        return {
-            "panel_content_template": "parts/colleague_panel_content.html",
-            "panel_title": colleague.name,
-            "close_url": self._build_close_url(self.request),
-            "colleague": colleague,
-            "assignment_list": assignment_list,
-        }
-
-    @staticmethod
-    def _get_org_breadcrumb(org: OrganizationUnit) -> dict:
-        """Build breadcrumb data for an organization: label + clickable ancestor path."""
-        # Walk up to build ancestor chain (excluding the org itself)
-        ancestors = []
-        current = org.parent
-        while current:
-            label = current.abbreviation or current.label or current.name
-            ancestors.append({"label": label, "url": f"/?org={current.id}"})
-            current = current.parent
-        ancestors.reverse()  # root → ... → direct parent
-
-        # Determine if this org is a "self-node": has children with assignment links
-        is_self = org.children.filter(assignment_relations__isnull=False).exists()
-
-        label = org.label or org.name
-        url = f"/?org_self={org.id}" if is_self else f"/?org={org.id}"
-
-        return {"label": label, "url": url, "ancestors": ancestors}
-
-    def _get_assignment_panel_data(self, assignment):
-        """Get assignment panel data for server-side rendering"""
-        # Fetch services with their current placements
-        services = assignment.services.select_related("skill").prefetch_related(
-            Prefetch(
-                "placements",
-                queryset=filter_placements_by_min_end_date(
-                    annotate_placement_dates(Placement.objects.select_related("colleague")),
-                    timezone.now().date(),
-                ),
-                to_attr="current_placements",
-            )
-        )
-
-        # Add colleague URLs to placements
-        for service in services:
-            for placement in service.current_placements:
-                placement.colleague_url = self._build_colleague_url(placement.colleague.id)
-
-        # Check if user can edit assignment
-        user_can_edit = user_can_edit_assignment(self.request.user, assignment)
-
-        # Build organization breadcrumbs (primary first, then involved)
-        primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
-            "organization__parent__parent__parent__parent"
-        )
-        involved = assignment.organization_relations.filter(role="INVOLVED").select_related(
-            "organization__parent__parent__parent__parent"
-        )
-        org_breadcrumbs = [
-            {**self._get_org_breadcrumb(rel.organization), "role": rel.role} for rel in [*primary, *involved]
-        ]
-
-        return {
-            "panel_content_template": "parts/assignment_panel_content.html",
-            "panel_title": assignment.name,
-            "close_url": self._build_close_url(self.request),
-            "assignment": assignment,
-            "services": services,
-            "user_can_edit": user_can_edit,
-            "owner_url": self._build_colleague_url(assignment.owner.id) if assignment.owner else "",
-            "org_breadcrumbs": org_breadcrumbs,
-        }
 
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
@@ -580,7 +563,7 @@ class PlacementListView(ListView):
 
         # Add colleague URLs to placement objects
         for placement in context["object_list"]:
-            placement.colleague_url = self._build_colleague_url(placement.colleague.id)
+            placement.colleague_url = _build_panel_url(self.request, collega=placement.colleague.id)
 
         context["filter_target_url"] = reverse("home")
         context["search_field"] = "zoek"
@@ -762,18 +745,17 @@ class PlacementListView(ListView):
         colleague_id = self.request.GET.get("collega")
         assignment_id = self.request.GET.get("opdracht")
 
-        # if one or both of the ids are invalid, the panel_data is skipped
         if colleague_id and not assignment_id:
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
-                context["panel_data"] = self._get_colleague_panel_data(colleague)
+                context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
             except Colleague.DoesNotExist:
                 pass
-        elif colleague_id and assignment_id:
+        elif assignment_id:
             try:
                 assignment = Assignment.objects.get(id=assignment_id)
-                context["panel_data"] = self._get_assignment_panel_data(assignment)
-            except Colleague.DoesNotExist, Assignment.DoesNotExist:
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
+            except Assignment.DoesNotExist:
                 pass
         return context
 
@@ -787,7 +769,14 @@ class AssignmentListView(ListView):
     page_kwarg = "pagina"
 
     def _get_base_queryset(self):
-        qs = Assignment.objects.filter(status="OPEN").order_by("-created_at")
+        has_unfilled_open_service = Exists(
+            Service.objects.filter(
+                assignment=OuterRef("pk"),
+                status="OPEN",
+                placements__isnull=True,
+            )
+        )
+        qs = Assignment.objects.filter(has_unfilled_open_service).order_by("-created_at")
         search_filter = self.request.GET.get("zoek")
         if search_filter:
             qs = qs.filter(
@@ -839,7 +828,11 @@ class AssignmentListView(ListView):
         return qs.distinct().prefetch_related(
             Prefetch(
                 "services",
-                queryset=Service.objects.filter(skill__isnull=False).select_related("skill"),
+                queryset=Service.objects.filter(
+                    skill__isnull=False,
+                    status="OPEN",
+                    placements__isnull=True,
+                ).select_related("skill"),
                 to_attr="services_with_skills",
             )
         )
@@ -849,60 +842,15 @@ class AssignmentListView(ListView):
             if self.request.headers.get("HX-Target") == "side_panel-container":
                 return ["parts/side_panel.html"]
             if self.request.headers.get("HX-Target") == "side_panel-content":
+                colleague_id = self.request.GET.get("collega")
+                assignment_id = self.request.GET.get("opdracht")
+                if colleague_id and not assignment_id:
+                    return ["parts/colleague_panel_content.html"]
                 return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/assignment_card_rows.html"]
             return ["parts/filter_and_card_container.html"]
         return ["assignment_card_grid.html"]
-
-    def _build_close_url(self):
-        params = QueryDict(mutable=True)
-        params.update(self.request.GET)
-        params.pop("opdracht", None)
-        base = reverse("assignment-list")
-        return f"{base}?{params.urlencode()}" if params else base
-
-    def _build_panel_url(self, assignment_id):
-        params = QueryDict(mutable=True)
-        params.update(self.request.GET)
-        params.pop("opdracht", None)
-        params["opdracht"] = assignment_id
-        return f"{reverse('assignment-list')}?{params.urlencode()}"
-
-    def _get_vacancy_panel_data(self, assignment):
-        # Fetch services with their current placements
-        services = assignment.services.select_related("skill").prefetch_related(
-            Prefetch(
-                "placements",
-                queryset=filter_placements_by_min_end_date(
-                    annotate_placement_dates(Placement.objects.select_related("colleague")),
-                    timezone.now().date(),
-                ),
-                to_attr="current_placements",
-            )
-        )
-
-        # Build organization breadcrumbs from organization_relations
-        base_url = reverse("assignment-list")
-        primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
-            "organization__parent__parent__parent__parent"
-        )
-        involved = assignment.organization_relations.filter(role="INVOLVED").select_related(
-            "organization__parent__parent__parent__parent"
-        )
-        org_breadcrumbs = [
-            {**get_org_breadcrumb(rel.organization, base_url), "role": rel.role} for rel in [*primary, *involved]
-        ]
-
-        return {
-            "panel_content_template": "parts/assignment_panel_content.html",
-            "panel_title": assignment.name,
-            "close_url": self._build_close_url(),
-            "assignment": assignment,
-            "services": services,
-            "org_breadcrumbs": org_breadcrumbs,
-            "owner_url": "",
-        }
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -910,7 +858,7 @@ class AssignmentListView(ListView):
 
         base_url = reverse("assignment-list")
         for assignment in context["object_list"]:
-            assignment.panel_url = self._build_panel_url(assignment.id)
+            assignment.panel_url = _build_panel_url(self.request, opdracht=assignment.id)
             first_org = assignment.organizations.select_related("parent__parent__parent__parent").first()
             assignment.org_breadcrumb = get_org_breadcrumb(first_org, base_url) if first_org else None
 
@@ -1037,11 +985,19 @@ class AssignmentListView(ListView):
             context["next_page_url"] = None
 
         # Side panel
+        colleague_id = self.request.GET.get("collega")
         assignment_id = self.request.GET.get("opdracht")
-        if assignment_id:
+
+        if colleague_id and not assignment_id:
             try:
-                assignment = Assignment.objects.select_related("owner").get(id=assignment_id, status="OPEN")
-                context["panel_data"] = self._get_vacancy_panel_data(assignment)
+                colleague = Colleague.objects.get(id=colleague_id)
+                context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
+            except Colleague.DoesNotExist:
+                pass
+        elif assignment_id:
+            try:
+                assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
             except Assignment.DoesNotExist:
                 pass
 
@@ -2027,17 +1983,24 @@ def client_modal(request):
     count_mode = request.GET.get("count_mode", "placements")
 
     if count_mode == "open_assignments":
-        # Count open assignments per OrganizationUnit
-        assignment_qs = Assignment.objects.filter(status="OPEN")
+        # Count assignments with at least 1 unfilled OPEN service per OrganizationUnit
+        has_unfilled_open_service = Exists(
+            Service.objects.filter(
+                assignment=OuterRef("pk"),
+                status="OPEN",
+                placements__isnull=True,
+            )
+        )
+        assignment_qs = Assignment.objects.filter(has_unfilled_open_service)
         if excluded_org_ids:
             assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
         org_id_list = assignment_qs.values_list("organizations__id", flat=True)
         org_self_counts: Counter[int] = Counter(org_id for org_id in org_id_list if org_id is not None)
     else:
         # Count active placements per OrganizationUnit (self-count only — direct link).
-        active_placements = annotate_placement_dates(
-            Placement.objects.filter(service__assignment__status="INGEVULD")
-        ).filter(actual_end_date__gte=timezone.now().date())
+        active_placements = annotate_placement_dates(Placement.objects.all()).filter(
+            actual_end_date__gte=timezone.now().date()
+        )
         if excluded_org_ids:
             active_placements = active_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
         org_id_list = active_placements.values_list("service__assignment__organizations__id", flat=True)
