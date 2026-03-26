@@ -33,23 +33,32 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.python_label, _ = Label.objects.get_or_create(name="Python", category=self.skills_category)
         self.django_label, _ = Label.objects.get_or_create(name="Django", category=self.skills_category)
 
-        # Create users with labels
+        # Create users with linked colleagues that have labels
         self.user1 = User.objects.create(
             username="user1", email="user1@rijksoverheid.nl", first_name="User", last_name="One"
         )
-        self.user1.labels.add(self.rig_label, self.python_label)
+        self.user1_colleague = Colleague.objects.create(
+            user=self.user1, name="User One", email="user1@rijksoverheid.nl", source="wies"
+        )
+        self.user1_colleague.labels.add(self.rig_label, self.python_label)
 
         self.user2 = User.objects.create(
             username="user2", email="user2@rijksoverheid.nl", first_name="User", last_name="Two"
         )
-        self.user2.labels.add(self.rc_label)
+        self.user2_colleague = Colleague.objects.create(
+            user=self.user2, name="User Two", email="user2@rijksoverheid.nl", source="wies"
+        )
+        self.user2_colleague.labels.add(self.rc_label)
 
         self.user3 = User.objects.create(
             username="user3", email="user3@rijksoverheid.nl", first_name="User", last_name="Three"
         )
-        self.user3.labels.add(self.rig_label, self.django_label)
+        self.user3_colleague = Colleague.objects.create(
+            user=self.user3, name="User Three", email="user3@rijksoverheid.nl", source="wies"
+        )
+        self.user3_colleague.labels.add(self.rig_label, self.django_label)
 
-        # Create colleagues with labels
+        # Create colleagues (without users) with labels
         self.colleague1 = Colleague.objects.create(
             name="Colleague One", email="colleague1@rijksoverheid.nl", source="wies"
         )
@@ -185,7 +194,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         """Test: Label filters persist when paginating results"""
         self.client.force_login(self.auth_user)
 
-        # Create many users with same label to trigger pagination
+        # Create many users with linked colleagues with same label to trigger pagination
         for i in range(25):
             user = User.objects.create(
                 username=f"paginated_user_{i}",
@@ -193,7 +202,10 @@ class LabelFilteringAndDisplayTest(TestCase):
                 first_name="User",
                 last_name=f"{i}",
             )
-            user.labels.add(self.rig_label)
+            colleague = Colleague.objects.create(
+                user=user, name=f"User {i}", email=f"paginated{i}@rijksoverheid.nl", source="wies"
+            )
+            colleague.labels.add(self.rig_label)
 
         # Request first page with label filter
         response = self.client.get(reverse("admin-users"), {"labels": self.rig_label.id, "pagina": 1})

@@ -99,7 +99,6 @@ class Skill(models.Model):
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
-    labels = models.ManyToManyField("Label", related_name="users", blank=True)
 
 
 class Colleague(models.Model):

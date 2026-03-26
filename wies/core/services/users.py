@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
-from wies.core.models import DEFAULT_LABELS, Label, LabelCategory, User
+from wies.core.models import DEFAULT_LABELS, Colleague, Label, LabelCategory, User
 from wies.core.services.events import create_event
 
 
@@ -50,9 +50,13 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
         last_name=last_name,
     )
 
+    colleague, _ = Colleague.objects.get_or_create(
+        user=user, defaults={"name": f"{first_name} {last_name}", "email": email, "source": "wies"}
+    )
+
     label_names = []
     if labels:
-        user.labels.set(labels)
+        colleague.labels.set(labels)
         label_names = [label.name for label in labels]
     if groups:
         user.groups.set(groups)
@@ -94,12 +98,21 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
     user.last_name = last_name
     user.email = email
 
+    colleague, _ = Colleague.objects.get_or_create(
+        user=user, defaults={"name": f"{first_name} {last_name}", "email": email, "source": "wies"}
+    )
+
     label_names = []
     if labels is not None:
-        user.labels.set(labels)
+        colleague.labels.set(labels)
         label_names = [label.name for label in labels]
 
     user.save()
+
+    # Sync name/email to linked Colleague
+    colleague.name = f"{first_name} {last_name}"
+    colleague.email = email
+    colleague.save(update_fields=["name", "email"])
     if groups:
         user.groups.set(groups)
 

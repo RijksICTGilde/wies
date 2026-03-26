@@ -171,8 +171,8 @@ class UserForm(RvoFormMixin, forms.ModelForm):
             field_name = f"category_{category.name}"
 
             initial = []
-            if instance:
-                initial = list(instance.labels.filter(category=category).values_list("pk", flat=True))
+            if instance and hasattr(instance, "colleague") and instance.colleague is not None:
+                initial = list(instance.colleague.labels.filter(category=category).values_list("pk", flat=True))
 
             self.fields[field_name] = forms.ModelMultipleChoiceField(
                 label=category.name,
