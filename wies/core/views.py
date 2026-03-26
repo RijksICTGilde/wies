@@ -295,8 +295,8 @@ def logout(request):
     return redirect(reverse("login"))
 
 
-@user_passes_test(lambda u: u.is_superuser and u.is_authenticated, login_url="/djadmin/login/")
-def admin_db(request):
+@user_passes_test(lambda u: u.is_authenticated and u.email.lower() in settings.STAFF_EMAILS, login_url="/geen-toegang/")
+def staff(request):
     context = {
         "assignment_count": Assignment.objects.count(),
         "colleague_count": Colleague.objects.count(),
@@ -343,14 +343,14 @@ def admin_db(request):
             # Handle database import from uploaded JSON file
             if "json_file" not in request.FILES:
                 messages.error(request, "Geen bestand geüpload. Upload een JSON-bestand.")
-                return redirect("djadmin-db")
+                return redirect("staff")
 
             json_file = request.FILES["json_file"]
 
             # Validate file extension
             if not json_file.name.endswith(".json"):
                 messages.error(request, "Ongeldig bestandstype. Upload een JSON-bestand.")
-                return redirect("djadmin-db")
+                return redirect("staff")
 
             # Save uploaded file to temp location
             with tempfile.NamedTemporaryFile(mode="wb", suffix=".json", delete=False) as tmp:
@@ -382,7 +382,7 @@ def admin_db(request):
                 # Clean up temp file
                 Path(tmp_path).unlink(missing_ok=True)
 
-            return redirect("djadmin-db")
+            return redirect("staff")
         elif action == "sync_all_otys_records":
             sync_all_otys_iir_records()
             messages.success(request, "All records synced successfully from OTYS IIR")
@@ -404,8 +404,8 @@ def admin_db(request):
                 context["latest_tasks"] = get_latest_tasks(limit=3)
                 return render(request, "parts/task_list.html", context)
 
-            return redirect("djadmin-db")
-        return redirect("djadmin-db")
+            return redirect("staff")
+        return redirect("staff")
 
     return render(request, "admin_db.html", context)
 
@@ -799,7 +799,11 @@ class AssignmentListView(ListView):
         if exclude_filter != "rol":
             rol_filter = self.request.GET.getlist("rol")
             if rol_filter:
-                qs = qs.filter(services__skill__id__in=rol_filter)
+                qs = qs.filter(
+                    services__skill__id__in=rol_filter,
+                    services__status="OPEN",
+                    services__placements__isnull=True,
+                )
 
         if exclude_filter != "org":
             org_ids = [int(x) for x in self.request.GET.getlist("org") if x.isdigit()]
