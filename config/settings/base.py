@@ -161,6 +161,9 @@ AUTH_USER_MODEL = "core.User"
 # Allowed email domains for ODI users
 ALLOWED_EMAIL_DOMAINS = ["@rijksoverheid.nl", "@minbzk.nl"]
 
+# Comma-separated emails that can access /staff/ (db admin)
+STAFF_EMAILS = [email.strip().lower() for email in os.environ.get("STAFF_EMAILS", "").split(",") if email.strip()]
+
 # OTYS API settings
 OTYS_API_KEY = os.environ.get("OTYS_API_KEY", "")
 OTYS_URL = os.environ.get("OTYS_URL", "")
