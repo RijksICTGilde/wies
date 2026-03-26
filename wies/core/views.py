@@ -799,7 +799,11 @@ class AssignmentListView(ListView):
         if exclude_filter != "rol":
             rol_filter = self.request.GET.getlist("rol")
             if rol_filter:
-                qs = qs.filter(services__skill__id__in=rol_filter)
+                qs = qs.filter(
+                    services__skill__id__in=rol_filter,
+                    services__status="OPEN",
+                    services__placements__isnull=True,
+                )
 
         if exclude_filter != "org":
             org_ids = [int(x) for x in self.request.GET.getlist("org") if x.isdigit()]

@@ -171,3 +171,28 @@ class AssignmentListViewTest(TestCase):
         response = self.client.get(self.list_url)
         content = response.content.decode()
         assert "Mix Opdracht" in content
+
+    def test_filter_by_rol_excludes_filled_services(self):
+        """Rol filter should only match assignments with an OPEN unfilled service for that skill"""
+        # Assignment with a filled service (skill) and an unfilled service (skill2)
+        mix_assignment = Assignment.objects.create(name="Mix Opdracht", source="wies")
+        filled_svc = Service.objects.create(
+            assignment=mix_assignment, description="Filled", skill=self.skill, status="OPEN", source="wies"
+        )
+        colleague = Colleague.objects.create(name="Col", email="col2@test.nl", source="wies")
+        Placement.objects.create(colleague=colleague, service=filled_svc, source="wies")
+        Service.objects.create(
+            assignment=mix_assignment, description="Unfilled", skill=self.skill2, status="OPEN", source="wies"
+        )
+
+        self.client.force_login(self.auth_user)
+
+        # Filtering by skill2 (unfilled) should show Mix Opdracht
+        response = self.client.get(self.list_url, {"rol": str(self.skill2.id)})
+        content = response.content.decode()
+        assert "Mix Opdracht" in content
+
+        # Filtering by skill (filled) should NOT show Mix Opdracht
+        response = self.client.get(self.list_url, {"rol": str(self.skill.id)})
+        content = response.content.decode()
+        assert "Mix Opdracht" not in content
