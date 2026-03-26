@@ -24,7 +24,6 @@ from wies.core.views import (
     AssignmentListView,
     PlacementListView,
     UserListView,
-    admin_db,
     assignment_edit_attribute,
     assignment_import_csv,
     auth,
@@ -46,6 +45,7 @@ from wies.core.views import (
     organization_admin,
     robots_txt,
     search_suggestions,
+    staff,
     user_create,
     user_delete,
     user_edit,
@@ -62,7 +62,7 @@ urlpatterns = [
         name="security-txt",
     ),
     # Admin
-    path("djadmin/db/", admin_db, name="djadmin-db"),
+    path("staff/", staff, name="staff"),
     path("djadmin/", admin.site.urls),
     # Wies
     path("", PlacementListView.as_view(), name="home"),

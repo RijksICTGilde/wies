@@ -1,4 +1,4 @@
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from wies.core.models import User
@@ -47,7 +47,6 @@ class AccessControlTest(TestCase):
         """Test that admin views require authentication"""
         admin_paths = [
             "/djadmin/",
-            "/djadmin/db/",
         ]
 
         for path in admin_paths:
@@ -57,27 +56,33 @@ class AccessControlTest(TestCase):
                 assert response.status_code == 302
                 assert response.url.startswith("/djadmin/login/")
 
-    def test_superuser_can_access_admin_db(self):
-        """Test that superuser can access /djadmin/db/ view"""
-        superuser = User.objects.create(
+    def test_staff_page_requires_authentication(self):
+        """Test that /staff/ redirects unauthenticated users"""
+        response = self.client.get("/staff/", follow=False)
+
+        assert response.status_code == 302
+
+    @override_settings(STAFF_EMAILS=["admin@rijksoverheid.nl"])
+    def test_staff_email_can_access_staff_page(self):
+        """Test that a user whose email is in STAFF_EMAILS can access /staff/"""
+        staff_user = User.objects.create(
             username="admin",
             email="admin@rijksoverheid.nl",
             first_name="Admin",
             last_name="User",
-            is_superuser=True,
-            is_staff=True,
         )
-        self.client.force_login(superuser)
+        self.client.force_login(staff_user)
 
-        response = self.client.get("/djadmin/db/")
+        response = self.client.get("/staff/")
 
         assert response.status_code == 200
 
-    def test_non_superuser_cannot_access_admin_db(self):
-        """Test that non-superuser cannot access /djadmin/db/ view"""
+    @override_settings(STAFF_EMAILS=["other@rijksoverheid.nl"])
+    def test_non_staff_email_cannot_access_staff_page(self):
+        """Test that a user whose email is not in STAFF_EMAILS is redirected"""
         self.client.force_login(self.test_user)
 
-        response = self.client.get("/djadmin/db/", follow=False)
+        response = self.client.get("/staff/", follow=False)
 
-        # Should redirect (either to admin login or show access denied)
         assert response.status_code == 302
+        assert response.url.startswith("/geen-toegang/")
