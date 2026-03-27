@@ -1,4 +1,4 @@
-from django.contrib.auth.models import AbstractUser
+from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.functions import Lower
@@ -97,13 +97,10 @@ class Skill(models.Model):
         return self.name
 
 
-class User(AbstractUser):
-    email = models.EmailField(unique=True)
-    labels = models.ManyToManyField("Label", related_name="users", blank=True)
-
-
 class Colleague(models.Model):
-    user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name="colleague")
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True, related_name="colleague"
+    )
     name = models.CharField(max_length=200)
     email = models.EmailField()
     skills = models.ManyToManyField("Skill", blank=True)
@@ -421,7 +418,7 @@ class Task(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name="tasks")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, related_name="tasks")
     timeout_minutes = models.IntegerField(help_text="Task timeout in minutes")
     error_message = models.TextField(blank=True, help_text="Error message if task failed")
 

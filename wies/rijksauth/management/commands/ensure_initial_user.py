@@ -1,13 +1,13 @@
 import logging
 import os
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 
-from wies.core.models import Colleague, User
-from wies.core.services.users import create_user
-
 logger = logging.getLogger(__name__)
+
+User = get_user_model()
 
 
 class Command(BaseCommand):
@@ -36,16 +36,8 @@ class Command(BaseCommand):
                 "INITIAL_USER_FIRSTNAME or INITIAL_USER_LASTNAME not set, creating user with empty name fields"
             )
 
-        user = create_user(None, first_name, last_name, email)
+        user = User.objects.create_user(email=email, first_name=first_name, last_name=last_name)
 
         for group in Group.objects.all():
             user.groups.add(group)
         logger.info("Successfully created initial user: %s", email)
-
-        if not Colleague.objects.filter(email=email).exists():
-            Colleague.objects.create(
-                name=f"{first_name} {last_name}".strip(),
-                source="wies",
-                email=email,
-            )
-            logger.info("Successfully created initial colleague: %s", email)

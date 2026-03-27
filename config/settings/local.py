@@ -31,7 +31,7 @@ if (
 SKIP_OIDC = os.environ.get("SKIP_OIDC", "false").lower() == "true"
 if SKIP_OIDC:
     MIDDLEWARE = [m for m in MIDDLEWARE if m != "django.contrib.auth.middleware.LoginRequiredMiddleware"]  # noqa: F405
-    MIDDLEWARE.append("wies.core.middleware.AutoLoginMiddleware")
+    MIDDLEWARE.append("wies.rijksauth.middleware.AutoLoginMiddleware")
 
 # LOGGING
 # ----------------------------------------------------------------------------------------------------------------------

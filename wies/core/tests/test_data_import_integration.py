@@ -1,12 +1,15 @@
 from unittest.mock import Mock, patch
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
-from wies.core.models import Colleague, Label, LabelCategory, User
+from wies.core.models import Colleague, Label, LabelCategory
 from wies.core.services.placements import create_assignments_from_csv
 from wies.core.services.sync import sync_all_otys_iir_records
 from wies.core.services.users import create_users_from_csv
+
+User = get_user_model()
 
 
 class DataImportIntegrationTest(TestCase):
@@ -41,15 +44,15 @@ Bob,Johnson,bob@rijksoverheid.nl,Rijks ICT Gilde,n,n,y"""
         rig_label = Label.objects.get(name="Rijks ICT Gilde", category=merken_category)
         rc_label = Label.objects.get(name="Rijksconsultants", category=merken_category)
 
-        # Verify users have correct labels
+        # Verify users' linked colleagues have correct labels
         john = User.objects.get(email="john@rijksoverheid.nl")
-        assert rig_label in john.labels.all()
+        assert rig_label in john.colleague.labels.all()
 
         jane = User.objects.get(email="jane@rijksoverheid.nl")
-        assert rc_label in jane.labels.all()
+        assert rc_label in jane.colleague.labels.all()
 
         bob = User.objects.get(email="bob@rijksoverheid.nl")
-        assert rig_label in bob.labels.all()
+        assert rig_label in bob.colleague.labels.all()
 
     def test_csv_user_import_without_brand_creates_users_without_labels(self):
         """Test: CSV without brand column or empty brand creates users with no labels"""
@@ -63,12 +66,12 @@ Charlie,Brown,charlie@rijksoverheid.nl,"""
         assert result["users_created"] == 2
         assert result["labels_created"] == 0
 
-        # Verify users have no labels
+        # Verify users have no linked colleague (no labels were assigned)
         alice = User.objects.get(email="alice@rijksoverheid.nl")
-        assert alice.labels.count() == 0
+        assert alice.colleague.labels.count() == 0
 
         charlie = User.objects.get(email="charlie@rijksoverheid.nl")
-        assert charlie.labels.count() == 0
+        assert charlie.colleague.labels.count() == 0
 
     def test_csv_user_import_reuses_existing_labels(self):
         """Test: Importing multiple users with same brand reuses existing label"""
@@ -91,14 +94,14 @@ User,Three,user3@rijksoverheid.nl,Pre-existing Brand"""
         labels_count = Label.objects.filter(name="Pre-existing Brand").count()
         assert labels_count == 1
 
-        # Verify all users have the same label
+        # Verify all users' linked colleagues have the same label
         user1 = User.objects.get(email="user1@rijksoverheid.nl")
         user2 = User.objects.get(email="user2@rijksoverheid.nl")
         user3 = User.objects.get(email="user3@rijksoverheid.nl")
 
-        assert existing_label in user1.labels.all()
-        assert existing_label in user2.labels.all()
-        assert existing_label in user3.labels.all()
+        assert existing_label in user1.colleague.labels.all()
+        assert existing_label in user2.colleague.labels.all()
+        assert existing_label in user3.colleague.labels.all()
 
     def test_csv_user_import_duplicate_email_handling(self):
         """Test: Re-importing user with existing email skips and warns"""
@@ -349,10 +352,10 @@ Test,User,testuser@rijksoverheid.nl,Test Brand"""
         merken_category = LabelCategory.objects.get(name="Merk")
         test_label = Label.objects.get(name="Test Brand", category=merken_category)
 
-        # Verify user has label
+        # Verify user's linked colleague has label
         user = User.objects.get(email="testuser@rijksoverheid.nl")
-        assert test_label in user.labels.all()
+        assert test_label in user.colleague.labels.all()
 
-        # Verify label appears in queryset (simulating UI display)
-        users_with_label = User.objects.filter(labels=test_label)
+        # Verify label appears in queryset (simulating UI display via colleague)
+        users_with_label = User.objects.filter(colleague__labels=test_label)
         assert user in users_with_label

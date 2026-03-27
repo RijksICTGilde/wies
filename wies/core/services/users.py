@@ -1,15 +1,17 @@
 import csv
-import uuid
 from io import StringIO
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
-from wies.core.models import DEFAULT_LABELS, Label, LabelCategory, User
+from wies.core.models import DEFAULT_LABELS, Colleague, Label, LabelCategory
 from wies.core.services.events import create_event
+
+User = get_user_model()
 
 
 def is_allowed_email_domain(email: str) -> bool:
@@ -37,22 +39,22 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
     # Validate email domain
     validate_email_domain(email)
 
-    # django built in User model necessitates a username, this generates a random one
-    random_username = uuid.uuid4()
-
     if User.objects.filter(email=email).exists():
         raise EmailNotAvailableError(email)
 
-    user = User.objects.create(
-        username=random_username,
+    user = User.objects.create_user(
         email=email,
         first_name=first_name,
         last_name=last_name,
     )
 
+    colleague, _ = Colleague.objects.get_or_create(
+        user=user, defaults={"name": f"{first_name} {last_name}", "email": email, "source": "wies"}
+    )
+
     label_names = []
     if labels:
-        user.labels.set(labels)
+        colleague.labels.set(labels)
         label_names = [label.name for label in labels]
     if groups:
         user.groups.set(groups)
@@ -60,7 +62,6 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
     creator_user_email = creator.email if creator is not None else ""
     context = {
         "created_id": user.id,
-        "username": str(random_username),  # casting uuid to str to have serializable json
         "email": email,
         "first_name": first_name,
         "last_name": last_name,
@@ -94,12 +95,21 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
     user.last_name = last_name
     user.email = email
 
+    colleague, _ = Colleague.objects.get_or_create(
+        user=user, defaults={"name": f"{first_name} {last_name}", "email": email, "source": "wies"}
+    )
+
     label_names = []
     if labels is not None:
-        user.labels.set(labels)
+        colleague.labels.set(labels)
         label_names = [label.name for label in labels]
 
     user.save()
+
+    # Sync name/email to linked Colleague
+    colleague.name = f"{first_name} {last_name}"
+    colleague.email = email
+    colleague.save(update_fields=["name", "email"])
     if groups:
         user.groups.set(groups)
 

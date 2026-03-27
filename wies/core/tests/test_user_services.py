@@ -1,9 +1,10 @@
 import pytest
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
-from wies.core.models import Event, User
+from wies.core.models import Event
 from wies.core.services.users import (
     create_user,
     create_users_from_csv,
@@ -11,6 +12,8 @@ from wies.core.services.users import (
     update_user,
     validate_email_domain,
 )
+
+User = get_user_model()
 
 
 class CreateUserServiceTest(TestCase):
@@ -29,7 +32,7 @@ class CreateUserServiceTest(TestCase):
         assert user.first_name == "New"
         assert user.last_name == "User"
         assert user.email == "newuser@rijksoverheid.nl"
-        assert user.username is not None  # UUID should be generated
+        assert user.email == "newuser@rijksoverheid.nl"  # email is the identifier
         assert User.objects.filter(email="newuser@rijksoverheid.nl").exists()
 
         # Verify that event was created

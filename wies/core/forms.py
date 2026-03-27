@@ -1,17 +1,20 @@
 import logging
 
 from django import forms
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.forms.renderers import Jinja2
 from django.forms.utils import ErrorList
 from django.template import engines
 
-from .models import Label, LabelCategory, User
+from .models import Label, LabelCategory
 from .services.users import validate_email_domain
 from .widgets import MultiselectDropdown
 
 logger = logging.getLogger(__name__)
+
+User = get_user_model()
 
 
 class RvoJinja2Renderer(Jinja2):
@@ -171,8 +174,8 @@ class UserForm(RvoFormMixin, forms.ModelForm):
             field_name = f"category_{category.name}"
 
             initial = []
-            if instance:
-                initial = list(instance.labels.filter(category=category).values_list("pk", flat=True))
+            if instance and hasattr(instance, "colleague") and instance.colleague is not None:
+                initial = list(instance.colleague.labels.filter(category=category).values_list("pk", flat=True))
 
             self.fields[field_name] = forms.ModelMultipleChoiceField(
                 label=category.name,

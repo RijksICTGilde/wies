@@ -17,11 +17,7 @@
       </div>
     </div>
   </section>
-  {% if colleague.user and colleague.user.labels.all()|length > 0 %}
-    {% set labels = colleague.user.labels.all() %}
-  {% else %}
-    {% set labels = colleague.labels.all() %}
-  {% endif %}
+  {% set labels = colleague.labels.all() %}
   {% if labels %}
     <div class="rvo-layout-row rvo-layout-gap--sm" style="flex-wrap: wrap;">
       {% for label in labels %}

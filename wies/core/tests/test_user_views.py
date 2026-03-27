@@ -1,9 +1,12 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Event, Label, LabelCategory, User
+from wies.core.models import Colleague, Event, Label, LabelCategory
+
+User = get_user_model()
 
 
 class UserViewsTest(TestCase):
@@ -14,8 +17,7 @@ class UserViewsTest(TestCase):
         self.client = Client()
 
         # Create a regular user for authentication
-        self.auth_user = User.objects.create(
-            username="auth_user",
+        self.auth_user = User.objects.create_user(
             email="auth@rijksoverheid.nl",
             first_name="Auth",
             last_name="User",
@@ -30,7 +32,6 @@ class UserViewsTest(TestCase):
 
         # Create a superuser (should be excluded from list)
         self.superuser = User.objects.create_superuser(
-            username="admin",
             email="admin@rijksoverheid.nl",
             password="admin123",
             first_name="Admin",
@@ -48,21 +49,25 @@ class UserViewsTest(TestCase):
         self.bdm_group = Group.objects.create(name="Business Development Manager")
 
         # Create test users
-        self.user1 = User.objects.create(
-            username="user1",
+        self.user1 = User.objects.create_user(
             email="user1@rijksoverheid.nl",
             first_name="John",
             last_name="Doe",
         )
-        self.user1.labels.add(self.label_a)
+        self.colleague1 = Colleague.objects.create(
+            user=self.user1, name="John Doe", email="user1@rijksoverheid.nl", source="wies"
+        )
+        self.colleague1.labels.add(self.label_a)
 
-        self.user2 = User.objects.create(
-            username="user2",
+        self.user2 = User.objects.create_user(
             email="user2@rijksoverheid.nl",
             first_name="Jane",
             last_name="Smith",
         )
-        self.user2.labels.add(self.label_b)
+        self.colleague2 = Colleague.objects.create(
+            user=self.user2, name="Jane Smith", email="user2@rijksoverheid.nl", source="wies"
+        )
+        self.colleague2.labels.add(self.label_b)
 
     def test_user_admin_requires_login(self):
         """Test that user list requires authentication"""
@@ -165,7 +170,7 @@ class UserViewsTest(TestCase):
         new_user = User.objects.get(email="newuser@rijksoverheid.nl")
         assert new_user.first_name == "New"
         assert new_user.last_name == "User"
-        assert new_user.labels.filter(id=self.label_a.id).exists()
+        assert new_user.colleague.labels.filter(id=self.label_a.id).exists()
         assert not new_user.is_superuser
 
         # Event should be created
@@ -192,7 +197,7 @@ class UserViewsTest(TestCase):
         assert response.url == reverse("admin-users")
 
         new_user = User.objects.get(email="nolabels@rijksoverheid.nl")
-        assert new_user.labels.count() == 0
+        assert new_user.colleague.labels.count() == 0
 
     def test_user_create_validation_errors(self):
         """Test user creation with validation errors"""
@@ -307,8 +312,7 @@ class UserViewsTest(TestCase):
     def test_user_admin_requires_view_permission(self):
         """Test that user list returns 403 without view_user permission"""
         # Create user without view_user permission
-        user_no_perms = User.objects.create(
-            username="no_perms",
+        user_no_perms = User.objects.create_user(
             email="noperms@rijksoverheid.nl",
             first_name="No",
             last_name="Perms",
@@ -320,8 +324,7 @@ class UserViewsTest(TestCase):
 
     def test_user_admin_allows_with_view_permission(self):
         """Test that user list works with view_user permission"""
-        user_with_perms = User.objects.create(
-            username="with_perms",
+        user_with_perms = User.objects.create_user(
             email="withperms@rijksoverheid.nl",
             first_name="With",
             last_name="Perms",
@@ -336,8 +339,7 @@ class UserViewsTest(TestCase):
     def test_user_create_requires_add_permission(self):
         """Test that user creation returns 403 without add_user permission"""
         # Create user with only view permission
-        user_view_only = User.objects.create(
-            username="view_only",
+        user_view_only = User.objects.create_user(
             email="viewonly@rijksoverheid.nl",
             first_name="View",
             last_name="Only",
@@ -362,8 +364,7 @@ class UserViewsTest(TestCase):
 
     def test_user_create_get_requires_add_permission(self):
         """Test that getting the user creation form returns 403 without add_user permission"""
-        user_no_add = User.objects.create(
-            username="no_add",
+        user_no_add = User.objects.create_user(
             email="noadd@rijksoverheid.nl",
             first_name="No",
             last_name="Add",
@@ -376,8 +377,7 @@ class UserViewsTest(TestCase):
     def test_user_delete_requires_delete_permission(self):
         """Test that user deletion returns 403 without delete_user permission"""
         # Create user with only view permission
-        user_view_only = User.objects.create(
-            username="view_only2",
+        user_view_only = User.objects.create_user(
             email="viewonly2@rijksoverheid.nl",
             first_name="View",
             last_name="Only2",
@@ -509,8 +509,7 @@ class UserViewsTest(TestCase):
     def test_user_edit_requires_change_permission(self):
         """Test that user editing returns 403 without change_user permission"""
         # Create user with only view permission
-        user_view_only = User.objects.create(
-            username="view_only3",
+        user_view_only = User.objects.create_user(
             email="viewonly3@rijksoverheid.nl",
             first_name="View",
             last_name="Only3",
@@ -536,8 +535,7 @@ class UserViewsTest(TestCase):
 
     def test_user_edit_get_requires_change_permission(self):
         """Test that getting the user edit form returns 403 without change_user permission"""
-        user_no_change = User.objects.create(
-            username="no_change",
+        user_no_change = User.objects.create_user(
             email="nochange@rijksoverheid.nl",
             first_name="No",
             last_name="Change",
@@ -578,8 +576,7 @@ class UserImportTest(TestCase):
         self.existing_label = Label.objects.create(name="Existing Brand", category=category)
 
         # Create authenticated user with add_user permission
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
@@ -588,8 +585,7 @@ class UserImportTest(TestCase):
         self.auth_user.user_permissions.add(add_permission)
 
         # Create user without permissions
-        self.no_perm_user = User.objects.create(
-            username="nopermuser",
+        self.no_perm_user = User.objects.create_user(
             email="noperm@rijksoverheid.nl",
             first_name="No",
             last_name="Permission",
@@ -663,7 +659,7 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         assert john.first_name == "John"
         assert john.last_name == "Doe"
         # Verify label was assigned (Brand A should be created as label)
-        assert john.labels.filter(name="Brand A").exists()
+        assert john.colleague.labels.filter(name="Brand A").exists()
         assert john.groups.filter(name="Beheerder").exists()
         assert not john.groups.filter(name="Consultant").exists()
 
@@ -689,7 +685,7 @@ John,Doe,john.doe@rijksoverheid.nl,{self.existing_label.name},n,n,n"""
         assert Label.objects.count() == label_count_before
 
         john = User.objects.get(email="john.doe@rijksoverheid.nl")
-        assert john.labels.filter(id=self.existing_label.id).exists()
+        assert john.colleague.labels.filter(id=self.existing_label.id).exists()
 
     def test_import_validates_missing_required_columns(self):
         """Test that import validates required columns are present"""
@@ -774,9 +770,7 @@ Jane,Smith,duplicate@rijksoverheid.nl"""
         """Test that import skips users with existing email addresses"""
         self.client.force_login(self.auth_user)
         # Create existing user
-        User.objects.create(
-            username="existing", email="existing@rijksoverheid.nl", first_name="Existing", last_name="User"
-        )
+        User.objects.create_user(email="existing@rijksoverheid.nl", first_name="Existing", last_name="User")
 
         csv_content = """first_name,last_name,email
 John,Doe,john@rijksoverheid.nl
@@ -809,7 +803,7 @@ John,Doe,john@rijksoverheid.nl"""
         assert "Import geslaagd" in content
 
         john = User.objects.get(email="john@rijksoverheid.nl")
-        assert john.labels.count() == 0
+        assert john.colleague.labels.count() == 0
         assert john.groups.count() == 0
 
     def test_import_with_multiple_groups(self):
@@ -891,4 +885,4 @@ Jane,Smith,invalid-email"""
         john = User.objects.get(email="john@rijksoverheid.nl")
         assert john.first_name == "John"
         assert john.last_name == "Doe"
-        assert john.labels.filter(name="Brand A").exists()
+        assert john.colleague.labels.filter(name="Brand A").exists()

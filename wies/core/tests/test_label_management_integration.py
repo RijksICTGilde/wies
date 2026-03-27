@@ -1,8 +1,11 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Colleague, Label, LabelCategory, User
+from wies.core.models import Colleague, Label, LabelCategory
+
+User = get_user_model()
 
 
 class LabelManagementIntegrationTest(TestCase):
@@ -13,8 +16,7 @@ class LabelManagementIntegrationTest(TestCase):
         self.client = Client()
 
         # Create admin user with all label permissions
-        self.admin_user = User.objects.create(
-            username="admin",
+        self.admin_user = User.objects.create_user(
             email="admin@rijksoverheid.nl",
             first_name="Admin",
             last_name="User",
@@ -33,8 +35,7 @@ class LabelManagementIntegrationTest(TestCase):
         self.admin_user.user_permissions.add(*label_cat_permissions, *label_permissions, *user_permissions)
 
         # Create unprivileged user
-        self.regular_user = User.objects.create(
-            username="regular",
+        self.regular_user = User.objects.create_user(
             email="regular@rijksoverheid.nl",
             first_name="Regular",
             last_name="User",
@@ -76,14 +77,14 @@ class LabelManagementIntegrationTest(TestCase):
         assert response.status_code == 200
 
         user = User.objects.get(email="test@rijksoverheid.nl")
-        assert label in user.labels.all()
+        assert label in user.colleague.labels.all()
 
         # Step 4: Verify label appears in user list view
         response = self.client.get(reverse("admin-users"))
         assert response.status_code == 200
         self.assertContains(response, "Test Label")
 
-        # Step 5: Delete the category (should cascade to label and remove from user)
+        # Step 5: Delete the category (should cascade to label and remove from colleague)
         response = self.client.post(reverse("label-category-delete", kwargs={"pk": category.id}), follow=True)
         assert response.status_code == 200
 
@@ -91,9 +92,9 @@ class LabelManagementIntegrationTest(TestCase):
         assert not LabelCategory.objects.filter(id=category.id).exists()
         assert not Label.objects.filter(id=label.id).exists()
 
-        # Verify user still exists but has no labels
+        # Verify user still exists but colleague has no labels
         user.refresh_from_db()
-        assert user.labels.count() == 0
+        assert user.colleague.labels.count() == 0
 
     def test_label_edit_propagates_correctly(self):
         """Test: Editing a label name propagates to all assigned users/colleagues"""
@@ -103,11 +104,12 @@ class LabelManagementIntegrationTest(TestCase):
         category = LabelCategory.objects.create(name="Brands", color="#0066CC")
         label = Label.objects.create(name="Original Name", category=category)
 
-        # Assign to user and colleague
-        user = User.objects.create(
-            username="test_user", email="user@rijksoverheid.nl", first_name="Test", last_name="User"
+        # Assign to colleague (linked to user) and standalone colleague
+        user = User.objects.create_user(email="user@rijksoverheid.nl", first_name="Test", last_name="User")
+        user_colleague = Colleague.objects.create(
+            user=user, name="Test User", email="user@rijksoverheid.nl", source="wies"
         )
-        user.labels.add(label)
+        user_colleague.labels.add(label)
 
         colleague = Colleague.objects.create(name="Test Colleague", email="colleague@rijksoverheid.nl", source="wies")
         colleague.labels.add(label)
@@ -124,8 +126,8 @@ class LabelManagementIntegrationTest(TestCase):
         label.refresh_from_db()
         assert label.name == "Updated Name"
 
-        # Verify user and colleague still have the label
-        assert label in user.labels.all()
+        # Verify both colleagues still have the label
+        assert label in user_colleague.labels.all()
         assert label in colleague.labels.all()
 
     def test_permission_boundaries_enforced(self):
@@ -160,16 +162,18 @@ class LabelManagementIntegrationTest(TestCase):
         label2 = Label.objects.create(name="Django", category=category)
         label3 = Label.objects.create(name="JavaScript", category=category)
 
-        # Assign labels to users
-        user1 = User.objects.create(
-            username="user1", email="user1@rijksoverheid.nl", first_name="User", last_name="One"
+        # Assign labels to colleagues linked to users
+        user1 = User.objects.create_user(email="user1@rijksoverheid.nl", first_name="User", last_name="One")
+        colleague1 = Colleague.objects.create(
+            user=user1, name="User One", email="user1@rijksoverheid.nl", source="wies"
         )
-        user1.labels.add(label1, label2)
+        colleague1.labels.add(label1, label2)
 
-        user2 = User.objects.create(
-            username="user2", email="user2@rijksoverheid.nl", first_name="User", last_name="Two"
+        user2 = User.objects.create_user(email="user2@rijksoverheid.nl", first_name="User", last_name="Two")
+        colleague2 = Colleague.objects.create(
+            user=user2, name="User Two", email="user2@rijksoverheid.nl", source="wies"
         )
-        user2.labels.add(label2, label3)
+        colleague2.labels.add(label2, label3)
 
         # Delete the category
         response = self.client.post(reverse("label-category-delete", kwargs={"pk": category.id}), follow=True)
@@ -178,11 +182,11 @@ class LabelManagementIntegrationTest(TestCase):
         # Verify all labels are deleted
         assert not Label.objects.filter(category=category).exists()
 
-        # Verify users still exist but have no labels
-        user1.refresh_from_db()
-        user2.refresh_from_db()
-        assert user1.labels.count() == 0
-        assert user2.labels.count() == 0
+        # Verify colleagues still exist but have no labels
+        colleague1.refresh_from_db()
+        colleague2.refresh_from_db()
+        assert colleague1.labels.count() == 0
+        assert colleague2.labels.count() == 0
 
     def test_duplicate_label_name_in_same_category_prevented(self):
         """Test: Cannot create duplicate label names within the same category"""
