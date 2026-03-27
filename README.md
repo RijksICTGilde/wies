@@ -16,7 +16,7 @@ Internal tool for managing colleague placements within the Dutch government. Wie
 - [Docker](https://www.docker.com/)
 - [just](https://github.com/casey/just)
 - [uv](https://docs.astral.sh/uv/)
-- [npm](https://www.npmjs.com/)
+- [Node.js](https://nodejs.org/) (for JavaScript tests)
 - [pre-commit](https://pre-commit.com/)
 
 ## Quick Start
@@ -80,18 +80,16 @@ just test           # Run all tests (Django + JS)
 just test django    # Run Django tests only
 just test js        # Run JavaScript tests only
 just manage [...]   # Django manage.py commands
-just update-vendor  # Update vendor assets (htmx, RVO CSS)
+just update-vendor  # Update vendor assets (htmx)
 ```
 
 ### Vendor Assets
 
-This project vendors external JavaScript and CSS dependencies instead of using a CDN. This ensures the application works without external network dependencies and improves security (no CDN in CSP).
+This project vendors external JavaScript instead of using a CDN. This ensures the application works without external network dependencies and improves security (no CDN in CSP).
 
 **Vendored packages:**
 
 - [htmx](https://htmx.org/) - JavaScript library for AJAX/HTML
-- [@nl-rvo/design-tokens](https://www.npmjs.com/package/@nl-rvo/design-tokens) - RVO design tokens
-- [@nl-rvo/component-library-css](https://www.npmjs.com/package/@nl-rvo/component-library-css) - RVO component styles
 
 #### Update vendor dependencies
 
@@ -101,8 +99,6 @@ To update vendor dependencies:
 
    ```
    HTMX_VERSION := "2.0.6"
-   RVO_DESIGN_TOKENS_VERSION := "1.11.0"
-   RVO_COMPONENT_LIBRARY_VERSION := "4.11.1"
    ```
 
 2. Run the update command:
@@ -141,7 +137,7 @@ just manage test wies.core.tests.test_roles
 Not linked in the UI:
 
 - `/djadmin/` - Django admin
-- `/djadmin/db/` - Database admin (clear data, load fixtures, sync)
+- `/staff/` - Staff actions (clear data, load fixtures, sync)
 - `/plaatsingen/import/` - Import placements from CSV
 
 ## Architecture
