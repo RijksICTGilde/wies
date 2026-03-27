@@ -15,6 +15,7 @@ from datetime import UTC, date, datetime, timedelta
 
 from django.core.management.base import BaseCommand
 
+from wies.core.management.commands.download_profile_pictures import PROFILE_PICTURES_DIR
 from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -26,6 +27,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.services.images import process_profile_picture
 from wies.core.services.organizations import get_org_descendant_ids, sync_organizations
 
 logger = logging.getLogger(__name__)
@@ -510,6 +512,8 @@ class Command(BaseCommand):
         self.stdout.write(f"Rijksoverheid orgs (non-root): {len(rijks_pks)}, Other orgs: {len(other_pks)}")
 
         # ── 4. Colleagues ────────────────────────────────────────────────
+        picture_files = sorted(PROFILE_PICTURES_DIR.glob("*.jpg")) if PROFILE_PICTURES_DIR.exists() else []
+
         used_emails: set[str] = set()
         colleagues = []
         for i in range(1, NUM_COLLEAGUES + 1):
@@ -523,11 +527,22 @@ class Command(BaseCommand):
             num_skills = rng.randint(1, 3)
             chosen_skills = rng.sample(skills, num_skills)
 
+            picture_fields = {}
+            if picture_files:
+                picture_path = picture_files[(i - 1) % len(picture_files)]
+                image_bytes, content_type, image_hash = process_profile_picture(picture_path.read_bytes())
+                picture_fields = {
+                    "profile_picture": image_bytes,
+                    "profile_picture_content_type": content_type,
+                    "profile_picture_hash": image_hash,
+                }
+
             colleague = Colleague.objects.create(
                 name=name,
                 email=email,
                 source=weighted_choice(rng, SOURCE_WEIGHTS),
                 source_id="",
+                **picture_fields,
             )
             colleague.skills.set(chosen_skills)
             colleagues.append(colleague)

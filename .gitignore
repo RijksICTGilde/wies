@@ -225,3 +225,4 @@ wies/core/fixtures/dummy_data.json
 .python_history
 /.idea/
 wies/core/management/commands/debug.py
+profile_pictures/

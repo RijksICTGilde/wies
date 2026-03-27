@@ -1020,7 +1020,8 @@ class UserListView(PermissionRequiredMixin, ListView):
     def _get_base_queryset(self):
         """Base queryset with search applied."""
         qs = (
-            User.objects.prefetch_related("groups", "colleague__labels__category")
+            User.objects.select_related("colleague")
+            .prefetch_related("groups", "colleague__labels__category")
             .filter(is_superuser=False)
             .order_by("last_name", "first_name")
         )
@@ -1923,6 +1924,24 @@ def error_404(request, exception=None):
 @login_not_required
 def error_500(request):
     return render(request, "500.html", status=500)
+
+
+def serve_colleague_image(request, image_hash: str):
+    """Serve a colleague profile picture by its content hash."""
+    colleague = (
+        Colleague.objects.only("profile_picture", "profile_picture_content_type")
+        .filter(profile_picture_hash=image_hash)
+        .first()
+    )
+    if colleague is None:
+        raise Http404
+    response = HttpResponse(
+        bytes(colleague.profile_picture),
+        content_type=colleague.profile_picture_content_type,
+    )
+    response["Cache-Control"] = "private, immutable, max-age=31536000"
+    response["Content-Length"] = len(colleague.profile_picture)
+    return response
 
 
 @login_not_required

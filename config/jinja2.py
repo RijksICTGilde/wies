@@ -3,7 +3,7 @@ from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.urls import reverse
 from django.utils.formats import date_format
-from django.utils.html import format_html, json_script
+from django.utils.html import escape, format_html, json_script
 from jinja2 import Environment
 from jinja_roos_components import setup_components
 
@@ -53,6 +53,27 @@ def get_sort_state(request, field):
     return None
 
 
+def avatar_html(colleague, css_class="user-avatar"):
+    """Generate avatar HTML: profile picture if available (with initials fallback), or just initials."""
+    initial = colleague.name[0].upper() if colleague and colleague.name else "?"
+    if colleague and getattr(colleague, "profile_picture_hash", ""):
+        url = reverse("colleague-image", kwargs={"image_hash": colleague.profile_picture_hash})
+        name = escape(colleague.name)
+        img_class = css_class + "-img"
+        return format_html(
+            '<div class="{}">{}'
+            '<img class="{}" src="{}" alt="Profielfoto van {}" loading="lazy"'
+            ' onerror="this.remove()" />'
+            "</div>",
+            css_class,
+            initial,
+            img_class,
+            url,
+            name,
+        )
+    return format_html('<div class="{}">{}</div>', css_class, initial)
+
+
 def environment(**options):
     env = Environment(**options)  # noqa: S701 - autoescape handled by Django
     setup_components(env)
@@ -64,6 +85,7 @@ def environment(**options):
             "get_csrf_hidden_input": get_csrf_hidden_input,
             "get_toggle_sort_url": get_toggle_sort_url,
             "get_sort_state": get_sort_state,
+            "avatar": avatar_html,
             "DEBUG": settings.DEBUG,
         }
     )

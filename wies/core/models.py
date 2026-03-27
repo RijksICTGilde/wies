@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.functions import Lower
+from django.urls import reverse
 from django.utils import timezone
 
 SERVICE_STATUS = {
@@ -110,10 +111,19 @@ class Colleague(models.Model):
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(blank=True)
+    profile_picture = models.BinaryField(blank=True, null=True, editable=False)
+    profile_picture_content_type = models.CharField(max_length=50, blank=True)
+    profile_picture_hash = models.CharField(max_length=64, blank=True, db_index=True)
     # placements via reversed relation
 
     def __str__(self):
         return self.name
+
+    @property
+    def profile_picture_url(self) -> str | None:
+        if self.profile_picture_hash:
+            return reverse("colleague-image", kwargs={"image_hash": self.profile_picture_hash})
+        return None
 
 
 # Create your models here.
