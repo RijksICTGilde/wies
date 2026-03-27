@@ -1,7 +1,10 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.test import Client, TestCase, override_settings
 
-from wies.core.models import OrganizationUnit, User
+from wies.core.models import OrganizationUnit
+
+User = get_user_model()
 
 
 @override_settings(DEBUG=True)
@@ -10,7 +13,7 @@ class OrganizationAdminViewTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(email="test@rijksoverheid.nl", password="testpass123")
         self.url = "/instellingen/organisaties/"
 
     def test_requires_authentication(self):

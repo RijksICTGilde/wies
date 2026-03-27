@@ -1,8 +1,11 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Assignment, Colleague, Placement, Service, User
+from wies.core.models import Assignment, Colleague, Placement, Service
+
+User = get_user_model()
 
 
 class AssignmentEditAttributeTest(TestCase):
@@ -13,8 +16,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client = Client()
 
         # Create users
-        self.user_with_permission = User.objects.create(
-            username="user_with_perm",
+        self.user_with_permission = User.objects.create_user(
             email="perm@rijksoverheid.nl",
             first_name="User",
             last_name="WithPerm",
@@ -22,22 +24,19 @@ class AssignmentEditAttributeTest(TestCase):
         change_permission = Permission.objects.get(codename="change_assignment")
         self.user_with_permission.user_permissions.add(change_permission)
 
-        self.owner_user = User.objects.create(
-            username="owner_user",
+        self.owner_user = User.objects.create_user(
             email="owner@rijksoverheid.nl",
             first_name="Owner",
             last_name="User",
         )
 
-        self.assigned_user = User.objects.create(
-            username="assigned_user",
+        self.assigned_user = User.objects.create_user(
             email="assigned@rijksoverheid.nl",
             first_name="Assigned",
             last_name="User",
         )
 
-        self.unrelated_user = User.objects.create(
-            username="unrelated_user",
+        self.unrelated_user = User.objects.create_user(
             email="unrelated@rijksoverheid.nl",
             first_name="Unrelated",
             last_name="User",

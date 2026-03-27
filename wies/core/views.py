@@ -4,12 +4,9 @@ from collections import Counter
 from datetime import date
 from pathlib import Path
 
-from authlib.integrations.django_client import OAuth
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.auth import authenticate as auth_authenticate
-from django.contrib.auth import login as auth_login
-from django.contrib.auth import logout as auth_logout
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_not_required, permission_required, user_passes_test
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
@@ -18,7 +15,7 @@ from django.db.models import Case, Exists, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.http import Http404, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
-from django.urls import reverse, reverse_lazy
+from django.urls import reverse
 from django.utils import timezone
 from django.views.generic.list import ListView
 
@@ -34,7 +31,6 @@ from .models import (
     Placement,
     Service,
     Skill,
-    User,
 )
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .roles import user_can_edit_assignment
@@ -55,6 +51,8 @@ from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
 logger = logging.getLogger(__name__)
+
+User = get_user_model()
 
 # Singular → plural display names for organization type group headers.
 ORG_TYPE_PLURAL: dict[str, str] = {
@@ -242,57 +240,11 @@ def _build_colleague_panel_data(colleague, request):
     }
 
 
-oauth = OAuth()
-oauth.register(
-    name="oidc",
-    server_metadata_url=settings.OIDC_DISCOVERY_URL,
-    client_id=settings.OIDC_CLIENT_ID,
-    client_secret=settings.OIDC_CLIENT_SECRET,
-    client_kwargs={"scope": "openid profile email"},
-)
-
-
-@login_not_required  # login page cannot require login
-def login(request):
-    """Redirect directly to Keycloak for authentication"""
-    redirect_uri = request.build_absolute_uri(reverse_lazy("auth"))
-    return oauth.oidc.authorize_redirect(request, redirect_uri)
-
-
-@login_not_required  # called by oidc, cannot have login
-def auth(request):
-    oidc_response = oauth.oidc.authorize_access_token(request)
-    username = oidc_response["userinfo"]["sub"]
-    first_name = oidc_response["userinfo"]["given_name"]
-    last_name = oidc_response["userinfo"]["family_name"]
-    email = oidc_response["userinfo"]["email"]
-    user = auth_authenticate(
-        request, username=username, email=email, extra_fields={"first_name": first_name, "last_name": last_name}
-    )
-    if user:
-        auth_login(request, user)
-        logger.info("login successful, access granted")
-        create_event(user.email, "Login.success")
-        return redirect(request.build_absolute_uri(reverse("home")))
-
-    logger.info("login not successful, access denied")
-    # Store email for no_access page
-    request.session["failed_login_email"] = email
-    return redirect("/geen-toegang/")
-
-
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
 def no_access(request):
     email = request.session.pop("failed_login_email", None)
     is_allowed_domain = email and is_allowed_email_domain(email)
     return render(request, "no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
-
-
-@login_not_required  # logout should be accessible without login
-def logout(request):
-    if request.user and request.user.is_authenticated:
-        auth_logout(request)
-    return redirect(reverse("login"))
 
 
 @user_passes_test(lambda u: u.is_authenticated and u.email.lower() in settings.STAFF_EMAILS, login_url="/geen-toegang/")
@@ -1015,7 +967,7 @@ class UserListView(PermissionRequiredMixin, ListView):
     template_name = "user_admin.html"
     paginate_by = 50
     page_kwarg = "pagina"
-    permission_required = "core.view_user"
+    permission_required = "rijksauth.view_user"
 
     def _get_base_queryset(self):
         """Base queryset with search applied."""
@@ -1186,7 +1138,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         return context
 
 
-@permission_required("core.add_user", raise_exception=True)
+@permission_required("rijksauth.add_user", raise_exception=True)
 def user_create(request):
     """Handle user creation - GET returns form modal, POST processes creation"""
 
@@ -1243,7 +1195,7 @@ def user_create(request):
     return HttpResponse(status=405)
 
 
-@permission_required("core.change_user", raise_exception=True)
+@permission_required("rijksauth.change_user", raise_exception=True)
 def user_edit(request, pk):
     """Handle user editing - GET returns form modal with user data, POST processes update"""
     edited_user = get_object_or_404(User, pk=pk, is_superuser=False)
@@ -1307,7 +1259,7 @@ def user_edit(request, pk):
     return HttpResponse(status=405)
 
 
-@permission_required("core.delete_user", raise_exception=True)
+@permission_required("rijksauth.delete_user", raise_exception=True)
 def user_delete(request, pk):
     """Handle user deletion"""
     user = get_object_or_404(User, pk=pk, is_superuser=False)
@@ -1348,7 +1300,7 @@ def user_delete(request, pk):
     return HttpResponse(status=405)
 
 
-@permission_required("core.add_user", raise_exception=True)
+@permission_required("rijksauth.add_user", raise_exception=True)
 def user_import_csv(request):
     """
     Import users from a CSV file.

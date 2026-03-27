@@ -1,6 +1,7 @@
 from datetime import date
 from unittest.mock import Mock, patch
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, RequestFactory, TestCase
@@ -14,10 +15,11 @@ from wies.core.models import (
     Placement,
     Service,
     Skill,
-    User,
 )
 from wies.core.services.organizations import get_org_descendant_ids
 from wies.core.views import PlacementListView, _build_assignment_panel_data, _build_colleague_panel_data
+
+User = get_user_model()
 
 
 class PlacementImportTest(TestCase):
@@ -34,8 +36,7 @@ class PlacementImportTest(TestCase):
         self.bdm_group = Group.objects.create(name="Business Development Manager")
 
         # Create authenticated user with all required permissions
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
@@ -49,16 +50,14 @@ class PlacementImportTest(TestCase):
         )
 
         # Create user without permissions
-        self.no_perm_user = User.objects.create(
-            username="nopermuser",
+        self.no_perm_user = User.objects.create_user(
             email="noperm@rijksoverheid.nl",
             first_name="No",
             last_name="Permission",
         )
 
         # Create user with only some permissions (missing add_service)
-        self.partial_perm_user = User.objects.create(
-            username="partialuser",
+        self.partial_perm_user = User.objects.create_user(
             email="partial@rijksoverheid.nl",
             first_name="Partial",
             last_name="Permission",
@@ -205,8 +204,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         self.list_url = reverse("home")
 
         # Create authenticated user
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
@@ -404,8 +402,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         self.list_url = reverse("home")
 
         # Create authenticated user
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
@@ -532,8 +529,7 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
         self.list_url = reverse("home")
 
         # Create authenticated user
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
@@ -686,8 +682,7 @@ class PlacementOrganizationFilterTest(TestCase):
     """Tests for organization filtering in PlacementListView."""
 
     def setUp(self):
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
         )
         self.skill = Skill.objects.create(name="Test Skill")
@@ -838,8 +833,7 @@ class PlacementSearchTest(TestCase):
     """Tests for the 'zoek' search parameter in PlacementListView."""
 
     def setUp(self):
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
         )
         self.skill = Skill.objects.create(name="Test Skill")

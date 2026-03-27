@@ -4,8 +4,6 @@ SUPPORTED_EVENT_NAMES = {
     "User.create",
     "User.update",
     "User.delete",
-    "Login.success",
-    "Login.fail",
     "OrgSync.create",
     "OrgSync.update",
     "OrgSync.deactivate",
