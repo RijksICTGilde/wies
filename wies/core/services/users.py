@@ -50,9 +50,15 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
         last_name=last_name,
     )
 
-    colleague, _ = Colleague.objects.get_or_create(
-        email=email, defaults={"user": user, "name": f"{first_name} {last_name}", "source": "wies"}
+    # TODO: there can be an OTYS colleague record too when this is properly synced
+    # the current get_or_create method is then not sufficient (same for update_user)
+    colleague, created = Colleague.objects.get_or_create(
+        email=email, source="wies", defaults={"user": user, "name": f"{first_name} {last_name}"}
     )
+    if not created and colleague.user is None:
+        colleague.user = user
+        colleague.name = f"{first_name} {last_name}"
+        colleague.save(update_fields=["user", "name"])
 
     label_names = []
     if labels:
@@ -99,7 +105,7 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
     user.email = email
 
     colleague, _ = Colleague.objects.get_or_create(
-        email=email, defaults={"name": f"{first_name} {last_name}", "user": user, "source": "wies"}
+        user=user, defaults={"name": f"{first_name} {last_name}", "email": email, "source": "wies"}
     )
 
     label_names = []
