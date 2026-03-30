@@ -1941,6 +1941,9 @@ def serve_colleague_image(request, image_hash: str):
     )
     response["Cache-Control"] = "private, immutable, max-age=31536000"
     response["Content-Length"] = len(colleague.profile_picture)
+    response["X-Content-Type-Options"] = "nosniff"
+    response["Content-Security-Policy"] = "default-src 'none'"
+    response["Content-Disposition"] = "inline"
     return response
 
 
