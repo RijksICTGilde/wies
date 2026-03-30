@@ -51,7 +51,7 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
     )
 
     colleague, _ = Colleague.objects.get_or_create(
-        user=user, defaults={"name": f"{first_name} {last_name}", "email": email, "source": "wies"}
+        email=email, defaults={"user": user, "name": f"{first_name} {last_name}", "source": "wies"}
     )
 
     label_names = []
@@ -99,7 +99,7 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
     user.email = email
 
     colleague, _ = Colleague.objects.get_or_create(
-        user=user, defaults={"name": f"{first_name} {last_name}", "email": email, "source": "wies"}
+        email=email, defaults={"name": f"{first_name} {last_name}", "user": user, "source": "wies"}
     )
 
     label_names = []
