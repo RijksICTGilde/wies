@@ -114,7 +114,7 @@
                  title="Bekijk {{ placement.colleague.name }}">
                 <div class="placement-details-header">
                   <div class="user-table-cell">
-                    <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>
+                    {{ avatar(placement.colleague) }}
                     <div class="user-info">
                       <strong>{{ placement.colleague.name }}</strong>
                     </div>

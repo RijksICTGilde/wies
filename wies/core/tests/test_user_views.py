@@ -3,7 +3,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Event, Label, LabelCategory, User
+from wies.core.models import Colleague, Event, Label, LabelCategory, User
 
 
 class UserViewsTest(TestCase):
@@ -54,7 +54,10 @@ class UserViewsTest(TestCase):
             first_name="John",
             last_name="Doe",
         )
-        self.user1.labels.add(self.label_a)
+        self.colleague1 = Colleague.objects.create(
+            user=self.user1, name="John Doe", email="user1@rijksoverheid.nl", source="wies"
+        )
+        self.colleague1.labels.add(self.label_a)
 
         self.user2 = User.objects.create(
             username="user2",
@@ -62,7 +65,10 @@ class UserViewsTest(TestCase):
             first_name="Jane",
             last_name="Smith",
         )
-        self.user2.labels.add(self.label_b)
+        self.colleague2 = Colleague.objects.create(
+            user=self.user2, name="Jane Smith", email="user2@rijksoverheid.nl", source="wies"
+        )
+        self.colleague2.labels.add(self.label_b)
 
     def test_user_admin_requires_login(self):
         """Test that user list requires authentication"""
@@ -165,7 +171,7 @@ class UserViewsTest(TestCase):
         new_user = User.objects.get(email="newuser@rijksoverheid.nl")
         assert new_user.first_name == "New"
         assert new_user.last_name == "User"
-        assert new_user.labels.filter(id=self.label_a.id).exists()
+        assert new_user.colleague.labels.filter(id=self.label_a.id).exists()
         assert not new_user.is_superuser
 
         # Event should be created
@@ -192,7 +198,7 @@ class UserViewsTest(TestCase):
         assert response.url == reverse("admin-users")
 
         new_user = User.objects.get(email="nolabels@rijksoverheid.nl")
-        assert new_user.labels.count() == 0
+        assert new_user.colleague.labels.count() == 0
 
     def test_user_create_validation_errors(self):
         """Test user creation with validation errors"""
@@ -663,7 +669,7 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         assert john.first_name == "John"
         assert john.last_name == "Doe"
         # Verify label was assigned (Brand A should be created as label)
-        assert john.labels.filter(name="Brand A").exists()
+        assert john.colleague.labels.filter(name="Brand A").exists()
         assert john.groups.filter(name="Beheerder").exists()
         assert not john.groups.filter(name="Consultant").exists()
 
@@ -689,7 +695,7 @@ John,Doe,john.doe@rijksoverheid.nl,{self.existing_label.name},n,n,n"""
         assert Label.objects.count() == label_count_before
 
         john = User.objects.get(email="john.doe@rijksoverheid.nl")
-        assert john.labels.filter(id=self.existing_label.id).exists()
+        assert john.colleague.labels.filter(id=self.existing_label.id).exists()
 
     def test_import_validates_missing_required_columns(self):
         """Test that import validates required columns are present"""
@@ -809,7 +815,7 @@ John,Doe,john@rijksoverheid.nl"""
         assert "Import geslaagd" in content
 
         john = User.objects.get(email="john@rijksoverheid.nl")
-        assert john.labels.count() == 0
+        assert john.colleague.labels.count() == 0
         assert john.groups.count() == 0
 
     def test_import_with_multiple_groups(self):
@@ -891,4 +897,4 @@ Jane,Smith,invalid-email"""
         john = User.objects.get(email="john@rijksoverheid.nl")
         assert john.first_name == "John"
         assert john.last_name == "Doe"
-        assert john.labels.filter(name="Brand A").exists()
+        assert john.colleague.labels.filter(name="Brand A").exists()

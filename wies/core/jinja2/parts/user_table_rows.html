@@ -6,7 +6,11 @@
       title="Bewerk {{ user.first_name }} {{ user.last_name }}">
     <td class="rvo-table-cell">
       <div class="user-table-cell">
-        <div class="user-avatar">{{ user.first_name|first|upper if user.first_name else user.email|first|upper }}</div>
+        {% if user.colleague is defined and user.colleague %}
+          {{ avatar(user.colleague) }}
+        {% else %}
+          <div class="user-avatar">{{ user.first_name|first|upper if user.first_name else user.email|first|upper }}</div>
+        {% endif %}
         <div class="user-info">
           <div class="rvo-text rvo-text--bold">{{ user.first_name }} {{ user.last_name }}</div>
         </div>

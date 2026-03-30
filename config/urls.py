@@ -45,6 +45,7 @@ from wies.core.views import (
     organization_admin,
     robots_txt,
     search_suggestions,
+    serve_colleague_image,
     staff,
     user_create,
     user_delete,
@@ -87,6 +88,7 @@ urlpatterns = [
     path("instellingen/labels/categorie/<int:pk>/labels/aanmaken/", label_create),
     path("instellingen/labels/<int:pk>/bewerken/", label_edit, name="label-edit"),
     path("instellingen/labels/<int:pk>/verwijderen/", label_delete, name="label-delete"),
+    path("afbeeldingen/<str:image_hash>/", serve_colleague_image, name="colleague-image"),
     path("zoek-suggesties/", search_suggestions, name="search-suggestions"),
     path("client-modal/", client_modal, name="client-modal"),
 ]

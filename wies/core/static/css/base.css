@@ -547,8 +547,10 @@ html {
 }
 
 .user-avatar {
+  position: relative;
   width: 32px;
   height: 32px;
+  min-width: 32px;
   border-radius: 50%;
   background-color: var(--rvo-color-hemelblauw-150);
   display: flex;
@@ -559,6 +561,41 @@ html {
   font-family:
     var(--rvo-font-sans-serif-font-family),
     var(--rvo-font-sans-serif-fallback-font-family), sans-serif;
+  overflow: hidden;
+}
+
+.card-avatar {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  min-width: 80px;
+  background-color: var(--rvo-color-hemelblauw-150);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: var(--rvo-font-weight-semibold);
+  font-size: 2rem;
+  color: var(--rvo-color-lintblauw);
+  overflow: hidden;
+}
+
+.user-avatar-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.card-avatar-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .user-avatar--vacant {
