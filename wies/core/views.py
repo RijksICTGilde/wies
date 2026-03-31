@@ -1020,7 +1020,7 @@ class UserListView(PermissionRequiredMixin, ListView):
     def _get_base_queryset(self):
         """Base queryset with search applied."""
         qs = (
-            User.objects.prefetch_related("groups", "labels__category")
+            User.objects.prefetch_related("groups", "colleague__labels__category")
             .filter(is_superuser=False)
             .order_by("last_name", "first_name")
         )
@@ -1057,7 +1057,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         labels_by_category = self._get_labels_by_category()
         for cat_id, cat_label_ids in labels_by_category.items():
             if exclude_filter != cat_id:
-                qs = qs.filter(labels__id__in=cat_label_ids)
+                qs = qs.filter(colleague__labels__id__in=cat_label_ids)
 
         # Role filter
         if exclude_filter != "rol":
@@ -1115,7 +1115,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         for category in LabelCategory.objects.all():
             cat_filtered_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
             cat_user_qs = User.objects.filter(id__in=cat_filtered_qs.values_list("id", flat=True))
-            cat_label_ids = cat_user_qs.values_list("labels__id", flat=True)
+            cat_label_ids = cat_user_qs.values_list("colleague__labels__id", flat=True)
             cat_label_counts = Counter(lid for lid in cat_label_ids if lid is not None)
 
             options = [{"value": "", "label": ""}]
@@ -1328,7 +1328,10 @@ def user_delete(request, pk):
             },
         )
     if request.method == "POST":
-        label_names = [label.name for label in user.labels.all()]
+        if hasattr(user, "colleague") and user.colleague:
+            label_names = [label.name for label in user.colleague.labels.all()]
+        else:
+            label_names = []
         context = {
             "id": pk,
             "email": user.email,

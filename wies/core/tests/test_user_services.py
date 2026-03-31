@@ -3,7 +3,7 @@ from django.contrib.auth.models import Group
 from django.test import TestCase
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
-from wies.core.models import Event, User
+from wies.core.models import Colleague, Event, User
 from wies.core.services.users import (
     create_user,
     create_users_from_csv,
@@ -93,6 +93,77 @@ class CreateUserServiceTest(TestCase):
 
         # Verify no user was created
         assert not User.objects.filter(email="external@gmail.com").exists()
+
+
+class CreateUserColleagueLinkTest(TestCase):
+    """Tests for colleague linking in create_user"""
+
+    def test_create_user_creates_colleague(self):
+        """Test that creating a user also creates a linked colleague"""
+        user = create_user(
+            None,
+            first_name="Test",
+            last_name="User",
+            email="test@rijksoverheid.nl",
+        )
+
+        colleague = Colleague.objects.get(email="test@rijksoverheid.nl")
+        assert colleague.user == user
+        assert colleague.name == "Test User"
+        assert colleague.source == "wies"
+
+    def test_delete_user_and_readd_relinks_colleague(self):
+        """Test that deleting a user and re-adding with the same email relinks the existing colleague"""
+        user = create_user(
+            None,
+            first_name="Original",
+            last_name="User",
+            email="relink@rijksoverheid.nl",
+        )
+
+        colleague = Colleague.objects.get(email="relink@rijksoverheid.nl")
+        colleague_id = colleague.id
+        assert colleague.user == user
+
+        # Delete user — colleague stays with user=None (SET_NULL)
+        user.delete()
+        colleague.refresh_from_db()
+        assert colleague.user is None
+
+        # Re-add user with same email
+        new_user = create_user(
+            None,
+            first_name="New",
+            last_name="User",
+            email="relink@rijksoverheid.nl",
+        )
+
+        # Colleague should be relinked, not duplicated
+        colleague.refresh_from_db()
+        assert colleague.id == colleague_id
+        assert colleague.user == new_user
+        assert colleague.name == "New User"
+        assert Colleague.objects.filter(email="relink@rijksoverheid.nl").count() == 1
+
+    def test_update_user_email_syncs_colleague(self):
+        """Test that updating a user's email also updates the linked colleague's email"""
+        user = create_user(
+            None,
+            first_name="Test",
+            last_name="User",
+            email="old@rijksoverheid.nl",
+        )
+
+        update_user(
+            None,
+            user=user,
+            first_name="Test",
+            last_name="User",
+            email="new@rijksoverheid.nl",
+        )
+
+        colleague = Colleague.objects.get(user=user)
+        assert colleague.email == "new@rijksoverheid.nl"
 
 
 class UpdateUserServiceTest(TestCase):

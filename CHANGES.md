@@ -4,6 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 266: (migration) enforce uniqueness on Colleague.email + Colleague.source
+- 266: always create Colleague for Users
+- 266: (migration) move labels from User to Colleague
 - 265: fix opdrachten filter to only consider skills on open services
 - 265: make search bar on assignments page same as on wiezitwaar page
 - 261: (new env var) move db admin from `/djadmin/db/` to `/staff/`, use SSO login instead of superuser login, access controlled by `STAFF_EMAILS`
