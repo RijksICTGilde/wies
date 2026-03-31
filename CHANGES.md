@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 280: extend business manager mailto link with pre-filled subject and email body
 - 265: fix opdrachten filter to only consider skills on open services
 - 265: make search bar on assignments page same as on wiezitwaar page
 - 261: (new env var) move db admin from `/djadmin/db/` to `/staff/`, use SSO login instead of superuser login, access controlled by `STAFF_EMAILS`

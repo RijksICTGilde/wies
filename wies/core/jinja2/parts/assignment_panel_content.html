@@ -89,10 +89,9 @@
           {% else %}
             {{ panel_data.assignment.owner.name }}
           {% endif %}
-          {% if panel_data.assignment.owner.email %}
+          {% if panel_data.owner_mailto_href %}
             <br>
-            <a href="mailto:{{ panel_data.assignment.owner.email }}"
-               class="rvo-link">{{ panel_data.assignment.owner.email }}</a>
+            <a href="{{ panel_data.owner_mailto_href }}" class="rvo-link">{{ panel_data.assignment.owner.email }}</a>
           {% endif %}
         </dd>
       {% endif %}
