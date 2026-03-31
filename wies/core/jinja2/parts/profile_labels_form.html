@@ -1,0 +1,52 @@
+{% set widget_name = "labels_" ~ category.id %}
+<form hx-post="{{ edit_url }}"
+      hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+      hx-target="#{{ target_element }}"
+      hx-swap="innerHTML">
+  <div class="multiselect" data-multiselect data-name="{{ widget_name }}">
+    <button type="button"
+            class="multiselect__trigger utrecht-select"
+            aria-haspopup="listbox"
+            aria-expanded="false"
+            aria-labelledby="label-{{ widget_name }}">
+      <span class="multiselect__trigger-text">
+        {%- set selected_count = selected_label_ids|length -%}
+        {%- if selected_count == 1 -%}
+          {%- for label in all_labels if label.pk in selected_label_ids -%}
+            {{ label.name }}
+          {%- endfor -%}
+        {%- elif selected_count > 1 -%}
+          {{ selected_count }} geselecteerd
+        {%- endif -%}
+      </span>
+    </button>
+    <div class="multiselect__dropdown" role="listbox" hidden>
+      <button type="button"
+              class="multiselect__clear"
+              {% if not selected_label_ids %}hidden{% endif %}>Wis selectie</button>
+      {% for label in all_labels %}
+        <label class="multiselect__option">
+          <input type="checkbox"
+                 class="rvo-checkbox__input multiselect__checkbox"
+                 value="{{ label.pk }}"
+                 {% if label.pk in selected_label_ids %}checked{% endif %} />
+          <span class="rvo-text">{{ label.name }}</span>
+        </label>
+      {% endfor %}
+    </div>
+    <div class="multiselect__hidden-inputs">
+      {% for label_id in selected_label_ids %}
+        <input type="hidden"
+               name="{{ widget_name }}"
+               value="{{ label_id }}"
+               data-filter-input />
+      {% endfor %}
+    </div>
+  </div>
+  <div class="field-actions">
+    <c-button type="submit" kind="primary">Opslaan</c-button>
+    <c-button type="button" kind="secondary" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target_element }}" hx-swap="innerHTML">
+    Annuleren
+    </c-button>
+  </div>
+</form>

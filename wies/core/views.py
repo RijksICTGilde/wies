@@ -1905,6 +1905,288 @@ def assignment_edit_attribute(request, pk, attribute):
     return HttpResponse(status=405)
 
 
+def _build_profile_assignment_list(colleague):
+    """Build the full assignment list for the user profile (including historical)."""
+    placement_qs = (
+        Placement.objects.filter(colleague=colleague)
+        .select_related("service__assignment", "service__skill")
+        .values(
+            "id",
+            "service__assignment__id",
+            "service__assignment__name",
+            "service__assignment__start_date",
+            "service__assignment__end_date",
+            "service__skill__name",
+        )
+        .distinct()
+    )
+    placement_qs = annotate_placement_dates(placement_qs)
+    # No end_date filter — include all assignments (historical too)
+
+    assignments_by_id = {}
+    for item in placement_qs:
+        aid = item["service__assignment__id"]
+        if aid not in assignments_by_id:
+            assignments_by_id[aid] = {
+                "name": item["service__assignment__name"],
+                "id": aid,
+                "tags": [],
+                "start_date": item.get("actual_start_date"),
+                "end_date": item.get("actual_end_date"),
+            }
+        else:
+            existing = assignments_by_id[aid]
+            start = item.get("actual_start_date")
+            end = item.get("actual_end_date")
+            if start and (existing["start_date"] is None or start < existing["start_date"]):
+                existing["start_date"] = start
+            if end and (existing["end_date"] is None or end > existing["end_date"]):
+                existing["end_date"] = end
+        skill = item["service__skill__name"]
+        if skill and skill not in assignments_by_id[aid]["tags"]:
+            assignments_by_id[aid]["tags"].append(skill)
+
+    # Also include assignments where colleague is the owner (BDM) — all, not just current
+    bm_assignments = Assignment.objects.filter(owner=colleague).values_list("id", "name", "start_date", "end_date")
+    for aid, name, start_date, end_date in bm_assignments:
+        if aid in assignments_by_id:
+            if "Business Manager" not in assignments_by_id[aid]["tags"]:
+                assignments_by_id[aid]["tags"].append("Business Manager")
+        else:
+            assignments_by_id[aid] = {
+                "name": name,
+                "id": aid,
+                "tags": ["Business Manager"],
+                "start_date": start_date,
+                "end_date": end_date,
+            }
+
+    # Add phase to each assignment
+    today = timezone.now().date()
+    for assignment in assignments_by_id.values():
+        start = assignment["start_date"]
+        end = assignment["end_date"]
+        if None in (start, end):
+            assignment["phase"] = None
+        elif start > today:
+            assignment["phase"] = "planned"
+        elif end < today:
+            assignment["phase"] = "completed"
+        else:
+            assignment["phase"] = "active"
+
+    return sorted(assignments_by_id.values(), key=lambda a: a["name"])
+
+
+def user_profile(request):
+    """User's own profile page with editable fields and full assignment history."""
+    user = request.user
+    colleague = getattr(user, "colleague", None)
+
+    # Build label data per category for the data list rows
+    label_categories = []
+    for category in LabelCategory.objects.order_by("name"):
+        selected = list(colleague.labels.filter(category=category).order_by("name")) if colleague else []
+        label_categories.append({"category": category, "labels": selected})
+
+    assignment_list = _build_profile_assignment_list(colleague) if colleague else []
+
+    return render(
+        request,
+        "user_profile.html",
+        {
+            "colleague": colleague,
+            "label_categories": label_categories,
+            "assignment_list": assignment_list,
+        },
+    )
+
+
+# Configuration for editable profile fields
+EDITABLE_PROFILE_FIELDS = {
+    "first_name": {
+        "field_type": "text",
+        "field_name": "first_name",
+        "max_length": 150,
+        "required": True,
+        "label": "Voornaam",
+        "display_template": "parts/editable_text_field.html",
+        "form_template": "parts/editable_text_field_form.html",
+        "target_element": "profile-first-name-content",
+    },
+    "last_name": {
+        "field_type": "text",
+        "field_name": "last_name",
+        "max_length": 150,
+        "required": True,
+        "label": "Achternaam",
+        "display_template": "parts/editable_text_field.html",
+        "form_template": "parts/editable_text_field_form.html",
+        "target_element": "profile-last-name-content",
+    },
+}
+
+
+def user_profile_edit_attribute(request, attribute):
+    """
+    Inline editor for user profile attributes.
+    Handles text fields (first_name, last_name) and label categories (labels_<category_id>).
+    """
+    user = request.user
+
+    # Handle label category editing: labels_<category_id>
+    if attribute.startswith("labels_"):
+        return _handle_label_edit(request, attribute)
+
+    # Handle text field editing
+    if attribute not in EDITABLE_PROFILE_FIELDS:
+        return HttpResponse(status=404)
+
+    field_config = EDITABLE_PROFILE_FIELDS[attribute]
+    edit_url = reverse("user-profile-edit-attribute", kwargs={"attribute": attribute})
+
+    if request.method == "POST":
+        field_name = field_config["field_name"]
+        new_value = request.POST.get(field_name, "").strip()
+
+        errors = {}
+        if field_config["required"] and not new_value:
+            errors[field_name] = f"{field_config['label']} is verplicht"
+        elif field_config.get("max_length") and len(new_value) > field_config["max_length"]:
+            errors[field_name] = f"{field_config['label']} mag maximaal {field_config['max_length']} tekens bevatten"
+
+        if errors:
+            return render(
+                request,
+                field_config["form_template"],
+                {
+                    "target_element": field_config["target_element"],
+                    "field_name": field_name,
+                    "field_value": new_value,
+                    "edit_url": edit_url,
+                    "errors": errors,
+                },
+            )
+
+        # Save to User
+        setattr(user, field_name, new_value)
+        user.save(update_fields=[field_name])
+
+        # Sync name to Colleague
+        colleague, _ = Colleague.objects.get_or_create(
+            user=user, defaults={"name": f"{user.first_name} {user.last_name}", "email": user.email, "source": "wies"}
+        )
+        colleague.name = f"{user.first_name} {user.last_name}"
+        colleague.save(update_fields=["name"])
+
+        return render(
+            request,
+            field_config["display_template"],
+            {
+                "target_element": field_config["target_element"],
+                "field_label": field_config["label"],
+                "field_value": getattr(user, field_name),
+                "edit_url": edit_url,
+                "user_can_edit": True,
+            },
+        )
+
+    if request.method == "GET":
+        current_value = getattr(user, field_config["field_name"])
+
+        if request.GET.get("cancel"):
+            return render(
+                request,
+                field_config["display_template"],
+                {
+                    "target_element": field_config["target_element"],
+                    "field_label": field_config["label"],
+                    "field_value": current_value,
+                    "edit_url": edit_url,
+                    "user_can_edit": True,
+                },
+            )
+        return render(
+            request,
+            field_config["form_template"],
+            {
+                "target_element": field_config["target_element"],
+                "field_name": field_config["field_name"],
+                "field_value": current_value or "",
+                "edit_url": edit_url,
+            },
+        )
+
+    return HttpResponse(status=405)
+
+
+def _handle_label_edit(request, attribute):
+    """Handle inline label editing for a specific category."""
+    try:
+        category_id = int(attribute.split("_", 1)[1])
+    except ValueError, IndexError:
+        return HttpResponse(status=404)
+
+    category = get_object_or_404(LabelCategory, pk=category_id)
+    user = request.user
+
+    colleague, _ = Colleague.objects.get_or_create(
+        user=user, defaults={"name": f"{user.first_name} {user.last_name}", "email": user.email, "source": "wies"}
+    )
+
+    edit_url = reverse("user-profile-edit-attribute", kwargs={"attribute": attribute})
+    target_element = f"profile-labels-{category_id}-content"
+    all_labels = list(Label.objects.filter(category=category).order_by("name"))
+
+    if request.method == "POST":
+        selected_ids = request.POST.getlist(f"labels_{category_id}")
+        selected_labels = Label.objects.filter(pk__in=selected_ids, category=category)
+
+        colleague.labels.remove(*colleague.labels.filter(category=category))
+        colleague.labels.add(*selected_labels)
+
+        updated_labels = list(colleague.labels.filter(category=category).order_by("name"))
+        return render(
+            request,
+            "parts/profile_labels_display.html",
+            {
+                "category": category,
+                "labels": updated_labels,
+                "edit_url": edit_url,
+                "target_element": target_element,
+            },
+        )
+
+    if request.method == "GET":
+        selected_labels = list(colleague.labels.filter(category=category).order_by("name"))
+
+        if request.GET.get("cancel"):
+            return render(
+                request,
+                "parts/profile_labels_display.html",
+                {
+                    "category": category,
+                    "labels": selected_labels,
+                    "edit_url": edit_url,
+                    "target_element": target_element,
+                },
+            )
+
+        return render(
+            request,
+            "parts/profile_labels_form.html",
+            {
+                "category": category,
+                "all_labels": all_labels,
+                "selected_label_ids": [label.pk for label in selected_labels],
+                "edit_url": edit_url,
+                "target_element": target_element,
+            },
+        )
+
+    return HttpResponse(status=405)
+
+
 @login_not_required
 def error_400(request, exception=None):
     return render(request, "400.html", status=400)

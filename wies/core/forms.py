@@ -199,3 +199,34 @@ class UserForm(RvoFormMixin, forms.ModelForm):
                 cleaned_data["labels"].extend(selected_labels)
 
         return cleaned_data
+
+
+class ProfileLabelsForm(RvoFormMixin, forms.Form):
+    """Form for editing labels on the user profile page, grouped by category."""
+
+    def __init__(self, *args, colleague=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for category in LabelCategory.objects.all():
+            field_name = f"category_{category.name}"
+
+            initial = []
+            if colleague is not None:
+                initial = list(colleague.labels.filter(category=category).values_list("pk", flat=True))
+
+            self.fields[field_name] = forms.ModelMultipleChoiceField(
+                label=category.name,
+                queryset=Label.objects.filter(category=category),
+                required=False,
+                initial=initial,
+                widget=MultiselectDropdown(),
+            )
+            self._configure_field_for_rvo(field_name)
+
+    def get_all_labels(self):
+        """Return combined list of all selected labels across categories."""
+        labels = []
+        for field_name, value in self.cleaned_data.items():
+            if field_name.startswith("category_") and value:
+                labels.extend(value)
+        return labels
