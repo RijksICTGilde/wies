@@ -12,14 +12,19 @@ This files lists the changes during the lifetime of this project.
 - 282: redesign placement table columns (Wie, Wat, Waar)
 - 282: improve contrast: black links, headings, and icons (WCAG AA)
 - 282: add RVO date, textarea, and checkbox widget templates
+- 268: fix duplicate form validation errors in service rows
+- 268: improve service row layout (consultant field on own line)
+- 268: add assignment creation form with services, org picker, and inline skill creation
+- 268: add Django formset for service rows with per-service status
+- 268: add success toast notification after assignment creation
 - 266: (migration) enforce uniqueness on Colleague.email + Colleague.source
 - 266: always create Colleague for Users
 - 266: (migration) move labels from User to Colleague
 - 265: fix opdrachten filter to only consider skills on open services
 - 265: make search bar on assignments page same as on wiezitwaar page
-- 261: (new env var) move db admin from `/djadmin/db/` to `/staff/`, use SSO login instead of superuser login, access controlled by `STAFF_EMAILS`
 - 262: make sidepanels the same between 2 pages
 - 262: (migration) change status from assignment to service: (CONCEPT, OPEN, GESLOTEN)
+- 261: (new env var) move db admin from `/djadmin/db/` to `/staff/`, use SSO login instead of superuser login, access controlled by `STAFF_EMAILS`
 - 251: fix that placement table shows org labels instead of org names
 - 251: confirm search by enter press
 - 251: add search suggestions: organizations found by abbreviation

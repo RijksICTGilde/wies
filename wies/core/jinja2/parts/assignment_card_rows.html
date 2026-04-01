@@ -7,18 +7,6 @@
            hx-target="#side_panel-container"
            onkeydown="if(event.key==='Enter')htmx.trigger(this,'click')"
            style="cursor: pointer">
-    {% if assignment.services_with_skills %}
-      <div class="assignment-card__tags"
-           role="list"
-           aria-label="Gezochte rollen">
-        {% for service in assignment.services_with_skills[:3] %}
-          <span class="rvo-tag rvo-tag--default" role="listitem">{{ service.skill.name }}</span>
-        {% endfor %}
-        {% if assignment.services_with_skills|length > 3 %}
-          <span class="rvo-tag rvo-tag--default" role="listitem">+{{ assignment.services_with_skills|length - 3 }} meer</span>
-        {% endif %}
-      </div>
-    {% endif %}
     <div class="assignment-card__header">
       <h3 class="rvo-text rvo-text--bold rvo-text--no-margins assignment-card__title">{{ assignment.name }}</h3>
     </div>
@@ -38,6 +26,18 @@
         {{ assignment.start_date|datum_nl("N Y") }}
         {% if assignment.end_date %}- {{ assignment.end_date|datum_nl("N Y") }}{% endif %}
       </span>
+    {% endif %}
+    {% if assignment.services_with_skills %}
+      <div class="assignment-card__tags"
+           role="list"
+           aria-label="Gezochte rollen">
+        {% for service in assignment.services_with_skills[:3] %}
+          <span class="rvo-tag rvo-tag--default" role="listitem">{{ service.skill.name }}</span>
+        {% endfor %}
+        {% if assignment.services_with_skills|length > 3 %}
+          <span class="rvo-tag rvo-tag--default" role="listitem">+{{ assignment.services_with_skills|length - 3 }} meer</span>
+        {% endif %}
+      </div>
     {% endif %}
   </article>
 {% else %}
