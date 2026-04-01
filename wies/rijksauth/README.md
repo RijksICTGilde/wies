@@ -65,7 +65,7 @@ urlpatterns = [
 
 ## Extending with a user profile
 
-The `rijksauth.User` model is intentionally minimal: just email-based authentication. Your project will likely need additional user metadata (roles, labels, department, phone number, etc.). The recommended pattern is a **separate profile model** in your own app with a `OneToOneField` to `User`:
+The `rijksauth.User` model is intentionally minimal: just email-based authentication. Your project will likely need additional user metadata (preferences, notification settings, etc.). The recommended pattern is a **separate profile model** in your own app with a `OneToOneField` to `User`:
 
 ```python
 # yourapp/models.py
@@ -78,8 +78,8 @@ class UserProfile(models.Model):
         on_delete=models.CASCADE,
         related_name="profile",
     )
-    department = models.CharField(max_length=200, blank=True)
-    phone = models.CharField(max_length=20, blank=True)
+    preferred_language = models.CharField(max_length=5, default="nl")
+    notifications_enabled = models.BooleanField(default=True)
     # ... any fields specific to your project
 ```
 
@@ -139,6 +139,27 @@ class YourAppConfig(AppConfig):
 ```
 
 This way your app owns the full user lifecycle.
+
+## Role-based access control (RBAC)
+
+`rijksauth.User` extends Django's `AbstractUser`, so the full [Django permissions system](https://docs.djangoproject.com/en/5.2/topics/auth/default/#permissions-and-authorization) is available out of the box — groups, permissions, `user.has_perm()`, `@permission_required`, etc.
+
+The recommended pattern is to use Django groups as roles. Define a setup function in your app:
+
+```python
+# yourapp/roles.py
+from django.contrib.auth.models import Group, Permission
+from django.contrib.contenttypes.models import ContentType
+
+from yourapp.models import Report
+
+def setup_roles():
+    editor, _ = Group.objects.get_or_create(name="Editor")
+    content_type = ContentType.objects.get_for_model(Report)
+    for codename in ["add_report", "change_report", "delete_report"]:
+        perm = Permission.objects.get(codename=codename, content_type=content_type)
+        editor.permissions.add(perm)
+```
 
 ## Enforcing email domains
 
