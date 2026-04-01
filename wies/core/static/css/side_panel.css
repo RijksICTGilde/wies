@@ -182,7 +182,8 @@ dialog#side_panel::backdrop {
   position: relative;
 }
 
-.editable-field-display span {
+.editable-field-display > span:first-child,
+.editable-field-display > div:first-child {
   flex: 1;
 }
 

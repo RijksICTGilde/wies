@@ -1975,7 +1975,7 @@ def _build_profile_assignment_list(colleague):
         else:
             assignment["phase"] = "active"
 
-    return sorted(assignments_by_id.values(), key=lambda a: a["name"])
+    return sorted(assignments_by_id.values(), key=lambda a: a["start_date"] or date.min, reverse=True)
 
 
 def user_profile(request):
