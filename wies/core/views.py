@@ -22,7 +22,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic.list import ListView
 
-from .forms import LabelCategoryForm, LabelForm, ProfileLabelsForm, UserForm
+from .forms import AssignmentCreateForm, LabelCategoryForm, LabelForm, ProfileLabelsForm, ServiceFormSet, UserForm
 from .models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -38,6 +38,7 @@ from .models import (
 )
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .roles import user_can_edit_assignment
+from .services.assignments import create_assignment_from_form, extract_services_data
 from .services.events import create_event
 from .services.organizations import (
     find_orgs_by_abbreviation,
@@ -1173,6 +1174,13 @@ class AssignmentListView(ListView):
             context["next_page_url"] = f"?{params.urlencode()}"
         else:
             context["next_page_url"] = None
+
+        # Primary button for assignment creation (BDM permission)
+        if self.request.user.has_perm("core.add_assignment"):
+            context["primary_button"] = {
+                "button_text": "Opdracht toevoegen",
+                "href": reverse("assignment-create"),
+            }
 
         # Side panel
         colleague_id = self.request.GET.get("collega")
@@ -2398,6 +2406,71 @@ Disallow: /
     return HttpResponse(content, content_type="text/plain")
 
 
+@permission_required("core.add_assignment", raise_exception=True)
+def assignment_create(request):
+    """Handle assignment creation - standalone form page."""
+    template = "assignment_create.html"
+
+    skill_choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
+    skill_choices.extend((str(s.id), s.name) for s in Skill.objects.order_by("name"))
+
+    if request.method == "GET":
+        initial = {}
+        if hasattr(request.user, "colleague"):
+            initial["owner"] = request.user.colleague
+        form = AssignmentCreateForm(initial=initial)
+        service_formset = ServiceFormSet(prefix="service", form_kwargs={"skill_choices": skill_choices})
+        return render(request, template, {"form": form, "service_formset": service_formset})
+
+    if request.method == "POST":
+        form = AssignmentCreateForm(request.POST)
+        service_formset = ServiceFormSet(request.POST, prefix="service", form_kwargs={"skill_choices": skill_choices})
+
+        # Always check org selection and services, regardless of form/formset validity
+        primary_org_ids = [int(x) for x in request.POST.getlist("primary_organization") if x.isdigit()]
+        org_error = "" if primary_org_ids else "Voeg minimaal één opdrachtgever toe."
+
+        # Check if at least one service has a skill selected (works even when formset is invalid)
+        total_forms = int(request.POST.get("service-TOTAL_FORMS", 0))
+        has_any_service = any(request.POST.get(f"service-{i}-skill") for i in range(total_forms))
+        services_error = "" if has_any_service else "Voeg minimaal één dienst toe."
+
+        form_valid = form.is_valid()
+        formset_valid = service_formset.is_valid()
+
+        if not form_valid or not formset_valid or org_error or services_error:
+            if services_error:
+                form.add_error(None, services_error)
+            return render(request, template, {"form": form, "service_formset": service_formset, "org_error": org_error})
+
+        services_data = extract_services_data(service_formset)
+
+        primary_org_id = primary_org_ids[0]
+        # Extra primary orgs demoted to involved
+        involved_org_ids = [int(x) for x in request.POST.getlist("involved_organization") if x.isdigit()]
+        involved_org_ids.extend(primary_org_ids[1:])
+
+        assignment = create_assignment_from_form(
+            name=form.cleaned_data["name"],
+            extra_info=form.cleaned_data.get("extra_info", ""),
+            start_date=form.cleaned_data.get("start_date"),
+            end_date=form.cleaned_data.get("end_date"),
+            owner=form.cleaned_data.get("owner"),
+            primary_organization_id=primary_org_id,
+            involved_organization_ids=involved_org_ids,
+            services_data=services_data,
+        )
+
+        link_url = f"{reverse('assignment-list')}?opdracht={assignment.id}"
+        messages.success(
+            request,
+            f'Opdracht "{assignment.name}" is aangemaakt.',
+            extra_tags=f"link:{link_url}|Bekijk opdracht",
+        )
+        return redirect("assignment-list")
+    return HttpResponse(status=405)
+
+
 def search_suggestions(request):
     """Return org abbreviation suggestions for the search input (HTMX partial)."""
     term = request.GET.get("zoek", "")
@@ -2571,8 +2644,9 @@ def client_modal(request):
     hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 
+    template = "parts/assignment_org_modal.html" if count_mode == "none" else "parts/client_modal.html"
     return render(
         request,
-        "parts/client_modal.html",
+        template,
         {"hierarchy": hierarchy, "current_selections": current_selections},
     )
