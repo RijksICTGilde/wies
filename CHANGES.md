@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 281: fix label delete bug introduced in 266
 - 266: (migration) enforce uniqueness on Colleague.email + Colleague.source
 - 266: always create Colleague for Users
 - 266: (migration) move labels from User to Colleague

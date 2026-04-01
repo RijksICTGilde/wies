@@ -1742,7 +1742,7 @@ def label_delete(request, pk):
     label = get_object_or_404(Label, pk=pk)
     category = label.category
 
-    label_use_count = label.users.count() + label.colleagues.count()
+    label_use_count = label.colleagues.count()
 
     if request.method == "GET":
         return render(
