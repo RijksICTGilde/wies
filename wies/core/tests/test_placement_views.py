@@ -449,7 +449,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         )
 
         # Create historical placement (ended yesterday)
-        historical_placement = Placement.objects.create(
+        Placement.objects.create(
             colleague=self.colleague1,
             service=service,
             period_source="PLACEMENT",
@@ -459,7 +459,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         )
 
         # Create current placement (ending tomorrow)
-        current_placement = Placement.objects.create(
+        Placement.objects.create(
             colleague=self.colleague2,
             service=service,
             period_source="PLACEMENT",
@@ -475,11 +475,11 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
 
         panel_data = _build_assignment_panel_data(assignment, request, request.path)
 
-        # Verify only current placement is in panel data
-        placement_ids = [p.id for s in panel_data["services"] for p in s.current_placements]
-        assert len(placement_ids) == 1, "Panel should contain only 1 (current) placement"
-        assert current_placement.id in placement_ids, "Current placement should be in panel"
-        assert historical_placement.id not in placement_ids, "Historical placement should be excluded"
+        # Verify only current placement's colleague is in panel data
+        colleague_ids = [m["colleague"].id for m in panel_data["team_members"]]
+        assert len(colleague_ids) == 1, "Panel should contain only 1 (current) team member"
+        assert self.colleague2.id in colleague_ids, "Current placement's colleague should be in panel"
+        assert self.colleague1.id not in colleague_ids, "Historical placement's colleague should be excluded"
 
     @patch("wies.core.views.timezone")
     def test_assignment_panel_includes_current_placements(self, mock_timezone):
@@ -502,7 +502,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         )
 
         # Create placement ending today
-        placement = Placement.objects.create(
+        Placement.objects.create(
             colleague=self.colleague1,
             service=service,
             period_source="PLACEMENT",
@@ -519,9 +519,9 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         panel_data = _build_assignment_panel_data(assignment, request, request.path)
 
         # Verify placement ending today is included
-        placement_ids = [p.id for s in panel_data["services"] for p in s.current_placements]
-        assert len(placement_ids) == 1, "Panel should contain the placement ending today"
-        assert placement.id in placement_ids, "Placement ending today should be included"
+        colleague_ids = [m["colleague"].id for m in panel_data["team_members"]]
+        assert len(colleague_ids) == 1, "Panel should contain the team member ending today"
+        assert self.colleague1.id in colleague_ids, "Colleague with placement ending today should be included"
 
 
 class ColleagueSidePanelHistoricalFilterTest(TestCase):

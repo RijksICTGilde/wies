@@ -140,12 +140,24 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
     )
     filled_services = [s for s in filled_services if s.current_placements]
 
+    # Group filled placements by colleague for the team list
+    colleagues_by_id: dict[int, dict] = {}
     for service in filled_services:
         for placement in service.current_placements:
-            placement.colleague_url = _build_panel_url(request, collega=placement.colleague.id)
+            cid = placement.colleague.id
+            if cid not in colleagues_by_id:
+                colleagues_by_id[cid] = {
+                    "colleague": placement.colleague,
+                    "colleague_url": _build_panel_url(request, collega=cid),
+                    "skills": [],
+                }
+            if service.skill and service.skill.name not in colleagues_by_id[cid]["skills"]:
+                colleagues_by_id[cid]["skills"].append(service.skill.name)
 
-    # Vacancies first, then filled
-    services = vacancy_services + filled_services
+    # Vacancies (open services without placements)
+    vacancy_skills = [s.skill.name if s.skill else None for s in vacancy_services]
+
+    team_members = list(colleagues_by_id.values())
 
     primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
         "organization__parent__parent__parent__parent"
@@ -162,7 +174,8 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         "panel_title": assignment.name,
         "close_url": _build_close_url(request),
         "assignment": assignment,
-        "services": services,
+        "team_members": team_members,
+        "vacancy_skills": vacancy_skills,
         "user_can_edit": user_can_edit_assignment(request.user, assignment),
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
         "org_breadcrumbs": org_breadcrumbs,

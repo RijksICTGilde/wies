@@ -98,48 +98,45 @@
       {% endif %}
     </dl>
   </section>
-  {% if panel_data.services %}
+  {% if panel_data.vacancy_skills or panel_data.team_members %}
     <section>
       <h2>Team</h2>
       <div class="rvo-item-list">
-        {% for service in panel_data.services %}
-          {% if service.current_placements %}
-            {% for placement in service.current_placements %}
-              <a href="{{ placement.colleague_url }}"
-                 hx-get="{{ placement.colleague_url }}"
-                 hx-target="#side_panel-content"
-                 class="rvo-item-list__item clickable-row"
-                 style="text-decoration: none;
-                        color: inherit"
-                 title="Bekijk {{ placement.colleague.name }}">
-                <div class="placement-details-header">
-                  <div class="user-table-cell">
-                    <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>
-                    <div class="user-info">
-                      <strong>{{ placement.colleague.name }}</strong>
-                    </div>
-                  </div>
-                  <div>
-                    {% if service.skill %}<span class="rvo-tag rvo-tag--default">{{ service.skill.name }}</span>{% endif %}
-                  </div>
-                </div>
-              </a>
-            {% endfor %}
-          {% else %}
-            <div class="rvo-item-list__item">
-              <div class="placement-details-header">
-                <div class="user-table-cell">
-                  <div class="user-avatar user-avatar--vacant">?</div>
-                  <div class="user-info">
-                    <span class="rvo-text--italic rvo-text--subtle">Open</span>
-                  </div>
-                </div>
-                <div>
-                  {% if service.skill %}<span class="rvo-tag rvo-tag--default">{{ service.skill.name }}</span>{% endif %}
+        {% for skill_name in panel_data.vacancy_skills %}
+          <div class="rvo-item-list__item">
+            <div class="placement-details-header">
+              <div class="user-table-cell">
+                <div class="user-avatar user-avatar--vacant">?</div>
+                <div class="user-info">
+                  <span class="rvo-text--italic rvo-text--subtle">Open</span>
                 </div>
               </div>
+              <div>
+                {% if skill_name %}<span class="rvo-tag rvo-tag--default">{{ skill_name }}</span>{% endif %}
+              </div>
             </div>
-          {% endif %}
+          </div>
+        {% endfor %}
+        {% for member in panel_data.team_members %}
+          <a href="{{ member.colleague_url }}"
+             hx-get="{{ member.colleague_url }}"
+             hx-target="#side_panel-content"
+             class="rvo-item-list__item clickable-row"
+             style="text-decoration: none;
+                    color: inherit"
+             title="Bekijk {{ member.colleague.name }}">
+            <div class="placement-details-header">
+              <div class="user-table-cell">
+                <div class="user-avatar">{{ member.colleague.name|first|upper }}</div>
+                <div class="user-info">
+                  <strong>{{ member.colleague.name }}</strong>
+                </div>
+              </div>
+              <div>
+                {% for skill in member.skills %}<span class="rvo-tag rvo-tag--default">{{ skill }}</span>{% endfor %}
+              </div>
+            </div>
+          </a>
         {% endfor %}
       </div>
     </section>
