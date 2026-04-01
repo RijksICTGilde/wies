@@ -1,5 +1,6 @@
 import logging
 import tempfile
+import urllib.parse
 from collections import Counter
 from datetime import date
 from pathlib import Path
@@ -157,6 +158,21 @@ def _build_assignment_panel_data(assignment, request):
         {**get_org_breadcrumb(rel.organization, request.path), "role": rel.role} for rel in [*primary, *involved]
     ]
 
+    owner_mailto_href = ""
+    if assignment.owner and assignment.owner.email:
+        opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.id}")
+        subject = urllib.parse.quote(f"Opdracht: {assignment.name}")
+        body_lines = [
+            f"Beste {assignment.owner.name},",
+            "",
+            f"Ik zag deze opdracht {opdracht_url} op WIES. Kun je me hier meer informatie over geven?",
+        ]
+        if assignment.extra_info:
+            body_lines += ["", f"Opdrachtbeschrijving: {assignment.extra_info}"]
+        body_lines += ["", "Met vriendelijke groet,", "", ""]
+        body = urllib.parse.quote("\n".join(body_lines))
+        owner_mailto_href = f"mailto:{assignment.owner.email}?subject={subject}&body={body}"
+
     return {
         "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
@@ -165,6 +181,7 @@ def _build_assignment_panel_data(assignment, request):
         "services": services,
         "user_can_edit": user_can_edit_assignment(request.user, assignment),
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
+        "owner_mailto_href": owner_mailto_href,
         "org_breadcrumbs": org_breadcrumbs,
     }
 
