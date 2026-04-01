@@ -4,6 +4,8 @@
   <link rel="stylesheet" href="{{ static('css/filters/filters.css') }}">
   <link rel="stylesheet" href="{{ static('css/user_profile.css') }}">
   <script src="{{ static('js/filters/multi_select.js') }}" defer></script>
+  <script src="{{ static('js/dialog.js') }}" defer></script>
+  <script src="{{ static('js/side_panel.js') }}" defer></script>
 {% endblock extra_head %}
 {% block content %}
   <div class="profile-page rvo-layout-column rvo-layout-gap--xl">
@@ -69,7 +71,9 @@
               <div class="rvo-card rvo-card--outline rvo-card--padding--md"
                    title="Deze afgelopen opdracht is alleen zichtbaar voor jou">
               {% else %}
-                <a href="{{ url("home") }}?opdracht={{ assignment.id }}"
+                <a href="{{ url("user-profile") }}?opdracht={{ assignment.id }}"
+                   hx-get="{{ url("user-profile") }}?opdracht={{ assignment.id }}"
+                   hx-target="#side_panel-container"
                    class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row"
                    style="text-decoration: none;
                           color: inherit">
@@ -114,3 +118,10 @@
     </section>
   </div>
 {% endblock content %}
+{% block panel %}
+  <div id="side_panel-container">
+    {% if panel_data %}
+      {% include "parts/side_panel.html" %}
+    {% endif %}
+  </div>
+{% endblock panel %}

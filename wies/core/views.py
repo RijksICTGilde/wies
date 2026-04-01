@@ -111,7 +111,7 @@ def _build_close_url(request):
     return f"{request.path}?{params.urlencode()}" if params else request.path
 
 
-def _build_assignment_panel_data(assignment, request):
+def _build_assignment_panel_data(assignment, request, breadcrumb_base):
     """Shared helper to build assignment panel context data for both views."""
     today = timezone.now().date()
 
@@ -154,7 +154,7 @@ def _build_assignment_panel_data(assignment, request):
         "organization__parent__parent__parent__parent"
     )
     org_breadcrumbs = [
-        {**get_org_breadcrumb(rel.organization, request.path), "role": rel.role} for rel in [*primary, *involved]
+        {**get_org_breadcrumb(rel.organization, breadcrumb_base), "role": rel.role} for rel in [*primary, *involved]
     ]
 
     return {
@@ -754,7 +754,7 @@ class PlacementListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
             except Assignment.DoesNotExist:
                 pass
         return context
@@ -1001,7 +1001,7 @@ class AssignmentListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
             except Assignment.DoesNotExist:
                 pass
 
@@ -1983,6 +1983,32 @@ def user_profile(request):
     user = request.user
     colleague = getattr(user, "colleague", None)
 
+    # Side panel handling
+    colleague_id = request.GET.get("collega")
+    assignment_id = request.GET.get("opdracht")
+    panel_data = None
+
+    if assignment_id:
+        try:
+            assignment = Assignment.objects.get(id=assignment_id)
+            panel_data = _build_assignment_panel_data(assignment, request, reverse("home"))
+        except Assignment.DoesNotExist:
+            pass
+    elif colleague_id:
+        try:
+            panel_colleague = Colleague.objects.get(id=colleague_id)
+            panel_data = _build_colleague_panel_data(panel_colleague, request)
+        except Colleague.DoesNotExist:
+            pass
+
+    # HTMX partial responses for panel swaps
+    if "HX-Request" in request.headers:
+        hx_target = request.headers.get("HX-Target")
+        if hx_target == "side_panel-container" and panel_data:
+            return render(request, "parts/side_panel.html", {"panel_data": panel_data})
+        if hx_target == "side_panel-content" and panel_data:
+            return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+
     # Build label data per category for the data list rows
     label_categories = []
     for category in LabelCategory.objects.order_by("name"):
@@ -1998,6 +2024,7 @@ def user_profile(request):
             "colleague": colleague,
             "label_categories": label_categories,
             "assignment_list": assignment_list,
+            "panel_data": panel_data,
         },
     )
 

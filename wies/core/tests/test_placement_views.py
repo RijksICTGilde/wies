@@ -473,7 +473,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        panel_data = _build_assignment_panel_data(assignment, request)
+        panel_data = _build_assignment_panel_data(assignment, request, request.path)
 
         # Verify only current placement is in panel data
         placement_ids = [p.id for s in panel_data["services"] for p in s.current_placements]
@@ -516,7 +516,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        panel_data = _build_assignment_panel_data(assignment, request)
+        panel_data = _build_assignment_panel_data(assignment, request, request.path)
 
         # Verify placement ending today is included
         placement_ids = [p.id for s in panel_data["services"] for p in s.current_placements]
