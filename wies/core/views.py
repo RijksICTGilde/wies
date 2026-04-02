@@ -238,7 +238,7 @@ def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, *
     }
 
 
-def _get_colleague_panel_assignments(request, colleague, viewer):
+def _get_colleague_assignments(request, colleague, viewer):
 
     today = timezone.now().date()
     viewer_is_colleague = viewer and colleague.id == viewer.id
@@ -366,9 +366,13 @@ def _get_colleague_panel_assignments(request, colleague, viewer):
         else:
             continue
 
-    # Build final sorted list: active first, then historical
-    active_list = sorted(active_by_id.values(), key=lambda a: a["name"])
-    historical_list = sorted(historical_by_id.values(), key=lambda a: a["name"])
+    # Convert tag sets to sorted lists for deterministic template rendering
+    for assignment in (*active_by_id.values(), *historical_by_id.values()):
+        assignment["tags"] = sorted(assignment["tags"])
+
+    # Build final sorted list: active first, then historical; within each block by start_date desc
+    active_list = sorted(active_by_id.values(), key=lambda a: a["start_date"] or date.min, reverse=True)
+    historical_list = sorted(historical_by_id.values(), key=lambda a: a["start_date"] or date.min, reverse=True)
     return active_list + historical_list
 
 
@@ -376,7 +380,7 @@ def _build_colleague_panel_data(colleague, request):
     """Shared helper to build colleague panel context data for both views."""
     viewer = getattr(request.user, "colleague", None)
 
-    assignments = _get_colleague_panel_assignments(request, colleague, viewer)
+    assignments = _get_colleague_assignments(request, colleague, viewer)
 
     return {
         "panel_content_template": "parts/colleague_panel_content.html",
