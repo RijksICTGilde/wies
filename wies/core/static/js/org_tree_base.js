@@ -240,7 +240,12 @@
       return;
     }
 
-    var matchingNodes = new Set();
+    allNodes.forEach(function (li) {
+      li.classList.add("search-hidden");
+      li.classList.remove("search-match");
+      li.classList.remove("collapsed");
+    });
+
     self.treeState.nodes.forEach(function (node) {
       var matches = false;
       if (node.label && node.label.toLowerCase().includes(q)) matches = true;
@@ -252,30 +257,20 @@
           }
         }
       }
-      if (matches) matchingNodes.add(node.id);
-    });
-
-    var visibleNodes = new Set(matchingNodes);
-    matchingNodes.forEach(function (nodeId) {
-      var node = self.treeState.nodes.get(nodeId);
-      if (!node) return;
-      var ancestor = node.parent;
-      while (ancestor) {
-        visibleNodes.add(ancestor.id);
-        ancestor = ancestor.parent;
-      }
-    });
-
-    allNodes.forEach(function (li) {
-      var nodeId = li.dataset.nodeId;
-      if (visibleNodes.has(nodeId)) {
-        li.classList.remove("search-hidden");
-        li.classList.remove("collapsed");
-        li.classList.toggle("search-match", matchingNodes.has(nodeId));
-      } else {
-        li.classList.add("search-hidden");
-        li.classList.remove("search-match");
-        li.classList.remove("collapsed");
+      if (matches) {
+        var li = self.domNodes.get(node.id);
+        if (li) {
+          li.classList.remove("search-hidden");
+          li.classList.add("search-match");
+        }
+        var ancestor = node.parent;
+        while (ancestor) {
+          var ancestorLi = self.domNodes.get(ancestor.id);
+          if (ancestorLi) {
+            ancestorLi.classList.remove("search-hidden");
+          }
+          ancestor = ancestor.parent;
+        }
       }
     });
     self.onSync(self.treeState);
