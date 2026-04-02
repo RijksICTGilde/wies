@@ -166,6 +166,35 @@ dialog#side_panel::backdrop {
   width: 100%;
 }
 
+/* Completed assignment tag */
+.assignment-tag--completed {
+  background-color: var(--rvo-color-rood-200, #f9dfdd);
+  color: var(--rvo-color-rood-800, #8b0000);
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 3px;
+}
+
+/* Label badges */
+.label-list {
+  flex-wrap: wrap;
+}
+
+.label-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+}
+
+/* Panel card link (no link styling) */
+.panel-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.panel-card-link__title {
+  flex: 1;
+}
+
 /* Assignment skill tag spacing */
 .assignment-skill-tag {
   display: flex;
@@ -182,7 +211,8 @@ dialog#side_panel::backdrop {
   position: relative;
 }
 
-.editable-field-display span {
+.editable-field-display > span:first-child,
+.editable-field-display > div:first-child {
   flex: 1;
 }
 

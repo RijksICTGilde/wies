@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/side_panel.css') }}">
+  <link rel="stylesheet" href="{{ static('css/filters/filters.css') }}">
+  <link rel="stylesheet" href="{{ static('css/user_profile.css') }}">
+  <script src="{{ static('js/filters/multi_select.js') }}" defer></script>
+  <script src="{{ static('js/dialog.js') }}" defer></script>
+  <script src="{{ static('js/side_panel.js') }}" defer></script>
+{% endblock extra_head %}
+{% block content %}
+  <div class="profile-page rvo-layout-column rvo-layout-gap--xl">
+    {# Profile info #}
+    <section class="rvo-layout-column rvo-layout-gap--md">
+      <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--center">
+        <img alt="Profielfoto van {{ user.get_full_name() }}"
+             src="{{ static('img/placeholder-avatar.svg') }}"
+             class="profile-avatar" />
+        <h1 class="utrecht-heading-1 rvo-heading rvo-heading--no-margin">Mijn profiel</h1>
+      </div>
+      <dl class="rvo-data-list profile-data-list">
+        <dt>Voornaam</dt>
+        <dd>
+          <div id="profile-first-name-content">
+            {% with target_element="profile-first-name-content",
+              field_value=user.first_name,
+              field_label="Voornaam",
+              edit_url=url("user-profile-edit-attribute", args=["first_name"]),
+              user_can_edit=true %}
+              {% include "parts/editable_text_field.html" %}
+            {% endwith %}
+          </div>
+        </dd>
+        <dt>Achternaam</dt>
+        <dd>
+          <div id="profile-last-name-content">
+            {% with target_element="profile-last-name-content",
+              field_value=user.last_name,
+              field_label="Achternaam",
+              edit_url=url("user-profile-edit-attribute", args=["last_name"]),
+              user_can_edit=true %}
+              {% include "parts/editable_text_field.html" %}
+            {% endwith %}
+          </div>
+        </dd>
+        <dt>E-mail</dt>
+        <dd>
+          <a href="mailto:{{ user.email }}" class="rvo-link">{{ user.email }}</a>
+        </dd>
+        {% for item in label_categories %}
+          <dt>{{ item.category.name }}</dt>
+          <dd>
+            <div id="profile-labels-{{ item.category.id }}-content">
+              {% with category=item.category,
+                labels=item.labels,
+                edit_url=url("user-profile-edit-attribute", args=["labels_" ~ item.category.id]),
+                target_element="profile-labels-" ~ item.category.id ~ "-content" %}
+                {% include "parts/profile_labels_display.html" %}
+              {% endwith %}
+            </div>
+          </dd>
+        {% endfor %}
+      </dl>
+    </section>
+    {# Assignments section #}
+    <section>
+      <h2 class="utrecht-heading-2">Opdrachten</h2>
+      {% if assignment_list %}
+        <div class="rvo-layout-column rvo-layout-gap--sm">
+          {% for assignment in assignment_list %}
+            <a href="{{ assignment.assignment_url }}"
+               hx-get="{{ assignment.assignment_url }}"
+               hx-target="#side_panel-container"
+               class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row panel-card-link">
+              <div class="rvo-card__content">
+                {% if assignment.historical %}
+                  <div class="rvo-layout-row rvo-layout-align--center">
+                    <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin panel-card-link__title">{{ assignment.name }}</h3>
+                    <span class="rvo-tag assignment-tag--completed">Afgelopen</span>
+                  </div>
+                {% else %}
+                  <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin">{{ assignment.name }}</h3>
+                {% endif %}
+                {% if assignment.start_date or assignment.end_date %}
+                  <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
+                    <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm rvo-icon--rvo-grijs-700"
+                          role="img"
+                          aria-label="Periode"></span>
+                    <span class="rvo-text--subtle rvo-text--sm">{{ assignment.start_date|datum_nl("N y") }} - {{ assignment.end_date|datum_nl("N y") }}</span>
+                  </div>
+                {% endif %}
+                {% if assignment.tags %}
+                  <div class="assignment-skill-tag">
+                    {% for tag in assignment.tags %}<span class="rvo-tag rvo-tag--default">{{ tag }}</span>{% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="rvo-card rvo-card--outline rvo-card--padding--md">
+          <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center">
+            <span class="utrecht-icon rvo-icon rvo-icon-info rvo-icon--lg rvo-icon--rvo-grijs-700"
+                  role="img"
+                  aria-label="Informatie"></span>
+            <span class="rvo-text--italic rvo-text--subtle">Geen opdrachten gevonden.</span>
+          </div>
+        </div>
+      {% endif %}
+    </section>
+  </div>
+{% endblock content %}
+{% block panel %}
+  <div id="side_panel-container">
+    {% if panel_data %}
+      {% include "parts/side_panel.html" %}
+    {% endif %}
+  </div>
+{% endblock panel %}
