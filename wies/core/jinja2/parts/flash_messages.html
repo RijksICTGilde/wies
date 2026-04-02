@@ -1,0 +1,22 @@
+{% set page_messages = get_messages(request) %}
+{% if page_messages %}
+  <div class="flash-messages" id="flash-messages">
+    {% for message in page_messages %}
+      {% set link = message.extra_tags|parse_message_link %}
+      <c-alert kind="{{ 'success' if 'success' in message.tags else 'error' if 'error' in message.tags else 'info' }}">
+      {{ message }}
+      {% if link %}<a href="{{ link.url }}" class="rvo-link">{{ link.text }}</a>{% endif %}
+      </c-alert>
+    {% endfor %}
+  </div>
+  <script>
+    (function() {
+      var el = document.getElementById("flash-messages");
+      if (!el) return;
+      var timeout = setTimeout(function() { el.classList.add("flash-messages--hiding"); }, 5000);
+      el.addEventListener("mouseenter", function() { clearTimeout(timeout); });
+      el.addEventListener("mouseleave", function() { timeout = setTimeout(function() { el.classList.add("flash-messages--hiding"); }, 2000); });
+      el.addEventListener("animationend", function(e) { if (e.animationName === "flash-fade-out") el.remove(); });
+    })();
+  </script>
+{% endif %}

@@ -1,0 +1,23 @@
+{# Single service row within the formset #}
+<div class="service-row" data-service-index="{{ row_index }}">
+  <div class="service-row__line">
+    <div class="service-field--grow">{{ svc_form.skill.as_field_group() }}</div>
+    <div class="service-field--remove">
+      {% if not is_first %}
+        <button type="button"
+                class="service-row__remove rvo-button rvo-button--tertiary rvo-button--size-xs"
+                title="Dienst verwijderen"
+                aria-label="Dienst verwijderen">×</button>
+      {% endif %}
+    </div>
+  </div>
+  <div class="service-new-skill" style="display: none">{{ svc_form.new_skill_name.as_field_group() }}</div>
+  {{ svc_form.description.as_field_group() }}
+  <div class="service-field--checkbox">
+    <label class="rvo-checkbox">{{ svc_form.is_filled }} Rol ingevuld</label>
+  </div>
+  <div class="service-colleague-field" style="display: none">{{ svc_form.colleague.as_field_group() }}</div>
+  {% if svc_form.non_field_errors() %}
+    {% for error in svc_form.non_field_errors() %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
+  {% endif %}
+</div>
