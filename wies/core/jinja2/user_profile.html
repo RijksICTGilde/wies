@@ -67,42 +67,37 @@
       {% if assignment_list %}
         <div class="rvo-layout-column rvo-layout-gap--sm">
           {% for assignment in assignment_list %}
-            {% if assignment.phase == "completed" %}
-              <div class="rvo-card rvo-card--outline rvo-card--padding--md"
-                   title="Deze afgelopen opdracht is alleen zichtbaar voor jou">
-              {% else %}
-                <a href="{{ url("user-profile") }}?opdracht={{ assignment.id }}"
-                   hx-get="{{ url("user-profile") }}?opdracht={{ assignment.id }}"
-                   hx-target="#side_panel-container"
-                   class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row"
-                   style="text-decoration: none;
-                          color: inherit">
-                {% endif %}
-                <div class="rvo-card__content">
-                  <div class="rvo-layout-row rvo-layout-align--center">
-                    <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin"
-                        style="flex: 1">{{ assignment.name }}</h3>
-                    {% if assignment.phase == "completed" %}<span class="rvo-tag assignment-tag--completed">Afgelopen</span>{% endif %}
+            <a href="{{ url("user-profile") }}?opdracht={{ assignment.id }}"
+               hx-get="{{ url("user-profile") }}?opdracht={{ assignment.id }}"
+               hx-target="#side_panel-container"
+               class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row"
+               style="text-decoration: none;
+                      color: inherit">
+              <div class="rvo-card__content">
+                <div class="rvo-layout-row rvo-layout-align--center">
+                  <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin"
+                      style="flex: 1">{{ assignment.name }}</h3>
+                  {% if assignment.phase == "completed" %}<span class="rvo-tag assignment-tag--completed">Afgelopen</span>{% endif %}
+                </div>
+                {% if assignment.start_date or assignment.end_date %}
+                  <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
+                    <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm rvo-icon--rvo-grijs-700"
+                          role="img"
+                          aria-label="Periode"></span>
+                    <span class="rvo-text--subtle rvo-text--sm">{{ assignment.start_date|datum_nl("N y") }} - {{ assignment.end_date|datum_nl("N y") }}</span>
                   </div>
-                  {% if assignment.start_date or assignment.end_date %}
-                    <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
-                      <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm rvo-icon--rvo-grijs-700"
-                            role="img"
-                            aria-label="Periode"></span>
-                      <span class="rvo-text--subtle rvo-text--sm">{{ assignment.start_date|datum_nl("N y") }} - {{ assignment.end_date|datum_nl("N y") }}</span>
-                    </div>
-                  {% endif %}
-                  {% if assignment.tags %}
-                    <div class="assignment-skill-tag">
-                      {% for tag in assignment.tags %}<span class="rvo-tag rvo-tag--default">{{ tag }}</span>{% endfor %}
-                    </div>
-                  {% endif %}
-                </div>
-                {% if assignment.phase == "completed" %}
-                </div>
-              {% else %}
-              </a>
-            {% endif %}
+                {% endif %}
+                {% if assignment.tags or assignment.historical_tags %}
+                  <div class="assignment-skill-tag">
+                    {% for tag in assignment.tags %}<span class="rvo-tag rvo-tag--default">{{ tag }}</span>{% endfor %}
+                    {% for tag in assignment.historical_tags %}
+                      <span class="rvo-tag rvo-tag--default rvo-text--subtle"
+                            style="opacity: 0.6">{{ tag }} (afgelopen)</span>
+                    {% endfor %}
+                  </div>
+                {% endif %}
+              </div>
+            </a>
           {% endfor %}
         </div>
       {% else %}

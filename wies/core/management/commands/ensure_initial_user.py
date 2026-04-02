@@ -6,19 +6,14 @@ from django.contrib.auth.models import Group
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from wies.core.models import Colleague, Label, Placement, Service, User
+from wies.core.models import Assignment, Colleague, Label, Placement, Service, User
 from wies.core.services.users import create_user
 
 logger = logging.getLogger(__name__)
 
 
-def _setup_dev_profile(colleague):
-    """Populate the initial user's colleague with labels and placements for dev."""
-    if colleague.labels.exists():
-        logger.info("Colleague already has labels, skipping dev profile setup")
-        return
-
-    # Assign labels per category
+def _assign_dev_labels(colleague):
+    """Give the dev colleague a handful of labels across categories."""
     label_names = {
         "Expertise": ["AI", "Architectuur en technologie", "Cloud en platform technologie"],
         "Merk": ["Rijks ICT Gilde"],
@@ -27,32 +22,36 @@ def _setup_dev_profile(colleague):
     for category_name, names in label_names.items():
         labels = Label.objects.filter(category__name=category_name, name__in=names)
         colleague.labels.add(*labels)
+    logger.info("Assigned %d labels to initial colleague", colleague.labels.count())
 
-    assigned_count = colleague.labels.count()
-    logger.info("Assigned %d labels to initial colleague", assigned_count)
 
-    # Create placements for a mix of current and historical assignments
-    if colleague.placements.exists():
-        return
-
+def _create_dev_placements(colleague):
+    """Create a mix of current, historical, and split-tile placements for dev."""
     today = timezone.now().date()
 
-    # Find services from current/active assignments
-    current_services = (
+    # Find one service per distinct active assignment
+    current_services: list[Service] = []
+    seen_assignments: set[int] = set()
+    for service in (
         Service.objects.filter(assignment__end_date__gte=today)
         .select_related("assignment")
-        .order_by("assignment__name")[:3]
-    )
+        .order_by("assignment__name")
+    ):
+        if service.assignment_id not in seen_assignments:
+            current_services.append(service)
+            seen_assignments.add(service.assignment_id)
+        if len(current_services) == 3:  # noqa: PLR2004
+            break
 
     # Find services from completed/historical assignments
-    historical_services = (
+    historical_services = list(
         Service.objects.filter(assignment__end_date__lt=today)
         .select_related("assignment")
         .order_by("-assignment__end_date")[:2]
     )
 
     placement_count = 0
-    for service in list(current_services) + list(historical_services):
+    for service in current_services + historical_services:
         Placement.objects.create(
             colleague=colleague,
             service=service,
@@ -61,7 +60,58 @@ def _setup_dev_profile(colleague):
         )
         placement_count += 1
 
+    # Ensure one assignment has both an active and an ended placement for this colleague.
+    # Find a sibling service (different skill) on one of the active assignments and create
+    # an already-ended placement on it, giving the "split tile" scenario.
+    placed_service_ids = {s.pk for s in current_services}
+    for service in current_services:
+        sibling = (
+            Service.objects.filter(assignment=service.assignment)
+            .exclude(pk__in=placed_service_ids)
+            .select_related("skill")
+            .first()
+        )
+        if sibling:
+            Placement.objects.create(
+                colleague=colleague,
+                service=sibling,
+                period_source="PLACEMENT",
+                specific_start_date=today.replace(year=today.year - 1),
+                specific_end_date=today.replace(month=max(today.month - 2, 1)),
+                source="wies",
+            )
+            placement_count += 1
+            break
+
     logger.info("Created %d placements for initial colleague", placement_count)
+
+    # Make colleague the BM (owner) on one active and one finished assignment
+    active_assignment = (
+        Assignment.objects.filter(end_date__gte=today).exclude(services__placements__colleague=colleague).first()
+    )
+    if active_assignment:
+        active_assignment.owner = colleague
+        active_assignment.save(update_fields=["owner"])
+        logger.info("Set colleague as BM on active assignment: %s", active_assignment.name)
+
+    finished_assignment = (
+        Assignment.objects.filter(end_date__lt=today).exclude(services__placements__colleague=colleague).first()
+    )
+    if finished_assignment:
+        finished_assignment.owner = colleague
+        finished_assignment.save(update_fields=["owner"])
+        logger.info("Set colleague as BM on finished assignment: %s", finished_assignment.name)
+
+
+def _setup_dev_profile(colleague):
+    """Populate the initial user's colleague with labels and placements for dev."""
+    if not colleague.labels.exists():
+        _assign_dev_labels(colleague)
+    else:
+        logger.info("Colleague already has labels, skipping dev profile setup")
+
+    if not colleague.placements.exists():
+        _create_dev_placements(colleague)
 
 
 class Command(BaseCommand):

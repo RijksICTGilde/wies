@@ -159,6 +159,37 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
 
     team_members = list(colleagues_by_id.values())
 
+    # Historical placements — privacy-critical: only visible to the consultant themselves or the BM
+    historical_team_members: list[dict] = []
+    viewer = getattr(request.user, "colleague", None)
+    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
+    if viewer:
+        historical_services = list(
+            assignment.services.select_related("skill").prefetch_related(
+                Prefetch(
+                    "placements",
+                    queryset=annotate_placement_dates(Placement.objects.select_related("colleague")).filter(
+                        actual_end_date__lt=today
+                    ),
+                    to_attr="historical_placements",
+                )
+            )
+        )
+        historical_by_id: dict[int, dict] = {}
+        for service in historical_services:
+            for placement in service.historical_placements:
+                cid = placement.colleague.id
+                if cid != viewer.id and not viewer_is_bm:
+                    continue
+                if cid not in historical_by_id:
+                    historical_by_id[cid] = {
+                        "colleague": placement.colleague,
+                        "skills": [],
+                    }
+                if service.skill and service.skill.name not in historical_by_id[cid]["skills"]:
+                    historical_by_id[cid]["skills"].append(service.skill.name)
+        historical_team_members = list(historical_by_id.values())
+
     primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
         "organization__parent__parent__parent__parent"
     )
@@ -175,15 +206,48 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         "close_url": _build_close_url(request),
         "assignment": assignment,
         "team_members": team_members,
+        "historical_team_members": historical_team_members,
         "vacancy_skills": vacancy_skills,
         "user_can_edit": user_can_edit_assignment(request.user, assignment),
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
         "org_breadcrumbs": org_breadcrumbs,
+        "viewer_is_bm": viewer_is_bm,
+    }
+
+
+def _merge_date_range(existing: dict, start, end):
+    """Widen the date range of an assignment entry to include the given start/end."""
+    if start and (existing["start_date"] is None or start < existing["start_date"]):
+        existing["start_date"] = start
+    if end and (existing["end_date"] is None or end > existing["end_date"]):
+        existing["end_date"] = end
+
+
+def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, **extra):
+    """Build a standard assignment dict for panel display."""
+    return {
+        "name": name,
+        "id": aid,
+        "tags": set(),
+        "assignment_url": _build_panel_url(request, opdracht=aid),
+        "start_date": start_date,
+        "end_date": end_date,
+        "historical": False,
+        "privacy_warning_text": None,
+        **extra,
     }
 
 
 def _build_colleague_panel_data(colleague, request):
     """Shared helper to build colleague panel context data for both views."""
+    today = timezone.now().date()
+    viewer = getattr(request.user, "colleague", None)
+    viewer_is_colleague = viewer and colleague.id == viewer.id
+
+    active_by_id: dict[int, dict] = {}
+    historical_by_id: dict[int, dict] = {}
+
+    # --- Placements (both active and ended) ---
     placement_qs = (
         Placement.objects.filter(colleague=colleague)
         .select_related("service__assignment", "service__skill")
@@ -193,65 +257,127 @@ def _build_colleague_panel_data(colleague, request):
             "service__assignment__name",
             "service__assignment__start_date",
             "service__assignment__end_date",
+            "service__assignment__owner_id",
             "service__skill__name",
         )
         .distinct()
     )
-
     placement_qs = annotate_placement_dates(placement_qs)
-    placement_qs = filter_placements_by_min_end_date(placement_qs, timezone.now().date())
+    for placement in placement_qs:
+        assignment_id = placement["service__assignment__id"]
+        placement_is_active = placement.get("actual_end_date") is None or today <= placement["actual_end_date"]
+        owner_id = placement["service__assignment__owner_id"]
+        viewer_is_assignment_bd = viewer is not None and owner_id is not None and owner_id == viewer.id
 
-    assignments_by_id = {}
-    for item in placement_qs:
-        aid = item["service__assignment__id"]
-        if aid not in assignments_by_id:
-            assignments_by_id[aid] = {
-                "name": item["service__assignment__name"],
-                "id": aid,
-                "tags": [],
-                "assignment_url": _build_panel_url(request, opdracht=aid),
-                "start_date": item.get("actual_start_date"),
-                "end_date": item.get("actual_end_date"),
-            }
+        if placement_is_active:
+            if assignment_id not in active_by_id:
+                active_by_id[assignment_id] = _make_assignment_entry(
+                    placement["service__assignment__name"],
+                    assignment_id,
+                    request,
+                    start_date=placement.get("actual_start_date"),
+                    end_date=placement.get("actual_end_date"),
+                )
+            else:
+                _merge_date_range(
+                    active_by_id[assignment_id], placement.get("actual_start_date"), placement.get("actual_end_date")
+                )
+            skill = placement["service__skill__name"]
+            if skill:
+                active_by_id[assignment_id]["tags"].add(skill)
+        elif viewer_is_colleague:
+            # users can see their own ended placements
+            if assignment_id not in historical_by_id:
+                historical_by_id[assignment_id] = _make_assignment_entry(
+                    placement["service__assignment__name"],
+                    assignment_id,
+                    request,
+                    start_date=placement.get("actual_start_date"),
+                    end_date=placement.get("actual_end_date"),
+                    historical=True,
+                    privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
+                )
+            else:
+                _merge_date_range(
+                    historical_by_id[assignment_id],
+                    placement.get("actual_start_date"),
+                    placement.get("actual_end_date"),
+                )
+            skill = placement["service__skill__name"]
+            if skill:
+                historical_by_id[assignment_id]["tags"].add(skill)
+        elif viewer_is_assignment_bd:
+            # business developers can see their the assignments they own
+            # users can see their own ended placements
+            if assignment_id not in historical_by_id:
+                historical_by_id[assignment_id] = _make_assignment_entry(
+                    placement["service__assignment__name"],
+                    assignment_id,
+                    request,
+                    start_date=placement.get("actual_start_date"),
+                    end_date=placement.get("actual_end_date"),
+                    historical=True,
+                    privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
+                )
+            else:
+                _merge_date_range(
+                    historical_by_id[assignment_id],
+                    placement.get("actual_start_date"),
+                    placement.get("actual_end_date"),
+                )
+            skill = placement["service__skill__name"]
+            if skill:
+                historical_by_id[assignment_id]["tags"].add(skill)
         else:
-            existing = assignments_by_id[aid]
-            start = item.get("actual_start_date")
-            end = item.get("actual_end_date")
-            if start and (existing["start_date"] is None or start < existing["start_date"]):
-                existing["start_date"] = start
-            if end and (existing["end_date"] is None or end > existing["end_date"]):
-                existing["end_date"] = end
-        skill = item["service__skill__name"]
-        if skill:
-            assignments_by_id[aid]["tags"].append(skill)
+            # others should not see these placements
+            continue
 
-    today = timezone.now().date()
-    bm_assignments = (
-        Assignment.objects.filter(owner=colleague)
-        .exclude(end_date__lt=today)
-        .values_list("id", "name", "start_date", "end_date")
-    )
-    for aid, name, start_date, end_date in bm_assignments:
-        if aid in assignments_by_id:
-            assignments_by_id[aid]["tags"].append("Business Manager")
+    # BM roles (active and ended)
+    bm_assignments = Assignment.objects.filter(owner=colleague).values_list("id", "name", "start_date", "end_date")
+    for assignment_id, name, start_date, end_date in bm_assignments:
+        assignment_is_active = end_date is None or today <= end_date
+
+        if assignment_is_active:
+            if assignment_id not in active_by_id:
+                active_by_id[assignment_id] = _make_assignment_entry(
+                    name,
+                    assignment_id,
+                    request,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
+            skill = "Business Manager"
+            active_by_id[assignment_id]["tags"].add(skill)
+        elif viewer_is_colleague:
+            # user can their own ended assignments as business manager
+            # no clause for other business manager that can see this (only one)
+            if assignment_id not in historical_by_id:
+                historical_by_id[assignment_id] = _make_assignment_entry(
+                    name,
+                    assignment_id,
+                    request,
+                    start_date=start_date,
+                    end_date=end_date,
+                    tags={"Business Manager"},
+                    historical=True,
+                    privacy_warning_text="Alleen zichtbaar voor jou en het team",
+                )
+            skill = "Business Manager"
+            historical_by_id[assignment_id]["tags"].add(skill)
         else:
-            assignments_by_id[aid] = {
-                "name": name,
-                "id": aid,
-                "tags": ["Business Manager"],
-                "assignment_url": _build_panel_url(request, opdracht=aid),
-                "start_date": start_date,
-                "end_date": end_date,
-            }
+            continue
 
-    assignment_list = sorted(assignments_by_id.values(), key=lambda a: a["name"])
+    # Build final sorted list: active first, then historical
+    active_list = sorted(active_by_id.values(), key=lambda a: a["name"])
+    historical_list = sorted(historical_by_id.values(), key=lambda a: a["name"])
+    assignments = active_list + historical_list
 
     return {
         "panel_content_template": "parts/colleague_panel_content.html",
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
-        "assignment_list": assignment_list,
+        "assignments": assignments,
     }
 
 
@@ -1920,6 +2046,7 @@ def assignment_edit_attribute(request, pk, attribute):
 
 def _build_profile_assignment_list(colleague):
     """Build the full assignment list for the user profile (including historical)."""
+    today = timezone.now().date()
     placement_qs = (
         Placement.objects.filter(colleague=colleague)
         .select_related("service__assignment", "service__skill")
@@ -1944,6 +2071,7 @@ def _build_profile_assignment_list(colleague):
                 "name": item["service__assignment__name"],
                 "id": aid,
                 "tags": [],
+                "historical_tags": [],
                 "start_date": item.get("actual_start_date"),
                 "end_date": item.get("actual_end_date"),
             }
@@ -1956,7 +2084,14 @@ def _build_profile_assignment_list(colleague):
             if end and (existing["end_date"] is None or end > existing["end_date"]):
                 existing["end_date"] = end
         skill = item["service__skill__name"]
-        if skill and skill not in assignments_by_id[aid]["tags"]:
+        if not skill:
+            continue
+        placement_end = item.get("actual_end_date")
+        is_ended = placement_end is not None and placement_end < today
+        if is_ended:
+            if skill not in assignments_by_id[aid]["historical_tags"]:
+                assignments_by_id[aid]["historical_tags"].append(skill)
+        elif skill not in assignments_by_id[aid]["tags"]:
             assignments_by_id[aid]["tags"].append(skill)
 
     # Also include assignments where colleague is the owner (BDM) — all, not just current
@@ -1970,12 +2105,18 @@ def _build_profile_assignment_list(colleague):
                 "name": name,
                 "id": aid,
                 "tags": ["Business Manager"],
+                "historical_tags": [],
                 "start_date": start_date,
                 "end_date": end_date,
             }
 
+    # Deduplicate: if a skill is active, don't also show it as historical
+    for assignment in assignments_by_id.values():
+        assignment["historical_tags"] = [
+            t for t in assignment.get("historical_tags", []) if t not in assignment["tags"]
+        ]
+
     # Add phase to each assignment
-    today = timezone.now().date()
     for assignment in assignments_by_id.values():
         start = assignment["start_date"]
         end = assignment["end_date"]

@@ -98,7 +98,7 @@
       {% endif %}
     </dl>
   </section>
-  {% if panel_data.vacancy_skills or panel_data.team_members %}
+  {% if panel_data.vacancy_skills or panel_data.team_members or panel_data.historical_team_members %}
     <section>
       <h2>Team</h2>
       <div class="rvo-item-list">
@@ -132,11 +132,39 @@
                   <strong>{{ member.colleague.name }}</strong>
                 </div>
               </div>
-              <div>
+              <div class="rvo-layout-row rvo-layout-gap--xs" style="flex-wrap: wrap">
                 {% for skill in member.skills %}<span class="rvo-tag rvo-tag--default">{{ skill }}</span>{% endfor %}
               </div>
             </div>
           </a>
+        {% endfor %}
+        {% for member in panel_data.historical_team_members %}
+          <div class="rvo-item-list__item">
+            <div class="placement-details-header">
+              <div class="user-table-cell">
+                <div class="user-avatar">{{ member.colleague.name|first|upper }}</div>
+                <div class="user-info">
+                  <strong>{{ member.colleague.name }}</strong>
+                  <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
+                    <span class="utrecht-icon rvo-icon rvo-icon-hangslot-dicht rvo-icon--sm rvo-icon--rvo-grijs-700"
+                          role="img"
+                          aria-label="Privé"></span>
+                    <span class="rvo-text--subtle rvo-text--xs">
+                      {%- if panel_data.viewer_is_bm -%}
+                        Alleen zichtbaar voor jou en de consultant
+                      {%- else -%}
+                        Alleen zichtbaar voor jou en de Business Manager
+                      {%- endif -%}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="rvo-layout-row rvo-layout-gap--xs" style="flex-wrap: wrap">
+                <span class="rvo-tag assignment-tag--completed">Afgelopen</span>
+                {% for skill in member.skills %}<span class="rvo-tag rvo-tag--default">{{ skill }}</span>{% endfor %}
+              </div>
+            </div>
+          </div>
         {% endfor %}
       </div>
     </section>
