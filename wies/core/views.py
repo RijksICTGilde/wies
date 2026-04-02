@@ -22,7 +22,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic.list import ListView
 
-from .forms import LabelCategoryForm, LabelForm, UserForm
+from .forms import LabelCategoryForm, LabelForm, ProfileLabelsForm, UserForm
 from .models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -2239,14 +2239,13 @@ def _handle_label_edit(request, attribute):
 
     edit_url = reverse("user-profile-edit-attribute", kwargs={"attribute": attribute})
     target_element = f"profile-labels-{category_id}-content"
-    all_labels = list(Label.objects.filter(category=category).order_by("name"))
 
     if request.method == "POST":
-        selected_ids = request.POST.getlist(f"labels_{category_id}")
-        selected_labels = Label.objects.filter(pk__in=selected_ids, category=category)
-
-        colleague.labels.remove(*colleague.labels.filter(category=category))
-        colleague.labels.add(*selected_labels)
+        form = ProfileLabelsForm(request.POST, category=category)
+        if form.is_valid():
+            selected_labels = form.cleaned_data["labels"]
+            colleague.labels.remove(*colleague.labels.filter(category=category))
+            colleague.labels.add(*selected_labels)
 
         updated_labels = list(colleague.labels.filter(category=category).order_by("name"))
         return render(
@@ -2275,13 +2274,13 @@ def _handle_label_edit(request, attribute):
                 },
             )
 
+        selected_ids = [label.pk for label in selected_labels]
+        form = ProfileLabelsForm(category=category, initial={"labels": selected_ids})
         return render(
             request,
             "parts/profile_labels_form.html",
             {
-                "category": category,
-                "all_labels": all_labels,
-                "selected_label_ids": [label.pk for label in selected_labels],
+                "form": form,
                 "edit_url": edit_url,
                 "target_element": target_element,
             },
