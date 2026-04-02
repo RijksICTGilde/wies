@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 281: fix label delete bug introduced in 266
 - 282: refactor UI polish, accessibility, and colleague model improvements
 - 282: add location icons to assignment cards and colleague panel
 - 282: fix XSS, input validation, and accessibility issues
