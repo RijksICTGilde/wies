@@ -238,10 +238,9 @@ def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, *
     }
 
 
-def _build_colleague_panel_data(colleague, request):
-    """Shared helper to build colleague panel context data for both views."""
+def _get_colleague_panel_assignments(request, colleague, viewer):
+
     today = timezone.now().date()
-    viewer = getattr(request.user, "colleague", None)
     viewer_is_colleague = viewer and colleague.id == viewer.id
 
     active_by_id: dict[int, dict] = {}
@@ -370,7 +369,14 @@ def _build_colleague_panel_data(colleague, request):
     # Build final sorted list: active first, then historical
     active_list = sorted(active_by_id.values(), key=lambda a: a["name"])
     historical_list = sorted(historical_by_id.values(), key=lambda a: a["name"])
-    assignments = active_list + historical_list
+    return active_list + historical_list
+
+
+def _build_colleague_panel_data(colleague, request):
+    """Shared helper to build colleague panel context data for both views."""
+    viewer = getattr(request.user, "colleague", None)
+
+    assignments = _get_colleague_panel_assignments(request, colleague, viewer)
 
     return {
         "panel_content_template": "parts/colleague_panel_content.html",
