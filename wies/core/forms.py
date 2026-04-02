@@ -232,7 +232,7 @@ class AssignmentCreateForm(RvoFormMixin, forms.Form):
     end_date = forms.DateField(label="Einddatum", required=False, widget=forms.DateInput())
     owner = forms.ModelChoiceField(
         label="Business Manager",
-        queryset=Colleague.objects.filter(source="wies").order_by("name"),
+        queryset=Colleague.objects.order_by("name"),
         required=True,
         empty_label=" ",
         error_messages={"required": "Selecteer een business manager."},
