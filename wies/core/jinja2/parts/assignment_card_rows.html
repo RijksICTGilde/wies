@@ -9,14 +9,18 @@
            style="cursor: pointer">
     <div class="assignment-card__header">
       <h3 class="rvo-text rvo-text--bold rvo-text--no-margins assignment-card__title">{{ assignment.name }}</h3>
-      <span class="rvo-tag rvo-tag--info">Open</span>
     </div>
     {% if assignment.org_breadcrumb %}
-      <span class="rvo-text rvo-text--sm">{{ assignment.org_breadcrumb.label }}</span>
+      <span class="rvo-text">
+        <span class="utrecht-icon rvo-icon rvo-icon-basis-kantoorgebouw rvo-icon--md rvo-icon--rvo-grijs-700"
+              role="img"
+              aria-label="Opdrachtgever"></span>
+        {{ assignment.org_breadcrumb.label }}
+      </span>
     {% endif %}
     {% if assignment.start_date or assignment.end_date %}
-      <span class="assignment-card__meta-item rvo-text rvo-text--sm rvo-text--subtle">
-        <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm"
+      <span class="assignment-card__meta-item rvo-text rvo-text--subtle">
+        <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--md"
               role="img"
               aria-label="Periode"></span>
         {{ assignment.start_date|datum_nl("N Y") }}

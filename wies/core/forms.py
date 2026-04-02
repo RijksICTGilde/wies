@@ -52,6 +52,9 @@ class RvoFormMixin:
         "CheckboxSelectMultiple": "rvo/forms/widgets/checkbox_select.html",
         "MultiselectDropdown": "rvo/forms/widgets/multiselect.html",
         "RadioSelect": "rvo/forms/widgets/radio.html",
+        "DateInput": "rvo/forms/widgets/date.html",
+        "Textarea": "rvo/forms/widgets/textarea.html",
+        "CheckboxInput": "rvo/forms/widgets/checkbox.html",
     }
 
     def _configure_field_for_rvo(self, field_name):

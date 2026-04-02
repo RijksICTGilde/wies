@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.conf import settings
 from django.middleware.csrf import get_token
 from django.templatetags.static import static
@@ -12,6 +14,11 @@ def datum_nl(datum, fmt="N Y"):
     """Format a date using Django's localization (nl-nl)"""
     if datum is None:
         return "?"
+    if isinstance(datum, str):
+        try:
+            datum = date.fromisoformat(datum)
+        except ValueError:
+            return datum
     return date_format(datum, fmt)
 
 

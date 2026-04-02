@@ -26,7 +26,7 @@
             <span id="client-results-count" class="client-modal__results-count"></span>
           </div>
           <ul id="client-selection-list" class="client-modal__selection-list">
-            <li class="client-modal__empty-state">Niets geselecteerd</li>
+            <li class="client-modal__empty-state" hidden></li>
           </ul>
         </div>
       </div>
@@ -47,6 +47,4 @@
   </div>
   {{ hierarchy|json_script("client-data") }}
   {{ current_selections|json_script("client-current-selections") }}
-  <script src="{{ static('js/tree_state.js') }}"></script>
-  <script src="{{ static('js/client_tree.js') }}"></script>
 </dialog>

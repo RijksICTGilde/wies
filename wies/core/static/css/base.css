@@ -576,6 +576,52 @@ html {
   text-decoration: underline !important;
 }
 
+/* Flash messages - floating toast */
+.flash-messages {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  max-width: 500px;
+}
+
+.flash-messages .rvo-alert {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: flash-slide-in 0.3s ease;
+}
+
+.flash-messages--hiding {
+  animation: flash-fade-out 0.5s ease forwards;
+}
+
+@keyframes flash-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-1rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes flash-fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(-1rem);
+  }
+}
+
+/* Table defaults */
+.rvo-table {
+  width: 100%;
+}
+
+/* Utility: prevent text wrapping */
+.rvo-text--nowrap {
+  white-space: nowrap;
+}
+
 /* Logo link should never have underline */
 .logo-link,
 .logo-link:hover,
