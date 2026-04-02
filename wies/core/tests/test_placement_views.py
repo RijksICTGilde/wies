@@ -17,7 +17,7 @@ from wies.core.models import (
     User,
 )
 from wies.core.services.organizations import get_org_descendant_ids
-from wies.core.views import PlacementListView, _build_assignment_panel_data, _build_colleague_panel_data
+from wies.core.views import PlacementListView, _build_assignment_panel_data, _get_colleague_assignments
 
 
 class PlacementImportTest(TestCase):
@@ -734,8 +734,8 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         assert historical[self.colleague_alice.id] == ["Ended Skill"]
 
 
-class ColleagueSidePanelHistoricalFilterTest(TestCase):
-    """Tests for historical placement filtering in colleague sidepanel"""
+class ColleagueAssignmentsHistoricalFilterTest(TestCase):
+    """Tests for historical placement filtering in colleague assignments"""
 
     def setUp(self):
         """Create test data"""
@@ -809,15 +809,14 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
             source="wies",
         )
 
-        # Get panel data using view method
         factory = RequestFactory()
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        panel_data = _build_colleague_panel_data(self.colleague, request)
+        assignments = _get_colleague_assignments(request, self.colleague, viewer=None)
 
-        # Verify only current assignment is in active panel data
-        active = [a for a in panel_data["assignments"] if not a["historical"]]
+        # Verify only current assignment is in active list
+        active = [a for a in assignments if not a["historical"]]
         active_ids = [a["id"] for a in active]
         assert len(active_ids) == 1, "Panel should contain only 1 (current) assignment"
         assert assignment_b.id in active_ids, "Current assignment should be in panel"
@@ -851,22 +850,21 @@ class ColleagueSidePanelHistoricalFilterTest(TestCase):
             source="wies",
         )
 
-        # Get panel data using view method
         factory = RequestFactory()
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        panel_data = _build_colleague_panel_data(self.colleague, request)
+        assignments = _get_colleague_assignments(request, self.colleague, viewer=None)
 
         # Verify assignment ending today is included
-        active = [a for a in panel_data["assignments"] if not a["historical"]]
+        active = [a for a in assignments if not a["historical"]]
         active_ids = [a["id"] for a in active]
         assert len(active_ids) == 1, "Panel should contain the assignment with placement ending today"
         assert assignment.id in active_ids, "Assignment with placement ending today should be included"
 
 
-class ColleagueSidePanelHistoricalVisibilityTest(TestCase):
-    """Tests for historical assignment visibility rules in colleague sidepanel.
+class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
+    """Tests for historical assignment visibility rules in colleague assignments.
 
     Privacy-critical: historical assignments must only be visible to the
     colleague themselves or the assignment's Business Manager.
@@ -923,9 +921,9 @@ class ColleagueSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        panel_data = _build_colleague_panel_data(self.colleague_alice, request)
+        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_alice)
 
-        historical = [a for a in panel_data["assignments"] if a["historical"]]
+        historical = [a for a in assignments if a["historical"]]
         ids = [a["id"] for a in historical]
         assert assignment.id in ids
 
@@ -952,9 +950,9 @@ class ColleagueSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_bob)
-        panel_data = _build_colleague_panel_data(self.colleague_alice, request)
+        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_bob)
 
-        historical = [a for a in panel_data["assignments"] if a["historical"]]
+        historical = [a for a in assignments if a["historical"]]
         ids = [a["id"] for a in historical]
         assert assignment.id in ids
 
@@ -981,9 +979,9 @@ class ColleagueSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_unrelated)
-        panel_data = _build_colleague_panel_data(self.colleague_alice, request)
+        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_unrelated)
 
-        historical = [a for a in panel_data["assignments"] if a["historical"]]
+        historical = [a for a in assignments if a["historical"]]
         assert historical == []
 
     @patch("wies.core.views.timezone")
@@ -1020,10 +1018,10 @@ class ColleagueSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        panel_data = _build_colleague_panel_data(self.colleague_alice, request)
+        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_alice)
 
-        active = [a for a in panel_data["assignments"] if not a["historical"]]
-        historical = [a for a in panel_data["assignments"] if a["historical"]]
+        active = [a for a in assignments if not a["historical"]]
+        historical = [a for a in assignments if a["historical"]]
         current_ids = [a["id"] for a in active]
         historical_ids = [a["id"] for a in historical]
 
@@ -1049,9 +1047,9 @@ class ColleagueSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_unrelated)
-        panel_data = _build_colleague_panel_data(self.colleague_alice, request)
+        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_unrelated)
 
-        historical = [a for a in panel_data["assignments"] if a["historical"]]
+        historical = [a for a in assignments if a["historical"]]
         assert historical == [], "Unrelated user should not see ended BM assignments"
 
     @patch("wies.core.views.timezone")
@@ -1083,9 +1081,9 @@ class ColleagueSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(user_no_colleague)
-        panel_data = _build_colleague_panel_data(self.colleague_alice, request)
+        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=None)
 
-        historical = [a for a in panel_data["assignments"] if a["historical"]]
+        historical = [a for a in assignments if a["historical"]]
         assert historical == [], "User without colleague should not see historical assignments"
 
     @patch("wies.core.views.timezone")
@@ -1112,9 +1110,9 @@ class ColleagueSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_unrelated)
-        panel_data = _build_colleague_panel_data(self.colleague_alice, request)
+        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_unrelated)
 
-        active = [a for a in panel_data["assignments"] if not a["historical"]]
+        active = [a for a in assignments if not a["historical"]]
         active_ids = [a["id"] for a in active]
         assert assignment.id in active_ids, "Unrelated user should see active assignments"
 
@@ -1146,9 +1144,9 @@ class ColleagueSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        panel_data = _build_colleague_panel_data(self.colleague_alice, request)
+        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_alice)
 
-        historical = [a for a in panel_data["assignments"] if a["historical"]]
+        historical = [a for a in assignments if a["historical"]]
         ids = [a["id"] for a in historical]
         assert assignment.id in ids, "BM should see their own ended placement on own assignment"
 
@@ -1176,9 +1174,9 @@ class ColleagueSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_bob)
-        panel_data = _build_colleague_panel_data(self.colleague_alice, request)
+        assignments = _get_colleague_assignments(request, self.colleague_alice, viewer=self.colleague_bob)
 
-        historical = [a for a in panel_data["assignments"] if a["historical"]]
+        historical = [a for a in assignments if a["historical"]]
         assert historical == [], "BM of different assignment should not see ended BM assignments"
 
 

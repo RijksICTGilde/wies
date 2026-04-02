@@ -2054,94 +2054,6 @@ def assignment_edit_attribute(request, pk, attribute):
     return HttpResponse(status=405)
 
 
-def _build_profile_assignment_list(colleague):
-    """Build the full assignment list for the user profile (including historical)."""
-    today = timezone.now().date()
-    placement_qs = (
-        Placement.objects.filter(colleague=colleague)
-        .select_related("service__assignment", "service__skill")
-        .values(
-            "id",
-            "service__assignment__id",
-            "service__assignment__name",
-            "service__assignment__start_date",
-            "service__assignment__end_date",
-            "service__skill__name",
-        )
-        .distinct()
-    )
-    placement_qs = annotate_placement_dates(placement_qs)
-    # No end_date filter — include all assignments (historical too)
-
-    assignments_by_id = {}
-    for item in placement_qs:
-        aid = item["service__assignment__id"]
-        if aid not in assignments_by_id:
-            assignments_by_id[aid] = {
-                "name": item["service__assignment__name"],
-                "id": aid,
-                "tags": [],
-                "historical_tags": [],
-                "start_date": item.get("actual_start_date"),
-                "end_date": item.get("actual_end_date"),
-            }
-        else:
-            existing = assignments_by_id[aid]
-            start = item.get("actual_start_date")
-            end = item.get("actual_end_date")
-            if start and (existing["start_date"] is None or start < existing["start_date"]):
-                existing["start_date"] = start
-            if end and (existing["end_date"] is None or end > existing["end_date"]):
-                existing["end_date"] = end
-        skill = item["service__skill__name"]
-        if not skill:
-            continue
-        placement_end = item.get("actual_end_date")
-        is_ended = placement_end is not None and placement_end < today
-        if is_ended:
-            if skill not in assignments_by_id[aid]["historical_tags"]:
-                assignments_by_id[aid]["historical_tags"].append(skill)
-        elif skill not in assignments_by_id[aid]["tags"]:
-            assignments_by_id[aid]["tags"].append(skill)
-
-    # Also include assignments where colleague is the owner (BDM) — all, not just current
-    bm_assignments = Assignment.objects.filter(owner=colleague).values_list("id", "name", "start_date", "end_date")
-    for aid, name, start_date, end_date in bm_assignments:
-        if aid in assignments_by_id:
-            if "Business Manager" not in assignments_by_id[aid]["tags"]:
-                assignments_by_id[aid]["tags"].append("Business Manager")
-        else:
-            assignments_by_id[aid] = {
-                "name": name,
-                "id": aid,
-                "tags": ["Business Manager"],
-                "historical_tags": [],
-                "start_date": start_date,
-                "end_date": end_date,
-            }
-
-    # Deduplicate: if a skill is active, don't also show it as historical
-    for assignment in assignments_by_id.values():
-        assignment["historical_tags"] = [
-            t for t in assignment.get("historical_tags", []) if t not in assignment["tags"]
-        ]
-
-    # Add phase to each assignment
-    for assignment in assignments_by_id.values():
-        start = assignment["start_date"]
-        end = assignment["end_date"]
-        if None in (start, end):
-            assignment["phase"] = None
-        elif start > today:
-            assignment["phase"] = "planned"
-        elif end < today:
-            assignment["phase"] = "completed"
-        else:
-            assignment["phase"] = "active"
-
-    return sorted(assignments_by_id.values(), key=lambda a: a["start_date"] or date.min, reverse=True)
-
-
 def user_profile(request):
     """User's own profile page with editable fields and full assignment history."""
     user = request.user
@@ -2179,7 +2091,7 @@ def user_profile(request):
         selected = list(colleague.labels.filter(category=category).order_by("name")) if colleague else []
         label_categories.append({"category": category, "labels": selected})
 
-    assignment_list = _build_profile_assignment_list(colleague) if colleague else []
+    assignment_list = _get_colleague_assignments(request, colleague, viewer=colleague) if colleague else []
 
     return render(
         request,
