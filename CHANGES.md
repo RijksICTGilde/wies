@@ -5,6 +5,13 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 281: fix label delete bug introduced in 266
+- 282: refactor UI polish, accessibility, and colleague model improvements
+- 282: add location icons to assignment cards and colleague panel
+- 282: fix XSS, input validation, and accessibility issues
+- 282: show service description in team and colleague sidepanels
+- 282: redesign placement table columns (Wie, Wat, Waar)
+- 282: improve contrast: black links, headings, and icons (WCAG AA)
+- 282: add RVO date, textarea, and checkbox widget templates
 - 266: (migration) enforce uniqueness on Colleague.email + Colleague.source
 - 266: always create Colleague for Users
 - 266: (migration) move labels from User to Colleague

@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from collections import Counter
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 from authlib.integrations.django_client import OAuth
@@ -48,7 +48,6 @@ from .services.organizations import (
 from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
-    filter_placements_by_period,
 )
 from .services.sync import sync_all_otys_iir_records
 from .services.tasks import create_task, get_latest_tasks, has_active_task
@@ -181,6 +180,7 @@ def _build_colleague_panel_data(colleague, request):
             "service__assignment__start_date",
             "service__assignment__end_date",
             "service__skill__name",
+            "service__description",
         )
         .distinct()
     )
@@ -210,7 +210,8 @@ def _build_colleague_panel_data(colleague, request):
                 existing["end_date"] = end
         skill = item["service__skill__name"]
         if skill:
-            assignments_by_id[aid]["tags"].append(skill)
+            tag = {"skill": skill, "description": item.get("service__description", "")}
+            assignments_by_id[aid]["tags"].append(tag)
 
     today = timezone.now().date()
     bm_assignments = (
@@ -230,6 +231,15 @@ def _build_colleague_panel_data(colleague, request):
                 "start_date": start_date,
                 "end_date": end_date,
             }
+
+    # Add primary organization to each assignment
+    org_links = AssignmentOrganizationUnit.objects.filter(
+        assignment_id__in=assignments_by_id.keys(),
+        role="PRIMARY",
+    ).select_related("organization")
+    for link in org_links:
+        if link.assignment_id in assignments_by_id:
+            assignments_by_id[link.assignment_id]["organization"] = link.organization.label or link.organization.name
 
     assignment_list = sorted(assignments_by_id.values(), key=lambda a: a["name"])
 
@@ -466,20 +476,7 @@ class PlacementListView(ListView):
 
         # filter out historical placements
         qs = annotate_placement_dates(qs)
-        qs = filter_placements_by_min_end_date(qs, timezone.now().date())
-
-        # Apply period filtering for overlapping periods
-        periode = self.request.GET.get("periode")
-        if periode and "_" in periode:
-            try:
-                period_from_str, period_to_str = periode.split("_", 1)
-                period_from = date.fromisoformat(period_from_str)
-                period_to = date.fromisoformat(period_to_str)
-                qs = filter_placements_by_period(qs, period_from, period_to)
-            except Value:
-                pass  # Invalid date format, ignore filter
-
-        return qs
+        return filter_placements_by_min_end_date(qs, timezone.now().date())
 
     def _get_labels_by_category(self):
         """Parse selected label IDs grouped by category."""
@@ -491,10 +488,29 @@ class PlacementListView(ListView):
             labels_by_category.setdefault(label["category_id"], []).append(label["id"])
         return labels_by_category
 
+    def _get_loopt_af_options(self, base_qs):
+        """Build 'loopt af' filter options with cumulative counts."""
+        today = timezone.now().date()
+        filtered_qs = self._apply_filters(base_qs, exclude_filter="loopt_af").distinct()
+        presets = [
+            ("3m", "Binnen 3 maanden", 91),
+            ("6m", "Binnen 6 maanden", 182),
+        ]
+        options = [{"value": "", "label": ""}]
+        for value, label, days in presets:
+            end_date = today + timedelta(days=days)
+            count = filtered_qs.filter(service__assignment__end_date__lte=end_date).count()
+            options.append({"value": value, "label": label, "count": count})
+        # "Longer than 6 months"
+        half_year = today + timedelta(days=182)
+        count_beyond = filtered_qs.filter(service__assignment__end_date__gt=half_year).count()
+        options.append({"value": "6m+", "label": "Langer dan 6 maanden", "count": count_beyond})
+        return options
+
     def _apply_filters(self, qs, *, exclude_filter=None):
         """Apply all selection filters, optionally excluding one filter type.
 
-        exclude_filter can be: "rol", "org", or a category_id (int) for labels.
+        exclude_filter can be: "rol", "org", "loopt_af", or a category_id (int) for labels.
         """
         if exclude_filter != "rol":
             rol_filter = [x for x in self.request.GET.getlist("rol") if x.isdigit()]
@@ -526,6 +542,28 @@ class PlacementListView(ListView):
         for cat_id, cat_label_ids in labels_by_category.items():
             if exclude_filter != cat_id:
                 qs = qs.filter(colleague__labels__id__in=cat_label_ids)
+
+        # Filter by assignment end date (preset period)
+        if exclude_filter != "loopt_af":
+            loopt_af_values = set(self.request.GET.getlist("loopt_af"))
+            if loopt_af_values:
+                today = timezone.now().date()
+                preset_days = {"3m": 91, "6m": 182}
+                has_beyond = "6m+" in loopt_af_values
+                bounded = {v for v in loopt_af_values if v in preset_days}
+                half_year = today + timedelta(days=182)
+                if bounded and has_beyond:
+                    max_days = max(preset_days[v] for v in bounded)
+                    end_date = today + timedelta(days=max_days)
+                    qs = qs.filter(
+                        Q(service__assignment__end_date__lte=end_date) | Q(service__assignment__end_date__gt=half_year)
+                    )
+                elif bounded:
+                    max_days = max(preset_days[v] for v in bounded)
+                    end_date = today + timedelta(days=max_days)
+                    qs = qs.filter(service__assignment__end_date__lte=end_date)
+                elif has_beyond:
+                    qs = qs.filter(service__assignment__end_date__gt=half_year)
 
         return qs
 
@@ -571,10 +609,10 @@ class PlacementListView(ListView):
         context["search_filter"] = self.request.GET.get("zoek")
 
         active_filters: dict = {}
-        for filter_param in ["periode"]:
-            val = self.request.GET.get(filter_param)
-            if val:
-                active_filters[filter_param] = val
+
+        loopt_af_values = set(self.request.GET.getlist("loopt_af"))
+        if loopt_af_values:
+            active_filters["loopt_af"] = loopt_af_values
 
         # rol filter supports multi-select
         rol_filter = set()
@@ -591,13 +629,6 @@ class PlacementListView(ListView):
                 label_filter.add(label_id)
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
-
-        if active_filters.get("periode"):
-            periode_from, periode_to = active_filters["periode"].split("_")
-            active_filters["periode"] = {
-                "from": date.fromisoformat(periode_from),
-                "to": date.fromisoformat(periode_to),
-            }
 
         # Organization filter (multi-select via modal)
         active_org_filter_count = 0
@@ -725,12 +756,11 @@ class PlacementListView(ListView):
             },
             *label_filter_groups,
             {
-                "type": "date_range",
-                "name": "periode",
-                "label": "Periode",
-                "from_label": "Van",
-                "to_label": "Tot",
-                "require_both": True,
+                "type": "select-multi",
+                "name": "loopt_af",
+                "label": "Loopt af",
+                "options": self._get_loopt_af_options(base_qs),
+                "selected_values": list(loopt_af_values),
             },
         ]
 
@@ -1984,13 +2014,11 @@ def search_suggestions(request):
     return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs})
 
 
-def client_modal(request):
-    """Return the client tree selection modal (HTMX partial)."""
-    excluded_org_ids = get_excluded_org_ids()
-    count_mode = request.GET.get("count_mode", "placements")
-
+def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int]:
+    """Return per-org self-counts based on count_mode."""
+    if count_mode == "none":
+        return Counter()
     if count_mode == "open_assignments":
-        # Count assignments with at least 1 unfilled OPEN service per OrganizationUnit
         has_unfilled_open_service = Exists(
             Service.objects.filter(
                 assignment=OuterRef("pk"),
@@ -2002,25 +2030,26 @@ def client_modal(request):
         if excluded_org_ids:
             assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
         org_id_list = assignment_qs.values_list("organizations__id", flat=True)
-        org_self_counts: Counter[int] = Counter(org_id for org_id in org_id_list if org_id is not None)
     else:
-        # Count active placements per OrganizationUnit (self-count only — direct link).
         active_placements = annotate_placement_dates(Placement.objects.all()).filter(
             actual_end_date__gte=timezone.now().date()
         )
         if excluded_org_ids:
             active_placements = active_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
         org_id_list = active_placements.values_list("service__assignment__organizations__id", flat=True)
-        org_self_counts: Counter[int] = Counter(org_id for org_id in org_id_list if org_id is not None)
+    return Counter(org_id for org_id in org_id_list if org_id is not None)
 
-    # Load all OrganizationUnits (excluding hidden organizations)
+
+def _build_org_hierarchy(
+    org_self_counts: Counter[int], excluded_org_ids: list[int], *, prune_empty: bool
+) -> list[dict]:
+    """Build the grouped org tree hierarchy for the client modal."""
     all_orgs = list(
         OrganizationUnit.objects.exclude(id__in=excluded_org_ids).values(
             "id", "parent_id", "name", "label", "abbreviations"
         )
     )
 
-    # Build lightweight tree in Python
     units_by_id: dict[int, dict] = {}
     for org in all_orgs:
         org["children_data"] = []
@@ -2036,7 +2065,6 @@ def client_modal(request):
         else:
             roots.append(unit)
 
-    # Compute total counts bottom-up (self + all descendants)
     def compute_total(node: dict) -> int:
         total = node["self_count"]
         for child in node["children_data"]:
@@ -2047,24 +2075,23 @@ def client_modal(request):
     for root in roots:
         compute_total(root)
 
-    # Prune branches with zero placements
-    def prune(node: dict) -> None:
-        node["children_data"] = [c for c in node["children_data"] if c["total_count"] > 0]
-        for child in node["children_data"]:
-            prune(child)
+    if prune_empty:
 
-    for root in roots:
-        prune(root)
-    roots = [r for r in roots if r["total_count"] > 0]
+        def prune(node: dict) -> None:
+            node["children_data"] = [c for c in node["children_data"] if c["total_count"] > 0]
+            for child in node["children_data"]:
+                prune(child)
+
+        for root in roots:
+            prune(root)
+        roots = [r for r in roots if r["total_count"] > 0]
 
     def sort_key(node: dict) -> str:
         return node.get("label") or node.get("name") or ""
 
-    # Convert to JSON-serializable tree, injecting self-nodes
     def to_json(node: dict) -> dict:
         children_data = sorted(node["children_data"], key=sort_key)
         children_json = []
-
         has_children_with_placements = any(c["total_count"] > 0 for c in children_data)
         if node["self_count"] > 0 and has_children_with_placements:
             children_json.append(
@@ -2076,9 +2103,7 @@ def client_modal(request):
                     "nr_of_placements": node["self_count"],
                 }
             )
-
         children_json.extend(to_json(child) for child in children_data)
-
         result: dict = {
             "id": node["id"],
             "label": node["label"] or node["name"],
@@ -2089,7 +2114,7 @@ def client_modal(request):
             result["children"] = children_json
         return result
 
-    # Group roots by OrganizationUnit type (same logic as organization_admin view)
+    # Group roots by OrganizationUnit type
     root_ids = {u["id"] for u in roots}
     type_links = (
         OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
@@ -2110,7 +2135,6 @@ def client_modal(request):
         else:
             ungrouped.append(unit)
 
-    # Build hierarchy: group nodes (not selectable) containing the actual root orgs
     hierarchy = []
     for group_label in sorted(grouped.keys()):
         group_units = sorted(grouped[group_label], key=sort_key)
@@ -2125,25 +2149,36 @@ def client_modal(request):
             }
         )
     hierarchy.extend(to_json(unit) for unit in sorted(ungrouped, key=sort_key))
+    return hierarchy
 
-    # Build current selections dict for state restoration in client_tree.js
-    # Maps tree node ID (string) → display label
+
+def _build_current_selections(request) -> dict[str, str]:
+    """Build current selections dict from request params for state restoration."""
     current_selections: dict[str, str] = {}
 
-    # normal orgs
     org_ids = [org_id for org_id in request.GET.getlist("org") if org_id.isdigit()]
     for org in OrganizationUnit.objects.filter(id__in=org_ids).values("id", "label"):
         current_selections[org["id"]] = org["label"]
 
-    # self-node orgs
     self_org_ids = [org_id for org_id in request.GET.getlist("org_self") if org_id.isdigit()]
     for org in OrganizationUnit.objects.filter(id__in=self_org_ids).values("id", "label"):
-        current_selections[org[f"self-{org['id']}"]] = f'Direct onder "{org["label"]}"'
+        current_selections[f"self-{org['id']}"] = f'Direct onder "{org["label"]}"'
 
-    # type-node orgs
     for type_label in request.GET.getlist("org_type"):
         if type_label:
             current_selections[f"group-{type_label}"] = ORG_TYPE_PLURAL.get(type_label, type_label)
+
+    return current_selections
+
+
+def client_modal(request):
+    """Return the client tree selection modal (HTMX partial)."""
+    excluded_org_ids = get_excluded_org_ids()
+    count_mode = request.GET.get("count_mode", "placements")
+
+    org_self_counts = _get_org_counts(count_mode, excluded_org_ids)
+    hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
+    current_selections = _build_current_selections(request)
 
     return render(
         request,

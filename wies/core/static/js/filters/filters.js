@@ -144,13 +144,12 @@ function setupDateRangeListeners(formSelector) {
 
   form.querySelectorAll('input[type="date"]').forEach((input) => {
     input.addEventListener("change", function (event) {
-      event.stopPropagation();
-
       const requireBoth = input.dataset.requireBoth === "true";
       const combinedName = input.dataset.combinedName;
       const pairId = input.dataset.pairId;
 
       if (requireBoth && combinedName && pairId) {
+        event.stopPropagation();
         const pairInput = document.getElementById(pairId);
         const validationMessage = document.getElementById(
           `${combinedName}-validation-message`,
@@ -225,6 +224,20 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     setupDateRangeListeners(sidebarFormSelector);
+
+    // Date input change — trigger form via htmx (like checkbox_filter.js does)
+    document.addEventListener(
+      "change",
+      function (e) {
+        if (!e.target.matches('input[type="date"][data-filter-input]')) return;
+        e.stopPropagation();
+        var form = e.target.closest("form");
+        if (form && typeof htmx !== "undefined") {
+          htmx.trigger(form, "change");
+        }
+      },
+      true,
+    ); // capture phase
 
     document.body.addEventListener("htmx:afterSwap", function (event) {
       if (event.detail.target.id === "filter-and-table-container") {

@@ -1869,7 +1869,7 @@
     "pk": 1,
     "fields": {
       "assignment": 17,
-      "description": "Ketenbeheer",
+      "description": "Analyse van beleidsopties en impactbeoordeling voor ICT-investeringen",
       "skill": 14,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -1882,7 +1882,7 @@
     "pk": 2,
     "fields": {
       "assignment": 15,
-      "description": "Test management",
+      "description": "Advies over de inrichting van de IT-governance en besluitvormingsstructuur",
       "skill": 12,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -1895,7 +1895,7 @@
     "pk": 3,
     "fields": {
       "assignment": 22,
-      "description": "Scrum mastering",
+      "description": "Advies over verantwoorde inzet van AI binnen overheidsprocessen conform de AI-verordening",
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -1908,7 +1908,7 @@
     "pk": 4,
     "fields": {
       "assignment": 9,
-      "description": "Programmamanagement",
+      "description": "Advies over de inrichting van master data management en datakwaliteit",
       "skill": 21,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -1921,7 +1921,7 @@
     "pk": 5,
     "fields": {
       "assignment": 18,
-      "description": "AI consultancy",
+      "description": "Verkenning van mogelijkheden voor tekstanalyse en classificatie van documenten",
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -1934,7 +1934,7 @@
     "pk": 6,
     "fields": {
       "assignment": 16,
-      "description": "Cloud migratie",
+      "description": "Analyse van bedrijfsprocessen en vertaling naar functionele specificaties",
       "skill": 24,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -1947,7 +1947,7 @@
     "pk": 7,
     "fields": {
       "assignment": 14,
-      "description": "Full-stack ontwikkeling",
+      "description": "Afstemming tussen business en IT over informatiebehoeften en prioriteiten",
       "skill": 28,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -1960,7 +1960,7 @@
     "pk": 8,
     "fields": {
       "assignment": 28,
-      "description": "Product ownership",
+      "description": "Inrichten en beheer van CI/CD-pipelines en geautomatiseerde deployments",
       "skill": 25,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -1973,7 +1973,7 @@
     "pk": 9,
     "fields": {
       "assignment": 24,
-      "description": "Backend ontwikkeling",
+      "description": "Ondersteuning bij het opstellen van procesmodellen en verbeterplannen",
       "skill": 11,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -1986,7 +1986,7 @@
     "pk": 10,
     "fields": {
       "assignment": 2,
-      "description": "UX/UI ontwerp",
+      "description": "Begeleiden van de organisatie bij de transitie naar agile werken",
       "skill": 16,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -1999,7 +1999,7 @@
     "pk": 11,
     "fields": {
       "assignment": 23,
-      "description": "DevOps implementatie",
+      "description": "Aansturen van het migratietraject van on-premise naar cloudomgeving",
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2012,7 +2012,7 @@
     "pk": 12,
     "fields": {
       "assignment": 11,
-      "description": "Procesoptimalisatie",
+      "description": "Bouwen van koppelingen met externe registraties en basisregistraties",
       "skill": 1,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -2025,7 +2025,7 @@
     "pk": 13,
     "fields": {
       "assignment": 5,
-      "description": "Scrum mastering",
+      "description": "Begeleiding bij acceptatietesten en validatie van opgeleverde functionaliteit",
       "skill": 24,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2038,7 +2038,7 @@
     "pk": 14,
     "fields": {
       "assignment": 20,
-      "description": "Beleidsadvies",
+      "description": "Begeleiden van het scrumteam en bewaken van het agile proces",
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2051,7 +2051,7 @@
     "pk": 15,
     "fields": {
       "assignment": 12,
-      "description": "Backend ontwikkeling",
+      "description": "Bewaken van de testkwaliteit en advies over testdekking bij releases",
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2064,7 +2064,7 @@
     "pk": 16,
     "fields": {
       "assignment": 26,
-      "description": "Projectleiding",
+      "description": "Faciliteren van sprint ceremonies en het wegnemen van impediments",
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2077,7 +2077,7 @@
     "pk": 17,
     "fields": {
       "assignment": 8,
-      "description": "Verandermanagement",
+      "description": "Begeleiden van de organisatie bij de transitie naar agile werken",
       "skill": 16,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2090,7 +2090,7 @@
     "pk": 18,
     "fields": {
       "assignment": 3,
-      "description": "Verandermanagement",
+      "description": "Analyse van bedrijfsprocessen en vertaling naar functionele specificaties",
       "skill": 24,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2103,7 +2103,7 @@
     "pk": 19,
     "fields": {
       "assignment": 7,
-      "description": "Architectuur advies",
+      "description": "Leiding geven aan een multidisciplinair team voor de implementatie van een nieuw zaaksysteem",
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2116,7 +2116,7 @@
     "pk": 20,
     "fields": {
       "assignment": 21,
-      "description": "Security advies",
+      "description": "Onderzoek naar de effectiviteit van digitale dienstverlening en gebruikerstevredenheid",
       "skill": 7,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2129,7 +2129,7 @@
     "pk": 21,
     "fields": {
       "assignment": 13,
-      "description": "Kwartiermaking",
+      "description": "Inrichten en beheer van CI/CD-pipelines en geautomatiseerde deployments",
       "skill": 25,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2142,7 +2142,7 @@
     "pk": 22,
     "fields": {
       "assignment": 30,
-      "description": "Programmamanagement",
+      "description": "Ondersteuning bij de adoptie van nieuwe systemen en werkwijzen door eindgebruikers",
       "skill": 16,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2155,7 +2155,7 @@
     "pk": 23,
     "fields": {
       "assignment": 29,
-      "description": "Procesoptimalisatie",
+      "description": "Ondersteuning bij de implementatie van procesverbeteringen en monitoring",
       "skill": 29,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2168,7 +2168,7 @@
     "pk": 24,
     "fields": {
       "assignment": 1,
-      "description": "Ketenbeheer",
+      "description": "Ondersteuning bij de uitvoering van het project",
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2181,7 +2181,7 @@
     "pk": 25,
     "fields": {
       "assignment": 19,
-      "description": "Architectuur advies",
+      "description": "Advies over de juridische aspecten van data-uitwisseling tussen overheidsorganisaties",
       "skill": 6,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2194,7 +2194,7 @@
     "pk": 26,
     "fields": {
       "assignment": 4,
-      "description": "Frontend ontwikkeling",
+      "description": "Leiding geven aan een multidisciplinair team voor de implementatie van een nieuw zaaksysteem",
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -2207,7 +2207,7 @@
     "pk": 27,
     "fields": {
       "assignment": 10,
-      "description": "Data analyse",
+      "description": "Coaching van teamleden en stakeholders in agile werkwijzen",
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2220,7 +2220,7 @@
     "pk": 28,
     "fields": {
       "assignment": 6,
-      "description": "Backend ontwikkeling",
+      "description": "Opstellen van interactiepatronen en designrichtlijnen voor het platform",
       "skill": 4,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2233,7 +2233,7 @@
     "pk": 29,
     "fields": {
       "assignment": 27,
-      "description": "Security advies",
+      "description": "Inrichten van de samenwerking met ketenpartners en externe leveranciers",
       "skill": 15,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2246,7 +2246,7 @@
     "pk": 30,
     "fields": {
       "assignment": 25,
-      "description": "Beleidsadvies",
+      "description": "Ondersteuning bij de implementatie van procesverbeteringen en monitoring",
       "skill": 29,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2259,7 +2259,7 @@
     "pk": 31,
     "fields": {
       "assignment": 3,
-      "description": "Cloud migratie",
+      "description": "Vertalen van beleidsdoelen naar concrete user stories en acceptatiecriteria",
       "skill": 3,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2272,7 +2272,7 @@
     "pk": 32,
     "fields": {
       "assignment": 2,
-      "description": "Cloud migratie",
+      "description": "Opzetten van een teststrategie en coördinatie van testactiviteiten",
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -2285,7 +2285,7 @@
     "pk": 33,
     "fields": {
       "assignment": 3,
-      "description": "Data engineering",
+      "description": "Advisering en begeleiding binnen het programma",
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2298,7 +2298,7 @@
     "pk": 34,
     "fields": {
       "assignment": 20,
-      "description": "DevOps implementatie",
+      "description": "Bewaken van de testkwaliteit en advies over testdekking bij releases",
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2311,7 +2311,7 @@
     "pk": 35,
     "fields": {
       "assignment": 23,
-      "description": "Architectuur advies",
+      "description": "Verkenning en voorbereiding van een nieuw programma rond datagedreven werken",
       "skill": 15,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -2324,7 +2324,7 @@
     "pk": 36,
     "fields": {
       "assignment": 20,
-      "description": "Frontend ontwikkeling",
+      "description": "Uitvoeren van risicoanalyses en penetratietesten op kritieke systemen",
       "skill": 20,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2337,7 +2337,7 @@
     "pk": 37,
     "fields": {
       "assignment": 4,
-      "description": "UX/UI ontwerp",
+      "description": "Ondersteuning bij de uitvoering van het project",
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2350,7 +2350,7 @@
     "pk": 38,
     "fields": {
       "assignment": 14,
-      "description": "Projectleiding",
+      "description": "Advies over de juridische aspecten van data-uitwisseling tussen overheidsorganisaties",
       "skill": 6,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2363,7 +2363,7 @@
     "pk": 39,
     "fields": {
       "assignment": 3,
-      "description": "Product ownership",
+      "description": "Advisering over de implementatie van nieuwe wet- en regelgeving in digitale systemen",
       "skill": 14,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2376,7 +2376,7 @@
     "pk": 40,
     "fields": {
       "assignment": 22,
-      "description": "Architectuur advies",
+      "description": "Ontwikkeling van ETL-processen voor de ontsluiting van bronregistraties",
       "skill": 8,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2389,7 +2389,7 @@
     "pk": 41,
     "fields": {
       "assignment": 21,
-      "description": "Programmamanagement",
+      "description": "Ontwikkeling van ETL-processen voor de ontsluiting van bronregistraties",
       "skill": 8,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2402,7 +2402,7 @@
     "pk": 42,
     "fields": {
       "assignment": 29,
-      "description": "UX/UI ontwerp",
+      "description": "Opzetten van een teststrategie en coördinatie van testactiviteiten",
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2415,7 +2415,7 @@
     "pk": 43,
     "fields": {
       "assignment": 24,
-      "description": "Programmamanagement",
+      "description": "Advies over verantwoorde inzet van AI binnen overheidsprocessen conform de AI-verordening",
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2428,7 +2428,7 @@
     "pk": 44,
     "fields": {
       "assignment": 3,
-      "description": "Architectuur advies",
+      "description": "Inrichten van testautomatisering en kwaliteitsrapportages",
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2441,7 +2441,7 @@
     "pk": 45,
     "fields": {
       "assignment": 25,
-      "description": "Product ownership",
+      "description": "Beheer van de productbacklog en afstemming met stakeholders over prioriteiten",
       "skill": 3,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2454,7 +2454,7 @@
     "pk": 46,
     "fields": {
       "assignment": 15,
-      "description": "Procesoptimalisatie",
+      "description": "Leiding geven aan een multidisciplinair team voor de implementatie van een nieuw zaaksysteem",
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2467,7 +2467,7 @@
     "pk": 47,
     "fields": {
       "assignment": 21,
-      "description": "Scrum mastering",
+      "description": "Bouwen van toegankelijke formulieren en dashboards conform WCAG-richtlijnen",
       "skill": 2,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2480,7 +2480,7 @@
     "pk": 48,
     "fields": {
       "assignment": 27,
-      "description": "Projectleiding",
+      "description": "Beheer van de productbacklog en afstemming met stakeholders over prioriteiten",
       "skill": 3,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -2493,7 +2493,7 @@
     "pk": 49,
     "fields": {
       "assignment": 25,
-      "description": "AI consultancy",
+      "description": "Migratie van legacy-systemen naar een moderne microservices-architectuur",
       "skill": 1,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2506,7 +2506,7 @@
     "pk": 50,
     "fields": {
       "assignment": 14,
-      "description": "AI consultancy",
+      "description": "Beheer van de containerplatform-infrastructuur en monitoring",
       "skill": 25,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2519,7 +2519,7 @@
     "pk": 51,
     "fields": {
       "assignment": 23,
-      "description": "Machine learning",
+      "description": "Aansturen van het migratietraject van on-premise naar cloudomgeving",
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -2532,7 +2532,7 @@
     "pk": 52,
     "fields": {
       "assignment": 20,
-      "description": "Full-stack ontwikkeling",
+      "description": "Ontwikkelen en uitvoeren van een veranderstrategie voor digitale transformatie",
       "skill": 16,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2545,7 +2545,7 @@
     "pk": 53,
     "fields": {
       "assignment": 20,
-      "description": "Data engineering",
+      "description": "Uitvoeren van DPIA's en toezicht houden op de naleving van de AVG",
       "skill": 22,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -2558,7 +2558,7 @@
     "pk": 54,
     "fields": {
       "assignment": 16,
-      "description": "Architectuur advies",
+      "description": "Ondersteuning bij de adoptie van nieuwe systemen en werkwijzen door eindgebruikers",
       "skill": 16,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2571,7 +2571,7 @@
     "pk": 55,
     "fields": {
       "assignment": 19,
-      "description": "Frontend ontwikkeling",
+      "description": "Advisering van het bestuur over IT-investeringen en digitale innovatie",
       "skill": 18,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2584,7 +2584,7 @@
     "pk": 56,
     "fields": {
       "assignment": 16,
-      "description": "AI consultancy",
+      "description": "Opstellen van interactiepatronen en designrichtlijnen voor het platform",
       "skill": 4,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2597,7 +2597,7 @@
     "pk": 57,
     "fields": {
       "assignment": 23,
-      "description": "Onderzoek en analyse",
+      "description": "Ontwikkeling en onderhoud van backend-services en API's voor het centrale platform",
       "skill": 1,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -2610,7 +2610,7 @@
     "pk": 58,
     "fields": {
       "assignment": 21,
-      "description": "Procesoptimalisatie",
+      "description": "Uitvoeren van beleidsanalyses en haalbaarheidsstudies voor nieuwe digitale initiatieven",
       "skill": 7,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2623,7 +2623,7 @@
     "pk": 59,
     "fields": {
       "assignment": 22,
-      "description": "Frontend ontwikkeling",
+      "description": "Inrichten en beheer van CI/CD-pipelines en geautomatiseerde deployments",
       "skill": 25,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2636,7 +2636,7 @@
     "pk": 60,
     "fields": {
       "assignment": 24,
-      "description": "Product ownership",
+      "description": "Opbouwen van een nieuw team en inrichten van de werkprocessen",
       "skill": 10,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -2649,7 +2649,7 @@
     "pk": 61,
     "fields": {
       "assignment": 22,
-      "description": "DevOps implementatie",
+      "description": "Opstellen van datamodellen en richtlijnen voor gegevensuitwisseling",
       "skill": 21,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2662,7 +2662,7 @@
     "pk": 62,
     "fields": {
       "assignment": 10,
-      "description": "Verandermanagement",
+      "description": "Bouwen van koppelingen met externe registraties en basisregistraties",
       "skill": 1,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2675,7 +2675,7 @@
     "pk": 63,
     "fields": {
       "assignment": 13,
-      "description": "Data engineering",
+      "description": "Tijdelijke inzet voor de doorontwikkeling van het platform",
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2688,7 +2688,7 @@
     "pk": 64,
     "fields": {
       "assignment": 4,
-      "description": "Beleidsadvies",
+      "description": "Verkenning van mogelijkheden voor tekstanalyse en classificatie van documenten",
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -2701,7 +2701,7 @@
     "pk": 65,
     "fields": {
       "assignment": 15,
-      "description": "Scrum mastering",
+      "description": "Aansturen van het migratietraject van on-premise naar cloudomgeving",
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2714,7 +2714,7 @@
     "pk": 66,
     "fields": {
       "assignment": 22,
-      "description": "Data analyse",
+      "description": "Strategische aansturing van de IT-organisatie en digitale agenda",
       "skill": 18,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2727,7 +2727,7 @@
     "pk": 67,
     "fields": {
       "assignment": 27,
-      "description": "Full-stack ontwikkeling",
+      "description": "Begeleiding bij de ontwikkeling van een AI-strategie en implementatieroadmap",
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2740,7 +2740,7 @@
     "pk": 68,
     "fields": {
       "assignment": 20,
-      "description": "Procesoptimalisatie",
+      "description": "Opzetten van een teststrategie en coördinatie van testactiviteiten",
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2753,7 +2753,7 @@
     "pk": 69,
     "fields": {
       "assignment": 1,
-      "description": "Ketenbeheer",
+      "description": "Tijdelijke aansturing van het ICT-team tijdens een reorganisatie",
       "skill": 10,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2766,7 +2766,7 @@
     "pk": 70,
     "fields": {
       "assignment": 30,
-      "description": "Product ownership",
+      "description": "Begeleiding bij de ontwikkeling van een AI-strategie en implementatieroadmap",
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2779,7 +2779,7 @@
     "pk": 71,
     "fields": {
       "assignment": 17,
-      "description": "Verandermanagement",
+      "description": "Inrichten en beheer van CI/CD-pipelines en geautomatiseerde deployments",
       "skill": 25,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2792,7 +2792,7 @@
     "pk": 72,
     "fields": {
       "assignment": 16,
-      "description": "Projectleiding",
+      "description": "Faciliteren van sprint ceremonies en het wegnemen van impediments",
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2805,7 +2805,7 @@
     "pk": 73,
     "fields": {
       "assignment": 13,
-      "description": "Frontend ontwikkeling",
+      "description": "Opstellen van beleidskaders voor digitalisering en informatievoorziening",
       "skill": 14,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2818,7 +2818,7 @@
     "pk": 74,
     "fields": {
       "assignment": 22,
-      "description": "Agile coaching",
+      "description": "Opzetten van een teststrategie en coördinatie van testactiviteiten",
       "skill": 27,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2831,7 +2831,7 @@
     "pk": 75,
     "fields": {
       "assignment": 30,
-      "description": "Data analyse",
+      "description": "Ontwerp van het datalandschap en de gegevensarchitectuur voor de organisatie",
       "skill": 21,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2844,7 +2844,7 @@
     "pk": 76,
     "fields": {
       "assignment": 2,
-      "description": "Security advies",
+      "description": "Bewaken van architectuurprincipes en technische samenhang tussen systemen",
       "skill": 19,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -2857,7 +2857,7 @@
     "pk": 77,
     "fields": {
       "assignment": 21,
-      "description": "Backend ontwikkeling",
+      "description": "Verkenning en voorbereiding van een nieuw programma rond datagedreven werken",
       "skill": 15,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2870,7 +2870,7 @@
     "pk": 78,
     "fields": {
       "assignment": 20,
-      "description": "Full-stack ontwikkeling",
+      "description": "Verkenning van mogelijkheden voor tekstanalyse en classificatie van documenten",
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2883,7 +2883,7 @@
     "pk": 79,
     "fields": {
       "assignment": 14,
-      "description": "Agile coaching",
+      "description": "Coaching van teamleden en stakeholders in agile werkwijzen",
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2896,7 +2896,7 @@
     "pk": 80,
     "fields": {
       "assignment": 16,
-      "description": "Verandermanagement",
+      "description": "Modelleren van processen in BPMN en identificeren van verbeterkansen",
       "skill": 29,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2909,7 +2909,7 @@
     "pk": 81,
     "fields": {
       "assignment": 16,
-      "description": "Beleidsadvies",
+      "description": "Inrichten en beheer van CI/CD-pipelines en geautomatiseerde deployments",
       "skill": 25,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -2922,7 +2922,7 @@
     "pk": 82,
     "fields": {
       "assignment": 2,
-      "description": "Test management",
+      "description": "Ontwikkeling van ETL-processen voor de ontsluiting van bronregistraties",
       "skill": 8,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2935,7 +2935,7 @@
     "pk": 83,
     "fields": {
       "assignment": 15,
-      "description": "Interim management",
+      "description": "Waarneming van het afdelingshoofd en bewaken van de operationele continuïteit",
       "skill": 10,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2948,7 +2948,7 @@
     "pk": 84,
     "fields": {
       "assignment": 4,
-      "description": "Data engineering",
+      "description": "Begeleiden van het scrumteam en bewaken van het agile proces",
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2961,7 +2961,7 @@
     "pk": 85,
     "fields": {
       "assignment": 15,
-      "description": "Frontend ontwikkeling",
+      "description": "Implementatie van een componentenbibliotheek voor hergebruik binnen de organisatie",
       "skill": 2,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2974,7 +2974,7 @@
     "pk": 86,
     "fields": {
       "assignment": 2,
-      "description": "Scrum mastering",
+      "description": "Analyse van de organisatiecultuur en aanbevelingen voor verandermanagement",
       "skill": 12,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -2987,7 +2987,7 @@
     "pk": 87,
     "fields": {
       "assignment": 23,
-      "description": "Informatiemanagement",
+      "description": "Advisering over privacy by design bij de ontwikkeling van digitale diensten",
       "skill": 22,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3000,7 +3000,7 @@
     "pk": 88,
     "fields": {
       "assignment": 10,
-      "description": "Agile coaching",
+      "description": "Ondersteuning bij de implementatie van procesverbeteringen en monitoring",
       "skill": 29,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3013,7 +3013,7 @@
     "pk": 89,
     "fields": {
       "assignment": 13,
-      "description": "Data analyse",
+      "description": "Advies over de integratie van cloudoplossingen binnen de bestaande infrastructuur",
       "skill": 19,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3026,7 +3026,7 @@
     "pk": 90,
     "fields": {
       "assignment": 29,
-      "description": "Onderzoek en analyse",
+      "description": "Leiding geven aan een multidisciplinair team voor de implementatie van een nieuw zaaksysteem",
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3039,7 +3039,7 @@
     "pk": 91,
     "fields": {
       "assignment": 21,
-      "description": "Onderzoek en analyse",
+      "description": "Evaluatie van bestaande systemen en advies over verbetermogelijkheden",
       "skill": 7,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3052,7 +3052,7 @@
     "pk": 92,
     "fields": {
       "assignment": 3,
-      "description": "Cloud migratie",
+      "description": "Ondersteuning bij de herinrichting van rollen en verantwoordelijkheden",
       "skill": 12,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3065,7 +3065,7 @@
     "pk": 93,
     "fields": {
       "assignment": 20,
-      "description": "Architectuur advies",
+      "description": "Opzetten van een nieuw team en inrichten van werkprocessen en tooling",
       "skill": 15,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3078,7 +3078,7 @@
     "pk": 94,
     "fields": {
       "assignment": 19,
-      "description": "Projectleiding",
+      "description": "Opstellen van interactiepatronen en designrichtlijnen voor het platform",
       "skill": 4,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3091,7 +3091,7 @@
     "pk": 95,
     "fields": {
       "assignment": 17,
-      "description": "Architectuur advies",
+      "description": "Coaching van teamleden en stakeholders in agile werkwijzen",
       "skill": 23,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3104,7 +3104,7 @@
     "pk": 96,
     "fields": {
       "assignment": 30,
-      "description": "Cloud migratie",
+      "description": "Ontwikkeling en onderhoud van backend-services en API's voor het centrale platform",
       "skill": 1,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -3117,7 +3117,7 @@
     "pk": 97,
     "fields": {
       "assignment": 2,
-      "description": "Interim management",
+      "description": "Ondersteuning bij de uitvoering van het project",
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3130,7 +3130,7 @@
     "pk": 98,
     "fields": {
       "assignment": 15,
-      "description": "DevOps implementatie",
+      "description": "Ontwikkeling van ETL-processen voor de ontsluiting van bronregistraties",
       "skill": 8,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3143,7 +3143,7 @@
     "pk": 99,
     "fields": {
       "assignment": 13,
-      "description": "Programmamanagement",
+      "description": "Inrichten van security monitoring en incident response processen",
       "skill": 20,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3156,7 +3156,7 @@
     "pk": 100,
     "fields": {
       "assignment": 30,
-      "description": "Test management",
+      "description": "Verkenning van mogelijkheden voor tekstanalyse en classificatie van documenten",
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3169,7 +3169,7 @@
     "pk": 101,
     "fields": {
       "assignment": 29,
-      "description": "Informatiemanagement",
+      "description": "Opbouwen van een nieuw team en inrichten van de werkprocessen",
       "skill": 10,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3182,7 +3182,7 @@
     "pk": 102,
     "fields": {
       "assignment": 25,
-      "description": "Full-stack ontwikkeling",
+      "description": "Begeleiding bij de ontwikkeling van een AI-strategie en implementatieroadmap",
       "skill": 5,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -3195,7 +3195,7 @@
     "pk": 103,
     "fields": {
       "assignment": 16,
-      "description": "UX/UI ontwerp",
+      "description": "Advies over de juridische aspecten van data-uitwisseling tussen overheidsorganisaties",
       "skill": 6,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3208,7 +3208,7 @@
     "pk": 104,
     "fields": {
       "assignment": 24,
-      "description": "Procesoptimalisatie",
+      "description": "Advies over de inrichting van de IT-governance en besluitvormingsstructuur",
       "skill": 12,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3221,7 +3221,7 @@
     "pk": 105,
     "fields": {
       "assignment": 14,
-      "description": "Ketenbeheer",
+      "description": "Aansturen van het migratietraject van on-premise naar cloudomgeving",
       "skill": 9,
       "period_source": "ASSIGNMENT",
       "source": "wies",
@@ -3234,7 +3234,7 @@
     "pk": 106,
     "fields": {
       "assignment": 15,
-      "description": "Informatiemanagement",
+      "description": "Faciliteren van samenwerking tussen beleid, uitvoering en ICT",
       "skill": 11,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3247,7 +3247,7 @@
     "pk": 107,
     "fields": {
       "assignment": 3,
-      "description": "Onderzoek en analyse",
+      "description": "Inrichten en beheer van datapipelines voor het centrale dataplatform",
       "skill": 8,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3260,7 +3260,7 @@
     "pk": 108,
     "fields": {
       "assignment": 19,
-      "description": "Informatiemanagement",
+      "description": "Ondersteuning bij de uitvoering van het project",
       "skill": null,
       "period_source": "ASSIGNMENT",
       "source": "otys_iir",
@@ -3273,7 +3273,7 @@
     "pk": 109,
     "fields": {
       "assignment": 31,
-      "description": "Backend development",
+      "description": "Ontwikkeling en onderhoud van backend-services en API's voor het centrale platform",
       "skill": 1,
       "period_source": "ASSIGNMENT",
       "source": "wies",

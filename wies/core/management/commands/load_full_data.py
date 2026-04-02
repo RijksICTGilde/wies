@@ -377,35 +377,148 @@ PROJECT_TOPICS = [
     "Informatiehuishouding",
 ]
 
-SERVICE_DESCRIPTIONS = [
-    "Backend ontwikkeling",
-    "Frontend ontwikkeling",
-    "Full-stack ontwikkeling",
-    "Data engineering",
-    "Data analyse",
-    "Machine learning",
-    "UX/UI ontwerp",
-    "Projectleiding",
-    "Programmamanagement",
-    "Architectuur advies",
-    "Security advies",
-    "Privacy advies",
-    "Agile coaching",
-    "Scrum mastering",
-    "Product ownership",
-    "Beleidsadvies",
-    "Procesoptimalisatie",
-    "Verandermanagement",
-    "Cloud migratie",
-    "DevOps implementatie",
-    "Test management",
-    "Onderzoek en analyse",
-    "Kwartiermaking",
-    "Interim management",
-    "AI consultancy",
-    "Informatiemanagement",
-    "Ketenbeheer",
-]
+SERVICE_DESCRIPTIONS: dict[str, list[str]] = {
+    "Backend development": [
+        "Ontwikkeling en onderhoud van backend-services en API's voor het centrale platform",
+        "Migratie van legacy-systemen naar een moderne microservices-architectuur",
+        "Bouwen van koppelingen met externe registraties en basisregistraties",
+    ],
+    "Frontend development": [
+        "Doorontwikkeling van de gebruikersinterface op basis van het NL Design System",
+        "Bouwen van toegankelijke formulieren en dashboards conform WCAG-richtlijnen",
+        "Implementatie van een componentenbibliotheek voor hergebruik binnen de organisatie",
+    ],
+    "Product owner": [
+        "Beheer van de productbacklog en afstemming met stakeholders over prioriteiten",
+        "Vertalen van beleidsdoelen naar concrete user stories en acceptatiecriteria",
+        "Begeleiden van de productroadmap en kwartaalplanning voor het digitale platform",
+    ],
+    "UX designer": [
+        "Gebruikersonderzoek en ontwerp van intuïtieve workflows voor interne medewerkers",
+        "Herontwerp van de aanvraagprocessen op basis van gebruikerstesten en feedback",
+        "Opstellen van interactiepatronen en designrichtlijnen voor het platform",
+    ],
+    "AI Consultant": [
+        "Advies over verantwoorde inzet van AI binnen overheidsprocessen conform de AI-verordening",
+        "Verkenning van mogelijkheden voor tekstanalyse en classificatie van documenten",
+        "Begeleiding bij de ontwikkeling van een AI-strategie en implementatieroadmap",
+    ],
+    "AI Jurist": [
+        "Juridische toetsing van algoritmes en geautomatiseerde besluitvorming aan de AVG en AI Act",
+        "Opstellen van kaders voor transparantie en uitlegbaarheid van AI-systemen",
+        "Advies over de juridische aspecten van data-uitwisseling tussen overheidsorganisaties",
+    ],
+    "Researcher": [
+        "Onderzoek naar de effectiviteit van digitale dienstverlening en gebruikerstevredenheid",
+        "Uitvoeren van beleidsanalyses en haalbaarheidsstudies voor nieuwe digitale initiatieven",
+        "Evaluatie van bestaande systemen en advies over verbetermogelijkheden",
+    ],
+    "Data engineer": [
+        "Inrichten en beheer van datapipelines voor het centrale dataplatform",
+        "Ontwikkeling van ETL-processen voor de ontsluiting van bronregistraties",
+        "Bouwen van een datawarehouse voor managementrapportages en stuurinformatie",
+    ],
+    "Project leader": [
+        "Leiding geven aan een multidisciplinair team voor de implementatie van een nieuw zaaksysteem",
+        "Coördinatie van de planning, risico's en afhankelijkheden binnen het programma",
+        "Aansturen van het migratietraject van on-premise naar cloudomgeving",
+    ],
+    "(Interim) Manager": [
+        "Tijdelijke aansturing van het ICT-team tijdens een reorganisatie",
+        "Waarneming van het afdelingshoofd en bewaken van de operationele continuïteit",
+        "Opbouwen van een nieuw team en inrichten van de werkprocessen",
+    ],
+    "Procesbegeleider": [
+        "Begeleiden van workshops en werksessies voor de herinrichting van werkprocessen",
+        "Faciliteren van samenwerking tussen beleid, uitvoering en ICT",
+        "Ondersteuning bij het opstellen van procesmodellen en verbeterplannen",
+    ],
+    "Organisatieadviseur": [
+        "Advies over de inrichting van de IT-governance en besluitvormingsstructuur",
+        "Analyse van de organisatiecultuur en aanbevelingen voor verandermanagement",
+        "Ondersteuning bij de herinrichting van rollen en verantwoordelijkheden",
+    ],
+    "Programmamanager": [
+        "Aansturing van een programma met meerdere projecten rond digitale transformatie",
+        "Bewaken van de samenhang tussen projecten en realisatie van programmadoelen",
+        "Rapportage aan de stuurgroep en management over voortgang en risico's",
+    ],
+    "Beleidsadviseur": [
+        "Opstellen van beleidskaders voor digitalisering en informatievoorziening",
+        "Advisering over de implementatie van nieuwe wet- en regelgeving in digitale systemen",
+        "Analyse van beleidsopties en impactbeoordeling voor ICT-investeringen",
+    ],
+    "Kwartiermaker": [
+        "Opzetten van een nieuw team en inrichten van werkprocessen en tooling",
+        "Verkenning en voorbereiding van een nieuw programma rond datagedreven werken",
+        "Inrichten van de samenwerking met ketenpartners en externe leveranciers",
+    ],
+    "Verandermanager": [
+        "Begeleiden van de organisatie bij de transitie naar agile werken",
+        "Ontwikkelen en uitvoeren van een veranderstrategie voor digitale transformatie",
+        "Ondersteuning bij de adoptie van nieuwe systemen en werkwijzen door eindgebruikers",
+    ],
+    "I-Adviseur": [
+        "Advies over de informatievoorziening en de samenhang met de enterprise-architectuur",
+        "Opstellen van informatiebeleidsplannen en architectuurprincipes",
+        "Begeleiding bij de selectie en implementatie van nieuwe informatiesystemen",
+    ],
+    "CIO": [
+        "Strategische aansturing van de IT-organisatie en digitale agenda",
+        "Advisering van het bestuur over IT-investeringen en digitale innovatie",
+        "Bewaken van de samenhang tussen IT-strategie en organisatiedoelen",
+    ],
+    "Solution Architect": [
+        "Ontwerp van de technische architectuur voor een nieuw registratiesysteem",
+        "Bewaken van architectuurprincipes en technische samenhang tussen systemen",
+        "Advies over de integratie van cloudoplossingen binnen de bestaande infrastructuur",
+    ],
+    "Cybersecurity Specialist": [
+        "Uitvoeren van risicoanalyses en penetratietesten op kritieke systemen",
+        "Inrichten van security monitoring en incident response processen",
+        "Advisering over de implementatie van BIO-maatregelen en beveiligingsstandaarden",
+    ],
+    "Data Architect": [
+        "Ontwerp van het datalandschap en de gegevensarchitectuur voor de organisatie",
+        "Opstellen van datamodellen en richtlijnen voor gegevensuitwisseling",
+        "Advies over de inrichting van master data management en datakwaliteit",
+    ],
+    "Privacy Officer": [
+        "Uitvoeren van DPIA's en toezicht houden op de naleving van de AVG",
+        "Opstellen van privacybeleid en verwerkingsregisters voor nieuwe systemen",
+        "Advisering over privacy by design bij de ontwikkeling van digitale diensten",
+    ],
+    "Scrum Master": [
+        "Begeleiden van het scrumteam en bewaken van het agile proces",
+        "Faciliteren van sprint ceremonies en het wegnemen van impediments",
+        "Coaching van teamleden en stakeholders in agile werkwijzen",
+    ],
+    "Business Analist": [
+        "Analyse van bedrijfsprocessen en vertaling naar functionele specificaties",
+        "Opstellen van requirements en procesmodellen voor systeemontwikkeling",
+        "Begeleiding bij acceptatietesten en validatie van opgeleverde functionaliteit",
+    ],
+    "DevOps Engineer": [
+        "Inrichten en beheer van CI/CD-pipelines en geautomatiseerde deployments",
+        "Beheer van de containerplatform-infrastructuur en monitoring",
+        "Automatisering van infrastructuur met Infrastructure as Code",
+    ],
+    "Test Manager": [
+        "Opzetten van een teststrategie en coördinatie van testactiviteiten",
+        "Inrichten van testautomatisering en kwaliteitsrapportages",
+        "Bewaken van de testkwaliteit en advies over testdekking bij releases",
+    ],
+    "Information Manager": [
+        "Afstemming tussen business en IT over informatiebehoeften en prioriteiten",
+        "Beheer van het applicatielandschap en advisering over rationalisatie",
+        "Opstellen van informatieplannen en bewaken van de informatiearchitectuur",
+    ],
+    "Process Analyst": [
+        "In kaart brengen en analyseren van werkprocessen voor optimalisatie",
+        "Modelleren van processen in BPMN en identificeren van verbeterkansen",
+        "Ondersteuning bij de implementatie van procesverbeteringen en monitoring",
+    ],
+}
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -591,7 +704,7 @@ class Command(BaseCommand):
             skill = rng.choice(skills)
             service = Service.objects.create(
                 assignment=assignment,
-                description=rng.choice(SERVICE_DESCRIPTIONS),
+                description=rng.choice(SERVICE_DESCRIPTIONS.get(skill.name, [""])),
                 skill=skill,
                 period_source="ASSIGNMENT",
                 source=weighted_choice(rng, SOURCE_WEIGHTS),
@@ -606,7 +719,7 @@ class Command(BaseCommand):
             skill = rng.choice(skills)
             service = Service.objects.create(
                 assignment=assignment,
-                description=rng.choice(SERVICE_DESCRIPTIONS),
+                description=rng.choice(SERVICE_DESCRIPTIONS.get(skill.name, [""])),
                 skill=skill,
                 period_source="ASSIGNMENT",
                 source=weighted_choice(rng, SOURCE_WEIGHTS),
