@@ -22,9 +22,9 @@ This files lists the changes during the lifetime of this project.
 - 266: (migration) move labels from User to Colleague
 - 265: fix opdrachten filter to only consider skills on open services
 - 265: make search bar on assignments page same as on wiezitwaar page
+- 261: (new env var) move db admin from `/djadmin/db/` to `/staff/`, use SSO login instead of superuser login, access controlled by `STAFF_EMAILS`
 - 262: make sidepanels the same between 2 pages
 - 262: (migration) change status from assignment to service: (CONCEPT, OPEN, GESLOTEN)
-- 261: (new env var) move db admin from `/djadmin/db/` to `/staff/`, use SSO login instead of superuser login, access controlled by `STAFF_EMAILS`
 - 251: fix that placement table shows org labels instead of org names
 - 251: confirm search by enter press
 - 251: add search suggestions: organizations found by abbreviation
