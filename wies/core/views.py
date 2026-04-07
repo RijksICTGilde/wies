@@ -111,84 +111,97 @@ def _build_close_url(request):
     return f"{request.path}?{params.urlencode()}" if params else request.path
 
 
+def _make_team_member_entry(
+    colleague, colleague_url=None, *, historical=False, privacy_warning_text=None, is_vacancy=False, skill_name=None
+):
+    """Build a standard team member dict for assignment panel display."""
+    entry = {
+        "colleague": colleague,
+        "colleague_url": colleague_url,
+        "skills": set(),
+        "historical": historical,
+        "privacy_warning_text": privacy_warning_text,
+        "is_vacancy": is_vacancy,
+    }
+    if skill_name:
+        entry["skills"].add(skill_name)
+    return entry
+
+
 def _build_assignment_panel_data(assignment, request, breadcrumb_base):
     """Shared helper to build assignment panel context data for both views."""
     today = timezone.now().date()
+    viewer = getattr(request.user, "colleague", None)
+    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
 
-    # Vacancy services: OPEN and never had any placement
-    vacancy_services = list(
-        assignment.services.filter(
-            status="OPEN",
-            placements__isnull=True,
-        ).select_related("skill")
-    )
-    for service in vacancy_services:
-        service.current_placements = []
-
-    # Services with current placements (regardless of status)
-    filled_services = list(
+    # Single query: all services with all annotated placements
+    services = list(
         assignment.services.select_related("skill").prefetch_related(
             Prefetch(
                 "placements",
-                queryset=filter_placements_by_min_end_date(
-                    annotate_placement_dates(Placement.objects.select_related("colleague")),
-                    today,
-                ),
-                to_attr="current_placements",
+                queryset=annotate_placement_dates(Placement.objects.select_related("colleague")),
+                to_attr="all_placements",
             )
         )
     )
-    filled_services = [s for s in filled_services if s.current_placements]
 
-    # Group filled placements by colleague for the team list
-    colleagues_by_id: dict[int, dict] = {}
-    for service in filled_services:
-        for placement in service.current_placements:
+    vacancy_list: list[dict] = []
+    current_by_id: dict[int, dict] = {}
+    historical_by_id: dict[int, dict] = {}
+
+    for service in services:
+        skill_name = service.skill.name if service.skill else None
+
+        # Vacancy: OPEN service that never had any placement
+        if not service.all_placements and service.status == "OPEN":
+            vacancy_list.append(_make_team_member_entry(None, is_vacancy=True, skill_name=skill_name))
+            continue
+
+        for placement in service.all_placements:
             cid = placement.colleague.id
-            if cid not in colleagues_by_id:
-                colleagues_by_id[cid] = {
-                    "colleague": placement.colleague,
-                    "colleague_url": _build_panel_url(request, collega=cid),
-                    "skills": [],
-                }
-            if service.skill and service.skill.name not in colleagues_by_id[cid]["skills"]:
-                colleagues_by_id[cid]["skills"].append(service.skill.name)
+            placement_is_active = placement.actual_end_date is None or today <= placement.actual_end_date
 
-    # Vacancies (open services without placements)
-    vacancy_skills = [s.skill.name if s.skill else None for s in vacancy_services]
+            if placement_is_active:
+                # Active placements are visible to everyone
+                if cid not in current_by_id:
+                    current_by_id[cid] = _make_team_member_entry(
+                        placement.colleague,
+                        colleague_url=_build_panel_url(request, collega=cid),
+                    )
+                if skill_name:
+                    current_by_id[cid]["skills"].add(skill_name)
 
-    team_members = list(colleagues_by_id.values())
-
-    # Historical placements — privacy-critical: only visible to the consultant themselves or the BM
-    historical_team_members: list[dict] = []
-    viewer = getattr(request.user, "colleague", None)
-    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
-    if viewer:
-        historical_services = list(
-            assignment.services.select_related("skill").prefetch_related(
-                Prefetch(
-                    "placements",
-                    queryset=annotate_placement_dates(Placement.objects.select_related("colleague")).filter(
-                        actual_end_date__lt=today
-                    ),
-                    to_attr="historical_placements",
-                )
-            )
-        )
-        historical_by_id: dict[int, dict] = {}
-        for service in historical_services:
-            for placement in service.historical_placements:
-                cid = placement.colleague.id
-                if cid != viewer.id and not viewer_is_bm:
-                    continue
+            elif viewer is not None and cid == viewer.id:
+                # Consultants can see their own ended placements
                 if cid not in historical_by_id:
-                    historical_by_id[cid] = {
-                        "colleague": placement.colleague,
-                        "skills": [],
-                    }
-                if service.skill and service.skill.name not in historical_by_id[cid]["skills"]:
-                    historical_by_id[cid]["skills"].append(service.skill.name)
-        historical_team_members = list(historical_by_id.values())
+                    historical_by_id[cid] = _make_team_member_entry(
+                        placement.colleague,
+                        historical=True,
+                        privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
+                    )
+                if skill_name:
+                    historical_by_id[cid]["skills"].add(skill_name)
+
+            elif viewer_is_bm:
+                # BM can see all ended placements on their assignment
+                if cid not in historical_by_id:
+                    historical_by_id[cid] = _make_team_member_entry(
+                        placement.colleague,
+                        historical=True,
+                        privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
+                    )
+                if skill_name:
+                    historical_by_id[cid]["skills"].add(skill_name)
+
+            else:
+                # Others must not see ended placements
+                continue
+
+    # Convert skill sets to sorted lists for deterministic template rendering
+    for member in (*vacancy_list, *current_by_id.values(), *historical_by_id.values()):
+        member["skills"] = sorted(member["skills"])
+
+    team_members = vacancy_list + list(current_by_id.values()) + list(historical_by_id.values())
 
     primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
         "organization__parent__parent__parent__parent"
@@ -206,12 +219,9 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         "close_url": _build_close_url(request),
         "assignment": assignment,
         "team_members": team_members,
-        "historical_team_members": historical_team_members,
-        "vacancy_skills": vacancy_skills,
         "user_can_edit": user_can_edit_assignment(request.user, assignment),
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
         "org_breadcrumbs": org_breadcrumbs,
-        "viewer_is_bm": viewer_is_bm,
     }
 
 
