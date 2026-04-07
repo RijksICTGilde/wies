@@ -54,7 +54,7 @@
                 labels=item.labels,
                 edit_url=url("user-profile-edit-attribute", args=["labels_" ~ item.category.id]),
                 target_element="profile-labels-" ~ item.category.id ~ "-content" %}
-                {% include "parts/profile_labels_display.html" %}
+                {% include "parts/editable_labels_field.html" %}
               {% endwith %}
             </div>
           </dd>

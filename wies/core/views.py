@@ -2260,7 +2260,7 @@ def _handle_label_edit(request, attribute):
         updated_labels = list(colleague.labels.filter(category=category).order_by("name"))
         return render(
             request,
-            "parts/profile_labels_display.html",
+            "parts/editable_labels_field.html",
             {
                 "category": category,
                 "labels": updated_labels,
@@ -2275,7 +2275,7 @@ def _handle_label_edit(request, attribute):
         if request.GET.get("cancel"):
             return render(
                 request,
-                "parts/profile_labels_display.html",
+                "parts/editable_labels_field.html",
                 {
                     "category": category,
                     "labels": selected_labels,
@@ -2288,7 +2288,7 @@ def _handle_label_edit(request, attribute):
         form = ProfileLabelsForm(category=category, initial={"labels": selected_ids})
         return render(
             request,
-            "parts/profile_labels_form.html",
+            "parts/editable_labels_field_form.html",
             {
                 "form": form,
                 "edit_url": edit_url,
