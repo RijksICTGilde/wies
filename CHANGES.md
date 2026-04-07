@@ -4,9 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 279: show historic placements and assignment (only to own user and assignment bm)
+- 279: show historic placements and assignment (only to user themselves and assignment bm)
 - 279: introduce editable userprofile
-- 279: when colleague has multiple roles on 1 assignment, show as 1 line, multiple chips
+- 279: when colleague has multiple roles on 1 assignment, show on 1 line
 - 281: fix label delete bug introduced in 266
 - 282: refactor UI polish, accessibility, and colleague model improvements
 - 282: add location icons to assignment cards and colleague panel
