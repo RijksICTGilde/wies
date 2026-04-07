@@ -64,49 +64,9 @@
     {# Assignments section #}
     <section>
       <h2 class="utrecht-heading-2">Opdrachten</h2>
-      {% if assignment_list %}
-        <div class="rvo-layout-column rvo-layout-gap--sm">
-          {% for assignment in assignment_list %}
-            <a href="{{ assignment.assignment_url }}"
-               hx-get="{{ assignment.assignment_url }}"
-               hx-target="#side_panel-container"
-               class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row panel-card-link">
-              <div class="rvo-card__content">
-                {% if assignment.historical %}
-                  <div class="rvo-layout-row rvo-layout-align--center">
-                    <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin panel-card-link__title">{{ assignment.name }}</h3>
-                    <span class="rvo-tag assignment-tag--completed">Afgelopen</span>
-                  </div>
-                {% else %}
-                  <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin">{{ assignment.name }}</h3>
-                {% endif %}
-                {% if assignment.start_date or assignment.end_date %}
-                  <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
-                    <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm rvo-icon--rvo-grijs-700"
-                          role="img"
-                          aria-label="Periode"></span>
-                    <span class="rvo-text--subtle rvo-text--sm">{{ assignment.start_date|datum_nl("N y") }} - {{ assignment.end_date|datum_nl("N y") }}</span>
-                  </div>
-                {% endif %}
-                {% if assignment.tags %}
-                  <div class="assignment-skill-tag">
-                    {% for tag in assignment.tags %}<span class="rvo-tag rvo-tag--default">{{ tag }}</span>{% endfor %}
-                  </div>
-                {% endif %}
-              </div>
-            </a>
-          {% endfor %}
-        </div>
-      {% else %}
-        <div class="rvo-card rvo-card--outline rvo-card--padding--md">
-          <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center">
-            <span class="utrecht-icon rvo-icon rvo-icon-info rvo-icon--lg rvo-icon--rvo-grijs-700"
-                  role="img"
-                  aria-label="Informatie"></span>
-            <span class="rvo-text--italic rvo-text--subtle">Geen opdrachten gevonden.</span>
-          </div>
-        </div>
-      {% endif %}
+      {% with assignments=assignment_list, hx_target="#side_panel-container" %}
+        {% include "parts/colleague_assignment_cards.html" %}
+      {% endwith %}
     </section>
   </div>
 {% endblock content %}
