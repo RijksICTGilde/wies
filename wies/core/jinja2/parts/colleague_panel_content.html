@@ -30,54 +30,8 @@
   {% endif %}
   <section>
     <h2>Opdrachten</h2>
-    {% if panel_data.assignment_list %}
-      <div class="rvo-layout-column rvo-layout-gap--sm">
-        {% for assignment in panel_data.assignment_list %}
-          <a href="{{ assignment.assignment_url }}"
-             hx-get="{{ assignment.assignment_url }}"
-             hx-target="#side_panel-content"
-             class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row">
-            <div class="rvo-card__content">
-              <div class="colleague-assignment-header">
-                <span class="colleague-assignment-name">
-                  <strong>{{ assignment.name }}</strong>
-                  {% if assignment.organization %}
-                    <span class="icon-text-inline">
-                      <span class="utrecht-icon rvo-icon rvo-icon-basis-kantoorgebouw rvo-icon--md rvo-icon--rvo-grijs-700"
-                            role="img"
-                            aria-label="Opdrachtgever"></span>
-                      {{ assignment.organization }}
-                    </span>
-                  {% endif %}
-                </span>
-                {% if assignment.start_date or assignment.end_date %}
-                  <span class="colleague-assignment-date">
-                    <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--md rvo-icon--rvo-grijs-700"
-                          role="img"
-                          aria-label="Periode"></span>
-                    {{ assignment.start_date|datum_nl("N y") }} - {{ assignment.end_date|datum_nl("N y") }}
-                  </span>
-                {% endif %}
-              </div>
-              {% for tag in assignment.tags %}
-                <div class="service-description-line">
-                  {{ tag.skill if tag is mapping else tag }}
-                  {% if tag is mapping and tag.description %}· <span class="rvo-text--subtle">{{ tag.description }}</span>{% endif %}
-                </div>
-              {% endfor %}
-            </div>
-          </a>
-        {% endfor %}
-      </div>
-    {% else %}
-      <div class="rvo-card rvo-card--outline rvo-card--padding--md">
-        <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center">
-          <span class="utrecht-icon rvo-icon rvo-icon-info rvo-icon--lg rvo-icon--rvo-grijs-700"
-                role="img"
-                aria-label="Informatie"></span>
-          <span class="rvo-text--italic rvo-text--subtle">Geen opdrachten gevonden voor deze collega.</span>
-        </div>
-      </div>
-    {% endif %}
+    {% with assignments=panel_data.assignments, hx_target="#side_panel-content" %}
+      {% include "parts/colleague_assignment_cards.html" %}
+    {% endwith %}
   </section>
 </div>

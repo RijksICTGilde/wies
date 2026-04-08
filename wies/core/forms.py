@@ -139,6 +139,20 @@ class LabelForm(RvoFormMixin, forms.ModelForm):
         return new_name
 
 
+class ProfileLabelsForm(RvoFormMixin, forms.Form):
+    """Form for editing a colleague's labels within a single category."""
+
+    def __init__(self, *args, category, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["labels"] = forms.ModelMultipleChoiceField(
+            label="",
+            queryset=Label.objects.filter(category=category).order_by("name"),
+            required=False,
+            widget=MultiselectDropdown(),
+        )
+        self._configure_field_for_rvo("labels")
+
+
 class UserForm(RvoFormMixin, forms.ModelForm):
     """Form for creating and updating User instances"""
 

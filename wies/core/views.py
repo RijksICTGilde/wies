@@ -22,7 +22,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic.list import ListView
 
-from .forms import LabelCategoryForm, LabelForm, UserForm
+from .forms import LabelCategoryForm, LabelForm, ProfileLabelsForm, UserForm
 from .models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -110,41 +110,93 @@ def _build_close_url(request):
     return f"{request.path}?{params.urlencode()}" if params else request.path
 
 
-def _build_assignment_panel_data(assignment, request):
+def _make_team_member_entry(
+    colleague, colleague_url=None, *, historical=False, privacy_warning_text=None, is_vacancy=False, skills=None
+):
+    """Build a standard team member dict for assignment panel display."""
+    return {
+        "colleague": colleague,
+        "colleague_url": colleague_url,
+        "skills": skills or [],
+        "historical": historical,
+        "privacy_warning_text": privacy_warning_text,
+        "is_vacancy": is_vacancy,
+    }
+
+
+def _build_assignment_panel_data(assignment, request, breadcrumb_base):
     """Shared helper to build assignment panel context data for both views."""
     today = timezone.now().date()
+    viewer = getattr(request.user, "colleague", None)
+    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
 
-    # Vacancy services: OPEN and never had any placement
-    vacancy_services = list(
-        assignment.services.filter(
-            status="OPEN",
-            placements__isnull=True,
-        ).select_related("skill")
-    )
-    for service in vacancy_services:
-        service.current_placements = []
-
-    # Services with current placements (regardless of status)
-    filled_services = list(
+    # Single query: all services with all annotated placements
+    services = list(
         assignment.services.select_related("skill").prefetch_related(
             Prefetch(
                 "placements",
-                queryset=filter_placements_by_min_end_date(
-                    annotate_placement_dates(Placement.objects.select_related("colleague")),
-                    today,
-                ),
-                to_attr="current_placements",
+                queryset=annotate_placement_dates(Placement.objects.select_related("colleague")),
+                to_attr="all_placements",
             )
         )
     )
-    filled_services = [s for s in filled_services if s.current_placements]
 
-    for service in filled_services:
-        for placement in service.current_placements:
-            placement.colleague_url = _build_panel_url(request, collega=placement.colleague.id)
+    vacancy_list: list[dict] = []
+    # Group by (colleague_id, historical) to merge skills per colleague
+    current_grouped: dict[int, dict] = {}
+    historical_grouped: dict[int, dict] = {}
 
-    # Vacancies first, then filled
-    services = vacancy_services + filled_services
+    for service in services:
+        skill = {"name": service.skill.name, "description": service.description} if service.skill else None
+
+        # Vacancy: OPEN service that never had any placement
+        if not service.all_placements and service.status == "OPEN":
+            vacancy_list.append(_make_team_member_entry(None, is_vacancy=True, skills=[skill] if skill else []))
+            continue
+
+        for placement in service.all_placements:
+            cid = placement.colleague.id
+            placement_is_active = placement.actual_end_date is None or today <= placement.actual_end_date
+
+            if placement_is_active:
+                # Active placements are visible to everyone
+                if cid not in current_grouped:
+                    current_grouped[cid] = _make_team_member_entry(
+                        placement.colleague,
+                        colleague_url=_build_panel_url(request, collega=cid),
+                    )
+                if skill:
+                    current_grouped[cid]["skills"].append(skill)
+
+            elif viewer is not None and cid == viewer.id:
+                # Consultants can see their own ended placements
+                if cid not in historical_grouped:
+                    historical_grouped[cid] = _make_team_member_entry(
+                        placement.colleague,
+                        colleague_url=_build_panel_url(request, collega=cid),
+                        historical=True,
+                        privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
+                    )
+                if skill:
+                    historical_grouped[cid]["skills"].append(skill)
+
+            elif viewer_is_bm:
+                # BM can see all ended placements on their assignment
+                if cid not in historical_grouped:
+                    historical_grouped[cid] = _make_team_member_entry(
+                        placement.colleague,
+                        colleague_url=_build_panel_url(request, collega=cid),
+                        historical=True,
+                        privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
+                    )
+                if skill:
+                    historical_grouped[cid]["skills"].append(skill)
+
+            else:
+                # Others must not see ended placements
+                continue
+
+    team_members = vacancy_list + list(current_grouped.values()) + list(historical_grouped.values())
 
     primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
         "organization__parent__parent__parent__parent"
@@ -153,7 +205,7 @@ def _build_assignment_panel_data(assignment, request):
         "organization__parent__parent__parent__parent"
     )
     org_breadcrumbs = [
-        {**get_org_breadcrumb(rel.organization, request.path), "role": rel.role} for rel in [*primary, *involved]
+        {**get_org_breadcrumb(rel.organization, breadcrumb_base), "role": rel.role} for rel in [*primary, *involved]
     ]
 
     return {
@@ -161,15 +213,45 @@ def _build_assignment_panel_data(assignment, request):
         "panel_title": assignment.name,
         "close_url": _build_close_url(request),
         "assignment": assignment,
-        "services": services,
+        "team_members": team_members,
         "user_can_edit": user_can_edit_assignment(request.user, assignment),
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
         "org_breadcrumbs": org_breadcrumbs,
     }
 
 
-def _build_colleague_panel_data(colleague, request):
-    """Shared helper to build colleague panel context data for both views."""
+def _merge_date_range(existing: dict, start, end):
+    """Widen the date range of an assignment entry to include the given start/end."""
+    if start and (existing["start_date"] is None or start < existing["start_date"]):
+        existing["start_date"] = start
+    if end and (existing["end_date"] is None or end > existing["end_date"]):
+        existing["end_date"] = end
+
+
+def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, **extra):
+    """Build a standard assignment dict for panel display."""
+    return {
+        "name": name,
+        "id": aid,
+        "tags": {},
+        "assignment_url": _build_panel_url(request, opdracht=aid),
+        "start_date": start_date,
+        "end_date": end_date,
+        "historical": False,
+        "privacy_warning_text": None,
+        **extra,
+    }
+
+
+def _get_colleague_assignments(request, colleague, viewer):
+
+    today = timezone.now().date()
+    viewer_is_colleague = viewer and colleague.id == viewer.id
+
+    active_by_id: dict[int, dict] = {}
+    historical_by_id: dict[int, dict] = {}
+
+    # --- Placements (both active and ended) ---
     placement_qs = (
         Placement.objects.filter(colleague=colleague)
         .select_related("service__assignment", "service__skill")
@@ -179,76 +261,150 @@ def _build_colleague_panel_data(colleague, request):
             "service__assignment__name",
             "service__assignment__start_date",
             "service__assignment__end_date",
+            "service__assignment__owner_id",
             "service__skill__name",
             "service__description",
         )
         .distinct()
     )
-
     placement_qs = annotate_placement_dates(placement_qs)
-    placement_qs = filter_placements_by_min_end_date(placement_qs, timezone.now().date())
+    for placement in placement_qs:
+        assignment_id = placement["service__assignment__id"]
+        placement_is_active = placement.get("actual_end_date") is None or today <= placement["actual_end_date"]
+        owner_id = placement["service__assignment__owner_id"]
+        viewer_is_assignment_bd = viewer is not None and owner_id is not None and owner_id == viewer.id
 
-    assignments_by_id = {}
-    for item in placement_qs:
-        aid = item["service__assignment__id"]
-        if aid not in assignments_by_id:
-            assignments_by_id[aid] = {
-                "name": item["service__assignment__name"],
-                "id": aid,
-                "tags": [],
-                "assignment_url": _build_panel_url(request, opdracht=aid),
-                "start_date": item.get("actual_start_date"),
-                "end_date": item.get("actual_end_date"),
-            }
+        if placement_is_active:
+            if assignment_id not in active_by_id:
+                active_by_id[assignment_id] = _make_assignment_entry(
+                    placement["service__assignment__name"],
+                    assignment_id,
+                    request,
+                    start_date=placement.get("actual_start_date"),
+                    end_date=placement.get("actual_end_date"),
+                )
+            else:
+                _merge_date_range(
+                    active_by_id[assignment_id], placement.get("actual_start_date"), placement.get("actual_end_date")
+                )
+            skill_name = placement["service__skill__name"]
+            if skill_name:
+                active_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
+        elif viewer_is_colleague:
+            # users can see their own ended placements
+            if assignment_id not in historical_by_id:
+                historical_by_id[assignment_id] = _make_assignment_entry(
+                    placement["service__assignment__name"],
+                    assignment_id,
+                    request,
+                    start_date=placement.get("actual_start_date"),
+                    end_date=placement.get("actual_end_date"),
+                    historical=True,
+                    privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
+                )
+            else:
+                _merge_date_range(
+                    historical_by_id[assignment_id],
+                    placement.get("actual_start_date"),
+                    placement.get("actual_end_date"),
+                )
+            skill_name = placement["service__skill__name"]
+            if skill_name:
+                historical_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
+        elif viewer_is_assignment_bd:
+            # business developers can see their the assignments they own
+            # users can see their own ended placements
+            if assignment_id not in historical_by_id:
+                historical_by_id[assignment_id] = _make_assignment_entry(
+                    placement["service__assignment__name"],
+                    assignment_id,
+                    request,
+                    start_date=placement.get("actual_start_date"),
+                    end_date=placement.get("actual_end_date"),
+                    historical=True,
+                    privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
+                )
+            else:
+                _merge_date_range(
+                    historical_by_id[assignment_id],
+                    placement.get("actual_start_date"),
+                    placement.get("actual_end_date"),
+                )
+            skill_name = placement["service__skill__name"]
+            if skill_name:
+                historical_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
         else:
-            existing = assignments_by_id[aid]
-            start = item.get("actual_start_date")
-            end = item.get("actual_end_date")
-            if start and (existing["start_date"] is None or start < existing["start_date"]):
-                existing["start_date"] = start
-            if end and (existing["end_date"] is None or end > existing["end_date"]):
-                existing["end_date"] = end
-        skill = item["service__skill__name"]
-        if skill:
-            tag = {"skill": skill, "description": item.get("service__description", "")}
-            assignments_by_id[aid]["tags"].append(tag)
+            # others should not see these placements
+            continue
 
-    today = timezone.now().date()
-    bm_assignments = (
-        Assignment.objects.filter(owner=colleague)
-        .exclude(end_date__lt=today)
-        .values_list("id", "name", "start_date", "end_date")
+    # BM roles (active and ended)
+    bm_assignments = Assignment.objects.filter(owner=colleague).values_list("id", "name", "start_date", "end_date")
+    for assignment_id, name, start_date, end_date in bm_assignments:
+        assignment_is_active = end_date is None or today <= end_date
+
+        if assignment_is_active:
+            if assignment_id not in active_by_id:
+                active_by_id[assignment_id] = _make_assignment_entry(
+                    name,
+                    assignment_id,
+                    request,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
+            active_by_id[assignment_id]["tags"]["Business Manager"] = None
+        elif viewer_is_colleague:
+            # user can their own ended assignments as business manager
+            # no clause for other business manager that can see this (only one)
+            if assignment_id not in historical_by_id:
+                historical_by_id[assignment_id] = _make_assignment_entry(
+                    name,
+                    assignment_id,
+                    request,
+                    start_date=start_date,
+                    end_date=end_date,
+                    tags={"Business Manager": None},
+                    historical=True,
+                    privacy_warning_text="Alleen zichtbaar voor jou en het team",
+                )
+            historical_by_id[assignment_id]["tags"]["Business Manager"] = None
+        else:
+            continue
+
+    # Batch-fetch primary organization names for all assignments
+    all_ids = set(active_by_id) | set(historical_by_id)
+    primary_orgs = dict(
+        AssignmentOrganizationUnit.objects.filter(
+            assignment_id__in=all_ids,
+            role="PRIMARY",
+        ).values_list("assignment_id", "organization__name")
     )
-    for aid, name, start_date, end_date in bm_assignments:
-        if aid in assignments_by_id:
-            assignments_by_id[aid]["tags"].append("Business Manager")
-        else:
-            assignments_by_id[aid] = {
-                "name": name,
-                "id": aid,
-                "tags": ["Business Manager"],
-                "assignment_url": _build_panel_url(request, opdracht=aid),
-                "start_date": start_date,
-                "end_date": end_date,
-            }
 
-    # Add primary organization to each assignment
-    org_links = AssignmentOrganizationUnit.objects.filter(
-        assignment_id__in=assignments_by_id.keys(),
-        role="PRIMARY",
-    ).select_related("organization")
-    for link in org_links:
-        if link.assignment_id in assignments_by_id:
-            assignments_by_id[link.assignment_id]["organization"] = link.organization.label or link.organization.name
+    # Convert tag sets to sorted lists for deterministic template rendering
+    for assignment in (*active_by_id.values(), *historical_by_id.values()):
+        assignment["tags"] = sorted(
+            [{"skill": name, "description": desc} for name, desc in assignment["tags"].items()],
+            key=lambda t: t["skill"],
+        )
+        assignment["organization"] = primary_orgs.get(assignment["id"])
 
-    assignment_list = sorted(assignments_by_id.values(), key=lambda a: a["name"])
+    # Build final sorted list: active first, then historical; within each block by start_date desc
+    active_list = sorted(active_by_id.values(), key=lambda a: a["start_date"] or date.min, reverse=True)
+    historical_list = sorted(historical_by_id.values(), key=lambda a: a["start_date"] or date.min, reverse=True)
+    return active_list + historical_list
+
+
+def _build_colleague_panel_data(colleague, request):
+    """Shared helper to build colleague panel context data for both views."""
+    viewer = getattr(request.user, "colleague", None)
+
+    assignments = _get_colleague_assignments(request, colleague, viewer)
 
     return {
         "panel_content_template": "parts/colleague_panel_content.html",
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
-        "assignment_list": assignment_list,
+        "assignments": assignments,
     }
 
 
@@ -784,7 +940,7 @@ class PlacementListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
             except Assignment.DoesNotExist:
                 pass
         return context
@@ -1031,7 +1187,7 @@ class AssignmentListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
             except Assignment.DoesNotExist:
                 pass
 
@@ -1929,6 +2085,241 @@ def assignment_edit_attribute(request, pk, attribute):
                 "field_name": field_config["field_name"],
                 "field_value": current_value or "",
                 "edit_url": edit_url,
+            },
+        )
+
+    return HttpResponse(status=405)
+
+
+def user_profile(request):
+    """User's own profile page with editable fields and full assignment history."""
+    user = request.user
+    colleague = getattr(user, "colleague", None)
+
+    # Side panel handling
+    colleague_id = request.GET.get("collega")
+    assignment_id = request.GET.get("opdracht")
+    panel_data = None
+
+    if assignment_id:
+        try:
+            assignment = Assignment.objects.get(id=assignment_id)
+            panel_data = _build_assignment_panel_data(assignment, request, reverse("home"))
+        except Assignment.DoesNotExist:
+            pass
+    elif colleague_id:
+        try:
+            panel_colleague = Colleague.objects.get(id=colleague_id)
+            panel_data = _build_colleague_panel_data(panel_colleague, request)
+        except Colleague.DoesNotExist:
+            pass
+
+    # HTMX partial responses for panel swaps
+    if "HX-Request" in request.headers:
+        hx_target = request.headers.get("HX-Target")
+        if hx_target == "side_panel-container" and panel_data:
+            return render(request, "parts/side_panel.html", {"panel_data": panel_data})
+        if hx_target == "side_panel-content" and panel_data:
+            return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+
+    # Build label data per category for the data list rows
+    label_categories = []
+    for category in LabelCategory.objects.order_by("name"):
+        selected = list(colleague.labels.filter(category=category).order_by("name")) if colleague else []
+        label_categories.append({"category": category, "labels": selected})
+
+    assignment_list = _get_colleague_assignments(request, colleague, viewer=colleague) if colleague else []
+
+    return render(
+        request,
+        "user_profile.html",
+        {
+            "colleague": colleague,
+            "label_categories": label_categories,
+            "assignment_list": assignment_list,
+            "panel_data": panel_data,
+        },
+    )
+
+
+# Configuration for editable profile fields
+EDITABLE_PROFILE_FIELDS = {
+    "first_name": {
+        "field_type": "text",
+        "field_name": "first_name",
+        "max_length": 150,
+        "required": True,
+        "label": "Voornaam",
+        "display_template": "parts/editable_text_field.html",
+        "form_template": "parts/editable_text_field_form.html",
+        "target_element": "profile-first-name-content",
+    },
+    "last_name": {
+        "field_type": "text",
+        "field_name": "last_name",
+        "max_length": 150,
+        "required": True,
+        "label": "Achternaam",
+        "display_template": "parts/editable_text_field.html",
+        "form_template": "parts/editable_text_field_form.html",
+        "target_element": "profile-last-name-content",
+    },
+}
+
+
+def user_profile_edit_attribute(request, attribute):
+    """
+    Inline editor for user profile attributes.
+    Handles text fields (first_name, last_name) and label categories (labels_<category_id>).
+    """
+    user = request.user
+
+    # Handle label category editing: labels_<category_id>
+    if attribute.startswith("labels_"):
+        return _handle_label_edit(request, attribute)
+
+    # Handle text field editing
+    if attribute not in EDITABLE_PROFILE_FIELDS:
+        return HttpResponse(status=404)
+
+    field_config = EDITABLE_PROFILE_FIELDS[attribute]
+    edit_url = reverse("user-profile-edit-attribute", kwargs={"attribute": attribute})
+
+    if request.method == "POST":
+        field_name = field_config["field_name"]
+        new_value = request.POST.get(field_name, "").strip()
+
+        errors = {}
+        if field_config["required"] and not new_value:
+            errors[field_name] = f"{field_config['label']} is verplicht"
+        elif field_config.get("max_length") and len(new_value) > field_config["max_length"]:
+            errors[field_name] = f"{field_config['label']} mag maximaal {field_config['max_length']} tekens bevatten"
+
+        if errors:
+            return render(
+                request,
+                field_config["form_template"],
+                {
+                    "target_element": field_config["target_element"],
+                    "field_name": field_name,
+                    "field_value": new_value,
+                    "edit_url": edit_url,
+                    "errors": errors,
+                },
+            )
+
+        # Save to User
+        setattr(user, field_name, new_value)
+        user.save(update_fields=[field_name])
+
+        # Sync name to Colleague
+        colleague, _ = Colleague.objects.get_or_create(
+            user=user, defaults={"name": f"{user.first_name} {user.last_name}", "email": user.email, "source": "wies"}
+        )
+        colleague.name = f"{user.first_name} {user.last_name}"
+        colleague.save(update_fields=["name"])
+
+        return render(
+            request,
+            field_config["display_template"],
+            {
+                "target_element": field_config["target_element"],
+                "field_label": field_config["label"],
+                "field_value": getattr(user, field_name),
+                "edit_url": edit_url,
+                "user_can_edit": True,
+            },
+        )
+
+    if request.method == "GET":
+        current_value = getattr(user, field_config["field_name"])
+
+        if request.GET.get("cancel"):
+            return render(
+                request,
+                field_config["display_template"],
+                {
+                    "target_element": field_config["target_element"],
+                    "field_label": field_config["label"],
+                    "field_value": current_value,
+                    "edit_url": edit_url,
+                    "user_can_edit": True,
+                },
+            )
+        return render(
+            request,
+            field_config["form_template"],
+            {
+                "target_element": field_config["target_element"],
+                "field_name": field_config["field_name"],
+                "field_value": current_value or "",
+                "edit_url": edit_url,
+            },
+        )
+
+    return HttpResponse(status=405)
+
+
+def _handle_label_edit(request, attribute):
+    """Handle inline label editing for a specific category."""
+    try:
+        category_id = int(attribute.split("_", 1)[1])
+    except ValueError, IndexError:
+        return HttpResponse(status=404)
+
+    category = get_object_or_404(LabelCategory, pk=category_id)
+    user = request.user
+
+    colleague, _ = Colleague.objects.get_or_create(
+        user=user, defaults={"name": f"{user.first_name} {user.last_name}", "email": user.email, "source": "wies"}
+    )
+
+    edit_url = reverse("user-profile-edit-attribute", kwargs={"attribute": attribute})
+    target_element = f"profile-labels-{category_id}-content"
+
+    if request.method == "POST":
+        form = ProfileLabelsForm(request.POST, category=category)
+        if form.is_valid():
+            selected_labels = form.cleaned_data["labels"]
+            colleague.labels.remove(*colleague.labels.filter(category=category))
+            colleague.labels.add(*selected_labels)
+
+        updated_labels = list(colleague.labels.filter(category=category).order_by("name"))
+        return render(
+            request,
+            "parts/editable_labels_field.html",
+            {
+                "category": category,
+                "labels": updated_labels,
+                "edit_url": edit_url,
+                "target_element": target_element,
+            },
+        )
+
+    if request.method == "GET":
+        selected_labels = list(colleague.labels.filter(category=category).order_by("name"))
+
+        if request.GET.get("cancel"):
+            return render(
+                request,
+                "parts/editable_labels_field.html",
+                {
+                    "category": category,
+                    "labels": selected_labels,
+                    "edit_url": edit_url,
+                    "target_element": target_element,
+                },
+            )
+
+        selected_ids = [label.pk for label in selected_labels]
+        form = ProfileLabelsForm(category=category, initial={"labels": selected_ids})
+        return render(
+            request,
+            "parts/editable_labels_field_form.html",
+            {
+                "form": form,
+                "edit_url": edit_url,
+                "target_element": target_element,
             },
         )
 

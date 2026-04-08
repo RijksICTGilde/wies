@@ -29,22 +29,13 @@
       <ul class="menubar__nav-right">
         {% if user.is_authenticated %}
           <li>
-            {% if user.colleague %}
-              <a href="{{ url('home') }}?collega={{ user.colleague.id }}"
-                 class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw">
-                <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
-                      role="img"
-                      aria-label="User"></span>
-                {{ user.get_full_name() }}
-              </a>
-            {% else %}
-              <span class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw">
-                <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
-                      role="img"
-                      aria-label="User"></span>
-                {{ user.get_full_name() }}
-              </span>
-            {% endif %}
+            <a href="{{ url('user-profile') }}"
+               class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/profiel/' in request.path %}menu-item--active{% endif %}">
+              <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
+                    role="img"
+                    aria-label="User"></span>
+              {{ user.get_full_name() }}
+            </a>
           </li>
         {% endif %}
         {% if user.has_perms(['core.view_user', 'core.view_labelcategory']) %}
