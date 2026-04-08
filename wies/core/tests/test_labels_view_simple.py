@@ -41,9 +41,7 @@ class LabelsViewTest(TestCase):
     def test_usage_count_annotation(self):
         """Test that labels have usage_count annotation"""
         # Test the annotation logic directly
-        labels_with_usage = Label.objects.annotate(
-            usage_count=Count("users", distinct=True) + Count("colleagues", distinct=True)
-        )
+        labels_with_usage = Label.objects.annotate(usage_count=Count("colleagues", distinct=True))
 
         # Get the test label
         label = labels_with_usage.get(name="Test Label")
@@ -51,5 +49,5 @@ class LabelsViewTest(TestCase):
         # This should not raise an AttributeError
         usage_count = label.usage_count
 
-        # Should be 0 since no users or colleagues are assigned
+        # Should be 0 since no colleagues are assigned
         assert usage_count == 0

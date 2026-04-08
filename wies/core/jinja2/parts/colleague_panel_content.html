@@ -17,18 +17,12 @@
       </div>
     </div>
   </section>
-  {% if colleague.user and colleague.user.labels.all()|length > 0 %}
-    {% set labels = colleague.user.labels.all() %}
-  {% else %}
-    {% set labels = colleague.labels.all() %}
-  {% endif %}
+  {% set labels = colleague.labels.all() %}
   {% if labels %}
-    <div class="rvo-layout-row rvo-layout-gap--sm" style="flex-wrap: wrap;">
+    <div class="rvo-layout-row rvo-layout-gap--sm label-badge-list">
       {% for label in labels %}
-        <span class="rvo-badge"
-              style="background-color: {{ label.category.color }};
-                     padding: 0.25rem 0.5rem;
-                     border-radius: 3px">{{ label.name }}</span>
+        <span class="rvo-badge label-badge"
+              style="background-color: {{ label.category.color }}">{{ label.name }}</span>
       {% endfor %}
     </div>
   {% else %}
@@ -42,24 +36,35 @@
           <a href="{{ assignment.assignment_url }}"
              hx-get="{{ assignment.assignment_url }}"
              hx-target="#side_panel-content"
-             class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row"
-             style="text-decoration: none;
-                    color: inherit">
+             class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row">
             <div class="rvo-card__content">
-              <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin">{{ assignment.name }}</h3>
-              {% if assignment.start_date or assignment.end_date %}
-                <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
-                  <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm rvo-icon--rvo-grijs-700"
-                        role="img"
-                        aria-label="Periode"></span>
-                  <span class="rvo-text--subtle rvo-text--sm">{{ assignment.start_date|datum_nl("N y") }} - {{ assignment.end_date|datum_nl("N y") }}</span>
+              <div class="colleague-assignment-header">
+                <span class="colleague-assignment-name">
+                  <strong>{{ assignment.name }}</strong>
+                  {% if assignment.organization %}
+                    <span class="icon-text-inline">
+                      <span class="utrecht-icon rvo-icon rvo-icon-basis-kantoorgebouw rvo-icon--md rvo-icon--rvo-grijs-700"
+                            role="img"
+                            aria-label="Opdrachtgever"></span>
+                      {{ assignment.organization }}
+                    </span>
+                  {% endif %}
+                </span>
+                {% if assignment.start_date or assignment.end_date %}
+                  <span class="colleague-assignment-date">
+                    <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--md rvo-icon--rvo-grijs-700"
+                          role="img"
+                          aria-label="Periode"></span>
+                    {{ assignment.start_date|datum_nl("N y") }} - {{ assignment.end_date|datum_nl("N y") }}
+                  </span>
+                {% endif %}
+              </div>
+              {% for tag in assignment.tags %}
+                <div class="service-description-line">
+                  {{ tag.skill if tag is mapping else tag }}
+                  {% if tag is mapping and tag.description %}· <span class="rvo-text--subtle">{{ tag.description }}</span>{% endif %}
                 </div>
-              {% endif %}
-              {% if assignment.tags %}
-                <div class="assignment-skill-tag">
-                  {% for tag in assignment.tags %}<span class="rvo-tag rvo-tag--default">{{ tag }}</span>{% endfor %}
-                </div>
-              {% endif %}
+              {% endfor %}
             </div>
           </a>
         {% endfor %}
