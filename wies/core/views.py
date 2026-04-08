@@ -1,7 +1,7 @@
 import logging
 import tempfile
 from collections import Counter
-from datetime import date
+from datetime import date, timedelta
 from pathlib import Path
 
 from authlib.integrations.django_client import OAuth
@@ -22,7 +22,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic.list import ListView
 
-from .forms import LabelCategoryForm, LabelForm, UserForm
+from .forms import LabelCategoryForm, LabelForm, ProfileLabelsForm, UserForm
 from .models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -48,7 +48,6 @@ from .services.organizations import (
 from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
-    filter_placements_by_period,
 )
 from .services.sync import sync_all_otys_iir_records
 from .services.tasks import create_task, get_latest_tasks, has_active_task
@@ -111,41 +110,93 @@ def _build_close_url(request):
     return f"{request.path}?{params.urlencode()}" if params else request.path
 
 
-def _build_assignment_panel_data(assignment, request):
+def _make_team_member_entry(
+    colleague, colleague_url=None, *, historical=False, privacy_warning_text=None, is_vacancy=False, skills=None
+):
+    """Build a standard team member dict for assignment panel display."""
+    return {
+        "colleague": colleague,
+        "colleague_url": colleague_url,
+        "skills": skills or [],
+        "historical": historical,
+        "privacy_warning_text": privacy_warning_text,
+        "is_vacancy": is_vacancy,
+    }
+
+
+def _build_assignment_panel_data(assignment, request, breadcrumb_base):
     """Shared helper to build assignment panel context data for both views."""
     today = timezone.now().date()
+    viewer = getattr(request.user, "colleague", None)
+    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
 
-    # Vacancy services: OPEN and never had any placement
-    vacancy_services = list(
-        assignment.services.filter(
-            status="OPEN",
-            placements__isnull=True,
-        ).select_related("skill")
-    )
-    for service in vacancy_services:
-        service.current_placements = []
-
-    # Services with current placements (regardless of status)
-    filled_services = list(
+    # Single query: all services with all annotated placements
+    services = list(
         assignment.services.select_related("skill").prefetch_related(
             Prefetch(
                 "placements",
-                queryset=filter_placements_by_min_end_date(
-                    annotate_placement_dates(Placement.objects.select_related("colleague")),
-                    today,
-                ),
-                to_attr="current_placements",
+                queryset=annotate_placement_dates(Placement.objects.select_related("colleague")),
+                to_attr="all_placements",
             )
         )
     )
-    filled_services = [s for s in filled_services if s.current_placements]
 
-    for service in filled_services:
-        for placement in service.current_placements:
-            placement.colleague_url = _build_panel_url(request, collega=placement.colleague.id)
+    vacancy_list: list[dict] = []
+    # Group by (colleague_id, historical) to merge skills per colleague
+    current_grouped: dict[int, dict] = {}
+    historical_grouped: dict[int, dict] = {}
 
-    # Vacancies first, then filled
-    services = vacancy_services + filled_services
+    for service in services:
+        skill = {"name": service.skill.name, "description": service.description} if service.skill else None
+
+        # Vacancy: OPEN service that never had any placement
+        if not service.all_placements and service.status == "OPEN":
+            vacancy_list.append(_make_team_member_entry(None, is_vacancy=True, skills=[skill] if skill else []))
+            continue
+
+        for placement in service.all_placements:
+            cid = placement.colleague.id
+            placement_is_active = placement.actual_end_date is None or today <= placement.actual_end_date
+
+            if placement_is_active:
+                # Active placements are visible to everyone
+                if cid not in current_grouped:
+                    current_grouped[cid] = _make_team_member_entry(
+                        placement.colleague,
+                        colleague_url=_build_panel_url(request, collega=cid),
+                    )
+                if skill:
+                    current_grouped[cid]["skills"].append(skill)
+
+            elif viewer is not None and cid == viewer.id:
+                # Consultants can see their own ended placements
+                if cid not in historical_grouped:
+                    historical_grouped[cid] = _make_team_member_entry(
+                        placement.colleague,
+                        colleague_url=_build_panel_url(request, collega=cid),
+                        historical=True,
+                        privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
+                    )
+                if skill:
+                    historical_grouped[cid]["skills"].append(skill)
+
+            elif viewer_is_bm:
+                # BM can see all ended placements on their assignment
+                if cid not in historical_grouped:
+                    historical_grouped[cid] = _make_team_member_entry(
+                        placement.colleague,
+                        colleague_url=_build_panel_url(request, collega=cid),
+                        historical=True,
+                        privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
+                    )
+                if skill:
+                    historical_grouped[cid]["skills"].append(skill)
+
+            else:
+                # Others must not see ended placements
+                continue
+
+    team_members = vacancy_list + list(current_grouped.values()) + list(historical_grouped.values())
 
     primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
         "organization__parent__parent__parent__parent"
@@ -154,7 +205,7 @@ def _build_assignment_panel_data(assignment, request):
         "organization__parent__parent__parent__parent"
     )
     org_breadcrumbs = [
-        {**get_org_breadcrumb(rel.organization, request.path), "role": rel.role} for rel in [*primary, *involved]
+        {**get_org_breadcrumb(rel.organization, breadcrumb_base), "role": rel.role} for rel in [*primary, *involved]
     ]
 
     return {
@@ -162,15 +213,45 @@ def _build_assignment_panel_data(assignment, request):
         "panel_title": assignment.name,
         "close_url": _build_close_url(request),
         "assignment": assignment,
-        "services": services,
+        "team_members": team_members,
         "user_can_edit": user_can_edit_assignment(request.user, assignment),
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
         "org_breadcrumbs": org_breadcrumbs,
     }
 
 
-def _build_colleague_panel_data(colleague, request):
-    """Shared helper to build colleague panel context data for both views."""
+def _merge_date_range(existing: dict, start, end):
+    """Widen the date range of an assignment entry to include the given start/end."""
+    if start and (existing["start_date"] is None or start < existing["start_date"]):
+        existing["start_date"] = start
+    if end and (existing["end_date"] is None or end > existing["end_date"]):
+        existing["end_date"] = end
+
+
+def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, **extra):
+    """Build a standard assignment dict for panel display."""
+    return {
+        "name": name,
+        "id": aid,
+        "tags": {},
+        "assignment_url": _build_panel_url(request, opdracht=aid),
+        "start_date": start_date,
+        "end_date": end_date,
+        "historical": False,
+        "privacy_warning_text": None,
+        **extra,
+    }
+
+
+def _get_colleague_assignments(request, colleague, viewer):
+
+    today = timezone.now().date()
+    viewer_is_colleague = viewer and colleague.id == viewer.id
+
+    active_by_id: dict[int, dict] = {}
+    historical_by_id: dict[int, dict] = {}
+
+    # --- Placements (both active and ended) ---
     placement_qs = (
         Placement.objects.filter(colleague=colleague)
         .select_related("service__assignment", "service__skill")
@@ -180,65 +261,150 @@ def _build_colleague_panel_data(colleague, request):
             "service__assignment__name",
             "service__assignment__start_date",
             "service__assignment__end_date",
+            "service__assignment__owner_id",
             "service__skill__name",
+            "service__description",
         )
         .distinct()
     )
-
     placement_qs = annotate_placement_dates(placement_qs)
-    placement_qs = filter_placements_by_min_end_date(placement_qs, timezone.now().date())
+    for placement in placement_qs:
+        assignment_id = placement["service__assignment__id"]
+        placement_is_active = placement.get("actual_end_date") is None or today <= placement["actual_end_date"]
+        owner_id = placement["service__assignment__owner_id"]
+        viewer_is_assignment_bd = viewer is not None and owner_id is not None and owner_id == viewer.id
 
-    assignments_by_id = {}
-    for item in placement_qs:
-        aid = item["service__assignment__id"]
-        if aid not in assignments_by_id:
-            assignments_by_id[aid] = {
-                "name": item["service__assignment__name"],
-                "id": aid,
-                "tags": [],
-                "assignment_url": _build_panel_url(request, opdracht=aid),
-                "start_date": item.get("actual_start_date"),
-                "end_date": item.get("actual_end_date"),
-            }
+        if placement_is_active:
+            if assignment_id not in active_by_id:
+                active_by_id[assignment_id] = _make_assignment_entry(
+                    placement["service__assignment__name"],
+                    assignment_id,
+                    request,
+                    start_date=placement.get("actual_start_date"),
+                    end_date=placement.get("actual_end_date"),
+                )
+            else:
+                _merge_date_range(
+                    active_by_id[assignment_id], placement.get("actual_start_date"), placement.get("actual_end_date")
+                )
+            skill_name = placement["service__skill__name"]
+            if skill_name:
+                active_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
+        elif viewer_is_colleague:
+            # users can see their own ended placements
+            if assignment_id not in historical_by_id:
+                historical_by_id[assignment_id] = _make_assignment_entry(
+                    placement["service__assignment__name"],
+                    assignment_id,
+                    request,
+                    start_date=placement.get("actual_start_date"),
+                    end_date=placement.get("actual_end_date"),
+                    historical=True,
+                    privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
+                )
+            else:
+                _merge_date_range(
+                    historical_by_id[assignment_id],
+                    placement.get("actual_start_date"),
+                    placement.get("actual_end_date"),
+                )
+            skill_name = placement["service__skill__name"]
+            if skill_name:
+                historical_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
+        elif viewer_is_assignment_bd:
+            # business developers can see their the assignments they own
+            # users can see their own ended placements
+            if assignment_id not in historical_by_id:
+                historical_by_id[assignment_id] = _make_assignment_entry(
+                    placement["service__assignment__name"],
+                    assignment_id,
+                    request,
+                    start_date=placement.get("actual_start_date"),
+                    end_date=placement.get("actual_end_date"),
+                    historical=True,
+                    privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
+                )
+            else:
+                _merge_date_range(
+                    historical_by_id[assignment_id],
+                    placement.get("actual_start_date"),
+                    placement.get("actual_end_date"),
+                )
+            skill_name = placement["service__skill__name"]
+            if skill_name:
+                historical_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
         else:
-            existing = assignments_by_id[aid]
-            start = item.get("actual_start_date")
-            end = item.get("actual_end_date")
-            if start and (existing["start_date"] is None or start < existing["start_date"]):
-                existing["start_date"] = start
-            if end and (existing["end_date"] is None or end > existing["end_date"]):
-                existing["end_date"] = end
-        skill = item["service__skill__name"]
-        if skill:
-            assignments_by_id[aid]["tags"].append(skill)
+            # others should not see these placements
+            continue
 
-    today = timezone.now().date()
-    bm_assignments = (
-        Assignment.objects.filter(owner=colleague)
-        .exclude(end_date__lt=today)
-        .values_list("id", "name", "start_date", "end_date")
+    # BM roles (active and ended)
+    bm_assignments = Assignment.objects.filter(owner=colleague).values_list("id", "name", "start_date", "end_date")
+    for assignment_id, name, start_date, end_date in bm_assignments:
+        assignment_is_active = end_date is None or today <= end_date
+
+        if assignment_is_active:
+            if assignment_id not in active_by_id:
+                active_by_id[assignment_id] = _make_assignment_entry(
+                    name,
+                    assignment_id,
+                    request,
+                    start_date=start_date,
+                    end_date=end_date,
+                )
+            active_by_id[assignment_id]["tags"]["Business Manager"] = None
+        elif viewer_is_colleague:
+            # user can their own ended assignments as business manager
+            # no clause for other business manager that can see this (only one)
+            if assignment_id not in historical_by_id:
+                historical_by_id[assignment_id] = _make_assignment_entry(
+                    name,
+                    assignment_id,
+                    request,
+                    start_date=start_date,
+                    end_date=end_date,
+                    tags={"Business Manager": None},
+                    historical=True,
+                    privacy_warning_text="Alleen zichtbaar voor jou en het team",
+                )
+            historical_by_id[assignment_id]["tags"]["Business Manager"] = None
+        else:
+            continue
+
+    # Batch-fetch primary organization names for all assignments
+    all_ids = set(active_by_id) | set(historical_by_id)
+    primary_orgs = dict(
+        AssignmentOrganizationUnit.objects.filter(
+            assignment_id__in=all_ids,
+            role="PRIMARY",
+        ).values_list("assignment_id", "organization__name")
     )
-    for aid, name, start_date, end_date in bm_assignments:
-        if aid in assignments_by_id:
-            assignments_by_id[aid]["tags"].append("Business Manager")
-        else:
-            assignments_by_id[aid] = {
-                "name": name,
-                "id": aid,
-                "tags": ["Business Manager"],
-                "assignment_url": _build_panel_url(request, opdracht=aid),
-                "start_date": start_date,
-                "end_date": end_date,
-            }
 
-    assignment_list = sorted(assignments_by_id.values(), key=lambda a: a["name"])
+    # Convert tag sets to sorted lists for deterministic template rendering
+    for assignment in (*active_by_id.values(), *historical_by_id.values()):
+        assignment["tags"] = sorted(
+            [{"skill": name, "description": desc} for name, desc in assignment["tags"].items()],
+            key=lambda t: t["skill"],
+        )
+        assignment["organization"] = primary_orgs.get(assignment["id"])
+
+    # Build final sorted list: active first, then historical; within each block by start_date desc
+    active_list = sorted(active_by_id.values(), key=lambda a: a["start_date"] or date.min, reverse=True)
+    historical_list = sorted(historical_by_id.values(), key=lambda a: a["start_date"] or date.min, reverse=True)
+    return active_list + historical_list
+
+
+def _build_colleague_panel_data(colleague, request):
+    """Shared helper to build colleague panel context data for both views."""
+    viewer = getattr(request.user, "colleague", None)
+
+    assignments = _get_colleague_assignments(request, colleague, viewer)
 
     return {
         "panel_content_template": "parts/colleague_panel_content.html",
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
-        "assignment_list": assignment_list,
+        "assignments": assignments,
     }
 
 
@@ -466,20 +632,7 @@ class PlacementListView(ListView):
 
         # filter out historical placements
         qs = annotate_placement_dates(qs)
-        qs = filter_placements_by_min_end_date(qs, timezone.now().date())
-
-        # Apply period filtering for overlapping periods
-        periode = self.request.GET.get("periode")
-        if periode and "_" in periode:
-            try:
-                period_from_str, period_to_str = periode.split("_", 1)
-                period_from = date.fromisoformat(period_from_str)
-                period_to = date.fromisoformat(period_to_str)
-                qs = filter_placements_by_period(qs, period_from, period_to)
-            except Value:
-                pass  # Invalid date format, ignore filter
-
-        return qs
+        return filter_placements_by_min_end_date(qs, timezone.now().date())
 
     def _get_labels_by_category(self):
         """Parse selected label IDs grouped by category."""
@@ -491,10 +644,29 @@ class PlacementListView(ListView):
             labels_by_category.setdefault(label["category_id"], []).append(label["id"])
         return labels_by_category
 
+    def _get_loopt_af_options(self, base_qs):
+        """Build 'loopt af' filter options with cumulative counts."""
+        today = timezone.now().date()
+        filtered_qs = self._apply_filters(base_qs, exclude_filter="loopt_af").distinct()
+        presets = [
+            ("3m", "Binnen 3 maanden", 91),
+            ("6m", "Binnen 6 maanden", 182),
+        ]
+        options = [{"value": "", "label": ""}]
+        for value, label, days in presets:
+            end_date = today + timedelta(days=days)
+            count = filtered_qs.filter(service__assignment__end_date__lte=end_date).count()
+            options.append({"value": value, "label": label, "count": count})
+        # "Longer than 6 months"
+        half_year = today + timedelta(days=182)
+        count_beyond = filtered_qs.filter(service__assignment__end_date__gt=half_year).count()
+        options.append({"value": "6m+", "label": "Langer dan 6 maanden", "count": count_beyond})
+        return options
+
     def _apply_filters(self, qs, *, exclude_filter=None):
         """Apply all selection filters, optionally excluding one filter type.
 
-        exclude_filter can be: "rol", "org", or a category_id (int) for labels.
+        exclude_filter can be: "rol", "org", "loopt_af", or a category_id (int) for labels.
         """
         if exclude_filter != "rol":
             rol_filter = [x for x in self.request.GET.getlist("rol") if x.isdigit()]
@@ -526,6 +698,28 @@ class PlacementListView(ListView):
         for cat_id, cat_label_ids in labels_by_category.items():
             if exclude_filter != cat_id:
                 qs = qs.filter(colleague__labels__id__in=cat_label_ids)
+
+        # Filter by assignment end date (preset period)
+        if exclude_filter != "loopt_af":
+            loopt_af_values = set(self.request.GET.getlist("loopt_af"))
+            if loopt_af_values:
+                today = timezone.now().date()
+                preset_days = {"3m": 91, "6m": 182}
+                has_beyond = "6m+" in loopt_af_values
+                bounded = {v for v in loopt_af_values if v in preset_days}
+                half_year = today + timedelta(days=182)
+                if bounded and has_beyond:
+                    max_days = max(preset_days[v] for v in bounded)
+                    end_date = today + timedelta(days=max_days)
+                    qs = qs.filter(
+                        Q(service__assignment__end_date__lte=end_date) | Q(service__assignment__end_date__gt=half_year)
+                    )
+                elif bounded:
+                    max_days = max(preset_days[v] for v in bounded)
+                    end_date = today + timedelta(days=max_days)
+                    qs = qs.filter(service__assignment__end_date__lte=end_date)
+                elif has_beyond:
+                    qs = qs.filter(service__assignment__end_date__gt=half_year)
 
         return qs
 
@@ -571,10 +765,10 @@ class PlacementListView(ListView):
         context["search_filter"] = self.request.GET.get("zoek")
 
         active_filters: dict = {}
-        for filter_param in ["periode"]:
-            val = self.request.GET.get(filter_param)
-            if val:
-                active_filters[filter_param] = val
+
+        loopt_af_values = set(self.request.GET.getlist("loopt_af"))
+        if loopt_af_values:
+            active_filters["loopt_af"] = loopt_af_values
 
         # rol filter supports multi-select
         rol_filter = set()
@@ -591,13 +785,6 @@ class PlacementListView(ListView):
                 label_filter.add(label_id)
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
-
-        if active_filters.get("periode"):
-            periode_from, periode_to = active_filters["periode"].split("_")
-            active_filters["periode"] = {
-                "from": date.fromisoformat(periode_from),
-                "to": date.fromisoformat(periode_to),
-            }
 
         # Organization filter (multi-select via modal)
         active_org_filter_count = 0
@@ -725,12 +912,11 @@ class PlacementListView(ListView):
             },
             *label_filter_groups,
             {
-                "type": "date_range",
-                "name": "periode",
-                "label": "Periode",
-                "from_label": "Van",
-                "to_label": "Tot",
-                "require_both": True,
+                "type": "select-multi",
+                "name": "loopt_af",
+                "label": "Loopt af",
+                "options": self._get_loopt_af_options(base_qs),
+                "selected_values": list(loopt_af_values),
             },
         ]
 
@@ -754,7 +940,7 @@ class PlacementListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
             except Assignment.DoesNotExist:
                 pass
         return context
@@ -1001,7 +1187,7 @@ class AssignmentListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
             except Assignment.DoesNotExist:
                 pass
 
@@ -1020,7 +1206,7 @@ class UserListView(PermissionRequiredMixin, ListView):
     def _get_base_queryset(self):
         """Base queryset with search applied."""
         qs = (
-            User.objects.prefetch_related("groups", "labels__category")
+            User.objects.prefetch_related("groups", "colleague__labels__category")
             .filter(is_superuser=False)
             .order_by("last_name", "first_name")
         )
@@ -1057,7 +1243,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         labels_by_category = self._get_labels_by_category()
         for cat_id, cat_label_ids in labels_by_category.items():
             if exclude_filter != cat_id:
-                qs = qs.filter(labels__id__in=cat_label_ids)
+                qs = qs.filter(colleague__labels__id__in=cat_label_ids)
 
         # Role filter
         if exclude_filter != "rol":
@@ -1115,7 +1301,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         for category in LabelCategory.objects.all():
             cat_filtered_qs = self._apply_filters(base_qs, exclude_filter=category.id).distinct()
             cat_user_qs = User.objects.filter(id__in=cat_filtered_qs.values_list("id", flat=True))
-            cat_label_ids = cat_user_qs.values_list("labels__id", flat=True)
+            cat_label_ids = cat_user_qs.values_list("colleague__labels__id", flat=True)
             cat_label_counts = Counter(lid for lid in cat_label_ids if lid is not None)
 
             options = [{"value": "", "label": ""}]
@@ -1328,7 +1514,10 @@ def user_delete(request, pk):
             },
         )
     if request.method == "POST":
-        label_names = [label.name for label in user.labels.all()]
+        if hasattr(user, "colleague") and user.colleague:
+            label_names = [label.name for label in user.colleague.labels.all()]
+        else:
+            label_names = []
         context = {
             "id": pk,
             "email": user.email,
@@ -1739,7 +1928,7 @@ def label_delete(request, pk):
     label = get_object_or_404(Label, pk=pk)
     category = label.category
 
-    label_use_count = label.users.count() + label.colleagues.count()
+    label_use_count = label.colleagues.count()
 
     if request.method == "GET":
         return render(
@@ -1902,6 +2091,241 @@ def assignment_edit_attribute(request, pk, attribute):
     return HttpResponse(status=405)
 
 
+def user_profile(request):
+    """User's own profile page with editable fields and full assignment history."""
+    user = request.user
+    colleague = getattr(user, "colleague", None)
+
+    # Side panel handling
+    colleague_id = request.GET.get("collega")
+    assignment_id = request.GET.get("opdracht")
+    panel_data = None
+
+    if assignment_id:
+        try:
+            assignment = Assignment.objects.get(id=assignment_id)
+            panel_data = _build_assignment_panel_data(assignment, request, reverse("home"))
+        except Assignment.DoesNotExist:
+            pass
+    elif colleague_id:
+        try:
+            panel_colleague = Colleague.objects.get(id=colleague_id)
+            panel_data = _build_colleague_panel_data(panel_colleague, request)
+        except Colleague.DoesNotExist:
+            pass
+
+    # HTMX partial responses for panel swaps
+    if "HX-Request" in request.headers:
+        hx_target = request.headers.get("HX-Target")
+        if hx_target == "side_panel-container" and panel_data:
+            return render(request, "parts/side_panel.html", {"panel_data": panel_data})
+        if hx_target == "side_panel-content" and panel_data:
+            return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+
+    # Build label data per category for the data list rows
+    label_categories = []
+    for category in LabelCategory.objects.order_by("name"):
+        selected = list(colleague.labels.filter(category=category).order_by("name")) if colleague else []
+        label_categories.append({"category": category, "labels": selected})
+
+    assignment_list = _get_colleague_assignments(request, colleague, viewer=colleague) if colleague else []
+
+    return render(
+        request,
+        "user_profile.html",
+        {
+            "colleague": colleague,
+            "label_categories": label_categories,
+            "assignment_list": assignment_list,
+            "panel_data": panel_data,
+        },
+    )
+
+
+# Configuration for editable profile fields
+EDITABLE_PROFILE_FIELDS = {
+    "first_name": {
+        "field_type": "text",
+        "field_name": "first_name",
+        "max_length": 150,
+        "required": True,
+        "label": "Voornaam",
+        "display_template": "parts/editable_text_field.html",
+        "form_template": "parts/editable_text_field_form.html",
+        "target_element": "profile-first-name-content",
+    },
+    "last_name": {
+        "field_type": "text",
+        "field_name": "last_name",
+        "max_length": 150,
+        "required": True,
+        "label": "Achternaam",
+        "display_template": "parts/editable_text_field.html",
+        "form_template": "parts/editable_text_field_form.html",
+        "target_element": "profile-last-name-content",
+    },
+}
+
+
+def user_profile_edit_attribute(request, attribute):
+    """
+    Inline editor for user profile attributes.
+    Handles text fields (first_name, last_name) and label categories (labels_<category_id>).
+    """
+    user = request.user
+
+    # Handle label category editing: labels_<category_id>
+    if attribute.startswith("labels_"):
+        return _handle_label_edit(request, attribute)
+
+    # Handle text field editing
+    if attribute not in EDITABLE_PROFILE_FIELDS:
+        return HttpResponse(status=404)
+
+    field_config = EDITABLE_PROFILE_FIELDS[attribute]
+    edit_url = reverse("user-profile-edit-attribute", kwargs={"attribute": attribute})
+
+    if request.method == "POST":
+        field_name = field_config["field_name"]
+        new_value = request.POST.get(field_name, "").strip()
+
+        errors = {}
+        if field_config["required"] and not new_value:
+            errors[field_name] = f"{field_config['label']} is verplicht"
+        elif field_config.get("max_length") and len(new_value) > field_config["max_length"]:
+            errors[field_name] = f"{field_config['label']} mag maximaal {field_config['max_length']} tekens bevatten"
+
+        if errors:
+            return render(
+                request,
+                field_config["form_template"],
+                {
+                    "target_element": field_config["target_element"],
+                    "field_name": field_name,
+                    "field_value": new_value,
+                    "edit_url": edit_url,
+                    "errors": errors,
+                },
+            )
+
+        # Save to User
+        setattr(user, field_name, new_value)
+        user.save(update_fields=[field_name])
+
+        # Sync name to Colleague
+        colleague, _ = Colleague.objects.get_or_create(
+            user=user, defaults={"name": f"{user.first_name} {user.last_name}", "email": user.email, "source": "wies"}
+        )
+        colleague.name = f"{user.first_name} {user.last_name}"
+        colleague.save(update_fields=["name"])
+
+        return render(
+            request,
+            field_config["display_template"],
+            {
+                "target_element": field_config["target_element"],
+                "field_label": field_config["label"],
+                "field_value": getattr(user, field_name),
+                "edit_url": edit_url,
+                "user_can_edit": True,
+            },
+        )
+
+    if request.method == "GET":
+        current_value = getattr(user, field_config["field_name"])
+
+        if request.GET.get("cancel"):
+            return render(
+                request,
+                field_config["display_template"],
+                {
+                    "target_element": field_config["target_element"],
+                    "field_label": field_config["label"],
+                    "field_value": current_value,
+                    "edit_url": edit_url,
+                    "user_can_edit": True,
+                },
+            )
+        return render(
+            request,
+            field_config["form_template"],
+            {
+                "target_element": field_config["target_element"],
+                "field_name": field_config["field_name"],
+                "field_value": current_value or "",
+                "edit_url": edit_url,
+            },
+        )
+
+    return HttpResponse(status=405)
+
+
+def _handle_label_edit(request, attribute):
+    """Handle inline label editing for a specific category."""
+    try:
+        category_id = int(attribute.split("_", 1)[1])
+    except ValueError, IndexError:
+        return HttpResponse(status=404)
+
+    category = get_object_or_404(LabelCategory, pk=category_id)
+    user = request.user
+
+    colleague, _ = Colleague.objects.get_or_create(
+        user=user, defaults={"name": f"{user.first_name} {user.last_name}", "email": user.email, "source": "wies"}
+    )
+
+    edit_url = reverse("user-profile-edit-attribute", kwargs={"attribute": attribute})
+    target_element = f"profile-labels-{category_id}-content"
+
+    if request.method == "POST":
+        form = ProfileLabelsForm(request.POST, category=category)
+        if form.is_valid():
+            selected_labels = form.cleaned_data["labels"]
+            colleague.labels.remove(*colleague.labels.filter(category=category))
+            colleague.labels.add(*selected_labels)
+
+        updated_labels = list(colleague.labels.filter(category=category).order_by("name"))
+        return render(
+            request,
+            "parts/editable_labels_field.html",
+            {
+                "category": category,
+                "labels": updated_labels,
+                "edit_url": edit_url,
+                "target_element": target_element,
+            },
+        )
+
+    if request.method == "GET":
+        selected_labels = list(colleague.labels.filter(category=category).order_by("name"))
+
+        if request.GET.get("cancel"):
+            return render(
+                request,
+                "parts/editable_labels_field.html",
+                {
+                    "category": category,
+                    "labels": selected_labels,
+                    "edit_url": edit_url,
+                    "target_element": target_element,
+                },
+            )
+
+        selected_ids = [label.pk for label in selected_labels]
+        form = ProfileLabelsForm(category=category, initial={"labels": selected_ids})
+        return render(
+            request,
+            "parts/editable_labels_field_form.html",
+            {
+                "form": form,
+                "edit_url": edit_url,
+                "target_element": target_element,
+            },
+        )
+
+    return HttpResponse(status=405)
+
+
 @login_not_required
 def error_400(request, exception=None):
     return render(request, "400.html", status=400)
@@ -1981,13 +2405,11 @@ def search_suggestions(request):
     return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs})
 
 
-def client_modal(request):
-    """Return the client tree selection modal (HTMX partial)."""
-    excluded_org_ids = get_excluded_org_ids()
-    count_mode = request.GET.get("count_mode", "placements")
-
+def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int]:
+    """Return per-org self-counts based on count_mode."""
+    if count_mode == "none":
+        return Counter()
     if count_mode == "open_assignments":
-        # Count assignments with at least 1 unfilled OPEN service per OrganizationUnit
         has_unfilled_open_service = Exists(
             Service.objects.filter(
                 assignment=OuterRef("pk"),
@@ -1999,25 +2421,26 @@ def client_modal(request):
         if excluded_org_ids:
             assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
         org_id_list = assignment_qs.values_list("organizations__id", flat=True)
-        org_self_counts: Counter[int] = Counter(org_id for org_id in org_id_list if org_id is not None)
     else:
-        # Count active placements per OrganizationUnit (self-count only — direct link).
         active_placements = annotate_placement_dates(Placement.objects.all()).filter(
             actual_end_date__gte=timezone.now().date()
         )
         if excluded_org_ids:
             active_placements = active_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
         org_id_list = active_placements.values_list("service__assignment__organizations__id", flat=True)
-        org_self_counts: Counter[int] = Counter(org_id for org_id in org_id_list if org_id is not None)
+    return Counter(org_id for org_id in org_id_list if org_id is not None)
 
-    # Load all OrganizationUnits (excluding hidden organizations)
+
+def _build_org_hierarchy(
+    org_self_counts: Counter[int], excluded_org_ids: list[int], *, prune_empty: bool
+) -> list[dict]:
+    """Build the grouped org tree hierarchy for the client modal."""
     all_orgs = list(
         OrganizationUnit.objects.exclude(id__in=excluded_org_ids).values(
             "id", "parent_id", "name", "label", "abbreviations"
         )
     )
 
-    # Build lightweight tree in Python
     units_by_id: dict[int, dict] = {}
     for org in all_orgs:
         org["children_data"] = []
@@ -2033,7 +2456,6 @@ def client_modal(request):
         else:
             roots.append(unit)
 
-    # Compute total counts bottom-up (self + all descendants)
     def compute_total(node: dict) -> int:
         total = node["self_count"]
         for child in node["children_data"]:
@@ -2044,24 +2466,23 @@ def client_modal(request):
     for root in roots:
         compute_total(root)
 
-    # Prune branches with zero placements
-    def prune(node: dict) -> None:
-        node["children_data"] = [c for c in node["children_data"] if c["total_count"] > 0]
-        for child in node["children_data"]:
-            prune(child)
+    if prune_empty:
 
-    for root in roots:
-        prune(root)
-    roots = [r for r in roots if r["total_count"] > 0]
+        def prune(node: dict) -> None:
+            node["children_data"] = [c for c in node["children_data"] if c["total_count"] > 0]
+            for child in node["children_data"]:
+                prune(child)
+
+        for root in roots:
+            prune(root)
+        roots = [r for r in roots if r["total_count"] > 0]
 
     def sort_key(node: dict) -> str:
         return node.get("label") or node.get("name") or ""
 
-    # Convert to JSON-serializable tree, injecting self-nodes
     def to_json(node: dict) -> dict:
         children_data = sorted(node["children_data"], key=sort_key)
         children_json = []
-
         has_children_with_placements = any(c["total_count"] > 0 for c in children_data)
         if node["self_count"] > 0 and has_children_with_placements:
             children_json.append(
@@ -2073,9 +2494,7 @@ def client_modal(request):
                     "nr_of_placements": node["self_count"],
                 }
             )
-
         children_json.extend(to_json(child) for child in children_data)
-
         result: dict = {
             "id": node["id"],
             "label": node["label"] or node["name"],
@@ -2086,7 +2505,7 @@ def client_modal(request):
             result["children"] = children_json
         return result
 
-    # Group roots by OrganizationUnit type (same logic as organization_admin view)
+    # Group roots by OrganizationUnit type
     root_ids = {u["id"] for u in roots}
     type_links = (
         OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
@@ -2107,7 +2526,6 @@ def client_modal(request):
         else:
             ungrouped.append(unit)
 
-    # Build hierarchy: group nodes (not selectable) containing the actual root orgs
     hierarchy = []
     for group_label in sorted(grouped.keys()):
         group_units = sorted(grouped[group_label], key=sort_key)
@@ -2122,25 +2540,36 @@ def client_modal(request):
             }
         )
     hierarchy.extend(to_json(unit) for unit in sorted(ungrouped, key=sort_key))
+    return hierarchy
 
-    # Build current selections dict for state restoration in client_tree.js
-    # Maps tree node ID (string) → display label
+
+def _build_current_selections(request) -> dict[str, str]:
+    """Build current selections dict from request params for state restoration."""
     current_selections: dict[str, str] = {}
 
-    # normal orgs
     org_ids = [org_id for org_id in request.GET.getlist("org") if org_id.isdigit()]
     for org in OrganizationUnit.objects.filter(id__in=org_ids).values("id", "label"):
         current_selections[org["id"]] = org["label"]
 
-    # self-node orgs
     self_org_ids = [org_id for org_id in request.GET.getlist("org_self") if org_id.isdigit()]
     for org in OrganizationUnit.objects.filter(id__in=self_org_ids).values("id", "label"):
-        current_selections[org[f"self-{org['id']}"]] = f'Direct onder "{org["label"]}"'
+        current_selections[f"self-{org['id']}"] = f'Direct onder "{org["label"]}"'
 
-    # type-node orgs
     for type_label in request.GET.getlist("org_type"):
         if type_label:
             current_selections[f"group-{type_label}"] = ORG_TYPE_PLURAL.get(type_label, type_label)
+
+    return current_selections
+
+
+def client_modal(request):
+    """Return the client tree selection modal (HTMX partial)."""
+    excluded_org_ids = get_excluded_org_ids()
+    count_mode = request.GET.get("count_mode", "placements")
+
+    org_self_counts = _get_org_counts(count_mode, excluded_org_ids)
+    hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
+    current_selections = _build_current_selections(request)
 
     return render(
         request,

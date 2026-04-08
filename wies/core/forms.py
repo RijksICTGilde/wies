@@ -52,6 +52,9 @@ class RvoFormMixin:
         "CheckboxSelectMultiple": "rvo/forms/widgets/checkbox_select.html",
         "MultiselectDropdown": "rvo/forms/widgets/multiselect.html",
         "RadioSelect": "rvo/forms/widgets/radio.html",
+        "DateInput": "rvo/forms/widgets/date.html",
+        "Textarea": "rvo/forms/widgets/textarea.html",
+        "CheckboxInput": "rvo/forms/widgets/checkbox.html",
     }
 
     def _configure_field_for_rvo(self, field_name):
@@ -136,6 +139,20 @@ class LabelForm(RvoFormMixin, forms.ModelForm):
         return new_name
 
 
+class ProfileLabelsForm(RvoFormMixin, forms.Form):
+    """Form for editing a colleague's labels within a single category."""
+
+    def __init__(self, *args, category, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["labels"] = forms.ModelMultipleChoiceField(
+            label="",
+            queryset=Label.objects.filter(category=category).order_by("name"),
+            required=False,
+            widget=MultiselectDropdown(),
+        )
+        self._configure_field_for_rvo("labels")
+
+
 class UserForm(RvoFormMixin, forms.ModelForm):
     """Form for creating and updating User instances"""
 
@@ -171,8 +188,8 @@ class UserForm(RvoFormMixin, forms.ModelForm):
             field_name = f"category_{category.name}"
 
             initial = []
-            if instance:
-                initial = list(instance.labels.filter(category=category).values_list("pk", flat=True))
+            if instance and hasattr(instance, "colleague") and instance.colleague is not None:
+                initial = list(instance.colleague.labels.filter(category=category).values_list("pk", flat=True))
 
             self.fields[field_name] = forms.ModelMultipleChoiceField(
                 label=category.name,

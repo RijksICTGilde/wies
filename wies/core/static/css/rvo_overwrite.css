@@ -88,3 +88,21 @@
   margin-top: auto;
   margin-bottom: auto;
 }
+
+/* Override link color to black for better contrast (WCAG AA) */
+:root {
+  --rvo-link-color: #000000;
+}
+
+.rvo-link:not(.menubar .rvo-link),
+.rvo-link:visited:not(.menubar .rvo-link) {
+  color: #000000;
+}
+
+.rvo-heading:not(.menubar .rvo-heading) {
+  color: #000000;
+}
+
+.rvo-icon--hemelblauw {
+  background-color: #000000;
+}
