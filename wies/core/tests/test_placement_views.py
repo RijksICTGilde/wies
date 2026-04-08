@@ -906,3 +906,149 @@ class PlacementSearchTest(TestCase):
         self._create_placement(org=self.org)
         qs = self._search("Rijkswaterstaat")
         assert not qs.exists()
+
+
+class PlacementLooptAfFilterTest(TestCase):
+    """Tests for the 'loopt af' end-date filter in PlacementListView."""
+
+    def setUp(self):
+        self.auth_user = User.objects.create(username="testuser", email="test@rijksoverheid.nl")
+        self.skill = Skill.objects.create(name="Test Skill")
+        self.colleague_counter = 0
+
+    def _create_placement_with_assignment_end(self, end_date):
+        """Create an active placement with an assignment that ends on the given date."""
+        self.colleague_counter += 1
+        colleague = Colleague.objects.create(
+            name=f"Colleague {self.colleague_counter}",
+            email=f"c{self.colleague_counter}@rijksoverheid.nl",
+            source="wies",
+        )
+        assignment = Assignment.objects.create(
+            name=f"Assignment ending {end_date}",
+            start_date=date(2025, 1, 1),
+            end_date=end_date,
+            source="wies",
+        )
+        service = Service.objects.create(assignment=assignment, description="S", skill=self.skill, source="wies")
+        return Placement.objects.create(colleague=colleague, service=service, period_source="ASSIGNMENT", source="wies")
+
+    def _get_ids(self, params):
+        factory = RequestFactory()
+        request = factory.get("/", params)
+        request.user = self.auth_user
+        view = PlacementListView()
+        view.request = request
+        return set(view.get_queryset().values_list("id", flat=True))
+
+    @patch("wies.core.views.timezone")
+    def test_loopt_af_3m(self, mock_timezone):
+        mock_now = Mock()
+        mock_now.date.return_value = date(2026, 1, 1)
+        mock_timezone.now.return_value = mock_now
+
+        p_soon = self._create_placement_with_assignment_end(date(2026, 3, 1))  # within 91 days
+        p_later = self._create_placement_with_assignment_end(date(2026, 6, 1))  # within 6m
+        p_far = self._create_placement_with_assignment_end(date(2027, 1, 1))  # beyond 6m
+
+        ids = self._get_ids({"loopt_af": "3m"})
+        assert p_soon.id in ids
+        assert p_later.id not in ids
+        assert p_far.id not in ids
+
+    @patch("wies.core.views.timezone")
+    def test_loopt_af_6m(self, mock_timezone):
+        mock_now = Mock()
+        mock_now.date.return_value = date(2026, 1, 1)
+        mock_timezone.now.return_value = mock_now
+
+        p_soon = self._create_placement_with_assignment_end(date(2026, 3, 1))
+        p_later = self._create_placement_with_assignment_end(date(2026, 6, 1))
+        p_far = self._create_placement_with_assignment_end(date(2027, 1, 1))
+
+        ids = self._get_ids({"loopt_af": "6m"})
+        assert p_soon.id in ids
+        assert p_later.id in ids
+        assert p_far.id not in ids
+
+    @patch("wies.core.views.timezone")
+    def test_loopt_af_beyond_6m(self, mock_timezone):
+        mock_now = Mock()
+        mock_now.date.return_value = date(2026, 1, 1)
+        mock_timezone.now.return_value = mock_now
+
+        p_soon = self._create_placement_with_assignment_end(date(2026, 3, 1))
+        p_far = self._create_placement_with_assignment_end(date(2027, 1, 1))
+
+        ids = self._get_ids({"loopt_af": "6m+"})
+        assert p_soon.id not in ids
+        assert p_far.id in ids
+
+    @patch("wies.core.views.timezone")
+    def test_loopt_af_combined_3m_and_beyond(self, mock_timezone):
+        """Selecting both 3m and 6m+ returns union: <=91 days OR >182 days."""
+        mock_now = Mock()
+        mock_now.date.return_value = date(2026, 1, 1)
+        mock_timezone.now.return_value = mock_now
+
+        p_soon = self._create_placement_with_assignment_end(date(2026, 3, 1))
+        p_mid = self._create_placement_with_assignment_end(date(2026, 5, 1))  # between 3m and 6m
+        p_far = self._create_placement_with_assignment_end(date(2027, 1, 1))
+
+        ids = self._get_ids({"loopt_af": ["3m", "6m+"]})
+        assert p_soon.id in ids
+        assert p_mid.id not in ids
+        assert p_far.id in ids
+
+    @patch("wies.core.views.timezone")
+    def test_no_loopt_af_returns_all(self, mock_timezone):
+        mock_now = Mock()
+        mock_now.date.return_value = date(2026, 1, 1)
+        mock_timezone.now.return_value = mock_now
+
+        p_soon = self._create_placement_with_assignment_end(date(2026, 3, 1))
+        p_far = self._create_placement_with_assignment_end(date(2027, 1, 1))
+
+        ids = self._get_ids({})
+        assert p_soon.id in ids
+        assert p_far.id in ids
+
+
+class ClientModalCountModeTest(TestCase):
+    """Tests for count_mode parameter in client_modal view."""
+
+    def setUp(self):
+        self.client = Client()
+        self.auth_user = User.objects.create(username="testuser", email="test@rijksoverheid.nl")
+        self.org_with_placements = OrganizationUnit.objects.create(name="OrgA", label="Org A")
+        self.org_without_placements = OrganizationUnit.objects.create(name="OrgB", label="Org B")
+
+        # Create a placement for org_with_placements
+        skill = Skill.objects.create(name="TestSkill")
+        colleague = Colleague.objects.create(name="C", email="c@rijksoverheid.nl", source="wies")
+        assignment = Assignment.objects.create(
+            name="A", source="wies", start_date=date(2025, 1, 1), end_date=date(2030, 1, 1)
+        )
+        AssignmentOrganizationUnit.objects.create(assignment=assignment, organization=self.org_with_placements)
+        service = Service.objects.create(assignment=assignment, description="S", skill=skill, source="wies")
+        Placement.objects.create(colleague=colleague, service=service, period_source="ASSIGNMENT", source="wies")
+
+    def test_count_mode_none_returns_200(self):
+        self.client.force_login(self.auth_user)
+        response = self.client.get(reverse("client-modal"), {"count_mode": "none"})
+        assert response.status_code == 200
+        assert b"clientModal" in response.content
+
+    def test_count_mode_none_includes_orgs_without_placements(self):
+        """count_mode=none should not prune orgs with zero placements."""
+        self.client.force_login(self.auth_user)
+        response = self.client.get(reverse("client-modal"), {"count_mode": "none"})
+        content = response.content.decode()
+        assert "Org B" in content
+
+    def test_default_count_mode_prunes_empty_orgs(self):
+        """Default count_mode (placements) should prune orgs with zero placements."""
+        self.client.force_login(self.auth_user)
+        response = self.client.get(reverse("client-modal"))
+        content = response.content.decode()
+        assert "Org B" not in content

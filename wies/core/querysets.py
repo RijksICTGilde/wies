@@ -60,8 +60,6 @@ def annotate_usage_counts(queryset):
     Annotate LabelCategory queryset with usage counts on labels
     """
 
-    labels_with_usage = Label.objects.order_by(Lower("name")).annotate(
-        usage_count=Count("users", distinct=True) + Count("colleagues", distinct=True)
-    )
+    labels_with_usage = Label.objects.order_by(Lower("name")).annotate(usage_count=Count("colleagues", distinct=True))
 
     return queryset.prefetch_related(Prefetch("labels", queryset=labels_with_usage))

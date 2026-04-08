@@ -99,7 +99,6 @@ class Skill(models.Model):
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
-    labels = models.ManyToManyField("Label", related_name="users", blank=True)
 
 
 class Colleague(models.Model):
@@ -112,6 +111,11 @@ class Colleague(models.Model):
     source_id = models.CharField(blank=True)
     source_url = models.URLField(blank=True)
     # placements via reversed relation
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["email", "source"], name="unique_colleague_email_source"),
+        ]
 
     def __str__(self):
         return self.name

@@ -35,7 +35,7 @@ Language: Dutch UI, English code.
 
 1. Update the model in `wies/core/models.py`
 2. Update `wies/core/management/commands/load_full_data.py` to match new model structure
-3. Do NOT run makemigrations - mention migration needed
+3. Run `uv run python manage.py makemigrations` to generate migrations
 4. Update affected forms and views
 
 ### UI Changes

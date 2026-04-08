@@ -1,5 +1,12 @@
 /* Placement-specific CSS */
 
+/* Clickable rows (table rows and card links) */
+.clickable-row {
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
 /* Placement table styling */
 .placement-ministry {
   font-size: var(--rvo-font-size-xs);
@@ -22,6 +29,10 @@
   max-width: none;
 }
 
+.placement-table .rvo-table {
+  table-layout: fixed;
+}
+
 #placement-content {
   margin-top: 0;
   padding-top: 0;
@@ -30,17 +41,20 @@
 /* Column width optimization for placement table only */
 .placement-table .rvo-table th:nth-child(1),
 .placement-table .rvo-table td:nth-child(1) {
-  width: 28%; /* Naam column - more space */
+  width: 28%; /* Wie column */
 }
 
 .placement-table .rvo-table th:nth-child(2),
 .placement-table .rvo-table td:nth-child(2) {
-  width: 37%; /* Opdracht column - slightly smaller */
+  width: auto; /* Wat & waar column - takes remaining space */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .placement-table .rvo-table th:nth-child(3),
 .placement-table .rvo-table td:nth-child(3) {
-  width: 20%; /* Rol column */
+  width: 7.5rem; /* Tot column - fixed so date never overflows */
+  white-space: nowrap;
 }
 
 /* Role tags with overflow protection */
@@ -49,10 +63,4 @@
   overflow: hidden;
   text-overflow: ellipsis;
   display: inline-block;
-}
-
-.placement-table .rvo-table th:nth-child(4),
-.placement-table .rvo-table td:nth-child(4) {
-  width: 15%; /* Periode column - same */
-  white-space: nowrap; /* Prevent wrapping */
 }

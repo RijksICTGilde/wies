@@ -7,22 +7,6 @@
            hx-target="#side_panel-container"
            onkeydown="if(event.key==='Enter')htmx.trigger(this,'click')"
            style="cursor: pointer">
-    <div class="assignment-card__header">
-      <h3 class="rvo-text rvo-text--bold rvo-text--no-margins assignment-card__title">{{ assignment.name }}</h3>
-      <span class="rvo-tag rvo-tag--info">Open</span>
-    </div>
-    {% if assignment.org_breadcrumb %}
-      <span class="rvo-text rvo-text--sm">{{ assignment.org_breadcrumb.label }}</span>
-    {% endif %}
-    {% if assignment.start_date or assignment.end_date %}
-      <span class="assignment-card__meta-item rvo-text rvo-text--sm rvo-text--subtle">
-        <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--sm"
-              role="img"
-              aria-label="Periode"></span>
-        {{ assignment.start_date|datum_nl("N Y") }}
-        {% if assignment.end_date %}- {{ assignment.end_date|datum_nl("N Y") }}{% endif %}
-      </span>
-    {% endif %}
     {% if assignment.services_with_skills %}
       <div class="assignment-card__tags"
            role="list"
@@ -35,10 +19,30 @@
         {% endif %}
       </div>
     {% endif %}
+    <div class="assignment-card__header">
+      <h3 class="rvo-text rvo-text--bold rvo-text--no-margins assignment-card__title">{{ assignment.name }}</h3>
+    </div>
+    {% if assignment.org_breadcrumb %}
+      <span class="rvo-text">
+        <span class="utrecht-icon rvo-icon rvo-icon-basis-kantoorgebouw rvo-icon--md rvo-icon--rvo-grijs-700"
+              role="img"
+              aria-label="Opdrachtgever"></span>
+        {{ assignment.org_breadcrumb.label }}
+      </span>
+    {% endif %}
+    {% if assignment.start_date or assignment.end_date %}
+      <span class="assignment-card__meta-item rvo-text rvo-text--subtle">
+        <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--md"
+              role="img"
+              aria-label="Periode"></span>
+        {{ assignment.start_date|datum_nl("N Y") }}
+        {% if assignment.end_date %}- {{ assignment.end_date|datum_nl("N Y") }}{% endif %}
+      </span>
+    {% endif %}
   </article>
 {% else %}
   <div class="assignment-card-grid__empty">
-    <span class="rvo-text--italic rvo-text--subtle">Geen openstaande opdrachten gevonden.</span>
+    <span class="rvo-text--italic rvo-text--subtle">Geen vacatures gevonden.</span>
   </div>
 {% endfor %}
 {% if next_page_url %}
