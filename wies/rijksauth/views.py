@@ -46,10 +46,7 @@ def auth(request):
     if user:
         auth_login(request, user)
         logger.info("login successful, access granted")
-        try:
-            create_auth_event(user.email, "Login.success")
-        except Exception:
-            logger.exception("Failed to log auth event")
+        create_auth_event(user.email, "Login.success")
         return redirect(request.build_absolute_uri(reverse("home")))
 
     logger.info("login not successful, access denied")
