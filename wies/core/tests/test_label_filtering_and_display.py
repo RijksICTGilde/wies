@@ -55,6 +55,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.user3_colleague.labels.add(self.rig_label, self.django_label)
 
         # Create colleagues (without users) with labels
+        # Create colleagues (without users) with labels
         self.colleague1 = Colleague.objects.create(
             name="Colleague One", email="colleague1@rijksoverheid.nl", source="wies"
         )

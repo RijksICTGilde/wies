@@ -47,6 +47,8 @@ from wies.core.views import (
     user_delete,
     user_edit,
     user_import_csv,
+    user_profile,
+    user_profile_edit_attribute,
 )
 from wies.rijksauth.views import auth, login, logout
 
@@ -85,6 +87,8 @@ urlpatterns = [
     path("instellingen/labels/categorie/<int:pk>/labels/aanmaken/", label_create),
     path("instellingen/labels/<int:pk>/bewerken/", label_edit, name="label-edit"),
     path("instellingen/labels/<int:pk>/verwijderen/", label_delete, name="label-delete"),
+    path("profiel/", user_profile, name="user-profile"),
+    path("profiel/bewerken/<str:attribute>/", user_profile_edit_attribute, name="user-profile-edit-attribute"),
     path("zoek-suggesties/", search_suggestions, name="search-suggestions"),
     path("client-modal/", client_modal, name="client-modal"),
 ]

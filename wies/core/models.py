@@ -110,6 +110,11 @@ class Colleague(models.Model):
     source_url = models.URLField(blank=True)
     # placements via reversed relation
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["email", "source"], name="unique_colleague_email_source"),
+        ]
+
     def __str__(self):
         return self.name
 

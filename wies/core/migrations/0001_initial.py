@@ -86,6 +86,11 @@ class Migration(migrations.Migration):
                 ("labels", models.ManyToManyField(blank=True, related_name="colleagues", to="core.label")),
                 ("skills", models.ManyToManyField(blank=True, to="core.skill")),
             ],
+            options={
+                "constraints": [
+                    models.UniqueConstraint(fields=("email", "source"), name="unique_colleague_email_source"),
+                ],
+            },
         ),
         migrations.CreateModel(
             name="Assignment",

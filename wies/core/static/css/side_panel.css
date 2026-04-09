@@ -154,16 +154,133 @@ dialog#side_panel::backdrop {
   margin: 0 0.15rem;
 }
 
-/* Placement details header */
-.placement-details-header {
+/* Item list for assignment team panel */
+.rvo-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.rvo-item-list__item--filled:hover {
+  border-color: var(--rvo-color-hemelblauw, #007bc7);
+  background: var(--rvo-color-hemelblauw-150, #f0f6fc);
+}
+
+.rvo-item-list__item--vacant {
+  border-style: dashed;
+  background: var(--rvo-color-grijs-50, #f9fafb);
+}
+
+.rvo-item-list__content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+
+/* Colleague panel: assignment cards */
+.colleague-assignment-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
+.colleague-assignment-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  margin-left: 0.5rem;
+}
+
+.colleague-assignment-tag {
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
 .rvo-item-list__item {
-  display: block;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid var(--rvo-color-grijs-300, #c5ced6);
+  border-radius: 4px;
+  text-decoration: none;
+  color: inherit;
   width: 100%;
+}
+
+/* Completed assignment tag */
+.assignment-tag--completed {
+  background-color: var(--rvo-color-rood-200, #f9dfdd);
+  color: var(--rvo-color-rood-800, #8b0000);
+  font-size: 0.75rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 3px;
+}
+
+/* Label badges */
+.label-list {
+  flex-wrap: wrap;
+}
+
+.label-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
+}
+
+/* Panel card link (no link styling) */
+.panel-card-link {
+  text-decoration: none;
+  color: inherit;
+}
+
+.panel-card-link__title {
+  flex: 1;
+}
+
+.rvo-item-list__item .user-avatar {
+  flex-shrink: 0;
+}
+
+/* Reusable: icon + text inline (org name, date, etc.) */
+.icon-text-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.icon-text-inline--block {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+/* Colleague panel: assignment name + org row */
+.colleague-assignment-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Service description line in panels */
+.service-description-line {
+  margin-top: 0.25rem;
+}
+
+/* Label badge container */
+.label-badge-list {
+  flex-wrap: wrap;
+}
+
+/* Label badge (static styles; dynamic background-color stays inline) */
+.label-badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 3px;
 }
 
 /* Assignment skill tag spacing */
@@ -182,7 +299,8 @@ dialog#side_panel::backdrop {
   position: relative;
 }
 
-.editable-field-display span {
+.editable-field-display > span:first-child,
+.editable-field-display > div:first-child {
   flex: 1;
 }
 
