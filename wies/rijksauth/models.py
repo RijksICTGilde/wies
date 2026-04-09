@@ -28,6 +28,9 @@ class User(AbstractUser):
 
     objects = UserManager()
 
+    class Meta:
+        db_table = "auth_user"
+
 
 class AuthEvent(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)

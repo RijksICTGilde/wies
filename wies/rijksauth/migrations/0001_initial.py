@@ -80,9 +80,7 @@ class Migration(migrations.Migration):
                 ),
             ],
             options={
-                "verbose_name": "user",
-                "verbose_name_plural": "users",
-                "abstract": False,
+                "db_table": "auth_user",
             },
         ),
     ]
