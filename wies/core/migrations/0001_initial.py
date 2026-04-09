@@ -4,7 +4,6 @@ import django.contrib.auth.models
 import django.contrib.auth.validators
 import django.db.models.deletion
 import django.utils.timezone
-from django.conf import settings
 from django.db import migrations, models
 
 
@@ -158,7 +157,7 @@ class Migration(migrations.Migration):
                         null=True,
                         on_delete=django.db.models.deletion.SET_NULL,
                         related_name="colleague",
-                        to=settings.AUTH_USER_MODEL,
+                        to="core.User",
                     ),
                 ),
                 ("skills", models.ManyToManyField(blank=True, to="core.skill")),

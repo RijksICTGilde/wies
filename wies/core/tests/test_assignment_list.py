@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -11,8 +12,9 @@ from wies.core.models import (
     Placement,
     Service,
     Skill,
-    User,
 )
+
+User = get_user_model()
 
 
 class AssignmentListViewTest(TestCase):
@@ -22,8 +24,7 @@ class AssignmentListViewTest(TestCase):
         self.client = Client()
         self.list_url = reverse("assignment-list")
 
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",

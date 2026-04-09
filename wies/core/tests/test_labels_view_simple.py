@@ -16,14 +16,14 @@ class LabelsViewTest(TestCase):
     def setUp(self):
         """Set up test user and permissions"""
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(email="test@rijksoverheid.nl", password="testpass123")
 
         # Add view permission
         perm = Permission.objects.get(codename="view_labelcategory")
         self.user.user_permissions.add(perm)
 
         # Login
-        self.client.login(username="testuser", password="testpass123")
+        self.client.force_login(self.user)
 
         # Create test data
         self.category = LabelCategory.objects.create(name="Test Category", color="#FFFFFF")

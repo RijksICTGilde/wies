@@ -1,6 +1,7 @@
 from datetime import date
 from unittest.mock import Mock, patch
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, RequestFactory, TestCase
@@ -14,10 +15,11 @@ from wies.core.models import (
     Placement,
     Service,
     Skill,
-    User,
 )
 from wies.core.services.organizations import get_org_descendant_ids
 from wies.core.views import PlacementListView, _build_assignment_panel_data, _get_colleague_assignments
+
+User = get_user_model()
 
 
 class PlacementImportTest(TestCase):
@@ -34,8 +36,7 @@ class PlacementImportTest(TestCase):
         self.bdm_group = Group.objects.create(name="Business Development Manager")
 
         # Create authenticated user with all required permissions
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
@@ -49,16 +50,14 @@ class PlacementImportTest(TestCase):
         )
 
         # Create user without permissions
-        self.no_perm_user = User.objects.create(
-            username="nopermuser",
+        self.no_perm_user = User.objects.create_user(
             email="noperm@rijksoverheid.nl",
             first_name="No",
             last_name="Permission",
         )
 
         # Create user with only some permissions (missing add_service)
-        self.partial_perm_user = User.objects.create(
-            username="partialuser",
+        self.partial_perm_user = User.objects.create_user(
             email="partial@rijksoverheid.nl",
             first_name="Partial",
             last_name="Permission",
@@ -205,8 +204,7 @@ class PlacementListHistoricalFilterTest(TestCase):
         self.list_url = reverse("home")
 
         # Create authenticated user
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
@@ -404,8 +402,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         self.list_url = reverse("home")
 
         # Create authenticated user
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
@@ -538,21 +535,21 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         self.skill = Skill.objects.create(name="Python Developer")
 
         # Users and their linked colleagues
-        self.user_alice = User.objects.create(username="alice", email="alice@rijksoverheid.nl")
+        self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
         self.colleague_alice = Colleague.objects.create(
             name="Alice",
             email="alice@rijksoverheid.nl",
             source="wies",
             user=self.user_alice,
         )
-        self.user_bob = User.objects.create(username="bob", email="bob@rijksoverheid.nl")
+        self.user_bob = User.objects.create_user(email="bob@rijksoverheid.nl")
         self.colleague_bob = Colleague.objects.create(
             name="Bob",
             email="bob@rijksoverheid.nl",
             source="wies",
             user=self.user_bob,
         )
-        self.user_unrelated = User.objects.create(username="unrelated", email="unrelated@rijksoverheid.nl")
+        self.user_unrelated = User.objects.create_user(email="unrelated@rijksoverheid.nl")
         self.colleague_unrelated = Colleague.objects.create(
             name="Unrelated",
             email="unrelated@rijksoverheid.nl",
@@ -751,7 +748,7 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         mock_now.date.return_value = date(2024, 6, 15)
         mock_timezone.now.return_value = mock_now
 
-        user_no_colleague = User.objects.create(username="admin", email="admin@rijksoverheid.nl")
+        user_no_colleague = User.objects.create_user(email="admin@rijksoverheid.nl")
 
         assignment = Assignment.objects.create(name="Ended Assignment", source="wies")
         service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
@@ -879,8 +876,7 @@ class ColleagueAssignmentsHistoricalFilterTest(TestCase):
         self.list_url = reverse("home")
 
         # Create authenticated user
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
@@ -1011,21 +1007,21 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         self.list_url = reverse("home")
         self.skill = Skill.objects.create(name="Tester")
 
-        self.user_alice = User.objects.create(username="cp_alice", email="cp_alice@rijksoverheid.nl")
+        self.user_alice = User.objects.create_user(email="cp_alice@rijksoverheid.nl")
         self.colleague_alice = Colleague.objects.create(
             name="Alice",
             email="cp_alice@rijksoverheid.nl",
             source="wies",
             user=self.user_alice,
         )
-        self.user_bob = User.objects.create(username="cp_bob", email="cp_bob@rijksoverheid.nl")
+        self.user_bob = User.objects.create_user(email="cp_bob@rijksoverheid.nl")
         self.colleague_bob = Colleague.objects.create(
             name="Bob",
             email="cp_bob@rijksoverheid.nl",
             source="wies",
             user=self.user_bob,
         )
-        self.user_unrelated = User.objects.create(username="cp_unrelated", email="cp_unrelated@rijksoverheid.nl")
+        self.user_unrelated = User.objects.create_user(email="cp_unrelated@rijksoverheid.nl")
         self.colleague_unrelated = Colleague.objects.create(
             name="Unrelated",
             email="cp_unrelated@rijksoverheid.nl",
@@ -1196,8 +1192,7 @@ class ColleagueAssignmentsHistoricalVisibilityTest(TestCase):
         mock_now.date.return_value = date(2024, 6, 15)
         mock_timezone.now.return_value = mock_now
 
-        user_no_colleague = User.objects.create(
-            username="cp_admin",
+        user_no_colleague = User.objects.create_user(
             email="cp_admin@rijksoverheid.nl",
         )
 
@@ -1348,8 +1343,7 @@ class PlacementOrganizationFilterTest(TestCase):
     """Tests for organization filtering in PlacementListView."""
 
     def setUp(self):
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
         )
         self.skill = Skill.objects.create(name="Test Skill")
@@ -1500,8 +1494,7 @@ class PlacementSearchTest(TestCase):
     """Tests for the 'zoek' search parameter in PlacementListView."""
 
     def setUp(self):
-        self.auth_user = User.objects.create(
-            username="testuser",
+        self.auth_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
         )
         self.skill = Skill.objects.create(name="Test Skill")
@@ -1574,7 +1567,7 @@ class PlacementLooptAfFilterTest(TestCase):
     """Tests for the 'loopt af' end-date filter in PlacementListView."""
 
     def setUp(self):
-        self.auth_user = User.objects.create(username="testuser", email="test@rijksoverheid.nl")
+        self.auth_user = User.objects.create_user(email="test@rijksoverheid.nl")
         self.skill = Skill.objects.create(name="Test Skill")
         self.colleague_counter = 0
 
@@ -1681,7 +1674,7 @@ class ClientModalCountModeTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.auth_user = User.objects.create(username="testuser", email="test@rijksoverheid.nl")
+        self.auth_user = User.objects.create_user(email="test@rijksoverheid.nl")
         self.org_with_placements = OrganizationUnit.objects.create(name="OrgA", label="Org A")
         self.org_without_placements = OrganizationUnit.objects.create(name="OrgB", label="Org B")
 

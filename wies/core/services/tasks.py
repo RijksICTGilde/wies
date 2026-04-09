@@ -2,12 +2,15 @@
 
 from typing import TYPE_CHECKING
 
+from django.contrib.auth import get_user_model
 from django.utils import timezone
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
 
-from wies.core.models import Task, User
+from wies.core.models import Task
+
+User = get_user_model()
 
 
 def create_task(command: str, created_by: User, timeout_minutes: int, parameters: dict | None = None) -> Task:

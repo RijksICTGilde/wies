@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "wies.rijksauth",
     "wies.core",
 ]
 
@@ -152,11 +153,13 @@ SESSION_COOKIE_AGE = 8 * 60 * 60  # 8 hours (workday)
 LOGIN_URL = "login"
 
 AUTHENTICATION_BACKENDS = [
-    "wies.core.auth_backend.AuthBackend",
+    "wies.rijksauth.auth_backend.AuthBackend",
     "django.contrib.auth.backends.ModelBackend",
 ]
 
-AUTH_USER_MODEL = "core.User"
+AUTH_USER_MODEL = "rijksauth.User"
+
+AUTH_NO_ACCESS_URL = "/geen-toegang/"
 
 # Allowed email domains for ODI users
 ALLOWED_EMAIL_DOMAINS = ["@rijksoverheid.nl", "@minbzk.nl"]

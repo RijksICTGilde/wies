@@ -20,6 +20,7 @@ setup:
   docker compose run --rm django python manage.py assign_random_labels_to_colleagues
   docker compose run --rm django python manage.py createsuperuser --noinput
   docker compose run --rm django python manage.py ensure_initial_user
+  docker compose run --rm django python manage.py setup_initial_user
 
 # Generate full dummy data: sync organizations + create dummy colleagues/assignments/placements
 load-full-data:
@@ -59,8 +60,8 @@ up-production-worker:
 rebuild-db:
   echo "removing db, migrations and building up again from scratch"
   docker compose run --rm django python manage.py dropdb --noinput
-  rm -r wies/core/migrations/*
-  touch wies/core/migrations/__init__.py
+  rm -r wies/core/migrations/* wies/rijksauth/migrations/*
+  touch wies/core/migrations/__init__.py wies/rijksauth/migrations/__init__.py
   docker compose run --rm django python manage.py makemigrations
 
 # Executes `manage.py` command.

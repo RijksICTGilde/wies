@@ -1,9 +1,12 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Label, LabelCategory, User
+from wies.core.models import Label, LabelCategory
 from wies.core.roles import setup_roles
+
+User = get_user_model()
 
 
 class RBACSetupTest(TestCase):
@@ -34,8 +37,7 @@ class RBACSetupTest(TestCase):
         setup_roles()
 
         # Create user and add to Beheerder group
-        admin_user = User.objects.create(
-            username="admin_user",
+        admin_user = User.objects.create_user(
             email="admin@rijksoverheid.nl",
             first_name="Admin",
             last_name="User",
@@ -70,8 +72,7 @@ class RBACSetupTest(TestCase):
         assert User.objects.filter(email="newuser@rijksoverheid.nl").exists()
 
         # Test user deletion
-        user_to_delete = User.objects.create(
-            username="delete_me",
+        user_to_delete = User.objects.create_user(
             email="deleteme@rijksoverheid.nl",
             first_name="Delete",
             last_name="Me",

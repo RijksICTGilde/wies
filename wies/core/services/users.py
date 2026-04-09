@@ -1,15 +1,17 @@
 import csv
-import uuid
 from io import StringIO
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
-from wies.core.models import DEFAULT_LABELS, Colleague, Label, LabelCategory, User
+from wies.core.models import DEFAULT_LABELS, Colleague, Label, LabelCategory
 from wies.core.services.events import create_event
+
+User = get_user_model()
 
 
 def is_allowed_email_domain(email: str) -> bool:
@@ -37,14 +39,10 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
     # Validate email domain
     validate_email_domain(email)
 
-    # django built in User model necessitates a username, this generates a random one
-    random_username = uuid.uuid4()
-
     if User.objects.filter(email=email).exists():
         raise EmailNotAvailableError(email)
 
-    user = User.objects.create(
-        username=random_username,
+    user = User.objects.create_user(
         email=email,
         first_name=first_name,
         last_name=last_name,
@@ -70,7 +68,6 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
     creator_user_email = creator.email if creator is not None else ""
     context = {
         "created_id": user.id,
-        "username": str(random_username),  # casting uuid to str to have serializable json
         "email": email,
         "first_name": first_name,
         "last_name": last_name,
