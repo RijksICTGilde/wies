@@ -10,9 +10,13 @@ logger = logging.getLogger(__name__)
 
 @receiver(user_logged_in)
 def link_colleague_on_login(sender, request, user, **kwargs):
-    """Link or create a Colleague for the User on login."""
+    """Link or create a Colleague for the User on login.
+
+    Only looks at source="wies" colleagues. OTYS-imported colleagues are matched
+    separately during sync — TODO: handle OTYS-imported users here when that's implemented.
+    """
     try:
-        colleague = Colleague.objects.get(email=user.email)
+        colleague = Colleague.objects.get(email=user.email, source="wies")
         if colleague.user_id != user.id:
             colleague.user = user
             colleague.save(update_fields=["user"])

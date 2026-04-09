@@ -60,8 +60,8 @@ up-production-worker:
 rebuild-db:
   echo "removing db, migrations and building up again from scratch"
   docker compose run --rm django python manage.py dropdb --noinput
-  rm -r wies/core/migrations/*
-  touch wies/core/migrations/__init__.py
+  rm -r wies/core/migrations/* wies/rijksauth/migrations/*
+  touch wies/core/migrations/__init__.py wies/rijksauth/migrations/__init__.py
   docker compose run --rm django python manage.py makemigrations
 
 # Executes `manage.py` command.

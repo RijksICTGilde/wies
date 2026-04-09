@@ -1,3 +1,4 @@
+import functools
 import logging
 
 from authlib.integrations.django_client import OAuth
@@ -14,20 +15,17 @@ from .services.events import create_auth_event
 logger = logging.getLogger(__name__)
 
 oauth = OAuth()
-_oidc_registered = False
 
 
+@functools.cache
 def _get_oidc():
-    global _oidc_registered  # noqa: PLW0603 — lazy singleton registration for OIDC client
-    if not _oidc_registered:
-        oauth.register(
-            name="oidc",
-            server_metadata_url=settings.OIDC_DISCOVERY_URL,
-            client_id=settings.OIDC_CLIENT_ID,
-            client_secret=settings.OIDC_CLIENT_SECRET,
-            client_kwargs={"scope": "openid profile email"},
-        )
-        _oidc_registered = True
+    oauth.register(
+        name="oidc",
+        server_metadata_url=settings.OIDC_DISCOVERY_URL,
+        client_id=settings.OIDC_CLIENT_ID,
+        client_secret=settings.OIDC_CLIENT_SECRET,
+        client_kwargs={"scope": "openid profile email"},
+    )
     return oauth.oidc
 
 

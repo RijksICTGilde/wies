@@ -32,7 +32,6 @@ class CreateUserServiceTest(TestCase):
         assert user.first_name == "New"
         assert user.last_name == "User"
         assert user.email == "newuser@rijksoverheid.nl"
-        assert user.email == "newuser@rijksoverheid.nl"  # email is the identifier
         assert User.objects.filter(email="newuser@rijksoverheid.nl").exists()
 
         # Verify that event was created
