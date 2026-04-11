@@ -868,7 +868,7 @@ requires-dist = [
     { name = "gunicorn", specifier = "==25.3.0" },
     { name = "jinja-roos-components", git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=0.4" },
     { name = "jinja2", specifier = "==3.1.6" },
-    { name = "psycopg", extras = ["binary"], specifier = ">=3.2.0" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.3.3" },
     { name = "requests", specifier = "==2.33.1" },
     { name = "urllib3", specifier = ">=2.6.0" },
     { name = "whitenoise", specifier = "==6.12.0" },
