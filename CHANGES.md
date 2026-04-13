@@ -4,7 +4,11 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: func to migrate old data
+- ...
+
+## 2026-04-13_3
+
+- 299: add func to migrate old data
 
 ## 2026-04-13_2
 
