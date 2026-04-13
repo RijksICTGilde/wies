@@ -3,11 +3,14 @@
 from datetime import timedelta
 
 import pytest
+from django.contrib.auth import get_user_model
 from django.test import Client
 from django.urls import reverse
 from django.utils import timezone
 
-from wies.core.models import Assignment, Colleague, Placement, Service, Skill, User
+from wies.core.models import Assignment, Colleague, Placement, Service, Skill
+
+User = get_user_model()
 
 
 @pytest.mark.django_db
@@ -18,7 +21,6 @@ class TestPlacementPagination:
     def setup(self):
         """Create authenticated user for tests."""
         self.user = User.objects.create_user(
-            username="testuser",
             email="test@example.com",
             password="testpass123",
         )

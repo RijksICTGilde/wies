@@ -26,7 +26,6 @@ from wies.core.views import (
     UserListView,
     assignment_edit_attribute,
     assignment_import_csv,
-    auth,
     client_modal,
     error_400,
     error_403,
@@ -39,8 +38,6 @@ from wies.core.views import (
     label_create,
     label_delete,
     label_edit,
-    login,
-    logout,
     no_access,
     organization_admin,
     robots_txt,
@@ -53,6 +50,7 @@ from wies.core.views import (
     user_profile,
     user_profile_edit_attribute,
 )
+from wies.rijksauth.views import auth, login, logout
 
 urlpatterns = [
     # Well-known paths

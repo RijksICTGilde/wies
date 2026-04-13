@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 from django.db import transaction
@@ -10,8 +11,9 @@ from wies.core.models import (
     OrganizationUnit,
     Placement,
     Service,
-    User,
 )
+
+User = get_user_model()
 
 
 def user_can_edit_assignment(user, assignment):

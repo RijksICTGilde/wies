@@ -1,17 +1,20 @@
 import logging
 
 from django import forms
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.forms.renderers import Jinja2
 from django.forms.utils import ErrorList
 from django.template import engines
 
-from .models import Label, LabelCategory, User
+from .models import Label, LabelCategory
 from .services.users import validate_email_domain
 from .widgets import MultiselectDropdown
 
 logger = logging.getLogger(__name__)
+
+User = get_user_model()
 
 
 class RvoJinja2Renderer(Jinja2):

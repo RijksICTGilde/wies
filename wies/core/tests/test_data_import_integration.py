@@ -1,12 +1,15 @@
 from unittest.mock import Mock, patch
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
-from wies.core.models import Colleague, Label, LabelCategory, User
+from wies.core.models import Colleague, Label, LabelCategory
 from wies.core.services.placements import create_assignments_from_csv
 from wies.core.services.sync import sync_all_otys_iir_records
 from wies.core.services.users import create_users_from_csv
+
+User = get_user_model()
 
 
 class DataImportIntegrationTest(TestCase):

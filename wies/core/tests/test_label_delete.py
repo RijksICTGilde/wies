@@ -14,12 +14,12 @@ class LabelDeleteViewTest(TestCase):
 
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(email="testuser@rijksoverheid.nl", first_name="Test", last_name="User")
 
         perm = Permission.objects.get(codename="delete_label")
         self.user.user_permissions.add(perm)
 
-        self.client.login(username="testuser", password="testpass123")
+        self.client.force_login(self.user)
 
         self.category = LabelCategory.objects.create(name="Test Category", color="#FFFFFF")
         self.label = Label.objects.create(name="Test Label", category=self.category)

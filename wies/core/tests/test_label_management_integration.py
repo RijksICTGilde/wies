@@ -1,8 +1,11 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Colleague, Label, LabelCategory, User
+from wies.core.models import Colleague, Label, LabelCategory
+
+User = get_user_model()
 
 
 class LabelManagementIntegrationTest(TestCase):
@@ -13,8 +16,7 @@ class LabelManagementIntegrationTest(TestCase):
         self.client = Client()
 
         # Create admin user with all label permissions
-        self.admin_user = User.objects.create(
-            username="admin",
+        self.admin_user = User.objects.create_user(
             email="admin@rijksoverheid.nl",
             first_name="Admin",
             last_name="User",
@@ -33,8 +35,7 @@ class LabelManagementIntegrationTest(TestCase):
         self.admin_user.user_permissions.add(*label_cat_permissions, *label_permissions, *user_permissions)
 
         # Create unprivileged user
-        self.regular_user = User.objects.create(
-            username="regular",
+        self.regular_user = User.objects.create_user(
             email="regular@rijksoverheid.nl",
             first_name="Regular",
             last_name="User",
@@ -104,9 +105,7 @@ class LabelManagementIntegrationTest(TestCase):
         label = Label.objects.create(name="Original Name", category=category)
 
         # Assign to colleague (linked to user) and standalone colleague
-        user = User.objects.create(
-            username="test_user", email="user@rijksoverheid.nl", first_name="Test", last_name="User"
-        )
+        user = User.objects.create_user(email="user@rijksoverheid.nl", first_name="Test", last_name="User")
         user_colleague = Colleague.objects.create(
             user=user, name="Test User", email="user@rijksoverheid.nl", source="wies"
         )
@@ -164,17 +163,13 @@ class LabelManagementIntegrationTest(TestCase):
         label3 = Label.objects.create(name="JavaScript", category=category)
 
         # Assign labels to colleagues linked to users
-        user1 = User.objects.create(
-            username="user1", email="user1@rijksoverheid.nl", first_name="User", last_name="One"
-        )
+        user1 = User.objects.create_user(email="user1@rijksoverheid.nl", first_name="User", last_name="One")
         colleague1 = Colleague.objects.create(
             user=user1, name="User One", email="user1@rijksoverheid.nl", source="wies"
         )
         colleague1.labels.add(label1, label2)
 
-        user2 = User.objects.create(
-            username="user2", email="user2@rijksoverheid.nl", first_name="User", last_name="Two"
-        )
+        user2 = User.objects.create_user(email="user2@rijksoverheid.nl", first_name="User", last_name="Two")
         colleague2 = Colleague.objects.create(
             user=user2, name="User Two", email="user2@rijksoverheid.nl", source="wies"
         )
