@@ -1,4 +1,4 @@
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -39,6 +39,8 @@ class AssignmentCreateTest(TestCase):
             first_name="BDM",
             last_name="User",
         )
+        bdm_group = Group.objects.get(name="Business Development Manager")
+        self.bdm_user.groups.add(bdm_group)
         add_assignment = Permission.objects.get(codename="add_assignment")
         add_service = Permission.objects.get(codename="add_service")
         add_placement = Permission.objects.get(codename="add_placement")
@@ -60,6 +62,7 @@ class AssignmentCreateTest(TestCase):
             name="BDM Colleague",
             email="bdm@rijksoverheid.nl",
             source="wies",
+            user=self.bdm_user,
         )
         self.skill = Skill.objects.create(name="Python Developer")
         self.org = OrganizationUnit.objects.create(
