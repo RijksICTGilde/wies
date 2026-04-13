@@ -501,6 +501,31 @@ def staff(request):
                 Path(tmp_path).unlink(missing_ok=True)
 
             return redirect("staff")
+        elif action == "migrate_old_data":
+            if "json_file" not in request.FILES:
+                messages.error(request, "Geen bestand geüpload. Upload een JSON-bestand.")
+                return redirect("staff")
+
+            json_file = request.FILES["json_file"]
+
+            if not json_file.name.endswith(".json"):
+                messages.error(request, "Ongeldig bestandstype. Upload een JSON-bestand.")
+                return redirect("staff")
+
+            with tempfile.NamedTemporaryFile(mode="wb", suffix=".json", delete=False) as tmp:
+                tmp_path = tmp.name
+                for chunk in json_file.chunks():
+                    tmp.write(chunk)
+
+            try:
+                management.call_command("migrate_old_data", tmp_path)
+                messages.success(request, "Data migratie succesvol uitgevoerd")
+            except Exception as e:  # noqa: BLE001 — show user-friendly error message
+                messages.error(request, f"Migratie mislukt: {e!s}")
+            finally:
+                Path(tmp_path).unlink(missing_ok=True)
+
+            return redirect("staff")
         elif action == "sync_all_otys_records":
             sync_all_otys_iir_records()
             messages.success(request, "All records synced successfully from OTYS IIR")
