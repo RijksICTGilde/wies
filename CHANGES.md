@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ...
+
+## 2026-04-13_2
+
 - 273: (squashed migrations) split out rijksauth app
 
 ## 2026-04-13
