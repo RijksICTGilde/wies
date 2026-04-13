@@ -26,6 +26,7 @@
         <div>
           <c-link href="{{ url('assignment-list') }}" icon="terug" iconPlacement="before" noUnderline>Terug naar vacatures</c-link>
           <c-h1>Nieuwe opdracht</c-h1>
+          <p class="rvo-text--subtle">Voer hier de gegevens in van een nieuwe opdracht. Dit formulier kan gebruikt worden voor nieuwe opdrachten, bestaande opdrachten en vacatures.</p>
         </div>
         <form method="post"
               action="{{ url('assignment-create') }}"
@@ -60,6 +61,7 @@
               </div>
             {% endcall %}
             {% call fieldset('Diensten <span class="rvo-text--normal rvo-text--sm">(voeg tenminste 1 dienst toe)</span>', id="diensten") %}
+            <p class="rvo-text--subtle rvo-text--sm">Vul je een consultant in? Dan is de dienst direct bezet. Laat je het veld leeg, dan wordt de dienst als vacature geplaatst.</p>
             {{ service_formset.management_form }}
             {% if service_formset.non_form_errors() or form.non_field_errors() %}
               <c-alert kind="error" id="diensten-error">
