@@ -3,9 +3,10 @@
 This files lists the changes during the lifetime of this project.
 
 ## unreleased
+
 - ...
 
-# 2026-04-13
+## 2026-04-13
 
 - 279: show historic placements and assignment (only to user themselves and assignment bm)
 - 279: introduce editable userprofile
