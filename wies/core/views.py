@@ -2427,11 +2427,13 @@ def assignment_create(request):
         service_formset = ServiceFormSet(request.POST, prefix="service", form_kwargs={"skill_choices": skill_choices})
 
         # Always check org selection and services, regardless of form/formset validity
-        primary_org_ids = [int(x) for x in request.POST.getlist("primary_organization") if x.isdigit()]
+        submitted_primary_ids = [int(x) for x in request.POST.getlist("primary_organization") if x.isdigit()]
+        valid_org_ids = set(OrganizationUnit.objects.filter(id__in=submitted_primary_ids).values_list("id", flat=True))
+        primary_org_ids = [x for x in submitted_primary_ids if x in valid_org_ids]
         org_error = "" if primary_org_ids else "Voeg minimaal één opdrachtgever toe."
 
         # Check if at least one service has a skill selected (works even when formset is invalid)
-        total_forms = int(request.POST.get("service-TOTAL_FORMS", 0))
+        total_forms = min(int(request.POST.get("service-TOTAL_FORMS", 0)), 100)
         has_any_service = any(request.POST.get(f"service-{i}-skill") for i in range(total_forms))
         services_error = "" if has_any_service else "Voeg minimaal één dienst toe."
 
@@ -2447,7 +2449,11 @@ def assignment_create(request):
 
         primary_org_id = primary_org_ids[0]
         # Extra primary orgs demoted to involved
-        involved_org_ids = [int(x) for x in request.POST.getlist("involved_organization") if x.isdigit()]
+        submitted_involved_ids = [int(x) for x in request.POST.getlist("involved_organization") if x.isdigit()]
+        valid_involved_ids = set(
+            OrganizationUnit.objects.filter(id__in=submitted_involved_ids).values_list("id", flat=True)
+        )
+        involved_org_ids = [x for x in submitted_involved_ids if x in valid_involved_ids]
         involved_org_ids.extend(primary_org_ids[1:])
 
         assignment = create_assignment_from_form(

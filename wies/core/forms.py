@@ -282,7 +282,10 @@ class ServiceForm(RvoFormMixin, forms.Form):
     def clean(self):
         cleaned_data = super().clean()
         skill_val = cleaned_data.get("skill", "")
-        has_skill = (skill_val and skill_val != "__new__") or cleaned_data.get("new_skill_name")
+        new_skill_name = cleaned_data.get("new_skill_name", "").strip()
+        if skill_val == "__new__" and not new_skill_name:
+            self.add_error("new_skill_name", "Voer een naam in voor de nieuwe rol.")
+        has_skill = (skill_val and skill_val != "__new__") or new_skill_name
         has_other_data = (
             cleaned_data.get("description") or cleaned_data.get("is_filled") or cleaned_data.get("colleague")
         )

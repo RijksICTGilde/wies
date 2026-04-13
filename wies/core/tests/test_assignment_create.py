@@ -256,6 +256,79 @@ class AssignmentCreateTest(TestCase):
         involved = AssignmentOrganizationUnit.objects.get(assignment=assignment, role="INVOLVED")
         assert involved.organization == self.org2
 
+    def test_invalid_primary_org_id_rejected(self):
+        """Non-existent org IDs should not create an assignment."""
+        self.client.force_login(self.bdm_user)
+        response = self.client.post(
+            reverse("assignment-create"),
+            {
+                "name": "Test Opdracht",
+                "owner": self.bdm_colleague.id,
+                "primary_organization": "99999",
+                **FORMSET_MGMT_1,
+                "service-0-skill": self.skill.id,
+                "service-0-description": "Dienst",
+            },
+        )
+        assert response.status_code == 200
+        assert Assignment.objects.count() == 0
+
+    def test_invalid_involved_org_id_silently_ignored(self):
+        """Non-existent involved org IDs should be ignored (not crash)."""
+        self.client.force_login(self.bdm_user)
+        response = self.client.post(
+            reverse("assignment-create"),
+            {
+                "name": "Test Opdracht",
+                "owner": self.bdm_colleague.id,
+                "primary_organization": self.org.id,
+                "involved_organization": "99999",
+                **FORMSET_MGMT_1,
+                "service-0-skill": self.skill.id,
+                "service-0-description": "Dienst",
+            },
+        )
+        assert response.status_code == 302
+        assignment = Assignment.objects.get(name="Test Opdracht")
+        assert AssignmentOrganizationUnit.objects.filter(assignment=assignment, role="INVOLVED").count() == 0
+
+    def test_formset_size_capped_at_100(self):
+        """Submitting TOTAL_FORMS > 100 should not crash the server."""
+        self.client.force_login(self.bdm_user)
+        data = {
+            "name": "Test Opdracht",
+            "owner": self.bdm_colleague.id,
+            "primary_organization": self.org.id,
+            "service-TOTAL_FORMS": "9999",
+            "service-INITIAL_FORMS": "0",
+            "service-MIN_NUM_FORMS": "1",
+            "service-MAX_NUM_FORMS": "1000",
+            "service-0-skill": self.skill.id,
+            "service-0-description": "Dienst",
+        }
+        response = self.client.post(reverse("assignment-create"), data)
+        # Should not crash (500) regardless of outcome
+        assert response.status_code in (200, 302)
+
+    def test_new_skill_empty_name_rejected(self):
+        """Selecting __new__ without providing a skill name should fail validation."""
+        self.client.force_login(self.bdm_user)
+        response = self.client.post(
+            reverse("assignment-create"),
+            {
+                "name": "Test Opdracht",
+                "owner": self.bdm_colleague.id,
+                "primary_organization": self.org.id,
+                **FORMSET_MGMT_1,
+                "service-0-skill": "__new__",
+                "service-0-new_skill_name": "",
+                "service-0-description": "Dienst",
+            },
+        )
+        assert response.status_code == 200
+        assert Assignment.objects.count() == 0
+        assert Skill.objects.filter(name="").count() == 0
+
     def test_source_wies_on_service_and_placement(self):
         """source='wies' is set on Service and Placement, not just Assignment."""
         self.client.force_login(self.bdm_user)
