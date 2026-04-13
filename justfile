@@ -16,8 +16,11 @@ setup:
   docker compose build
   docker compose run --rm django python manage.py migrate
   docker compose run --rm django python manage.py setup
+  docker compose run --rm django python manage.py loaddata base_dummy_data
+  docker compose run --rm django python manage.py assign_random_labels_to_colleagues
   docker compose run --rm django python manage.py createsuperuser --noinput
   docker compose run --rm django python manage.py ensure_initial_user
+  docker compose run --rm django python manage.py setup_initial_user
 
 # Generate full dummy data: sync organizations + create dummy colleagues/assignments/placements
 load-full-data:
