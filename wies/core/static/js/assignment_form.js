@@ -105,7 +105,7 @@
   }
 
   // --------------------------------------------------------------------------
-  // Inline create toggles: new skill / new colleague
+  // Inline create toggles: new skill
   // --------------------------------------------------------------------------
   function initInlineCreate(row) {
     var skillSelect = row.querySelector("[name$='-skill']");
