@@ -10,7 +10,7 @@
     var inputsContainer = document.getElementById("assignment-org-inputs");
     var triggerText = document.getElementById("assignment-org-trigger-text");
     if (!inputsContainer || !triggerText) return;
-    var count = inputsContainer.querySelectorAll("input").length;
+    var count = inputsContainer.querySelectorAll("input[name$='-organization']").length;
     if (count === 0) {
       triggerText.textContent = "";
       var ph = document.createElement("span");
@@ -46,9 +46,8 @@
 
         // Preserve existing roles before clearing
         var existingRoles = {};
-        inputsContainer.querySelectorAll("input").forEach(function (inp) {
-          existingRoles[inp.value] =
-            inp.name === "primary_organization" ? "PRIMARY" : "INVOLVED";
+        inputsContainer.querySelectorAll("[data-org-id]").forEach(function (inp) {
+          existingRoles[inp.dataset.orgId] = inp.dataset.orgRole || "INVOLVED";
         });
 
         inputsContainer.innerHTML = "";
@@ -56,6 +55,9 @@
 
         var hasSelections = false;
         var isFirst = true;
+        var index = 0;
+        var rows = [];
+
         var table = document.createElement("table");
         table.className = "assignment-org-table";
         var thead = document.createElement("thead");
@@ -81,20 +83,61 @@
           var defaultRole =
             existingRoles[nodeId] || (isFirst ? "PRIMARY" : "INVOLVED");
 
-          var input = document.createElement("input");
-          input.type = "hidden";
-          input.name =
-            defaultRole === "PRIMARY"
-              ? "primary_organization"
-              : "involved_organization";
-          input.value = nodeId;
-          input.dataset.orgId = nodeId;
-          inputsContainer.appendChild(input);
+          rows.push({ nodeId: nodeId, label: label, role: defaultRole, index: index });
+          index++;
+          isFirst = false;
+        });
 
+        function rebuildInputs() {
+          inputsContainer.innerHTML = "";
+
+          // Formset management form
+          var totalForms = document.createElement("input");
+          totalForms.type = "hidden";
+          totalForms.name = "org-TOTAL_FORMS";
+          totalForms.value = rows.length;
+          inputsContainer.appendChild(totalForms);
+
+          var initialForms = document.createElement("input");
+          initialForms.type = "hidden";
+          initialForms.name = "org-INITIAL_FORMS";
+          initialForms.value = "0";
+          inputsContainer.appendChild(initialForms);
+
+          var minForms = document.createElement("input");
+          minForms.type = "hidden";
+          minForms.name = "org-MIN_NUM_FORMS";
+          minForms.value = "1";
+          inputsContainer.appendChild(minForms);
+
+          var maxForms = document.createElement("input");
+          maxForms.type = "hidden";
+          maxForms.name = "org-MAX_NUM_FORMS";
+          maxForms.value = "1000";
+          inputsContainer.appendChild(maxForms);
+
+          rows.forEach(function (row, i) {
+            var orgInput = document.createElement("input");
+            orgInput.type = "hidden";
+            orgInput.name = "org-" + i + "-organization";
+            orgInput.value = row.nodeId;
+            orgInput.dataset.orgId = row.nodeId;
+            orgInput.dataset.orgRole = row.role;
+            inputsContainer.appendChild(orgInput);
+
+            var roleInput = document.createElement("input");
+            roleInput.type = "hidden";
+            roleInput.name = "org-" + i + "-role";
+            roleInput.value = row.role;
+            inputsContainer.appendChild(roleInput);
+          });
+        }
+
+        rows.forEach(function (row) {
           var tr = document.createElement("tr");
 
           var tdName = document.createElement("td");
-          tdName.textContent = label;
+          tdName.textContent = row.label;
           tr.appendChild(tdName);
 
           var tdActions = document.createElement("td");
@@ -106,18 +149,14 @@
           var radio = document.createElement("input");
           radio.type = "radio";
           radio.name = "primary_org_radio";
-          radio.value = nodeId;
+          radio.value = row.nodeId;
           radio.className = "utrecht-radio-button";
-          if (defaultRole === "PRIMARY") radio.checked = true;
+          if (row.role === "PRIMARY") radio.checked = true;
           radio.addEventListener("change", function () {
-            inputsContainer
-              .querySelectorAll("input[data-org-id]")
-              .forEach(function (inp) {
-                inp.name =
-                  inp.dataset.orgId === radio.value
-                    ? "primary_organization"
-                    : "involved_organization";
-              });
+            rows.forEach(function (r) {
+              r.role = r.nodeId === radio.value ? "PRIMARY" : "INVOLVED";
+            });
+            rebuildInputs();
           });
           radioLabel.appendChild(radio);
           actionsWrapper.appendChild(radioLabel);
@@ -126,31 +165,38 @@
           removeBtn.type = "button";
           removeBtn.className =
             "assignment-org-remove rvo-button rvo-button--tertiary rvo-button--size-xs";
-          removeBtn.dataset.orgId = nodeId;
+          removeBtn.dataset.orgId = row.nodeId;
           removeBtn.textContent = "Verwijderen";
-          removeBtn.setAttribute("aria-label", "Verwijder " + label);
+          removeBtn.setAttribute("aria-label", "Verwijder " + row.label);
+          removeBtn.addEventListener("click", function () {
+            rows = rows.filter(function (r) { return r.nodeId !== row.nodeId; });
+            if (rows.length > 0 && !rows.some(function (r) { return r.role === "PRIMARY"; })) {
+              rows[0].role = "PRIMARY";
+            }
+            rebuildInputs();
+            tr.remove();
+            if (rows.length === 0) table.remove();
+            updateOrgTriggerText();
+          });
           actionsWrapper.appendChild(removeBtn);
 
           tdActions.appendChild(actionsWrapper);
           tr.appendChild(tdActions);
-
           tbody.appendChild(tr);
-          isFirst = false;
         });
+
+        // Ensure exactly one primary
+        if (hasSelections && !rows.some(function (r) { return r.role === "PRIMARY"; })) {
+          rows[0].role = "PRIMARY";
+          var firstRadio = tbody.querySelector("input[type='radio']");
+          if (firstRadio) firstRadio.checked = true;
+        }
+
+        rebuildInputs();
 
         table.appendChild(tbody);
         if (hasSelections) {
           displayContainer.appendChild(table);
-        }
-
-        // Ensure exactly one primary is always selected
-        var primaryRadio = tbody.querySelector("input[type='radio']:checked");
-        if (!primaryRadio && hasSelections) {
-          var firstRadio = tbody.querySelector("input[type='radio']");
-          if (firstRadio) {
-            firstRadio.checked = true;
-            firstRadio.dispatchEvent(new Event("change"));
-          }
         }
 
         updateOrgTriggerText();
@@ -166,4 +212,22 @@
       init();
     }
   });
+
+  var triggerBtn = document.getElementById("assignment-org-trigger-btn");
+  if (triggerBtn) {
+    triggerBtn.addEventListener("htmx:configRequest", function (e) {
+      var params = new URLSearchParams(e.detail.path.split("?")[1] || "");
+      // Include orgs from JS-managed inputs (data-org-id) and server-rendered inputs
+      document.querySelectorAll("#assignment-org-inputs input[data-org-id]").forEach(function (inp) {
+        params.append("org", inp.dataset.orgId);
+      });
+      document.querySelectorAll("#assignment-org-inputs input[name$='-organization']").forEach(function (inp) {
+        if (inp.value) params.append("org", inp.value);
+      });
+      e.detail.path = e.detail.path.split("?")[0] + "?" + params.toString();
+    });
+  }
+
+  // On page load, update trigger text in case org data was preserved after form error
+  updateOrgTriggerText();
 })();

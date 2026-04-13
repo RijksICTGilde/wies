@@ -10,6 +10,34 @@
   if (!container || !addBtn || !totalFormsInput) return;
 
   // --------------------------------------------------------------------------
+  // Remove buttons: show on all rows when >1, hide when only 1 remains
+  // --------------------------------------------------------------------------
+  function updateRemoveButtons() {
+    var rows = container.querySelectorAll(".service-row");
+    rows.forEach(function (row) {
+      var checkboxLine = row.querySelector(".service-row__checkbox-line");
+      if (!checkboxLine) return;
+      var existing = checkboxLine.querySelector(".service-row__remove");
+      if (rows.length > 1) {
+        if (!existing) {
+          var btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "service-row__remove rvo-button rvo-button--warning-subtle rvo-button--size-sm";
+          btn.textContent = "Verwijderen";
+          btn.setAttribute("aria-label", "Dienst verwijderen");
+          btn.addEventListener("click", function () {
+            row.remove();
+            updateRemoveButtons();
+          });
+          checkboxLine.appendChild(btn);
+        }
+      } else {
+        if (existing) existing.remove();
+      }
+    });
+  }
+
+  // --------------------------------------------------------------------------
   // Dynamic formset rows
   // --------------------------------------------------------------------------
   function addServiceRow() {
@@ -41,22 +69,9 @@
         el.style.display = "none";
       });
 
-    // Ensure remove button exists
-    var removeSlot = row.querySelector(".service-field--remove");
-    if (removeSlot) {
-      removeSlot.innerHTML = "";
-      var removeBtn = document.createElement("button");
-      removeBtn.type = "button";
-      removeBtn.className =
-        "service-row__remove rvo-button rvo-button--tertiary rvo-button--size-xs";
-      removeBtn.textContent = "×";
-      removeBtn.title = "Dienst verwijderen";
-      removeBtn.setAttribute("aria-label", "Dienst verwijderen");
-      removeBtn.addEventListener("click", function () {
-        row.remove();
-      });
-      removeSlot.appendChild(removeBtn);
-    }
+    // Remove any existing remove button from the clone (updateRemoveButtons handles it)
+    var existingBtn = row.querySelector(".service-row__remove");
+    if (existingBtn) existingBtn.remove();
 
     // Clear any error messages
     row.querySelectorAll(".rvo-form-field__error").forEach(function (el) {
@@ -66,6 +81,7 @@
     container.appendChild(row);
     totalFormsInput.value = index + 1;
 
+    updateRemoveButtons();
     initStatusToggle(row);
     initInlineCreate(row);
   }
@@ -107,6 +123,7 @@
     initStatusToggle(row);
     initInlineCreate(row);
   });
+  updateRemoveButtons();
 
   // --------------------------------------------------------------------------
   // Cancel button
@@ -125,7 +142,7 @@
     var inputsContainer = document.getElementById("assignment-org-inputs");
     var triggerText = document.getElementById("assignment-org-trigger-text");
     if (!inputsContainer || !triggerText) return;
-    var count = inputsContainer.querySelectorAll("input").length;
+    var count = inputsContainer.querySelectorAll("input[name$='-organization']").length;
     if (count === 0) {
       triggerText.textContent = "";
       var placeholder = document.createElement("span");
@@ -202,4 +219,9 @@
 
     updateOrgTriggerText();
   });
+
+  var dienstenError = document.getElementById("diensten-error");
+  if (dienstenError) {
+    dienstenError.scrollIntoView({ behavior: "smooth" });
+  }
 })();

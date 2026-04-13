@@ -28,6 +28,20 @@ FORMSET_MGMT_2 = {
 }
 
 
+def org_formset_data(orgs):
+    """Build org formset POST data from list of (org, role) tuples."""
+    data = {
+        "org-TOTAL_FORMS": str(len(orgs)),
+        "org-INITIAL_FORMS": "0",
+        "org-MIN_NUM_FORMS": "1",
+        "org-MAX_NUM_FORMS": "1000",
+    }
+    for i, (org, role) in enumerate(orgs):
+        data[f"org-{i}-organization"] = org.id
+        data[f"org-{i}-role"] = role
+    return data
+
+
 class AssignmentCreateTest(TestCase):
     def setUp(self):
         setup_roles()
@@ -87,7 +101,7 @@ class AssignmentCreateTest(TestCase):
         self.client.force_login(self.bdm_user)
         response = self.client.get(reverse("assignment-create"))
         assert response.status_code == 200
-        assert b"Nieuwe opdracht" in response.content
+        assert b"Opdracht invoeren" in response.content
 
     def test_post_creates_assignment_with_open_service(self):
         self.client.force_login(self.bdm_user)
@@ -96,7 +110,7 @@ class AssignmentCreateTest(TestCase):
             {
                 "name": "Test Opdracht",
                 "owner": self.bdm_colleague.id,
-                "primary_organization": self.org.id,
+                **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_1,
                 "service-0-description": "Backend ontwikkeling",
                 "service-0-skill": self.skill.id,
@@ -118,7 +132,7 @@ class AssignmentCreateTest(TestCase):
             {
                 "name": "Ingevulde Opdracht",
                 "owner": self.bdm_colleague.id,
-                "primary_organization": self.org.id,
+                **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_1,
                 "service-0-description": "Backend ontwikkeling",
                 "service-0-skill": self.skill.id,
@@ -139,11 +153,10 @@ class AssignmentCreateTest(TestCase):
             {
                 "name": "Opdracht met Org",
                 "owner": self.bdm_colleague.id,
+                **org_formset_data([(self.org, "PRIMARY"), (self.org2, "INVOLVED")]),
                 **FORMSET_MGMT_1,
                 "service-0-description": "Dienst",
                 "service-0-skill": self.skill.id,
-                "primary_organization": self.org.id,
-                "involved_organization": self.org2.id,
             },
         )
         assert response.status_code == 302
@@ -160,7 +173,7 @@ class AssignmentCreateTest(TestCase):
             {
                 "name": "Multi Service Opdracht",
                 "owner": self.bdm_colleague.id,
-                "primary_organization": self.org.id,
+                **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_2,
                 "service-0-description": "Frontend",
                 "service-0-skill": self.skill.id,
@@ -178,6 +191,27 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create"),
             {
                 "name": "",
+                **org_formset_data([(self.org, "PRIMARY")]),
+                **FORMSET_MGMT_1,
+                "service-0-skill": self.skill.id,
+                "service-0-description": "Dienst",
+            },
+        )
+        assert response.status_code == 200
+        assert Assignment.objects.count() == 0
+
+    def test_post_validation_no_org(self):
+        """Submitting without an org should fail validation."""
+        self.client.force_login(self.bdm_user)
+        response = self.client.post(
+            reverse("assignment-create"),
+            {
+                "name": "Opdracht Zonder Org",
+                "owner": self.bdm_colleague.id,
+                "org-TOTAL_FORMS": "0",
+                "org-INITIAL_FORMS": "0",
+                "org-MIN_NUM_FORMS": "1",
+                "org-MAX_NUM_FORMS": "1000",
                 **FORMSET_MGMT_1,
                 "service-0-skill": self.skill.id,
                 "service-0-description": "Dienst",
@@ -192,6 +226,7 @@ class AssignmentCreateTest(TestCase):
             reverse("assignment-create"),
             {
                 "name": "Opdracht Zonder Dienst",
+                **org_formset_data([(self.org, "PRIMARY")]),
                 "service-TOTAL_FORMS": "1",
                 "service-INITIAL_FORMS": "0",
                 "service-MIN_NUM_FORMS": "1",
@@ -199,7 +234,6 @@ class AssignmentCreateTest(TestCase):
                 "service-0-description": "",
             },
         )
-        # Formset is valid (empty form ignored) but no services_data → re-renders with error
         assert response.status_code == 200
         assert Assignment.objects.count() == 0
 
@@ -210,7 +244,7 @@ class AssignmentCreateTest(TestCase):
             {
                 "name": "Opdracht Nieuwe Rol",
                 "owner": self.bdm_colleague.id,
-                "primary_organization": self.org.id,
+                **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_1,
                 "service-0-description": "Nieuwe dienst",
                 "service-0-skill": "__new__",
@@ -230,6 +264,7 @@ class AssignmentCreateTest(TestCase):
                 "name": "Datum Opdracht",
                 "start_date": "2026-06-01",
                 "end_date": "2026-01-01",
+                **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_1,
                 "service-0-skill": self.skill.id,
                 "service-0-description": "Dienst",
@@ -238,28 +273,7 @@ class AssignmentCreateTest(TestCase):
         assert response.status_code == 200
         assert Assignment.objects.count() == 0
 
-    def test_post_multiple_primary_orgs_demotes_to_involved(self):
-        """Extra primary_organization values beyond the first become INVOLVED."""
-        self.client.force_login(self.bdm_user)
-        response = self.client.post(
-            reverse("assignment-create"),
-            {
-                "name": "Multi Primary Opdracht",
-                "owner": self.bdm_colleague.id,
-                **FORMSET_MGMT_1,
-                "service-0-skill": self.skill.id,
-                "service-0-description": "Dienst",
-                "primary_organization": [self.org.id, self.org2.id],
-            },
-        )
-        assert response.status_code == 302
-        assignment = Assignment.objects.get(name="Multi Primary Opdracht")
-        primary = AssignmentOrganizationUnit.objects.get(assignment=assignment, role="PRIMARY")
-        assert primary.organization == self.org
-        involved = AssignmentOrganizationUnit.objects.get(assignment=assignment, role="INVOLVED")
-        assert involved.organization == self.org2
-
-    def test_invalid_primary_org_id_rejected(self):
+    def test_invalid_org_id_rejected(self):
         """Non-existent org IDs should not create an assignment."""
         self.client.force_login(self.bdm_user)
         response = self.client.post(
@@ -267,7 +281,12 @@ class AssignmentCreateTest(TestCase):
             {
                 "name": "Test Opdracht",
                 "owner": self.bdm_colleague.id,
-                "primary_organization": "99999",
+                "org-TOTAL_FORMS": "1",
+                "org-INITIAL_FORMS": "0",
+                "org-MIN_NUM_FORMS": "1",
+                "org-MAX_NUM_FORMS": "1000",
+                "org-0-organization": "99999",
+                "org-0-role": "PRIMARY",
                 **FORMSET_MGMT_1,
                 "service-0-skill": self.skill.id,
                 "service-0-description": "Dienst",
@@ -276,32 +295,13 @@ class AssignmentCreateTest(TestCase):
         assert response.status_code == 200
         assert Assignment.objects.count() == 0
 
-    def test_invalid_involved_org_id_silently_ignored(self):
-        """Non-existent involved org IDs should be ignored (not crash)."""
-        self.client.force_login(self.bdm_user)
-        response = self.client.post(
-            reverse("assignment-create"),
-            {
-                "name": "Test Opdracht",
-                "owner": self.bdm_colleague.id,
-                "primary_organization": self.org.id,
-                "involved_organization": "99999",
-                **FORMSET_MGMT_1,
-                "service-0-skill": self.skill.id,
-                "service-0-description": "Dienst",
-            },
-        )
-        assert response.status_code == 302
-        assignment = Assignment.objects.get(name="Test Opdracht")
-        assert AssignmentOrganizationUnit.objects.filter(assignment=assignment, role="INVOLVED").count() == 0
-
     def test_formset_size_capped_at_100(self):
         """Submitting TOTAL_FORMS > 100 should not crash the server."""
         self.client.force_login(self.bdm_user)
         data = {
             "name": "Test Opdracht",
             "owner": self.bdm_colleague.id,
-            "primary_organization": self.org.id,
+            **org_formset_data([(self.org, "PRIMARY")]),
             "service-TOTAL_FORMS": "9999",
             "service-INITIAL_FORMS": "0",
             "service-MIN_NUM_FORMS": "1",
@@ -310,7 +310,6 @@ class AssignmentCreateTest(TestCase):
             "service-0-description": "Dienst",
         }
         response = self.client.post(reverse("assignment-create"), data)
-        # Should not crash (500) regardless of outcome
         assert response.status_code in (200, 302)
 
     def test_new_skill_empty_name_rejected(self):
@@ -321,7 +320,7 @@ class AssignmentCreateTest(TestCase):
             {
                 "name": "Test Opdracht",
                 "owner": self.bdm_colleague.id,
-                "primary_organization": self.org.id,
+                **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_1,
                 "service-0-skill": "__new__",
                 "service-0-new_skill_name": "",
@@ -340,7 +339,7 @@ class AssignmentCreateTest(TestCase):
             {
                 "name": "Source Check",
                 "owner": self.bdm_colleague.id,
-                "primary_organization": self.org.id,
+                **org_formset_data([(self.org, "PRIMARY")]),
                 **FORMSET_MGMT_1,
                 "service-0-skill": self.skill.id,
                 "service-0-description": "Dienst",
@@ -375,9 +374,9 @@ class AssignmentListButtonTest(TestCase):
     def test_bdm_sees_create_button(self):
         self.client.force_login(self.bdm_user)
         response = self.client.get(reverse("assignment-list"))
-        assert b"Opdracht toevoegen" in response.content
+        assert b"Opdracht invoeren" in response.content
 
     def test_regular_user_does_not_see_create_button(self):
         self.client.force_login(self.regular_user)
         response = self.client.get(reverse("assignment-list"))
-        assert b"Opdracht toevoegen" not in response.content
+        assert b"Opdracht invoeren" not in response.content

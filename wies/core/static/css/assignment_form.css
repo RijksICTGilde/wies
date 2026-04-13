@@ -2,6 +2,17 @@
    Assignment Create Form
    ---------------------------------------------------------------------------- */
 
+/* Tighter legend spacing in diensten fieldset */
+#diensten .utrecht-form-fieldset__legend {
+  margin-block-end: 0;
+}
+
+.fieldset-hint {
+  font-size: 1rem;
+  font-weight: normal;
+  color: inherit;
+}
+
 /* Tighter spacing within fieldsets */
 #assignment-create-form .utrecht-form-field {
   margin-bottom: 0;
@@ -73,14 +84,10 @@ form#assignment-create-form
   padding-bottom: 0.5rem;
 }
 
-.service-field--remove {
-  position: absolute;
-  right: -1.5rem;
-  top: 0.5rem;
-}
-
-.service-row__remove {
-  color: var(--rvo-color-rood-500, #d52b1e);
+.service-row__checkbox-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 /* ----------------------------------------------------------------------------

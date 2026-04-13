@@ -22,7 +22,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.generic.list import ListView
 
-from .forms import AssignmentCreateForm, LabelCategoryForm, LabelForm, ProfileLabelsForm, ServiceFormSet, UserForm
+from .forms import AssignmentCreateForm, LabelCategoryForm, LabelForm, OrganizationFormSet, ProfileLabelsForm, ServiceFormSet, UserForm
 from .models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -1178,7 +1178,7 @@ class AssignmentListView(ListView):
         # Primary button for assignment creation (BDM permission)
         if self.request.user.has_perm("core.add_assignment"):
             context["primary_button"] = {
-                "button_text": "Opdracht toevoegen",
+                "button_text": "Opdracht invoeren",
                 "href": reverse("assignment-create"),
             }
 
@@ -2420,17 +2420,13 @@ def assignment_create(request):
             initial["owner"] = request.user.colleague
         form = AssignmentCreateForm(initial=initial)
         service_formset = ServiceFormSet(prefix="service", form_kwargs={"skill_choices": skill_choices})
-        return render(request, template, {"form": form, "service_formset": service_formset})
+        org_formset = OrganizationFormSet(prefix="org")
+        return render(request, template, {"form": form, "service_formset": service_formset, "org_formset": org_formset})
 
     if request.method == "POST":
         form = AssignmentCreateForm(request.POST)
         service_formset = ServiceFormSet(request.POST, prefix="service", form_kwargs={"skill_choices": skill_choices})
-
-        # Always check org selection and services, regardless of form/formset validity
-        submitted_primary_ids = [int(x) for x in request.POST.getlist("primary_organization") if x.isdigit()]
-        valid_org_ids = set(OrganizationUnit.objects.filter(id__in=submitted_primary_ids).values_list("id", flat=True))
-        primary_org_ids = [x for x in submitted_primary_ids if x in valid_org_ids]
-        org_error = "" if primary_org_ids else "Voeg minimaal één opdrachtgever toe."
+        org_formset = OrganizationFormSet(request.POST, prefix="org")
 
         # Check if at least one service has a skill selected (works even when formset is invalid)
         total_forms = min(int(request.POST.get("service-TOTAL_FORMS", 0)), 100)
@@ -2439,22 +2435,17 @@ def assignment_create(request):
 
         form_valid = form.is_valid()
         formset_valid = service_formset.is_valid()
+        org_formset_valid = org_formset.is_valid()
 
-        if not form_valid or not formset_valid or org_error or services_error:
+        if not form_valid or not formset_valid or not org_formset_valid or services_error:
             if services_error:
                 form.add_error(None, services_error)
-            return render(request, template, {"form": form, "service_formset": service_formset, "org_error": org_error})
+            return render(request, template, {"form": form, "service_formset": service_formset, "org_formset": org_formset})
 
         services_data = extract_services_data(service_formset)
-
-        primary_org_id = primary_org_ids[0]
-        # Extra primary orgs demoted to involved
-        submitted_involved_ids = [int(x) for x in request.POST.getlist("involved_organization") if x.isdigit()]
-        valid_involved_ids = set(
-            OrganizationUnit.objects.filter(id__in=submitted_involved_ids).values_list("id", flat=True)
-        )
-        involved_org_ids = [x for x in submitted_involved_ids if x in valid_involved_ids]
-        involved_org_ids.extend(primary_org_ids[1:])
+        org_data = [f.cleaned_data for f in org_formset if f.cleaned_data]
+        primary_org = next(o["organization"] for o in org_data if o["role"] == "PRIMARY")
+        involved_orgs = [o["organization"] for o in org_data if o["role"] == "INVOLVED"]
 
         assignment = create_assignment_from_form(
             name=form.cleaned_data["name"],
@@ -2462,8 +2453,8 @@ def assignment_create(request):
             start_date=form.cleaned_data.get("start_date"),
             end_date=form.cleaned_data.get("end_date"),
             owner=form.cleaned_data.get("owner"),
-            primary_organization_id=primary_org_id,
-            involved_organization_ids=involved_org_ids,
+            primary_organization_id=primary_org.id,
+            involved_organization_ids=[o.id for o in involved_orgs],
             services_data=services_data,
         )
 

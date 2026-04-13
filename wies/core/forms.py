@@ -7,7 +7,7 @@ from django.forms.renderers import Jinja2
 from django.forms.utils import ErrorList
 from django.template import engines
 
-from .models import Colleague, Label, LabelCategory, Skill, User
+from .models import Colleague, Label, LabelCategory, OrganizationUnit, Skill, User
 from .services.users import validate_email_domain
 from .widgets import MultiselectDropdown
 
@@ -245,6 +245,28 @@ class AssignmentCreateForm(RvoFormMixin, forms.Form):
         if start and end and end < start:
             self.add_error("end_date", "Einddatum moet na startdatum liggen.")
         return cleaned_data
+
+
+class OrganizationForm(RvoFormMixin, forms.Form):
+    """Form for a single organization row within assignment creation."""
+
+    organization = forms.ModelChoiceField(
+        label="Opdrachtgever",
+        queryset=OrganizationUnit.objects.order_by("name"),
+        required=True,
+        empty_label=" ",
+        error_messages={"required": "Selecteer een opdrachtgever."},
+        widget=forms.HiddenInput(),
+    )
+    role = forms.ChoiceField(
+        label="Rol",
+        choices=[("PRIMARY", "Primaire opdrachtgever"), ("INVOLVED", "Betrokken opdrachtgever")],
+        required=True,
+        widget=forms.HiddenInput(),
+    )
+
+
+OrganizationFormSet = forms.formset_factory(OrganizationForm, extra=0, min_num=1, validate_min=True)
 
 
 class ServiceForm(RvoFormMixin, forms.Form):
