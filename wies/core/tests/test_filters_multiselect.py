@@ -1,5 +1,6 @@
 from datetime import date
 
+from django.contrib.auth import get_user_model
 from django.test import RequestFactory, TestCase
 
 from wies.core.models import (
@@ -12,16 +13,17 @@ from wies.core.models import (
     Placement,
     Service,
     Skill,
-    User,
 )
 from wies.core.views import PlacementListView
+
+User = get_user_model()
 
 
 class FilterCombiningTestBase(TestCase):
     """Shared setup for filter combining tests."""
 
     def setUp(self):
-        self.auth_user = User.objects.create(username="testuser", email="test@rijksoverheid.nl")
+        self.auth_user = User.objects.create_user(email="test@rijksoverheid.nl")
         self.skill_python = Skill.objects.create(name="Python Developer")
         self.skill_java = Skill.objects.create(name="Java Developer")
 

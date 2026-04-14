@@ -11,7 +11,6 @@ from .models import (
     Placement,
     Service,
     Skill,
-    User,
 )
 
 
@@ -30,11 +29,6 @@ class AssignmentAdmin(admin.ModelAdmin):
 @admin.register(Colleague)
 class ColleagueAdmin(admin.ModelAdmin):
     search_fields = ["name", "email"]
-
-
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    search_fields = ["first_name", "last_name", "email"]
 
 
 @admin.register(Skill)

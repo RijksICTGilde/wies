@@ -5,6 +5,7 @@
 - Python 3.14+ with type hints on public functions
 - Use `uv` for package management
 - Format with `ruff format`, lint with `ruff check --fix`
+- When adding `# noqa` comments, always include what the rule enforces and why the suppression is justified here (e.g. `# noqa: F401 (unused import), PLC0415 (import not at top level) — Django signal registration must happen inside ready()`)
 
 ## Django
 

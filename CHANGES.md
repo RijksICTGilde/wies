@@ -4,6 +4,18 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ...
+
+## 2026-04-13_3
+
+- 299: add func to migrate old data
+
+## 2026-04-13_2
+
+- 273: (squashed migrations) split out rijksauth app
+
+## 2026-04-13
+
 - 279: show historic placements and assignment (only to user themselves and assignment bm)
 - 279: introduce editable userprofile
 - 279: when colleague has multiple roles on 1 assignment, show on 1 line

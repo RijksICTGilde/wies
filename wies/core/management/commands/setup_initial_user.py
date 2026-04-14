@@ -2,14 +2,15 @@ import logging
 import os
 
 from django.conf import settings
-from django.contrib.auth.models import Group
+from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.utils import timezone
 
-from wies.core.models import Assignment, Colleague, Label, Placement, Service, User
-from wies.core.services.users import create_user
+from wies.core.models import Assignment, Colleague, Label, Placement, Service
 
 logger = logging.getLogger(__name__)
+
+User = get_user_model()
 
 
 def _assign_dev_labels(colleague):
@@ -116,46 +117,37 @@ def _setup_dev_profile(colleague):
 
 class Command(BaseCommand):
     help = (
-        "Ensure an initial admin user exists. "
-        "Reads INITIAL_USER_EMAIL (required), INITIAL_USER_FIRSTNAME and INITIAL_USER_LASTNAME (optional) "
-        "from environment. Idempotent: skips if user already exists."
+        "Set up the initial user's Colleague profile with dev data. "
+        "Reads INITIAL_USER_EMAIL from environment. "
+        "Creates Colleague if needed, populates labels and placements in DEBUG mode."
     )
 
     def handle(self, *args, **options):
         email = os.environ.get("INITIAL_USER_EMAIL", "")
 
         if not email:
-            logger.info("Initial user not created: INITIAL_USER_EMAIL not set")
+            logger.info("INITIAL_USER_EMAIL not set, skipping")
             return
 
-        if User.objects.filter(email=email).exists():
-            logger.info("Initial user already exists (%s), skipping", email)
+        user = User.objects.filter(email=email).first()
+        if not user:
+            logger.info("User %s not found, skipping (run ensure_initial_user first)", email)
             return
 
-        first_name = os.environ.get("INITIAL_USER_FIRSTNAME", "")
-        last_name = os.environ.get("INITIAL_USER_LASTNAME", "")
+        # Ensure Colleague exists (needed before dev profile setup)
+        colleague, created = Colleague.objects.get_or_create(
+            email=email,
+            source="wies",
+            defaults={
+                "name": f"{user.first_name} {user.last_name}".strip() or email,
+                "user": user,
+            },
+        )
+        if created:
+            logger.info("Created initial colleague: %s", email)
+        elif colleague.user_id != user.id:
+            colleague.user = user
+            colleague.save(update_fields=["user"])
 
-        if not first_name or not last_name:
-            logger.warning(
-                "INITIAL_USER_FIRSTNAME or INITIAL_USER_LASTNAME not set, creating user with empty name fields"
-            )
-
-        user = create_user(None, first_name, last_name, email)
-
-        for group in Group.objects.all():
-            user.groups.add(group)
-        logger.info("Successfully created initial user: %s", email)
-
-        if not Colleague.objects.filter(email=email).exists():
-            Colleague.objects.create(
-                name=f"{first_name} {last_name}".strip(),
-                source="wies",
-                email=email,
-            )
-            logger.info("Successfully created initial colleague: %s", email)
-
-        # In dev, populate the profile with labels and placements
         if settings.DEBUG:
-            colleague = Colleague.objects.filter(email=email).first()
-            if colleague:
-                _setup_dev_profile(colleague)
+            _setup_dev_profile(colleague)

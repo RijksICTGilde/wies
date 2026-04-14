@@ -38,7 +38,7 @@
             </a>
           </li>
         {% endif %}
-        {% if user.has_perms(['core.view_user', 'core.view_labelcategory']) %}
+        {% if user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
           <li>
             <a href="{{ url('admin-users') }}"
                class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/instellingen/' in request.path %}menu-item--active{% endif %}">

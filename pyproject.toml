@@ -99,6 +99,8 @@ known-first-party = ["wies", "config"]
 
 [tool.ruff.lint.per-file-ignores]
 "wies/core/tests/*" = ["E501", "S101", "S106", "PLR2004"]
+"wies/rijksauth/tests/*" = ["E501", "S101", "S106", "PLR2004"]
+"*/migrations/*" = ["E501", "Q000"]
 "wies/core/views.py" = ["C901"]  # complexity (fix later)
 "wies/core/services/*" = ["C901"]  # complexity (fix later)
 "scripts/*" = ["INP001"]  # standalone scripts, not a package

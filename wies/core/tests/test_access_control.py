@@ -1,7 +1,8 @@
+from django.contrib.auth import get_user_model
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from wies.core.models import User
+User = get_user_model()
 
 
 class AccessControlTest(TestCase):
@@ -12,8 +13,7 @@ class AccessControlTest(TestCase):
     def setUp(self):
         """Create test data"""
         self.client = Client()
-        self.test_user = User.objects.create(
-            username="test_user",
+        self.test_user = User.objects.create_user(
             email="test@rijksoverheid.nl",
             first_name="Test",
             last_name="User",
@@ -65,8 +65,7 @@ class AccessControlTest(TestCase):
     @override_settings(STAFF_EMAILS=["admin@rijksoverheid.nl"])
     def test_staff_email_can_access_staff_page(self):
         """Test that a user whose email is in STAFF_EMAILS can access /staff/"""
-        staff_user = User.objects.create(
-            username="admin",
+        staff_user = User.objects.create_user(
             email="admin@rijksoverheid.nl",
             first_name="Admin",
             last_name="User",

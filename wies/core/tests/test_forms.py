@@ -1,11 +1,14 @@
 import re
 
 from django import forms
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
 from wies.core.forms import RvoFormMixin, UserForm
-from wies.core.models import Label, LabelCategory, User
+from wies.core.models import Label, LabelCategory
+
+User = get_user_model()
 
 
 class RvoFormMixinTest(TestCase):
@@ -212,8 +215,7 @@ class UserFormEmailDomainValidationTest(TestCase):
 
     def test_edit_existing_user_with_valid_email(self):
         """Test editing an existing user with a valid email domain"""
-        user = User.objects.create(
-            username="existinguser",
+        user = User.objects.create_user(
             email="existing@rijksoverheid.nl",
             first_name="Existing",
             last_name="User",
@@ -230,8 +232,7 @@ class UserFormEmailDomainValidationTest(TestCase):
 
     def test_edit_existing_user_with_invalid_email(self):
         """Test editing an existing user with an invalid email domain is rejected"""
-        user = User.objects.create(
-            username="existinguser",
+        user = User.objects.create_user(
             email="existing@rijksoverheid.nl",
             first_name="Existing",
             last_name="User",
