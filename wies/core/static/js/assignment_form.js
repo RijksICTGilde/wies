@@ -22,7 +22,8 @@
         if (!existing) {
           var btn = document.createElement("button");
           btn.type = "button";
-          btn.className = "service-row__remove rvo-button rvo-button--warning-subtle rvo-button--size-sm";
+          btn.className =
+            "service-row__remove rvo-button rvo-button--warning-subtle rvo-button--size-sm";
           btn.textContent = "Verwijderen";
           btn.setAttribute("aria-label", "Dienst verwijderen");
           btn.addEventListener("click", function () {
@@ -142,7 +143,9 @@
     var inputsContainer = document.getElementById("assignment-org-inputs");
     var triggerText = document.getElementById("assignment-org-trigger-text");
     if (!inputsContainer || !triggerText) return;
-    var count = inputsContainer.querySelectorAll("input[name$='-organization']").length;
+    var count = inputsContainer.querySelectorAll(
+      "input[name$='-organization']",
+    ).length;
     if (count === 0) {
       triggerText.textContent = "";
       var placeholder = document.createElement("span");

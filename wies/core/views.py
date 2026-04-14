@@ -19,7 +19,15 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic.list import ListView
 
-from .forms import AssignmentCreateForm, LabelCategoryForm, LabelForm, OrganizationFormSet, ProfileLabelsForm, ServiceFormSet, UserForm
+from .forms import (
+    AssignmentCreateForm,
+    LabelCategoryForm,
+    LabelForm,
+    OrganizationFormSet,
+    ProfileLabelsForm,
+    ServiceFormSet,
+    UserForm,
+)
 from .models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -2417,7 +2425,9 @@ def assignment_create(request):
         if not form_valid or not formset_valid or not org_formset_valid or services_error:
             if services_error:
                 form.add_error(None, services_error)
-            return render(request, template, {"form": form, "service_formset": service_formset, "org_formset": org_formset})
+            return render(
+                request, template, {"form": form, "service_formset": service_formset, "org_formset": org_formset}
+            )
 
         services_data = extract_services_data(service_formset)
         org_data = [f.cleaned_data for f in org_formset if f.cleaned_data]
