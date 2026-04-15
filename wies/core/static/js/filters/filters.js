@@ -361,7 +361,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     clearBtn.addEventListener("click", function () {
       input.value = "";
-      wrapper.classList.remove("has-value");
+      input.dispatchEvent(new Event("input", { bubbles: true }));
       input.focus();
       // Clear suggestions dropdown
       var suggestionsContainer = wrapper.querySelector(
