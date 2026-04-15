@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ...
+- ?: remove migration func and restore ci actions
 
 ## 2026-04-13_3
 
