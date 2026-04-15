@@ -3,7 +3,7 @@ from django.contrib.auth.models import Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Assignment, Colleague, Placement, Service
+from wies.core.models import Assignment, Colleague, Event, Placement, Service
 
 User = get_user_model()
 
@@ -304,3 +304,60 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-edit-attribute", args=[99999, "name"]))
 
         assert response.status_code == 404
+
+    # ========== Event Logging Tests ==========
+
+    def test_assignment_edit_creates_event(self):
+        """Test that editing an assignment creates an Assignment.update event"""
+        self.client.force_login(self.user_with_permission)
+
+        self.client.post(
+            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]),
+            {"name": "Event Test Name"},
+        )
+
+        event = Event.objects.get(name="Assignment.update")
+        assert event.resource_id == self.assignment.id
+        assert event.user == self.user_with_permission
+        assert event.user_email == "perm@rijksoverheid.nl"
+        assert event.context["field_name"] == "name"
+        assert event.context["field_label"] == "Opdracht naam"
+        assert event.context["old_value"] == "Test Assignment"
+        assert event.context["new_value"] == "Event Test Name"
+
+    def test_assignment_edit_no_change_no_event(self):
+        """Test that saving the same value does not create an event"""
+        self.client.force_login(self.user_with_permission)
+
+        self.client.post(
+            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]),
+            {"name": "Test Assignment"},  # Same as current value
+        )
+
+        assert not Event.objects.filter(name="Assignment.update").exists()
+
+    def test_assignment_edit_long_value_truncated_in_event(self):
+        """Test that long values are truncated to 200 chars in event context"""
+        self.client.force_login(self.user_with_permission)
+        long_text = "x" * 300
+
+        self.client.post(
+            reverse("assignment-edit-attribute", args=[self.assignment.id, "extra_info"]),
+            {"extra_info": long_text},
+        )
+
+        event = Event.objects.get(name="Assignment.update")
+        assert len(event.context["new_value"]) == 200
+
+    def test_assignment_edit_event_stores_user(self):
+        """Test that event stores the user FK for live lookups"""
+        self.client.force_login(self.owner_user)
+
+        self.client.post(
+            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]),
+            {"name": "Owner Changed Name"},
+        )
+
+        event = Event.objects.get(name="Assignment.update")
+        assert event.user == self.owner_user
+        assert event.user_email == "owner@rijksoverheid.nl"

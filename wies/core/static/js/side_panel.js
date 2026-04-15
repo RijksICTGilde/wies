@@ -127,3 +127,23 @@ window.addEventListener("popstate", function () {
     swapPanel(window.location.href);
   }
 });
+
+// --- Tab switching (event delegation for HTMX-swapped content) ---
+
+document.addEventListener("click", (e) => {
+  const link = e.target.closest(".rvo-tabs .rvo-tabs__item-link");
+  if (!link) return;
+  e.preventDefault();
+  const tabsContainer = link.closest(".rvo-tabs");
+  const allLinks = [...tabsContainer.querySelectorAll(".rvo-tabs__item-link")];
+  const index = allLinks.indexOf(link);
+  allLinks.forEach((t, i) => {
+    t.classList.toggle("rvo-tabs__item-link--active", i === index);
+    t.setAttribute("aria-selected", i === index);
+  });
+  const panels =
+    tabsContainer.parentElement.querySelectorAll("[role=tabpanel]");
+  panels.forEach((p, i) => {
+    p.style.display = i === index ? "" : "none";
+  });
+});

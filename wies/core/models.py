@@ -237,11 +237,14 @@ class Service(models.Model):
 
 
 class Event(models.Model):
-    timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
-    # deliberately no foreignkey, because of cascading/nulling.
-    # this should be append-only. could no longer exist. empty string used for system creation
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
+    # TODO: check this, might just be for fixtures and undesirable for security
+    # user FK for live display (current name, future avatar). SET_NULL preserves event on user deletion.
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    # frozen audit fields — never shown in UI (GDPR), only for security/admin access
     user_email = models.EmailField(max_length=255, blank=True, db_index=True)
     name = models.CharField(max_length=32, db_index=True)
+    resource_id = models.IntegerField(null=True, blank=True, db_index=True)
     context = models.JSONField(default=dict)
 
     def __str__(self):

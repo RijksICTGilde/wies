@@ -4,8 +4,10 @@ from django.conf import settings
 from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.urls import reverse
+from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.html import format_html, json_script
+from django.utils.timesince import timesince
 from jinja2 import Environment
 from jinja_roos_components import setup_components
 
@@ -20,6 +22,13 @@ def datum_nl(datum, fmt="N Y"):
         except ValueError:
             return datum
     return date_format(datum, fmt)
+
+
+def tijdgeleden(dt):
+    """Returns Dutch relative time string, e.g. '2 weken geleden'"""
+    if dt is None:
+        return ""
+    return f"{timesince(dt, timezone.now())} geleden"
 
 
 def get_csrf_hidden_input(request):
@@ -75,6 +84,7 @@ def environment(**options):
         }
     )
     env.filters["datum_nl"] = datum_nl
+    env.filters["tijdgeleden"] = tijdgeleden
     env.filters["json_script"] = json_script
 
     return env

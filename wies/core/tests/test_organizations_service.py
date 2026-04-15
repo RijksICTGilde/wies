@@ -847,6 +847,7 @@ class SyncEventLoggingTest(TestCase):
         create_events = Event.objects.filter(name="OrgSync.create")
         assert create_events.count() >= 1
         event = create_events.first()
+        assert event.user is None  # System event, no user
         assert event.user_email == ""
         assert "org_id" in event.context
         assert "name" in event.context

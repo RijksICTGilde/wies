@@ -37,7 +37,8 @@ class CreateUserServiceTest(TestCase):
         # Verify that event was created
         event = Event.objects.filter(name="User.create", context__created_id=user.id).first()
         assert event is not None
-        assert event.user_email == ""  # System-created (creator is None)
+        assert event.user is None  # System-created (creator is None)
+        assert event.user_email == ""
         assert event.context["email"] == "newuser@rijksoverheid.nl"
         assert event.context["first_name"] == "New"
         assert event.context["last_name"] == "User"
@@ -52,7 +53,8 @@ class CreateUserServiceTest(TestCase):
         # Verify that event is created and creator user is logged
         event2 = Event.objects.filter(name="User.create", context__created_id=user2.id).first()
         assert event2 is not None
-        assert event2.user_email == user.email  # Creator is user
+        assert event2.user == user  # Creator is user
+        assert event2.user_email == user.email
         assert event2.context["email"] == "newuser2@rijksoverheid.nl"
         assert event2.context["first_name"] == "New2"
         assert event2.context["last_name"] == "User2"
@@ -199,7 +201,8 @@ class UpdateUserServiceTest(TestCase):
         # Verify that event was created
         event = Event.objects.filter(name="User.update", context__updated_id=user.id).first()
         assert event is not None
-        assert event.user_email == ""  # Updater is None (system)
+        assert event.user is None  # Updater is None (system)
+        assert event.user_email == ""
         assert event.context["email"] == "updated@rijksoverheid.nl"
         assert event.context["first_name"] == "Updated"
         assert event.context["last_name"] == "NewName"

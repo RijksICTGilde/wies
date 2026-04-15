@@ -24,6 +24,7 @@ from .models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    Event,
     Label,
     LabelCategory,
     OrganizationType,
@@ -206,6 +207,15 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         {**get_org_breadcrumb(rel.organization, breadcrumb_base), "role": rel.role} for rel in [*primary, *involved]
     ]
 
+    events = (
+        Event.objects.filter(
+            name__in=("Assignment.create", "Assignment.update"),
+            resource_id=assignment.id,
+        )
+        .select_related("user__colleague")
+        .order_by("-timestamp")[:20]
+    )
+
     return {
         "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
@@ -215,6 +225,7 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         "user_can_edit": user_can_edit_assignment(request.user, assignment),
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
         "org_breadcrumbs": org_breadcrumbs,
+        "events": events,
     }
 
 
@@ -1479,7 +1490,7 @@ def user_delete(request, pk):
             "group_names": [g.name for g in user.groups.all()],
         }
         user.delete()
-        create_event(request.user.email, "User.delete", context)
+        create_event("User.delete", user=request.user, context=context)
         response = HttpResponse(status=200)
         response["HX-Redirect"] = reverse("admin-users")
         return response
@@ -1995,8 +2006,23 @@ def assignment_edit_attribute(request, pk, attribute):
             )
 
         # Save
+        old_value = getattr(assignment, field_name) or ""
         setattr(assignment, field_name, new_value)
         assignment.save()
+
+        # Log change event
+        if str(old_value) != str(new_value):
+            create_event(
+                "Assignment.update",
+                user=request.user,
+                resource_id=assignment.id,
+                context={
+                    "field_name": field_name,
+                    "field_label": field_config["label"],
+                    "old_value": str(old_value)[:200],
+                    "new_value": str(new_value)[:200],
+                },
+            )
 
         # Return updated display after save
         return render(

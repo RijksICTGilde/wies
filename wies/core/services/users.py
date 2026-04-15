@@ -65,7 +65,6 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
     if groups:
         user.groups.set(groups)
 
-    creator_user_email = creator.email if creator is not None else ""
     context = {
         "created_id": user.id,
         "email": email,
@@ -74,7 +73,7 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
         "label_names": label_names,
         "group_names": [group.name for group in groups],
     }
-    create_event(creator_user_email, "User.create", context=context)
+    create_event("User.create", user=creator, context=context)
 
     return user
 
@@ -119,7 +118,6 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
     if groups:
         user.groups.set(groups)
 
-    updater_user_email = updater.email if updater is not None else ""
     context = {
         "updated_id": user.id,
         "first_name": first_name,
@@ -128,7 +126,7 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
         "label_names": label_names,
         "group_names": [group.name for group in groups],
     }
-    create_event(updater_user_email, "User.update", context=context)
+    create_event("User.update", user=updater, context=context)
     return user
 
 

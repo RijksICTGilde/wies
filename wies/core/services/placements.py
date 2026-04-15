@@ -19,6 +19,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.services.events import create_event
 
 
 def parse_date_dmy(date_str: str) -> datetime.date:
@@ -176,6 +177,13 @@ def create_assignments_from_csv(csv_content: str):
 
                 if created:
                     assignments_created += 1
+                    create_event(
+                        "Assignment.create",
+                        resource_id=assignment.id,
+                        context={
+                            "assignment_name": assignment.name,
+                        },
+                    )
 
                 # Link organizations to assignment
                 for url, role in client_urls:

@@ -373,3 +373,47 @@ dialog#side_panel::backdrop {
   font-weight: bold;
   font-size: 1em;
 }
+
+/* GitHub-style event timeline */
+.event-timeline {
+  padding-top: 8px;
+}
+
+.event-timeline__item {
+  display: flex;
+  gap: 12px;
+  position: relative;
+  padding-bottom: 16px;
+}
+
+.event-timeline__item:not(:last-child) .event-timeline__avatar::after {
+  content: "";
+  position: absolute;
+  left: 11px;
+  top: 28px;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--rvo-color-grijs-300);
+}
+
+.event-timeline__avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.user-avatar--sm {
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+}
+
+.event-timeline__content {
+  font-size: var(--rvo-font-size-sm);
+  padding-top: 2px;
+  line-height: 1.4;
+}
+
+/* Tabs inside side panel */
+.rvo-tabs__content {
+  padding-top: 16px;
+}
