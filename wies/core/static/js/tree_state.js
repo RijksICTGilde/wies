@@ -89,9 +89,12 @@ TreeState.prototype.uncheck = function (nodeId) {
 };
 
 TreeState.prototype.removeSelection = function (nodeId) {
+  // Always remove from explicit selections, even if the node
+  // doesn't exist in the tree (e.g. pruned zero-placement orgs).
+  this.explicitSelections.delete(String(nodeId));
+
   var node = this.nodes.get(String(nodeId));
   if (!node) return;
-  this.explicitSelections.delete(node.id);
   node.checked = false;
   node.indeterminate = false;
   this._cascadeDown(node, false);

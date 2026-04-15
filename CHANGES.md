@@ -4,7 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: clearing search filter inside client filter re-evaluates list
+- ?: fix that clearing search filter inside client filter re-evaluates list
+- ?: fix that clearing org without placements works
 
 ## 2026-04-13_3
 
