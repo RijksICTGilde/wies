@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>
+      {% block title %}
+        Wies (NDD PoC)
+      {% endblock title %}
+    </title>
+    {# NDD Design System #}
+    <link rel="stylesheet" href="{{ static('vendor/ndd/settings.css') }}">
+    <link rel="stylesheet" href="{{ static('vendor/ndd/ndd-rich-text.css') }}">
+    <script type="module" src="{{ static('vendor/ndd/ndd-components.js') }}"></script>
+    {# HTMX #}
+    <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
+    {# Page-specific extra head #}
+    {% block extra_head %}
+    {% endblock extra_head %}
+    <style>
+      /* Minimale lay-out voor de PoC */
+      *, *::before, *::after { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: var(--ndd-font-family-body, system-ui, sans-serif);
+        background-color: var(--ndd-color-background-page, #f5f5f5);
+        color: var(--ndd-color-foreground-default, #111);
+      }
+
+      .poc-banner {
+        background: #f0c000;
+        color: #111;
+        text-align: center;
+        padding: 0.4rem 1rem;
+        font-size: 0.85rem;
+        font-weight: bold;
+      }
+
+      .page-shell {
+        display: grid;
+        grid-template-rows: auto 1fr;
+        min-height: 100vh;
+      }
+
+      .page-topbar {
+        background: var(--ndd-color-background-surface, #fff);
+        border-bottom: 1px solid var(--ndd-color-border-default, #ccc);
+        padding: 0.75rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+      }
+
+      .page-topbar__brand {
+        font-weight: 700;
+        font-size: 1.1rem;
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .page-topbar__nav {
+        display: flex;
+        gap: 1rem;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+
+      .page-topbar__nav a {
+        text-decoration: none;
+        color: inherit;
+        font-size: 0.9rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 4px;
+      }
+
+      .page-topbar__nav a:hover,
+      .page-topbar__nav a[aria-current="page"] {
+        background: var(--ndd-color-background-interactive-hover, #e8f0fb);
+      }
+
+      .page-body {
+        display: grid;
+        grid-template-columns: 260px 1fr;
+      }
+
+      .page-sidebar {
+        background: var(--ndd-color-background-surface, #fff);
+        border-right: 1px solid var(--ndd-color-border-default, #ccc);
+        padding: 1.25rem 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+      }
+
+      .page-sidebar__title {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin: 0 0 0.25rem 0;
+      }
+
+      .page-main {
+        padding: 1.5rem;
+        overflow: auto;
+      }
+
+      .page-main__header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+      }
+
+      .page-main__header-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .results-count {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--ndd-color-foreground-subtle, #555);
+      }
+    </style>
+  </head>
+  <body class="page-shell">
+    <div class="poc-banner">
+      PoC — NDD Design System (MinBZK) — vergelijk met de <a href="{{ url('home') }}">huidige pagina</a>
+    </div>
+    {# Topbar #}
+    <header class="page-topbar">
+      <a href="{{ url('ndd-home') }}" class="page-topbar__brand">Wies</a>
+      <nav aria-label="Hoofdnavigatie">
+        <ul class="page-topbar__nav">
+          <li>
+            <a href="{{ url('ndd-home') }}"
+               {% if request.path == '/ndd/' %}aria-current="page"{% endif %}>Wie zit waar?</a>
+          </li>
+          <li>
+            <a href="{{ url('assignment-list') }}">Vacatures</a>
+          </li>
+          {% if user.is_authenticated %}
+            <li>
+              <a href="{{ url('user-profile') }}">{{ user.get_full_name() }}</a>
+            </li>
+          {% endif %}
+        </ul>
+      </nav>
+    </header>
+    {# Page body: sidebar + main #}
+    <div class="page-body">
+      <aside class="page-sidebar">
+        {% block sidebar %}
+        {% endblock sidebar %}
+      </aside>
+      <main class="page-main">
+        {% block content %}
+        {% endblock content %}
+      </main>
+    </div>
+  </body>
+</html>

@@ -1,0 +1,11 @@
+{
+  "name": "wies-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build-ndd": "node scripts/build-ndd.mjs"
+  },
+  "dependencies": {
+    "@minbzk/storybook": "^0.8.29"
+  }
+}
