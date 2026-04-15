@@ -8,7 +8,7 @@ from django.forms.renderers import Jinja2
 from django.forms.utils import ErrorList
 from django.template import engines
 
-from .models import Colleague, Label, LabelCategory, OrganizationUnit, Skill, User
+from .models import Colleague, Label, LabelCategory, OrganizationUnit, Skill
 from .services.users import validate_email_domain
 from .widgets import MultiselectDropdown
 
