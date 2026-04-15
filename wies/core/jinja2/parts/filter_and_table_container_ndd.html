@@ -1,0 +1,62 @@
+{# HTMX partial (NDD PoC): vervangt de tabelcontainer bij filterwijzigingen #}
+<div id="filter-and-table-container">
+  <div class="page-main__header">
+    <div class="page-main__header-row">
+      <h1 style="margin:0;font-size:1.5rem;">Wie zit waar?</h1>
+      <div class="ndd-search-wrapper">
+        <ndd-text-field id="search" name="zoek" placeholder="Zoeken..." aria-label="Zoeken" hx-get="{{ url('search-suggestions') }}" hx-trigger="input delay:300ms" hx-target="#search-suggestions-container" hx-swap="innerHTML" style="min-width:220px;">
+        </ndd-text-field>
+        <div id="search-suggestions-container"></div>
+      </div>
+    </div>
+    <div class="page-main__header-row">
+      <p class="results-count">
+        <b>{{ page_obj.paginator.count }}</b> resultaten
+      </p>
+    </div>
+  </div>
+  <div class="ndd-table-wrapper">
+    <table class="ndd-table">
+      <thead>
+        <tr>
+          <th class="sortable {% if get_sort_state(request, 'name') %}sort-active{% endif %}"
+              hx-get="{{ get_toggle_sort_url(request, 'name') }}"
+              hx-target="#filter-and-table-container"
+              hx-swap="outerHTML"
+              hx-replace-url="true">
+            Wie
+            <span class="ndd-table-sort-icon" aria-hidden="true">
+              {% if get_sort_state(request, 'name') == 'ascending' %}
+                ↑
+              {% elif get_sort_state(request, 'name') == 'descending' %}
+                ↓
+              {% else %}
+                ↕
+              {% endif %}
+            </span>
+          </th>
+          <th class="sortable {% if get_sort_state(request, 'assignment') %}sort-active{% endif %}"
+              hx-get="{{ get_toggle_sort_url(request, 'assignment') }}"
+              hx-target="#filter-and-table-container"
+              hx-swap="outerHTML"
+              hx-replace-url="true">
+            Wat &amp; waar
+            <span class="ndd-table-sort-icon" aria-hidden="true">
+              {% if get_sort_state(request, 'assignment') == 'ascending' %}
+                ↑
+              {% elif get_sort_state(request, 'assignment') == 'descending' %}
+                ↓
+              {% else %}
+                ↕
+              {% endif %}
+            </span>
+          </th>
+          <th>Tot</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% include "parts/placement_table_rows_ndd.html" %}
+      </tbody>
+    </table>
+  </div>
+</div>

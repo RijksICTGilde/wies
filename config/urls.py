@@ -22,6 +22,7 @@ from django.views.generic import RedirectView
 
 from wies.core.views import (
     AssignmentListView,
+    PlacementListNDDView,
     PlacementListView,
     UserListView,
     assignment_edit_attribute,
@@ -66,6 +67,7 @@ urlpatterns = [
     path("djadmin/", admin.site.urls),
     # Wies
     path("", PlacementListView.as_view(), name="home"),
+    path("ndd/", PlacementListNDDView.as_view(), name="ndd-home"),
     path("inloggen/", login, name="login"),
     path("geen-toegang/", no_access),
     path("uitloggen/", logout, name="logout"),

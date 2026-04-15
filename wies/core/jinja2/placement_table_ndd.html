@@ -1,0 +1,311 @@
+{% extends "base_ndd.html" %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/filters/filters.css') }}">
+  <script src="{{ static('js/filters/filters.js') }}"></script>
+  <script src="{{ static('js/filters/checkbox_filter.js') }}"></script>
+  <style>
+    /* Tabel styling met NDD tokens */
+    .ndd-table-wrapper {
+      background: var(--ndd-color-background-surface, #fff);
+      border: 1px solid var(--ndd-color-border-default, #ccc);
+      border-radius: var(--ndd-border-radius-md, 6px);
+      overflow: hidden;
+    }
+
+    .ndd-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    .ndd-table th {
+      background: var(--ndd-color-background-surface-raised, #f5f5f5);
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--ndd-color-foreground-subtle, #555);
+      border-bottom: 1px solid var(--ndd-color-border-default, #ccc);
+      white-space: nowrap;
+    }
+
+    .ndd-table th:nth-child(1) { width: 28%; }
+    .ndd-table th:nth-child(2) { width: auto; }
+    .ndd-table th:nth-child(3) { width: 7.5rem; }
+
+    .ndd-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--ndd-color-border-subtle, #eee);
+      font-size: 0.9rem;
+      vertical-align: middle;
+    }
+
+    .ndd-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .ndd-table tr.ndd-table__row--clickable {
+      cursor: pointer;
+    }
+
+    .ndd-table tr.ndd-table__row--clickable:hover td {
+      background: var(--ndd-color-background-interactive-hover, #f0f4ff);
+    }
+
+    .ndd-table th.sortable {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .ndd-table th.sortable:hover {
+      background: var(--ndd-color-background-interactive-hover, #e8f0fb);
+    }
+
+    .ndd-table-sort-icon {
+      display: inline-block;
+      margin-left: 0.25rem;
+      vertical-align: middle;
+      opacity: 0.5;
+    }
+
+    .ndd-table th.sort-active .ndd-table-sort-icon {
+      opacity: 1;
+    }
+
+    /* Avatar */
+    .ndd-avatar {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background: var(--ndd-color-background-interactive-default, #2060d0);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .ndd-user-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .ndd-user-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+      min-width: 0;
+    }
+
+    .ndd-user-info strong {
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ndd-user-info span {
+      font-size: 0.8rem;
+      color: var(--ndd-color-foreground-subtle, #666);
+    }
+
+    .ndd-assignment-cell {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      min-width: 0;
+    }
+
+    .ndd-assignment-cell strong {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .ndd-client-row {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.8rem;
+      color: var(--ndd-color-foreground-subtle, #666);
+    }
+
+    .ndd-date-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+
+    .ndd-empty-row td {
+      text-align: center;
+      color: var(--ndd-color-foreground-subtle, #888);
+      font-style: italic;
+      padding: 2rem 1rem;
+    }
+
+    /* Zoekbalk */
+    .ndd-search-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .ndd-search-icon {
+      position: absolute;
+      left: 0.6rem;
+      pointer-events: none;
+      color: var(--ndd-color-foreground-subtle, #666);
+    }
+
+    /* Filter sidebar met NDD tokens */
+    .ndd-sidebar-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .ndd-sidebar-section__title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin: 0;
+      color: var(--ndd-color-foreground-default, #111);
+    }
+  </style>
+{% endblock extra_head %}
+{% block sidebar %}
+  <p class="page-sidebar__title">Filters</p>
+  <form class="ndd-sidebar-section"
+        hx-get="{{ filter_target_url }}"
+        hx-target="#filter-and-table-container"
+        hx-swap="innerHTML settle:0"
+        hx-replace-url="true"
+        hx-trigger="change,input delay:500ms from:[data-filter-input]"
+        hx-include="[data-filter-input]">
+    {# Zoekfilter hidden input #}
+    <input type="hidden"
+           id="search-filter-value"
+           name="zoek"
+           value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}"
+           data-filter-input />
+    {# Org filter hidden inputs #}
+    <div id="org-filter-inputs">
+      {% for chip in org_chip_data %}
+        <input type="hidden"
+               name="{{ chip.param_name }}"
+               value="{{ chip.param_value }}"
+               data-filter-input
+               data-label="{{ chip.label }}">
+      {% endfor %}
+    </div>
+    {# Filter velden #}
+    <div id="sidebar-filter-fields" class="ndd-sidebar-section">
+      {% for filter_group in filter_groups %}
+        {% if filter_group.type == 'select' %}
+          <ndd-select label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input value="{{ filter_group.value }}">
+          <option value="">Alle</option>
+          {% for option in filter_group.options %}
+            <option value="{{ option.value }}"
+                    {% if option.value == filter_group.value %}selected{% endif %}>{{ option.label }}</option>
+          {% endfor %}
+          </ndd-select>
+        {% elif filter_group.type == 'select-multi' %}
+          {% with name=filter_group.name, label=filter_group.label, options=filter_group.options, selected_values=filter_group.selected_values %}
+            {% include "parts/filters/checkbox_filter.html" %}
+          {% endwith %}
+        {% elif filter_group.type == 'date' %}
+          <div>
+            <label for="filter-{{ filter_group.name }}"
+                   style="font-size:0.85rem;
+                          font-weight:600">{{ filter_group.label }}</label>
+            <ndd-text-field type="date" id="filter-{{ filter_group.name }}" name="{{ filter_group.name }}" data-filter-input value="{%- if active_filters.get(filter_group.name) -%}{{ active_filters.get(filter_group.name) }}{%- endif -%}">
+            </ndd-text-field>
+          </div>
+        {% elif filter_group.type == 'modal' %}
+          <div>
+            <p class="ndd-sidebar-section__title">{{ filter_group.label }}</p>
+            <ndd-button variant="secondary" type="button" id="org-filter-button" hx-get="/client-modal/?count_mode={{ client_modal_count_mode }}" hx-target="#clientModalContainer" hx-swap="innerHTML" hx-push-url="false" hx-include="#org-filter-inputs">
+            {%- if active_org_filter_count == 1 -%}
+              {{ active_org_filter_label }}
+            {%- elif active_org_filter_count > 1 -%}
+              {{ active_org_filter_count }} geselecteerd
+            {%- else -%}
+              Selecteer
+            {%- endif -%}
+            </ndd-button>
+          </div>
+        {% endif %}
+      {% endfor %}
+    </div>
+  </form>
+{% endblock sidebar %}
+{% block content %}
+  <div id="filter-and-table-container">
+    {# Header #}
+    <div class="page-main__header">
+      <div class="page-main__header-row">
+        <h1 style="margin:0;font-size:1.5rem;">Wie zit waar?</h1>
+        <div class="ndd-search-wrapper">
+          <ndd-text-field id="search" name="zoek" placeholder="Zoeken..." aria-label="Zoeken" hx-get="{{ url('search-suggestions') }}" hx-trigger="input delay:300ms" hx-target="#search-suggestions-container" hx-swap="innerHTML" style="min-width:220px;">
+          </ndd-text-field>
+          <div id="search-suggestions-container"></div>
+        </div>
+      </div>
+      <div class="page-main__header-row">
+        <p class="results-count">
+          <b>{{ page_obj.paginator.count }}</b> resultaten
+        </p>
+      </div>
+    </div>
+    {# Tabel #}
+    <div class="ndd-table-wrapper">
+      <table class="ndd-table">
+        <thead>
+          <tr>
+            <th class="sortable {% if get_sort_state(request, 'name') %}sort-active{% endif %}"
+                hx-get="{{ get_toggle_sort_url(request, 'name') }}"
+                hx-target="#filter-and-table-container"
+                hx-swap="outerHTML"
+                hx-replace-url="true">
+              Wie
+              <span class="ndd-table-sort-icon" aria-hidden="true">
+                {% if get_sort_state(request, 'name') == 'ascending' %}
+                  ↑
+                {% elif get_sort_state(request, 'name') == 'descending' %}
+                  ↓
+                {% else %}
+                  ↕
+                {% endif %}
+              </span>
+            </th>
+            <th class="sortable {% if get_sort_state(request, 'assignment') %}sort-active{% endif %}"
+                hx-get="{{ get_toggle_sort_url(request, 'assignment') }}"
+                hx-target="#filter-and-table-container"
+                hx-swap="outerHTML"
+                hx-replace-url="true">
+              Wat &amp; waar
+              <span class="ndd-table-sort-icon" aria-hidden="true">
+                {% if get_sort_state(request, 'assignment') == 'ascending' %}
+                  ↑
+                {% elif get_sort_state(request, 'assignment') == 'descending' %}
+                  ↓
+                {% else %}
+                  ↕
+                {% endif %}
+              </span>
+            </th>
+            <th>Tot</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% include "parts/placement_table_rows_ndd.html" %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div id="clientModalContainer"></div>
+{% endblock content %}

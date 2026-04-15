@@ -923,6 +923,24 @@ class PlacementListView(ListView):
         return context
 
 
+class PlacementListNDDView(PlacementListView):
+    """PoC view: inzettenlijst met NDD Design System templates (MinBZK)."""
+
+    template_name = "placement_table_ndd.html"
+
+    def get_template_names(self) -> list[str]:
+        if "HX-Request" in self.request.headers:
+            if self.request.GET.get("pagina"):
+                return ["parts/placement_table_rows_ndd.html"]
+            return ["parts/filter_and_table_container_ndd.html"]
+        return ["placement_table_ndd.html"]
+
+    def get_context_data(self, **kwargs: object) -> dict:
+        context = super().get_context_data(**kwargs)
+        context["filter_target_url"] = reverse("ndd-home")
+        return context
+
+
 class AssignmentListView(ListView):
     """View for vacancy assignments displayed as cards with infinite scroll pagination"""
 
