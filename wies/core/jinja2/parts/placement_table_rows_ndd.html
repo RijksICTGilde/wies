@@ -1,7 +1,9 @@
 {% for placement in object_list %}
-  <tr class="ndd-table__row--clickable"
+  <tr style="cursor:pointer"
       hx-get="{{ placement.colleague_url }}"
-      hx-target="#side_panel-container">
+      hx-trigger="click"
+      hx-target="#side_panel-container"
+      hx-swap="innerHTML">
     <td>
       <div class="ndd-user-cell">
         <div class="ndd-avatar" aria-hidden="true">{{ placement.colleague.name|first|upper }}</div>

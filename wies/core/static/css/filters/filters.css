@@ -485,73 +485,34 @@
   border: 0;
 }
 
-.checkbox-filter__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  background: none;
-  border: none;
-  padding: 0;
-  margin-bottom: 0.25rem;
-  cursor: pointer;
-}
-
-.checkbox-filter__header:focus,
-.checkbox-filter__header:active,
-.checkbox-filter__header:hover {
-  outline: none;
-}
-
-.checkbox-filter__header-icon {
-  transition: transform 0.2s ease;
-  flex-shrink: 0;
-  color: var(--rvo-color-lintblauw, #154273);
-  margin-right: 0.35rem;
-}
-
-.checkbox-filter__header--collapsed .checkbox-filter__header-icon {
-  transform: rotate(180deg);
-}
-
-.checkbox-filter__body[hidden] {
+.checkbox-filter__body--hidden {
   display: none;
-}
-
-.checkbox-filter__label {
-  margin-bottom: 0;
-  font-size: 1.05rem;
 }
 
 .checkbox-filter__options {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0;
+  padding: 0 var(--primitives-space-10, 10px);
+}
+
+.checkbox-filter__option-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.checkbox-filter__option-row ndd-checkbox-field {
+  flex: 1;
+  min-width: 0;
 }
 
 .checkbox-filter__options[hidden] {
   display: none;
 }
 
-.checkbox-filter__option {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  padding: 0.2rem 0;
-}
-
-.checkbox-filter__option:hover {
-  color: var(--rvo-color-hemelblauw);
-}
-
-.checkbox-filter__option .rvo-checkbox__input {
-  flex-shrink: 0;
-}
-
-.checkbox-filter__option-text {
-  flex: 1;
-  font-size: var(--rvo-font-size-md);
+.checkbox-filter__options--hidden {
+  display: none;
 }
 
 .checkbox-filter__count {
@@ -561,41 +522,6 @@
   margin-left: auto;
   width: calc(20px + 0.7rem);
   text-align: center;
-}
-
-/* Toggle button — styled as link */
-.checkbox-filter__toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: none;
-  border: none;
-  color: #000000;
-  text-decoration: none;
-  font-weight: normal;
-  font-size: var(--rvo-font-size-md);
-  cursor: pointer;
-  padding: 0.25rem 0;
-  margin-top: 0.25rem;
-}
-
-.checkbox-filter__toggle-icon {
-  font-size: 1.2em;
-}
-
-.checkbox-filter__toggle-text {
-  text-decoration: underline;
-}
-
-.checkbox-filter__toggle:focus,
-.checkbox-filter__toggle:active,
-.checkbox-filter__toggle:hover {
-  outline: none;
-  color: var(--rvo-link-color, #007bc7);
-}
-
-.checkbox-filter__toggle--expanded .checkbox-filter__toggle-icon {
-  transform: rotate(180deg);
 }
 
 /* Hidden inputs */

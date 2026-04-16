@@ -1,22 +1,52 @@
 {# HTMX partial (NDD PoC): vervangt de tabelcontainer bij filterwijzigingen #}
-<div id="filter-and-table-container">
-  <div class="page-main__header">
-    <div class="page-main__header-row">
-      <h1 style="margin:0;font-size:1.5rem;">Wie zit waar?</h1>
-      <div class="ndd-search-wrapper">
-        <ndd-text-field id="search" name="zoek" placeholder="Zoeken..." aria-label="Zoeken" hx-get="{{ url('search-suggestions') }}" hx-trigger="input delay:300ms" hx-target="#search-suggestions-container" hx-swap="innerHTML" style="min-width:220px;">
-        </ndd-text-field>
-        <div id="search-suggestions-container"></div>
+<div id="filter-and-table-container" style="padding:1.5rem;">
+  {# Results count + active filter tokens on one row #}
+  {% set has_active_filters = (org_chip_data|length > 0) or search_filter or (active_filters|length > 0) %}
+  <div style="display:flex;
+              flex-wrap:wrap;
+              align-items:center;
+              gap:0.5rem;
+              padding:0 0 0.75rem;
+              min-height:2.5rem">
+    <p id="results-count"
+       class="results-count"
+       style="flex-shrink:0;
+              margin:0">
+      <b>{{ page_obj.paginator.count }}</b> resultaten
+    </p>
+    {% if has_active_filters %}
+      <div class="ndd-filter-tokens" style="display:contents;">
+        {# Organization filter tokens #}
+        {% for chip in org_chip_data %}
+          <ndd-token control="dismiss" dismiss-text="Verwijder filter" data-filter-type="org" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</ndd-token>
+        {% endfor %}
+        {# Search filter token #}
+        {% if search_filter %}
+          <ndd-token control="dismiss" dismiss-text="Verwijder filter" data-filter-type="zoek" data-filter-name="zoek">{{ search_filter }}</ndd-token>
+        {% endif %}
+        {# Regular filters #}
+        {% for filter_group in filter_groups %}
+          {% if filter_group.type == 'select-multi' %}
+            {% set filter_values = active_filters.get(filter_group.name) %}
+            {% if filter_values %}
+              {% for selected_id in filter_values %}
+                {% for option in filter_group.options %}
+                  {% if option.value == selected_id %}
+                    <ndd-token control="dismiss" dismiss-text="Verwijder filter" data-filter-type="select-multi" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_id }}">{{ option.label }}</ndd-token>
+                  {% endif %}
+                {% endfor %}
+              {% endfor %}
+            {% endif %}
+          {% elif filter_group.type == 'date' and active_filters.get(filter_group.name) %}
+            <ndd-token control="dismiss" dismiss-text="Verwijder filter" data-filter-type="date" data-filter-name="{{ filter_group.name }}">{{ filter_group.label }}: {{ active_filters.get(filter_group.name) |datum_nl('j F Y') }}</ndd-token>
+          {% endif %}
+        {% endfor %}
       </div>
-    </div>
-    <div class="page-main__header-row">
-      <p class="results-count">
-        <b>{{ page_obj.paginator.count }}</b> resultaten
-      </p>
-    </div>
+    {% endif %}
   </div>
-  <div class="ndd-table-wrapper">
-    <table class="ndd-table">
+  <div style="container-type: inline-size; container-name: layout-area;">
+    <ndd-rich-text spacing="snug">
+    <table>
       <thead>
         <tr>
           <th class="sortable {% if get_sort_state(request, 'name') %}sort-active{% endif %}"
@@ -24,39 +54,38 @@
               hx-target="#filter-and-table-container"
               hx-swap="outerHTML"
               hx-replace-url="true">
-            Wie
-            <span class="ndd-table-sort-icon" aria-hidden="true">
-              {% if get_sort_state(request, 'name') == 'ascending' %}
-                ↑
-              {% elif get_sort_state(request, 'name') == 'descending' %}
-                ↓
-              {% else %}
-                ↕
-              {% endif %}
-            </span>
-          </th>
-          <th class="sortable {% if get_sort_state(request, 'assignment') %}sort-active{% endif %}"
-              hx-get="{{ get_toggle_sort_url(request, 'assignment') }}"
-              hx-target="#filter-and-table-container"
-              hx-swap="outerHTML"
-              hx-replace-url="true">
-            Wat &amp; waar
-            <span class="ndd-table-sort-icon" aria-hidden="true">
-              {% if get_sort_state(request, 'assignment') == 'ascending' %}
-                ↑
-              {% elif get_sort_state(request, 'assignment') == 'descending' %}
-                ↓
-              {% else %}
-                ↕
-              {% endif %}
-            </span>
-          </th>
-          <th>Tot</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% include "parts/placement_table_rows_ndd.html" %}
-      </tbody>
-    </table>
-  </div>
+            Wie <span class="sort-icon" aria-hidden="true">
+            {% if get_sort_state(request, 'name') == 'ascending' %}
+              ↑
+            {% elif get_sort_state(request, 'name') == 'descending' %}
+              ↓
+            {% else %}
+              ↕
+            {% endif %}
+          </span>
+        </th>
+        <th class="sortable {% if get_sort_state(request, 'assignment') %}sort-active{% endif %}"
+            hx-get="{{ get_toggle_sort_url(request, 'assignment') }}"
+            hx-target="#filter-and-table-container"
+            hx-swap="outerHTML"
+            hx-replace-url="true">
+          Wat &amp; waar <span class="sort-icon" aria-hidden="true">
+          {% if get_sort_state(request, 'assignment') == 'ascending' %}
+            ↑
+          {% elif get_sort_state(request, 'assignment') == 'descending' %}
+            ↓
+          {% else %}
+            ↕
+          {% endif %}
+        </span>
+      </th>
+      <th>Tot</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% include "parts/placement_table_rows_ndd.html" %}
+  </tbody>
+</table>
+</ndd-rich-text>
+</div>
 </div>

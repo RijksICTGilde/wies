@@ -930,6 +930,13 @@ class PlacementListNDDView(PlacementListView):
 
     def get_template_names(self) -> list[str]:
         if "HX-Request" in self.request.headers:
+            if self.request.headers.get("HX-Target") == "side_panel-container":
+                colleague_id = self.request.GET.get("collega")
+                assignment_id = self.request.GET.get("opdracht")
+                if colleague_id and not assignment_id:
+                    return ["parts/colleague_panel_content_ndd.html"]
+                if assignment_id:
+                    return ["parts/assignment_panel_content_ndd.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/placement_table_rows_ndd.html"]
             return ["parts/filter_and_table_container_ndd.html"]
@@ -2566,8 +2573,9 @@ def client_modal(request):
     hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 
+    template = "parts/client_modal_ndd.html" if request.GET.get("ndd") else "parts/client_modal.html"
     return render(
         request,
-        "parts/client_modal.html",
+        template,
         {"hierarchy": hierarchy, "current_selections": current_selections},
     )
