@@ -1,0 +1,164 @@
+/* NDD client modal — minimale styling, ndd-modal-dialog doet het meeste werk. */
+
+.ndd-client-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-12, 12px);
+  min-width: 600px;
+  max-width: 900px;
+}
+
+.ndd-client-modal__layout {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: var(--primitives-space-16, 16px);
+  height: 420px;
+  min-height: 0;
+}
+
+.ndd-client-modal__tree,
+.ndd-client-modal__selection {
+  border: 1px solid var(--components-top-title-bar-divider-color, #e5e5e5);
+  border-radius: 6px;
+  overflow-y: auto;
+  background: var(--semantics-surfaces-tinted-background-color, #fafafa);
+}
+.ndd-client-modal__tree {
+  padding: var(--primitives-space-12, 12px);
+}
+
+.ndd-client-modal__selection {
+  display: flex;
+  flex-direction: column;
+}
+
+.ndd-client-modal__selection-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--primitives-space-10, 10px) var(--primitives-space-14, 14px);
+  border-bottom: 1px solid
+    var(--components-top-title-bar-divider-color, #e5e5e5);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.ndd-client-modal__selection-count {
+  display: inline-block;
+  margin-left: 0.4rem;
+  background: var(--semantics-content-accent-color, #0d4a8a);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0 0.45rem;
+  font-size: 0.75rem;
+  min-width: 1.4rem;
+  text-align: center;
+}
+
+.ndd-client-modal__results-count {
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--semantics-content-secondary-color, #888);
+}
+
+.ndd-client-modal__selection-list {
+  list-style: none;
+  margin: 0;
+  padding: var(--primitives-space-6, 6px) 0;
+  flex: 1;
+  overflow-y: auto;
+}
+.ndd-client-modal__selection-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--primitives-space-6, 6px) var(--primitives-space-14, 14px);
+  font-size: 0.875rem;
+}
+.ndd-client-modal__selection-list li:hover {
+  background: var(
+    --semantics-surfaces-interactive-hovered-background-color,
+    #f0f4ff
+  );
+}
+.ndd-client-modal__empty-state {
+  font-style: italic;
+  color: var(--semantics-content-secondary-color, #888);
+  padding: var(--primitives-space-10, 10px) var(--primitives-space-14, 14px);
+}
+
+.ndd-client-modal__footer {
+  display: flex;
+  gap: var(--primitives-space-8, 8px);
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* --- Tree node styling (selectors uit client_tree.js) --------------- */
+.client-tree-level {
+  list-style: none;
+  margin: 0;
+  padding-left: var(--primitives-space-16, 16px);
+}
+.client-tree-level:first-child {
+  padding-left: 0;
+}
+
+.client-tree-node {
+  position: relative;
+  padding: var(--primitives-space-2, 2px) 0;
+  font-size: 0.9rem;
+}
+.client-tree-node > label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--primitives-space-6, 6px);
+  cursor: pointer;
+  padding: var(--primitives-space-2, 2px) var(--primitives-space-4, 4px);
+  border-radius: 4px;
+}
+.client-tree-node > label:hover {
+  background: var(
+    --semantics-surfaces-interactive-hovered-background-color,
+    #f0f4ff
+  );
+}
+.client-tree-node.checked > label {
+  background: var(--semantics-surfaces-tinted-background-color, #dceaf7);
+}
+.client-tree-node.collapsed > .client-tree-level {
+  display: none;
+}
+.client-tree-node.search-hidden {
+  display: none;
+}
+
+.client-toggle,
+.client-toggle-spacer {
+  display: inline-block;
+  width: 1.1rem;
+  text-align: center;
+}
+.client-toggle {
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font-size: 0.95rem;
+  padding: 0;
+  transition: transform 100ms ease;
+}
+.client-tree-node:not(.collapsed) > .client-toggle {
+  transform: rotate(90deg);
+}
+
+.client-placement-badge {
+  display: inline-block;
+  background: var(--semantics-surfaces-tinted-background-color, #eef3f8);
+  color: var(--semantics-content-secondary-color, #555);
+  font-size: 0.75rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  margin-left: 0.3rem;
+}

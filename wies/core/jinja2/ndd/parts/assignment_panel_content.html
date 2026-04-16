@@ -1,0 +1,120 @@
+{% set assignment = panel_data.assignment %}
+<div class="ndd-panel">
+  <header class="ndd-panel__bar">
+    <button type="button"
+            class="ndd-panel__bar-back"
+            data-ndd-action="panel-back"
+            aria-label="Terug">
+      <svg viewBox="0 0 24 24"
+           width="18"
+           height="18"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="2"
+           aria-hidden="true">
+        <path d="M19 12H5M12 19l-7-7 7-7" />
+      </svg>
+    </button>
+    <h2 class="ndd-panel__bar-title">{{ assignment.name }}</h2>
+    <button type="button"
+            class="ndd-panel__bar-action"
+            data-ndd-action="panel-close">Sluit</button>
+  </header>
+  <ndd-rich-text spacing="snug">
+  <h3>Opdracht gegevens</h3>
+  <dl class="ndd-data-list">
+    {% if assignment.extra_info %}
+      <dt>Beschrijving</dt>
+      <dd>
+        {{ assignment.extra_info }}
+      </dd>
+    {% endif %}
+    {% if panel_data.org_breadcrumbs %}
+      <dt>
+        Opdrachtgever
+        {% if panel_data.org_breadcrumbs|length > 1 %}s{% endif %}
+      </dt>
+      <dd>
+        {% for crumb in panel_data.org_breadcrumbs %}
+          <div class="ndd-org-crumb">
+            {% if crumb.ancestors %}
+              {% for ancestor in crumb.ancestors %}
+                <span>{{ ancestor.label }}</span><span class="ndd-org-crumb__sep">›</span>
+              {% endfor %}
+            {% endif %}
+            <strong>{{ crumb.label }}</strong>
+            {% if crumb.role == "PRIMARY" and panel_data.org_breadcrumbs|length > 1 %}
+              <span class="ndd-text-secondary">(primair)</span>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </dd>
+    {% endif %}
+    <dt>Periode</dt>
+    <dd>
+      {% if assignment.start_date or assignment.end_date %}
+        {{ assignment.start_date|datum_nl("j F Y") if assignment.start_date else "?" }}
+        – {{ assignment.end_date|datum_nl("j F Y") if assignment.end_date else "?" }}
+      {% else %}
+        <em class="ndd-text-secondary">Geen periode opgegeven</em>
+      {% endif %}
+    </dd>
+    {% if assignment.owner %}
+      <dt>Business Manager</dt>
+      <dd>
+        {% if panel_data.owner_url %}
+          <a href="{{ panel_data.owner_url }}"
+             hx-get="{{ panel_data.owner_url }}"
+             hx-target="#ndd-side-panel-content"
+             hx-swap="innerHTML">{{ assignment.owner.name }}</a>
+        {% else %}
+          {{ assignment.owner.name }}
+        {% endif %}
+        {% if assignment.owner.email %}
+          <br>
+          <a href="mailto:{{ assignment.owner.email }}">{{ assignment.owner.email }}</a>
+        {% endif %}
+      </dd>
+    {% endif %}
+  </dl>
+  {% if panel_data.team_members %}
+    <h3>Team</h3>
+    <div class="ndd-team-list">
+      {% for member in panel_data.team_members %}
+        {% if member.is_vacancy %}
+          <div class="ndd-team-member ndd-team-member--vacant">
+            <span class="ndd-avatar ndd-avatar--vacant" aria-hidden="true">?</span>
+            <div class="ndd-team-member__info">
+              <em class="ndd-text-secondary">Openstaand</em>
+              {% for skill in member.skills %}
+                <div class="ndd-team-member__skill">
+                  {{ skill.name }}
+                  {% if skill.description %}· <span class="ndd-text-secondary">{{ skill.description }}</span>{% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% else %}
+          <a class="ndd-team-member{% if member.historical %} ndd-team-member--historical{% endif %}"
+             href="{{ member.colleague_url }}"
+             hx-get="{{ member.colleague_url }}"
+             hx-target="#ndd-side-panel-content"
+             hx-swap="innerHTML">
+            <span class="ndd-avatar" aria-hidden="true">{{ member.colleague.name|first|upper }}</span>
+            <div class="ndd-team-member__info">
+              <strong>{{ member.colleague.name }}</strong>
+              {% if member.historical %}<ndd-token>Afgelopen</ndd-token>{% endif %}
+              {% for skill in member.skills %}
+                <div class="ndd-team-member__skill">
+                  {{ skill.name }}
+                  {% if skill.description %}· <span class="ndd-text-secondary">{{ skill.description }}</span>{% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          </a>
+        {% endif %}
+      {% endfor %}
+    </div>
+  {% endif %}
+  </ndd-rich-text>
+</div>

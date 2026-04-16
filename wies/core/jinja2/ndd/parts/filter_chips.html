@@ -1,0 +1,55 @@
+{# NDD active filter chips. Klikken op verwijder-knop dispatcht een
+   custom 'ndd-filter-remove' event dat de bridge afvangt. #}
+<div class="ndd-chips" data-ndd-chips>
+  {# Org chips #}
+  {% for chip in org_chip_data %}
+    <span class="ndd-chip"
+          data-filter-name="{{ chip.param_name }}"
+          data-filter-value="{{ chip.param_value }}">
+      <span class="ndd-chip__label">{{ chip.label }}</span>
+      <button type="button"
+              class="ndd-chip__remove"
+              aria-label="Verwijder filter {{ chip.label }}"
+              data-ndd-action="filter-remove"
+              data-filter-name="{{ chip.param_name }}"
+              data-filter-value="{{ chip.param_value }}">×</button>
+    </span>
+  {% endfor %}
+  {# Search chip #}
+  {% if search_filter %}
+    <span class="ndd-chip" data-filter-name="zoek">
+      <span class="ndd-chip__label">"{{ search_filter }}"</span>
+      <button type="button"
+              class="ndd-chip__remove"
+              aria-label="Verwijder zoekopdracht"
+              data-ndd-action="filter-remove"
+              data-filter-name="zoek">×</button>
+    </span>
+  {% endif %}
+  {# Multi-select chips (rol, labels, loopt_af) #}
+  {% for filter_group in filter_groups %}
+    {% if filter_group.type == 'select-multi' %}
+      {% set values = active_filters.get(filter_group.name) %}
+      {% if values %}
+        {% for selected_value in values %}
+          {% for option in filter_group.options %}
+            {% if option.value == selected_value %}
+              <span class="ndd-chip {% if option.category_color %}ndd-chip--colored{% endif %}"
+                    {% if option.category_color %}style="--ndd-chip-bg: {{ option.category_color }}"{% endif %}
+                    data-filter-name="{{ filter_group.name }}"
+                    data-filter-value="{{ selected_value }}">
+                <span class="ndd-chip__label">{{ option.label }}</span>
+                <button type="button"
+                        class="ndd-chip__remove"
+                        aria-label="Verwijder filter {{ option.label }}"
+                        data-ndd-action="filter-remove"
+                        data-filter-name="{{ filter_group.name }}"
+                        data-filter-value="{{ selected_value }}">×</button>
+              </span>
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+</div>

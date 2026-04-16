@@ -1,0 +1,49 @@
+{# NDD filter chips + table container — outer container blijft hetzelfde
+   id zodat HTMX outerHTML-swap correct gaat. ndd-top-title-bar wordt
+   alleen op initial render meegestuurd (slot=header van ndd-page);
+   bij HTMX swap blijft de title-bar staan. #}
+{% if not request.headers.get("HX-Request") %}
+  <ndd-top-title-bar slot="header" text="Wie zit waar?">
+  <ndd-search-field slot="toolbar" id="ndd-search-input" placeholder="Zoek op collega, opdracht of opdrachtgever…" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-ndd-search-input>
+  </ndd-search-field>
+  </ndd-top-title-bar>
+{% endif %}
+<div id="ndd-filter-and-table-container">
+  {# Resultaten + actieve filter tokens #}
+  {% set has_active_filters = (org_chip_data|length > 0) or search_filter or (active_filters|length > 0) %}
+  <div class="ndd-results-bar">
+    <p class="ndd-results-bar__count">
+      <strong>{{ paginator.count }}</strong>
+      {{ "resultaat" if paginator.count == 1 else "resultaten" }}
+    </p>
+    {% if has_active_filters %}
+      <div class="ndd-filter-tokens">
+        {% for chip in org_chip_data %}
+          <ndd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-ndd-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</ndd-token>
+        {% endfor %}
+        {% if search_filter %}
+          <ndd-token control="dismiss" dismiss-text="Verwijder zoekopdracht" data-ndd-dismiss="filter" data-filter-name="zoek">{{ search_filter }}</ndd-token>
+        {% endif %}
+        {% for filter_group in filter_groups %}
+          {% if filter_group.type == 'select-multi' %}
+            {% set values = active_filters.get(filter_group.name) %}
+            {% if values %}
+              {% for selected_value in values %}
+                {% for option in filter_group.options %}
+                  {% if option.value == selected_value %}
+                    <ndd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-ndd-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</ndd-token>
+                  {% endif %}
+                {% endfor %}
+              {% endfor %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+      </div>
+    {% endif %}
+  </div>
+  {% include "ndd/parts/placement_table.html" %}
+</div>
+{# OOB swap: re-render hele filter form zodat counts + checkbox state up-to-date zijn #}
+{% if render_filter_fields_oob %}
+  <div hx-swap-oob="outerHTML:#ndd-filter-form">{% include "ndd/parts/filter_sidebar.html" %}</div>
+{% endif %}

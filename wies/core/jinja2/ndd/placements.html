@@ -1,0 +1,27 @@
+{% extends "ndd/base.html" %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/ndd/filters.css') }}">
+  <link rel="stylesheet" href="{{ static('css/ndd/table.css') }}">
+  <link rel="stylesheet" href="{{ static('css/ndd/side_panel.css') }}">
+  <link rel="stylesheet" href="{{ static('css/ndd/client_modal.css') }}">
+  <script src="{{ static('js/ndd/htmx-bridge.js') }}" defer></script>
+  <script src="{{ static('js/ndd/side_panel.js') }}" defer></script>
+  <script src="{{ static('js/ndd/client_modal.js') }}" defer></script>
+{% endblock extra_head %}
+{% block sidebar %}
+  {% include "ndd/parts/filter_sidebar.html" %}
+{% endblock sidebar %}
+{% block content %}
+  {% include "ndd/parts/filter_and_table_container.html" %}
+{% endblock content %}
+{% block panel %}
+  {# ndd-sheet zit altijd in de DOM; HTMX vult #ndd-side-panel-content #}
+  <ndd-sheet id="ndd-side-panel" placement="right" accessible-label="Detail">
+  <div id="ndd-side-panel-content">
+    {% if panel_data %}
+      {% include panel_data.panel_content_template %}
+    {% endif %}
+  </div>
+  </ndd-sheet>
+  <div id="ndd-client-modal-container"></div>
+{% endblock panel %}

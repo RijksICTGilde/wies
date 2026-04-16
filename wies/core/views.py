@@ -924,27 +924,34 @@ class PlacementListView(ListView):
 
 
 class PlacementListNDDView(PlacementListView):
-    """PoC view: inzettenlijst met NDD Design System templates (MinBZK)."""
+    """PoC view: inzettenlijst met NDD Design System (MinBZK)."""
 
-    template_name = "placement_table_ndd.html"
+    template_name = "ndd/placements.html"
 
     def get_template_names(self) -> list[str]:
         if "HX-Request" in self.request.headers:
-            if self.request.headers.get("HX-Target") == "side_panel-container":
+            if self.request.headers.get("HX-Target") == "ndd-side-panel-content":
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
                 if colleague_id and not assignment_id:
-                    return ["parts/colleague_panel_content_ndd.html"]
+                    return ["ndd/parts/colleague_panel_content.html"]
                 if assignment_id:
-                    return ["parts/assignment_panel_content_ndd.html"]
+                    return ["ndd/parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
-                return ["parts/placement_table_rows_ndd.html"]
-            return ["parts/filter_and_table_container_ndd.html"]
-        return ["placement_table_ndd.html"]
+                return ["ndd/parts/placement_table_rows.html"]
+            return ["ndd/parts/filter_and_table_container.html"]
+        return ["ndd/placements.html"]
 
     def get_context_data(self, **kwargs: object) -> dict:
         context = super().get_context_data(**kwargs)
         context["filter_target_url"] = reverse("ndd-home")
+        # Map RVO panel content templates to NDD equivalents
+        if context.get("panel_data"):
+            template = context["panel_data"].get("panel_content_template", "")
+            if template == "parts/colleague_panel_content.html":
+                context["panel_data"]["panel_content_template"] = "ndd/parts/colleague_panel_content.html"
+            elif template == "parts/assignment_panel_content.html":
+                context["panel_data"]["panel_content_template"] = "ndd/parts/assignment_panel_content.html"
         return context
 
 
@@ -2573,7 +2580,7 @@ def client_modal(request):
     hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 
-    template = "parts/client_modal_ndd.html" if request.GET.get("ndd") else "parts/client_modal.html"
+    template = "ndd/parts/client_modal.html" if request.GET.get("ndd") else "parts/client_modal.html"
     return render(
         request,
         template,
