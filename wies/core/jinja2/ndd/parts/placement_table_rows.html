@@ -1,0 +1,63 @@
+{% for placement in object_list %}
+  <tr class="ndd-row-clickable"
+      hx-get="{{ placement.colleague_url }}"
+      hx-target="#ndd-side-panel-content"
+      hx-swap="innerHTML">
+    <td>
+      <div class="ndd-person">
+        <span class="ndd-avatar" aria-hidden="true">{{ placement.colleague.name|first|upper }}</span>
+        <span class="ndd-person__info">
+          <strong>{{ placement.colleague.name }}</strong>
+          {% if placement.service.skill %}<span class="ndd-text-secondary">{{ placement.service.skill.name }}</span>{% endif %}
+        </span>
+      </div>
+    </td>
+    <td>
+      <strong>{{ placement.service.assignment.name }}</strong>
+      {% set clients = placement.service.assignment.sorted_clients %}
+      {% if clients %}
+        <div class="ndd-cell-meta">
+          <svg class="ndd-cell-icon"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               aria-hidden="true">
+            <path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-2" />
+          </svg>
+          {{ clients[0].organization.label or clients[0].organization.name }}
+          {% if clients|length > 1 %}(+{{ clients|length - 1 }}){% endif %}
+        </div>
+      {% endif %}
+    </td>
+    <td class="ndd-cell-nowrap">
+      {% if placement.service.assignment.end_date %}
+        <span class="ndd-cell-meta">
+          <svg class="ndd-cell-icon"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2" />
+            <path d="M3 9h18M8 3v4M16 3v4" />
+          </svg>
+          {{ placement.service.assignment.end_date|datum_nl("j M Y") }}
+        </span>
+      {% endif %}
+    </td>
+  </tr>
+{% else %}
+  <tr>
+    <td colspan="3" class="ndd-cell-empty">
+      <em>Geen inzetten gevonden.</em>
+    </td>
+  </tr>
+{% endfor %}
+{% if next_page_url %}
+  <tr hx-get="{{ next_page_url }}"
+      hx-trigger="revealed"
+      hx-swap="outerHTML">
+    <td colspan="3" class="ndd-cell-loading">Meer laden…</td>
+  </tr>
+{% endif %}

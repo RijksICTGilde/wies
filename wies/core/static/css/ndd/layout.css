@@ -1,0 +1,166 @@
+/* NDD POC — App shell layout overrides voor ndd-app-view + ndd-bar-split-view. */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body.ndd-app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: "RijksSansVF", system-ui, sans-serif;
+  color: var(--semantics-content-color, #1a1a1a);
+  background: var(--semantics-surfaces-background-color, #fff);
+}
+
+a {
+  color: inherit;
+}
+
+/* --- Banner --------------------------------------------------------- */
+.ndd-app__banner {
+  background: #fff8db;
+  color: #5a4500;
+  padding: var(--primitives-space-8, 8px) var(--primitives-space-16, 16px);
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  border-bottom: 1px solid
+    var(--components-top-title-bar-divider-color, #e5e5e5);
+}
+.ndd-app__banner a {
+  margin-left: 0.5rem;
+  text-decoration: underline;
+}
+
+/* --- ndd-app-view + bar-split-view ---------------------------------- */
+ndd-app-view {
+  flex: 1;
+  min-height: 0;
+  display: block;
+}
+ndd-bar-split-view {
+  display: block;
+  height: 100%;
+}
+ndd-top-navigation-bar {
+  display: block;
+  width: 100%;
+}
+
+/* --- Main split: sidebar | main ------------------------------------- */
+#ndd-main-split {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+
+/* --- Sidebar pane --------------------------------------------------- */
+#ndd-sidebar-pane {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  width: 320px;
+  border-right: 1px solid var(--components-top-title-bar-divider-color, #e5e5e5);
+  transition: width 0.2s ease;
+  overflow: hidden;
+}
+
+#ndd-sidebar-pane.collapsed {
+  width: var(--semantics-controls-md-min-size, 44px);
+}
+
+.ndd-sidebar-pane__header {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding-inline: var(--primitives-space-6, 6px);
+  border-bottom: 1px solid
+    var(--components-top-title-bar-divider-color, #e5e5e5);
+  white-space: nowrap;
+  flex-shrink: 0;
+  min-height: var(--semantics-controls-md-min-size, 44px);
+}
+
+.ndd-sidebar-pane__divider {
+  width: 1px;
+  height: var(--primitives-space-24, 24px);
+  background-color: var(--components-top-title-bar-divider-color, #e5e5e5);
+  flex-shrink: 0;
+  margin-inline: var(--primitives-space-6, 6px);
+}
+
+.ndd-sidebar-pane__title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--semantics-content-color, inherit);
+  padding-inline: var(--primitives-space-10, 10px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ndd-sidebar-pane__body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--primitives-space-16, 16px);
+}
+
+#ndd-sidebar-pane.collapsed .ndd-sidebar-pane__body {
+  display: none;
+}
+#ndd-sidebar-pane.collapsed .ndd-sidebar-pane__divider {
+  display: none;
+}
+#ndd-sidebar-pane.collapsed .ndd-sidebar-pane__header {
+  flex-direction: column;
+  align-items: center;
+  height: auto;
+  min-height: unset;
+  padding: var(--primitives-space-6, 6px) 0;
+  gap: var(--primitives-space-6, 6px);
+}
+#ndd-sidebar-pane.collapsed .ndd-sidebar-pane__title {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  padding: var(--primitives-space-6, 6px) 0;
+  transform: rotate(180deg);
+}
+
+/* --- Main pane ------------------------------------------------------ */
+#ndd-main-pane {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+ndd-page {
+  display: block;
+  flex: 1;
+  min-height: 0;
+}
+
+/* --- Mobile --------------------------------------------------------- */
+@media (max-width: 768px) {
+  #ndd-main-split {
+    flex-direction: column;
+  }
+  #ndd-sidebar-pane {
+    width: 100%;
+    max-height: 50vh;
+    border-right: 0;
+    border-bottom: 1px solid
+      var(--components-top-title-bar-divider-color, #e5e5e5);
+  }
+}

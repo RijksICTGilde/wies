@@ -1,0 +1,68 @@
+{# NDD filter sidebar — gebruikt echte NDD componenten.
+   Hidden inputs (data-filter-input) worden door js/ndd/htmx-bridge.js
+   gespiegeld vanuit ndd-checkbox-field state, zodat hx-include werkt. #}
+<form class="ndd-filter-form"
+      id="ndd-filter-form"
+      hx-get="{{ filter_target_url }}"
+      hx-target="#ndd-filter-and-table-container"
+      hx-swap="outerHTML settle:0"
+      hx-replace-url="true"
+      hx-trigger="change from:[data-filter-input], input delay:500ms from:[data-filter-input]"
+      hx-include="[data-filter-input]">
+  {# Search filter (verborgen, bijgewerkt door ndd-search-field via bridge) #}
+  <input type="hidden"
+         name="zoek"
+         id="ndd-search-hidden"
+         value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}"
+         data-filter-input>
+  {# Org filter — hidden inputs, beheerd door client modal #}
+  <div id="ndd-org-filter-inputs">
+    {% for chip in org_chip_data %}
+      <input type="hidden"
+             name="{{ chip.param_name }}"
+             value="{{ chip.param_value }}"
+             data-filter-input
+             data-label="{{ chip.label }}">
+    {% endfor %}
+  </div>
+  {% for filter_group in filter_groups %}
+    {% if filter_group.type == 'modal' %}
+      <div class="ndd-filter-group">
+        <span class="ndd-filter-group__label">{{ filter_group.label }}</span>
+        <ndd-button variant="secondary" type="button" full-width text="{%- if active_org_filter_count == 1 -%}{{ active_org_filter_label }}{%- elif active_org_filter_count > 1 -%}{{ active_org_filter_count }} geselecteerd{%- else -%}Selecteer{%- endif -%}" hx-get="/client-modal/?count_mode={{ client_modal_count_mode }}&ndd=1" hx-target="#ndd-client-modal-container" hx-swap="innerHTML" hx-push-url="false" hx-include="#ndd-org-filter-inputs">
+        </ndd-button>
+      </div>
+    {% elif filter_group.type == 'select-multi' %}
+      {% set real_options = filter_group.options|selectattr('value')|list %}
+      {% if real_options %}
+        <fieldset class="ndd-filter-group ndd-filter-checkboxes"
+                  data-ndd-fieldset
+                  data-name="{{ filter_group.name }}">
+          <legend class="ndd-filter-group__label">{{ filter_group.label }}</legend>
+          {% for option in real_options %}
+            {% set cb_label = option.label ~ (' (' ~ option.count ~ ')' if option.count is defined else '') %}
+            <ndd-checkbox-field data-ndd-input label="{{ cb_label }}" value="{{ option.value }}"
+            {% if option.value in filter_group.selected_values %}checked{% endif %}
+            >
+            </ndd-checkbox-field>
+          {% endfor %}
+          {# Hidden mirror; bridge update dit op elke change. Server rendert de
+             huidige selecties zodat initial state direct verzonden wordt. #}
+          <span data-hidden-inputs hidden>
+            {% for v in filter_group.selected_values %}
+              <input type="hidden"
+                     name="{{ filter_group.name }}"
+                     value="{{ v }}"
+                     data-filter-input>
+            {% endfor %}
+          </span>
+        </fieldset>
+      {% endif %}
+    {% elif filter_group.type == 'date' %}
+      <div class="ndd-filter-group">
+        <ndd-text-field type="date" label="{{ filter_group.label }}" data-ndd-input name="{{ filter_group.name }}" value="{%- if active_filters.get(filter_group.name) -%}{{ active_filters.get(filter_group.name) }}{%- endif -%}">
+        </ndd-text-field>
+      </div>
+    {% endif %}
+  {% endfor %}
+</form>

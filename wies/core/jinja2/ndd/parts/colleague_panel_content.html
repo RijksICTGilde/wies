@@ -1,0 +1,54 @@
+{% set colleague = panel_data.colleague %}
+<div class="ndd-panel">
+  <header class="ndd-panel__bar">
+    <h2 class="ndd-panel__bar-title">{{ colleague.name }}</h2>
+    <button type="button"
+            class="ndd-panel__bar-action"
+            data-ndd-action="panel-close">Sluit</button>
+  </header>
+  <section class="ndd-panel__identity">
+    <span class="ndd-avatar ndd-avatar--lg" aria-hidden="true">{{ colleague.name|first|upper }}</span>
+    <div class="ndd-panel__identity-info">
+      {% if colleague.email %}
+        <a class="ndd-panel__email" href="mailto:{{ colleague.email }}">{{ colleague.email }}</a>
+      {% endif %}
+    </div>
+  </section>
+  {% set labels = colleague.labels.all() %}
+  {% if labels %}
+    <div class="ndd-panel__tokens">
+      {% for label in labels %}
+        <ndd-token style="--ndd-token-bg: {{ label.category.color }}">{{ label.name }}</ndd-token>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <ndd-rich-text spacing="snug">
+  <h3>Opdrachten</h3>
+  {% if panel_data.assignments %}
+    <div class="ndd-assignment-cards">
+      {% for assignment in panel_data.assignments %}
+        <a class="ndd-assignment-card{% if assignment.historical %} ndd-assignment-card--historical{% endif %}"
+           href="{{ assignment.assignment_url }}"
+           hx-get="{{ assignment.assignment_url }}"
+           hx-target="#ndd-side-panel-content"
+           hx-swap="innerHTML">
+          <div class="ndd-assignment-card__top">
+            <strong>{{ assignment.name }}</strong>
+            {% if assignment.start_date or assignment.end_date %}
+              <span class="ndd-text-secondary">
+                {{ assignment.start_date|datum_nl("N y") if assignment.start_date else "?" }}
+                – {{ assignment.end_date|datum_nl("N y") if assignment.end_date else "?" }}
+              </span>
+            {% endif %}
+          </div>
+          {% if assignment.historical %}<ndd-token>Afgelopen</ndd-token>{% endif %}
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="ndd-text-secondary">
+      <em>Geen opdrachten gevonden.</em>
+    </p>
+  {% endif %}
+  </ndd-rich-text>
+</div>

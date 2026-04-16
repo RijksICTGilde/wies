@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="nl">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
+    <title>
+      {% block title %}
+        Wies — NDD POC
+      {% endblock title %}
+    </title>
+    <link rel="icon" type="image/svg+xml" href="{{ static('favicon.svg') }}">
+    <link rel="shortcut icon" href="/favicon.ico">
+    {# NDD design system (build via: just build-ndd) #}
+    <link rel="stylesheet" href="{{ static('vendor/ndd/ndd.styles.css') }}">
+    {# NDD POC layout overrides #}
+    <link rel="stylesheet" href="{{ static('css/ndd/layout.css') }}">
+    {% block extra_head %}
+    {% endblock extra_head %}
+    <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
+    <script src="{{ static('vendor/ndd/ndd.bundle.js') }}"></script>
+  </head>
+  <body class="ndd-app">
+    <div class="ndd-app__banner" role="note">
+      PoC — NDD Design System (MinBZK).
+      <a href="{{ url('home') }}">→ vergelijk met de huidige (RVO) pagina</a>
+    </div>
+    <ndd-app-view>
+    <ndd-bar-split-view>
+    <div slot="toolbar">
+      <ndd-top-navigation-bar website-title="Wies">
+      {% block topbar_start %}
+      {% endblock topbar_start %}
+      <ndd-menu-bar-item slot="global" text="Wie zit waar?" href="{{ url('ndd-home') }}"
+      {% if request.path == '/ndd/' %}current{% endif %}
+      >
+      </ndd-menu-bar-item>
+      <ndd-menu-bar-item slot="global" text="Vacatures" href="{{ url('assignment-list') }}"
+      {% if '/opdrachten/' in request.path %}current{% endif %}
+      >
+      </ndd-menu-bar-item>
+      {% if request.user.is_authenticated %}
+        <ndd-menu-bar-item slot="utility" text="{{ request.user.get_full_name() or request.user.email }}" icon="person" expandable content-priority="text">
+        <ndd-menu-item text="Profiel" href="{{ url('user-profile') }}"></ndd-menu-item>
+        {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
+          <ndd-menu-divider></ndd-menu-divider>
+          <ndd-menu-item text="Instellingen" href="{{ url('admin-users') }}"></ndd-menu-item>
+        {% endif %}
+        <ndd-menu-divider></ndd-menu-divider>
+        <ndd-menu-item text="Uitloggen" href="{{ url('logout') }}"></ndd-menu-item>
+        </ndd-menu-bar-item>
+      {% endif %}
+      </ndd-top-navigation-bar>
+    </div>
+    <div slot="main" id="ndd-main-split">
+      <aside id="ndd-sidebar-pane">
+        <header class="ndd-sidebar-pane__header">
+          <ndd-icon-button id="ndd-sidebar-toggle" icon="chevron-left" variant="neutral-transparent" aria-label="Filters inklappen">
+          </ndd-icon-button>
+          <span class="ndd-sidebar-pane__divider"></span>
+          <span class="ndd-sidebar-pane__title">Filters</span>
+        </header>
+        <div class="ndd-sidebar-pane__body">
+          {% block sidebar %}
+          {% endblock sidebar %}
+        </div>
+      </aside>
+      <div id="ndd-main-pane">
+        <ndd-page sticky-header>
+        {% block content %}
+        {% endblock content %}
+        </ndd-page>
+      </div>
+    </div>
+    </ndd-bar-split-view>
+    </ndd-app-view>
+    {% block panel %}
+    {% endblock panel %}
+  </body>
+</html>
