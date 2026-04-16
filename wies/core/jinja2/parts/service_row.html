@@ -1,0 +1,23 @@
+{# Single service row within the formset #}
+<div class="service-row" data-service-index="{{ row_index }}">
+  {{ svc_form.skill.as_field_group() }}
+  <div class="service-new-skill" style="display: none">{{ svc_form.new_skill_name.as_field_group() }}</div>
+  {{ svc_form.description.as_field_group() }}
+  <div class="service-row__checkbox-line">
+    <label class="rvo-checkbox">{{ svc_form.is_filled }} Rol ingevuld</label>
+  </div>
+  <div class="service-colleague-field" style="display: none">
+    <div class="utrecht-form-field">
+      <div class="rvo-form-field__label">
+        <label class="rvo-label" for="{{ svc_form.colleague.id_for_label }}">{{ svc_form.colleague.label }}</label>
+      </div>
+      {{ svc_form.colleague }}
+    </div>
+  </div>
+  {% if svc_form.colleague.errors %}
+    {% for error in svc_form.colleague.errors %}<c-alert kind="error">{{ error }}</c-alert>{% endfor %}
+  {% endif %}
+  {% if svc_form.non_field_errors() %}
+    {% for error in svc_form.non_field_errors() %}<c-alert kind="error">{{ error }}</c-alert>{% endfor %}
+  {% endif %}
+</div>

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/assignment_form.css') }}">
+  <link rel="stylesheet" href="{{ static('css/client_modal.css') }}">
+  <link rel="stylesheet" href="{{ static('css/filters/filters.css') }}">
+  <script src="{{ static('js/dialog.js') }}"></script>
+  <script src="{{ static('js/tree_state.js') }}"></script>
+  <script src="{{ static('js/org_tree_base.js') }}"></script>
+  <script src="{{ static('js/assignment_org_tree.js') }}" defer></script>
+  <script src="{{ static('js/assignment_form.js') }}" defer></script>
+{% endblock extra_head %}
+{% macro fieldset(legend, distanced=true, gap="sm", hint="") %}
+  <div class="utrecht-form-fieldset rvo-form-fieldset" {{ kwargs|xmlattr }}>
+    <fieldset class="utrecht-form-fieldset__fieldset utrecht-form-fieldset--html-fieldset">
+      <legend class="utrecht-form-fieldset__legend{% if distanced %} utrecht-form-fieldset__legend--distanced{% endif %}">
+        {{ legend }}
+        {% if hint %}<span class="fieldset-hint">({{ hint }})</span>{% endif %}
+      </legend>
+      <div class="rvo-layout-column rvo-layout-gap--{{ gap }}">{{ caller() }}</div>
+    </fieldset>
+  </div>
+{% endmacro %}
+{% block content %}
+  <main class="rvo-max-width-layout rvo-max-width-layout--sm">
+    <div class="rvo-form">
+      <div class="rvo-layout-column rvo-layout-gap--md">
+        <div class="rvo-layout-column rvo-layout-gap--sm">
+          <c-link href="{{ url('assignment-list') }}" icon="terug" iconPlacement="before" noUnderline>Terug naar vacatures</c-link>
+          <div>
+            <c-h1>Opdracht invoeren</c-h1>
+            <p>
+              Voer hier de gegevens in van een opdracht. Dit formulier kan gebruikt worden voor nieuwe opdrachten, bestaande opdrachten en vacatures.
+            </p>
+          </div>
+        </div>
+        <form method="post"
+              action="{{ url('assignment-create') }}"
+              id="assignment-create-form">
+          {{ get_csrf_hidden_input(request) }}
+          <div class="rvo-layout-column rvo-layout-gap--2xl">
+            {% call fieldset("Opdrachtgegevens") %}
+              {{ form.name.as_field_group() }}
+              {{ form.extra_info.as_field_group() }}
+              <div class="assignment-form-row">
+                {{ form.start_date.as_field_group() }}
+                {{ form.end_date.as_field_group() }}
+              </div>
+              {{ form.owner.as_field_group() }}
+            {% endcall %}
+            {% call fieldset("Opdrachtgever(s)", hint="voeg minimaal 1 opdrachtgever toe") %}
+              {% if org_formset.non_form_errors() %}
+                <c-alert kind="error">
+                {% for error in org_formset.non_form_errors() %}{{ error }}{% endfor %}
+                </c-alert>
+              {% endif %}
+              <div class="utrecht-form-field rvo-form-field" id="assignment-org-picker">
+                <button type="button"
+                        class="org-filter-trigger"
+                        id="assignment-org-trigger-btn"
+                        hx-get="{{ url('client-modal') }}"
+                        hx-target="#assignmentOrgModal"
+                        hx-swap="innerHTML"
+                        hx-params="none"
+                        hx-push-url="false">
+                  <span class="org-filter-trigger__text" id="assignment-org-trigger-text">
+                    <span class="org-filter-trigger__placeholder">Selecteer</span>
+                  </span>
+                </button>
+                <div id="assignment-org-selections" class="assignment-org-selections"></div>
+                <div id="assignment-org-inputs">
+                  {% set filled_orgs = [] %}
+                  {% for org_form in org_formset %}
+                    {% if org_form['organization'].value() %}
+                      {% set _ = filled_orgs.append(org_form) %}
+                    {% endif %}
+                  {% endfor %}
+                  {% if filled_orgs %}
+                    {% for org_form in filled_orgs %}
+                      <input type="hidden"
+                             name="org-{{ loop.index0 }}-organization"
+                             value="{{ org_form['organization'].value() }}"
+                             data-org-id="{{ org_form['organization'].value() }}"
+                             data-org-role="{{ org_form['role'].value() }}">
+                      <input type="hidden"
+                             name="org-{{ loop.index0 }}-role"
+                             value="{{ org_form['role'].value() }}">
+                    {% endfor %}
+                    <input type="hidden"
+                           name="org-TOTAL_FORMS"
+                           value="{{ filled_orgs | length }}">
+                    <input type="hidden" name="org-INITIAL_FORMS" value="0">
+                    <input type="hidden" name="org-MIN_NUM_FORMS" value="1">
+                    <input type="hidden" name="org-MAX_NUM_FORMS" value="1000">
+                  {% endif %}
+                </div>
+              </div>
+            {% endcall %}
+            {% call fieldset("Diensten", distanced=false, gap="xs", id="diensten", hint="voeg minimaal 1 dienst toe") %}
+              <p class="rvo-text--sm">
+                Vul je een consultant in? Dan is de dienst direct bezet. Laat je het veld leeg, dan wordt de dienst als vacature geplaatst.
+              </p>
+              {{ service_formset.management_form }}
+              {% if service_formset.non_form_errors() or form.non_field_errors() %}
+                <c-alert kind="error" id="diensten-error">
+                {% for error in service_formset.non_form_errors() %}{{ error }}{% endfor %}
+                {% for error in form.non_field_errors() %}
+                  {{ error }}
+                  <br>
+                {% endfor %}
+                </c-alert>
+              {% endif %}
+              <div id="services-container">
+                {% for svc_form in service_formset %}
+                  {% with row_index=loop.index0, is_first=loop.first %}
+                    {% include "parts/service_row.html" %}
+                  {% endwith %}
+                {% endfor %}
+              </div>
+              <button type="button"
+                      id="add-service-btn"
+                      class="rvo-button rvo-button--tertiary rvo-button--size-sm rvo-button--icon-before">
+                <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before"
+                      role="img"
+                      aria-label="Dienst toevoegen"></span>
+                Dienst toevoegen
+              </button>
+            {% endcall %}
+            <div class="utrecht-button-group">
+              <c-button kind="primary" type="submit">Opdracht aanmaken</c-button>
+              <c-button kind="secondary" type="button" id="assignment-cancel-btn" data-cancel-url="{{ url('assignment-list') }}">Annuleren</c-button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+{% endblock content %}
+{% block panel %}
+  <div id="assignmentOrgModal"></div>
+{% endblock panel %}

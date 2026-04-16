@@ -15,6 +15,15 @@
                 aria-label=""></span>
           Filters
         </button>
+        {% if primary_button %}
+          <a href="{{ primary_button.href }}"
+             class="rvo-button rvo-button--primary rvo-button--size-md rvo-button--icon-before">
+            <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before"
+                  role="img"
+                  aria-label="Plus"></span>
+            {{ primary_button.button_text }}
+          </a>
+        {% endif %}
         <!-- Search Field -->
         <div class="search-field-wrapper">
           <c-icon icon="zoek" color="lintblauw" size="md" class="search-icon" />
