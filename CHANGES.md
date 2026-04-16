@@ -6,6 +6,10 @@ This files lists the changes during the lifetime of this project.
 
 - ...
 
+## 2026-04-15
+
+- 302: remove migration func and restore ci actions
+
 ## 2026-04-13_3
 
 - 299: add func to migrate old data
