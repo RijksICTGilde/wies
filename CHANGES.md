@@ -4,7 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ...
+- 268: add assignment creation form with services, org picker, and inline skill creation
+- 268: add success toast notification after assignment creation
 
 ## 2026-04-15
 
@@ -32,8 +33,6 @@ This files lists the changes during the lifetime of this project.
 - 282: redesign placement table columns (Wie, Wat, Waar)
 - 282: improve contrast: black links, headings, and icons (WCAG AA)
 - 282: add RVO date, textarea, and checkbox widget templates
-- 268: add assignment creation form with services, org picker, and inline skill creation
-- 268: add success toast notification after assignment creation
 - 266: (migration) enforce uniqueness on Colleague.email + Colleague.source
 - 266: always create Colleague for Users
 - 266: (migration) move labels from User to Colleague
