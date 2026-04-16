@@ -241,22 +241,19 @@
 
   var triggerBtn = document.getElementById("assignment-org-trigger-btn");
   if (triggerBtn) {
-    triggerBtn.addEventListener("click", function () {
-      var orgIds = new Set();
+    // hx-params="none" strips all form-serialized inputs (including CSRF);
+    // this listener re-adds just the params the client-modal endpoint expects.
+    triggerBtn.addEventListener("htmx:configRequest", function (e) {
+      var orgIds = [];
       document
         .querySelectorAll("#assignment-org-inputs input[data-org-id]")
         .forEach(function (inp) {
-          if (inp.dataset.orgId) orgIds.add(inp.dataset.orgId);
+          if (inp.dataset.orgId) orgIds.push(inp.dataset.orgId);
         });
-      var params = new URLSearchParams("count_mode=none");
-      orgIds.forEach(function (id) {
-        params.append("org", id);
-      });
-      var url = triggerBtn.dataset.modalUrl + "?" + params.toString();
-      htmx.ajax("GET", url, {
-        target: "#assignmentOrgModal",
-        swap: "innerHTML",
-      });
+      e.detail.parameters["count_mode"] = "none";
+      if (orgIds.length) {
+        e.detail.parameters["org"] = orgIds;
+      }
     });
   }
 
