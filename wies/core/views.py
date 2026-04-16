@@ -2019,8 +2019,8 @@ def assignment_edit_attribute(request, pk, attribute):
                 context={
                     "field_name": field_name,
                     "field_label": field_config["label"],
-                    "old_value": str(old_value)[:200],
-                    "new_value": str(new_value)[:200],
+                    "old_value": str(old_value),
+                    "new_value": str(new_value),
                 },
             )
 
