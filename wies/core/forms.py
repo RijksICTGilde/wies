@@ -269,7 +269,15 @@ class OrganizationForm(RvoFormMixin, forms.Form):
     )
 
 
-OrganizationFormSet = forms.formset_factory(OrganizationForm, extra=0, min_num=1, validate_min=True)
+class OrganizationBaseFormSet(forms.BaseFormSet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.error_messages["too_few_forms"] = "Voeg minimaal %(num)d opdrachtgever toe."
+
+
+OrganizationFormSet = forms.formset_factory(
+    OrganizationForm, formset=OrganizationBaseFormSet, extra=0, min_num=1, validate_min=True
+)
 
 
 class ServiceForm(RvoFormMixin, forms.Form):
@@ -316,6 +324,10 @@ class ServiceForm(RvoFormMixin, forms.Form):
         )
         if not has_skill and has_other_data:
             self.add_error("skill", "Selecteer een rol.")
+        is_filled = cleaned_data.get("is_filled")
+        colleague = cleaned_data.get("colleague")
+        if is_filled and not colleague:
+            self.add_error("colleague", "Selecteer een consultant als de rol is ingevuld.")
         return cleaned_data
 
 

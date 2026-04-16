@@ -57,10 +57,7 @@
                 <button type="button"
                         class="org-filter-trigger"
                         id="assignment-org-trigger-btn"
-                        hx-get="{{ url("client-modal") }}?count_mode=none"
-                        hx-target="#assignmentOrgModal"
-                        hx-swap="innerHTML"
-                        hx-push-url="false">
+                        data-modal-url="{{ url('client-modal') }}">
                   <span class="org-filter-trigger__text" id="assignment-org-trigger-text">
                     <span class="org-filter-trigger__placeholder">Selecteer</span>
                   </span>

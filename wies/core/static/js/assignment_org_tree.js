@@ -237,20 +237,22 @@
 
   var triggerBtn = document.getElementById("assignment-org-trigger-btn");
   if (triggerBtn) {
-    triggerBtn.addEventListener("htmx:configRequest", function (e) {
-      var params = new URLSearchParams(e.detail.path.split("?")[1] || "");
-      // Include orgs from JS-managed inputs (data-org-id) and server-rendered inputs
+    triggerBtn.addEventListener("click", function () {
+      var orgIds = new Set();
       document
         .querySelectorAll("#assignment-org-inputs input[data-org-id]")
         .forEach(function (inp) {
-          params.append("org", inp.dataset.orgId);
+          if (inp.dataset.orgId) orgIds.add(inp.dataset.orgId);
         });
-      document
-        .querySelectorAll("#assignment-org-inputs input[name$='-organization']")
-        .forEach(function (inp) {
-          if (inp.value) params.append("org", inp.value);
-        });
-      e.detail.path = e.detail.path.split("?")[0] + "?" + params.toString();
+      var params = new URLSearchParams("count_mode=none");
+      orgIds.forEach(function (id) {
+        params.append("org", id);
+      });
+      var url = triggerBtn.dataset.modalUrl + "?" + params.toString();
+      htmx.ajax("GET", url, {
+        target: "#assignmentOrgModal",
+        swap: "innerHTML",
+      });
     });
   }
 
