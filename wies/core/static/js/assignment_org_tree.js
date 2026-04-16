@@ -182,6 +182,7 @@
             rows = rows.filter(function (r) {
               return r.nodeId !== row.nodeId;
             });
+            tr.remove();
             if (
               rows.length > 0 &&
               !rows.some(function (r) {
@@ -189,9 +190,12 @@
               })
             ) {
               rows[0].role = "PRIMARY";
+              var newPrimaryRadio = tbody.querySelector(
+                "input[type='radio'][value='" + rows[0].nodeId + "']",
+              );
+              if (newPrimaryRadio) newPrimaryRadio.checked = true;
             }
             rebuildInputs();
-            tr.remove();
             if (rows.length === 0) table.remove();
             updateOrgTriggerText();
           });
