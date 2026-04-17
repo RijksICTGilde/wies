@@ -230,6 +230,13 @@
   }
 
   // --- Sidebar collapse toggle --------------------------------------
+  function setSidebarWidth(collapsed) {
+    const width = collapsed
+      ? "var(--semantics-controls-md-min-size, 44px)"
+      : "320px";
+    document.documentElement.style.setProperty("--ndd-sidebar-width", width);
+  }
+
   function setupSidebarToggle() {
     const KEY = "ndd-sidebar-collapsed";
     const pane = document.getElementById("ndd-sidebar-pane");
@@ -237,6 +244,7 @@
 
     if (localStorage.getItem(KEY) === "true") {
       pane.classList.add("collapsed");
+      setSidebarWidth(true);
       const btn = document.getElementById("ndd-sidebar-toggle");
       if (btn) {
         btn.setAttribute("icon", "chevron-right");
@@ -251,6 +259,7 @@
       );
       if (!btn) return;
       const collapsed = pane.classList.toggle("collapsed");
+      setSidebarWidth(collapsed);
       btn.setAttribute("icon", collapsed ? "chevron-right" : "chevron-left");
       btn.setAttribute(
         "aria-label",
@@ -289,6 +298,43 @@
     setupClickBridge();
     setupTokenDismiss();
     setupSidebarToggle();
+    setupFilterCollapseAndToggle();
+  }
+
+  // --- Filter groep in/uitklappen + "Toon meer/minder" ----------------
+  function setupFilterCollapseAndToggle() {
+    document.addEventListener("click", (e) => {
+      // Header collapse toggle
+      const collapseBtn = e.target.closest("[data-ndd-collapse-toggle]");
+      if (collapseBtn) {
+        e.preventDefault();
+        const fieldset = collapseBtn.closest("[data-ndd-collapsible]");
+        if (fieldset) fieldset.toggleAttribute("data-collapsed");
+        return;
+      }
+
+      // "Toon meer / Toon minder" toggle
+      const toggleBtn = e.target.closest(".ndd-checkbox-filter__toggle");
+      if (toggleBtn) {
+        e.preventDefault();
+        const extra = toggleBtn.previousElementSibling;
+        if (!extra) return;
+        const expanding = extra.hidden;
+        extra.hidden = !expanding;
+        toggleBtn.classList.toggle(
+          "ndd-checkbox-filter__toggle--expanded",
+          expanding,
+        );
+        const icon = toggleBtn.querySelector(
+          ".ndd-checkbox-filter__toggle-icon",
+        );
+        const text = toggleBtn.querySelector(
+          ".ndd-checkbox-filter__toggle-text",
+        );
+        if (icon) icon.setAttribute("name", expanding ? "minus" : "plus");
+        if (text) text.textContent = expanding ? "Toon minder" : "Toon meer";
+      }
+    });
   }
 
   if (document.readyState === "loading") {
