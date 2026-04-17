@@ -41,19 +41,29 @@ a {
   text-decoration: underline;
 }
 
-/* --- ndd-app-view + bar-split-view ---------------------------------- */
-ndd-app-view {
-  flex: 1;
-  min-height: 0;
-  display: block;
+/* --- Navigatie-balk — volle viewport-breedte, padding-left matcht sidebar. */
+.ndd-app__nav {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+  padding-left: var(--ndd-sidebar-width, 320px);
+  border-bottom: 1px solid
+    var(--components-top-title-bar-divider-color, #e5e5e5);
+  transition: padding-left 0.2s ease;
 }
-ndd-bar-split-view {
-  display: block;
-  height: 100%;
+.ndd-app__nav > ndd-menu-bar {
+  flex: 0 0 auto;
 }
+.ndd-app__nav > ndd-menu-bar:last-of-type {
+  margin-left: auto;
+}
+
 ndd-top-navigation-bar {
   display: block;
   width: 100%;
+  container-type: inline-size;
+  container-name: layout-area;
 }
 
 /* --- Main split: sidebar | main ------------------------------------- */
@@ -69,14 +79,10 @@ ndd-top-navigation-bar {
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  width: 320px;
+  width: var(--ndd-sidebar-width, 320px);
   border-right: 1px solid var(--components-top-title-bar-divider-color, #e5e5e5);
-  transition: width 0.2s ease;
   overflow: hidden;
-}
-
-#ndd-sidebar-pane.collapsed {
-  width: var(--semantics-controls-md-min-size, 44px);
+  transition: width 0.2s ease;
 }
 
 .ndd-sidebar-pane__header {
@@ -153,6 +159,9 @@ ndd-page {
 
 /* --- Mobile --------------------------------------------------------- */
 @media (max-width: 768px) {
+  .ndd-app__nav {
+    padding-left: var(--primitives-space-16, 16px);
+  }
   #ndd-main-split {
     flex-direction: column;
   }

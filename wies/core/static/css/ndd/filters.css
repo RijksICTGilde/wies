@@ -18,20 +18,87 @@
   color: var(--semantics-content-color, inherit);
 }
 
-.ndd-filter-checkboxes {
+/* --- Inklapbare checkbox filter groep -------------------------------- */
+.ndd-checkbox-filter {
   border: 0;
   margin: 0;
   padding: 0;
+}
+.ndd-checkbox-filter__legend-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.ndd-checkbox-filter__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--primitives-space-6, 6px) 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+.ndd-checkbox-filter__header:hover {
+  color: var(--semantics-links-color, #0d4a8a);
+}
+.ndd-checkbox-filter__chevron {
+  transition: transform 0.15s ease;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+.ndd-checkbox-filter[data-collapsed] .ndd-checkbox-filter__chevron {
+  transform: rotate(-90deg);
+}
+.ndd-checkbox-filter[data-collapsed] .ndd-checkbox-filter__body {
+  display: none;
+}
+
+.ndd-checkbox-filter__body {
   display: flex;
   flex-direction: column;
-  gap: var(--primitives-space-4, 4px);
+  gap: var(--primitives-space-2, 2px);
 }
-.ndd-filter-checkboxes ndd-checkbox-field {
+.ndd-checkbox-filter__options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-2, 2px);
+}
+.ndd-checkbox-filter__options[hidden] {
+  display: none;
+}
+.ndd-checkbox-filter__options ndd-checkbox-field {
   display: block;
 }
 
-.ndd-filter-checkboxes legend {
-  margin-bottom: var(--primitives-space-6, 6px);
+.ndd-checkbox-filter__toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--primitives-space-6, 6px);
+  background: none;
+  border: 0;
+  color: var(--semantics-links-color, #0d4a8a);
+  font: inherit;
+  font-size: 0.825rem;
+  cursor: pointer;
+  padding: var(--primitives-space-4, 4px) 0;
+  margin-top: var(--primitives-space-4, 4px);
+}
+.ndd-checkbox-filter__toggle:hover {
+  text-decoration: underline;
+}
+.ndd-checkbox-filter__toggle-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
 }
 
 /* --- Filter tokens (chips bij resultaten) -------------------------- */
