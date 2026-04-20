@@ -36,6 +36,8 @@ jobs:
           context: .
           target: web
           push: true
+          build-args: |
+            APP_VERSION=${{ github.ref_name }}
           tags: |
             ${{ env.IMAGE_NAME }}:${{ github.ref_name }}
             ${{ env.IMAGE_NAME }}:latest
@@ -46,6 +48,8 @@ jobs:
           context: .
           target: worker
           push: true
+          build-args: |
+            APP_VERSION=${{ github.ref_name }}
           tags: |
             ${{ env.IMAGE_NAME }}-worker:${{ github.ref_name }}
             ${{ env.IMAGE_NAME }}-worker:latest
