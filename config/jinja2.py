@@ -10,8 +10,6 @@ from django.utils.html import format_html, json_script
 from jinja2 import Environment
 from jinja_roos_components import setup_components
 
-from wies.core.services.version import get_app_version
-
 
 def parse_message_link(extra_tags: str) -> dict | None:
     """Parse a structured link from message extra_tags.
@@ -92,7 +90,6 @@ def environment(**options):
             "get_sort_state": get_sort_state,
             "get_messages": get_messages,
             "DEBUG": settings.DEBUG,
-            "APP_VERSION": get_app_version(),
         }
     )
     env.filters["datum_nl"] = datum_nl

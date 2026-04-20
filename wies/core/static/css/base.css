@@ -27,22 +27,13 @@ html {
   --animation-duration-ms: 400; /* unitless for JS setTimeout */
 }
 
-/* 2-row grid so .layout gets viewport - header_height, no magic number. */
-body {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  min-height: 100vh;
-  /* Clip 100vw decorations that overflow by the scrollbar-gutter width. */
-  overflow-x: clip;
-}
-
 .layout {
   display: flex;
   flex-direction: column;
+  min-height: 100vh;
   width: 100%;
   max-width: var(--layout-max-width);
   margin: 0 auto;
-  min-height: 0;
 }
 
 .layout__body {

@@ -26,10 +26,9 @@ setup:
 load-full-data:
   docker compose run --rm django python manage.py load_full_data
 
-# Start up container. Exports APP_VERSION from local git (branch-shortsha)
-# so the running app shows a useful version in development.
+# Start up container
 up:
-  APP_VERSION="$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)" docker compose up
+  docker compose up
 
 # Stop and remove containers
 down:

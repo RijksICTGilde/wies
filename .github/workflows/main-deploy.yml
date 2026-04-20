@@ -7,7 +7,6 @@ on:
 
 env:
   IMAGE_NAME: ghcr.io/rijksictgilde/wies
-  MOVING_TAG: main
 
 jobs:
   build:
@@ -16,9 +15,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-
-    outputs:
-      immutable_tag: ${{ steps.tag.outputs.immutable }}
 
     steps:
       - name: Checkout code
@@ -31,26 +27,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Compute image tag
-        id: tag
-        run: |
-          TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)
-          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
-          IMMUTABLE="main-${TIMESTAMP}-${SHORT_SHA}"
-          echo "immutable=${IMMUTABLE}" >> "$GITHUB_OUTPUT"
-          echo "Immutable tag: ${IMMUTABLE}"
-
       - name: Build and push web image
         uses: docker/build-push-action@v7
         with:
           context: .
           target: web
           push: true
-          build-args: |
-            APP_VERSION=${{ steps.tag.outputs.immutable }}
-          tags: |
-            ${{ env.IMAGE_NAME }}:${{ env.MOVING_TAG }}
-            ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.immutable }}
+          tags: ${{ env.IMAGE_NAME }}:main
 
       - name: Build and push worker image
         uses: docker/build-push-action@v7
@@ -58,11 +41,7 @@ jobs:
           context: .
           target: worker
           push: true
-          build-args: |
-            APP_VERSION=${{ steps.tag.outputs.immutable }}
-          tags: |
-            ${{ env.IMAGE_NAME }}-worker:${{ env.MOVING_TAG }}
-            ${{ env.IMAGE_NAME }}-worker:${{ steps.tag.outputs.immutable }}
+          tags: ${{ env.IMAGE_NAME }}-worker:main
 
   deploy:
     runs-on: ubuntu-latest
@@ -86,6 +65,6 @@ jobs:
           deployment-name: main
           components: |
             [
-              {"name": "frontend", "image": "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.immutable_tag }}"},
-              {"name": "worker", "image": "${{ env.IMAGE_NAME }}-worker:${{ needs.build.outputs.immutable_tag }}"}
+              {"name": "frontend", "image": "${{ env.IMAGE_NAME }}:main"},
+              {"name": "worker", "image": "${{ env.IMAGE_NAME }}-worker:main"}
             ]
