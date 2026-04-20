@@ -1,5 +1,6 @@
 import logging
 import tempfile
+import urllib.parse
 from collections import Counter
 from datetime import date, timedelta
 from pathlib import Path
@@ -215,6 +216,23 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         {**get_org_breadcrumb(rel.organization, breadcrumb_base), "role": rel.role} for rel in [*primary, *involved]
     ]
 
+    owner_mailto_href = ""
+    if assignment.owner and assignment.owner.email:
+        opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.id}")
+        subject = urllib.parse.quote(f"Informatieverzoek over opdracht {assignment.name}")
+        body_lines = [
+            f"Beste {assignment.owner.name},",
+            "",
+            f"Ik zag deze opdracht {opdracht_url} op WIES."
+            + (f" De beschrijving is: {assignment.extra_info}" if assignment.extra_info else ""),
+            "",
+            "Kun je me hier meer informatie over geven?",
+        ]
+        consultant_name = getattr(getattr(request.user, "colleague", None), "name", "")
+        body_lines += ["", "Met vriendelijke groet,", "", consultant_name]
+        body = urllib.parse.quote("\n".join(body_lines))
+        owner_mailto_href = f"mailto:{assignment.owner.email}?subject={subject}&body={body}"
+
     return {
         "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
@@ -223,6 +241,7 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         "team_members": team_members,
         "user_can_edit": user_can_edit_assignment(request.user, assignment),
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
+        "owner_mailto_href": owner_mailto_href,
         "org_breadcrumbs": org_breadcrumbs,
     }
 
@@ -507,31 +526,6 @@ def staff(request):
                 messages.error(request, f"Import mislukt: {e!s}")
             finally:
                 # Clean up temp file
-                Path(tmp_path).unlink(missing_ok=True)
-
-            return redirect("staff")
-        elif action == "migrate_old_data":
-            if "json_file" not in request.FILES:
-                messages.error(request, "Geen bestand geüpload. Upload een JSON-bestand.")
-                return redirect("staff")
-
-            json_file = request.FILES["json_file"]
-
-            if not json_file.name.endswith(".json"):
-                messages.error(request, "Ongeldig bestandstype. Upload een JSON-bestand.")
-                return redirect("staff")
-
-            with tempfile.NamedTemporaryFile(mode="wb", suffix=".json", delete=False) as tmp:
-                tmp_path = tmp.name
-                for chunk in json_file.chunks():
-                    tmp.write(chunk)
-
-            try:
-                management.call_command("migrate_old_data", tmp_path)
-                messages.success(request, "Data migratie succesvol uitgevoerd")
-            except Exception as e:  # noqa: BLE001 — show user-friendly error message
-                messages.error(request, f"Migratie mislukt: {e!s}")
-            finally:
                 Path(tmp_path).unlink(missing_ok=True)
 
             return redirect("staff")

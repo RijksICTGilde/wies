@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase
 from django.urls import reverse
@@ -8,9 +9,10 @@ from wies.core.models import (
     Colleague,
     OrganizationUnit,
     Skill,
-    User,
 )
 from wies.core.roles import setup_roles
+
+User = get_user_model()
 
 # Formset management form data for the service formset (prefix="service")
 FORMSET_MGMT_1 = {
@@ -48,7 +50,6 @@ class AssignmentCreateTest(TestCase):
         self.client = Client()
 
         self.bdm_user = User.objects.create(
-            username="bdm_user",
             email="bdm@rijksoverheid.nl",
             first_name="BDM",
             last_name="User",
@@ -61,7 +62,6 @@ class AssignmentCreateTest(TestCase):
         self.bdm_user.user_permissions.add(add_assignment, add_service, add_placement)
 
         self.regular_user = User.objects.create(
-            username="regular_user",
             email="regular@rijksoverheid.nl",
             first_name="Regular",
             last_name="User",
@@ -331,6 +331,24 @@ class AssignmentCreateTest(TestCase):
         assert Assignment.objects.count() == 0
         assert Skill.objects.filter(name="").count() == 0
 
+    def test_is_filled_without_consultant_rejected(self):
+        """Checking 'role filled' without selecting a consultant should fail validation."""
+        self.client.force_login(self.bdm_user)
+        response = self.client.post(
+            reverse("assignment-create"),
+            {
+                "name": "Test Opdracht",
+                "owner": self.bdm_colleague.id,
+                **org_formset_data([(self.org, "PRIMARY")]),
+                **FORMSET_MGMT_1,
+                "service-0-skill": self.skill.id,
+                "service-0-is_filled": "on",
+                # no service-0-colleague
+            },
+        )
+        assert response.status_code == 200
+        assert Assignment.objects.count() == 0
+
     def test_source_wies_on_service_and_placement(self):
         """source='wies' is set on Service and Placement, not just Assignment."""
         self.client.force_login(self.bdm_user)
@@ -360,14 +378,12 @@ class AssignmentListButtonTest(TestCase):
         self.client = Client()
 
         self.bdm_user = User.objects.create(
-            username="bdm_user",
             email="bdm@rijksoverheid.nl",
         )
         add_assignment = Permission.objects.get(codename="add_assignment")
         self.bdm_user.user_permissions.add(add_assignment)
 
         self.regular_user = User.objects.create(
-            username="regular_user",
             email="regular@rijksoverheid.nl",
         )
 

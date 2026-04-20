@@ -7,6 +7,13 @@ This files lists the changes during the lifetime of this project.
 - 303: fix that clearing search filter inside client filter re-evaluates list
 - 303: fix that clearing org without placements works
 - 303: remove inactive tree search code in js
+- 280: extend business manager mailto link with pre-filled subject and email body
+- 268: add assignment creation form with services, org picker, and inline skill creation
+- 268: add success toast notification after assignment creation
+
+## 2026-04-15
+
+- 302: remove migration func and restore ci actions
 
 ## 2026-04-13_3
 
@@ -30,8 +37,6 @@ This files lists the changes during the lifetime of this project.
 - 282: redesign placement table columns (Wie, Wat, Waar)
 - 282: improve contrast: black links, headings, and icons (WCAG AA)
 - 282: add RVO date, textarea, and checkbox widget templates
-- 268: add assignment creation form with services, org picker, and inline skill creation
-- 268: add success toast notification after assignment creation
 - 266: (migration) enforce uniqueness on Colleague.email + Colleague.source
 - 266: always create Colleague for Users
 - 266: (migration) move labels from User to Colleague

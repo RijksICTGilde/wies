@@ -42,15 +42,6 @@
       <input type="file" name="json_file" accept=".json" required>
       <button type="submit">Upload database dump</button>
     </form>
-    <h2>Migreer data van oude omgeving</h2>
-    <form method="post"
-          enctype="multipart/form-data"
-          onsubmit="return confirm('Weet je zeker dat je de data wilt migreren? Bestaande data wordt samengevoegd.');">
-      {{ get_csrf_hidden_input(request) }}
-      <input type="hidden" name="action" value="migrate_old_data">
-      <input type="file" name="json_file" accept=".json" required>
-      <button type="submit">Migreer data</button>
-    </form>
     <h2>Sync all records from OTYS IIR</h2>
     <form method="post">
       {{ get_csrf_hidden_input(request) }}

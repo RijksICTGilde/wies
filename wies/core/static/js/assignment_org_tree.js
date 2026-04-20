@@ -182,6 +182,7 @@
             rows = rows.filter(function (r) {
               return r.nodeId !== row.nodeId;
             });
+            tr.remove();
             if (
               rows.length > 0 &&
               !rows.some(function (r) {
@@ -189,9 +190,12 @@
               })
             ) {
               rows[0].role = "PRIMARY";
+              var newPrimaryRadio = tbody.querySelector(
+                "input[type='radio'][value='" + rows[0].nodeId + "']",
+              );
+              if (newPrimaryRadio) newPrimaryRadio.checked = true;
             }
             rebuildInputs();
-            tr.remove();
             if (rows.length === 0) table.remove();
             updateOrgTriggerText();
           });
@@ -237,20 +241,19 @@
 
   var triggerBtn = document.getElementById("assignment-org-trigger-btn");
   if (triggerBtn) {
+    // hx-params="none" strips all form-serialized inputs (including CSRF);
+    // this listener re-adds just the params the client-modal endpoint expects.
     triggerBtn.addEventListener("htmx:configRequest", function (e) {
-      var params = new URLSearchParams(e.detail.path.split("?")[1] || "");
-      // Include orgs from JS-managed inputs (data-org-id) and server-rendered inputs
+      var orgIds = [];
       document
         .querySelectorAll("#assignment-org-inputs input[data-org-id]")
         .forEach(function (inp) {
-          params.append("org", inp.dataset.orgId);
+          if (inp.dataset.orgId) orgIds.push(inp.dataset.orgId);
         });
-      document
-        .querySelectorAll("#assignment-org-inputs input[name$='-organization']")
-        .forEach(function (inp) {
-          if (inp.value) params.append("org", inp.value);
-        });
-      e.detail.path = e.detail.path.split("?")[0] + "?" + params.toString();
+      e.detail.parameters["count_mode"] = "none";
+      if (orgIds.length) {
+        e.detail.parameters["org"] = orgIds;
+      }
     });
   }
 
