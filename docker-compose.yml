@@ -24,6 +24,8 @@ services:
       - .:/app:z
     command: python manage.py runserver 0.0.0.0:8080
     env_file: .env
+    environment:
+      APP_VERSION: ${APP_VERSION:-}
     depends_on:
       postgres:
         condition: service_healthy

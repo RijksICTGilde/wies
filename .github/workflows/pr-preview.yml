@@ -51,6 +51,8 @@ jobs:
           context: .
           target: web
           push: true
+          build-args: |
+            APP_VERSION=${{ steps.tag.outputs.immutable }}
           tags: |
             ${{ env.IMAGE_NAME }}:${{ env.MOVING_TAG }}
             ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.immutable }}
@@ -61,6 +63,8 @@ jobs:
           context: .
           target: worker
           push: true
+          build-args: |
+            APP_VERSION=${{ steps.tag.outputs.immutable }}
           tags: |
             ${{ env.IMAGE_NAME }}-worker:${{ env.MOVING_TAG }}
             ${{ env.IMAGE_NAME }}-worker:${{ steps.tag.outputs.immutable }}

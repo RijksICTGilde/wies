@@ -7,6 +7,8 @@ This files lists the changes during the lifetime of this project.
 - 280: extend business manager mailto link with pre-filled subject and email body
 - 268: add assignment creation form with services, org picker, and inline skill creation
 - 268: add success toast notification after assignment creation
+- image versioning toegevoegd en versie zichtbaar in de applicatie (onder het menu in instellingen)
+- layoutaanpassingen om visuele overflows te voorkomen (horizontale scrollbar, paginahoogte t.o.v. header)
 
 ## 2026-04-15
 
