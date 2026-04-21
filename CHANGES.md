@@ -4,6 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 309: add sidebar footer with links to privacy, toegankelijkheid, contact and GitHub
+- 309: add privacy, toegankelijkheid and contact pages
+- 309: make sidebar sticky so footer stays visible during scroll
 - 303: fix that clearing search filter inside client filter re-evaluates list
 - 303: fix that clearing org without placements works
 - 303: remove inactive tree search code in js
