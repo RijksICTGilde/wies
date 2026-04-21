@@ -1,20 +1,16 @@
-{# NDD filter chips + table container — outer container blijft hetzelfde
-   id zodat HTMX outerHTML-swap correct gaat. ndd-top-title-bar wordt
-   alleen op initial render meegestuurd (slot=header van ndd-page);
-   bij HTMX swap blijft de title-bar staan. #}
+{# NDD vacatures — filter chips + card grid container. #}
 {% if not request.headers.get("HX-Request") %}
   <ndd-container slot="header" padding="16">
-  <ndd-search-field id="ndd-search-input" placeholder="Zoek op collega, opdracht of opdrachtgever…" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-ndd-search-input>
+  <ndd-search-field id="ndd-search-input" placeholder="Zoek op opdracht of opdrachtgever…" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-ndd-search-input>
   </ndd-search-field>
   </ndd-container>
 {% endif %}
 <div id="ndd-filter-and-table-container">
-  {# Resultaten + actieve filter tokens #}
   {% set has_active_filters = (org_chip_data|length > 0) or search_filter or (active_filters|length > 0) %}
   <div class="ndd-results-bar">
     <p class="ndd-results-bar__count">
       <strong>{{ paginator.count }}</strong>
-      {{ "resultaat" if paginator.count == 1 else "resultaten" }}
+      {{ "vacature" if paginator.count == 1 else "vacatures" }}
     </p>
     {% if has_active_filters %}
       <div class="ndd-filter-tokens">
@@ -41,9 +37,10 @@
       </div>
     {% endif %}
   </div>
-  {% include "ndd/parts/placement_table.html" %}
+  <ndd-collection layout="grid" id="ndd-assignment-card-grid">
+  {% include "ndd/parts/assignment_card_rows.html" %}
+  </ndd-collection>
 </div>
-{# OOB swap: re-render hele filter form zodat counts + checkbox state up-to-date zijn #}
 {% if render_filter_fields_oob %}
   <div hx-swap-oob="outerHTML:#ndd-filter-form">{% include "ndd/parts/filter_sidebar.html" %}</div>
 {% endif %}

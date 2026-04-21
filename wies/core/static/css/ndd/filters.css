@@ -113,7 +113,7 @@
 .ndd-results-bar__count {
   margin: 0;
   font-size: 0.95rem;
-  color: var(--semantics-content-secondary-color, #555);
+  color: var(--semantics-content-secondary-color, #666);
   flex-shrink: 0;
 }
 

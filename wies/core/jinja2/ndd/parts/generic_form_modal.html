@@ -1,0 +1,32 @@
+<ndd-window id="{{ modal_element_id }}" accessible-label="{{ modal_title }}" width="600px">
+<ndd-page sticky-header sticky-footer>
+<ndd-top-title-bar slot="header" text="{{ modal_title }}" dismiss-text="Sluiten"></ndd-top-title-bar>
+<form method="post"
+      action="{{ form_post_url }}"
+      hx-post="{{ form_post_url }}"
+      hx-target="#{{ target_element_id }}"
+      style="display: flex;
+             flex-direction: column;
+             height: 100%">
+  {{ get_csrf_hidden_input(request) }}
+  <div style="flex: 1; padding: var(--primitives-space-16, 16px);">
+    {% if delete_warning %}
+      <ndd-rich-text>
+      <p>{{ delete_warning }}</p>
+      </ndd-rich-text>
+    {% else %}
+      {{ content }}
+    {% endif %}
+  </div>
+  <ndd-container slot="footer" padding-inline="16" padding-bottom="16">
+  <ndd-button-group orientation="horizontal">
+  <ndd-button variant="{{ 'warning' if warning_modal else 'primary' }}" type="submit" text="{{ form_button_label }}"></ndd-button>
+  {% if delete_url %}
+    <ndd-button variant="warning-subtle" text="Verwijderen" hx-get="{{ delete_url }}" hx-target="#{{ modal_element_id }}" hx-swap="outerHTML"></ndd-button>
+  {% endif %}
+  <ndd-button variant="secondary" type="button" text="Annuleren" onclick="this.closest('ndd-window').hide()"></ndd-button>
+  </ndd-button-group>
+  </ndd-container>
+</form>
+</ndd-page>
+</ndd-window>

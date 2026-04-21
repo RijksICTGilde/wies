@@ -1,0 +1,34 @@
+/* NDD vacature grid cards */
+
+#ndd-filter-and-table-container {
+  min-width: 0;
+}
+
+.ndd-vacancy-card {
+  cursor: pointer;
+  min-width: 0;
+}
+
+.ndd-vacancy-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--primitives-space-6, 6px);
+  margin-bottom: var(--primitives-space-8, 8px);
+}
+
+.ndd-vacancy-card__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-6, 6px);
+  font-size: 0.875rem;
+  margin-top: var(--primitives-space-4, 4px);
+}
+.ndd-vacancy-card__meta > ndd-icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.ndd-vacancy-card__meta--secondary {
+  color: var(--semantics-content-secondary-color, #666);
+}

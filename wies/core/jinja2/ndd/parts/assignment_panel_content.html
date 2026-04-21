@@ -15,20 +15,15 @@
         <path d="M19 12H5M12 19l-7-7 7-7" />
       </svg>
     </button>
-    <h2 class="ndd-panel__bar-title">{{ assignment.name }}</h2>
+    <h2 class="ndd-panel__bar-title">Opdracht gegevens</h2>
     <button type="button"
             class="ndd-panel__bar-action"
             data-ndd-action="panel-close">Sluit</button>
   </header>
   <ndd-rich-text spacing="snug">
-  <h3>Opdracht gegevens</h3>
+  <h2>{{ assignment.name }}</h2>
+  {% if assignment.extra_info %}<p class="ndd-text-secondary">{{ assignment.extra_info }}</p>{% endif %}
   <dl class="ndd-data-list">
-    {% if assignment.extra_info %}
-      <dt>Beschrijving</dt>
-      <dd>
-        {{ assignment.extra_info }}
-      </dd>
-    {% endif %}
     {% if panel_data.org_breadcrumbs %}
       <dt>
         Opdrachtgever

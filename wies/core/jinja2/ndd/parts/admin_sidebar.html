@@ -1,0 +1,38 @@
+{# NDD admin sidebar — navigatie voor instellingenpagina's. #}
+<ndd-list>
+<ndd-list-item type="link" href="{{ url('ndd-admin-users') }}"
+{% if '/ndd/instellingen/gebruikers/' in request.path %}current{% endif %}
+>
+<ndd-spacer-cell slot="start" size="12"></ndd-spacer-cell>
+<ndd-icon-cell slot="start" size="20">
+<ndd-icon name="person"></ndd-icon>
+</ndd-icon-cell>
+<ndd-spacer-cell slot="start" size="8"></ndd-spacer-cell>
+<ndd-title-cell text="Gebruikers"></ndd-title-cell>
+<ndd-spacer-cell slot="end" size="12"></ndd-spacer-cell>
+</ndd-list-item>
+{% if DEBUG %}
+  <ndd-list-item type="link" href="{{ url('organization-admin') }}"
+  {% if '/organisaties/' in request.path %}current{% endif %}
+  >
+  <ndd-spacer-cell slot="start" size="12"></ndd-spacer-cell>
+  <ndd-icon-cell slot="start" size="20">
+  <ndd-icon name="apartment-building"></ndd-icon>
+  </ndd-icon-cell>
+  <ndd-spacer-cell slot="start" size="8"></ndd-spacer-cell>
+  <ndd-title-cell text="Opdrachtgevers"></ndd-title-cell>
+  <ndd-spacer-cell slot="end" size="12"></ndd-spacer-cell>
+  </ndd-list-item>
+{% endif %}
+<ndd-list-item type="link" href="{{ url('ndd-label-admin') }}"
+{% if '/ndd/instellingen/labels/' in request.path %}current{% endif %}
+>
+<ndd-spacer-cell slot="start" size="12"></ndd-spacer-cell>
+<ndd-icon-cell slot="start" size="20">
+<ndd-icon name="tag"></ndd-icon>
+</ndd-icon-cell>
+<ndd-spacer-cell slot="start" size="8"></ndd-spacer-cell>
+<ndd-title-cell text="Labels"></ndd-title-cell>
+<ndd-spacer-cell slot="end" size="12"></ndd-spacer-cell>
+</ndd-list-item>
+</ndd-list>

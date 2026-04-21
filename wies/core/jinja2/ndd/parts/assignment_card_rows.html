@@ -1,0 +1,46 @@
+{% for assignment in object_list %}
+  <ndd-card accessible-label="{{ assignment.name }}" class="ndd-vacancy-card" hx-get="{{ assignment.panel_url }}" hx-target="#ndd-side-panel-content" hx-swap="innerHTML" tabindex="0" role="button">
+  <ndd-container padding="16">
+  {% if assignment.services_with_skills %}
+    <div class="ndd-vacancy-card__tags">
+      {% for service in assignment.services_with_skills[:3] %}<ndd-token>{{ service.skill.name }}</ndd-token>{% endfor %}
+      {% if assignment.services_with_skills|length > 3 %}
+        <ndd-token>+{{ assignment.services_with_skills|length - 3 }} meer</ndd-token>
+      {% endif %}
+    </div>
+  {% endif %}
+  <ndd-rich-text spacing="flat"><strong>{{ assignment.name }}</strong></ndd-rich-text>
+  <ndd-spacer size="4"></ndd-spacer>
+  {% if assignment.org_breadcrumb %}
+    <div class="ndd-vacancy-card__meta">
+      <ndd-icon name="apartment-building"></ndd-icon>
+      <span>{{ assignment.org_breadcrumb.label }}</span>
+    </div>
+  {% endif %}
+  {% if assignment.start_date or assignment.end_date %}
+    <div class="ndd-vacancy-card__meta ndd-vacancy-card__meta--secondary">
+      <ndd-icon name="calendar-event"></ndd-icon>
+      <span>
+        {{ assignment.start_date|datum_nl("N Y") if assignment.start_date else "" }}
+        {% if assignment.end_date %}– {{ assignment.end_date|datum_nl("N Y") }}{% endif %}
+      </span>
+    </div>
+  {% endif %}
+  </ndd-container>
+  </ndd-card>
+{% else %}
+  <ndd-rich-text>
+  <p>
+    <em>Geen vacatures gevonden.</em>
+  </p>
+  </ndd-rich-text>
+{% endfor %}
+{% if next_page_url %}
+  <div hx-get="{{ next_page_url }}"
+       hx-trigger="revealed"
+       hx-swap="outerHTML">
+    <ndd-rich-text style="text-align: center; padding: 1rem;">
+    <p>Meer laden…</p>
+    </ndd-rich-text>
+  </div>
+{% endif %}

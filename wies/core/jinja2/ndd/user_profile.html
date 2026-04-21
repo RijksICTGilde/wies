@@ -1,0 +1,107 @@
+{% extends "ndd/base.html" %}
+{% block title %}
+  Mijn profiel — Wies NDD
+{% endblock title %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/ndd/side_panel.css') }}">
+  <script src="{{ static('js/ndd/side_panel.js') }}" defer></script>
+{% endblock extra_head %}
+{% block sidebar_title %}
+{% endblock sidebar_title %}
+{% block sidebar %}
+{% endblock sidebar %}
+{% block content %}
+  <ndd-container>
+  <ndd-simple-section>
+  <ndd-rich-text>
+  <section class="ndd-panel__identity" style="margin-bottom: 1.5rem;">
+    <span class="ndd-avatar ndd-avatar--lg" aria-hidden="true">{{ user.first_name|first|upper if user.first_name else "?" }}</span>
+    <div class="ndd-panel__identity-info">
+      <strong style="font-size: 1.5rem;">Mijn profiel</strong>
+      {% if user.email %}<a class="ndd-panel__email" href="mailto:{{ user.email }}">{{ user.email }}</a>{% endif %}
+    </div>
+  </section>
+  <h3>Gegevens</h3>
+  <dl class="ndd-data-list">
+    <dt>Voornaam</dt>
+    <dd>
+      {{ user.first_name or "—" }}
+    </dd>
+    <dt>Achternaam</dt>
+    <dd>
+      {{ user.last_name or "—" }}
+    </dd>
+    <dt>E-mail</dt>
+    <dd>
+      {% if user.email %}
+        <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+      {% else %}
+        —
+      {% endif %}
+    </dd>
+    {% for item in label_categories %}
+      <dt>{{ item.category.name }}</dt>
+      <dd>
+        {% if item.labels %}
+          <div class="ndd-panel__tokens">
+            {% for label in item.labels %}
+              <ndd-token style="--ndd-token-bg: {{ label.category.color }}">{{ label.name }}</ndd-token>
+            {% endfor %}
+          </div>
+        {% else %}
+          <span class="ndd-text-secondary">—</span>
+        {% endif %}
+      </dd>
+    {% endfor %}
+  </dl>
+  <h3>Opdrachten</h3>
+  {% if assignment_list %}
+    <div class="ndd-assignment-cards">
+      {% for assignment in assignment_list %}
+        <a class="ndd-assignment-card{% if assignment.historical %} ndd-assignment-card--historical{% endif %}"
+           href="{{ assignment.assignment_url }}"
+           hx-get="{{ assignment.assignment_url }}"
+           hx-target="#ndd-side-panel-content"
+           hx-swap="innerHTML">
+          <div class="ndd-assignment-card__top">
+            <strong>{{ assignment.name }}</strong>
+            {% if assignment.start_date or assignment.end_date %}
+              <span class="ndd-text-secondary">
+                {{ assignment.start_date|datum_nl("N y") if assignment.start_date else "?" }}
+                – {{ assignment.end_date|datum_nl("N y") if assignment.end_date else "?" }}
+              </span>
+            {% endif %}
+          </div>
+          {% if assignment.tags %}
+            <div>
+              {% for tag in assignment.tags %}
+                <div style="font-size: 0.85rem;
+                            color: var(--semantics-content-secondary-color, #666)">
+                  {{ tag.skill if tag is mapping else tag }}
+                  {% if tag is mapping and tag.description %}· <span class="ndd-text-secondary">{{ tag.description }}</span>{% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% if assignment.historical %}<ndd-token>Afgelopen</ndd-token>{% endif %}
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="ndd-text-secondary">
+      <em>Geen opdrachten gevonden.</em>
+    </p>
+  {% endif %}
+  </ndd-rich-text>
+  </ndd-simple-section>
+  </ndd-container>
+{% endblock content %}
+{% block panel %}
+  <ndd-sheet id="ndd-side-panel" placement="right" accessible-label="Detail">
+  <div id="ndd-side-panel-content">
+    {% if panel_data %}
+      {% include panel_data.panel_content_template %}
+    {% endif %}
+  </div>
+  </ndd-sheet>
+{% endblock panel %}

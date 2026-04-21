@@ -1,7 +1,7 @@
 {% set colleague = panel_data.colleague %}
 <div class="ndd-panel">
   <header class="ndd-panel__bar">
-    <h2 class="ndd-panel__bar-title">{{ colleague.name }}</h2>
+    <h2 class="ndd-panel__bar-title">Persoonsgegevens</h2>
     <button type="button"
             class="ndd-panel__bar-action"
             data-ndd-action="panel-close">Sluit</button>
@@ -9,6 +9,7 @@
   <section class="ndd-panel__identity">
     <span class="ndd-avatar ndd-avatar--lg" aria-hidden="true">{{ colleague.name|first|upper }}</span>
     <div class="ndd-panel__identity-info">
+      <strong style="font-size: 1.25rem;">{{ colleague.name }}</strong>
       {% if colleague.email %}
         <a class="ndd-panel__email" href="mailto:{{ colleague.email }}">{{ colleague.email }}</a>
       {% endif %}

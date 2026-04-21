@@ -1,0 +1,61 @@
+{% extends "ndd/base.html" %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/ndd/side_panel.css') }}">
+  <link rel="stylesheet" href="{{ static('css/modals.css') }}">
+  <script src="{{ static('js/dialog.js') }}" defer></script>
+{% endblock extra_head %}
+{% block sidebar_header %}
+  <header class="ndd-sidebar-pane__header">
+    <span class="ndd-sidebar-pane__title">Instellingen</span>
+  </header>
+{% endblock sidebar_header %}
+{% block sidebar %}
+  {% include "ndd/parts/admin_sidebar.html" %}
+{% endblock sidebar %}
+{% block content %}
+  <ndd-container slot="header" padding="16">
+  <div style="display: flex;
+              align-items: center;
+              justify-content: space-between">
+    <ndd-rich-text><strong>Labels</strong></ndd-rich-text>
+    <ndd-button variant="primary" text="Categorie toevoegen" hx-get="{{ url('label-category-create') }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+    </ndd-button>
+  </div>
+  </ndd-container>
+  <div style="padding: var(--primitives-space-16, 16px);">
+    {% if categories %}
+      {% for category in categories %}
+        <div id="label_category_{{ category.id }}"
+             style="margin-bottom: var(--primitives-space-24, 24px)">
+          <div style="display: flex;
+                      align-items: center;
+                      gap: 8px;
+                      margin-bottom: var(--primitives-space-12, 12px)">
+            <h2 style="font-size: 1.125rem; font-weight: 600; margin: 0;">{{ category.name }}</h2>
+            <ndd-icon-button icon="pencil" variant="neutral-transparent" size="sm" aria-label="Bewerk {{ category.name }}" hx-get="{{ url('label-category-edit', args=[category.id]) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+            </ndd-icon-button>
+          </div>
+          {% if category.labels.all() %}
+            <div class="ndd-panel__tokens">
+              {% for label in category.labels.all() %}
+                {% set token_style = "cursor: pointer; background-color: " ~ category.color ~ ";" if category.color else "cursor: pointer;" %}
+                <ndd-token style="{{ token_style }}" hx-get="{{ url('label-edit', args=[label.id]) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+                {{ label.name }}
+                <span style="color: var(--semantics-content-secondary-color, #666);
+                             font-size: 0.85em;
+                             margin-left: 0.25em">({{ label.usage_count|default(0) }})</span>
+                </ndd-token>
+              {% endfor %}
+            </div>
+          {% else %}
+            <p style="color: var(--semantics-content-secondary-color, #666);
+                      font-style: italic">Geen labels in deze categorie</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>Geen categorieën gevonden. Maak een nieuwe categorie aan om te beginnen.</p>
+    {% endif %}
+  </div>
+  <div id="labelFormModal"></div>
+{% endblock content %}

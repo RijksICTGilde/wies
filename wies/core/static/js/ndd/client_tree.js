@@ -167,9 +167,9 @@
         li.appendChild(span);
         var removeBtn = document.createElement("button");
         removeBtn.type = "button";
-        removeBtn.className = "client-modal__selection-remove";
+        removeBtn.className = "ndd-client-modal__selection-remove";
         removeBtn.setAttribute("aria-label", "Verwijder " + text);
-        removeBtn.textContent = "×";
+        removeBtn.textContent = "✕";
         removeBtn.addEventListener(
           "click",
           (function (id) {
@@ -271,7 +271,7 @@
       if (orgInputsContainer) orgInputsContainer.innerHTML = "";
 
       var dialog = document.getElementById("ndd-client-modal");
-      if (dialog) dialog.close();
+      if (dialog && dialog.hide) dialog.hide();
 
       updateOrgFilterButtonText();
       if (sidebarForm) htmx.trigger(sidebarForm, "change");
@@ -306,7 +306,7 @@
       }
 
       var dialog = document.getElementById("ndd-client-modal");
-      if (dialog) dialog.close();
+      if (dialog && dialog.hide) dialog.hide();
 
       updateOrgFilterButtonText();
       if (sidebarForm) {

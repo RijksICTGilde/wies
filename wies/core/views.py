@@ -86,6 +86,25 @@ def get_delete_context(delete_url_name, object_pk, object_name):
     }
 
 
+def _is_ndd_request(request) -> bool:
+    """Check if the request came from an NDD page."""
+    return "/ndd/" in request.headers.get("Referer", "")
+
+
+def _ndd_redirect_url(request, rvo_name: str, ndd_name: str) -> str:
+    """Return NDD URL if the request came from an NDD page, else RVO URL."""
+    if _is_ndd_request(request):
+        return reverse(ndd_name)
+    return reverse(rvo_name)
+
+
+def _modal_template(request, rvo_template: str) -> str:
+    """Return NDD modal template if request came from NDD page."""
+    if _is_ndd_request(request):
+        return f"ndd/{rvo_template}"
+    return rvo_template
+
+
 def _build_panel_url(request, **overrides):
     """Build a URL on the current path, preserving filters but replacing panel params."""
     params = QueryDict(mutable=True)
@@ -1203,6 +1222,85 @@ class AssignmentListView(ListView):
         return context
 
 
+class AssignmentListNDDView(AssignmentListView):
+    """PoC view: vacaturelijst met NDD Design System (MinBZK)."""
+
+    template_name = "ndd/assignments.html"
+
+    def get_template_names(self) -> list[str]:
+        if "HX-Request" in self.request.headers:
+            if self.request.headers.get("HX-Target") == "ndd-side-panel-content":
+                colleague_id = self.request.GET.get("collega")
+                assignment_id = self.request.GET.get("opdracht")
+                if colleague_id and not assignment_id:
+                    return ["ndd/parts/colleague_panel_content.html"]
+                return ["ndd/parts/assignment_panel_content.html"]
+            if self.request.GET.get("pagina"):
+                return ["ndd/parts/assignment_card_rows.html"]
+            return ["ndd/parts/filter_and_card_container_assignments.html"]
+        return ["ndd/assignments.html"]
+
+    def get_context_data(self, **kwargs: object) -> dict:
+        context = super().get_context_data(**kwargs)
+        context["filter_target_url"] = reverse("ndd-assignments")
+        if context.get("panel_data"):
+            template = context["panel_data"].get("panel_content_template", "")
+            if template == "parts/colleague_panel_content.html":
+                context["panel_data"]["panel_content_template"] = "ndd/parts/colleague_panel_content.html"
+            elif template == "parts/assignment_panel_content.html":
+                context["panel_data"]["panel_content_template"] = "ndd/parts/assignment_panel_content.html"
+        return context
+
+
+class UserListNDDView(PermissionRequiredMixin, ListView):
+    """PoC view: gebruikerslijst met NDD Design System."""
+
+    model = User
+    template_name = "ndd/user_admin.html"
+    paginate_by = 50
+    page_kwarg = "pagina"
+    permission_required = "rijksauth.view_user"
+
+    def _get_base_queryset(self):
+        qs = (
+            User.objects.prefetch_related("groups", "colleague__labels__category")
+            .filter(is_superuser=False)
+            .order_by("last_name", "first_name")
+        )
+        search_filter = self.request.GET.get("zoek")
+        if search_filter:
+            qs = qs.annotate(
+                full_name=Concat("first_name", Value(" "), "last_name"),
+            ).filter(
+                Q(full_name__icontains=search_filter)
+                | Q(first_name__icontains=search_filter)
+                | Q(last_name__icontains=search_filter)
+                | Q(email__icontains=search_filter)
+            )
+        return qs
+
+    def get_queryset(self):
+        return self._get_base_queryset().distinct()
+
+    def get_template_names(self):
+        if "HX-Request" in self.request.headers:
+            if self.request.GET.get("pagina"):
+                return ["ndd/parts/user_table_rows.html"]
+            return ["ndd/parts/user_table.html"]
+        return ["ndd/user_admin.html"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["search_filter"] = self.request.GET.get("zoek")
+        if context.get("page_obj") and context["page_obj"].has_next():
+            params = self.request.GET.copy()
+            params["pagina"] = context["page_obj"].next_page_number()
+            context["next_page_url"] = f"?{params.urlencode()}"
+        else:
+            context["next_page_url"] = None
+        return context
+
+
 class UserListView(PermissionRequiredMixin, ListView):
     """View for user list with filtering and infinite scroll pagination"""
 
@@ -1394,7 +1492,7 @@ def user_create(request):
         form = UserForm()
         return render(
             request,
-            "parts/user_form_modal.html",
+            _modal_template(request, "parts/user_form_modal.html"),
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1419,13 +1517,13 @@ def user_create(request):
             # For standard form posts, use normal redirect
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
-                response["HX-Redirect"] = reverse("admin-users")
+                response["HX-Redirect"] = _ndd_redirect_url(request, "admin-users", "ndd-admin-users")
                 return response
-            return redirect("admin-users")
+            return redirect(_ndd_redirect_url(request, "admin-users", "ndd-admin-users"))
         # Re-render form with errors (stays in modal with HTMX)
         return render(
             request,
-            "parts/user_form_modal.html",
+            _modal_template(request, "parts/user_form_modal.html"),
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1451,7 +1549,7 @@ def user_edit(request, pk):
         form = UserForm(instance=edited_user)
         return render(
             request,
-            "parts/user_form_modal.html",
+            _modal_template(request, "parts/user_form_modal.html"),
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1480,13 +1578,13 @@ def user_edit(request, pk):
             # For standard form posts, use normal redirect
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
-                response["HX-Redirect"] = reverse("admin-users")
+                response["HX-Redirect"] = _ndd_redirect_url(request, "admin-users", "ndd-admin-users")
                 return response
-            return redirect("admin-users")
+            return redirect(_ndd_redirect_url(request, "admin-users", "ndd-admin-users"))
         # Re-render form with errors (stays in modal with HTMX)
         return render(
             request,
-            "parts/user_form_modal.html",
+            _modal_template(request, "parts/user_form_modal.html"),
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1511,7 +1609,7 @@ def user_delete(request, pk):
         # Show delete confirmation modal
         return render(
             request,
-            "parts/generic_form_modal.html",
+            _modal_template(request, "parts/generic_form_modal.html"),
             {
                 "modal_title": f"Verwijder gebruiker: {user.first_name} {user.last_name}",
                 "warning_modal": True,
@@ -1538,7 +1636,7 @@ def user_delete(request, pk):
         user.delete()
         create_event(request.user.email, "User.delete", context)
         response = HttpResponse(status=200)
-        response["HX-Redirect"] = reverse("admin-users")
+        response["HX-Redirect"] = _ndd_redirect_url(request, "admin-users", "ndd-admin-users")
         return response
     return HttpResponse(status=405)
 
@@ -1638,6 +1736,60 @@ def assignment_import_csv(request):
     return HttpResponse(status=405)
 
 
+@permission_required(
+    [
+        "core.add_assignment",
+        "core.add_service",
+        "core.add_placement",
+        "core.add_colleague",
+    ],
+    raise_exception=True,
+)
+def assignment_import_csv_ndd(request):
+    """
+    NDD variant of assignment CSV import.
+
+    GET: Display the import form (NDD design system)
+    POST: Process the uploaded CSV file and create assignments
+          (with related services, placements, colleagues, and skills)
+
+    For expected CSV format, see create_assignment_from_csv function
+    """
+    if request.method == "GET":
+        return render(request, "ndd/assignment_import.html")
+    if request.method == "POST":
+        if "csv_file" not in request.FILES:
+            return render(
+                request,
+                "ndd/assignment_import.html",
+                {"result": {"success": False, "errors": ["Geen bestand geüpload. Upload een CSV-bestand."]}},
+            )
+
+        csv_file = request.FILES["csv_file"]
+
+        if not csv_file.name.endswith(".csv"):
+            return render(
+                request,
+                "ndd/assignment_import.html",
+                {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
+            )
+
+        try:
+            csv_content = csv_file.read().decode("utf-8")
+        except UnicodeDecodeError:
+            return render(
+                request,
+                "ndd/assignment_import.html",
+                {"result": {"success": False, "errors": ["Invalid CSV file encoding. Please use UTF-8."]}},
+            )
+
+        result = create_assignments_from_csv(csv_content)
+
+        # Return results in the form
+        return render(request, "ndd/assignment_import.html", {"result": result})
+    return HttpResponse(status=405)
+
+
 @permission_required("core.view_organizationunit", raise_exception=True)
 def organization_admin(request):
     """Show all organization units in a collapsible tree, grouped by type. Only available in DEBUG mode."""
@@ -1707,6 +1859,13 @@ def label_admin(request):
     return render(request, "label_admin.html", {"categories": categories})
 
 
+@permission_required("core.view_labelcategory", raise_exception=True)
+def label_admin_ndd(request):
+    """PoC view: label admin met NDD Design System."""
+    categories = annotate_usage_counts(LabelCategory.objects.all())
+    return render(request, "ndd/label_admin.html", {"categories": categories})
+
+
 @permission_required("core.change_labelcategory", raise_exception=True)
 def label_category_create(request):
     """
@@ -1723,7 +1882,7 @@ def label_category_create(request):
         form = LabelCategoryForm()
         return render(
             request,
-            "parts/generic_form_modal.html",
+            _modal_template(request, "parts/generic_form_modal.html"),
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1739,13 +1898,11 @@ def label_category_create(request):
             form.save()
             messages.success(request, f"Categorie '{form.cleaned_data['name']}' succesvol aangemaakt")
             response = HttpResponse(status=200)
-            hx_redirect = reverse("label-admin")
-            # redirecting to part of the page does using anchor does not seem to work yet
-            response["HX-Redirect"] = hx_redirect
+            response["HX-Redirect"] = _ndd_redirect_url(request, "label-admin", "ndd-label-admin")
             return response
         return render(
             request,
-            "parts/generic_form_modal.html",
+            _modal_template(request, "parts/generic_form_modal.html"),
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1775,7 +1932,7 @@ def label_category_edit(request, pk):
         form = LabelCategoryForm(instance=category)
         return render(
             request,
-            "parts/generic_form_modal.html",
+            _modal_template(request, "parts/generic_form_modal.html"),
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1791,12 +1948,12 @@ def label_category_edit(request, pk):
         if form.is_valid():
             form.save()
             response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("label-admin")
+            response["HX-Redirect"] = _ndd_redirect_url(request, "label-admin", "ndd-label-admin")
             return response
 
         return render(
             request,
-            "parts/generic_form_modal.html",
+            _modal_template(request, "parts/generic_form_modal.html"),
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1819,7 +1976,7 @@ def label_category_delete(request, pk):
     if request.method == "GET":
         return render(
             request,
-            "parts/generic_form_modal.html",
+            _modal_template(request, "parts/generic_form_modal.html"),
             {
                 "modal_title": f"Verwijder categorie: {category.name}",
                 "warning_modal": True,
@@ -1838,7 +1995,7 @@ def label_category_delete(request, pk):
         category.delete()
         messages.success(request, f"Categorie '{category_name}' succesvol verwijderd")
         response = HttpResponse(status=200)
-        response["HX-Redirect"] = reverse("label-admin")
+        response["HX-Redirect"] = _ndd_redirect_url(request, "label-admin", "ndd-label-admin")
         return response
     return HttpResponse(status=405)
 
@@ -1889,7 +2046,7 @@ def label_edit(request, pk):
         form = LabelForm(instance=label, category_id=category.id)
         return render(
             request,
-            "parts/generic_form_modal.html",
+            _modal_template(request, "parts/generic_form_modal.html"),
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1914,7 +2071,7 @@ def label_edit(request, pk):
             return response
         return render(
             request,
-            "parts/generic_form_modal.html",
+            _modal_template(request, "parts/generic_form_modal.html"),
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1942,7 +2099,7 @@ def label_delete(request, pk):
     if request.method == "GET":
         return render(
             request,
-            "parts/generic_form_modal.html",
+            _modal_template(request, "parts/generic_form_modal.html"),
             {
                 "modal_title": f"Verwijder label: {label.name}",
                 "warning_modal": True,
@@ -2098,6 +2255,63 @@ def assignment_edit_attribute(request, pk, attribute):
         )
 
     return HttpResponse(status=405)
+
+
+def user_profile_ndd(request):
+    """NDD Design System variant of the user profile page."""
+    user = request.user
+    colleague = getattr(user, "colleague", None)
+
+    # Side panel handling
+    colleague_id = request.GET.get("collega")
+    assignment_id = request.GET.get("opdracht")
+    panel_data = None
+
+    if assignment_id:
+        try:
+            assignment = Assignment.objects.get(id=assignment_id)
+            panel_data = _build_assignment_panel_data(assignment, request, reverse("ndd-profile"))
+        except Assignment.DoesNotExist:
+            pass
+    elif colleague_id:
+        try:
+            panel_colleague = Colleague.objects.get(id=colleague_id)
+            panel_data = _build_colleague_panel_data(panel_colleague, request)
+        except Colleague.DoesNotExist:
+            pass
+
+    # Map RVO panel templates to NDD equivalents
+    if panel_data:
+        template = panel_data.get("panel_content_template", "")
+        if template == "parts/colleague_panel_content.html":
+            panel_data["panel_content_template"] = "ndd/parts/colleague_panel_content.html"
+        elif template == "parts/assignment_panel_content.html":
+            panel_data["panel_content_template"] = "ndd/parts/assignment_panel_content.html"
+
+    # HTMX partial responses for panel swaps
+    if "HX-Request" in request.headers:
+        hx_target = request.headers.get("HX-Target")
+        if hx_target == "ndd-side-panel-content" and panel_data:
+            return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+
+    # Build label data per category for the data list rows
+    label_categories = []
+    for category in LabelCategory.objects.order_by("name"):
+        selected = list(colleague.labels.filter(category=category).order_by("name")) if colleague else []
+        label_categories.append({"category": category, "labels": selected})
+
+    assignment_list = _get_colleague_assignments(request, colleague, viewer=colleague) if colleague else []
+
+    return render(
+        request,
+        "ndd/user_profile.html",
+        {
+            "colleague": colleague,
+            "label_categories": label_categories,
+            "assignment_list": assignment_list,
+            "panel_data": panel_data,
+        },
+    )
 
 
 def user_profile(request):

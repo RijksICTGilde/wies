@@ -1,18 +1,26 @@
-/* NDD client modal — minimale styling, ndd-modal-dialog doet het meeste werk. */
+/* NDD client modal — minimale styling, ndd-window doet het meeste werk. */
+
+#ndd-client-modal ndd-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: "RijksSansVF", system-ui, sans-serif;
+}
 
 .ndd-client-modal__body {
   display: flex;
   flex-direction: column;
   gap: var(--primitives-space-12, 12px);
-  min-width: 600px;
-  max-width: 900px;
+  flex: 1;
+  min-height: 0;
+  padding: var(--primitives-space-16, 16px);
 }
 
 .ndd-client-modal__layout {
   display: grid;
   grid-template-columns: 1fr 280px;
   gap: var(--primitives-space-16, 16px);
-  height: 420px;
+  flex: 1;
   min-height: 0;
 }
 
@@ -58,7 +66,7 @@
 .ndd-client-modal__results-count {
   font-size: 0.8rem;
   font-weight: 400;
-  color: var(--semantics-content-secondary-color, #888);
+  color: var(--semantics-content-secondary-color, #666);
 }
 
 .ndd-client-modal__selection-list {
@@ -81,18 +89,30 @@
     #f0f4ff
   );
 }
-.ndd-client-modal__empty-state {
-  font-style: italic;
-  color: var(--semantics-content-secondary-color, #888);
-  padding: var(--primitives-space-10, 10px) var(--primitives-space-14, 14px);
+.ndd-client-modal__selection-remove {
+  background: none;
+  border: 1px solid var(--components-top-title-bar-divider-color, #ccc);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--semantics-content-secondary-color, #666);
+  font-size: 0.75rem;
+  padding: 0.1rem 0.35rem;
+  line-height: 1;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+.ndd-client-modal__selection-remove:hover {
+  background: var(
+    --semantics-surfaces-interactive-hovered-background-color,
+    #f0f4ff
+  );
+  color: var(--semantics-content-color, #1a1a1a);
 }
 
-.ndd-client-modal__footer {
-  display: flex;
-  gap: var(--primitives-space-8, 8px);
-  align-items: center;
-  flex-wrap: wrap;
-  justify-content: flex-end;
+.ndd-client-modal__empty-state {
+  font-style: italic;
+  color: var(--semantics-content-secondary-color, #666);
+  padding: var(--primitives-space-10, 10px) var(--primitives-space-14, 14px);
 }
 
 /* --- Tree node styling (selectors uit client_tree.js) --------------- */
@@ -156,7 +176,7 @@
 .client-placement-badge {
   display: inline-block;
   background: var(--semantics-surfaces-tinted-background-color, #eef3f8);
-  color: var(--semantics-content-secondary-color, #555);
+  color: var(--semantics-content-secondary-color, #666);
   font-size: 0.75rem;
   padding: 0 0.4rem;
   border-radius: 999px;

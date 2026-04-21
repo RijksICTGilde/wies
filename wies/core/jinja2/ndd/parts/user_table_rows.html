@@ -1,0 +1,25 @@
+{% for user in object_list %}
+  <ndd-list-item type="button" title="{{ user.first_name }} {{ user.last_name }}" hx-get="{{ url('user-edit', args=[user.id]) }}" hx-target="#userFormModal" hx-swap="innerHTML">
+  <ndd-spacer-cell slot="start" size="12"></ndd-spacer-cell>
+  <ndd-icon-cell slot="start" size="40" vertical-alignment="top">
+  <span class="ndd-avatar" aria-hidden="true">{{ user.first_name|first|upper if user.first_name else user.email|first|upper }}</span>
+  </ndd-icon-cell>
+  <ndd-spacer-cell slot="start" size="8"></ndd-spacer-cell>
+  <ndd-title-cell text="{{ user.first_name }} {{ user.last_name }}" supporting-text="{{ user.email }}">
+  </ndd-title-cell>
+  <ndd-spacer-cell slot="end" size="8"></ndd-spacer-cell>
+  <ndd-icon-cell slot="end" color="secondary" size="16">
+  <ndd-icon name="chevron-right"></ndd-icon>
+  </ndd-icon-cell>
+  <ndd-spacer-cell slot="end" size="8"></ndd-spacer-cell>
+  </ndd-list-item>
+{% else %}
+  <ndd-list-item>
+  <ndd-text-cell text="Geen gebruikers gevonden."></ndd-text-cell>
+  </ndd-list-item>
+{% endfor %}
+{% if next_page_url %}
+  <ndd-list-item hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
+  <ndd-text-cell text="Meer laden…"></ndd-text-cell>
+  </ndd-list-item>
+{% endif %}

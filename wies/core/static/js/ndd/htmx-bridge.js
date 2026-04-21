@@ -297,8 +297,8 @@
 
     setupClickBridge();
     setupTokenDismiss();
-    setupSidebarToggle();
     setupFilterCollapseAndToggle();
+    setupSidebarToggle();
   }
 
   // --- Filter groep in/uitklappen + "Toon meer/minder" ----------------
