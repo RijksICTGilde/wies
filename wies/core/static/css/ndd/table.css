@@ -1,30 +1,20 @@
-/* NDD table — minimale aanpassingen op ndd-rich-text. */
+/* NDD placement list */
 
-.ndd-table-wrapper {
-  padding: var(--primitives-space-16, 16px) 0;
+/* Kolom-verhoudingen: Wie | Wat & waar */
+.ndd-col-who {
+  flex: 0 0 35%;
+  min-width: 0;
 }
-
-/* Klikbare rijen */
-ndd-rich-text tr.ndd-row-clickable {
-  cursor: pointer;
-}
-ndd-rich-text tr.ndd-row-clickable:hover td {
-  background: var(
-    --semantics-surfaces-interactive-hovered-background-color,
-    #f0f4ff
-  );
+.ndd-col-what {
+  flex: 0 0 45%;
+  min-width: 0;
 }
 
-/* Person cell met avatar */
-.ndd-person {
-  display: flex;
-  align-items: center;
-  gap: var(--primitives-space-12, 12px);
-}
+/* Avatar in ndd-icon-cell */
 .ndd-avatar {
   flex: 0 0 auto;
-  width: 2rem;
-  height: 2rem;
+  width: 2.25rem;
+  height: 2.25rem;
   border-radius: 50%;
   background: var(
     --semantics-content-accent-color,
@@ -44,52 +34,10 @@ ndd-rich-text tr.ndd-row-clickable:hover td {
 }
 .ndd-avatar--vacant {
   background: var(--semantics-surfaces-tinted-background-color, #eee);
-  color: var(--semantics-content-secondary-color, #888);
-}
-
-.ndd-person__info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-.ndd-person__info strong {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  color: var(--semantics-content-secondary-color, #666);
 }
 
 /* Subtle tekst (secondary content color) */
 .ndd-text-secondary {
   color: var(--semantics-content-secondary-color, #666);
-}
-
-/* Cell meta (subtle line met icoon) */
-.ndd-cell-meta {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--primitives-space-6, 6px);
-  margin-top: var(--primitives-space-4, 4px);
-  font-size: 0.875rem;
-  color: var(--semantics-content-secondary-color, #666);
-}
-.ndd-cell-icon {
-  width: 1rem;
-  height: 1rem;
-  flex: 0 0 auto;
-}
-
-.ndd-cell-nowrap {
-  white-space: nowrap;
-}
-.ndd-cell-empty {
-  text-align: center;
-  font-style: italic;
-  color: var(--semantics-content-secondary-color, #888);
-  padding: var(--primitives-space-32, 32px);
-}
-.ndd-cell-loading {
-  text-align: center;
-  font-style: italic;
-  color: var(--semantics-content-secondary-color, #888);
-  padding: var(--primitives-space-16, 16px);
 }

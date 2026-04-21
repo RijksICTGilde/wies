@@ -1,8 +1,9 @@
-{# NDD client (organisatie) modal — gebruikt ndd-modal-dialog component.
+{# NDD client (organisatie) modal — gebruikt ndd-window component.
    IDs voor de tree (client-data, client-tree-container, etc.) zijn intern
    aan deze modal en worden alleen gerenderd als de modal open is. #}
-<ndd-modal-dialog id="ndd-client-modal" accessible-label="Selecteer opdrachtgever(s)">
-<span slot="title">Selecteer opdrachtgever(s)</span>
+<ndd-window id="ndd-client-modal" accessible-label="Selecteer opdrachtgever(s)" width="900px" height="600px">
+<ndd-page sticky-header sticky-footer>
+<ndd-top-title-bar slot="header" text="Selecteer opdrachtgever(s)" dismiss-text="Sluiten"></ndd-top-title-bar>
 <div class="ndd-client-modal__body">
   <ndd-search-field id="client-search" placeholder="Zoek opdrachtgever…" aria-label="Zoek opdrachtgever">
   </ndd-search-field>
@@ -24,16 +25,16 @@
     </aside>
   </div>
 </div>
-<div slot="footer" class="ndd-client-modal__footer">
-  <ndd-button variant="secondary" text="Annuleren" data-ndd-action="client-modal-close">
-  </ndd-button>
-  <ndd-button variant="neutral-transparent" text="Filter verwijderen" id="client-clear-btn">
-  </ndd-button>
-  <ndd-button variant="primary" text="Filter toepassen" id="client-apply-btn">
-  </ndd-button>
-</div>
+<ndd-container slot="footer" padding-inline="16" padding-bottom="16">
+<ndd-button-group orientation="horizontal">
+<ndd-button variant="primary" text="Filter toepassen" id="client-apply-btn"></ndd-button>
+<ndd-button variant="secondary" text="Annuleren" data-ndd-action="client-modal-close"></ndd-button>
+<ndd-button variant="neutral-transparent" text="Filter verwijderen" id="client-clear-btn"></ndd-button>
+</ndd-button-group>
+</ndd-container>
+</ndd-page>
+</ndd-window>
 {{ hierarchy|json_script("client-data") }}
 {{ current_selections|json_script("client-current-selections") }}
 <script src="{{ static('js/ndd/tree_state.js') }}"></script>
 <script src="{{ static('js/ndd/client_tree.js') }}"></script>
-</ndd-modal-dialog>

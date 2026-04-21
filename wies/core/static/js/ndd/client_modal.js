@@ -1,4 +1,4 @@
-// NDD client modal — open ndd-modal-dialog na HTMX swap, sluit via data-ndd-action.
+// NDD client modal — open ndd-window na HTMX swap, sluit via data-ndd-action.
 (function () {
   "use strict";
 
@@ -11,13 +11,11 @@
 
   function openModal(modal) {
     if (!modal) return;
-    if (modal.shadowRoot) {
-      if (typeof modal.show === "function") modal.show();
-      else if (typeof modal.open === "function") modal.open();
+    if (typeof modal.show === "function") {
+      modal.show();
     } else {
-      customElements.whenDefined("ndd-modal-dialog").then(() => {
+      customElements.whenDefined("ndd-window").then(() => {
         if (typeof modal.show === "function") modal.show();
-        else if (typeof modal.open === "function") modal.open();
       });
     }
   }
@@ -26,7 +24,6 @@
     const modal = getModal();
     if (!modal) return;
     if (typeof modal.hide === "function") modal.hide();
-    else if (typeof modal.close === "function") modal.close();
   }
 
   document.addEventListener("htmx:afterSettle", (event) => {

@@ -19,6 +19,14 @@
     {% endblock extra_head %}
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
     <script defer src="{{ static('vendor/ndd/ndd.bundle.js') }}"></script>
+    <script>
+      document.addEventListener("click", (e) => {
+        const item = e.composedPath().find(
+          (el) => el instanceof Element && el.dataset && el.dataset.href
+        );
+        if (item) window.location.href = item.dataset.href;
+      });
+    </script>
   </head>
   <body class="ndd-app">
     <div class="ndd-app__banner" role="note">
@@ -27,45 +35,58 @@
     </div>
     <ndd-top-navigation-bar></ndd-top-navigation-bar>
     <nav class="ndd-app__nav">
-      <ndd-menu-bar accessible-label="Hoofdnavigatie" overflow-text="Meer opties">
-      <ndd-menu-bar-item text="Wie zit waar?" href="{{ url('ndd-home') }}"
-      {% if request.path == '/ndd/' %}current{% endif %}
-      >
-      </ndd-menu-bar-item>
-      <ndd-menu-bar-item text="Vacatures" href="{{ url('assignment-list') }}"
-      {% if '/opdrachten/' in request.path %}current{% endif %}
-      >
-      </ndd-menu-bar-item>
-      </ndd-menu-bar>
-      {% if request.user.is_authenticated %}
-        <ndd-menu-bar accessible-label="Gebruikersmenu" overflow-text="Meer">
-        <ndd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="person" expandable content-priority="text">
-        <ndd-menu-item text="Profiel" href="{{ url('user-profile') }}"></ndd-menu-item>
-        {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
-          <ndd-menu-divider></ndd-menu-divider>
-          <ndd-menu-item text="Instellingen" href="{{ url('admin-users') }}"></ndd-menu-item>
-        {% endif %}
-        <ndd-menu-divider></ndd-menu-divider>
-        <ndd-menu-item text="Uitloggen" href="{{ url('logout') }}"></ndd-menu-item>
+      <div class="ndd-app__nav-inner">
+        <ndd-menu-bar accessible-label="Hoofdnavigatie" overflow-text="Meer opties">
+        <ndd-menu-bar-item text="Wie zit waar?" href="{{ url('ndd-home') }}"
+        {% if request.path == '/ndd/' %}current{% endif %}
+        >
+        </ndd-menu-bar-item>
+        <ndd-menu-bar-item text="Vacatures" href="{{ url('ndd-assignments') }}"
+        {% if '/ndd/vacatures/' in request.path %}current{% endif %}
+        >
         </ndd-menu-bar-item>
         </ndd-menu-bar>
-      {% endif %}
+        {% if request.user.is_authenticated %}
+          <ndd-menu-bar accessible-label="Gebruikersmenu" overflow-text="Meer">
+          <ndd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="person" expandable content-priority="text">
+          <ndd-menu-item text="Profiel" data-href="{{ url('ndd-profile') }}"></ndd-menu-item>
+          {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
+            <ndd-menu-divider></ndd-menu-divider>
+            <ndd-menu-item text="Instellingen" data-href="{{ url('ndd-admin-users') }}"></ndd-menu-item>
+          {% endif %}
+          <ndd-menu-divider></ndd-menu-divider>
+          <ndd-menu-item text="Uitloggen" data-href="{{ url('logout') }}"></ndd-menu-item>
+          </ndd-menu-bar-item>
+          </ndd-menu-bar>
+        {% endif %}
+      </div>
     </nav>
     <div id="ndd-main-split">
-      <aside id="ndd-sidebar-pane">
-        <header class="ndd-sidebar-pane__header">
-          <ndd-icon-button id="ndd-sidebar-toggle" icon="chevron-left" variant="neutral-transparent" aria-label="Filters inklappen">
-          </ndd-icon-button>
-          <span class="ndd-sidebar-pane__divider"></span>
-          <span class="ndd-sidebar-pane__title">Filters</span>
-        </header>
-        <div class="ndd-sidebar-pane__body">
-          {% block sidebar %}
-          {% endblock sidebar %}
-        </div>
-      </aside>
+      {% block sidebar_pane %}
+        <aside id="ndd-sidebar-pane">
+          {% block sidebar_header %}
+            <header class="ndd-sidebar-pane__header">
+              <ndd-icon-button id="ndd-sidebar-toggle" icon="chevron-left" variant="neutral-transparent" aria-label="Filters inklappen">
+              </ndd-icon-button>
+              <span class="ndd-sidebar-pane__divider"></span>
+              <span class="ndd-sidebar-pane__title">
+                {% block sidebar_title %}
+                  Filters
+                {% endblock sidebar_title %}
+              </span>
+            </header>
+          {% endblock sidebar_header %}
+          <div class="ndd-sidebar-pane__body">
+            {% block sidebar %}
+            {% endblock sidebar %}
+          </div>
+        </aside>
+      {% endblock sidebar_pane %}
       <div id="ndd-main-pane">
-        <ndd-page sticky-header>
+        <ndd-page sticky-header
+        {% block page_attrs %}
+        {% endblock page_attrs %}
+        >
         {% block content %}
         {% endblock content %}
         </ndd-page>

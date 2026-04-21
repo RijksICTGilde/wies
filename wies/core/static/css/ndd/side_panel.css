@@ -1,9 +1,12 @@
 /* NDD side panel — minimale styling, ndd-sheet doet het meeste werk. */
 
+#ndd-side-panel {
+  --components-sheet-side-md-width: 700px;
+  --components-sheet-side-lg-width: 800px;
+}
+
 #ndd-side-panel-content {
   padding: var(--primitives-space-24, 24px);
-  min-width: 360px;
-  max-width: 520px;
 }
 
 /* --- Panel inner content -------------------------------------------- */
@@ -103,6 +106,24 @@
   gap: var(--primitives-space-6, 6px);
 }
 
+/* Detail list (icon + tekst) */
+.ndd-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-12, 12px);
+}
+.ndd-detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--primitives-space-10, 10px);
+}
+.ndd-detail-item > ndd-icon {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  color: var(--semantics-content-secondary-color, #666);
+}
+
 /* Data list (key/value gegevens) */
 .ndd-data-list {
   display: grid;
@@ -112,7 +133,7 @@
 }
 .ndd-data-list dt {
   font-weight: 600;
-  color: var(--semantics-content-secondary-color, #666);
+  color: var(--semantics-content-color, #333);
 }
 .ndd-data-list dd {
   margin: 0;
@@ -125,7 +146,7 @@
   gap: var(--primitives-space-4, 4px);
 }
 .ndd-org-crumb__sep {
-  color: var(--semantics-content-secondary-color, #888);
+  color: var(--semantics-content-secondary-color, #666);
 }
 
 /* Assignment cards */

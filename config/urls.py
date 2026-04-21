@@ -20,13 +20,16 @@ from django.urls import path
 from django.views.generic import RedirectView
 
 from wies.core.views import (
+    AssignmentListNDDView,
     AssignmentListView,
     PlacementListNDDView,
     PlacementListView,
+    UserListNDDView,
     UserListView,
     assignment_create,
     assignment_events_partial,
     assignment_import_csv,
+    assignment_import_csv_ndd,
     client_modal,
     contact,
     error_400,
@@ -35,6 +38,7 @@ from wies.core.views import (
     error_500,
     inline_edit_view,
     label_admin,
+    label_admin_ndd,
     label_category_create,
     label_category_delete,
     label_category_edit,
@@ -54,6 +58,7 @@ from wies.core.views import (
     user_edit,
     user_import_csv,
     user_profile,
+    user_profile_ndd,
 )
 from wies.rijksauth.views import auth, login, logout
 
@@ -69,6 +74,11 @@ urlpatterns = [
     # Wies
     path("", PlacementListView.as_view(), name="home"),
     path("ndd/", PlacementListNDDView.as_view(), name="ndd-home"),
+    path("ndd/vacatures/", AssignmentListNDDView.as_view(), name="ndd-assignments"),
+    path("ndd/profiel/", user_profile_ndd, name="ndd-profile"),
+    path("ndd/beheer/gebruikers/", UserListNDDView.as_view(), name="ndd-admin-users"),
+    path("ndd/beheer/labels/", label_admin_ndd, name="ndd-label-admin"),
+    path("ndd/vacatures/importeren/", assignment_import_csv_ndd, name="ndd-assignment-import-csv"),
     path("inloggen/", login, name="login"),
     path("geen-toegang/", no_access),
     path("uitloggen/", logout, name="logout"),

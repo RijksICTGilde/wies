@@ -1,0 +1,77 @@
+{% extends "ndd/base.html" %}
+{% block sidebar_title %}
+{% endblock sidebar_title %}
+{% block sidebar %}
+{% endblock sidebar %}
+{% block content %}
+  <ndd-container padding="24">
+  <ndd-rich-text>
+  <h1>Plaatsingen importeren</h1>
+  </ndd-rich-text>
+  <form method="post"
+        action="{{ url('ndd-assignment-import-csv') }}"
+        enctype="multipart/form-data">
+    {{ get_csrf_hidden_input(request) }}
+    <ndd-rich-text>
+    <p>
+      Upload een CSV-bestand met plaatsingsgegevens. <a href="{{ static('example_assignment_import.csv') }}">Download het voorbeeldbestand</a>
+    </p>
+    </ndd-rich-text>
+    <br>
+    <label for="csv_file">
+      <strong>CSV-bestand</strong>
+    </label>
+    <br>
+    <input type="file" id="csv_file" name="csv_file" accept=".csv">
+    <br>
+    <br>
+    {% if result and result.success %}
+      <ndd-rich-text>
+      <p style="color: var(--ndd-color-success, green);">
+        <strong>Import geslaagd!</strong>
+      </p>
+      <ul>
+        <li>
+          <strong>{{ result.placements_created }}</strong> plaatsingen geïmporteerd
+        </li>
+        <li>
+          <strong>{{ result.colleagues_created }}</strong> nieuwe collega's aangemaakt
+        </li>
+        <li>
+          <strong>{{ result.assignments_created }}</strong> nieuwe opdrachten aangemaakt
+        </li>
+        <li>
+          <strong>{{ result.services_created }}</strong> nieuwe diensten aangemaakt
+        </li>
+        <li>
+          <strong>{{ result.skills_created }}</strong> nieuwe rollen aangemaakt
+        </li>
+      </ul>
+      </ndd-rich-text>
+      {% if result.errors and result.errors|length > 0 %}
+        <ndd-rich-text>
+        <p style="color: var(--ndd-color-warning, orange);">
+          <strong>Waarschuwingen:</strong>
+        </p>
+        <ul>
+          {% for error in result.errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+        </ndd-rich-text>
+      {% endif %}
+    {% elif result %}
+      <ndd-rich-text>
+      <p style="color: var(--ndd-color-error, red);">
+        <strong>Import mislukt</strong>
+      </p>
+      {% if result.errors|length > 0 %}
+        <p>De volgende fouten zijn gevonden:</p>
+        <ul>
+          {% for error in result.errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+      {% endif %}
+      </ndd-rich-text>
+    {% endif %}
+    <ndd-button variant="primary" type="submit">Importeren</ndd-button>
+  </form>
+  </ndd-container>
+{% endblock content %}
