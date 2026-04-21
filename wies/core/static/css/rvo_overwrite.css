@@ -106,3 +106,24 @@
 .rvo-icon--hemelblauw {
   background-color: #000000;
 }
+
+/* Footer: witte tekst op donkerblauwe achtergrond (override globale zwart) */
+.rvo-footer .rvo-footer__column-title {
+  color: white;
+}
+
+.rvo-footer .rvo-link {
+  color: white;
+}
+
+.rvo-footer .rvo-link:hover {
+  color: var(--rvo-color-grijs-200, #e6e6e6);
+}
+
+.rvo-footer .rvo-icon-delta-naar-rechts {
+  background-color: white;
+}
+
+.rvo-footer .rvo-footer__payoff {
+  color: white;
+}
