@@ -11,12 +11,18 @@
   <div class="profile-page rvo-layout-column rvo-layout-gap--xl">
     {# Profile info #}
     <section class="rvo-layout-column rvo-layout-gap--md">
+      <c-grid division="1fr auto" gap="md">
       <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--center">
         <img alt="Profielfoto van {{ user.get_full_name() }}"
              src="{{ static('img/placeholder-avatar.svg') }}"
              class="profile-avatar" />
         <h1 class="utrecht-heading-1 rvo-heading rvo-heading--no-margin">Mijn profiel</h1>
       </div>
+      <form method="post" action="{{ url('logout') }}">
+        {{ get_csrf_hidden_input(request) }}
+        <c-button kind="primary" type="submit">Uitloggen</c-button>
+      </form>
+      </c-grid>
       <dl class="rvo-data-list profile-data-list">
         <dt>Voornaam</dt>
         <dd>

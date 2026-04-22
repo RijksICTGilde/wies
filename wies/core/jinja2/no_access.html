@@ -27,11 +27,9 @@
       Mogelijk ben je ingelogd met het e-mailadres van een opdrachtgever. Log uit en probeer het opnieuw met je ODI-account.
       </c-alert>
     {% endif %}
-    {# TODO: Activeer uitlogknop zodra volledige SSO-Rijk logout flow is geïmplementeerd (https://github.com/RijksICTGilde/wies/issues/58)
     <form action="{{ url('logout') }}" method="post">
-        {{ get_csrf_hidden_input(request) }}
-        <c-button kind="secondary" type="submit">Uitloggen en opnieuw proberen</c-button>
+      {{ get_csrf_hidden_input(request) }}
+      <c-button kind="secondary" type="submit">Uitloggen en opnieuw proberen</c-button>
     </form>
-    #}
   </main>
 {% endblock content %}
