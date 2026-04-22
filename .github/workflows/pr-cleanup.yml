@@ -36,6 +36,8 @@ jobs:
             ]
           delete-pr-comment: true
 
+      # Multi-arch note: deletes by tag only; arch-specific untagged manifests
+      # would be left for the weekly snok sweep to catch.
       - name: Delete remaining PR-tagged image versions
         continue-on-error: true
         env:
