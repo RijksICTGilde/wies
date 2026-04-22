@@ -89,6 +89,11 @@
   margin-bottom: auto;
 }
 
+/* Reset RVO's margin-inline: auto; it makes the header shrink in our grid body. */
+.rvo-header {
+  margin-inline: 0;
+}
+
 /* Override link color to black for better contrast (WCAG AA) */
 :root {
   --rvo-link-color: #000000;

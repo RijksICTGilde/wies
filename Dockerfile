@@ -67,6 +67,12 @@ RUN rm -rf /app/docker && \
 
 RUN python manage.py collectstatic
 
+# Bake the CI-provided version (immutable image tag) into the image so the
+# running app can report which build it is. Falls back to "onbekend" when
+# not supplied.
+ARG APP_VERSION=onbekend
+ENV APP_VERSION=${APP_VERSION}
+
 USER app
 
 
