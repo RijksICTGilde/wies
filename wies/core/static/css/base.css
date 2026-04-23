@@ -227,6 +227,10 @@ body {
   overflow-y: auto;
 }
 
+.layout--collapsed .sidebar {
+  overflow-y: hidden;
+}
+
 .layout--collapsed .sidebar__content {
   opacity: 0;
   pointer-events: none;
