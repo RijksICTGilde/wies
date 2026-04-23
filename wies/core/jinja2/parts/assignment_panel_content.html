@@ -1,171 +1,235 @@
-<div class="rvo-layout-column rvo-layout-gap--lg">
-  <section>
-    <h2>Opdracht gegevens</h2>
-    <dl class="rvo-data-list">
-      <dt>Opdracht naam</dt>
-      <dd>
-        <div id="assignment-name-content">
-          {% with target_element="assignment-name-content", field_value=panel_data.assignment.name, field_label="Opdracht naam", edit_url=url("assignment-edit-attribute", args=[panel_data.assignment.id, "name"]), user_can_edit=panel_data.user_can_edit %}
-            {% include "parts/editable_text_field.html" %}
-          {% endwith %}
-        </div>
-      </dd>
-      <dt>Beschrijving</dt>
-      <dd>
-        <div id="assignment-extra-info-content">
-          {% with target_element="assignment-extra-info-content", field_value=panel_data.assignment.extra_info, field_label="Beschrijving", edit_url=url("assignment-edit-attribute", args=[panel_data.assignment.id, "extra_info"]), user_can_edit=panel_data.user_can_edit, expanded=false %}
-            {% include "parts/editable_textarea_field.html" %}
-          {% endwith %}
-        </div>
-      </dd>
-      {% if panel_data.assignment.source not in ('wies', '') %}
-        <dt>Externe bron</dt>
-        <dd>
-          {% if panel_data.assignment.source_url %}
-            <a href="{{ panel_data.assignment.source_url }}"
-               target="_blank"
-               class="rvo-link">
-              {{ panel_data.assignment.get_source_display() }}
-              <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs"
-                    role="img"
-                    aria-label="Externe link"></span>
-            </a>
-          {% else %}
-            {{ panel_data.assignment.get_source_display() }}
-          {% endif %}
-        </dd>
-      {% endif %}
-      {% if panel_data.org_breadcrumbs %}
-        {% for org_breadcrumb in panel_data.org_breadcrumbs %}
-          <dt>
-            {% if loop.first %}
-              Opdrachtgever
-              {%- if panel_data.org_breadcrumbs|length > 1 %}s{% endif %}
-            {% endif %}
-          </dt>
-          <dd>
-            <div class="org-breadcrumb">
-              {% if org_breadcrumb.ancestors %}
-                {% for ancestor in org_breadcrumb.ancestors %}
-                  <a href="{{ ancestor.url }}" class="org-breadcrumb__ancestor">{{ ancestor.label }}</a>
-                  <span class="org-breadcrumb__separator">›</span>
-                {% endfor %}
-              {% endif %}
-              <a href="{{ org_breadcrumb.url }}" class="rvo-link">{{ org_breadcrumb.label }}</a>
-              {% if org_breadcrumb.role == "PRIMARY" and panel_data.org_breadcrumbs|length > 1 %}
-                <span class="rvo-text--subtle rvo-text--sm">(primair)</span>
-              {% endif %}
-            </div>
-          </dd>
-        {% endfor %}
-      {% else %}
-        <dt>Opdrachtgever</dt>
-        <dd>
-          <span class="rvo-text--italic rvo-text--subtle">Geen organisatie opgegeven</span>
-        </dd>
-      {% endif %}
-      <dt>Periode</dt>
-      <dd>
-        {% if panel_data.assignment.start_date or panel_data.assignment.end_date %}
-          {{ panel_data.assignment.start_date|datum_nl("j F Y") }} - {{ panel_data.assignment.end_date|datum_nl("j F Y") }}
-        {% else %}
-          <span class="rvo-text--italic rvo-text--subtle">Geen periode opgegeven</span>
-        {% endif %}
-      </dd>
-      {% if panel_data.assignment.created_at %}
-        <dt>Plaatsingsdatum</dt>
-        <dd>
-          {{ panel_data.assignment.created_at|datum_nl("j F Y") }}
-        </dd>
-      {% endif %}
-      {% if panel_data.assignment.owner %}
-        <dt>Business Manager</dt>
-        <dd>
-          {% if panel_data.owner_url %}
-            <a href="{{ panel_data.owner_url }}"
-               hx-get="{{ panel_data.owner_url }}"
-               hx-target="#side_panel-content"
-               class="rvo-link">{{ panel_data.assignment.owner.name }}</a>
-          {% else %}
-            {{ panel_data.assignment.owner.name }}
-          {% endif %}
-          {% if panel_data.owner_mailto_href %}
-            <br>
-            <a href="{{ panel_data.owner_mailto_href }}" class="rvo-link">{{ panel_data.assignment.owner.email }}</a>
-          {% endif %}
-        </dd>
-      {% endif %}
-    </dl>
-  </section>
-  {% if panel_data.team_members %}
-    <section>
-      <h2>Team</h2>
-      <div class="rvo-item-list">
-        {% for member in panel_data.team_members %}
-          {% if member.is_vacancy %}
-            <div class="rvo-item-list__item rvo-item-list__item--vacant">
-              <div class="user-avatar user-avatar--vacant">?</div>
-              <div class="rvo-item-list__content">
-                <span class="rvo-text--italic rvo-text--subtle">Openstaand</span>
-                {% for skill in member.skills %}
-                  <div class="service-description-line">
-                    {{ skill.name }}
-                    {% if skill.description %}· <span class="rvo-text--subtle">{{ skill.description }}</span>{% endif %}
-                  </div>
-                {% endfor %}
+<div>
+  <ul class="rvo-tabs" role="tablist">
+    <li class="rvo-tabs__item">
+      <a href="#"
+         class="rvo-tabs__item-link rvo-tabs__item-link--active"
+         role="tab"
+         aria-selected="true"
+         aria-controls="tab-panel-gegevens"
+         id="tab-gegevens">Gegevens</a>
+    </li>
+    <li class="rvo-tabs__item">
+      <a href="#"
+         class="rvo-tabs__item-link"
+         role="tab"
+         aria-selected="false"
+         aria-controls="tab-panel-wijzigingen"
+         id="tab-wijzigingen">Wijzigingen</a>
+    </li>
+  </ul>
+  <div class="rvo-tabs__content">
+    <div id="tab-panel-gegevens"
+         role="tabpanel"
+         aria-labelledby="tab-gegevens">
+      <div class="rvo-layout-column rvo-layout-gap--lg">
+        <section>
+          <h2>Opdracht gegevens</h2>
+          <dl class="rvo-data-list">
+            <dt>Opdracht naam</dt>
+            <dd>
+              <div id="assignment-name-content">
+                {% with target_element="assignment-name-content", field_value=panel_data.assignment.name, field_label="Opdracht naam", edit_url=url("assignment-edit-attribute", args=[panel_data.assignment.id, "name"]), user_can_edit=panel_data.user_can_edit %}
+                  {% include "parts/editable_text_field.html" %}
+                {% endwith %}
               </div>
-            </div>
-          {% elif not member.historical %}
-            <a href="{{ member.colleague_url }}"
-               hx-get="{{ member.colleague_url }}"
-               hx-target="#side_panel-content"
-               class="rvo-item-list__item rvo-item-list__item--filled"
-               title="Bekijk {{ member.colleague.name }}">
-              <div class="user-avatar">{{ member.colleague.name|first|upper }}</div>
-              <div class="rvo-item-list__content">
-                <strong>{{ member.colleague.name }}</strong>
-                {% for skill in member.skills %}
-                  <div class="service-description-line">
-                    {{ skill.name }}
-                    {% if skill.description %}· <span class="rvo-text--subtle">{{ skill.description }}</span>{% endif %}
-                  </div>
-                {% endfor %}
+            </dd>
+            <dt>Beschrijving</dt>
+            <dd>
+              <div id="assignment-extra-info-content">
+                {% with target_element="assignment-extra-info-content", field_value=panel_data.assignment.extra_info, field_label="Beschrijving", edit_url=url("assignment-edit-attribute", args=[panel_data.assignment.id, "extra_info"]), user_can_edit=panel_data.user_can_edit, expanded=false %}
+                  {% include "parts/editable_textarea_field.html" %}
+                {% endwith %}
               </div>
-            </a>
-          {% else %}
-            <a href="{{ member.colleague_url }}"
-               hx-get="{{ member.colleague_url }}"
-               hx-target="#side_panel-content"
-               class="rvo-item-list__item rvo-item-list__item--filled"
-               title="Bekijk {{ member.colleague.name }}">
-              <div class="user-avatar">{{ member.colleague.name|first|upper }}</div>
-              <div class="rvo-item-list__content">
-                <div style="display: flex;
-                            justify-content: space-between;
-                            align-items: center;
-                            width: 100%">
-                  <strong>{{ member.colleague.name }}</strong>
-                  <span class="rvo-tag assignment-tag--completed">Afgelopen</span>
-                </div>
-                {% for skill in member.skills %}
-                  <div class="service-description-line">
-                    {{ skill.name }}
-                    {% if skill.description %}· <span class="rvo-text--subtle">{{ skill.description }}</span>{% endif %}
-                  </div>
-                {% endfor %}
-                {% if member.privacy_warning_text %}
-                  <span class="icon-text-inline rvo-text--subtle rvo-text--xs">
-                    <span class="utrecht-icon rvo-icon rvo-icon-hangslot-dicht rvo-icon--sm rvo-icon--rvo-grijs-700"
+            </dd>
+            {% if panel_data.assignment.source not in ('wies', '') %}
+              <dt>Externe bron</dt>
+              <dd>
+                {% if panel_data.assignment.source_url %}
+                  <a href="{{ panel_data.assignment.source_url }}"
+                     target="_blank"
+                     class="rvo-link">
+                    {{ panel_data.assignment.get_source_display() }}
+                    <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs"
                           role="img"
-                          aria-label="Privé"></span>
-                    {{ member.privacy_warning_text }}
-                  </span>
+                          aria-label="Externe link"></span>
+                  </a>
+                {% else %}
+                  {{ panel_data.assignment.get_source_display() }}
                 {% endif %}
-              </div>
-            </a>
-          {% endif %}
-        {% endfor %}
+              </dd>
+            {% endif %}
+            {% if panel_data.org_breadcrumbs %}
+              {% for org_breadcrumb in panel_data.org_breadcrumbs %}
+                <dt>
+                  {% if loop.first %}
+                    Opdrachtgever
+                    {%- if panel_data.org_breadcrumbs|length > 1 %}s{% endif %}
+                  {% endif %}
+                </dt>
+                <dd>
+                  <div class="org-breadcrumb">
+                    {% if org_breadcrumb.ancestors %}
+                      {% for ancestor in org_breadcrumb.ancestors %}
+                        <a href="{{ ancestor.url }}" class="org-breadcrumb__ancestor">{{ ancestor.label }}</a>
+                        <span class="org-breadcrumb__separator">›</span>
+                      {% endfor %}
+                    {% endif %}
+                    <a href="{{ org_breadcrumb.url }}" class="rvo-link">{{ org_breadcrumb.label }}</a>
+                    {% if org_breadcrumb.role == "PRIMARY" and panel_data.org_breadcrumbs|length > 1 %}
+                      <span class="rvo-text--subtle rvo-text--sm">(primair)</span>
+                    {% endif %}
+                  </div>
+                </dd>
+              {% endfor %}
+            {% else %}
+              <dt>Opdrachtgever</dt>
+              <dd>
+                <span class="rvo-text--italic rvo-text--subtle">Geen organisatie opgegeven</span>
+              </dd>
+            {% endif %}
+            <dt>Periode</dt>
+            <dd>
+              {% if panel_data.assignment.start_date or panel_data.assignment.end_date %}
+                {{ panel_data.assignment.start_date|datum_nl("j F Y") }} - {{ panel_data.assignment.end_date|datum_nl("j F Y") }}
+              {% else %}
+                <span class="rvo-text--italic rvo-text--subtle">Geen periode opgegeven</span>
+              {% endif %}
+            </dd>
+            {% if panel_data.assignment.created_at %}
+              <dt>Plaatsingsdatum</dt>
+              <dd>
+                {{ panel_data.assignment.created_at|datum_nl("j F Y") }}
+              </dd>
+            {% endif %}
+            {% if panel_data.assignment.owner %}
+              <dt>Business Manager</dt>
+              <dd>
+                {% if panel_data.owner_url %}
+                  <a href="{{ panel_data.owner_url }}"
+                     hx-get="{{ panel_data.owner_url }}"
+                     hx-target="#side_panel-content"
+                     class="rvo-link">{{ panel_data.assignment.owner.name }}</a>
+                {% else %}
+                  {{ panel_data.assignment.owner.name }}
+                {% endif %}
+                {% if panel_data.owner_mailto_href %}
+                  <br>
+                  <a href="{{ panel_data.owner_mailto_href }}" class="rvo-link">{{ panel_data.assignment.owner.email }}</a>
+                {% endif %}
+              </dd>
+            {% endif %}
+          </dl>
+        </section>
+        {% if panel_data.team_members %}
+          <section>
+            <h2>Team</h2>
+            <div class="rvo-item-list">
+              {% for member in panel_data.team_members %}
+                {% if member.is_vacancy %}
+                  <div class="rvo-item-list__item rvo-item-list__item--vacant">
+                    <div class="user-avatar user-avatar--vacant">?</div>
+                    <div class="rvo-item-list__content">
+                      <span class="rvo-text--italic rvo-text--subtle">Openstaand</span>
+                      {% for skill in member.skills %}
+                        <div class="service-description-line">
+                          {{ skill.name }}
+                          {% if skill.description %}· <span class="rvo-text--subtle">{{ skill.description }}</span>{% endif %}
+                        </div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                {% elif not member.historical %}
+                  <a href="{{ member.colleague_url }}"
+                     hx-get="{{ member.colleague_url }}"
+                     hx-target="#side_panel-content"
+                     class="rvo-item-list__item rvo-item-list__item--filled"
+                     title="Bekijk {{ member.colleague.name }}">
+                    <div class="user-avatar">{{ member.colleague.name|first|upper }}</div>
+                    <div class="rvo-item-list__content">
+                      <strong>{{ member.colleague.name }}</strong>
+                      {% for skill in member.skills %}
+                        <div class="service-description-line">
+                          {{ skill.name }}
+                          {% if skill.description %}· <span class="rvo-text--subtle">{{ skill.description }}</span>{% endif %}
+                        </div>
+                      {% endfor %}
+                    </div>
+                  </a>
+                {% else %}
+                  <a href="{{ member.colleague_url }}"
+                     hx-get="{{ member.colleague_url }}"
+                     hx-target="#side_panel-content"
+                     class="rvo-item-list__item rvo-item-list__item--filled"
+                     title="Bekijk {{ member.colleague.name }}">
+                    <div class="user-avatar">{{ member.colleague.name|first|upper }}</div>
+                    <div class="rvo-item-list__content">
+                      <div style="display: flex;
+                                  justify-content: space-between;
+                                  align-items: center;
+                                  width: 100%">
+                        <strong>{{ member.colleague.name }}</strong>
+                        <span class="rvo-tag assignment-tag--completed">Afgelopen</span>
+                      </div>
+                      {% for skill in member.skills %}
+                        <div class="service-description-line">
+                          {{ skill.name }}
+                          {% if skill.description %}· <span class="rvo-text--subtle">{{ skill.description }}</span>{% endif %}
+                        </div>
+                      {% endfor %}
+                      {% if member.privacy_warning_text %}
+                        <span class="icon-text-inline rvo-text--subtle rvo-text--xs">
+                          <span class="utrecht-icon rvo-icon rvo-icon-hangslot-dicht rvo-icon--sm rvo-icon--rvo-grijs-700"
+                                role="img"
+                                aria-label="Privé"></span>
+                          {{ member.privacy_warning_text }}
+                        </span>
+                      {% endif %}
+                    </div>
+                  </a>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </section>
+        {% endif %}
       </div>
-    </section>
-  {% endif %}
+    </div>
+    <div id="tab-panel-wijzigingen"
+         role="tabpanel"
+         aria-labelledby="tab-wijzigingen"
+         style="display: none">
+      {% if panel_data.events %}
+        <div class="event-timeline">
+          {% for event in panel_data.events %}
+            {% if event.user and event.user.colleague %}
+              {% set author = event.user.colleague.name %}
+              {% set initial = author|first|upper %}
+            {% else %}
+              {% set author = "Onbekende gebruiker" %}
+              {% set initial = "?" %}
+            {% endif %}
+            <div class="event-timeline__item">
+              <div class="event-timeline__avatar">
+                <div class="user-avatar user-avatar--sm">{{ initial }}</div>
+              </div>
+              <div class="event-timeline__content">
+                <strong>{{ author }}</strong>
+                {% if event.name == "Assignment.create" %}
+                  maakte deze opdracht aan
+                {% else %}
+                  wijzigde <strong>{{ event.context.field_label }}</strong>
+                  {% if event.context.old_value %}van "{{ event.context.old_value }}"{% endif %}
+                  naar "{{ event.context.new_value }}"
+                {% endif %}
+                <br>
+                <span class="rvo-text--subtle rvo-text--xs"
+                      title="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="rvo-text--italic rvo-text--subtle">Geen wijzigingen</p>
+      {% endif %}
+    </div>
+  </div>
 </div>
