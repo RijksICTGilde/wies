@@ -1,5 +1,5 @@
 <div>
-  {% if panel_data.show_wijzigingen_tab %}
+  {% if panel_data.show_updates_tab %}
     <ul class="rvo-tabs" role="tablist">
       <li class="rvo-tabs__item">
         <a href="#"
@@ -14,11 +14,11 @@
            class="rvo-tabs__item-link"
            role="tab"
            aria-selected="false"
-           aria-controls="tab-panel-wijzigingen"
-           id="tab-wijzigingen"
+           aria-controls="tab-panel-updates"
+           id="tab-updates"
            hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.id]) }}"
-           hx-target="#tab-panel-wijzigingen"
-           hx-swap="innerHTML">Wijzigingen</a>
+           hx-target="#tab-panel-updates"
+           hx-swap="innerHTML">Updates</a>
       </li>
     </ul>
   {% endif %}
@@ -198,10 +198,10 @@
         {% endif %}
       </div>
     </div>
-    {% if panel_data.show_wijzigingen_tab %}
-      <div id="tab-panel-wijzigingen"
+    {% if panel_data.show_updates_tab %}
+      <div id="tab-panel-updates"
            role="tabpanel"
-           aria-labelledby="tab-wijzigingen"
+           aria-labelledby="tab-updates"
            style="display: none"></div>
     {% endif %}
   </div>

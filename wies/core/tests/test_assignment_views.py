@@ -452,15 +452,15 @@ class AssignmentEditAttributeTest(TestCase):
         self.assertContains(response, 'naar "Legacy New"')
 
     def test_events_partial_accessible_to_unrelated_user(self):
-        """Any authenticated user can open the wijzigingen tab, not just BDM/placed colleagues."""
+        """Any authenticated user can open the updates tab, not just BDM/placed colleagues."""
         self.client.force_login(self.unrelated_user)
 
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
 
         assert response.status_code == 200
 
-    def test_wijzigingen_tab_hidden_for_otys_iir_assignment(self):
-        """For assignments with source='otys_iir' the wijzigingen tab is not rendered."""
+    def test_updates_tab_hidden_for_otys_iir_assignment(self):
+        """For assignments with source='otys_iir' the updates tab is not rendered."""
         self.client.force_login(self.owner_user)
 
         response = self.client.get(
@@ -469,11 +469,11 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-        self.assertNotContains(response, 'id="tab-wijzigingen"')
-        self.assertNotContains(response, 'id="tab-panel-wijzigingen"')
+        self.assertNotContains(response, 'id="tab-updates"')
+        self.assertNotContains(response, 'id="tab-panel-updates"')
 
-    def test_wijzigingen_tab_shown_for_wies_assignment(self):
-        """For assignments with source='wies' the wijzigingen tab is rendered."""
+    def test_updates_tab_shown_for_wies_assignment(self):
+        """For assignments with source='wies' the updates tab is rendered."""
         self.client.force_login(self.owner_user)
 
         response = self.client.get(
@@ -482,5 +482,5 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-        self.assertContains(response, 'id="tab-wijzigingen"')
-        self.assertContains(response, 'id="tab-panel-wijzigingen"')
+        self.assertContains(response, 'id="tab-updates"')
+        self.assertContains(response, 'id="tab-panel-updates"')
