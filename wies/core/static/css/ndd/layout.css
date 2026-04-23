@@ -10,7 +10,11 @@ html,
 body {
   margin: 0;
   padding: 0;
-  height: 100%;
+}
+
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
 }
 
 body.ndd-app {
@@ -51,7 +55,7 @@ a {
   align-items: center;
   max-width: 1440px;
   margin-inline: auto;
-  padding-left: var(--ndd-sidebar-width, 320px);
+  padding-left: var(--primitives-space-16, 16px);
   transition: padding-left 0.2s ease;
 }
 .ndd-app__nav-inner > ndd-menu-bar {
@@ -72,8 +76,6 @@ ndd-top-navigation-bar {
 #ndd-main-split {
   display: flex;
   flex: 1;
-  min-height: 0;
-  height: 100%;
   max-width: 1440px;
   margin-inline: auto;
   width: 100%;
@@ -89,35 +91,31 @@ ndd-top-navigation-bar {
   background: var(--semantics-surfaces-tinted-background-color, #f5f5f5);
   overflow: hidden;
   transition: width 0.2s ease;
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
 }
 
-.ndd-sidebar-pane__header {
+/* Sidebar achtergrond uitrekken naar linkerrand viewport */
+#ndd-sidebar-pane::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 100%;
+  width: 100vw;
+  background: var(--semantics-surfaces-tinted-background-color, #f5f5f5);
+  pointer-events: none;
+}
+
+/* --- Search row: filter toggle + search field ----------------------- */
+.ndd-search-row {
   display: flex;
   align-items: center;
-  gap: 0;
-  padding-inline: var(--primitives-space-6, 6px);
-  border-bottom: 1px solid
-    var(--components-top-title-bar-divider-color, #e5e5e5);
-  white-space: nowrap;
-  flex-shrink: 0;
-  min-height: var(--semantics-controls-md-min-size, 44px);
+  gap: var(--primitives-space-8, 8px);
 }
-
-.ndd-sidebar-pane__divider {
-  width: 1px;
-  height: var(--primitives-space-24, 24px);
-  background-color: var(--components-top-title-bar-divider-color, #e5e5e5);
-  flex-shrink: 0;
-  margin-inline: var(--primitives-space-6, 6px);
-}
-
-.ndd-sidebar-pane__title {
-  font-weight: 600;
-  font-size: 0.95rem;
-  color: var(--semantics-content-color, inherit);
-  padding-inline: var(--primitives-space-10, 10px);
-  overflow: hidden;
-  text-overflow: ellipsis;
+.ndd-search-row__field {
+  flex: 1;
 }
 
 .ndd-sidebar-pane__body {
@@ -127,32 +125,23 @@ ndd-top-navigation-bar {
   padding: var(--primitives-space-16, 16px);
 }
 
-#ndd-sidebar-pane.collapsed .ndd-sidebar-pane__body {
-  display: none;
+/* Desktop: toggle sidebar collapsed */
+#ndd-sidebar-pane.collapsed {
+  width: 0;
+  border-right: 0;
+  overflow: hidden;
 }
-#ndd-sidebar-pane.collapsed .ndd-sidebar-pane__divider {
-  display: none;
-}
-#ndd-sidebar-pane.collapsed .ndd-sidebar-pane__header {
-  flex-direction: column;
-  align-items: center;
-  height: auto;
-  min-height: unset;
-  padding: var(--primitives-space-6, 6px) 0;
-  gap: var(--primitives-space-6, 6px);
-}
-#ndd-sidebar-pane.collapsed .ndd-sidebar-pane__title {
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  padding: var(--primitives-space-6, 6px) 0;
-  transform: rotate(180deg);
+
+@media (max-width: 1007px) {
+  #ndd-sidebar-pane {
+    display: none;
+  }
 }
 
 /* --- Main pane ------------------------------------------------------ */
 #ndd-main-pane {
   flex: 1;
   min-width: 0;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   padding: var(--primitives-space-16, 16px) var(--primitives-space-24, 24px);
@@ -162,21 +151,4 @@ ndd-page {
   display: block;
   flex: 1;
   min-height: 0;
-}
-
-/* --- Mobile --------------------------------------------------------- */
-@media (max-width: 768px) {
-  .ndd-app__nav {
-    padding-left: var(--primitives-space-16, 16px);
-  }
-  #ndd-main-split {
-    flex-direction: column;
-  }
-  #ndd-sidebar-pane {
-    width: 100%;
-    max-height: 50vh;
-    border-right: 0;
-    border-bottom: 1px solid
-      var(--components-top-title-bar-divider-color, #e5e5e5);
-  }
 }

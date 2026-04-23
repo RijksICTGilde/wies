@@ -24,7 +24,8 @@
 (function () {
   "use strict";
 
-  const NDD_CHECKBOX = "ndd-checkbox-field, ndd-switch-field";
+  const NDD_CHECKBOX =
+    "ndd-checkbox-field, ndd-switch-field, input[type='checkbox'][data-ndd-input]";
   const NDD_TEXT = "ndd-text-field";
   const NDD_SEARCH = "ndd-search-field";
 
@@ -35,19 +36,21 @@
     const slot = fieldset.querySelector("[data-hidden-inputs]");
     if (!slot) return;
     slot.innerHTML = "";
-    fieldset.querySelectorAll("ndd-checkbox-field").forEach((cb) => {
-      const checked =
-        cb.checked === true ||
-        (cb.checked === undefined && cb.hasAttribute("checked"));
-      if (checked) {
-        const input = document.createElement("input");
-        input.type = "hidden";
-        input.name = name;
-        input.value = cb.getAttribute("value") || "";
-        input.setAttribute("data-filter-input", "");
-        slot.appendChild(input);
-      }
-    });
+    fieldset
+      .querySelectorAll("ndd-checkbox-field, input[type='checkbox']")
+      .forEach((cb) => {
+        const checked =
+          cb.checked === true ||
+          (cb.checked === undefined && cb.hasAttribute("checked"));
+        if (checked) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = name;
+          input.value = cb.getAttribute("value") || "";
+          input.setAttribute("data-filter-input", "");
+          slot.appendChild(input);
+        }
+      });
   }
 
   function dispatchFormChange(form) {
@@ -153,7 +156,7 @@
     );
     if (fieldset && value !== null) {
       const cb = Array.from(
-        fieldset.querySelectorAll("ndd-checkbox-field"),
+        fieldset.querySelectorAll("ndd-checkbox-field, input[type='checkbox']"),
       ).find((el) => el.getAttribute("value") === value);
       if (cb) {
         try {
@@ -206,6 +209,7 @@
       );
       if (!host || !window.htmx) return;
       e.preventDefault();
+      e.stopImmediatePropagation();
       const verb = host.hasAttribute("hx-get") ? "GET" : "POST";
       const url = host.getAttribute("hx-get") || host.getAttribute("hx-post");
       const opts = {};
@@ -225,32 +229,17 @@
         });
         opts.values = values;
       }
+      // Gebruik source zodat HTMX correcte headers (HX-Current-URL etc.) meestuurt
+      opts.source = host;
       window.htmx.ajax(verb, url, opts);
     });
   }
 
   // --- Sidebar collapse toggle --------------------------------------
-  function setSidebarWidth(collapsed) {
-    const width = collapsed
-      ? "var(--semantics-controls-md-min-size, 44px)"
-      : "320px";
-    document.documentElement.style.setProperty("--ndd-sidebar-width", width);
-  }
-
   function setupSidebarToggle() {
-    const KEY = "ndd-sidebar-collapsed";
+    const sheet = document.getElementById("ndd-filter-sheet");
     const pane = document.getElementById("ndd-sidebar-pane");
-    if (!pane) return;
-
-    if (localStorage.getItem(KEY) === "true") {
-      pane.classList.add("collapsed");
-      setSidebarWidth(true);
-      const btn = document.getElementById("ndd-sidebar-toggle");
-      if (btn) {
-        btn.setAttribute("icon", "chevron-right");
-        btn.setAttribute("aria-label", "Filters uitklappen");
-      }
-    }
+    const isMobile = () => window.matchMedia("(max-width: 1007px)").matches;
 
     document.addEventListener("click", (e) => {
       const path = e.composedPath();
@@ -258,14 +247,32 @@
         (el) => el instanceof Element && el.id === "ndd-sidebar-toggle",
       );
       if (!btn) return;
-      const collapsed = pane.classList.toggle("collapsed");
-      setSidebarWidth(collapsed);
-      btn.setAttribute("icon", collapsed ? "chevron-right" : "chevron-left");
-      btn.setAttribute(
-        "aria-label",
-        collapsed ? "Filters uitklappen" : "Filters inklappen",
-      );
-      localStorage.setItem(KEY, String(collapsed));
+
+      if (isMobile() && sheet) {
+        // Mobile: verplaats sidebar content naar sheet en open
+        const sheetContent = document.getElementById(
+          "ndd-filter-sheet-content",
+        );
+        const sidebarBody = pane?.querySelector(".ndd-sidebar-pane__body");
+        if (sheetContent && sidebarBody) {
+          while (sidebarBody.firstChild) {
+            sheetContent.appendChild(sidebarBody.firstChild);
+          }
+          sheet.show();
+          sheet.addEventListener(
+            "close",
+            () => {
+              while (sheetContent.children.length > 1) {
+                sidebarBody.appendChild(sheetContent.lastChild);
+              }
+            },
+            { once: true },
+          );
+        }
+      } else if (pane) {
+        // Desktop: toggle sidebar
+        pane.classList.toggle("collapsed");
+      }
     });
   }
 
