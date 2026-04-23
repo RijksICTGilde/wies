@@ -237,7 +237,6 @@ class Service(models.Model):
 
 
 class Event(models.Model):
-    # default (not auto_now_add) so fixtures can carry historical timestamps; save() guards mutation.
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
     # user FK for live display (current name, future avatar). SET_NULL preserves event on user deletion.
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)

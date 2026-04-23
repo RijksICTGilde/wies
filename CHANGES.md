@@ -4,7 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 304: register assignment edit events and display on 'Updates' tab
+- 304: (migration) register assignment edit events and display on 'Updates' tab
+- 304: change dummy dat to 50/50 split wies/otys sources
 
 ## 2026-04-23
 
