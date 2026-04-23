@@ -165,7 +165,6 @@ body {
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--rvo-color-grijs-400, #b4b4b4) transparent;
-  align-self: start;
 }
 
 /* Extend sidebar background to the left */
@@ -224,8 +223,6 @@ body {
   opacity: 1;
   transition: opacity 0.15s ease;
   padding: var(--rvo-space-md);
-  flex: 1;
-  overflow-y: auto;
 }
 
 .layout--collapsed .sidebar {
