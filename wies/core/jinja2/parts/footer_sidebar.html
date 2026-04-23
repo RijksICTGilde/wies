@@ -13,6 +13,16 @@
           GitHub
         </a>
       </li>
+      {% if APP_VERSION and '/instellingen/' in request.path %}
+        <li>
+          <span class="sidebar-footer__link sidebar-footer__link--static">
+            <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs"
+                  role="img"
+                  aria-label=""></span>
+            Versie: <strong>{{ APP_VERSION }}</strong>
+          </span>
+        </li>
+      {% endif %}
     </ul>
   </div>
   <div class="sidebar-footer__column">

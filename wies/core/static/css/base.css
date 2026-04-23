@@ -691,6 +691,14 @@ body {
   background-color: var(--rvo-color-lintblauw, #154273);
 }
 
+.sidebar-footer__link--static {
+  cursor: default;
+}
+
+.sidebar-footer__link--static:hover {
+  color: var(--rvo-color-grijs-700, #535353);
+}
+
 .layout--collapsed .sidebar-footer {
   display: none;
 }
