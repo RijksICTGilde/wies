@@ -1,0 +1,33 @@
+{% if events %}
+  <div class="event-timeline">
+    {% for event in events %}
+      {% if event.user and event.user.colleague %}
+        {% set author = event.user.colleague.name %}
+        {% set initial = author|first|upper %}
+      {% else %}
+        {% set author = "Onbekende gebruiker" %}
+        {% set initial = "?" %}
+      {% endif %}
+      <div class="event-timeline__item">
+        <div class="event-timeline__avatar">
+          <div class="user-avatar user-avatar--sm">{{ initial }}</div>
+        </div>
+        <div class="event-timeline__content">
+          <strong>{{ author }}</strong>
+          {% if event.name == "Assignment.create" %}
+            maakte deze opdracht aan
+          {% else %}
+            wijzigde <strong>{{ event.context.field_label }}</strong>
+            {% if event.context.old_value %}van "{{ event.context.old_value }}"{% endif %}
+            naar "{{ event.context.new_value }}"
+          {% endif %}
+          <br>
+          <span class="rvo-text--subtle rvo-text--xs"
+                title="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="rvo-text--italic rvo-text--subtle">Geen wijzigingen</p>
+{% endif %}

@@ -217,15 +217,6 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         {**get_org_breadcrumb(rel.organization, breadcrumb_base), "role": rel.role} for rel in [*primary, *involved]
     ]
 
-    events = (
-        Event.objects.filter(
-            name__in=("Assignment.create", "Assignment.update"),
-            resource_id=assignment.id,
-        )
-        .select_related("user__colleague")
-        .order_by("-timestamp")[:20]
-    )
-
     owner_mailto_href = ""
     if assignment.owner and assignment.owner.email:
         opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.id}")
@@ -253,7 +244,6 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
         "owner_mailto_href": owner_mailto_href,
         "org_breadcrumbs": org_breadcrumbs,
-        "events": events,
     }
 
 
@@ -1986,6 +1976,21 @@ EDITABLE_ASSIGNMENT_FIELDS = {
         "target_element": "assignment-extra-info-content",
     },
 }
+
+
+def assignment_events_partial(request, pk):
+    assignment = get_object_or_404(Assignment, pk=pk)
+    if not user_can_edit_assignment(request.user, assignment):
+        return HttpResponse(status=403)
+    events = (
+        Event.objects.filter(
+            name__in=("Assignment.create", "Assignment.update"),
+            resource_id=assignment.id,
+        )
+        .select_related("user__colleague")
+        .order_by("-timestamp")[:20]
+    )
+    return render(request, "parts/assignment_events_timeline.html", {"events": events})
 
 
 # Permission check is done in function body, not decorator
