@@ -19,7 +19,7 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Cleanup ZAD deployment and images
+      - name: Cleanup ZAD deployment and moving image tag
         continue-on-error: true
         uses: RijksICTGilde/zad-actions/cleanup@v3
         with:
@@ -35,3 +35,25 @@ jobs:
               {"org": "rijksictgilde", "name": "wies-worker", "tag": "${{ env.IMAGE_TAG }}"}
             ]
           delete-pr-comment: true
+
+      # Multi-arch note: deletes by tag only; arch-specific untagged manifests
+      # would be left for the weekly snok sweep to catch.
+      - name: Delete remaining PR-tagged image versions
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORG: rijksictgilde
+          PR_NUM: ${{ github.event.pull_request.number }}
+        run: |
+          set -uo pipefail
+          for PKG in wies wies-worker; do
+            echo "=== Scanning ${PKG} for tags matching pr-${PR_NUM}-* ==="
+            gh api --paginate "/orgs/${ORG}/packages/container/${PKG}/versions" \
+              --jq ".[] | select(.metadata.container.tags | map(startswith(\"pr-${PR_NUM}-\")) | any) | .id" \
+              | while read -r VERSION_ID; do
+                  [ -z "${VERSION_ID}" ] && continue
+                  echo "Deleting version ${VERSION_ID} from ${PKG}"
+                  gh api -X DELETE "/orgs/${ORG}/packages/container/${PKG}/versions/${VERSION_ID}" \
+                    || echo "::warning::Failed to delete version ${VERSION_ID} from ${PKG}"
+                done
+          done
