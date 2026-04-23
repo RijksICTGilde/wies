@@ -2057,6 +2057,7 @@ def assignment_edit_attribute(request, pk, attribute):
                 user=request.user,
                 resource_id=assignment.id,
                 context={
+                    "field_type": field_config["field_type"],
                     "field_name": field_name,
                     "field_label": field_config["label"],
                     "old_value": str(old_value),

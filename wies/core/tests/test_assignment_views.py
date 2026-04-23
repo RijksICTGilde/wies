@@ -320,6 +320,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert event.resource_id == self.assignment.id
         assert event.user == self.user_with_permission
         assert event.user_email == "perm@rijksoverheid.nl"
+        assert event.context["field_type"] == "text"
         assert event.context["field_name"] == "name"
         assert event.context["field_label"] == "Opdracht naam"
         assert event.context["old_value"] == "Test Assignment"
@@ -348,3 +349,104 @@ class AssignmentEditAttributeTest(TestCase):
         event = Event.objects.get(name="Assignment.update")
         assert event.user == self.owner_user
         assert event.user_email == "owner@rijksoverheid.nl"
+
+    # ========== Timeline Rendering Tests ==========
+
+    def test_timeline_renders_textarea_change_with_toon_meer(self):
+        """Long textarea changes render with the Toon meer pattern, not inline 'van X naar Y'"""
+        self.client.force_login(self.user_with_permission)
+        long_old = "a" * 500
+        long_new = "b" * 500
+        Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            name="Assignment.update",
+            resource_id=self.assignment.id,
+            context={
+                "field_type": "textarea",
+                "field_name": "extra_info",
+                "field_label": "Beschrijving",
+                "old_value": long_old,
+                "new_value": long_new,
+            },
+        )
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, "Beschrijving")
+        self.assertContains(response, "truncated-text")
+        self.assertContains(response, "show-more-toggle")
+        self.assertContains(response, "Toon meer")
+        # Must NOT use the inline "van ... naar ..." form for textarea
+        self.assertNotContains(response, f'van "{long_old}"')
+
+    def test_timeline_textarea_short_value_no_toggle(self):
+        """Short textarea values render without the Toon meer toggle"""
+        self.client.force_login(self.user_with_permission)
+        Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            name="Assignment.update",
+            resource_id=self.assignment.id,
+            context={
+                "field_type": "textarea",
+                "field_name": "extra_info",
+                "field_label": "Beschrijving",
+                "old_value": "short old",
+                "new_value": "short new",
+            },
+        )
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, "short old")
+        self.assertContains(response, "short new")
+        self.assertNotContains(response, "show-more-toggle")
+
+    def test_timeline_renders_text_change_inline(self):
+        """Text field changes render inline as 'van X naar Y'"""
+        self.client.force_login(self.user_with_permission)
+        Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            name="Assignment.update",
+            resource_id=self.assignment.id,
+            context={
+                "field_type": "text",
+                "field_name": "name",
+                "field_label": "Opdracht naam",
+                "old_value": "Old Name",
+                "new_value": "New Name",
+            },
+        )
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, 'van "Old Name"')
+        self.assertContains(response, 'naar "New Name"')
+        self.assertNotContains(response, "show-more-toggle")
+
+    def test_timeline_legacy_event_without_field_type_renders_inline(self):
+        """Pre-existing events missing field_type fall back to inline rendering"""
+        self.client.force_login(self.user_with_permission)
+        Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            name="Assignment.update",
+            resource_id=self.assignment.id,
+            context={
+                "field_name": "name",
+                "field_label": "Opdracht naam",
+                "old_value": "Legacy Old",
+                "new_value": "Legacy New",
+            },
+        )
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, 'van "Legacy Old"')
+        self.assertContains(response, 'naar "Legacy New"')

@@ -1,3 +1,19 @@
+{% macro expandable_text(value) %}
+  {% if value|length > 300 %}
+    <span>
+      <span style="white-space: pre-wrap; display: block;" class="truncated-text">{{ value[:300] }}...</span>
+      <span style="white-space: pre-wrap; display: none;" class="full-text">{{ value }}</span>
+      <button type="button"
+              class="show-more-toggle"
+              onclick="const container = this.parentElement; const truncated = container.querySelector('.truncated-text'); const full = container.querySelector('.full-text'); const isExpanded = full.style.display !== 'none'; truncated.style.display = isExpanded ? 'block' : 'none'; full.style.display = isExpanded ? 'none' : 'block'; this.querySelector('.show-more-toggle__icon').textContent = isExpanded ? '+' : '−'; this.querySelector('.show-more-toggle__text').textContent = isExpanded ? 'Toon meer' : 'Toon minder';">
+        <span class="show-more-toggle__icon">+</span>
+        <span class="show-more-toggle__text">Toon meer</span>
+      </button>
+    </span>
+  {% else %}
+    <span style="white-space: pre-wrap;">{{ value }}</span>
+  {% endif %}
+{% endmacro %}
 {% if events %}
   <div class="event-timeline">
     {% for event in events %}
@@ -18,12 +34,26 @@
             maakte deze opdracht aan
           {% else %}
             wijzigde <strong>{{ event.context.field_label }}</strong>
-            {% if event.context.old_value %}van "{{ event.context.old_value }}"{% endif %}
-            naar "{{ event.context.new_value }}"
+            {% if event.context.field_type != "textarea" %}
+              {% if event.context.old_value %}van "{{ event.context.old_value }}"{% endif %}
+              naar "{{ event.context.new_value }}"
+            {% endif %}
           {% endif %}
           <br>
           <span class="rvo-text--subtle rvo-text--xs"
                 title="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
+          {% if event.context.field_type == "textarea" %}
+            {% if event.context.old_value %}
+              <div class="rvo-margin-block-start--xs">
+                <span class="rvo-text--subtle rvo-text--xs">Van:</span>
+                {{ expandable_text(event.context.old_value) }}
+              </div>
+            {% endif %}
+            <div class="rvo-margin-block-start--xs">
+              <span class="rvo-text--subtle rvo-text--xs">Naar:</span>
+              {{ expandable_text(event.context.new_value) }}
+            </div>
+          {% endif %}
         </div>
       </div>
     {% endfor %}
