@@ -241,6 +241,7 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         "assignment": assignment,
         "team_members": team_members,
         "user_can_edit": user_can_edit_assignment(request.user, assignment),
+        "show_wijzigingen_tab": assignment.source != "otys_iir",
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
         "owner_mailto_href": owner_mailto_href,
         "org_breadcrumbs": org_breadcrumbs,
@@ -1980,8 +1981,6 @@ EDITABLE_ASSIGNMENT_FIELDS = {
 
 def assignment_events_partial(request, pk):
     assignment = get_object_or_404(Assignment, pk=pk)
-    if not user_can_edit_assignment(request.user, assignment):
-        return HttpResponse(status=403)
     events = (
         Event.objects.filter(
             name__in=("Assignment.create", "Assignment.update"),

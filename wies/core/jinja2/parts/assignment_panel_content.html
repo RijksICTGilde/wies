@@ -1,25 +1,27 @@
 <div>
-  <ul class="rvo-tabs" role="tablist">
-    <li class="rvo-tabs__item">
-      <a href="#"
-         class="rvo-tabs__item-link rvo-tabs__item-link--active"
-         role="tab"
-         aria-selected="true"
-         aria-controls="tab-panel-gegevens"
-         id="tab-gegevens">Gegevens</a>
-    </li>
-    <li class="rvo-tabs__item">
-      <a href="#"
-         class="rvo-tabs__item-link"
-         role="tab"
-         aria-selected="false"
-         aria-controls="tab-panel-wijzigingen"
-         id="tab-wijzigingen"
-         hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.id]) }}"
-         hx-target="#tab-panel-wijzigingen"
-         hx-swap="innerHTML">Wijzigingen</a>
-    </li>
-  </ul>
+  {% if panel_data.show_wijzigingen_tab %}
+    <ul class="rvo-tabs" role="tablist">
+      <li class="rvo-tabs__item">
+        <a href="#"
+           class="rvo-tabs__item-link rvo-tabs__item-link--active"
+           role="tab"
+           aria-selected="true"
+           aria-controls="tab-panel-gegevens"
+           id="tab-gegevens">Gegevens</a>
+      </li>
+      <li class="rvo-tabs__item">
+        <a href="#"
+           class="rvo-tabs__item-link"
+           role="tab"
+           aria-selected="false"
+           aria-controls="tab-panel-wijzigingen"
+           id="tab-wijzigingen"
+           hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.id]) }}"
+           hx-target="#tab-panel-wijzigingen"
+           hx-swap="innerHTML">Wijzigingen</a>
+      </li>
+    </ul>
+  {% endif %}
   <div class="rvo-tabs__content">
     <div id="tab-panel-gegevens"
          role="tabpanel"
@@ -196,9 +198,11 @@
         {% endif %}
       </div>
     </div>
-    <div id="tab-panel-wijzigingen"
-         role="tabpanel"
-         aria-labelledby="tab-wijzigingen"
-         style="display: none"></div>
+    {% if panel_data.show_wijzigingen_tab %}
+      <div id="tab-panel-wijzigingen"
+           role="tabpanel"
+           aria-labelledby="tab-wijzigingen"
+           style="display: none"></div>
+    {% endif %}
   </div>
 </div>

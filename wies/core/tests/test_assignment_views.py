@@ -450,3 +450,37 @@ class AssignmentEditAttributeTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, 'van "Legacy Old"')
         self.assertContains(response, 'naar "Legacy New"')
+
+    def test_events_partial_accessible_to_unrelated_user(self):
+        """Any authenticated user can open the wijzigingen tab, not just BDM/placed colleagues."""
+        self.client.force_login(self.unrelated_user)
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+
+    def test_wijzigingen_tab_hidden_for_otys_iir_assignment(self):
+        """For assignments with source='otys_iir' the wijzigingen tab is not rendered."""
+        self.client.force_login(self.owner_user)
+
+        response = self.client.get(
+            reverse("home") + f"?opdracht={self.external_assignment.id}",
+            headers={"HX-Request": "true", "HX-Target": "side_panel-content"},
+        )
+
+        assert response.status_code == 200
+        self.assertNotContains(response, 'id="tab-wijzigingen"')
+        self.assertNotContains(response, 'id="tab-panel-wijzigingen"')
+
+    def test_wijzigingen_tab_shown_for_wies_assignment(self):
+        """For assignments with source='wies' the wijzigingen tab is rendered."""
+        self.client.force_login(self.owner_user)
+
+        response = self.client.get(
+            reverse("home") + f"?opdracht={self.assignment.id}",
+            headers={"HX-Request": "true", "HX-Target": "side_panel-content"},
+        )
+
+        assert response.status_code == 200
+        self.assertContains(response, 'id="tab-wijzigingen"')
+        self.assertContains(response, 'id="tab-panel-wijzigingen"')
