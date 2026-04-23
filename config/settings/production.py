@@ -26,6 +26,15 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
+# STATIC FILES
+# ----------------------------------------------------------------------------------------------------------------------
+# Hash filenames + gzip. Requires `collectstatic` to have produced a manifest.
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

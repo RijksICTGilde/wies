@@ -1,33 +1,194 @@
 /**
- * Organization tree picker for assignment creation form.
- * Thin wrapper around OrgTreePicker with assignment-specific apply logic
- * (primary/involved org roles, radio buttons, table display).
+ * Organization tree picker for assignment forms.
+ *
+ * Produces the same UI (table with radios + remove buttons) from two
+ * sources:
+ *   - existing hidden inputs on page load / HTMX swap, so inline edit
+ *     and a re-rendered create form after validation error look the
+ *     same as after a fresh "apply" from the modal;
+ *   - OrgTreePicker.onApply, when the user applies a new selection in
+ *     the modal.
+ *
+ * The widget template renders just the hidden inputs (plus a
+ * data-org-name carrying the label for JS rehydration). All visible
+ * selection UI lives here — one code path.
  */
 (function () {
   "use strict";
 
-  function updateOrgTriggerText() {
-    var inputsContainer = document.getElementById("assignment-org-inputs");
-    var triggerText = document.getElementById("assignment-org-trigger-text");
-    if (!inputsContainer || !triggerText) return;
-    var count = inputsContainer.querySelectorAll(
-      "input[name$='-organization']",
-    ).length;
-    if (count === 0) {
+  var INPUTS_ID = "assignment-org-inputs";
+  var SELECTIONS_ID = "assignment-org-selections";
+  var TRIGGER_TEXT_ID = "assignment-org-trigger-text";
+
+  function updateOrgTriggerText(rows) {
+    var triggerText = document.getElementById(TRIGGER_TEXT_ID);
+    if (!triggerText) return;
+    if (!rows || rows.length === 0) {
       triggerText.textContent = "";
       var ph = document.createElement("span");
       ph.className = "org-filter-trigger__placeholder";
       ph.textContent = "Selecteer";
       triggerText.appendChild(ph);
-    } else if (count === 1) {
-      var dl = document.querySelector("#assignment-org-selections dt");
-      triggerText.textContent = dl ? dl.textContent : "1 geselecteerd";
+    } else if (rows.length === 1) {
+      triggerText.textContent = rows[0].label || "1 geselecteerd";
     } else {
-      triggerText.textContent = count + " geselecteerd";
+      triggerText.textContent = rows.length + " geselecteerd";
     }
   }
 
-  function init() {
+  function rowsFromInputs() {
+    var inputsContainer = document.getElementById(INPUTS_ID);
+    if (!inputsContainer) return [];
+    var rows = [];
+    inputsContainer
+      .querySelectorAll("input[name$='-organization']")
+      .forEach(function (inp) {
+        rows.push({
+          nodeId: inp.value,
+          label: inp.dataset.orgName || inp.value,
+          role: inp.dataset.orgRole || "INVOLVED",
+        });
+      });
+    return rows;
+  }
+
+  function rebuildInputs(rows) {
+    var inputsContainer = document.getElementById(INPUTS_ID);
+    if (!inputsContainer) return;
+    inputsContainer.innerHTML = "";
+
+    var mgmt = [
+      ["org-TOTAL_FORMS", String(rows.length)],
+      ["org-INITIAL_FORMS", "0"],
+      ["org-MIN_NUM_FORMS", "1"],
+      ["org-MAX_NUM_FORMS", "1000"],
+    ];
+    mgmt.forEach(function (pair) {
+      var i = document.createElement("input");
+      i.type = "hidden";
+      i.name = pair[0];
+      i.value = pair[1];
+      inputsContainer.appendChild(i);
+    });
+
+    rows.forEach(function (row, i) {
+      var orgInput = document.createElement("input");
+      orgInput.type = "hidden";
+      orgInput.name = "org-" + i + "-organization";
+      orgInput.value = row.nodeId;
+      orgInput.dataset.orgId = row.nodeId;
+      orgInput.dataset.orgName = row.label;
+      orgInput.dataset.orgRole = row.role;
+      inputsContainer.appendChild(orgInput);
+
+      var roleInput = document.createElement("input");
+      roleInput.type = "hidden";
+      roleInput.name = "org-" + i + "-role";
+      roleInput.value = row.role;
+      inputsContainer.appendChild(roleInput);
+    });
+  }
+
+  function renderTable(rows) {
+    var displayContainer = document.getElementById(SELECTIONS_ID);
+    if (!displayContainer) return;
+    displayContainer.innerHTML = "";
+
+    // Guarantee exactly one PRIMARY when there's at least one row.
+    if (
+      rows.length > 0 &&
+      !rows.some(function (r) {
+        return r.role === "PRIMARY";
+      })
+    ) {
+      rows[0].role = "PRIMARY";
+    }
+
+    if (rows.length === 0) {
+      rebuildInputs(rows);
+      updateOrgTriggerText(rows);
+      return;
+    }
+
+    var table = document.createElement("table");
+    table.className = "assignment-org-table";
+    var thead = document.createElement("thead");
+    var headerRow = document.createElement("tr");
+    ["Organisatie", "Primaire opdrachtgever"].forEach(function (text) {
+      var th = document.createElement("th");
+      th.textContent = text;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+    var tbody = document.createElement("tbody");
+
+    rows.forEach(function (row) {
+      var tr = document.createElement("tr");
+
+      var tdName = document.createElement("td");
+      tdName.textContent = row.label;
+      tr.appendChild(tdName);
+
+      var tdActions = document.createElement("td");
+      var actionsWrapper = document.createElement("div");
+      actionsWrapper.className = "assignment-org-table__actions";
+
+      var radioLabel = document.createElement("label");
+      radioLabel.className = "rvo-radio-button";
+      var radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "primary_org_radio";
+      radio.value = row.nodeId;
+      radio.className = "utrecht-radio-button";
+      if (row.role === "PRIMARY") radio.checked = true;
+      radio.addEventListener("change", function () {
+        rows.forEach(function (r) {
+          r.role = r.nodeId === radio.value ? "PRIMARY" : "INVOLVED";
+        });
+        rebuildInputs(rows);
+      });
+      radioLabel.appendChild(radio);
+      actionsWrapper.appendChild(radioLabel);
+
+      var removeBtn = document.createElement("button");
+      removeBtn.type = "button";
+      removeBtn.className =
+        "assignment-org-remove rvo-button rvo-button--tertiary rvo-button--size-xs";
+      removeBtn.dataset.orgId = row.nodeId;
+      removeBtn.textContent = "Verwijderen";
+      removeBtn.setAttribute("aria-label", "Verwijder " + row.label);
+      removeBtn.addEventListener("click", function () {
+        var next = rows.filter(function (r) {
+          return r.nodeId !== row.nodeId;
+        });
+        rows.length = 0;
+        next.forEach(function (r) {
+          rows.push(r);
+        });
+        renderTable(rows);
+      });
+      actionsWrapper.appendChild(removeBtn);
+
+      tdActions.appendChild(actionsWrapper);
+      tr.appendChild(tdActions);
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    displayContainer.appendChild(table);
+
+    rebuildInputs(rows);
+    updateOrgTriggerText(rows);
+  }
+
+  function renderFromInputs() {
+    if (!document.getElementById(INPUTS_ID)) return;
+    var rows = rowsFromInputs();
+    renderTable(rows);
+  }
+
+  function initModalPicker() {
     new OrgTreePicker({
       dataElementId: "assignment-org-data",
       containerId: "assignment-org-tree-container",
@@ -40,192 +201,28 @@
       checkboxIdPrefix: "asgn-org-node-",
       skipGroupCheckboxes: true,
       onApply: function (treeState) {
-        var inputsContainer = document.getElementById("assignment-org-inputs");
-        var displayContainer = document.getElementById(
-          "assignment-org-selections",
-        );
-        if (!inputsContainer || !displayContainer) return;
-
-        // Preserve existing roles before clearing
+        // Preserve roles for orgs that were already selected.
         var existingRoles = {};
-        inputsContainer
-          .querySelectorAll("[data-org-id]")
-          .forEach(function (inp) {
-            existingRoles[inp.dataset.orgId] =
-              inp.dataset.orgRole || "INVOLVED";
-          });
+        rowsFromInputs().forEach(function (r) {
+          existingRoles[r.nodeId] = r.role;
+        });
 
-        inputsContainer.innerHTML = "";
-        displayContainer.innerHTML = "";
-
-        var hasSelections = false;
-        var isFirst = true;
-        var index = 0;
         var rows = [];
-
-        var table = document.createElement("table");
-        table.className = "assignment-org-table";
-        var thead = document.createElement("thead");
-        var headerRow = document.createElement("tr");
-        var thOrg = document.createElement("th");
-        thOrg.textContent = "Organisatie";
-        headerRow.appendChild(thOrg);
-        var thPrimary = document.createElement("th");
-        thPrimary.textContent = "Primaire opdrachtgever";
-        headerRow.appendChild(thPrimary);
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-        var tbody = document.createElement("tbody");
-
+        var isFirst = true;
         treeState.explicitSelections.forEach(function (label, nodeId) {
           if (
             String(nodeId).startsWith("group-") ||
             String(nodeId).startsWith("self-")
           )
             return;
-
-          hasSelections = true;
-          var defaultRole =
-            existingRoles[nodeId] || (isFirst ? "PRIMARY" : "INVOLVED");
-
           rows.push({
             nodeId: nodeId,
             label: label,
-            role: defaultRole,
-            index: index,
+            role: existingRoles[nodeId] || (isFirst ? "PRIMARY" : "INVOLVED"),
           });
-          index++;
           isFirst = false;
         });
-
-        function rebuildInputs() {
-          inputsContainer.innerHTML = "";
-
-          // Formset management form
-          var totalForms = document.createElement("input");
-          totalForms.type = "hidden";
-          totalForms.name = "org-TOTAL_FORMS";
-          totalForms.value = rows.length;
-          inputsContainer.appendChild(totalForms);
-
-          var initialForms = document.createElement("input");
-          initialForms.type = "hidden";
-          initialForms.name = "org-INITIAL_FORMS";
-          initialForms.value = "0";
-          inputsContainer.appendChild(initialForms);
-
-          var minForms = document.createElement("input");
-          minForms.type = "hidden";
-          minForms.name = "org-MIN_NUM_FORMS";
-          minForms.value = "1";
-          inputsContainer.appendChild(minForms);
-
-          var maxForms = document.createElement("input");
-          maxForms.type = "hidden";
-          maxForms.name = "org-MAX_NUM_FORMS";
-          maxForms.value = "1000";
-          inputsContainer.appendChild(maxForms);
-
-          rows.forEach(function (row, i) {
-            var orgInput = document.createElement("input");
-            orgInput.type = "hidden";
-            orgInput.name = "org-" + i + "-organization";
-            orgInput.value = row.nodeId;
-            orgInput.dataset.orgId = row.nodeId;
-            orgInput.dataset.orgRole = row.role;
-            inputsContainer.appendChild(orgInput);
-
-            var roleInput = document.createElement("input");
-            roleInput.type = "hidden";
-            roleInput.name = "org-" + i + "-role";
-            roleInput.value = row.role;
-            inputsContainer.appendChild(roleInput);
-          });
-        }
-
-        rows.forEach(function (row) {
-          var tr = document.createElement("tr");
-
-          var tdName = document.createElement("td");
-          tdName.textContent = row.label;
-          tr.appendChild(tdName);
-
-          var tdActions = document.createElement("td");
-          var actionsWrapper = document.createElement("div");
-          actionsWrapper.className = "assignment-org-table__actions";
-
-          var radioLabel = document.createElement("label");
-          radioLabel.className = "rvo-radio-button";
-          var radio = document.createElement("input");
-          radio.type = "radio";
-          radio.name = "primary_org_radio";
-          radio.value = row.nodeId;
-          radio.className = "utrecht-radio-button";
-          if (row.role === "PRIMARY") radio.checked = true;
-          radio.addEventListener("change", function () {
-            rows.forEach(function (r) {
-              r.role = r.nodeId === radio.value ? "PRIMARY" : "INVOLVED";
-            });
-            rebuildInputs();
-          });
-          radioLabel.appendChild(radio);
-          actionsWrapper.appendChild(radioLabel);
-
-          var removeBtn = document.createElement("button");
-          removeBtn.type = "button";
-          removeBtn.className =
-            "assignment-org-remove rvo-button rvo-button--tertiary rvo-button--size-xs";
-          removeBtn.dataset.orgId = row.nodeId;
-          removeBtn.textContent = "Verwijderen";
-          removeBtn.setAttribute("aria-label", "Verwijder " + row.label);
-          removeBtn.addEventListener("click", function () {
-            rows = rows.filter(function (r) {
-              return r.nodeId !== row.nodeId;
-            });
-            tr.remove();
-            if (
-              rows.length > 0 &&
-              !rows.some(function (r) {
-                return r.role === "PRIMARY";
-              })
-            ) {
-              rows[0].role = "PRIMARY";
-              var newPrimaryRadio = tbody.querySelector(
-                "input[type='radio'][value='" + rows[0].nodeId + "']",
-              );
-              if (newPrimaryRadio) newPrimaryRadio.checked = true;
-            }
-            rebuildInputs();
-            if (rows.length === 0) table.remove();
-            updateOrgTriggerText();
-          });
-          actionsWrapper.appendChild(removeBtn);
-
-          tdActions.appendChild(actionsWrapper);
-          tr.appendChild(tdActions);
-          tbody.appendChild(tr);
-        });
-
-        // Ensure exactly one primary
-        if (
-          hasSelections &&
-          !rows.some(function (r) {
-            return r.role === "PRIMARY";
-          })
-        ) {
-          rows[0].role = "PRIMARY";
-          var firstRadio = tbody.querySelector("input[type='radio']");
-          if (firstRadio) firstRadio.checked = true;
-        }
-
-        rebuildInputs();
-
-        table.appendChild(tbody);
-        if (hasSelections) {
-          displayContainer.appendChild(table);
-        }
-
-        updateOrgTriggerText();
+        renderTable(rows);
 
         var dialog = document.getElementById("assignmentOrgPickerModal");
         if (dialog) dialog.close();
@@ -233,20 +230,18 @@
     });
   }
 
-  document.body.addEventListener("htmx:afterSettle", function (e) {
-    if (e.detail.target && e.detail.target.id === "assignmentOrgModal") {
-      init();
-    }
-  });
-
-  var triggerBtn = document.getElementById("assignment-org-trigger-btn");
-  if (triggerBtn) {
-    // hx-params="none" strips all form-serialized inputs (including CSRF);
-    // this listener re-adds just the params the client-modal endpoint expects.
-    triggerBtn.addEventListener("htmx:configRequest", function (e) {
+  // The trigger button's htmx:configRequest listener adds the params
+  // /client-modal needs (current orgs for pre-check, count_mode=none
+  // so the endpoint returns the assignment picker template). Idempotent —
+  // runs on page load AND each HTMX swap, wiring the button exactly once.
+  function wireTriggerButton() {
+    var btn = document.getElementById("assignment-org-trigger-btn");
+    if (!btn || btn.__orgTreeWired) return;
+    btn.__orgTreeWired = true;
+    btn.addEventListener("htmx:configRequest", function (e) {
       var orgIds = [];
       document
-        .querySelectorAll("#assignment-org-inputs input[data-org-id]")
+        .querySelectorAll("#" + INPUTS_ID + " input[data-org-id]")
         .forEach(function (inp) {
           if (inp.dataset.orgId) orgIds.push(inp.dataset.orgId);
         });
@@ -257,6 +252,19 @@
     });
   }
 
-  // On page load, update trigger text in case org data was preserved after form error
-  updateOrgTriggerText();
+  document.body.addEventListener("htmx:afterSettle", function (e) {
+    if (e.detail.target && e.detail.target.id === "assignmentOrgModal") {
+      initModalPicker();
+    }
+    // The widget may have swapped in as part of an inline-edit
+    // partial — re-wire the trigger and rebuild the selection UI from
+    // the newly-inserted hidden inputs.
+    wireTriggerButton();
+    renderFromInputs();
+  });
+
+  // Page load: the create form ships the widget inline and inline edit
+  // relies on the htmx:afterSettle branch above.
+  wireTriggerButton();
+  renderFromInputs();
 })();

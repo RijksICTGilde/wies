@@ -4,11 +4,12 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
-from django.forms.renderers import Jinja2
-from django.forms.utils import ErrorList
-from django.template import engines
 
-from .models import Colleague, Label, LabelCategory, OrganizationUnit, Skill
+from wies.core.inline_edit.editables.assignment import AssignmentEditables
+from wies.core.inline_edit.forms import build_form_from
+
+from .form_mixins import RvoErrorList, RvoFormMixin, RvoJinja2Renderer
+from .models import Colleague, Label, LabelCategory, Skill
 from .services.users import validate_email_domain
 from .widgets import MultiselectDropdown
 
@@ -16,76 +17,16 @@ logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
-
-class RvoJinja2Renderer(Jinja2):
-    """Custom renderer that uses Django's configured Jinja2 environment with all globals."""
-
-    @property
-    def engine(self):
-        return engines["jinja2"]
-
-
-class RvoErrorList(ErrorList):
-    """Custom ErrorList with RVO template"""
-
-    template_name = "rvo/forms/errors/list/default.html"
-
-
-class RvoFormMixin:
-    """
-    Mixin to automatically configure forms for RVO design system rendering.
-
-    Usage:
-        class MyForm(RvoFormMixin, forms.ModelForm):
-            # Just define fields as normal
-            name = forms.CharField()
-
-    All RVO templates, error styling, and widget configuration happens automatically.
-    This Mixin also disables client-side required checks on fields.
-    """
-
-    template_name = "rvo/forms/form.html"
-    default_renderer = RvoJinja2Renderer()
-
-    # Widget type to template mapping (only includes widgets with existing templates)
-    widget_templates = {
-        "TextInput": "rvo/forms/widgets/text.html",
-        "EmailInput": "rvo/forms/widgets/email.html",
-        "Select": "rvo/forms/widgets/select.html",
-        "CheckboxSelectMultiple": "rvo/forms/widgets/checkbox_select.html",
-        "MultiselectDropdown": "rvo/forms/widgets/multiselect.html",
-        "RadioSelect": "rvo/forms/widgets/radio.html",
-        "DateInput": "rvo/forms/widgets/date.html",
-        "Textarea": "rvo/forms/widgets/textarea.html",
-        "CheckboxInput": "rvo/forms/widgets/checkbox.html",
-    }
-
-    def _configure_field_for_rvo(self, field_name):
-        field = self.fields[field_name]
-
-        # Disable HTML5 client-side required validation
-        field.widget.use_required_attribute = lambda _: False
-        field.template_name = "rvo/forms/field.html"
-
-        # Auto-assign widget template based on widget type
-        widget_class_name = field.widget.__class__.__name__
-        if widget_class_name in self.widget_templates:
-            field.widget.template_name = self.widget_templates[widget_class_name]
-        else:
-            logger.warning(
-                "Widget '%s' for field '%s' not in RVO widget_templates mapping. Using default Django template.",
-                widget_class_name,
-                field_name,
-            )
-
-    def __init__(self, *args, **kwargs):
-        # Set custom error class before calling super
-        kwargs.setdefault("error_class", RvoErrorList)
-        super().__init__(*args, **kwargs)
-
-        # Configure all fields and widgets for RVO
-        for field_name in self.fields:
-            self._configure_field_for_rvo(field_name)
+__all__ = [
+    "AssignmentCreateForm",
+    "LabelCategoryForm",
+    "LabelForm",
+    "RvoErrorList",
+    "RvoFormMixin",
+    "RvoJinja2Renderer",
+    "ServiceForm",
+    "UserForm",
+]
 
 
 class LabelCategoryForm(RvoFormMixin, forms.ModelForm):
@@ -140,20 +81,6 @@ class LabelForm(RvoFormMixin, forms.ModelForm):
             msg = "Naam wordt al gebruikt"
             raise ValidationError(msg)
         return new_name
-
-
-class ProfileLabelsForm(RvoFormMixin, forms.Form):
-    """Form for editing a colleague's labels within a single category."""
-
-    def __init__(self, *args, category, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields["labels"] = forms.ModelMultipleChoiceField(
-            label="",
-            queryset=Label.objects.filter(category=category).order_by("name"),
-            required=False,
-            widget=MultiselectDropdown(),
-        )
-        self._configure_field_for_rvo("labels")
 
 
 class UserForm(RvoFormMixin, forms.ModelForm):
@@ -221,68 +148,40 @@ class UserForm(RvoFormMixin, forms.ModelForm):
         return cleaned_data
 
 
-class AssignmentCreateForm(RvoFormMixin, forms.Form):
-    """Form for creating a new Assignment with services and optional placements."""
-
-    name = forms.CharField(label="Naam opdracht", max_length=200, error_messages={"required": "Vul een naam in."})
-    extra_info = forms.CharField(
-        label="Beschrijving",
-        required=False,
-        max_length=5000,
-        widget=forms.Textarea(attrs={"rows": 4}),
-    )
-    start_date = forms.DateField(label="Startdatum", required=False, widget=forms.DateInput())
-    end_date = forms.DateField(label="Einddatum", required=False, widget=forms.DateInput())
-    owner = forms.ModelChoiceField(
-        label="Business Manager",
-        queryset=Colleague.objects.filter(user__groups__name="Business Development Manager").order_by("name"),
-        required=True,
-        empty_label=" ",
-        error_messages={"required": "Selecteer een business manager."},
-    )
-
-    def clean(self):
-        cleaned_data = super().clean()
-        start = cleaned_data.get("start_date")
-        end = cleaned_data.get("end_date")
-        if start and end and end < start:
-            self.add_error("end_date", "Einddatum moet na startdatum liggen.")
-        return cleaned_data
-
-
-class OrganizationForm(RvoFormMixin, forms.Form):
-    """Form for a single organization row within assignment creation."""
-
-    organization = forms.ModelChoiceField(
-        label="Opdrachtgever",
-        queryset=OrganizationUnit.objects.order_by("name"),
-        required=True,
-        empty_label=" ",
-        error_messages={"required": "Selecteer een opdrachtgever."},
-        widget=forms.HiddenInput(),
-    )
-    role = forms.ChoiceField(
-        label="Rol",
-        choices=[("PRIMARY", "Primaire opdrachtgever"), ("INVOLVED", "Betrokken opdrachtgever")],
-        required=True,
-        widget=forms.HiddenInput(),
-    )
-
-
-class OrganizationBaseFormSet(forms.BaseFormSet):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.error_messages["too_few_forms"] = "Voeg minimaal %(num)d opdrachtgever toe."
-
-
-OrganizationFormSet = forms.formset_factory(
-    OrganizationForm, formset=OrganizationBaseFormSet, extra=0, min_num=1, validate_min=True
+_AssignmentCreateFormBase = build_form_from(
+    AssignmentEditables,
+    fields=[
+        AssignmentEditables.name,
+        AssignmentEditables.extra_info,
+        AssignmentEditables.period,
+        AssignmentEditables.owner,
+        AssignmentEditables.organizations,
+    ],
 )
 
 
-class ServiceForm(RvoFormMixin, forms.Form):
-    """Form for a single service row within assignment creation."""
+class AssignmentCreateForm(_AssignmentCreateFormBase):
+    """Stable importable name for the dynamically-built create form.
 
+    The base class is generated by ``build_form_from`` with
+    ``__name__ == "InlineEditForm"``; this subclass gives it a proper
+    identity in tracebacks and imports. Body is intentionally empty —
+    all fields come from ``AssignmentEditables``.
+    """
+
+
+class ServiceForm(RvoFormMixin, forms.Form):
+    """Form for a single service row within assignment creation and edit.
+
+    ``id`` and ``placement_id`` are hidden round-trip identifiers used by the
+    edit-from-side-panel path to diff existing rows against submitted rows.
+    Both are empty for newly-added rows on the create form. They are
+    attacker-controllable, so the save helper must verify each points at a
+    row owned by the target Assignment before writing.
+    """
+
+    id = forms.IntegerField(required=False, widget=forms.HiddenInput)
+    placement_id = forms.IntegerField(required=False, widget=forms.HiddenInput)
     skill = forms.ModelChoiceField(
         label="Rol",
         queryset=Skill.objects.order_by("name"),
@@ -328,6 +227,12 @@ class ServiceForm(RvoFormMixin, forms.Form):
         colleague = cleaned_data.get("colleague")
         if is_filled and not colleague:
             self.add_error("colleague", "Selecteer een consultant als de rol is ingevuld.")
+        # "Rol ingevuld" is the authoritative on/off for the placement.
+        # The UI hides (not clears) the colleague select when the
+        # checkbox is off, so the posted colleague id would otherwise
+        # leak through — treat an unchecked row as "no placement".
+        if not is_filled:
+            cleaned_data["colleague"] = None
         return cleaned_data
 
 

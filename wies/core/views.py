@@ -24,8 +24,6 @@ from .forms import (
     AssignmentCreateForm,
     LabelCategoryForm,
     LabelForm,
-    OrganizationFormSet,
-    ProfileLabelsForm,
     ServiceFormSet,
     UserForm,
 )
@@ -1964,31 +1962,6 @@ def label_delete(request, pk):
     return HttpResponse(status=405)
 
 
-# Configuration for editable assignment fields
-EDITABLE_ASSIGNMENT_FIELDS = {
-    "name": {
-        "field_type": "text",
-        "field_name": "name",
-        "max_length": 200,
-        "required": True,
-        "label": "Opdracht naam",
-        "display_template": "parts/editable_text_field.html",
-        "form_template": "parts/editable_text_field_form.html",
-        "target_element": "assignment-name-content",
-    },
-    "extra_info": {
-        "field_type": "textarea",
-        "field_name": "extra_info",
-        "max_length": 5000,
-        "required": False,
-        "label": "Beschrijving",
-        "display_template": "parts/editable_textarea_field.html",
-        "form_template": "parts/editable_textarea_field_form.html",
-        "target_element": "assignment-extra-info-content",
-    },
-}
-
-
 def assignment_events_partial(request, pk):
     assignment = get_object_or_404(Assignment, pk=pk)
     events = (
@@ -2000,125 +1973,6 @@ def assignment_events_partial(request, pk):
         .order_by("-timestamp")[:20]
     )
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
-
-
-# Permission check is done in function body, not decorator
-def assignment_edit_attribute(request, pk, attribute):
-    """
-    Generic inline editor for assignment attributes.
-    Handles both GET (show form) and POST (save) for any configured attribute.
-    Returns a partial html page, to be used with htmx.
-
-    Args:
-        request: HttpRequest object
-        pk: Assignment primary key
-        attribute: Name of the attribute to edit (must be in EDITABLE_ASSIGNMENT_FIELDS)
-    """
-    # Validate attribute
-    if attribute not in EDITABLE_ASSIGNMENT_FIELDS:
-        return HttpResponse(status=404)
-
-    field_config = EDITABLE_ASSIGNMENT_FIELDS[attribute]
-    assignment = get_object_or_404(Assignment, pk=pk)
-
-    # Check if user is authorized: has permission OR is owner OR is assigned colleague
-    if not user_can_edit_assignment(request.user, assignment):
-        return HttpResponse(status=403)
-
-    # Build edit URL
-    edit_url = reverse("assignment-edit-attribute", kwargs={"pk": assignment.id, "attribute": attribute})
-
-    if request.method == "POST":
-        # Process form submission
-        field_name = field_config["field_name"]
-        new_value = request.POST.get(field_name, "").strip()
-
-        # Validate
-        errors = {}
-        if field_config["required"] and not new_value:
-            errors[field_name] = f"{field_config['label']} is verplicht"
-        elif field_config.get("max_length") and len(new_value) > field_config["max_length"]:
-            errors[field_name] = f"{field_config['label']} mag maximaal {field_config['max_length']} tekens bevatten"
-
-        if errors:
-            # Return form with errors
-            return render(
-                request,
-                field_config["form_template"],
-                {
-                    "target_element": field_config["target_element"],
-                    "field_name": field_name,
-                    "field_value": new_value,
-                    "edit_url": edit_url,
-                    "errors": errors,
-                },
-            )
-
-        # Save
-        old_value = getattr(assignment, field_name) or ""
-        setattr(assignment, field_name, new_value)
-        assignment.save()
-
-        # Log change event
-        if str(old_value) != str(new_value):
-            create_event(
-                object_type="Assignment",
-                action="update",
-                source="user",
-                object_id=assignment.id,
-                user=request.user,
-                context={
-                    "field_type": field_config["field_type"],
-                    "field_name": field_name,
-                    "field_label": field_config["label"],
-                    "old_value": str(old_value),
-                    "new_value": str(new_value),
-                },
-            )
-
-        # Return updated display after save
-        return render(
-            request,
-            field_config["display_template"],
-            {
-                "target_element": field_config["target_element"],
-                "field_label": field_config["label"],
-                "field_value": getattr(assignment, field_name),
-                "edit_url": edit_url,
-                "user_can_edit": True,
-            },
-        )
-
-    if request.method == "GET":
-        current_value = getattr(assignment, field_config["field_name"])
-
-        # Check if this is a cancel request
-        if request.GET.get("cancel"):
-            # Return display mode
-            return render(
-                request,
-                field_config["display_template"],
-                {
-                    "target_element": field_config["target_element"],
-                    "field_label": field_config["label"],
-                    "field_value": current_value,
-                    "edit_url": edit_url,
-                    "user_can_edit": True,
-                },
-            )
-        # Return edit form
-        return render(
-            request,
-            field_config["form_template"],
-            {
-                "target_element": field_config["target_element"],
-                "field_name": field_config["field_name"],
-                "field_value": current_value or "",
-                "edit_url": edit_url,
-            },
-        )
-
-    return HttpResponse(status=405)
 
 
 def user_profile(request):
@@ -2170,190 +2024,6 @@ def user_profile(request):
             "panel_data": panel_data,
         },
     )
-
-
-# Configuration for editable profile fields
-EDITABLE_PROFILE_FIELDS = {
-    "first_name": {
-        "field_type": "text",
-        "field_name": "first_name",
-        "max_length": 150,
-        "required": True,
-        "label": "Voornaam",
-        "display_template": "parts/editable_text_field.html",
-        "form_template": "parts/editable_text_field_form.html",
-        "target_element": "profile-first-name-content",
-    },
-    "last_name": {
-        "field_type": "text",
-        "field_name": "last_name",
-        "max_length": 150,
-        "required": True,
-        "label": "Achternaam",
-        "display_template": "parts/editable_text_field.html",
-        "form_template": "parts/editable_text_field_form.html",
-        "target_element": "profile-last-name-content",
-    },
-}
-
-
-def user_profile_edit_attribute(request, attribute):
-    """
-    Inline editor for user profile attributes.
-    Handles text fields (first_name, last_name) and label categories (labels_<category_id>).
-    """
-    user = request.user
-
-    # Handle label category editing: labels_<category_id>
-    if attribute.startswith("labels_"):
-        return _handle_label_edit(request, attribute)
-
-    # Handle text field editing
-    if attribute not in EDITABLE_PROFILE_FIELDS:
-        return HttpResponse(status=404)
-
-    field_config = EDITABLE_PROFILE_FIELDS[attribute]
-    edit_url = reverse("user-profile-edit-attribute", kwargs={"attribute": attribute})
-
-    if request.method == "POST":
-        field_name = field_config["field_name"]
-        new_value = request.POST.get(field_name, "").strip()
-
-        errors = {}
-        if field_config["required"] and not new_value:
-            errors[field_name] = f"{field_config['label']} is verplicht"
-        elif field_config.get("max_length") and len(new_value) > field_config["max_length"]:
-            errors[field_name] = f"{field_config['label']} mag maximaal {field_config['max_length']} tekens bevatten"
-
-        if errors:
-            return render(
-                request,
-                field_config["form_template"],
-                {
-                    "target_element": field_config["target_element"],
-                    "field_name": field_name,
-                    "field_value": new_value,
-                    "edit_url": edit_url,
-                    "errors": errors,
-                },
-            )
-
-        # Save to User
-        setattr(user, field_name, new_value)
-        user.save(update_fields=[field_name])
-
-        # Sync name to Colleague
-        colleague, _ = Colleague.objects.get_or_create(
-            user=user, defaults={"name": f"{user.first_name} {user.last_name}", "email": user.email, "source": "wies"}
-        )
-        colleague.name = f"{user.first_name} {user.last_name}"
-        colleague.save(update_fields=["name"])
-
-        return render(
-            request,
-            field_config["display_template"],
-            {
-                "target_element": field_config["target_element"],
-                "field_label": field_config["label"],
-                "field_value": getattr(user, field_name),
-                "edit_url": edit_url,
-                "user_can_edit": True,
-            },
-        )
-
-    if request.method == "GET":
-        current_value = getattr(user, field_config["field_name"])
-
-        if request.GET.get("cancel"):
-            return render(
-                request,
-                field_config["display_template"],
-                {
-                    "target_element": field_config["target_element"],
-                    "field_label": field_config["label"],
-                    "field_value": current_value,
-                    "edit_url": edit_url,
-                    "user_can_edit": True,
-                },
-            )
-        return render(
-            request,
-            field_config["form_template"],
-            {
-                "target_element": field_config["target_element"],
-                "field_name": field_config["field_name"],
-                "field_value": current_value or "",
-                "edit_url": edit_url,
-            },
-        )
-
-    return HttpResponse(status=405)
-
-
-def _handle_label_edit(request, attribute):
-    """Handle inline label editing for a specific category."""
-    try:
-        category_id = int(attribute.split("_", 1)[1])
-    except ValueError, IndexError:
-        return HttpResponse(status=404)
-
-    category = get_object_or_404(LabelCategory, pk=category_id)
-    user = request.user
-
-    colleague, _ = Colleague.objects.get_or_create(
-        user=user, defaults={"name": f"{user.first_name} {user.last_name}", "email": user.email, "source": "wies"}
-    )
-
-    edit_url = reverse("user-profile-edit-attribute", kwargs={"attribute": attribute})
-    target_element = f"profile-labels-{category_id}-content"
-
-    if request.method == "POST":
-        form = ProfileLabelsForm(request.POST, category=category)
-        if form.is_valid():
-            selected_labels = form.cleaned_data["labels"]
-            colleague.labels.remove(*colleague.labels.filter(category=category))
-            colleague.labels.add(*selected_labels)
-
-        updated_labels = list(colleague.labels.filter(category=category).order_by("name"))
-        return render(
-            request,
-            "parts/editable_labels_field.html",
-            {
-                "category": category,
-                "labels": updated_labels,
-                "edit_url": edit_url,
-                "target_element": target_element,
-            },
-        )
-
-    if request.method == "GET":
-        selected_labels = list(colleague.labels.filter(category=category).order_by("name"))
-
-        if request.GET.get("cancel"):
-            return render(
-                request,
-                "parts/editable_labels_field.html",
-                {
-                    "category": category,
-                    "labels": selected_labels,
-                    "edit_url": edit_url,
-                    "target_element": target_element,
-                },
-            )
-
-        selected_ids = [label.pk for label in selected_labels]
-        form = ProfileLabelsForm(category=category, initial={"labels": selected_ids})
-        return render(
-            request,
-            "parts/editable_labels_field_form.html",
-            {
-                "form": form,
-                "edit_url": edit_url,
-                "target_element": target_element,
-            },
-        )
-
-    return HttpResponse(status=405)
 
 
 @login_not_required
@@ -2454,13 +2124,11 @@ def assignment_create(request):
             initial["owner"] = request.user.colleague
         form = AssignmentCreateForm(initial=initial)
         service_formset = ServiceFormSet(prefix="service", form_kwargs={"skill_choices": skill_choices})
-        org_formset = OrganizationFormSet(prefix="org")
-        return render(request, template, {"form": form, "service_formset": service_formset, "org_formset": org_formset})
+        return render(request, template, {"form": form, "service_formset": service_formset})
 
     if request.method == "POST":
         form = AssignmentCreateForm(request.POST)
         service_formset = ServiceFormSet(request.POST, prefix="service", form_kwargs={"skill_choices": skill_choices})
-        org_formset = OrganizationFormSet(request.POST, prefix="org")
 
         # Check if at least one service has a skill selected (works even when formset is invalid)
         total_forms = min(int(request.POST.get("service-TOTAL_FORMS", 0)), 100)
@@ -2469,19 +2137,16 @@ def assignment_create(request):
 
         form_valid = form.is_valid()
         formset_valid = service_formset.is_valid()
-        org_formset_valid = org_formset.is_valid()
 
-        if not form_valid or not formset_valid or not org_formset_valid or services_error:
+        if not form_valid or not formset_valid or services_error:
             if services_error:
                 form.add_error(None, services_error)
-            return render(
-                request, template, {"form": form, "service_formset": service_formset, "org_formset": org_formset}
-            )
+            return render(request, template, {"form": form, "service_formset": service_formset})
 
         services_data = extract_services_data(service_formset)
-        org_data = [f.cleaned_data for f in org_formset if f.cleaned_data]
-        primary_org = next(o["organization"] for o in org_data if o["role"] == "PRIMARY")
-        involved_orgs = [o["organization"] for o in org_data if o["role"] == "INVOLVED"]
+        orgs = form.cleaned_data["organizations"]
+        primary_org = next(o["organization"] for o in orgs if o["role"] == "PRIMARY")
+        involved_orgs = [o["organization"] for o in orgs if o["role"] == "INVOLVED"]
 
         assignment = create_assignment_from_form(
             name=form.cleaned_data["name"],

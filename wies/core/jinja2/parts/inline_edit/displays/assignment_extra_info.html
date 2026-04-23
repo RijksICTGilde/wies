@@ -1,0 +1,22 @@
+{# Display for Assignment.extra_info.
+  Truncates text >300 chars with a "Toon meer" toggle handled by
+  inline_edit.js (delegated, survives HTMX swaps). Empty value shows
+  "Niet ingevuld". Toggle visibility uses the HTML `hidden` attribute
+  + matching CSS — no inline styles. #}
+{% if value %}
+  {% set is_long = value|length > 300 %}
+  {% if is_long %}
+    <span class="inline-edit-long-text">
+      <span class="inline-edit-long-text__truncated">{{ value[:300] }}…</span>
+      <span class="inline-edit-long-text__full" hidden>{{ value }}</span>
+      <button type="button" class="inline-edit-show-more">
+        <span class="inline-edit-show-more__icon">+</span>
+        <span class="inline-edit-show-more__label">Toon meer</span>
+      </button>
+    </span>
+  {% else %}
+    <span class="inline-edit-long-text__truncated">{{ value }}</span>
+  {% endif %}
+{% else %}
+  <span class="rvo-text--italic rvo-text--subtle">Niet ingevuld</span>
+{% endif %}

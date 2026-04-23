@@ -103,6 +103,10 @@ known-first-party = ["wies", "config"]
 "*/migrations/*" = ["E501", "Q000"]
 "wies/core/views.py" = ["C901"]  # complexity (fix later)
 "wies/core/services/*" = ["C901"]  # complexity (fix later)
+# The inline_edit package is the abstraction layer — it legitimately
+# accesses its own internal dunder/sunder state (_editables, _name,
+# _meta.model_name) and raises exceptions with inline messages.
+"wies/core/inline_edit/*" = ["SLF001", "TRY003", "EM101", "EM102"]
 "scripts/*" = ["INP001"]  # standalone scripts, not a package
 
 

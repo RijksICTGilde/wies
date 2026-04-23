@@ -141,13 +141,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 
-STORAGES = {
-    # ...
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
-
 SESSION_COOKIE_AGE = 8 * 60 * 60  # 8 hours (workday)
 
 LOGIN_URL = "login"

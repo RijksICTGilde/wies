@@ -1,15 +1,20 @@
 {% extends "base.html" %}
 {% block extra_head %}
   <link rel="stylesheet" href="{{ static('css/placements.css') }}">
+  <link rel="stylesheet" href="{{ static('css/assignment_form.css') }}">
   <link rel="stylesheet" href="{{ static('css/filters/filters.css') }}">
   <link rel="stylesheet" href="{{ static('css/side_panel.css') }}">
+  <link rel="stylesheet" href="{{ static('css/org_picker.css') }}">
   <link rel="stylesheet" href="{{ static('css/client_modal.css') }}">
   <script src="{{ static('js/filters/checkbox_filter.js') }}"></script>
   <script src="{{ static('js/dialog.js') }}"></script>
   <script src="{{ static('js/side_panel.js') }}"></script>
+  <script src="{{ static('js/inline_edit.js') }}" defer></script>
   <script src="{{ static('js/tree_state.js') }}"></script>
   <script src="{{ static('js/org_tree_base.js') }}"></script>
   <script src="{{ static('js/client_tree.js') }}" defer></script>
+  <script src="{{ static('js/assignment_org_tree.js') }}" defer></script>
+  <script src="{{ static('js/assignment_form.js') }}" defer></script>
   <script>htmx.config.historyCacheSize = 0;</script>
 {% endblock extra_head %}
 {% block sidebar %}

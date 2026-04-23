@@ -17,43 +17,31 @@ User = get_user_model()
 
 
 def user_can_edit_assignment(user, assignment):
-    """
-    Check if a user can edit an assignment.
-
-    A user can edit an assignment if:
-    - User the 'core.change_assignment' permission, OR
-    - User is the BDM (owner) of the assignment, OR
-    - User is assigned to the assignment as a colleague
-    - Assignment is sourced from Wies, not an external program
-
-
-    Args:
-        user: User object to check permissions for
-        assignment: Assignment object to check edit permissions against
-
-    Returns:
-        bool: True if user can edit the assignment, False otherwise
-    """
+    """Any-field access: admin perm, owner, or a placed colleague. Wies-sourced only."""
     if not user.is_authenticated:
         return False
-
     if assignment.source not in ("wies", ""):
         return False
-
-    # Check permission
     if user.has_perm("core.change_assignment"):
         return True
-
-    # Check if user has a colleague profile
     if not hasattr(user, "colleague"):
         return False
-
-    # Check if user is the owner (BDM)
     if assignment.owner and assignment.owner.id == user.colleague.id:
         return True
-
-    # Check if user is assigned to the assignment
     return Placement.objects.filter(service__assignment=assignment, colleague__id=user.colleague.id).exists()
+
+
+def user_is_assignment_owner_or_admin(user, assignment):
+    """Management-field access (owner/period/organizations/team). Excludes placed consultants."""
+    if not user.is_authenticated:
+        return False
+    if assignment.source not in ("wies", ""):
+        return False
+    if user.has_perm("core.change_assignment"):
+        return True
+    if not hasattr(user, "colleague"):
+        return False
+    return bool(assignment.owner and assignment.owner.id == user.colleague.id)
 
 
 def setup_roles():

@@ -4,6 +4,7 @@ from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group, Permission
 from django.core.management.base import BaseCommand
 from django.db import models
 from django.utils import timezone
@@ -143,6 +144,19 @@ def _link_events_to_users():
         logger.info("Linked %d events to users", updated)
 
 
+def _grant_dev_permissions(user):
+    """Give the dev user BDM membership + edit permissions so the
+    inline-edit pencils work out of the box. Idempotent.
+    """
+    bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
+    user.groups.add(bdm_group)
+    for codename in ("change_assignment", "change_colleague"):
+        perm = Permission.objects.filter(codename=codename).first()
+        if perm is not None:
+            user.user_permissions.add(perm)
+    logger.info("Granted dev edit permissions to %s", user.email)
+
+
 def _setup_dev_profile(colleague):
     """Populate the initial user's colleague with labels and placements for dev."""
     if not colleague.labels.exists():
@@ -152,6 +166,9 @@ def _setup_dev_profile(colleague):
 
     if not colleague.placements.exists():
         _create_dev_placements(colleague)
+
+    if colleague.user is not None:
+        _grant_dev_permissions(colleague.user)
 
 
 class Command(BaseCommand):

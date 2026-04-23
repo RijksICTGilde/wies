@@ -1,0 +1,28 @@
+{# Multi-field forms (EditableGroup) show a label per field and get
+   vertical spacing between inputs. Single-field forms render the
+   widget bare — the context (panel value next to the pencil, then
+   the input when editing) is enough that a label would just be noise. #}
+{% set multi = form.fields|length > 1 %}
+<div id="{{ target }}">
+  <form hx-post="{{ url }}"
+        hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+        hx-target="#{{ target }}"
+        hx-swap="outerHTML">
+    <c-layout-flow gap="{%- if multi -%}md{%- else -%}0{%- endif -%}">
+    {% for bound in form %}
+      <div class="rvo-form-field">
+        {% if multi and bound.label %}
+          <label class="rvo-label" for="{{ bound.id_for_label }}">{{ bound.label }}</label>
+        {% endif %}
+        {{ bound.as_widget(attrs={"autofocus": loop.first}) }}
+        {% for error in bound.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
+      </div>
+    {% endfor %}
+    </c-layout-flow>
+    {% for error in form.non_field_errors() %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
+    <div class="field-actions">
+      <c-button type="submit" kind="primary">Opslaan</c-button>
+      <c-button type="button" kind="secondary" hx-get="{{ url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML">Annuleren</c-button>
+    </div>
+  </form>
+</div>
