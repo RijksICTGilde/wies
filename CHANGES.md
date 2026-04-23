@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+## 2026-04-23
+
 - 303: fix that clearing search filter inside client filter re-evaluates list
 - 303: fix that clearing org without placements works
 - 303: remove inactive tree search code in js
