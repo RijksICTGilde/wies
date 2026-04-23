@@ -2,13 +2,9 @@
 {% block extra_head %}
   <link rel="stylesheet" href="{{ static('css/ndd/side_panel.css') }}">
   <link rel="stylesheet" href="{{ static('css/modals.css') }}">
+  <script src="{{ static('js/ndd/htmx-bridge.js') }}" defer></script>
   <script src="{{ static('js/dialog.js') }}" defer></script>
 {% endblock extra_head %}
-{% block sidebar_header %}
-  <header class="ndd-sidebar-pane__header">
-    <span class="ndd-sidebar-pane__title">Instellingen</span>
-  </header>
-{% endblock sidebar_header %}
 {% block sidebar %}
   {% include "ndd/parts/admin_sidebar.html" %}
 {% endblock sidebar %}

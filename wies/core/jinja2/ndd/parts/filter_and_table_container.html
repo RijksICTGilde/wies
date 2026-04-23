@@ -4,8 +4,12 @@
    bij HTMX swap blijft de title-bar staan. #}
 {% if not request.headers.get("HX-Request") %}
   <ndd-container slot="header" padding="16">
-  <ndd-search-field id="ndd-search-input" placeholder="Zoek op collega, opdracht of opdrachtgever…" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-ndd-search-input>
-  </ndd-search-field>
+  <div class="ndd-search-row">
+    <ndd-button id="ndd-sidebar-toggle" variant="secondary" start-icon="chevron-left" end-icon="filter" text="Filters">
+    </ndd-button>
+    <ndd-search-field id="ndd-search-input" placeholder="Zoek op collega, opdracht of opdrachtgever…" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-ndd-search-input class="ndd-search-row__field">
+    </ndd-search-field>
+  </div>
   </ndd-container>
 {% endif %}
 <div id="ndd-filter-and-table-container">

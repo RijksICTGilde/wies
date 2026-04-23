@@ -39,23 +39,20 @@
       {% if real_options %}
         <fieldset class="ndd-filter-group ndd-checkbox-filter"
                   data-ndd-fieldset
-                  data-name="{{ filter_group.name }}"
-                  data-ndd-collapsible>
-          <legend class="ndd-checkbox-filter__legend-sr-only">{{ filter_group.label }}</legend>
-          <button type="button"
-                  class="ndd-checkbox-filter__header"
-                  data-ndd-collapse-toggle>
-            <span class="ndd-checkbox-filter__label">{{ filter_group.label }}</span>
-            <ndd-icon name="chevron-down" class="ndd-checkbox-filter__chevron"></ndd-icon>
-          </button>
+                  data-name="{{ filter_group.name }}">
+          <legend class="ndd-checkbox-filter__label">{{ filter_group.label }}</legend>
           <div class="ndd-checkbox-filter__body">
             <div class="ndd-checkbox-filter__options">
               {% for option in visible %}
-                {% set cb_label = option.label ~ (' (' ~ option.count ~ ')' if option.count is defined else '') %}
-                <ndd-checkbox-field data-ndd-input label="{{ cb_label }}" value="{{ option.value }}"
-                {% if option.value in filter_group.selected_values %}checked{% endif %}
-                >
-                </ndd-checkbox-field>
+                <label class="ndd-filter-option">
+                  <input type="checkbox"
+                         class="ndd-filter-option__checkbox"
+                         data-ndd-input
+                         value="{{ option.value }}"
+                         {% if option.value in filter_group.selected_values %}checked{% endif %}>
+                  <span class="ndd-filter-option__label">{{ option.label }}</span>
+                  {% if option.count is defined %}<span class="ndd-filter-option__count">{{ option.count }}</span>{% endif %}
+                </label>
               {% endfor %}
             </div>
             {% if extra %}
@@ -63,11 +60,15 @@
               <div class="ndd-checkbox-filter__options ndd-checkbox-filter__options--extra"
                    {% if not has_selected_extra %}hidden{% endif %}>
                 {% for option in extra %}
-                  {% set cb_label = option.label ~ (' (' ~ option.count ~ ')' if option.count is defined else '') %}
-                  <ndd-checkbox-field data-ndd-input label="{{ cb_label }}" value="{{ option.value }}"
-                  {% if option.value in filter_group.selected_values %}checked{% endif %}
-                  >
-                  </ndd-checkbox-field>
+                  <label class="ndd-filter-option">
+                    <input type="checkbox"
+                           class="ndd-filter-option__checkbox"
+                           data-ndd-input
+                           value="{{ option.value }}"
+                           {% if option.value in filter_group.selected_values %}checked{% endif %}>
+                    <span class="ndd-filter-option__label">{{ option.label }}</span>
+                    {% if option.count is defined %}<span class="ndd-filter-option__count">{{ option.count }}</span>{% endif %}
+                  </label>
                 {% endfor %}
               </div>
               <button type="button"

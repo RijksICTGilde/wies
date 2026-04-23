@@ -88,7 +88,7 @@ def get_delete_context(delete_url_name, object_pk, object_name):
 
 def _is_ndd_request(request) -> bool:
     """Check if the request came from an NDD page."""
-    return "/ndd/" in request.headers.get("Referer", "")
+    return "/ndd/" in (request.headers.get("HX-Current-URL", "") or request.headers.get("Referer", ""))
 
 
 def _ndd_redirect_url(request, rvo_name: str, ndd_name: str) -> str:

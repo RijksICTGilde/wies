@@ -13,24 +13,14 @@
   <ndd-title-cell class="ndd-col-who" text="{{ placement.colleague.name }}" supporting-text="{{ placement.service.skill.name if placement.service.skill else '' }}">
   </ndd-title-cell>
   <ndd-spacer-cell size="8"></ndd-spacer-cell>
-  <ndd-icon-cell color="secondary" size="16">
-  <ndd-icon name="apartment-building"></ndd-icon>
-  </ndd-icon-cell>
-  <ndd-spacer-cell size="4"></ndd-spacer-cell>
   <ndd-text-cell class="ndd-col-what" text="{{ placement.service.assignment.name }}" supporting-text="{{ client_label }}">
   </ndd-text-cell>
   <ndd-spacer-cell size="8"></ndd-spacer-cell>
-  <ndd-icon-cell color="secondary" size="16">
-  <ndd-icon name="calendar-event"></ndd-icon>
-  </ndd-icon-cell>
-  <ndd-spacer-cell size="4"></ndd-spacer-cell>
   <ndd-text-cell color="secondary" width="fit-content" text="{{ placement.service.assignment.end_date|datum_nl('j M Y') if placement.service.assignment.end_date else '' }}">
   </ndd-text-cell>
-  <ndd-spacer-cell slot="end" size="8"></ndd-spacer-cell>
-  <ndd-icon-cell slot="end" color="secondary" size="16">
+  <ndd-icon-cell color="secondary" size="16" style="margin-left: auto; padding-inline: 12px;">
   <ndd-icon name="chevron-right"></ndd-icon>
   </ndd-icon-cell>
-  <ndd-spacer-cell slot="end" size="8"></ndd-spacer-cell>
   </ndd-list-item>
 {% else %}
   <ndd-list-item>

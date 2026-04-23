@@ -26,6 +26,7 @@
         );
         if (item) window.location.href = item.dataset.href;
       });
+
     </script>
   </head>
   <body class="ndd-app">
@@ -62,26 +63,12 @@
       </div>
     </nav>
     <div id="ndd-main-split">
-      {% block sidebar_pane %}
-        <aside id="ndd-sidebar-pane">
-          {% block sidebar_header %}
-            <header class="ndd-sidebar-pane__header">
-              <ndd-icon-button id="ndd-sidebar-toggle" icon="chevron-left" variant="neutral-transparent" aria-label="Filters inklappen">
-              </ndd-icon-button>
-              <span class="ndd-sidebar-pane__divider"></span>
-              <span class="ndd-sidebar-pane__title">
-                {% block sidebar_title %}
-                  Filters
-                {% endblock sidebar_title %}
-              </span>
-            </header>
-          {% endblock sidebar_header %}
-          <div class="ndd-sidebar-pane__body">
-            {% block sidebar %}
-            {% endblock sidebar %}
-          </div>
-        </aside>
-      {% endblock sidebar_pane %}
+      <aside id="ndd-sidebar-pane">
+        <div class="ndd-sidebar-pane__body">
+          {% block sidebar %}
+          {% endblock sidebar %}
+        </div>
+      </aside>
       <div id="ndd-main-pane">
         <ndd-page sticky-header
         {% block page_attrs %}
@@ -94,5 +81,18 @@
     </div>
     {% block panel %}
     {% endblock panel %}
+    {# Mobile filter sheet #}
+    <ndd-sheet id="ndd-filter-sheet" placement="left" accessible-label="Filters">
+    <div id="ndd-filter-sheet-content"
+         class="ndd-panel"
+         style="padding: var(--primitives-space-24, 24px)">
+      <header class="ndd-panel__bar">
+        <h2 class="ndd-panel__bar-title">Filters</h2>
+        <button type="button"
+                class="ndd-panel__bar-action"
+                data-ndd-action="panel-close">Sluit</button>
+      </header>
+    </div>
+    </ndd-sheet>
   </body>
 </html>
