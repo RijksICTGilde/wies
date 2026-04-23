@@ -159,8 +159,12 @@ body {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  position: relative;
-  overflow: visible;
+  position: sticky;
+  top: 0;
+  max-height: 100vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--rvo-color-grijs-400, #b4b4b4) transparent;
 }
 
 /* Extend sidebar background to the left */
@@ -219,8 +223,10 @@ body {
   opacity: 1;
   transition: opacity 0.15s ease;
   padding: var(--rvo-space-md);
-  flex: 1;
-  overflow-y: auto;
+}
+
+.layout--collapsed .sidebar {
+  overflow-y: hidden;
 }
 
 .layout--collapsed .sidebar__content {
@@ -636,4 +642,65 @@ body {
 .logo-link:hover,
 .logo-link:focus {
   text-decoration: none;
+}
+
+/* ============================================================================
+   Sidebar footer - footer with headings and chevrons in sidebar
+   ============================================================================ */
+.sidebar-footer {
+  margin-top: auto;
+  padding: var(--rvo-space-md);
+  border-top: 1px solid var(--rvo-color-grijs-300, #c4c4c4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--rvo-space-md);
+}
+
+.sidebar-footer__title {
+  color: var(--rvo-color-lintblauw, #154273);
+  font-size: var(--rvo-font-size-md, 1rem);
+  font-weight: 700;
+  margin: 0 0 var(--rvo-space-xs) 0;
+}
+
+.sidebar-footer__menu {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rvo-space-xs);
+}
+
+.sidebar-footer__link {
+  color: var(--rvo-color-grijs-700, #535353);
+  text-decoration: none;
+  font-size: var(--rvo-font-size-sm, 0.875rem);
+  display: flex;
+  align-items: center;
+  gap: var(--rvo-space-xs);
+}
+
+.sidebar-footer__link:hover {
+  color: var(--rvo-color-lintblauw, #154273);
+}
+
+.sidebar-footer__link .rvo-icon-delta-naar-rechts {
+  background-color: var(--rvo-color-grijs-700, #535353);
+}
+
+.sidebar-footer__link:hover .rvo-icon-delta-naar-rechts {
+  background-color: var(--rvo-color-lintblauw, #154273);
+}
+
+.sidebar-footer__link--static {
+  cursor: default;
+}
+
+.sidebar-footer__link--static:hover {
+  color: var(--rvo-color-grijs-700, #535353);
+}
+
+.layout--collapsed .sidebar-footer {
+  display: none;
 }

@@ -1,0 +1,57 @@
+<div class="sidebar-footer">
+  <div class="sidebar-footer__column">
+    <h3 class="sidebar-footer__title">Over Wies</h3>
+    <ul class="sidebar-footer__menu">
+      <li>
+        <a href="https://github.com/RijksICTGilde/wies"
+           class="sidebar-footer__link"
+           target="_blank"
+           rel="noopener noreferrer">
+          <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs"
+                role="img"
+                aria-label=""></span>
+          GitHub
+        </a>
+      </li>
+      {% if APP_VERSION and '/instellingen/' in request.path %}
+        <li>
+          <span class="sidebar-footer__link sidebar-footer__link--static">
+            <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs"
+                  role="img"
+                  aria-label=""></span>
+            Versie: <strong>{{ APP_VERSION }}</strong>
+          </span>
+        </li>
+      {% endif %}
+    </ul>
+  </div>
+  <div class="sidebar-footer__column">
+    <h3 class="sidebar-footer__title">Over deze site</h3>
+    <ul class="sidebar-footer__menu">
+      <li>
+        <a href="{{ url('privacy') }}" class="sidebar-footer__link">
+          <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs"
+                role="img"
+                aria-label=""></span>
+          Privacy
+        </a>
+      </li>
+      <li>
+        <a href="{{ url('toegankelijkheid') }}" class="sidebar-footer__link">
+          <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs"
+                role="img"
+                aria-label=""></span>
+          Toegankelijkheid
+        </a>
+      </li>
+      <li>
+        <a href="{{ url('contact') }}" class="sidebar-footer__link">
+          <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs"
+                role="img"
+                aria-label=""></span>
+          Contact
+        </a>
+      </li>
+    </ul>
+  </div>
+</div>
