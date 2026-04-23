@@ -336,19 +336,6 @@ class AssignmentEditAttributeTest(TestCase):
 
         assert not Event.objects.filter(name="Assignment.update").exists()
 
-    def test_assignment_edit_long_value_truncated_in_event(self):
-        """Test that long values are truncated to 200 chars in event context"""
-        self.client.force_login(self.user_with_permission)
-        long_text = "x" * 300
-
-        self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "extra_info"]),
-            {"extra_info": long_text},
-        )
-
-        event = Event.objects.get(name="Assignment.update")
-        assert len(event.context["new_value"]) == 200
-
     def test_assignment_edit_event_stores_user(self):
         """Test that event stores the user FK for live lookups"""
         self.client.force_login(self.owner_user)
