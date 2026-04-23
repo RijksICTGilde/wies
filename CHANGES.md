@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 304: register assignment edit events and display on 'Updates' tab
+
 ## 2026-04-23
 
 - 303: fix that clearing search filter inside client filter re-evaluates list

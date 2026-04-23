@@ -237,8 +237,8 @@ class Service(models.Model):
 
 
 class Event(models.Model):
+    # default (not auto_now_add) so fixtures can carry historical timestamps; save() guards mutation.
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
-    # TODO: check this, might just be for fixtures and undesirable for security
     # user FK for live display (current name, future avatar). SET_NULL preserves event on user deletion.
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     # frozen audit fields — never shown in UI (GDPR), only for security/admin access
@@ -249,6 +249,14 @@ class Event(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.user_email})"
+
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            original_timestamp = Event.objects.only("timestamp").get(pk=self.pk).timestamp
+            if original_timestamp != self.timestamp:
+                msg = "Event.timestamp is immutable"
+                raise ValueError(msg)
+        super().save(*args, **kwargs)
 
 
 class OrganizationType(models.Model):

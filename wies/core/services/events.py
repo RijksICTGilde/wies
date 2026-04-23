@@ -1,3 +1,5 @@
+from django.utils import timezone
+
 from wies.core.models import Event
 
 SUPPORTED_EVENT_NAMES = {
@@ -27,6 +29,7 @@ def create_event(name, *, user=None, context=None, resource_id=None):
         context = {}
     user_email = user.email if user else ""
     Event.objects.create(
+        timestamp=timezone.now(),
         user=user,
         user_email=user_email,
         name=name,
