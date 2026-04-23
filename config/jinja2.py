@@ -1,6 +1,7 @@
 from datetime import date
 
 from django.conf import settings
+from django.contrib.messages import get_messages
 from django.middleware.csrf import get_token
 from django.templatetags.static import static
 from django.urls import reverse
@@ -10,6 +11,24 @@ from django.utils.html import format_html, json_script
 from django.utils.timesince import timesince
 from jinja2 import Environment
 from jinja_roos_components import setup_components
+
+from wies.core.services.version import get_app_version
+
+
+def parse_message_link(extra_tags: str) -> dict | None:
+    """Parse a structured link from message extra_tags.
+
+    Format: "link:<url>|<text>"
+    Returns {"url": ..., "text": ...} or None.
+    """
+    if not extra_tags:
+        return None
+    for tag in extra_tags.split():
+        if tag.startswith("link:"):
+            parts = tag[5:].split("|", 1)
+            if len(parts) == 2:  # noqa: PLR2004
+                return {"url": parts[0], "text": parts[1]}
+    return None
 
 
 def datum_nl(datum, fmt="N Y"):
@@ -80,11 +99,14 @@ def environment(**options):
             "get_csrf_hidden_input": get_csrf_hidden_input,
             "get_toggle_sort_url": get_toggle_sort_url,
             "get_sort_state": get_sort_state,
+            "get_messages": get_messages,
             "DEBUG": settings.DEBUG,
+            "APP_VERSION": get_app_version(),
         }
     )
     env.filters["datum_nl"] = datum_nl
     env.filters["tijdgeleden"] = tijdgeleden
     env.filters["json_script"] = json_script
+    env.filters["parse_message_link"] = parse_message_link
 
     return env

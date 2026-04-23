@@ -340,6 +340,14 @@ dialog#side_panel::backdrop {
   margin-top: var(--rvo-space-xs);
 }
 
+.rvo-form-field__error-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--rvo-space-xs) 0 0;
+  color: var(--rvo-color-rood);
+  font-size: 0.875rem;
+}
+
 .rvo-input--error,
 .rvo-textarea--error {
   border-color: var(--rvo-color-rood);

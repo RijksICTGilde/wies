@@ -1688,11 +1688,12 @@ class ClientModalCountModeTest(TestCase):
         service = Service.objects.create(assignment=assignment, description="S", skill=skill, source="wies")
         Placement.objects.create(colleague=colleague, service=service, period_source="ASSIGNMENT", source="wies")
 
-    def test_count_mode_none_returns_200(self):
+    def test_count_mode_none_uses_assignment_org_modal_template(self):
         self.client.force_login(self.auth_user)
         response = self.client.get(reverse("client-modal"), {"count_mode": "none"})
         assert response.status_code == 200
-        assert b"clientModal" in response.content
+        # assignment_org_modal.html has this unique element
+        assert b"assignmentOrgPickerModal" in response.content
 
     def test_count_mode_none_includes_orgs_without_placements(self):
         """count_mode=none should not prune orgs with zero placements."""

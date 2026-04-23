@@ -8,7 +8,7 @@ from django.forms.renderers import Jinja2
 from django.forms.utils import ErrorList
 from django.template import engines
 
-from .models import Label, LabelCategory
+from .models import Colleague, Label, LabelCategory, OrganizationUnit, Skill
 from .services.users import validate_email_domain
 from .widgets import MultiselectDropdown
 
@@ -219,3 +219,116 @@ class UserForm(RvoFormMixin, forms.ModelForm):
                 cleaned_data["labels"].extend(selected_labels)
 
         return cleaned_data
+
+
+class AssignmentCreateForm(RvoFormMixin, forms.Form):
+    """Form for creating a new Assignment with services and optional placements."""
+
+    name = forms.CharField(label="Naam opdracht", max_length=200, error_messages={"required": "Vul een naam in."})
+    extra_info = forms.CharField(
+        label="Beschrijving",
+        required=False,
+        max_length=5000,
+        widget=forms.Textarea(attrs={"rows": 4}),
+    )
+    start_date = forms.DateField(label="Startdatum", required=False, widget=forms.DateInput())
+    end_date = forms.DateField(label="Einddatum", required=False, widget=forms.DateInput())
+    owner = forms.ModelChoiceField(
+        label="Business Manager",
+        queryset=Colleague.objects.filter(user__groups__name="Business Development Manager").order_by("name"),
+        required=True,
+        empty_label=" ",
+        error_messages={"required": "Selecteer een business manager."},
+    )
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start = cleaned_data.get("start_date")
+        end = cleaned_data.get("end_date")
+        if start and end and end < start:
+            self.add_error("end_date", "Einddatum moet na startdatum liggen.")
+        return cleaned_data
+
+
+class OrganizationForm(RvoFormMixin, forms.Form):
+    """Form for a single organization row within assignment creation."""
+
+    organization = forms.ModelChoiceField(
+        label="Opdrachtgever",
+        queryset=OrganizationUnit.objects.order_by("name"),
+        required=True,
+        empty_label=" ",
+        error_messages={"required": "Selecteer een opdrachtgever."},
+        widget=forms.HiddenInput(),
+    )
+    role = forms.ChoiceField(
+        label="Rol",
+        choices=[("PRIMARY", "Primaire opdrachtgever"), ("INVOLVED", "Betrokken opdrachtgever")],
+        required=True,
+        widget=forms.HiddenInput(),
+    )
+
+
+class OrganizationBaseFormSet(forms.BaseFormSet):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.error_messages["too_few_forms"] = "Voeg minimaal %(num)d opdrachtgever toe."
+
+
+OrganizationFormSet = forms.formset_factory(
+    OrganizationForm, formset=OrganizationBaseFormSet, extra=0, min_num=1, validate_min=True
+)
+
+
+class ServiceForm(RvoFormMixin, forms.Form):
+    """Form for a single service row within assignment creation."""
+
+    skill = forms.ModelChoiceField(
+        label="Rol",
+        queryset=Skill.objects.order_by("name"),
+        required=False,
+        empty_label=" ",
+    )
+    description = forms.CharField(label="Omschrijving", max_length=500, required=False)
+    new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)
+    is_filled = forms.BooleanField(label="Rol ingevuld", required=False)
+    colleague = forms.ModelChoiceField(
+        label="Consultant",
+        queryset=Colleague.objects.order_by("name"),
+        required=False,
+        empty_label=" ",
+    )
+
+    def __init__(self, *args, skill_choices=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Replace ModelChoiceField with a ChoiceField so __new__ is a valid value
+        if skill_choices is None:
+            skill_choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
+            skill_choices.extend((str(s.id), s.name) for s in Skill.objects.order_by("name"))
+        self.fields["skill"] = forms.ChoiceField(
+            label="Rol",
+            choices=skill_choices,
+            required=False,
+        )
+        self._configure_field_for_rvo("skill")
+
+    def clean(self):
+        cleaned_data = super().clean()
+        skill_val = cleaned_data.get("skill", "")
+        new_skill_name = cleaned_data.get("new_skill_name", "").strip()
+        if skill_val == "__new__" and not new_skill_name:
+            self.add_error("new_skill_name", "Voer een naam in voor de nieuwe rol.")
+        has_skill = (skill_val and skill_val != "__new__") or new_skill_name
+        has_other_data = (
+            cleaned_data.get("description") or cleaned_data.get("is_filled") or cleaned_data.get("colleague")
+        )
+        if not has_skill and has_other_data:
+            self.add_error("skill", "Selecteer een rol.")
+        is_filled = cleaned_data.get("is_filled")
+        colleague = cleaned_data.get("colleague")
+        if is_filled and not colleague:
+            self.add_error("colleague", "Selecteer een consultant als de rol is ingevuld.")
+        return cleaned_data
+
+
+ServiceFormSet = forms.formset_factory(ServiceForm, extra=0, min_num=1, validate_min=False)

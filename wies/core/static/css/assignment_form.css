@@ -1,0 +1,158 @@
+/* ----------------------------------------------------------------------------
+   Assignment Create Form
+   ---------------------------------------------------------------------------- */
+
+/* Tighter legend spacing in diensten fieldset */
+#diensten .utrecht-form-fieldset__legend {
+  margin-block-end: 0;
+}
+
+.fieldset-hint {
+  font-size: 1rem;
+  font-weight: normal;
+  color: inherit;
+}
+
+/* Tighter spacing within fieldsets */
+#assignment-create-form .utrecht-form-field {
+  margin-bottom: 0;
+}
+
+form#assignment-create-form .rvo-form-fieldset,
+form#assignment-create-form
+  .rvo-form-fieldset
+  .utrecht-form-fieldset__fieldset {
+  padding-bottom: 0.5rem;
+  margin-bottom: 0;
+}
+
+/* Two fields side by side (dates, status+owner) */
+.assignment-form-row {
+  display: flex;
+  gap: 1rem;
+}
+
+.assignment-form-row > .utrecht-form-field {
+  flex: 1;
+}
+
+/* ----------------------------------------------------------------------------
+   Service Rows — compact inline layout
+   ---------------------------------------------------------------------------- */
+.service-row {
+  padding: 1.25rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid var(--rvo-color-grijs-300, #c5ced6);
+  border-radius: 4px;
+  background: var(--rvo-color-wit, white);
+}
+
+.service-row + .service-row {
+  margin-top: 0.5rem;
+}
+
+.service-row__line {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-end;
+  position: relative;
+}
+
+.service-row__line + .service-row__line {
+  margin-top: 0.5rem;
+}
+
+.service-field--grow {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Style the "+ Nieuwe ... aanmaken" option in dropdowns */
+.service-row option[value="__new__"] {
+  color: var(--rvo-link-color, #007bc7);
+  font-weight: 600;
+}
+
+/* Inline create fields */
+.service-new-skill {
+  margin-top: 0.5rem;
+}
+
+.service-field--checkbox {
+  padding-bottom: 0.5rem;
+}
+
+.service-row__checkbox-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* ----------------------------------------------------------------------------
+   Organization Selection List
+   ---------------------------------------------------------------------------- */
+.assignment-org-selections {
+  margin-top: 0.75rem;
+}
+
+.assignment-org-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.assignment-org-table th {
+  text-align: left;
+  font-weight: 600;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 2px solid var(--rvo-color-grijs-300, #ccc);
+  white-space: nowrap;
+}
+
+.assignment-org-table th:last-child {
+  text-align: left;
+}
+
+.assignment-org-table td {
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-200, #e6e6e6);
+  vertical-align: middle;
+}
+
+.assignment-org-table td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.assignment-org-table__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.assignment-org-remove {
+  color: var(--rvo-color-rood-500, #d52b1e);
+}
+
+/* Button group should always be horizontal */
+#assignment-create-form .utrecht-button-group {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .assignment-form-row {
+    flex-direction: column;
+  }
+
+  .service-row__line {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

@@ -89,9 +89,12 @@ TreeState.prototype.uncheck = function (nodeId) {
 };
 
 TreeState.prototype.removeSelection = function (nodeId) {
+  // Always remove from explicit selections, even if the node
+  // doesn't exist in the tree (e.g. pruned zero-placement orgs).
+  this.explicitSelections.delete(String(nodeId));
+
   var node = this.nodes.get(String(nodeId));
   if (!node) return;
-  this.explicitSelections.delete(node.id);
   node.checked = false;
   node.indeterminate = false;
   this._cascadeDown(node, false);
@@ -205,33 +208,6 @@ TreeState.prototype._demoteAncestors = function (node) {
     }
     current = parent;
   }
-};
-
-// ============================================================
-// SEARCH
-// ============================================================
-
-TreeState.nodeMatches = function (node, q) {
-  var query = q.toLowerCase();
-  if (node.label && node.label.toLowerCase().includes(query)) return true;
-  if (node.abbreviations) {
-    for (var i = 0; i < node.abbreviations.length; i++) {
-      if (node.abbreviations[i].toLowerCase().includes(query)) return true;
-    }
-  }
-  return false;
-};
-
-TreeState.collectMatches = function (nodes, q, result) {
-  if (!result) result = [];
-  for (var i = 0; i < nodes.length; i++) {
-    var node = nodes[i];
-    if (!node.group && !node.self && TreeState.nodeMatches(node, q)) {
-      result.push(node);
-    }
-    if (node.children) TreeState.collectMatches(node.children, q, result);
-  }
-  return result;
 };
 
 // ============================================================
