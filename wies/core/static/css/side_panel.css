@@ -353,6 +353,12 @@ dialog#side_panel::backdrop {
   border-color: var(--rvo-color-rood);
 }
 
+.pre-wrap,
+.truncated-text,
+.full-text {
+  white-space: pre-wrap;
+}
+
 /* Show more toggle - consistent with checkbox_filter__toggle */
 .show-more-toggle {
   display: inline-flex;

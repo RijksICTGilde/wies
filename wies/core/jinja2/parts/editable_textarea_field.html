@@ -1,19 +1,16 @@
 <div class="editable-field-display">
   {% if field_value %}
-    {% set is_long = field_value|length > 300 %}
-    {% if is_long %}
-      <span style="flex: 1;">
-        <span style="white-space: pre-wrap; display: block;" class="truncated-text">{{ field_value[:300] }}...</span>
-        <span style="white-space: pre-wrap; display: none;" class="full-text">{{ field_value }}</span>
-        <button type="button"
-                class="show-more-toggle"
-                onclick="const container = this.parentElement; const truncated = container.querySelector('.truncated-text'); const full = container.querySelector('.full-text'); const isExpanded = full.style.display !== 'none'; truncated.style.display = isExpanded ? 'block' : 'none'; full.style.display = isExpanded ? 'none' : 'block'; this.querySelector('.show-more-toggle__icon').textContent = isExpanded ? '+' : '−'; this.querySelector('.show-more-toggle__text').textContent = isExpanded ? 'Toon meer' : 'Toon minder';">
+    {% if field_value|length > 300 %}
+      <span>
+        <span class="truncated-text" style="display: block;">{{ field_value[:300] }}...</span>
+        <span class="full-text" style="display: none;">{{ field_value }}</span>
+        <button type="button" class="show-more-toggle" onclick="toggleShowMore(this)">
           <span class="show-more-toggle__icon">+</span>
           <span class="show-more-toggle__text">Toon meer</span>
         </button>
       </span>
     {% else %}
-      <span style="white-space: pre-wrap;">{{ field_value }}</span>
+      <span class="pre-wrap">{{ field_value }}</span>
     {% endif %}
   {% else %}
     <span class="rvo-text--italic rvo-text--subtle">Niet ingevuld</span>
