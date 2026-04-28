@@ -1,31 +1,32 @@
 <div>
   {% if panel_data.show_updates_tab %}
-    <ul class="rvo-tabs" role="tablist">
-      <li class="rvo-tabs__item">
-        <a href="#"
-           class="rvo-tabs__item-link rvo-tabs__item-link--active"
-           role="tab"
-           aria-selected="true"
-           aria-controls="tab-panel-gegevens"
-           id="tab-gegevens">Gegevens</a>
-      </li>
-      <li class="rvo-tabs__item">
-        <a href="#"
-           class="rvo-tabs__item-link"
-           role="tab"
-           aria-selected="false"
-           aria-controls="tab-panel-updates"
-           id="tab-updates"
-           hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.id]) }}"
-           hx-target="#tab-panel-updates"
-           hx-swap="innerHTML">Updates</a>
-      </li>
-    </ul>
-  {% endif %}
-  <div class="rvo-tabs__content">
+    <div class="rvo-tabs rvo-tabs--md">
+      <div class="rvo-tabs__tablist" role="tablist" aria-label="Tabs">
+        <button id="tab-gegevens"
+                type="button"
+                role="tab"
+                class="rvo-tabs__tab rvo-tabs__tab--active"
+                aria-selected="true"
+                aria-controls="tab-panel-gegevens"
+                tabindex="0">
+          <span class="rvo-tabs__label">Gegevens</span>
+        </button>
+        <button id="tab-updates"
+                type="button"
+                role="tab"
+                class="rvo-tabs__tab"
+                aria-selected="false"
+                aria-controls="tab-panel-updates"
+                tabindex="-1"
+                hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.id]) }}"
+                hx-target="#tab-panel-updates"
+                hx-swap="innerHTML">
+          <span class="rvo-tabs__label">Updates</span>
+        </button>
+      </div>
+    {% endif %}
     <div id="tab-panel-gegevens"
-         role="tabpanel"
-         aria-labelledby="tab-gegevens">
+         {% if panel_data.show_updates_tab %}class="rvo-tabs__panel" role="tabpanel" aria-labelledby="tab-gegevens" tabindex="0"{% endif %}>
       <div class="rvo-layout-column rvo-layout-gap--lg">
         <section>
           <h2>Opdracht gegevens</h2>
@@ -200,9 +201,11 @@
     </div>
     {% if panel_data.show_updates_tab %}
       <div id="tab-panel-updates"
+           class="rvo-tabs__panel"
            role="tabpanel"
            aria-labelledby="tab-updates"
-           style="display: none"></div>
-    {% endif %}
-  </div>
+           hidden
+           tabindex="-1"></div>
+    </div>
+  {% endif %}
 </div>

@@ -37,9 +37,25 @@
               naar "{{ event.context.new_value }}"
             {% endif %}
           {% endif %}
-          <br>
-          <span class="rvo-text--subtle rvo-text--xs"
-                title="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
+          <div class="event-timeline__meta">
+            <span class="rvo-text--subtle rvo-text--xs"
+                  title="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
+            {% if event.name == "Assignment.create" %}
+              <span class="event-tag event-tag--create">
+                <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--xs"
+                      role="img"
+                      aria-hidden="true"></span>
+                Aangemaakt
+              </span>
+            {% else %}
+              <span class="event-tag event-tag--update">
+                <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--xs"
+                      role="img"
+                      aria-hidden="true"></span>
+                Gewijzigd
+              </span>
+            {% endif %}
+          </div>
           {% if event.context.field_type == "textarea" %}
             {% if event.context.old_value %}
               <div class="rvo-margin-block-start--xs">

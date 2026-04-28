@@ -131,19 +131,24 @@ window.addEventListener("popstate", function () {
 // --- Tab switching (event delegation for HTMX-swapped content) ---
 
 document.addEventListener("click", (e) => {
-  const link = e.target.closest(".rvo-tabs .rvo-tabs__item-link");
-  if (!link) return;
-  e.preventDefault();
-  const tabsContainer = link.closest(".rvo-tabs");
-  const allLinks = [...tabsContainer.querySelectorAll(".rvo-tabs__item-link")];
-  const index = allLinks.indexOf(link);
-  allLinks.forEach((t, i) => {
-    t.classList.toggle("rvo-tabs__item-link--active", i === index);
+  const tab = e.target.closest(".rvo-tabs__tab");
+  if (!tab) return;
+  const tabsContainer = tab.closest(".rvo-tabs");
+  const allTabs = [...tabsContainer.querySelectorAll(".rvo-tabs__tab")];
+  const index = allTabs.indexOf(tab);
+  allTabs.forEach((t, i) => {
+    t.classList.toggle("rvo-tabs__tab--active", i === index);
     t.setAttribute("aria-selected", i === index);
+    t.setAttribute("tabindex", i === index ? "0" : "-1");
   });
-  const panels =
-    tabsContainer.parentElement.querySelectorAll("[role=tabpanel]");
+  const panels = tabsContainer.querySelectorAll(".rvo-tabs__panel");
   panels.forEach((p, i) => {
-    p.style.display = i === index ? "" : "none";
+    if (i === index) {
+      p.removeAttribute("hidden");
+      p.setAttribute("tabindex", "0");
+    } else {
+      p.setAttribute("hidden", "");
+      p.setAttribute("tabindex", "-1");
+    }
   });
 });

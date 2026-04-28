@@ -8,7 +8,6 @@ from django.urls import reverse
 from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.html import format_html, json_script
-from django.utils.timesince import timesince
 from jinja2 import Environment
 from jinja_roos_components import setup_components
 
@@ -47,7 +46,37 @@ def tijdgeleden(dt):
     """Returns Dutch relative time string, e.g. '2 weken geleden'"""
     if dt is None:
         return ""
-    return f"{timesince(dt, timezone.now())} geleden"
+
+    SECONDS_PER_MINUTE = 60  # noqa: N806
+    MINUTES_PER_HOUR = 60  # noqa: N806
+    HOURS_PER_DAY = 24  # noqa: N806
+    DAYS_PER_WEEK = 7  # noqa: N806
+    MAX_WEEKS = 5  # noqa: N806
+    MONTHS_PER_YEAR = 12  # noqa: N806
+    DAYS_PER_MONTH = 30  # noqa: N806
+    DAYS_PER_YEAR = 365  # noqa: N806
+
+    delta = timezone.now() - dt
+    seconds = int(delta.total_seconds())
+    if seconds < SECONDS_PER_MINUTE:
+        return "zojuist"
+    minutes = seconds // SECONDS_PER_MINUTE
+    if minutes < MINUTES_PER_HOUR:
+        return f"{minutes} {'minuut' if minutes == 1 else 'minuten'} geleden"
+    hours = minutes // MINUTES_PER_HOUR
+    if hours < HOURS_PER_DAY:
+        return f"{hours} uur geleden"
+    days = delta.days
+    if days < DAYS_PER_WEEK:
+        return f"{days} {'dag' if days == 1 else 'dagen'} geleden"
+    weeks = days // DAYS_PER_WEEK
+    if weeks < MAX_WEEKS:
+        return f"{weeks} {'week' if weeks == 1 else 'weken'} geleden"
+    months = days // DAYS_PER_MONTH
+    if months < MONTHS_PER_YEAR:
+        return f"{months} {'maand' if months == 1 else 'maanden'} geleden"
+    years = days // DAYS_PER_YEAR
+    return f"{years} jaar geleden"
 
 
 def get_csrf_hidden_input(request):
