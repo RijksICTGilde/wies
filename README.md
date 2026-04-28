@@ -182,3 +182,10 @@ This project has configuration for [Claude Code](https://claude.ai/code) in `.cl
 ```
 
 Start a Claude Code session in the project root for AI-assisted development with project context.
+
+## Production
+
+The production version of this app runs on `wies.rijksapp.nl`. It is deployed using the [ZAD platform](zad.rijksapp.nl):
+- Hosted on ODC Noord
+- Guarded by SSO-rijk through keycloak + ODI whitelist
+- Daily backups with max of 7 backups
