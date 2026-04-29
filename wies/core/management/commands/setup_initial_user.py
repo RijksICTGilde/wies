@@ -1,5 +1,6 @@
 import logging
 import os
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -79,7 +80,7 @@ def _create_dev_placements(colleague):
                 service=sibling,
                 period_source="PLACEMENT",
                 specific_start_date=today.replace(year=today.year - 1),
-                specific_end_date=today.replace(month=max(today.month - 2, 1)),
+                specific_end_date=today - timedelta(days=60),
                 source="wies",
             )
             placement_count += 1
