@@ -795,7 +795,9 @@ class SyncOrganizationsDeactivationTest(TestCase):
         assert result.deactivated >= 1
         assert not OrganizationUnit.objects.filter(id=ghost.id).exists()
         # Deactivation event should still exist
-        assert Event.objects.filter(name="OrgSync.deactivate", context__name="Ghost Org").exists()
+        assert Event.objects.filter(
+            object_type="OrganizationUnit", action="deactivate", context__name="Ghost Org"
+        ).exists()
 
     def test_does_not_deactivate_manual_orgs(self):
         """Test that manually added orgs (no source_url) are NOT deactivated"""
@@ -844,11 +846,12 @@ class SyncEventLoggingTest(TestCase):
 
         sync_organization_tree(copy.deepcopy(ministry), parent=None, dry_run=False, seen_ids=set())
 
-        create_events = Event.objects.filter(name="OrgSync.create")
+        create_events = Event.objects.filter(object_type="OrganizationUnit", action="create")
         assert create_events.count() >= 1
         event = create_events.first()
+        assert event.user is None  # System event, no user
         assert event.user_email == ""
-        assert "org_id" in event.context
+        assert event.object_id is not None
         assert "name" in event.context
 
     def test_update_event_logged(self):
@@ -863,10 +866,10 @@ class SyncEventLoggingTest(TestCase):
 
         sync_organization_tree(copy.deepcopy(ministry), parent=None, dry_run=False, seen_ids=set())
 
-        update_events = Event.objects.filter(name="OrgSync.update")
+        update_events = Event.objects.filter(object_type="OrganizationUnit", action="update")
         assert update_events.count() == 1
         event = update_events.first()
-        assert event.context["org_id"] == org.id
+        assert event.object_id == org.id
         assert "name" in event.context["changes"]
         assert event.context["changes"]["name"]["old"] == "Old Name"
         assert event.context["changes"]["name"]["new"] == "Asiel en Migratie"
@@ -880,9 +883,9 @@ class SyncEventLoggingTest(TestCase):
 
         sync_organizations(xml_content=self.xml_content, dry_run=False)
 
-        deactivate_events = Event.objects.filter(name="OrgSync.deactivate")
+        deactivate_events = Event.objects.filter(object_type="OrganizationUnit", action="deactivate")
         assert deactivate_events.count() >= 1
-        ghost_event = deactivate_events.filter(context__org_id=ghost.id).first()
+        ghost_event = deactivate_events.filter(object_id=ghost.id).first()
         assert ghost_event is not None
         assert ghost_event.context["name"] == "Ghost Org"
         assert ghost_event.context["reason"] == "not_seen_in_sync"
@@ -896,7 +899,7 @@ class SyncEventLoggingTest(TestCase):
 
         sync_organizations(xml_content=self.xml_content, dry_run=True)
 
-        sync_events = Event.objects.filter(name__startswith="OrgSync.")
+        sync_events = Event.objects.filter(object_type="OrganizationUnit", source="sync")
         assert sync_events.count() == 0
 
     def test_no_event_when_unchanged(self):
@@ -911,7 +914,7 @@ class SyncEventLoggingTest(TestCase):
         # Second sync with same data should not log update
         sync_organization_tree(copy.deepcopy(ministry), parent=None, dry_run=False, seen_ids=set())
 
-        update_events = Event.objects.filter(name="OrgSync.update")
+        update_events = Event.objects.filter(object_type="OrganizationUnit", action="update")
         assert update_events.count() == 0
 
 
@@ -984,9 +987,9 @@ class SyncOrganizationsCleanupTest(TestCase):
 
         sync_organizations(xml_content=self.xml_content, dry_run=False)
 
-        delete_events = Event.objects.filter(name="OrgSync.delete")
+        delete_events = Event.objects.filter(object_type="OrganizationUnit", action="delete")
         assert delete_events.count() >= 1
-        event = delete_events.filter(context__org_id=org_id).first()
+        event = delete_events.filter(object_id=org_id).first()
         assert event is not None
         assert event.context["name"] == "Dead Org"
         assert event.context["reason"] == "inactive_and_unlinked"

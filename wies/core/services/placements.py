@@ -19,6 +19,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.services.events import create_event
 
 
 def parse_date_dmy(date_str: str) -> datetime.date:
@@ -51,7 +52,7 @@ def filter_placements_by_min_end_date(queryset, min_end_date):
     return queryset.filter(Q(actual_end_date__gte=min_end_date) | Q(actual_end_date__isnull=True))
 
 
-def create_assignments_from_csv(csv_content: str):
+def create_assignments_from_csv(creator, csv_content: str):
     """
     Create colleagues, assignments, services and placements from csv.
 
@@ -176,6 +177,16 @@ def create_assignments_from_csv(csv_content: str):
 
                 if created:
                     assignments_created += 1
+                    create_event(
+                        object_type="Assignment",
+                        action="create",
+                        source="user",
+                        object_id=assignment.id,
+                        user=creator,
+                        context={
+                            "assignment_name": assignment.name,
+                        },
+                    )
 
                 # Link organizations to assignment
                 for url, role in client_urls:

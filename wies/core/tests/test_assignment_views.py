@@ -3,7 +3,7 @@ from django.contrib.auth.models import Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Assignment, Colleague, Placement, Service
+from wies.core.models import Assignment, Colleague, Event, Placement, Service
 
 User = get_user_model()
 
@@ -304,3 +304,191 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-edit-attribute", args=[99999, "name"]))
 
         assert response.status_code == 404
+
+    # ========== Event Logging Tests ==========
+
+    def test_assignment_edit_creates_event(self):
+        """Test that editing an assignment creates an Assignment.update event"""
+        self.client.force_login(self.user_with_permission)
+
+        self.client.post(
+            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]),
+            {"name": "Event Test Name"},
+        )
+
+        event = Event.objects.get(object_type="Assignment", action="update")
+        assert event.object_id == self.assignment.id
+        assert event.user == self.user_with_permission
+        assert event.user_email == "perm@rijksoverheid.nl"
+        assert event.context["field_type"] == "text"
+        assert event.context["field_name"] == "name"
+        assert event.context["field_label"] == "Opdracht naam"
+        assert event.context["old_value"] == "Test Assignment"
+        assert event.context["new_value"] == "Event Test Name"
+
+    def test_assignment_edit_no_change_no_event(self):
+        """Test that saving the same value does not create an event"""
+        self.client.force_login(self.user_with_permission)
+
+        self.client.post(
+            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]),
+            {"name": "Test Assignment"},  # Same as current value
+        )
+
+        assert not Event.objects.filter(object_type="Assignment", action="update").exists()
+
+    def test_assignment_edit_event_stores_user(self):
+        """Test that event stores the user FK for live lookups"""
+        self.client.force_login(self.owner_user)
+
+        self.client.post(
+            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]),
+            {"name": "Owner Changed Name"},
+        )
+
+        event = Event.objects.get(object_type="Assignment", action="update")
+        assert event.user == self.owner_user
+        assert event.user_email == "owner@rijksoverheid.nl"
+
+    # ========== Timeline Rendering Tests ==========
+
+    def test_timeline_renders_textarea_change_with_toon_meer(self):
+        """Long textarea changes render with the Toon meer pattern, not inline 'van X naar Y'"""
+        self.client.force_login(self.user_with_permission)
+        long_old = "a" * 500
+        long_new = "b" * 500
+        Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_type": "textarea",
+                "field_name": "extra_info",
+                "field_label": "Beschrijving",
+                "old_value": long_old,
+                "new_value": long_new,
+            },
+        )
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, "Beschrijving")
+        self.assertContains(response, "truncated-text")
+        self.assertContains(response, "show-more-toggle")
+        self.assertContains(response, "Toon meer")
+        # Must NOT use the inline "van ... naar ..." form for textarea
+        self.assertNotContains(response, f'van "{long_old}"')
+
+    def test_timeline_textarea_short_value_no_toggle(self):
+        """Short textarea values render without the Toon meer toggle"""
+        self.client.force_login(self.user_with_permission)
+        Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_type": "textarea",
+                "field_name": "extra_info",
+                "field_label": "Beschrijving",
+                "old_value": "short old",
+                "new_value": "short new",
+            },
+        )
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, "short old")
+        self.assertContains(response, "short new")
+        self.assertNotContains(response, "show-more-toggle")
+
+    def test_timeline_renders_text_change_inline(self):
+        """Text field changes render inline as 'van X naar Y'"""
+        self.client.force_login(self.user_with_permission)
+        Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_type": "text",
+                "field_name": "name",
+                "field_label": "Opdracht naam",
+                "old_value": "Old Name",
+                "new_value": "New Name",
+            },
+        )
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, 'van "Old Name"')
+        self.assertContains(response, 'naar "New Name"')
+        self.assertNotContains(response, "show-more-toggle")
+
+    def test_timeline_legacy_event_without_field_type_renders_inline(self):
+        """Pre-existing events missing field_type fall back to inline rendering"""
+        self.client.force_login(self.user_with_permission)
+        Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_name": "name",
+                "field_label": "Opdracht naam",
+                "old_value": "Legacy Old",
+                "new_value": "Legacy New",
+            },
+        )
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, 'van "Legacy Old"')
+        self.assertContains(response, 'naar "Legacy New"')
+
+    def test_events_partial_accessible_to_unrelated_user(self):
+        """Any authenticated user can open the updates tab, not just BDM/placed colleagues."""
+        self.client.force_login(self.unrelated_user)
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+
+    def test_updates_tab_hidden_for_otys_iir_assignment(self):
+        """For assignments with source='otys_iir' the updates tab is not rendered."""
+        self.client.force_login(self.owner_user)
+
+        response = self.client.get(
+            reverse("home") + f"?opdracht={self.external_assignment.id}",
+            headers={"HX-Request": "true", "HX-Target": "side_panel-content"},
+        )
+
+        assert response.status_code == 200
+        self.assertNotContains(response, 'id="tab-updates"')
+        self.assertNotContains(response, 'id="tab-panel-updates"')
+
+    def test_updates_tab_shown_for_wies_assignment(self):
+        """For assignments with source='wies' the updates tab is rendered."""
+        self.client.force_login(self.owner_user)
+
+        response = self.client.get(
+            reverse("home") + f"?opdracht={self.assignment.id}",
+            headers={"HX-Request": "true", "HX-Target": "side_panel-content"},
+        )
+
+        assert response.status_code == 200
+        self.assertContains(response, 'id="tab-updates"')
+        self.assertContains(response, 'id="tab-panel-updates"')

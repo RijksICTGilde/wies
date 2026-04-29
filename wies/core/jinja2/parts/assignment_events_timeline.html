@@ -1,0 +1,85 @@
+{% if events %}
+  <div class="event-timeline">
+    {% for event in events %}
+      {% if event.user and event.user.colleague %}
+        {% set author = event.user.colleague.name %}
+        {% set initial = author|first|upper %}
+      {% else %}
+        {% set author = "Onbekende gebruiker" %}
+        {% set initial = "?" %}
+      {% endif %}
+      <div class="event-timeline__item">
+        <div class="event-timeline__avatar">
+          <div class="user-avatar user-avatar--sm">{{ initial }}</div>
+        </div>
+        <div class="event-timeline__content">
+          <strong>{{ author }}</strong>
+          {% if event.action == "create" %}
+            maakte deze opdracht aan
+          {% else %}
+            wijzigde <strong>{{ event.context.field_label }}</strong>
+            {% if event.context.field_type != "textarea" %}
+              {% if event.context.old_value %}van "{{ event.context.old_value }}"{% endif %}
+              naar "{{ event.context.new_value }}"
+            {% endif %}
+          {% endif %}
+          <div class="event-timeline__meta">
+            <span class="rvo-text--subtle rvo-text--xs"
+                  title="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
+            {% if event.action == "create" %}
+              <span class="event-tag event-tag--create">
+                <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--xs"
+                      role="img"
+                      aria-hidden="true"></span>
+                Aangemaakt
+              </span>
+            {% else %}
+              <span class="event-tag event-tag--update">
+                <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--xs"
+                      role="img"
+                      aria-hidden="true"></span>
+                Gewijzigd
+              </span>
+            {% endif %}
+          </div>
+          {% if event.context.field_type == "textarea" %}
+            {% if event.context.old_value %}
+              <div class="rvo-margin-block-start--xs">
+                <span class="rvo-text--subtle rvo-text--xs">Van:</span>
+                {% if event.context.old_value|length > 300 %}
+                  <span>
+                    <span class="truncated-text" style="display: block;">{{ event.context.old_value[:300] }}...</span>
+                    <span class="full-text" style="display: none;">{{ event.context.old_value }}</span>
+                    <button type="button" class="show-more-toggle" onclick="toggleShowMore(this)">
+                      <span class="show-more-toggle__icon">+</span>
+                      <span class="show-more-toggle__text">Toon meer</span>
+                    </button>
+                  </span>
+                {% else %}
+                  <span class="pre-wrap">{{ event.context.old_value }}</span>
+                {% endif %}
+              </div>
+            {% endif %}
+            <div class="rvo-margin-block-start--xs">
+              <span class="rvo-text--subtle rvo-text--xs">Naar:</span>
+              {% if event.context.new_value|length > 300 %}
+                <span>
+                  <span class="truncated-text" style="display: block;">{{ event.context.new_value[:300] }}...</span>
+                  <span class="full-text" style="display: none;">{{ event.context.new_value }}</span>
+                  <button type="button" class="show-more-toggle" onclick="toggleShowMore(this)">
+                    <span class="show-more-toggle__icon">+</span>
+                    <span class="show-more-toggle__text">Toon meer</span>
+                  </button>
+                </span>
+              {% else %}
+                <span class="pre-wrap">{{ event.context.new_value }}</span>
+              {% endif %}
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="rvo-text--italic rvo-text--subtle">Geen updates</p>
+{% endif %}

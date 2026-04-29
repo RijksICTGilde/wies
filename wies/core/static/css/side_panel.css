@@ -353,6 +353,12 @@ dialog#side_panel::backdrop {
   border-color: var(--rvo-color-rood);
 }
 
+.pre-wrap,
+.truncated-text,
+.full-text {
+  white-space: pre-wrap;
+}
+
 /* Show more toggle - consistent with checkbox_filter__toggle */
 .show-more-toggle {
   display: inline-flex;
@@ -380,4 +386,87 @@ dialog#side_panel::backdrop {
 .show-more-toggle__icon {
   font-weight: bold;
   font-size: 1em;
+}
+
+/* GitHub-style event timeline */
+.event-timeline {
+  padding-top: 8px;
+}
+
+.event-timeline__item {
+  display: flex;
+  gap: 12px;
+  position: relative;
+  padding-bottom: 16px;
+}
+
+.event-timeline__item:not(:last-child) .event-timeline__avatar::after {
+  content: "";
+  position: absolute;
+  left: 11px;
+  top: 28px;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--rvo-color-grijs-300);
+}
+
+.event-timeline__avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.user-avatar--sm {
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+}
+
+.event-timeline__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.event-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 0.65rem;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+
+.event-tag .utrecht-icon {
+  --utrecht-icon-size: 0.7rem;
+}
+
+.event-tag--create {
+  background-color: var(--rvo-color-groen-200, #d4edda);
+  color: var(--rvo-color-groen-800, #155724);
+}
+
+.event-tag--update {
+  background-color: var(--rvo-color-hemelblauw-200, #dce8f5);
+  color: var(--rvo-color-hemelblauw-800, #154273);
+}
+
+.event-timeline__content {
+  font-size: var(--rvo-font-size-sm);
+  padding-top: 2px;
+  line-height: 1.4;
+}
+
+/* Tabs inside side panel — strip panel border/background, keep content spacing */
+.rvo-dialog .rvo-tabs__panel {
+  border: none;
+  background: none;
+  padding-inline: 0;
+  padding-block: var(--rvo-space-md) 0;
+}
+
+/* Remove bottom border on active tab to blend with content */
+.rvo-dialog .rvo-tabs__tab--active {
+  border-bottom-color: transparent;
 }

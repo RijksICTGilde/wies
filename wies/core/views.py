@@ -33,6 +33,7 @@ from .models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    Event,
     Label,
     LabelCategory,
     OrganizationType,
@@ -240,6 +241,7 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         "assignment": assignment,
         "team_members": team_members,
         "user_can_edit": user_can_edit_assignment(request.user, assignment),
+        "show_updates_tab": assignment.source != "otys_iir",
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
         "owner_mailto_href": owner_mailto_href,
         "org_breadcrumbs": org_breadcrumbs,
@@ -1506,7 +1508,6 @@ def user_delete(request, pk):
         else:
             label_names = []
         context = {
-            "id": pk,
             "email": user.email,
             "first_name": user.first_name,
             "last_name": user.last_name,
@@ -1514,7 +1515,14 @@ def user_delete(request, pk):
             "group_names": [g.name for g in user.groups.all()],
         }
         user.delete()
-        create_event(request.user.email, "User.delete", context)
+        create_event(
+            object_type="User",
+            action="delete",
+            source="user",
+            object_id=pk,
+            user=request.user,
+            context=context,
+        )
         response = HttpResponse(status=200)
         response["HX-Redirect"] = reverse("admin-users")
         return response
@@ -1609,7 +1617,7 @@ def assignment_import_csv(request):
                 {"result": {"success": False, "errors": ["Invalid CSV file encoding. Please use UTF-8."]}},
             )
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(request.user, csv_content)
 
         # Return results in the form
         return render(request, "assignment_import.html", {"result": result})
@@ -1977,6 +1985,19 @@ EDITABLE_ASSIGNMENT_FIELDS = {
 }
 
 
+def assignment_events_partial(request, pk):
+    assignment = get_object_or_404(Assignment, pk=pk)
+    events = (
+        Event.objects.filter(
+            object_type="Assignment",
+            object_id=assignment.id,
+        )
+        .select_related("user__colleague")
+        .order_by("-timestamp")[:20]
+    )
+    return render(request, "parts/assignment_events_timeline.html", {"events": events})
+
+
 # Permission check is done in function body, not decorator
 def assignment_edit_attribute(request, pk, attribute):
     """
@@ -2030,8 +2051,26 @@ def assignment_edit_attribute(request, pk, attribute):
             )
 
         # Save
+        old_value = getattr(assignment, field_name) or ""
         setattr(assignment, field_name, new_value)
         assignment.save()
+
+        # Log change event
+        if str(old_value) != str(new_value):
+            create_event(
+                object_type="Assignment",
+                action="update",
+                source="user",
+                object_id=assignment.id,
+                user=request.user,
+                context={
+                    "field_type": field_config["field_type"],
+                    "field_name": field_name,
+                    "field_label": field_config["label"],
+                    "old_value": str(old_value),
+                    "new_value": str(new_value),
+                },
+            )
 
         # Return updated display after save
         return render(

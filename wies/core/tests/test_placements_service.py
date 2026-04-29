@@ -46,7 +46,7 @@ class CreateFromCSVTest(TestCase):
         with sample_csv_path.open() as f:
             csv_content = f.read()
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
 
     # Critical Bug Exposure Tests
@@ -55,7 +55,7 @@ class CreateFromCSVTest(TestCase):
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,2025-01-01,28-02-2025,Python,John Doe,john@rijksoverheid.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert not result["success"]
         assert len(result["errors"]) > 0
         # Verify the error message mentions a date-related issue
@@ -74,7 +74,7 @@ Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,2025-01-01,28-02-
         csv_content = """assignment_name,assignment_description,placement_colleague_name
 Test,Description,John Doe"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert not result["success"]
         assert len(result["errors"]) > 0
         assert "CSV mist kolommen:" in result["errors"][0]
@@ -83,7 +83,7 @@ Test,Description,John Doe"""
         """Test that CSV with only headers succeeds with zero creates"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         assert result["assignments_created"] == 0
         assert result["services_created"] == 0
@@ -94,7 +94,7 @@ Test,Description,John Doe"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John,invalid-email-no-at,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert not result["success"]
         assert len(result["errors"]) > 0
 
@@ -103,7 +103,7 @@ Test Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John,john@rijksoverheid.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         assert result["organizations_linked"] == 0
 
@@ -114,7 +114,7 @@ Test Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,
 Same Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John,john@rijksoverheid.nl,,
 Same Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Java,Jane,jane@rijksoverheid.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         assert result["assignments_created"] == 1  # Only one assignment
         assert result["services_created"] == 2  # But two services
@@ -126,7 +126,7 @@ Same Assignment,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,
 Assignment 1,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John Doe,john@rijksoverheid.nl,,
 Assignment 2,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Java,John Doe,john@rijksoverheid.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         # Should only create one colleague even though email appears twice
         colleague_count = Colleague.objects.filter(email="john@rijksoverheid.nl").count()
@@ -138,7 +138,7 @@ Assignment 2,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Jav
 Shared Assignment,First description,Owner A,ownerA@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John,john@rijksoverheid.nl,,
 Shared Assignment,Different description,Owner B,ownerB@rijksoverheid.nl,,01-03-2025,30-04-2025,Java,Jane,jane@rijksoverheid.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         assert result["assignments_created"] == 1
         # Verify that first version of assignment details are kept
@@ -151,7 +151,7 @@ Shared Assignment,Different description,Owner B,ownerB@rijksoverheid.nl,,01-03-2
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,John Doe,john@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John Doe,john@rijksoverheid.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         # Should only create one colleague
         colleague_count = Colleague.objects.filter(email="john@rijksoverheid.nl").count()
@@ -167,7 +167,7 @@ Test Assignment,Description,John Doe,john@rijksoverheid.nl,,01-01-2025,28-02-202
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner Name,,,,,,John Doe,john@rijksoverheid.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         assignment = Assignment.objects.get(name="Test Assignment", source="wies")
         assert assignment.owner is None
@@ -181,7 +181,7 @@ Assignment 1,Description,Owner,owner@rijksoverheid.nl,,,,Python,John,john@rijkso
 Assignment 2,Description,Owner,owner@rijksoverheid.nl,,,, Python ,Jane,jane@rijksoverheid.nl,,
 Assignment 3,Description,Owner,owner@rijksoverheid.nl,,,,python,Bob,bob@rijksoverheid.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         # Should create 3 different skills due to case/whitespace differences
         python_skills = Skill.objects.filter(name__icontains="python").count()
@@ -192,7 +192,7 @@ Assignment 3,Description,Owner,owner@rijksoverheid.nl,,,,python,Bob,bob@rijksove
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner,owner@rijksoverheid.nl,,31-12-2025,01-01-2025,Python,John,john@rijksoverheid.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         # Currently no validation - this should succeed but creates invalid data
         assert result["success"]
         assignment = Assignment.objects.get(name="Test Assignment", source="wies")
@@ -206,7 +206,7 @@ Test Assignment,Description,Owner,owner@rijksoverheid.nl,,31-12-2025,01-01-2025,
 Assignment 1,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John,john@rijksoverheid.nl,,
 Assignment 2,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Java,Jane,jane@rijksoverheid.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
 
         # Verify counts in result match database
@@ -223,7 +223,7 @@ Assignment 2,Description,Owner,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Jav
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python Developer,John Doe,john@rijksoverheid.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
 
         # Verify Assignment -> Owner relationship
@@ -252,7 +252,7 @@ Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John Doe,john@rijksoverheid.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
 
         service = Service.objects.get(assignment__name="Test Assignment", source="wies")
@@ -263,7 +263,7 @@ Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-2025,Python,John Doe,john@rijksoverheid.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         assert result["placements_created"] == 1
 
@@ -280,7 +280,7 @@ Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl/1017/Ministerie_van_Binnenlandse_Zaken_en_Koninkrijksrelaties/,01-01-2025,28-02-2025,Python,John,john@test.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         assert result["organizations_linked"] == 1
 
@@ -293,7 +293,7 @@ Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl/9999/Nonexistent/,01-01-2025,28-02-2025,Python,John,john@test.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         assert result["organizations_linked"] == 0
 
@@ -321,7 +321,7 @@ Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,client_2_url,client_3_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl/1001/A/,https://organisaties.overheid.nl/1002/B/,https://organisaties.overheid.nl/1003/C/,01-01-2025,28-02-2025,Python,John,john@test.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         assert result["organizations_linked"] == 3
 
@@ -349,7 +349,7 @@ Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,client_2_url,client_3_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl/1001/A/,,,01-01-2025,28-02-2025,Python,John,john@test.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         assert result["organizations_linked"] == 1
 
@@ -362,6 +362,6 @@ Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Description,Owner,owner@test.nl,01-01-2025,28-02-2025,Python,John,john@test.nl,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
         assert result["organizations_linked"] == 0

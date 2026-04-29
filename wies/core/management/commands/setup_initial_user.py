@@ -1,12 +1,14 @@
 import logging
 import os
+from datetime import timedelta
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
+from django.db import models
 from django.utils import timezone
 
-from wies.core.models import Assignment, Colleague, Label, Placement, Service
+from wies.core.models import Assignment, Colleague, Event, Label, Placement, Service
 
 logger = logging.getLogger(__name__)
 
@@ -78,13 +80,20 @@ def _create_dev_placements(colleague):
                 service=sibling,
                 period_source="PLACEMENT",
                 specific_start_date=today.replace(year=today.year - 1),
-                specific_end_date=today.replace(month=max(today.month - 2, 1)),
+                specific_end_date=today - timedelta(days=60),
                 source="wies",
             )
             placement_count += 1
             break
 
     logger.info("Created %d placements for initial colleague", placement_count)
+
+    # Claim "Rijke historie" assignment (has event history for testing the timeline)
+    rijke_historie = Assignment.objects.filter(name="Rijke historie").first()
+    if rijke_historie and rijke_historie.owner_id != colleague.id:
+        rijke_historie.owner = colleague
+        rijke_historie.save(update_fields=["owner"])
+        logger.info("Set colleague as BM on 'Rijke historie'")
 
     # Make colleague the BM (owner) on one active and one finished assignment
     active_assignment = (
@@ -102,6 +111,36 @@ def _create_dev_placements(colleague):
         finished_assignment.owner = colleague
         finished_assignment.save(update_fields=["owner"])
         logger.info("Set colleague as BM on finished assignment: %s", finished_assignment.name)
+
+
+def _link_users_to_colleagues():
+    """Create User accounts for fixture colleagues that don't have one, so events can reference them."""
+    linked = 0
+    for colleague in Colleague.objects.filter(user__isnull=True).exclude(email=""):
+        user, created = User.objects.get_or_create(
+            email=colleague.email,
+            defaults={
+                "first_name": colleague.name.split()[0] if colleague.name else "",
+                "last_name": " ".join(colleague.name.split()[1:]) if colleague.name else "",
+            },
+        )
+        colleague.user = user
+        colleague.save(update_fields=["user"])
+        if created:
+            linked += 1
+    if linked:
+        logger.info("Created %d users for fixture colleagues", linked)
+
+
+def _link_events_to_users():
+    """Back-fill user FK on events that have a user_email matching an existing user."""
+    updated = (
+        Event.objects.filter(user__isnull=True)
+        .exclude(user_email="")
+        .update(user=models.Subquery(User.objects.filter(email=models.OuterRef("user_email")).values("pk")[:1]))
+    )
+    if updated:
+        logger.info("Linked %d events to users", updated)
 
 
 def _setup_dev_profile(colleague):
@@ -151,3 +190,5 @@ class Command(BaseCommand):
 
         if settings.DEBUG:
             _setup_dev_profile(colleague)
+            _link_users_to_colleagues()
+            _link_events_to_users()
