@@ -2353,6 +2353,18 @@ def _handle_label_edit(request, attribute):
 
 
 @login_not_required
+def contact(request):
+    return render(request, "contact.html")
+
+
+def privacy(request):
+    return render(request, "privacy.html")
+
+
+def toegankelijkheid(request):
+    return render(request, "toegankelijkheid.html")
+
+
 def error_400(request, exception=None):
     return render(request, "400.html", status=400)
 

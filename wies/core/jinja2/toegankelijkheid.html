@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}
+  Toegankelijkheid - Wies
+{% endblock title %}
+{% block content %}
+  <c-h1>Toegankelijkheid</c-h1>
+  <div style="margin-top: 1.5rem;"></div>
+  <a href="https://www.toegankelijkheidsverklaring.nl/register/29132"
+     target="_blank"
+     rel="noopener noreferrer">
+    <img src="{{ static('img/toegankelijkheidslabel.svg') }}"
+         alt="Status toegankelijkheidslabel van Wies. Volg de link voor de volledige toegankelijkheidsverklaring."
+         style="max-width: 100%;
+                height: auto" />
+  </a>
+  <c-paragraph>
+  Wij vinden het belangrijk dat onze website voor iedereen goed te gebruiken is.
+  </c-paragraph>
+  <c-paragraph>
+  Mocht je problemen ondervinden bij het gebruik van Wies of suggesties hebben voor
+  verbeteringen, neem dan contact met ons op via
+  <a href="mailto:wies-odi@rijksoverheid.nl">wies-odi@rijksoverheid.nl</a>.
+  Wij werken continu aan het verbeteren van de toegankelijkheid.
+  </c-paragraph>
+{% endblock content %}
