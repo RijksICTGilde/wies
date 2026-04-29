@@ -3950,8 +3950,10 @@
     "fields": {
       "timestamp": "2026-03-10T09:15:00Z",
       "user_email": "anna.demir@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 12,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 12,
       "context": {
         "field_name": "name",
         "field_label": "Opdracht naam",
@@ -3967,8 +3969,10 @@
     "fields": {
       "timestamp": "2026-03-22T14:30:00Z",
       "user_email": "anna.demir@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 12,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 12,
       "context": {
         "field_name": "extra_info",
         "field_label": "Beschrijving",
@@ -3984,8 +3988,10 @@
     "fields": {
       "timestamp": "2026-04-02T11:45:00Z",
       "user_email": "matthijs.beekman@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 14,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 14,
       "context": {
         "field_name": "name",
         "field_label": "Opdracht naam",
@@ -4001,8 +4007,10 @@
     "fields": {
       "timestamp": "2024-10-15T00:00:00Z",
       "user_email": "fatima.elamrani@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 1,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 1,
       "context": {
         "assignment_name": "Opzet Data Platform Onderwijs",
         "author_name": "Fatima El Amrani"
@@ -4015,8 +4023,10 @@
     "fields": {
       "timestamp": "2024-11-11T00:00:00Z",
       "user_email": "thomas.jansen@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 2,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 2,
       "context": {
         "assignment_name": "Proof of Concept Managementinformatie Informatiebeveiliging",
         "author_name": "Thomas Jansen"
@@ -4029,8 +4039,10 @@
     "fields": {
       "timestamp": "2023-04-13T00:00:00Z",
       "user_email": "rick.vandam@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 3,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 3,
       "context": {
         "assignment_name": "Optimalisatie Open Data",
         "author_name": "Rick van Dam"
@@ -4043,8 +4055,10 @@
     "fields": {
       "timestamp": "2022-01-14T00:00:00Z",
       "user_email": "nils.berger@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 4,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 4,
       "context": {
         "assignment_name": "Doorontwikkeling Architectuur Digitale Toegankelijkheid",
         "author_name": "Nils Berger"
@@ -4057,8 +4071,10 @@
     "fields": {
       "timestamp": "2026-05-24T00:00:00Z",
       "user_email": "eva.mulder@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 5,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 5,
       "context": {
         "assignment_name": "Uitrol Zaaksysteem Digitale Overheid",
         "author_name": "Eva Mulder"
@@ -4071,8 +4087,10 @@
     "fields": {
       "timestamp": "2024-07-26T00:00:00Z",
       "user_email": "jan.smits@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 6,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 6,
       "context": {
         "assignment_name": "Algoritmeregister Dienstverleningsportaal",
         "author_name": "Jan Smits"
@@ -4085,8 +4103,10 @@
     "fields": {
       "timestamp": "2024-11-01T00:00:00Z",
       "user_email": "anna.demir@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 7,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 7,
       "context": {
         "assignment_name": "Handhaving Cloudinfrastructuur",
         "author_name": "Anna Demir"
@@ -4099,8 +4119,10 @@
     "fields": {
       "timestamp": "2024-11-12T00:00:00Z",
       "user_email": "sanne.dekker@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 8,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 8,
       "context": {
         "assignment_name": "Wonen Ketenintegratie",
         "author_name": "Sanne Dekker"
@@ -4113,8 +4135,10 @@
     "fields": {
       "timestamp": "2022-12-16T00:00:00Z",
       "user_email": "eva.mulder@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 9,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 9,
       "context": {
         "assignment_name": "Doorontwikkeling Portaal Handhaving",
         "author_name": "Eva Mulder"
@@ -4127,8 +4151,10 @@
     "fields": {
       "timestamp": "2022-08-10T00:00:00Z",
       "user_email": "yusuf.kara@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 10,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 10,
       "context": {
         "assignment_name": "Opzet Zaaksysteem Vergunningen",
         "author_name": "Yusuf Kara"
@@ -4141,8 +4167,10 @@
     "fields": {
       "timestamp": "2023-06-03T00:00:00Z",
       "user_email": "dirk.kuiper@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 11,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 11,
       "context": {
         "assignment_name": "Vernieuwing Ketenintegratie Cybersecurity",
         "author_name": "Dirk Kuiper"
@@ -4155,8 +4183,10 @@
     "fields": {
       "timestamp": "2023-11-27T00:00:00Z",
       "user_email": "anna.demir@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 12,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 12,
       "context": {
         "assignment_name": "Optimalisatie Managementinformatie Bedrijfsvoering",
         "author_name": "Anna Demir"
@@ -4169,8 +4199,10 @@
     "fields": {
       "timestamp": "2025-06-03T00:00:00Z",
       "user_email": "matthijs.beekman@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 13,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 13,
       "context": {
         "assignment_name": "Opzet Wetgevingskalender",
         "author_name": "Matthijs Beekman"
@@ -4183,8 +4215,10 @@
     "fields": {
       "timestamp": "2024-04-29T00:00:00Z",
       "user_email": "vera.visser@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 14,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 14,
       "context": {
         "assignment_name": "Circulaire Economie Managementinformatie",
         "author_name": "Vera Visser"
@@ -4197,8 +4231,10 @@
     "fields": {
       "timestamp": "2022-04-21T00:00:00Z",
       "user_email": "lotte.bakker@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 15,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 15,
       "context": {
         "assignment_name": "Vernieuwing Zorgdata",
         "author_name": "Lotte Bakker"
@@ -4211,8 +4247,10 @@
     "fields": {
       "timestamp": "2026-05-03T00:00:00Z",
       "user_email": "tim.hendriks@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 16,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 16,
       "context": {
         "assignment_name": "Optimalisatie Burgerzaken",
         "author_name": "Tim Hendriks"
@@ -4225,8 +4263,10 @@
     "fields": {
       "timestamp": "2025-08-03T00:00:00Z",
       "user_email": "mika.deboer@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 17,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 17,
       "context": {
         "assignment_name": "Infrastructuur Registratie",
         "author_name": "Mika de Boer"
@@ -4239,8 +4279,10 @@
     "fields": {
       "timestamp": "2023-09-19T00:00:00Z",
       "user_email": "thomas.jansen@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 18,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 18,
       "context": {
         "assignment_name": "Uitrol Meldingensysteem Personeelsplanning",
         "author_name": "Thomas Jansen"
@@ -4253,8 +4295,10 @@
     "fields": {
       "timestamp": "2024-06-27T00:00:00Z",
       "user_email": "wouter.peters@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 19,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 19,
       "context": {
         "assignment_name": "Burgerzaken Dashboard",
         "author_name": "Wouter Peters"
@@ -4267,8 +4311,10 @@
     "fields": {
       "timestamp": "2024-12-25T00:00:00Z",
       "user_email": "nils.berger@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 20,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 20,
       "context": {
         "assignment_name": "Integratie Klimaatadaptatie",
         "author_name": "Nils Berger"
@@ -4281,8 +4327,10 @@
     "fields": {
       "timestamp": "2026-05-13T00:00:00Z",
       "user_email": "pieter.vanderberg@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 21,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 21,
       "context": {
         "assignment_name": "Open Data Architectuur",
         "author_name": "Pieter van der Berg"
@@ -4295,8 +4343,10 @@
     "fields": {
       "timestamp": "2026-03-28T00:00:00Z",
       "user_email": "iris.degroot@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 22,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 22,
       "context": {
         "assignment_name": "Personeelsplanning Werkplek",
         "author_name": "Iris de Groot"
@@ -4309,8 +4359,10 @@
     "fields": {
       "timestamp": "2022-08-28T00:00:00Z",
       "user_email": "udo.fischer@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 23,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 23,
       "context": {
         "assignment_name": "Ontwikkeling Wonen",
         "author_name": "Udo Fischer"
@@ -4323,8 +4375,10 @@
     "fields": {
       "timestamp": "2026-01-22T00:00:00Z",
       "user_email": "udo.fischer@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 24,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 24,
       "context": {
         "assignment_name": "Transitie Werkplek Digitale Toegankelijkheid",
         "author_name": "Udo Fischer"
@@ -4337,8 +4391,10 @@
     "fields": {
       "timestamp": "2026-07-05T00:00:00Z",
       "user_email": "olga.ivanova@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 25,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 25,
       "context": {
         "assignment_name": "Modernisering Inkoop en Aanbesteding",
         "author_name": "Olga Ivanova"
@@ -4351,8 +4407,10 @@
     "fields": {
       "timestamp": "2026-04-01T00:00:00Z",
       "user_email": "naomi.schouten@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 26,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 26,
       "context": {
         "assignment_name": "Financieel Beheer Meldingensysteem",
         "author_name": "Naomi Schouten"
@@ -4365,8 +4423,10 @@
     "fields": {
       "timestamp": "2024-12-01T00:00:00Z",
       "user_email": "wesley.bos@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 27,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 27,
       "context": {
         "assignment_name": "Opzet Financieel Beheer",
         "author_name": "Wesley Bos"
@@ -4379,8 +4439,10 @@
     "fields": {
       "timestamp": "2024-10-19T00:00:00Z",
       "user_email": "koen.meijer@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 28,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 28,
       "context": {
         "assignment_name": "Uitrol Werkplek Begrotingscyclus",
         "author_name": "Koen Meijer"
@@ -4393,8 +4455,10 @@
     "fields": {
       "timestamp": "2024-10-11T00:00:00Z",
       "user_email": "mila.vandijk@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 29,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 29,
       "context": {
         "assignment_name": "Algoritmeregister Informatiesysteem",
         "author_name": "Mila van Dijk"
@@ -4407,8 +4471,10 @@
     "fields": {
       "timestamp": "2024-09-16T00:00:00Z",
       "user_email": "xander.willems@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 30,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 30,
       "context": {
         "assignment_name": "Herontwerp Bedrijfsvoering",
         "author_name": "Xander Willems"
@@ -4421,8 +4487,10 @@
     "fields": {
       "timestamp": "2025-01-01T00:00:00Z",
       "user_email": "fatima.elamrani@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 31,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 31,
       "context": {
         "assignment_name": "Multi org",
         "author_name": "Fatima El Amrani"
@@ -4435,8 +4503,10 @@
     "fields": {
       "timestamp": "2024-08-15T10:30:00Z",
       "user_email": "jan.smits@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 6,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 6,
       "context": {
         "field_name": "name",
         "field_label": "Opdracht naam",
@@ -4452,8 +4522,10 @@
     "fields": {
       "timestamp": "2023-05-20T14:00:00Z",
       "user_email": "rick.vandam@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 3,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 3,
       "context": {
         "field_name": "extra_info",
         "field_label": "Beschrijving",
@@ -4469,8 +4541,10 @@
     "fields": {
       "timestamp": "2025-09-10T08:45:00Z",
       "user_email": "mika.deboer@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 17,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 17,
       "context": {
         "field_name": "extra_info",
         "field_label": "Beschrijving",
@@ -4486,8 +4560,10 @@
     "fields": {
       "timestamp": "2024-07-05T16:20:00Z",
       "user_email": "wouter.peters@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 19,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 19,
       "context": {
         "field_name": "name",
         "field_label": "Opdracht naam",
@@ -4503,8 +4579,10 @@
     "fields": {
       "timestamp": "2025-02-18T11:00:00Z",
       "user_email": "nils.berger@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 20,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 20,
       "context": {
         "field_name": "extra_info",
         "field_label": "Beschrijving",
@@ -4520,8 +4598,10 @@
     "fields": {
       "timestamp": "2024-11-20T13:15:00Z",
       "user_email": "fatima.elamrani@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 1,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 1,
       "context": {
         "field_name": "extra_info",
         "field_label": "Beschrijving",
@@ -4537,8 +4617,10 @@
     "fields": {
       "timestamp": "2026-02-05T09:30:00Z",
       "user_email": "naomi.schouten@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 26,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 26,
       "context": {
         "field_name": "name",
         "field_label": "Opdracht naam",
@@ -4615,8 +4697,10 @@
     "fields": {
       "timestamp": "2025-09-01T10:00:00Z",
       "user_email": "matthijs.beekman@rijksoverheid.nl",
-      "name": "Assignment.create",
-      "resource_id": 32,
+      "object_type": "Assignment",
+      "action": "create",
+      "source": "user",
+      "object_id": 32,
       "context": {
         "assignment_name": "Rijke historie",
         "author_name": "Matthijs Beekman"
@@ -4629,8 +4713,10 @@
     "fields": {
       "timestamp": "2025-09-15T14:22:00Z",
       "user_email": "matthijs.beekman@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 32,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 32,
       "context": {
         "field_name": "name",
         "field_label": "Opdracht naam",
@@ -4646,8 +4732,10 @@
     "fields": {
       "timestamp": "2025-10-03T09:45:00Z",
       "user_email": "anna.demir@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 32,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 32,
       "context": {
         "field_name": "extra_info",
         "field_label": "Beschrijving",
@@ -4663,8 +4751,10 @@
     "fields": {
       "timestamp": "2026-01-12T11:30:00Z",
       "user_email": "fatima.elamrani@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 32,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 32,
       "context": {
         "field_name": "name",
         "field_label": "Opdracht naam",
@@ -4680,8 +4770,10 @@
     "fields": {
       "timestamp": "2026-03-20T16:05:00Z",
       "user_email": "matthijs.beekman@rijksoverheid.nl",
-      "name": "Assignment.update",
-      "resource_id": 32,
+      "object_type": "Assignment",
+      "action": "update",
+      "source": "user",
+      "object_id": 32,
       "context": {
         "field_name": "name",
         "field_label": "Opdracht naam",

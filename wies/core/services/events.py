@@ -1,28 +1,28 @@
 from django.utils import timezone
 
-from wies.core.models import Event
+from wies.core.models import Event, EventAction, EventSource
 
-SUPPORTED_EVENT_NAMES = {
-    "User.create",
-    "User.update",
-    "User.delete",
-    "OrgSync.create",
-    "OrgSync.update",
-    "OrgSync.deactivate",
-    "OrgSync.delete",
-    "Assignment.create",
-    "Assignment.update",
+SUPPORTED_OBJECT_TYPES = {
+    "User",
+    "OrganizationUnit",
+    "Assignment",
 }
 
 
-def create_event(name, *, user=None, context=None, resource_id=None):
+def create_event(*, object_type, action, source, object_id=None, user=None, context=None):
     """
     Create an audit event.
     Pass `user` for user-initiated actions (email auto-derived).
     Omit for system events (OrgSync, CSV import).
     """
-    if name not in SUPPORTED_EVENT_NAMES:
-        msg = f"Unsupported event name: {name}"
+    if object_type not in SUPPORTED_OBJECT_TYPES:
+        msg = f"Unsupported event object_type: {object_type}"
+        raise ValueError(msg)
+    if action not in EventAction.values:
+        msg = f"Unsupported event action: {action}"
+        raise ValueError(msg)
+    if source not in EventSource.values:
+        msg = f"Unsupported event source: {source}"
         raise ValueError(msg)
 
     if not context:
@@ -32,7 +32,9 @@ def create_event(name, *, user=None, context=None, resource_id=None):
         timestamp=timezone.now(),
         user=user,
         user_email=user_email,
-        name=name,
+        object_type=object_type,
+        action=action,
+        source=source,
+        object_id=object_id,
         context=context,
-        resource_id=resource_id,
     )

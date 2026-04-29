@@ -155,7 +155,7 @@ Test Assignment,Test Description,John Owner,john@rijksoverheid.nl,,01-01-2024,31
 
         # Verify the service function was called with CSV content
         mock_create_placements.assert_called_once()
-        call_args = mock_create_placements.call_args[0][0]
+        call_args = mock_create_placements.call_args[0][1]
         assert "Test Assignment" in call_args
 
     @patch("wies.core.views.create_assignments_from_csv")

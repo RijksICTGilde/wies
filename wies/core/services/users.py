@@ -66,14 +66,20 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
         user.groups.set(groups)
 
     context = {
-        "created_id": user.id,
         "email": email,
         "first_name": first_name,
         "last_name": last_name,
         "label_names": label_names,
         "group_names": [group.name for group in groups],
     }
-    create_event("User.create", user=creator, context=context)
+    create_event(
+        object_type="User",
+        action="create",
+        source="user",
+        object_id=user.id,
+        user=creator,
+        context=context,
+    )
 
     return user
 
@@ -119,14 +125,20 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
         user.groups.set(groups)
 
     context = {
-        "updated_id": user.id,
         "first_name": first_name,
         "last_name": last_name,
         "email": email,
         "label_names": label_names,
         "group_names": [group.name for group in groups],
     }
-    create_event("User.update", user=updater, context=context)
+    create_event(
+        object_type="User",
+        action="update",
+        source="user",
+        object_id=user.id,
+        user=updater,
+        context=context,
+    )
     return user
 
 

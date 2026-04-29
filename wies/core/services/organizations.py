@@ -274,9 +274,11 @@ def sync_organization_tree(
                     db_org.save()
                     logger.info("Updated: %s", db_org)
                     create_event(
-                        "OrgSync.update",
+                        object_type="OrganizationUnit",
+                        action="update",
+                        source="sync",
+                        object_id=db_org.id,
                         context={
-                            "org_id": db_org.id,
                             "tooi": db_org.tooi_identifier or "",
                             "changes": changes,
                         },
@@ -325,9 +327,11 @@ def sync_organization_tree(
                     getattr(new_org, m2m_field).set(value)
                 logger.info("Created: %s", new_org)
                 create_event(
-                    "OrgSync.create",
+                    object_type="OrganizationUnit",
+                    action="create",
+                    source="sync",
+                    object_id=new_org.id,
                     context={
-                        "org_id": new_org.id,
                         "tooi": new_org.tooi_identifier or "",
                         "name": new_org.name,
                     },
@@ -412,9 +416,11 @@ def sync_organizations(
             OrganizationUnit.objects.filter(id__in=[org[0] for org in orgs_to_deactivate]).update(end_date=today)
             for org_id, tooi, name in orgs_to_deactivate:
                 create_event(
-                    "OrgSync.deactivate",
+                    object_type="OrganizationUnit",
+                    action="deactivate",
+                    source="sync",
+                    object_id=org_id,
                     context={
-                        "org_id": org_id,
                         "tooi": tooi or "",
                         "name": name,
                         "reason": "not_seen_in_sync",
@@ -438,9 +444,11 @@ def sync_organizations(
                 break
             for org_id, tooi, name in orgs_to_delete:
                 create_event(
-                    "OrgSync.delete",
+                    object_type="OrganizationUnit",
+                    action="delete",
+                    source="sync",
+                    object_id=org_id,
                     context={
-                        "org_id": org_id,
                         "tooi": tooi or "",
                         "name": name,
                         "reason": "inactive_and_unlinked",

@@ -28,7 +28,7 @@
         </div>
         <div class="event-timeline__content">
           <strong>{{ author }}</strong>
-          {% if event.name == "Assignment.create" %}
+          {% if event.action == "create" %}
             maakte deze opdracht aan
           {% else %}
             wijzigde <strong>{{ event.context.field_label }}</strong>
@@ -40,7 +40,7 @@
           <div class="event-timeline__meta">
             <span class="rvo-text--subtle rvo-text--xs"
                   title="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
-            {% if event.name == "Assignment.create" %}
+            {% if event.action == "create" %}
               <span class="event-tag event-tag--create">
                 <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--xs"
                       role="img"

@@ -132,7 +132,7 @@ Different,Name,duplicate@rijksoverheid.nl,Brand B"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,31-12-2025,Python,John Doe,john@rijksoverheid.nl,Rijks ICT Gilde,Rijks ICT Gilde"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
 
         assert result["success"]
         assert result["colleagues_created"] > 0
@@ -155,7 +155,7 @@ Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,3
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
 Test Assignment,Test Description,Owner Name,owner@test.com,,01-01-2025,31-12-2025,Python,John Doe,john@test.com,,"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
 
         assert result["success"]
         assert result["colleagues_created"] > 0
@@ -173,7 +173,7 @@ Test Assignment,Test Description,Owner Name,owner@test.com,,01-01-2025,31-12-202
 Assignment 1,Test,Owner A,ownera@test.com,,01-01-2025,31-12-2025,Python,John Doe,john@test.com,Rijks ICT Gilde,Rijksconsultants
 Assignment 2,Test,Owner B,ownerb@test.com,,01-01-2025,31-12-2025,Java,Jane Smith,jane@test.com,I-Interim Rijk,Rijks ICT Gilde"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
 
         assert result["success"]
         assert result["colleagues_created"] == 4  # 2 owners + 2 placement colleagues
@@ -219,7 +219,7 @@ Assignment 2,Test,Owner B,ownerb@test.com,,01-01-2025,31-12-2025,Java,Jane Smith
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
 New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,existing@rijksoverheid.com"""
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(None, csv_content)
 
         assert result["success"]
 

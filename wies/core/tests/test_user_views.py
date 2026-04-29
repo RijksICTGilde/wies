@@ -176,7 +176,8 @@ class UserViewsTest(TestCase):
         # Event should be created
         assert Event.objects.count() == initial_event_count + 1
         created_event = Event.objects.last()
-        assert created_event.name == "User.create"
+        assert created_event.object_type == "User"
+        assert created_event.action == "create"
         assert created_event.context["email"] == "newuser@rijksoverheid.nl"
 
     def test_user_create_without_labels(self):
@@ -279,7 +280,7 @@ class UserViewsTest(TestCase):
         # Event should be created
         assert Event.objects.count() == initial_event_count + 1
         created_event = Event.objects.last()
-        assert created_event.context["id"] == user_id
+        assert created_event.object_id == user_id
         assert created_event.context["email"] == self.user1.email
 
     def test_user_delete_prevents_superuser_deletion(self):
@@ -438,7 +439,8 @@ class UserViewsTest(TestCase):
         # Event should be created
         assert Event.objects.count() == initial_count_events + 1
         created_event = Event.objects.last()
-        assert created_event.name == "User.update"
+        assert created_event.object_type == "User"
+        assert created_event.action == "update"
         assert created_event.context["email"] == "updated@rijksoverheid.nl"
 
     def test_user_edit_validation_errors(self):

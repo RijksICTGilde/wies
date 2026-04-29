@@ -236,18 +236,35 @@ class Service(models.Model):
         return self.specific_end_date
 
 
+class EventAction(models.TextChoices):
+    CREATE = "create", "Aangemaakt"
+    UPDATE = "update", "Gewijzigd"
+    DELETE = "delete", "Verwijderd"
+    DEACTIVATE = "deactivate", "Gedeactiveerd"
+
+
+class EventSource(models.TextChoices):
+    USER = "user", "Gebruiker"
+    SYNC = "sync", "Sync"
+
+
 class Event(models.Model):
     timestamp = models.DateTimeField(default=timezone.now, db_index=True)
     # user FK for live display (current name, future avatar). SET_NULL preserves event on user deletion.
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
     # frozen audit fields — never shown in UI (GDPR), only for security/admin access
     user_email = models.EmailField(max_length=255, blank=True, db_index=True)
-    name = models.CharField(max_length=32, db_index=True)
-    resource_id = models.IntegerField(null=True, blank=True, db_index=True)
+    object_type = models.CharField(max_length=64, db_index=True)
+    action = models.CharField(max_length=16, choices=EventAction)
+    source = models.CharField(max_length=16, choices=EventSource)
+    object_id = models.IntegerField(null=True, blank=True)
     context = models.JSONField(default=dict)
 
+    class Meta:
+        indexes = [models.Index(fields=["object_type", "object_id"])]
+
     def __str__(self):
-        return f"{self.name} ({self.user_email})"
+        return f"{self.object_type}.{self.action} ({self.user_email})"
 
     def save(self, *args, **kwargs):
         if self.pk is not None:

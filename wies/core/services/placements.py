@@ -52,7 +52,7 @@ def filter_placements_by_min_end_date(queryset, min_end_date):
     return queryset.filter(Q(actual_end_date__gte=min_end_date) | Q(actual_end_date__isnull=True))
 
 
-def create_assignments_from_csv(csv_content: str):
+def create_assignments_from_csv(creator, csv_content: str):
     """
     Create colleagues, assignments, services and placements from csv.
 
@@ -178,8 +178,11 @@ def create_assignments_from_csv(csv_content: str):
                 if created:
                     assignments_created += 1
                     create_event(
-                        "Assignment.create",
-                        resource_id=assignment.id,
+                        object_type="Assignment",
+                        action="create",
+                        source="user",
+                        object_id=assignment.id,
+                        user=creator,
                         context={
                             "assignment_name": assignment.name,
                         },

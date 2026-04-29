@@ -1508,7 +1508,6 @@ def user_delete(request, pk):
         else:
             label_names = []
         context = {
-            "id": pk,
             "email": user.email,
             "first_name": user.first_name,
             "last_name": user.last_name,
@@ -1516,7 +1515,14 @@ def user_delete(request, pk):
             "group_names": [g.name for g in user.groups.all()],
         }
         user.delete()
-        create_event("User.delete", user=request.user, context=context)
+        create_event(
+            object_type="User",
+            action="delete",
+            source="user",
+            object_id=pk,
+            user=request.user,
+            context=context,
+        )
         response = HttpResponse(status=200)
         response["HX-Redirect"] = reverse("admin-users")
         return response
@@ -1611,7 +1617,7 @@ def assignment_import_csv(request):
                 {"result": {"success": False, "errors": ["Invalid CSV file encoding. Please use UTF-8."]}},
             )
 
-        result = create_assignments_from_csv(csv_content)
+        result = create_assignments_from_csv(request.user, csv_content)
 
         # Return results in the form
         return render(request, "assignment_import.html", {"result": result})
@@ -1983,8 +1989,8 @@ def assignment_events_partial(request, pk):
     assignment = get_object_or_404(Assignment, pk=pk)
     events = (
         Event.objects.filter(
-            name__in=("Assignment.create", "Assignment.update"),
-            resource_id=assignment.id,
+            object_type="Assignment",
+            object_id=assignment.id,
         )
         .select_related("user__colleague")
         .order_by("-timestamp")[:20]
@@ -2052,9 +2058,11 @@ def assignment_edit_attribute(request, pk, attribute):
         # Log change event
         if str(old_value) != str(new_value):
             create_event(
-                "Assignment.update",
+                object_type="Assignment",
+                action="update",
+                source="user",
+                object_id=assignment.id,
                 user=request.user,
-                resource_id=assignment.id,
                 context={
                     "field_type": field_config["field_type"],
                     "field_name": field_name,

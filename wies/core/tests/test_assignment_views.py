@@ -316,8 +316,8 @@ class AssignmentEditAttributeTest(TestCase):
             {"name": "Event Test Name"},
         )
 
-        event = Event.objects.get(name="Assignment.update")
-        assert event.resource_id == self.assignment.id
+        event = Event.objects.get(object_type="Assignment", action="update")
+        assert event.object_id == self.assignment.id
         assert event.user == self.user_with_permission
         assert event.user_email == "perm@rijksoverheid.nl"
         assert event.context["field_type"] == "text"
@@ -335,7 +335,7 @@ class AssignmentEditAttributeTest(TestCase):
             {"name": "Test Assignment"},  # Same as current value
         )
 
-        assert not Event.objects.filter(name="Assignment.update").exists()
+        assert not Event.objects.filter(object_type="Assignment", action="update").exists()
 
     def test_assignment_edit_event_stores_user(self):
         """Test that event stores the user FK for live lookups"""
@@ -346,7 +346,7 @@ class AssignmentEditAttributeTest(TestCase):
             {"name": "Owner Changed Name"},
         )
 
-        event = Event.objects.get(name="Assignment.update")
+        event = Event.objects.get(object_type="Assignment", action="update")
         assert event.user == self.owner_user
         assert event.user_email == "owner@rijksoverheid.nl"
 
@@ -360,8 +360,10 @@ class AssignmentEditAttributeTest(TestCase):
         Event.objects.create(
             user=self.user_with_permission,
             user_email=self.user_with_permission.email,
-            name="Assignment.update",
-            resource_id=self.assignment.id,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
             context={
                 "field_type": "textarea",
                 "field_name": "extra_info",
@@ -387,8 +389,10 @@ class AssignmentEditAttributeTest(TestCase):
         Event.objects.create(
             user=self.user_with_permission,
             user_email=self.user_with_permission.email,
-            name="Assignment.update",
-            resource_id=self.assignment.id,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
             context={
                 "field_type": "textarea",
                 "field_name": "extra_info",
@@ -411,8 +415,10 @@ class AssignmentEditAttributeTest(TestCase):
         Event.objects.create(
             user=self.user_with_permission,
             user_email=self.user_with_permission.email,
-            name="Assignment.update",
-            resource_id=self.assignment.id,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
             context={
                 "field_type": "text",
                 "field_name": "name",
@@ -435,8 +441,10 @@ class AssignmentEditAttributeTest(TestCase):
         Event.objects.create(
             user=self.user_with_permission,
             user_email=self.user_with_permission.email,
-            name="Assignment.update",
-            resource_id=self.assignment.id,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
             context={
                 "field_name": "name",
                 "field_label": "Opdracht naam",
