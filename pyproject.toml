@@ -6,23 +6,23 @@ dependencies = [
   "django==6.0.4",
   "whitenoise==6.12.0",
   "gunicorn==25.3.0",
-  "Authlib==1.6.9",
+  "Authlib==1.7.0",
   "requests==2.33.1",
   "urllib3>=2.6.0",  # CVE-2025-66418, CVE-2025-66471
   "jinja2==3.1.6",
   "jinja_roos_components@git+https://github.com/RijksICTGilde/jinja-roos-components.git@0.4",
-  "psycopg[binary]>=3.2.0",
+  "psycopg[binary]>=3.3.3",
 ]
 
 [dependency-groups]
 dev = [
-  "pre-commit>=4.0.0",
-  "ruff>=0.9.0",
+  "pre-commit>=4.6.0",
+  "ruff>=0.15.12",
   "djlint>=1.36.0",
-  "pytest>=8.0",
+  "pytest>=9.0.3",
   "pytest-django>=4.9",
   "pytest-cov>=6.0",
-  "coverage[toml]>=7.6",
+  "coverage[toml]>=7.13.5",
 ]
 
 [tool.setuptools]
