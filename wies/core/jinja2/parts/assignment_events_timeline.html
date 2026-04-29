@@ -1,17 +1,3 @@
-{% macro expandable_text(value) %}
-  {% if value|length > 300 %}
-    <span>
-      <span class="truncated-text" style="display: block;">{{ value[:300] }}...</span>
-      <span class="full-text" style="display: none;">{{ value }}</span>
-      <button type="button" class="show-more-toggle" onclick="toggleShowMore(this)">
-        <span class="show-more-toggle__icon">+</span>
-        <span class="show-more-toggle__text">Toon meer</span>
-      </button>
-    </span>
-  {% else %}
-    <span class="pre-wrap">{{ value }}</span>
-  {% endif %}
-{% endmacro %}
 {% if events %}
   <div class="event-timeline">
     {% for event in events %}
@@ -60,12 +46,34 @@
             {% if event.context.old_value %}
               <div class="rvo-margin-block-start--xs">
                 <span class="rvo-text--subtle rvo-text--xs">Van:</span>
-                {{ expandable_text(event.context.old_value) }}
+                {% if event.context.old_value|length > 300 %}
+                  <span>
+                    <span class="truncated-text" style="display: block;">{{ event.context.old_value[:300] }}...</span>
+                    <span class="full-text" style="display: none;">{{ event.context.old_value }}</span>
+                    <button type="button" class="show-more-toggle" onclick="toggleShowMore(this)">
+                      <span class="show-more-toggle__icon">+</span>
+                      <span class="show-more-toggle__text">Toon meer</span>
+                    </button>
+                  </span>
+                {% else %}
+                  <span class="pre-wrap">{{ event.context.old_value }}</span>
+                {% endif %}
               </div>
             {% endif %}
             <div class="rvo-margin-block-start--xs">
               <span class="rvo-text--subtle rvo-text--xs">Naar:</span>
-              {{ expandable_text(event.context.new_value) }}
+              {% if event.context.new_value|length > 300 %}
+                <span>
+                  <span class="truncated-text" style="display: block;">{{ event.context.new_value[:300] }}...</span>
+                  <span class="full-text" style="display: none;">{{ event.context.new_value }}</span>
+                  <button type="button" class="show-more-toggle" onclick="toggleShowMore(this)">
+                    <span class="show-more-toggle__icon">+</span>
+                    <span class="show-more-toggle__text">Toon meer</span>
+                  </button>
+                </span>
+              {% else %}
+                <span class="pre-wrap">{{ event.context.new_value }}</span>
+              {% endif %}
             </div>
           {% endif %}
         </div>
