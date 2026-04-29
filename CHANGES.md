@@ -6,6 +6,7 @@ This files lists the changes during the lifetime of this project.
 
 - 304: (migration) register assignment edit events and display on 'Updates' tab
 - 304: change dummy data to 50/50 split wies/otys sources
+- 304: bump jinja-roos-components to 0.5
 - 309: add sidebar footer with links to privacy, toegankelijkheid, contact and GitHub
 - 309: add privacy, toegankelijkheid and contact pages
 - 309: make sidebar sticky so footer stays visible during scroll
