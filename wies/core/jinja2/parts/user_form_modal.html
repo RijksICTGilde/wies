@@ -3,7 +3,7 @@
         closedby="any">
   <div class="modal-content">
     <div class="modal-header">
-      <h2 class="utrecht-heading-2">{{ modal_title }}</h2>
+      <c-h2>{{ modal_title }}</c-h2>
       <button type="button" class="close modal-close-button">×</button>
     </div>
     <form method="post"
@@ -20,7 +20,7 @@
           <div class="user-form-layout">
             {# Left column: Basic user info #}
             <div class="user-form-column">
-              <h3 class="utrecht-heading-3" style="margin-bottom: 1rem;">Gebruikersgegevens</h3>
+              <c-h3>Gebruikersgegevens</c-h3>
               <div>
                 {{ content.first_name.as_field_group() }}
                 {{ content.last_name.as_field_group() }}
@@ -32,7 +32,7 @@
             <div class="user-form-divider"></div>
             {# Right column: Labels #}
             <div class="user-form-column">
-              <h3 class="utrecht-heading-3" style="margin-bottom: 1rem;">Labels</h3>
+              <c-h3>Labels</c-h3>
               <div>
                 {% for field_name in content.fields %}
                   {% if field_name.startswith('category_') %}{{ content[field_name].as_field_group() }}{% endif %}

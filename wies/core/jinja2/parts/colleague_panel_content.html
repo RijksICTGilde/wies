@@ -7,12 +7,10 @@
              src="{{ static('img/placeholder-avatar.svg') }}" />
       </div>
       <div class="card__content">
-        <h3 class="utrecht-heading-3 rvo-heading rvo-heading--no-margin rvo-heading--gap-xs">{{ colleague.name }}</h3>
+        <c-h3 noMargins>{{ colleague.name }}</c-h3>
         <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
-          <span class="utrecht-icon rvo-icon rvo-icon-mail rvo-icon--md rvo-icon--hemelblauw"
-                role="img"
-                aria-label="E-mail"></span>
-          <a href="mailto:{{ colleague.email }}" class="rvo-link">{{ colleague.email }}</a>
+          <c-icon icon="mail" size="md" color="hemelblauw" />
+          <c-link href="mailto:{{ colleague.email }}">{{ colleague.email }}</c-link>
         </div>
       </div>
     </div>
@@ -29,7 +27,7 @@
     <span class="rvo-text--italic">Geen labels toegewezen</span>
   {% endif %}
   <section>
-    <h2>Opdrachten</h2>
+    <c-h2>Opdrachten</c-h2>
     {% with assignments=panel_data.assignments, hx_target="#side_panel-content" %}
       {% include "parts/colleague_assignment_cards.html" %}
     {% endwith %}

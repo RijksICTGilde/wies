@@ -31,9 +31,7 @@
           <li>
             <a href="{{ url('user-profile') }}"
                class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/profiel/' in request.path %}menu-item--active{% endif %}">
-              <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
-                    role="img"
-                    aria-label="User"></span>
+              <c-icon icon="user" size="md" color="lintblauw" class="rvo-link__icon--before" />
               {{ user.get_full_name() }}
             </a>
           </li>
@@ -42,18 +40,14 @@
           <li>
             <a href="{{ url('admin-users') }}"
                class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/instellingen/' in request.path %}menu-item--active{% endif %}">
-              <span class="utrecht-icon rvo-icon rvo-icon-instellingen rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
-                    role="img"
-                    aria-label="Instellingen"></span>
+              <c-icon icon="instellingen" size="md" color="lintblauw" class="rvo-link__icon--before" />
               Instellingen
             </a>
           </li>
           <li class="menubar__submenu-item">
             <a href="{{ url('admin-users') }}"
                class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/gebruikers/' in request.path %}menu-item--active{% endif %}">
-              <span class="utrecht-icon rvo-icon rvo-icon-user rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
-                    role="img"
-                    aria-label="Gebruikers"></span>
+              <c-icon icon="user" size="md" color="lintblauw" class="rvo-link__icon--before" />
               Gebruikers
             </a>
           </li>
@@ -61,9 +55,7 @@
             <li class="menubar__submenu-item">
               <a href="{{ url('organization-admin') }}"
                  class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/organisaties/' in request.path %}menu-item--active{% endif %}">
-                <span class="utrecht-icon rvo-icon rvo-icon-publicatie rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
-                      role="img"
-                      aria-label="Opdrachtgevers"></span>
+                <c-icon icon="publicatie" size="md" color="lintblauw" class="rvo-link__icon--before" />
                 Opdrachtgevers
               </a>
             </li>
@@ -71,9 +63,7 @@
           <li class="menubar__submenu-item">
             <a href="{{ url('label-admin') }}"
                class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/labels/' in request.path %}menu-item--active{% endif %}">
-              <span class="utrecht-icon rvo-icon rvo-icon-label rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
-                    role="img"
-                    aria-label="Labels"></span>
+              <c-icon icon="label" size="md" color="lintblauw" class="rvo-link__icon--before" />
               Labels
             </a>
           </li>

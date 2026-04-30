@@ -29,9 +29,7 @@ Usage:
       {% if filter_groups %}
         <button type="button"
                 class="filter-button rvo-button rvo-button--secondary{% if active_filter_count > 0 %} filter-button--active{% endif %} rvo-button--size-md rvo-button--icon-before">
-          <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before"
-                role="img"
-                aria-label="Trechter"></span>
+          <c-icon icon="trechter" size="md" class="rvo-link__icon--before" />
           <span class="filter-text">Filters
             {% if active_filter_count > 0 %}({{ active_filter_count }}){% endif %}
           </span>
@@ -40,14 +38,11 @@ Usage:
     </div>
     <div>
       {% if primary_button %}
-        <button type="button"
-                class="rvo-button rvo-button--primary rvo-button--size-md rvo-button--icon-before"
-                {% for attr_label, attr_value in primary_button.attrs.items() %}{{ attr_label }}="{{ attr_value }}"{% endfor %}>
-          <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before"
-                role="img"
-                aria-label="Plus"></span>
-          {{ primary_button.button_text }}
-        </button>
+        <c-button kind="primary" size="md" icon="plus" iconPlacement="before" type="button"
+        {% for attr_label, attr_value in primary_button.attrs.items() %}{{ attr_label }}="{{ attr_value }}"{% endfor %}
+        >
+        {{ primary_button.button_text }}
+        </c-button>
       {% endif %}
     </div>
   </div>
@@ -58,9 +53,7 @@ Usage:
       <div class="modal-header">
         <c-h2 noMargins>Filters</c-h2>
         <button type="button" class="modal-close">
-          <span class="utrecht-icon rvo-icon rvo-icon-kruis rvo-icon--md"
-                role="img"
-                aria-label="Sluiten"></span>
+          <c-icon icon="kruis" size="md" />
         </button>
       </div>
       <div class="modal-body">

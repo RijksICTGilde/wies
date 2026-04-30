@@ -28,16 +28,12 @@
                   title="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
             {% if event.action == "create" %}
               <span class="event-tag event-tag--create">
-                <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--xs"
-                      role="img"
-                      aria-hidden="true"></span>
+                <c-icon icon="plus" size="xs" />
                 Aangemaakt
               </span>
             {% else %}
               <span class="event-tag event-tag--update">
-                <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--xs"
-                      role="img"
-                      aria-hidden="true"></span>
+                <c-icon icon="bewerken" size="xs" />
                 Gewijzigd
               </span>
             {% endif %}

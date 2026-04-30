@@ -1,53 +1,45 @@
 {% for placement in object_list %}
-  <tr class="rvo-table-row clickable-row"
-      hx-get="{{ placement.colleague_url }}"
-      hx-target="#side_panel-container">
-    <td class="rvo-table-cell">
-      <div class="user-table-cell">
-        <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>
-        <div class="user-info">
-          <strong>{{ placement.colleague.name }}</strong>
-          {% if placement.service.skill %}<span>{{ placement.service.skill.name }}</span>{% endif %}
-        </div>
-      </div>
-    </td>
-    <td class="rvo-table-cell">
-      <strong>{{ placement.service.assignment.name }}</strong>
-      {% set clients = placement.service.assignment.sorted_clients %}
-      {% if clients %}
-        <div class="rvo-text--subtle icon-text-inline--block">
-          <span class="utrecht-icon rvo-icon rvo-icon-basis-kantoorgebouw rvo-icon--md rvo-icon--rvo-grijs-700"
-                role="img"
-                aria-label="Opdrachtgever"></span>
-          {{ clients[0].organization.label or clients[0].organization.name }}
-          {% if clients|length > 1 %}(+{{ clients|length - 1 }}){% endif %}
-        </div>
-      {% endif %}
-    </td>
-    <td class="rvo-table-cell">
-      {% if placement.service.assignment.end_date %}
-        <span class="icon-text-inline">
-          <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--md rvo-icon--rvo-grijs-700"
-                role="img"
-                aria-label="Einddatum"></span>
-          {{ placement.service.assignment.end_date|datum_nl("j M Y") }}
-        </span>
-      {% endif %}
-    </td>
-  </tr>
+  <c-table-row class="clickable-row" hx-get="{{ placement.colleague_url }}" hx-target="#side_panel-container">
+  <c-table-cell>
+  <div class="user-table-cell">
+    <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>
+    <div class="user-info">
+      <strong>{{ placement.colleague.name }}</strong>
+      {% if placement.service.skill %}<span>{{ placement.service.skill.name }}</span>{% endif %}
+    </div>
+  </div>
+  </c-table-cell>
+  <c-table-cell>
+  <strong>{{ placement.service.assignment.name }}</strong>
+  {% set clients = placement.service.assignment.sorted_clients %}
+  {% if clients %}
+    <div class="rvo-text--subtle icon-text-inline--block">
+      <c-icon icon="basis-kantoorgebouw" size="md" color="grijs-700" />
+      {{ clients[0].organization.label or clients[0].organization.name }}
+      {% if clients|length > 1 %}(+{{ clients|length - 1 }}){% endif %}
+    </div>
+  {% endif %}
+  </c-table-cell>
+  <c-table-cell>
+  {% if placement.service.assignment.end_date %}
+    <span class="icon-text-inline">
+      <c-icon icon="kalender" size="md" color="grijs-700" />
+      {{ placement.service.assignment.end_date|datum_nl("j M Y") }}
+    </span>
+  {% endif %}
+  </c-table-cell>
+  </c-table-row>
 {% else %}
-  <tr class="rvo-table-row">
-    <td class="rvo-table-cell" colspan="3">
-      <span class="rvo-text--italic">Geen inzetten gevonden.</span>
-    </td>
-  </tr>
+  <c-table-row>
+  <c-table-cell colspan="3">
+  <span class="rvo-text--italic">Geen inzetten gevonden.</span>
+  </c-table-cell>
+  </c-table-row>
 {% endfor %}
 {% if next_page_url %}
-  <tr hx-get="{{ next_page_url }}"
-      hx-trigger="revealed"
-      hx-swap="outerHTML">
-    <td colspan="3" class="rvo-table-cell rvo-text--center">
-      <span class="rvo-text--subtle">Meer laden...</span>
-    </td>
-  </tr>
+  <c-table-row hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
+  <c-table-cell colspan="3" class="rvo-text--center">
+  <span class="rvo-text--subtle">Meer laden...</span>
+  </c-table-cell>
+  </c-table-row>
 {% endif %}

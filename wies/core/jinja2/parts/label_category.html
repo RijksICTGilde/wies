@@ -7,38 +7,30 @@
   </div>
 </div>
 {% if category.labels.all() %}
-  <div class="rvo-table--responsive">
-    <table class="rvo-table">
-      <thead class="rvo-table__head">
-        <tr class="rvo-table-row">
-          <th scope="col" class="rvo-table-header">Naam</th>
-          <th scope="col" class="rvo-table-header">Toegepast</th>
-        </tr>
-      </thead>
-      <tbody class="rvo-table-body">
-        {% for label in category.labels.all() %}
-          <tr class="rvo-table-row clickable-row"
-              hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}"
-              hx-target="#labelFormModal"
-              hx-swap="innerHTML"
-              title="Bewerk {{ label.name }}">
-            <td class="rvo-table-cell">
-              <span class="rvo-badge label-badge"
-                    style="background-color: {{ label.category.color }}">{{ label.name }}</span>
-            </td>
-            <td class="rvo-table-cell">
-              <div class="table-cell-with-actions">
-                <span>{{ label.usage_count|default(0) }}</span>
-                <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md rvo-icon--hemelblauw edit-icon"
-                      role="img"
-                      aria-label="Bewerken"></span>
-              </div>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+  <c-table>
+  <c-table-head>
+  <c-table-row>
+  <c-table-header>Naam</c-table-header>
+  <c-table-header>Toegepast</c-table-header>
+  </c-table-row>
+  </c-table-head>
+  <c-table-body>
+  {% for label in category.labels.all() %}
+    <c-table-row class="clickable-row" hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}" hx-target="#labelFormModal" hx-swap="innerHTML" title="Bewerk {{ label.name }}">
+    <c-table-cell>
+    <span class="rvo-badge label-badge"
+          style="background-color: {{ label.category.color }}">{{ label.name }}</span>
+    </c-table-cell>
+    <c-table-cell>
+    <div class="table-cell-with-actions">
+      <span>{{ label.usage_count|default(0) }}</span>
+      <c-icon icon="bewerken" size="md" color="hemelblauw" class="edit-icon" />
+    </div>
+    </c-table-cell>
+    </c-table-row>
+  {% endfor %}
+  </c-table-body>
+  </c-table>
   <div class="label-form-container">
     <form class="label-form"
           hx-post="/instellingen/labels/categorie/{{ category.id }}/labels/aanmaken/"

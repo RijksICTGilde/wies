@@ -116,14 +116,9 @@
                   {% endwith %}
                 {% endfor %}
               </div>
-              <button type="button"
-                      id="add-service-btn"
-                      class="rvo-button rvo-button--tertiary rvo-button--size-sm rvo-button--icon-before">
-                <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before"
-                      role="img"
-                      aria-label="Dienst toevoegen"></span>
-                Dienst toevoegen
-              </button>
+              <c-button kind="tertiary" size="sm" icon="plus" iconPlacement="before" type="button" id="add-service-btn">
+              Dienst toevoegen
+              </c-button>
             {% endcall %}
             <div class="utrecht-button-group">
               <c-button kind="primary" type="submit">Opdracht aanmaken</c-button>
