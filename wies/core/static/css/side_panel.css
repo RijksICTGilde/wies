@@ -470,15 +470,7 @@ dialog#side_panel::backdrop {
   line-height: 1.4;
 }
 
-/* Tabs inside side panel — strip panel border/background, keep content spacing */
+/* Tabs panel spacing inside side panel */
 .rvo-dialog .rvo-tabs__panel {
-  border: none;
-  background: none;
-  padding-inline: 0;
   padding-block: var(--rvo-space-md) 0;
-}
-
-/* Remove bottom border on active tab to blend with content */
-.rvo-dialog .rvo-tabs__tab--active {
-  border-bottom-color: transparent;
 }

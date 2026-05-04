@@ -31,6 +31,9 @@ py-modules = []
 [tool.uv]
 package = false
 
+[tool.uv.sources]
+jinja-roos-components = { path = "../jinja-roos-components", editable = true }
+
 # Ruff configuration
 [tool.ruff]
 target-version = "py314"
