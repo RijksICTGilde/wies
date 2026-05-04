@@ -470,7 +470,10 @@ dialog#side_panel::backdrop {
   line-height: 1.4;
 }
 
-/* Tabs panel spacing inside side panel */
+/* Tabs panel spacing inside side panel (borderless variant) */
 .rvo-dialog .rvo-tabs__panel {
+  border: none;
+  background: none;
+  padding-inline: 0;
   padding-block: var(--rvo-space-md) 0;
 }
