@@ -16,11 +16,11 @@
               Fout
             {% endblock error_title %}
             </c-h1>
-            <p class="rvo-text">
-              {% block error_message %}
-                Er is iets misgegaan.
-              {% endblock error_message %}
-            </p>
+            <c-paragraph>
+            {% block error_message %}
+              Er is iets misgegaan.
+            {% endblock error_message %}
+            </c-paragraph>
             {% block error_extra %}
             {% endblock error_extra %}
           </div>

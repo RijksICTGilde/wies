@@ -44,7 +44,7 @@
     {% if errors and errors.name %}<div class="form-error">{{ errors.name }}</div>{% endif %}
   </div>
 {% else %}
-  <p class="empty-category-message">Geen labels in deze categorie</p>
+  <c-paragraph class="empty-category-message">Geen labels in deze categorie</c-paragraph>
   <div class="label-form-container">
     <form class="label-form"
           hx-post="/instellingen/labels/categorie/{{ category.id }}/labels/aanmaken/"

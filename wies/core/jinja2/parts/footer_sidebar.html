@@ -1,22 +1,16 @@
 <div class="sidebar-footer">
   <div class="sidebar-footer__column">
-    <h3 class="sidebar-footer__title">Over Wies</h3>
+    <c-h3 class="sidebar-footer__title" noMargins>Over Wies</c-h3>
     <ul class="sidebar-footer__menu">
       <li>
-        <a href="https://github.com/RijksICTGilde/wies"
-           class="sidebar-footer__link"
-           target="_blank"
-           rel="noopener noreferrer">
-          <c-icon icon="delta-naar-rechts" size="xs" />
-          GitHub
-        </a>
+        <c-link href="https://github.com/RijksICTGilde/wies" icon="delta-naar-rechts" iconSize="xs" target="_blank" class="sidebar-footer__link">
+        GitHub
+        </c-link>
       </li>
       {% if APP_VERSION and '/instellingen/' in request.path %}
         <li>
           <span class="sidebar-footer__link sidebar-footer__link--static">
-            <span class="utrecht-icon rvo-icon rvo-icon-delta-naar-rechts rvo-icon--xs"
-                  role="img"
-                  aria-label=""></span>
+            <c-icon icon="delta-naar-rechts" size="xs" />
             Versie: <strong>{{ APP_VERSION }}</strong>
           </span>
         </li>
@@ -24,25 +18,22 @@
     </ul>
   </div>
   <div class="sidebar-footer__column">
-    <h3 class="sidebar-footer__title">Over deze site</h3>
+    <c-h3 class="sidebar-footer__title" noMargins>Over deze site</c-h3>
     <ul class="sidebar-footer__menu">
       <li>
-        <a href="{{ url('privacy') }}" class="sidebar-footer__link">
-          <c-icon icon="delta-naar-rechts" size="xs" />
-          Privacy
-        </a>
+        <c-link href="{{ url('privacy') }}" icon="delta-naar-rechts" iconSize="xs" class="sidebar-footer__link">
+        Privacy
+        </c-link>
       </li>
       <li>
-        <a href="{{ url('toegankelijkheid') }}" class="sidebar-footer__link">
-          <c-icon icon="delta-naar-rechts" size="xs" />
-          Toegankelijkheid
-        </a>
+        <c-link href="{{ url('toegankelijkheid') }}" icon="delta-naar-rechts" iconSize="xs" class="sidebar-footer__link">
+        Toegankelijkheid
+        </c-link>
       </li>
       <li>
-        <a href="{{ url('contact') }}" class="sidebar-footer__link">
-          <c-icon icon="delta-naar-rechts" size="xs" />
-          Contact
-        </a>
+        <c-link href="{{ url('contact') }}" icon="delta-naar-rechts" iconSize="xs" class="sidebar-footer__link">
+        Contact
+        </c-link>
       </li>
     </ul>
   </div>

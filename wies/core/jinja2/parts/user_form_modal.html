@@ -13,8 +13,8 @@
       {{ get_csrf_hidden_input(request) }}
       <div class="modal-body">
         {% if delete_warning %}
-          <div style="padding: 1rem;">
-            <p class="rvo-text">{{ delete_warning }}</p>
+          <div class="modal-body__warning">
+            <c-paragraph>{{ delete_warning }}</c-paragraph>
           </div>
         {% else %}
           <div class="user-form-layout">

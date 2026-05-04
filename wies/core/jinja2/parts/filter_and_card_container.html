@@ -11,11 +11,10 @@
         Filters
         </c-button>
         {% if primary_button %}
-          <a href="{{ primary_button.href }}"
-             class="rvo-button rvo-button--primary rvo-button--size-md rvo-button--icon-before">
-            <c-icon icon="plus" size="md" class="rvo-link__icon--before" />
-            {{ primary_button.button_text }}
-          </a>
+          <c-link href="{{ primary_button.href }}" class="rvo-button rvo-button--primary rvo-button--size-md rvo-button--icon-before" noUnderline>
+          <c-icon icon="plus" size="md" class="rvo-link__icon--before" />
+          {{ primary_button.button_text }}
+          </c-link>
         {% endif %}
         <!-- Search Field -->
         <div class="search-field-wrapper">
@@ -28,9 +27,9 @@
     </div>
     <!-- Row 2: Result count + Active Filter Chips -->
     <div class="header-row">
-      <p class="results-count">
-        <b>{{ page_obj.paginator.count }}</b> resultaten
-      </p>
+      <c-paragraph class="results-count">
+      <b>{{ page_obj.paginator.count }}</b> resultaten
+      </c-paragraph>
       <!-- Active Filter Chips -->
       {% include "parts/filters/filter_chips.html" %}
     </div>

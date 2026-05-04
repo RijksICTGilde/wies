@@ -10,11 +10,7 @@
       <div class="client-modal__search">
         <div class="search-field-wrapper">
           <c-icon icon="zoek" color="lintblauw" size="md" class="search-icon" />
-          <input type="text"
-                 id="assignment-org-search"
-                 class="utrecht-textbox"
-                 placeholder="Zoek opdrachtgever..."
-                 aria-label="Zoek opdrachtgever" />
+          <c-input id="assignment-org-search" placeholder="Zoek opdrachtgever..." aria-label="Zoek opdrachtgever" size />
           <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
         </div>
       </div>
@@ -22,11 +18,10 @@
         <div class="client-modal__tree" id="assignment-org-tree-container"></div>
         <div class="client-modal__selection">
           <div class="client-modal__selection-header">
-            <span class="rvo-label client-modal__selection-title">Geselecteerd
-              <span id="assignment-org-selection-count"
-                    class="client-modal__selection-count"
-                    style="display: none">0</span>
-            </span>
+            <c-label class="client-modal__selection-title">Geselecteerd</c-label>
+            <span id="assignment-org-selection-count"
+                  class="client-modal__selection-count"
+                  style="display: none">0</span>
           </div>
           <ul id="assignment-org-selection-list"
               class="client-modal__selection-list">

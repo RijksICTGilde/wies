@@ -72,7 +72,7 @@
                 <div class="org-breadcrumb">
                   {% if org_breadcrumb.ancestors %}
                     {% for ancestor in org_breadcrumb.ancestors %}
-                      <a href="{{ ancestor.url }}" class="org-breadcrumb__ancestor">{{ ancestor.label }}</a>
+                      <c-link href="{{ ancestor.url }}" class="org-breadcrumb__ancestor">{{ ancestor.label }}</c-link>
                       <span class="org-breadcrumb__separator">›</span>
                     {% endfor %}
                   {% endif %}
@@ -162,10 +162,7 @@
                      title="Bekijk {{ member.colleague.name }}">
                     <div class="user-avatar">{{ member.colleague.name|first|upper }}</div>
                     <div class="rvo-item-list__content">
-                      <div style="display: flex;
-                                  justify-content: space-between;
-                                  align-items: center;
-                                  width: 100%">
+                      <div class="item-list__name-row">
                         <strong>{{ member.colleague.name }}</strong>
                         <c-tag type="default" class="assignment-tag--completed">Afgelopen</c-tag>
                       </div>

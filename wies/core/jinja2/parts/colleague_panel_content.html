@@ -19,8 +19,7 @@
   {% if labels %}
     <div class="rvo-layout-row rvo-layout-gap--sm label-badge-list">
       {% for label in labels %}
-        <span class="rvo-badge label-badge"
-              style="background-color: {{ label.category.color }}">{{ label.name }}</span>
+        <c-tag type="default" class="label-badge" style="background-color: {{ label.category.color }}">{{ label.name }}</c-tag>
       {% endfor %}
     </div>
   {% else %}

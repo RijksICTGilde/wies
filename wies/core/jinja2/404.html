@@ -9,9 +9,9 @@
   De pagina die je zoekt bestaat niet of is verplaatst.
 {% endblock error_message %}
 {% block error_extra %}
-  <p class="rvo-text">
-    {# djlint:off J018 - url() doesn't work in error handler context #}
-    <a href="/">Ga naar de homepage</a>
-    {# djlint:on #}
-  </p>
+  <c-paragraph>
+  {# djlint:off J018 - url() doesn't work in error handler context #}
+  <c-link href="/">Ga naar de homepage</c-link>
+  {# djlint:on #}
+  </c-paragraph>
 {% endblock error_extra %}

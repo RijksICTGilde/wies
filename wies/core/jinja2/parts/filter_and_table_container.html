@@ -21,9 +21,9 @@
     </div>
     <!-- Row 2: Result count + Active Filter Chips -->
     <div class="header-row">
-      <p class="results-count">
-        <b>{{ page_obj.paginator.count }}</b> resultaten
-      </p>
+      <c-paragraph class="results-count">
+      <b>{{ page_obj.paginator.count }}</b> resultaten
+      </c-paragraph>
       <!-- Active Filter Chips -->
       {% include "parts/filters/filter_chips.html" %}
     </div>
