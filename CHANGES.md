@@ -4,7 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-_ ...
+- ?: add usage dashboard on /staff/
+- ?: remove database dump download/upload and 'Sync OTYS' actions from /staff/
+- ?: guard destructive /staff/ actions (clear data, load dummy data) behind the `ENABLE_DESTRUCTIVE_STAFF_ACTIONS` env var
 
 ## 2026-05-05
 

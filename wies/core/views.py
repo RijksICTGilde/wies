@@ -1,9 +1,7 @@
 import logging
-import tempfile
 import urllib.parse
 from collections import Counter
 from datetime import date, timedelta
-from pathlib import Path
 
 from django.conf import settings
 from django.contrib import messages
@@ -14,11 +12,13 @@ from django.contrib.auth.models import Group
 from django.core import management
 from django.db.models import Case, Exists, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
-from django.http import Http404, HttpResponse, QueryDict
+from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic.list import ListView
+
+from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
     AssignmentCreateForm,
@@ -56,7 +56,6 @@ from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
 )
-from .services.sync import sync_all_otys_iir_records
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
@@ -443,16 +442,30 @@ def no_access(request):
     return render(request, "no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
 
 
+STAFF_TABS = ("dashboard", "database")
+DESTRUCTIVE_STAFF_ACTIONS = frozenset({"clear_data", "load_base_data"})
+
+
 @user_passes_test(lambda u: u.is_authenticated and u.email.lower() in settings.STAFF_EMAILS, login_url="/geen-toegang/")
 def staff(request):
+    tab = request.GET.get("tab", "dashboard")
+    if tab not in STAFF_TABS:
+        tab = "dashboard"
+
     context = {
+        "tab": tab,
         "assignment_count": Assignment.objects.count(),
         "colleague_count": Colleague.objects.count(),
         "organization_count": OrganizationUnit.objects.count(),
         "latest_tasks": get_latest_tasks(limit=3),
+        "usage": get_usage_stats(),
+        "destructive_actions_enabled": settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS,
     }
     if request.method == "POST":
         action = request.POST.get("action")
+        if action in DESTRUCTIVE_STAFF_ACTIONS and not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
+            return HttpResponseForbidden("Destructive staff actions are disabled in this environment.")
+        redirect_target = f"{reverse('staff')}?tab=database"
         if action == "clear_data":
             # not using flush, since that would clear users
             Assignment.objects.all().delete()
@@ -469,71 +482,6 @@ def staff(request):
         elif action == "load_base_data":
             management.call_command("loaddata", "base_dummy_data.json")
             messages.success(request, "Data geladen uit base_dummy_data.json")
-        elif action == "export_data":
-            # Use dumpdata's native --output argument with temp file
-            with tempfile.NamedTemporaryFile(mode="r", suffix=".json", delete=False) as tmp:
-                tmp_path = tmp.name
-
-            try:
-                # dumpdata writes directly to file using --output argument
-                management.call_command("dumpdata", "--natural-foreign", "--natural-primary", output=tmp_path)
-
-                # Read the JSON file
-                json_data = Path(tmp_path).read_text()
-
-                response = HttpResponse(json_data, content_type="application/json")
-                response["Content-Disposition"] = 'attachment; filename="wies_datadump.json"'
-                return response
-            finally:
-                # Clean up temp file
-                Path(tmp_path).unlink(missing_ok=True)
-        elif action == "import_data":
-            # Handle database import from uploaded JSON file
-            if "json_file" not in request.FILES:
-                messages.error(request, "Geen bestand geüpload. Upload een JSON-bestand.")
-                return redirect("staff")
-
-            json_file = request.FILES["json_file"]
-
-            # Validate file extension
-            if not json_file.name.endswith(".json"):
-                messages.error(request, "Ongeldig bestandstype. Upload een JSON-bestand.")
-                return redirect("staff")
-
-            # Save uploaded file to temp location
-            with tempfile.NamedTemporaryFile(mode="wb", suffix=".json", delete=False) as tmp:
-                tmp_path = tmp.name
-                for chunk in json_file.chunks():
-                    tmp.write(chunk)
-
-            try:
-                # Clear existing data before import to avoid PK conflicts
-                # Same clearing logic as "clear_data" action
-                Assignment.objects.all().delete()
-                Colleague.objects.all().delete()
-                Skill.objects.all().delete()
-                Placement.objects.all().delete()
-                Service.objects.all().delete()
-                LabelCategory.objects.all().delete()
-                Label.objects.all().delete()
-                OrganizationUnit.objects.update(parent=None)
-                OrganizationUnit.objects.all().delete()
-                OrganizationType.objects.all().delete()
-
-                # Load data using Django's loaddata command
-                management.call_command("loaddata", tmp_path)
-                messages.success(request, "Database succesvol geïmporteerd")
-            except Exception as e:  # noqa: BLE001
-                # Catch all exceptions to show user-friendly error message
-                messages.error(request, f"Import mislukt: {e!s}")
-            finally:
-                # Clean up temp file
-                Path(tmp_path).unlink(missing_ok=True)
-
-            return redirect("staff")
-        elif action == "sync_all_otys_records":
-            sync_all_otys_iir_records()
-            messages.success(request, "All records synced successfully from OTYS IIR")
         elif action == "sync_organizations":
             # Check if there's already an active task
             if has_active_task("sync_organizations"):
@@ -552,8 +500,8 @@ def staff(request):
                 context["latest_tasks"] = get_latest_tasks(limit=3)
                 return render(request, "parts/task_list.html", context)
 
-            return redirect("staff")
-        return redirect("staff")
+            return redirect(redirect_target)
+        return redirect(redirect_target)
 
     return render(request, "admin_db.html", context)
 
