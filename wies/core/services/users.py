@@ -276,7 +276,7 @@ def create_users_from_csv(creator, csv_content: str):
                 if group:
                     groups_to_assign.append(group)
 
-        existing_user = User.objects.filter(email=email).first()
+        existing_user = User.objects.filter(email__iexact=email).first()
         if existing_user:
             # Skip existing users
             errors.append(f"User with email '{email}' already exists, skipped")
