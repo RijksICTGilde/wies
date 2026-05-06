@@ -401,7 +401,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Event Test Name"},
         )
 
@@ -420,7 +420,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Test Assignment"},  # Same as current value
         )
 
@@ -431,7 +431,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.owner_user)
 
         self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Owner Changed Name"},
         )
 

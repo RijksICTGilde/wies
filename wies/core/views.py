@@ -2528,6 +2528,45 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
     return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
 
 
+_AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "OrganizationUnit": "OrganizationUnit"}
+
+
+def _emit_inline_edit_audit_event(spec, obj, old_value, new_value, user) -> None:
+    """Record an audit event for a single-Editable change on a tracked model.
+
+    Only fires for `Editable` (not Group/Collection) on models in
+    `_AUDIT_OBJECT_TYPES`. No-op when old == new so editing without a
+    real change doesn't create noise.
+    """
+    if not isinstance(spec, Editable):
+        return
+    object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
+    if object_type is None:
+        return
+    if str(old_value or "") == str(new_value or ""):
+        return
+    from django import forms  # noqa: PLC0415
+
+    widget = spec.widget
+    is_textarea = isinstance(widget, forms.Textarea) or (
+        isinstance(widget, type) and issubclass(widget, forms.Textarea)
+    )
+    create_event(
+        object_type=object_type,
+        action="update",
+        source="user",
+        object_id=obj.id,
+        user=user,
+        context={
+            "field_type": "textarea" if is_textarea else "text",
+            "field_name": spec.field or spec.name or "",
+            "field_label": spec.label or spec.name or "",
+            "old_value": str(old_value or ""),
+            "new_value": str(new_value or ""),
+        },
+    )
+
+
 def inline_edit_view(request, model_label, pk, name):
     """Generic HTMX endpoint. See ``features/inline-editing.md`` for the full contract."""
     editable_set = REGISTRY.get(model_label)
@@ -2571,7 +2610,10 @@ def inline_edit_view(request, model_label, pk, name):
         )
         form = form_cls(request.POST)
         if form.is_valid():
+            old_value = _current_value(obj, spec) if isinstance(spec, Editable) else None
             save_spec(spec, editables, form.cleaned_data, obj)
+            new_value = _current_value(obj, spec) if isinstance(spec, Editable) else None
+            _emit_inline_edit_audit_event(spec, obj, old_value, new_value, request.user)
             return _render_inline_edit_display(
                 request,
                 editable_set,
