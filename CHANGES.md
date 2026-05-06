@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-_ ...
+- 326: django security update to 6.0.5
 
 ## 2026-05-05
 
