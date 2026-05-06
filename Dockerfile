@@ -27,7 +27,6 @@ RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
 
-COPY --from=jrc . /jinja-roos-components
 RUN --mount=from=uv,source=/uv,target=/bin/uv \
   --mount=type=cache,target=/opt/uv-cache/ \
   --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
@@ -54,7 +53,6 @@ RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
 
 # copy results from build stages
 COPY --from=python-build --chown=app:app /opt/venv /opt/venv
-COPY --from=python-build --chown=app:app /jinja-roos-components /jinja-roos-components
 
 # copy uv to enable runtime including editable package during development
 COPY --from=uv /uv /bin/uv

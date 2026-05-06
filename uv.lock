@@ -352,32 +352,11 @@ wheels = [
 [[package]]
 name = "jinja-roos-components"
 version = "0.5"
-source = { editable = "../jinja-roos-components" }
+source = { git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=0.5#9268bb03e2296f66f79921ea675f0fc1532abedf" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "jinja2" },
     { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "beautifulsoup4", specifier = ">=4.9.0" },
-    { name = "jinja2", specifier = ">=3.0.0" },
-    { name = "pydantic", specifier = ">=2.0.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "black", specifier = ">=23.0.0" },
-    { name = "fastapi", specifier = ">=0.100.0" },
-    { name = "flask", specifier = ">=2.3.0" },
-    { name = "isort", specifier = ">=5.0.0" },
-    { name = "mypy", specifier = ">=1.0.0" },
-    { name = "pytest", specifier = ">=7.0.0" },
-    { name = "pytest-cov", specifier = ">=4.0.0" },
-    { name = "python-multipart", specifier = ">=0.0.6" },
-    { name = "ruff", specifier = ">=0.1.0" },
-    { name = "uvicorn", specifier = ">=0.20.0" },
 ]
 
 [[package]]
@@ -904,7 +883,7 @@ requires-dist = [
     { name = "authlib", specifier = "==1.7.0" },
     { name = "django", specifier = "==6.0.4" },
     { name = "gunicorn", specifier = "==25.3.0" },
-    { name = "jinja-roos-components", editable = "../jinja-roos-components" },
+    { name = "jinja-roos-components", git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=0.5" },
     { name = "jinja2", specifier = "==3.1.6" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.3" },
     { name = "requests", specifier = "==2.33.1" },
