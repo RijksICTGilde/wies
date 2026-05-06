@@ -28,6 +28,33 @@ def validate_email_domain(email: str, *, user_facing: bool = False) -> None:
         raise InvalidEmailDomainError(email, user_facing=user_facing)
 
 
+def _find_or_create_colleague_for_user(user, first_name, last_name, email):
+    """
+    Link a `source="wies"` colleague to the given user. If the user is already
+    linked to a colleague, update it in place. Otherwise reuse an unlinked
+    `source="wies"` colleague matching the email case-insensitively. Otherwise
+    create a new one. Colleagues from other sources (e.g. OTYS) are left alone.
+    """
+    name = f"{first_name} {last_name}"
+
+    existing = Colleague.objects.filter(user=user).first()
+    if existing is not None:
+        existing.name = name
+        existing.email = email
+        existing.save(update_fields=["name", "email"])
+        return existing
+
+    unlinked = Colleague.objects.filter(email__iexact=email, user__isnull=True, source="wies").order_by("id").first()
+    if unlinked is not None:
+        unlinked.user = user
+        unlinked.name = name
+        unlinked.email = email
+        unlinked.save(update_fields=["user", "name", "email"])
+        return unlinked
+
+    return Colleague.objects.create(user=user, name=name, email=email, source="wies")
+
+
 def create_user(creator: User, first_name, last_name, email, labels=None, groups=None):
     """
     :param creator: can be None when user create is triggered from system itself
@@ -39,7 +66,7 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
     # Validate email domain
     validate_email_domain(email)
 
-    if User.objects.filter(email=email).exists():
+    if User.objects.filter(email__iexact=email).exists():
         raise EmailNotAvailableError(email)
 
     user = User.objects.create_user(
@@ -48,15 +75,7 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
         last_name=last_name,
     )
 
-    # TODO: there can be an OTYS colleague record too when this is properly synced
-    # the current get_or_create method is then not sufficient (same for update_user)
-    colleague, created = Colleague.objects.get_or_create(
-        email=email, source="wies", defaults={"user": user, "name": f"{first_name} {last_name}"}
-    )
-    if not created and colleague.user is None:
-        colleague.user = user
-        colleague.name = f"{first_name} {last_name}"
-        colleague.save(update_fields=["user", "name"])
+    colleague = _find_or_create_colleague_for_user(user, first_name, last_name, email)
 
     label_names = []
     if labels:
@@ -95,32 +114,21 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
     # Validate email domain
     validate_email_domain(email)
 
-    try:
-        user_with_email = User.objects.get(email=email)
-        if user_with_email.id != user.id:
-            raise EmailNotAvailableError(email)
-    except User.DoesNotExist:
-        pass
+    other_user = User.objects.filter(email__iexact=email).exclude(pk=user.pk).first()
+    if other_user is not None:
+        raise EmailNotAvailableError(email)
 
     user.first_name = first_name
     user.last_name = last_name
     user.email = email
+    user.save()
 
-    colleague, _ = Colleague.objects.get_or_create(
-        user=user, defaults={"name": f"{first_name} {last_name}", "email": email, "source": "wies"}
-    )
+    colleague = _find_or_create_colleague_for_user(user, first_name, last_name, email)
 
     label_names = []
     if labels is not None:
         colleague.labels.set(labels)
         label_names = [label.name for label in labels]
-
-    user.save()
-
-    # Sync name/email to linked Colleague
-    colleague.name = f"{first_name} {last_name}"
-    colleague.email = email
-    colleague.save(update_fields=["name", "email"])
     if groups:
         user.groups.set(groups)
 
