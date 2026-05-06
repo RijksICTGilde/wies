@@ -38,7 +38,9 @@
   {% with field="assignment", label="Wat & waar", target="#filter-and-table-container", sort_state=get_sort_state(request, "assignment") %}
     {% include "parts/generic_sortable_header.html" %}
   {% endwith %}
-  <c-table-header>Tot</c-table-header>
+  {% with field="end_date", label="Tot", target="#filter-and-table-container", sort_state=get_sort_state(request, "end_date") %}
+    {% include "parts/generic_sortable_header.html" %}
+  {% endwith %}
   </c-table-row>
   </c-table-head>
   <c-table-body>

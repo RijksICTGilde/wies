@@ -57,6 +57,11 @@
   white-space: nowrap;
 }
 
+/* Date column right-aligned */
+.placement-table__date-cell {
+  text-align: right;
+}
+
 /* Role tags with overflow protection */
 .placement-table .rvo-tag {
   max-width: 100%;
