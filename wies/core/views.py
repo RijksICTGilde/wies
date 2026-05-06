@@ -442,9 +442,6 @@ def no_access(request):
     return render(request, "no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
 
 
-DESTRUCTIVE_STAFF_ACTIONS = frozenset({"clear_data", "load_base_data"})
-
-
 def staff_required(view_func):
     return user_passes_test(is_staff_user, login_url="/geen-toegang/")(view_func)
 
@@ -465,9 +462,9 @@ def staff_database(request):
     }
     if request.method == "POST":
         action = request.POST.get("action")
-        if action in DESTRUCTIVE_STAFF_ACTIONS and not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
-            return HttpResponseForbidden("Destructive staff actions are disabled in this environment.")
         if action == "clear_data":
+            if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
+                return HttpResponseForbidden("Destructive staff actions are disabled in this environment.")
             # not using flush, since that would clear users
             Assignment.objects.all().delete()
             Colleague.objects.all().delete()
@@ -479,8 +476,9 @@ def staff_database(request):
             OrganizationUnit.objects.update(parent=None)
             OrganizationUnit.objects.all().delete()
             OrganizationType.objects.all().delete()
-
         elif action == "load_base_data":
+            if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
+                return HttpResponseForbidden("Destructive staff actions are disabled in this environment.")
             management.call_command("loaddata", "base_dummy_data.json")
             messages.success(request, "Data geladen uit base_dummy_data.json")
         elif action == "sync_organizations":
