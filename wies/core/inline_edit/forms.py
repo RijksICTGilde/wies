@@ -18,10 +18,10 @@ if TYPE_CHECKING:
 
 
 def _build_form_field(editable: Editable) -> forms.Field:  # noqa: C901 — straight-line override application; breaking it apart would hide the structure
-    # Priority: explicit form_field → derive from model field → CharField fallback.
+    # Priority: explicit form_field_factory → derive from model field → CharField fallback.
     # Overrides (label/widget/choices/validators/error_messages/empty_label) apply last.
-    if editable.form_field is not None:
-        base = editable.form_field() if callable(editable.form_field) else editable.form_field
+    if editable.form_field_factory is not None:
+        base = editable.form_field_factory() if callable(editable.form_field_factory) else editable.form_field_factory
     elif editable.model is not None and editable.field is not None:
         model_fields = fields_for_model(editable.model, fields=[editable.field])
         base = model_fields[editable.field]
@@ -114,40 +114,6 @@ def resolve_editables(editable_set: type[EditableSet], spec: Editable | Editable
                 raise TypeError(f"EditableGroup.fields must contain str or Editable, got {type(f)}")
         return resolved
     raise TypeError(f"Unexpected spec type: {type(spec)}")
-
-
-def build_form_from(
-    editable_set: type[EditableSet],
-    fields: list[str | Editable | EditableGroup],
-    obj: Model | None = None,
-) -> type[forms.Form]:
-    """Build a form class from a selection of editables on an EditableSet.
-
-    ``fields`` accepts attribute names, Editable instances, or EditableGroup
-    instances (expanded into members). Used by full-page forms that reuse
-    inline-edit declarations.
-    """
-    resolved: list[Editable] = []
-    group_clean: Callable | None = None
-    for item in fields:
-        if isinstance(item, str):
-            spec = editable_set._editables.get(item)
-            if spec is None:
-                raise ValueError(f"Unknown editable '{item}' on {editable_set.__name__}")
-            resolved.extend(resolve_editables(editable_set, spec))
-            if isinstance(spec, EditableGroup) and spec.clean is not None:
-                group_clean = spec.clean
-        elif isinstance(item, EditableGroup):
-            resolved.extend(resolve_editables(editable_set, item))
-            if item.clean is not None:
-                group_clean = item.clean
-        elif isinstance(item, Editable):
-            resolved.append(item)
-        else:
-            raise TypeError(f"Unexpected field spec: {item!r}")
-
-    form_cls, _ = build_form_class(resolved, obj=obj, group_clean=group_clean)
-    return form_cls
 
 
 def save_editables(editables: list[Editable], cleaned_data: dict, obj: Model) -> None:

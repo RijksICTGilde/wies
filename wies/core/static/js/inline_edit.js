@@ -10,8 +10,10 @@ document.addEventListener("click", (event) => {
 
   const wrapper = toggle.parentElement;
   if (!wrapper) return;
-  const truncated = wrapper.querySelector(".inline-edit-show-more__truncated");
-  const full = wrapper.querySelector(".inline-edit-show-more__full");
+  // Template uses `inline-edit-long-text__*` for the value spans
+  // (the toggle button itself uses `inline-edit-show-more__*`).
+  const truncated = wrapper.querySelector(".inline-edit-long-text__truncated");
+  const full = wrapper.querySelector(".inline-edit-long-text__full");
   const icon = toggle.querySelector(".inline-edit-show-more__icon");
   const label = toggle.querySelector(".inline-edit-show-more__label");
   if (!truncated || !full || !icon || !label) return;

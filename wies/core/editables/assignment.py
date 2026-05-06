@@ -1,27 +1,20 @@
-"""Editables for Assignment. Reused by the inline-edit view and AssignmentCreateForm."""
+"""Editables for Assignment. Reused by the inline-edit view and AssignmentCreateForm.
+
+Permissions live in ``wies/core/permission_rules.py``.
+"""
 
 from django import forms
-from django.core.exceptions import ValidationError
 from django.db import transaction
 
+from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
-from wies.core.org_picker import OrganizationsField
-from wies.core.roles import user_can_edit_assignment, user_is_assignment_owner_or_admin
 from wies.core.services.assignments import apply_services_to_assignment, extract_services_data
 
 
 def _bdm_queryset():
     # Wrapped in a callable so `choices` evaluates lazily per request.
     return Colleague.objects.filter(user__groups__name="Business Development Manager").order_by("name")
-
-
-def _period_clean(cleaned):
-    """Reject end-before-start. Used by both the period group and AssignmentCreateForm."""
-    start, end = cleaned.get("start_date"), cleaned.get("end_date")
-    if start and end and end < start:
-        raise ValidationError({"end_date": "Einddatum moet na startdatum liggen."})
-    return cleaned
 
 
 def _organizations_initial(assignment):
@@ -94,9 +87,19 @@ def _save_services(assignment, formset):
     apply_services_to_assignment(assignment, services_data)
 
 
+def _validate_period(cleaned):
+    """Reject end-before-start. Cross-field validation for the period group."""
+    from django.core.exceptions import ValidationError  # noqa: PLC0415
+
+    start, end = cleaned.get("start_date"), cleaned.get("end_date")
+    if start and end and end < start:
+        raise ValidationError({"end_date": "Einddatum moet na startdatum liggen."})
+    return cleaned
+
+
 class AssignmentEditables(EditableSet):
-    model = Assignment
-    object_permission = staticmethod(user_can_edit_assignment)
+    class Meta:
+        model = Assignment
 
     name = Editable(
         label="Opdracht naam",
@@ -106,12 +109,12 @@ class AssignmentEditables(EditableSet):
     extra_info = Editable(
         label="Beschrijving",
         widget=forms.Textarea(attrs={"rows": 4}),
-        display="parts/inline_edit/displays/assignment_extra_info.html",
+        display="rvo/forms/displays/textarea.html",
     )
 
-    start_date = Editable(label="Startdatum", permission=user_is_assignment_owner_or_admin)
+    start_date = Editable(label="Startdatum")
 
-    end_date = Editable(label="Einddatum", permission=user_is_assignment_owner_or_admin)
+    end_date = Editable(label="Einddatum")
 
     owner = Editable(
         label="Business Manager",
@@ -119,25 +122,22 @@ class AssignmentEditables(EditableSet):
         required=True,
         empty_label=" ",
         error_messages={"required": "Selecteer een business manager."},
-        display="parts/inline_edit/displays/assignment_owner.html",
-        permission=user_is_assignment_owner_or_admin,
+        display="rvo/forms/displays/assignment_owner.html",
     )
 
     period = EditableGroup(
         label="Looptijd",
         fields=[start_date, end_date],
-        clean=_period_clean,
-        display="parts/inline_edit/displays/assignment_period.html",
-        permission=user_is_assignment_owner_or_admin,
+        clean=_validate_period,
+        display="rvo/forms/displays/assignment_period.html",
     )
 
     organizations = Editable(
         label="Opdrachtgever(s)",
-        form_field=lambda: OrganizationsField(required=True),
+        form_field_factory=lambda: OrganizationsField(required=True),
         initial=_organizations_initial,
         save=_save_organizations,
-        display="parts/inline_edit/displays/assignment_organizations.html",
-        permission=user_is_assignment_owner_or_admin,
+        display="rvo/forms/displays/organizations.html",
     )
 
     services = EditableCollection(
@@ -146,6 +146,5 @@ class AssignmentEditables(EditableSet):
         initial=_services_initial,
         save=_save_services,
         form_template="parts/assignment_services_form.html",
-        display="parts/inline_edit/displays/assignment_services.html",
-        permission=user_is_assignment_owner_or_admin,
+        display="rvo/forms/displays/assignment_services.html",
     )

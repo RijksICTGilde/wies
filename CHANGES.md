@@ -16,6 +16,15 @@ This files lists the changes during the lifetime of this project.
 - 309: add sidebar footer with links to privacy, toegankelijkheid, contact and GitHub
 - 309: add privacy, toegankelijkheid and contact pages
 - 309: make sidebar sticky so footer stays visible during scroll
+- 311: redesign row-level permissions as `has_permission(verb, obj, user, field=None)` engine with `@rule(...)` registry; rules live in `wies/core/permission_rules.py`. Class-level access (LIST/CREATE pages) stays on Django's `@permission_required` decorators. Fixes the placement-reassignment auth bug where any placed colleague could change other placements on the same assignment.
+- 311: drop `Editable.permission` and `EditableSet.object_permission` callbacks — the rule registry owns all per-row authorization for inline-edit and full-page forms.
+- 311: introduce `class Meta: model = ...` on each `EditableSet` (mirrors Django `ModelForm` convention).
+- 311: add `Editable.form_field()` helper so plain `forms.Form` subclasses can reuse editable-derived fields directly. `AssignmentCreateForm` and `UserForm` migrated; `build_form_from` removed.
+- 311: move `wies/core/inline_edit/editables/` → `wies/core/editables/`, split `org_picker.py` into `widgets.py` + new `fields.py`, move display partials under `rvo/forms/displays/`, move `org_picker.html` under `rvo/widgets/`.
+- 311: drop `_grant_dev_permissions` and the related management command — `ensure_initial_user` already adds the dev user to all groups; the user is also a Django superuser, which the new permission engine short-circuits to god-mode.
+- 311: fix `+Toon meer` toggle on long descriptions — JS was querying selectors that didn't match the template.
+- 311: move `whitenoise` middleware out of `config/settings/base.py` into `production.py` only.
+- 311: add field-level email rule — users cannot edit their own email inline; only Beheerder (via `rijksauth.change_user`) can.
 
 ## 2026-04-23
 

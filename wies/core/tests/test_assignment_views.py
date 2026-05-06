@@ -117,17 +117,37 @@ class AssignmentEditAttributeTest(TestCase):
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Owner Updated Name"
 
-    def test_assignment_edit_as_assigned_colleague_without_permission(self):
-        """Test that assigned colleague can edit without explicit permission"""
+    def test_assigned_colleague_cannot_edit_name(self):
+        """Placed consultants are limited to description-style fields.
+
+        Regression for the PR #311 placement-bug class: a colleague
+        placed on the assignment must NOT be able to edit the
+        assignment ``name`` (a management field).
+        """
         self.client.force_login(self.assigned_user)
 
         response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Colleague Updated Name"}
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            {"name": "Colleague Updated Name"},
+        )
+
+        assert response.status_code == 200
+        self.assertContains(response, "geen rechten")
+        self.assignment.refresh_from_db()
+        assert self.assignment.name == "Test Assignment"
+
+    def test_assigned_colleague_can_edit_extra_info(self):
+        """Placed consultants do gain narrow access to ``extra_info`` (description)."""
+        self.client.force_login(self.assigned_user)
+
+        response = self.client.post(
+            reverse("inline-edit", args=["assignment", self.assignment.id, "extra_info"]),
+            {"extra_info": "Description by colleague"},
         )
 
         assert response.status_code == 200
         self.assignment.refresh_from_db()
-        assert self.assignment.name == "Colleague Updated Name"
+        assert self.assignment.extra_info == "Description by colleague"
 
     def test_assigned_colleague_cannot_edit_owner_field(self):
         """Placed consultant is limited to name/extra_info. Attempting

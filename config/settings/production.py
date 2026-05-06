@@ -35,6 +35,13 @@ STORAGES = {
     },
 }
 
+# WhiteNoise serves static files. Insert it directly after SecurityMiddleware
+# per the WhiteNoise docs — kept out of the base MIDDLEWARE list so
+# tests/local don't need to filter it out.
+_WHITENOISE = "whitenoise.middleware.WhiteNoiseMiddleware"
+_AFTER_SECURITY = MIDDLEWARE.index("django.middleware.security.SecurityMiddleware") + 1  # noqa: F405
+MIDDLEWARE.insert(_AFTER_SECURITY, _WHITENOISE)  # noqa: F405
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

@@ -11,7 +11,15 @@ from django.utils.html import format_html, json_script
 from jinja2 import Environment
 from jinja_roos_components import setup_components
 
+from wies.core.editables import (
+    AssignmentEditables,
+    ColleagueEditables,
+    PlacementEditables,
+    ServiceEditables,
+    UserEditables,
+)
 from wies.core.inline_edit.jinja import inline_edit
+from wies.core.permissions import Verb, has_permission
 from wies.core.services.version import get_app_version
 
 
@@ -133,6 +141,13 @@ def environment(**options):
             "DEBUG": settings.DEBUG,
             "APP_VERSION": get_app_version(),
             "inline_edit": inline_edit,
+            "has_permission": has_permission,
+            "Verb": Verb,
+            "AssignmentEditables": AssignmentEditables,
+            "ColleagueEditables": ColleagueEditables,
+            "PlacementEditables": PlacementEditables,
+            "ServiceEditables": ServiceEditables,
+            "UserEditables": UserEditables,
         }
     )
     env.filters["datum_nl"] = datum_nl

@@ -12,17 +12,17 @@ from django.core.exceptions import ValidationError
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from wies.core.editables import REGISTRY
+from wies.core.editables.assignment import AssignmentEditables
+from wies.core.editables.placement import PlacementEditables
+from wies.core.editables.service import ServiceEditables
+from wies.core.fields import OrganizationsField
 from wies.core.forms import AssignmentCreateForm
 from wies.core.inline_edit.base import (
     Editable,
     EditableGroup,
     EditableSet,
 )
-from wies.core.inline_edit.editables import REGISTRY
-from wies.core.inline_edit.editables.assignment import AssignmentEditables
-from wies.core.inline_edit.editables.placement import PlacementEditables
-from wies.core.inline_edit.editables.service import ServiceEditables
-from wies.core.inline_edit.forms import build_form_from
 from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -34,7 +34,8 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.org_picker import OrganizationsField, OrgPickerWidget
+from wies.core.permissions import Verb, registered_rules, rule
+from wies.core.widgets import OrgPickerWidget
 
 User = get_user_model()
 
@@ -48,17 +49,44 @@ def _register(cls: type[EditableSet]) -> type[EditableSet]:
     return cls
 
 
+def _make_set(cls_name: str, /, model, **attrs):
+    """Build an EditableSet subclass with `class Meta: model = ...`.
+
+    Use in tests that need ad-hoc EditableSets:
+
+        cls = _make_set("MyEditables", Assignment, name=Editable())
+
+    ``cls_name`` is positional-only so callers can pass an Editable
+    attribute also named ``name`` without conflict.
+    """
+    meta_cls = type("Meta", (), {"model": model})
+    return type(cls_name, (EditableSet,), {"Meta": meta_cls, **attrs})
+
+
+def _snapshot_rules():
+    """Snapshot the global permission rule registry so tests can
+    register ad-hoc rules and restore on tearDown."""
+    return dict(registered_rules())
+
+
+def _restore_rules(snapshot):
+    """Restore the rule registry to a previous snapshot."""
+    from wies.core.permissions import _RULES  # noqa: PLC0415
+
+    _RULES.clear()
+    _RULES.update(snapshot)
+
+
 def _make_assignment_editables(**overrides):
     """Build a fresh EditableSet for Assignment. Using a local factory
     avoids Python caching the class at import time across tests.
     """
     attrs = {
-        "model": Assignment,
         "name": Editable(),
         "extra_info": Editable(),
     }
     attrs.update(overrides)
-    return _register(type("TestAssignmentEditables", (EditableSet,), attrs))
+    return _register(_make_set("TestAssignmentEditables", Assignment, **attrs))
 
 
 class InlineEditInfrastructureTest(TestCase):
@@ -147,6 +175,11 @@ class InlineEditInfrastructureTest(TestCase):
 
 
 class InlineEditPermissionTest(TestCase):
+    """Permission denial flows. Rules are registered ad-hoc against the
+    test EditableSet's editable, snapshotted in setUp and restored in
+    tearDown so production rules aren't disturbed.
+    """
+
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(
@@ -160,23 +193,17 @@ class InlineEditPermissionTest(TestCase):
             source="wies",
         )
         self._prev_registry = dict(REGISTRY)
+        self._prev_rules = _snapshot_rules()
 
     def tearDown(self):
         REGISTRY.clear()
         REGISTRY.update(self._prev_registry)
+        _restore_rules(self._prev_rules)
 
     def test_object_permission_denied_returns_display_with_alert(self):
-        _register(
-            type(
-                "ObjectDeniedEditables",
-                (EditableSet,),
-                {
-                    "model": Assignment,
-                    "object_permission": staticmethod(lambda u, o: False),
-                    "name": Editable(),
-                },
-            )
-        )
+        # No placement, no ownership, no Beheerder perm → whole-object
+        # rule update_assignment denies → alert rendered.
+        _register(_make_set("ObjectDeniedEditables", Assignment, name=Editable()))
         url = reverse("inline-edit", args=["assignment", self.assignment.pk, "name"])
         resp = self.client.get(url + "?edit=true")
         assert resp.status_code == 200
@@ -187,32 +214,19 @@ class InlineEditPermissionTest(TestCase):
         self.assertNotContains(resp, 'name="name"')
 
     def test_field_permission_denied_returns_display_with_alert(self):
-        _register(
-            type(
-                "FieldDeniedEditables",
-                (EditableSet,),
-                {
-                    "model": Assignment,
-                    "name": Editable(permission=lambda u, o: False),
-                },
-            )
-        )
+        # Field-level denial: register a rule against this editable that
+        # always returns False, even though the whole-object rule might
+        # otherwise allow.
+        cls = _register(_make_set("FieldDeniedEditables", Assignment, name=Editable()))
+        rule(Verb.UPDATE, cls.name)(lambda u, o: False)
         url = reverse("inline-edit", args=["assignment", self.assignment.pk, "name"])
         resp = self.client.get(url + "?edit=true")
         assert resp.status_code == 200
         self.assertContains(resp, "geen rechten")
 
     def test_post_denied_does_not_save(self):
-        _register(
-            type(
-                "PostDeniedEditables",
-                (EditableSet,),
-                {
-                    "model": Assignment,
-                    "name": Editable(permission=lambda u, o: False),
-                },
-            )
-        )
+        cls = _register(_make_set("PostDeniedEditables", Assignment, name=Editable()))
+        rule(Verb.UPDATE, cls.name)(lambda u, o: False)
         url = reverse("inline-edit", args=["assignment", self.assignment.pk, "name"])
         resp = self.client.post(url, {"name": "hacked"})
         assert resp.status_code == 200
@@ -224,7 +238,15 @@ class InlineEditPermissionTest(TestCase):
 class InlineEditGroupTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(email="group@rijksoverheid.nl", first_name="G", last_name="G")
+        # Superuser so the engine's is_superuser short-circuit allows
+        # all UPDATEs — these tests focus on group rendering/save, not auth.
+        self.user = User.objects.create_user(
+            email="group@rijksoverheid.nl",
+            first_name="G",
+            last_name="G",
+            is_superuser=True,
+            is_staff=True,
+        )
         self.client.force_login(self.user)
         self.assignment = Assignment.objects.create(
             name="G",
@@ -239,19 +261,16 @@ class InlineEditGroupTest(TestCase):
             return cleaned
 
         _register(
-            type(
+            _make_set(
                 "PeriodEditables",
-                (EditableSet,),
-                {
-                    "model": Assignment,
-                    "start_date": Editable(),
-                    "end_date": Editable(),
-                    "period": EditableGroup(
-                        label="Looptijd",
-                        fields=["start_date", "end_date"],
-                        clean=_period_clean,
-                    ),
-                },
+                Assignment,
+                start_date=Editable(),
+                end_date=Editable(),
+                period=EditableGroup(
+                    label="Looptijd",
+                    fields=["start_date", "end_date"],
+                    clean=_period_clean,
+                ),
             )
         )
         self.url = reverse("inline-edit", args=["assignment", self.assignment.pk, "period"])
@@ -291,7 +310,15 @@ class InlineEditGroupTest(TestCase):
 class InlineEditCustomSaveTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(email="cs@rijksoverheid.nl", first_name="C", last_name="S")
+        # Superuser so permission checks pass; this test focuses on the
+        # custom-save dispatch, not auth.
+        self.user = User.objects.create_user(
+            email="cs@rijksoverheid.nl",
+            first_name="C",
+            last_name="S",
+            is_superuser=True,
+            is_staff=True,
+        )
         self.client.force_login(self.user)
         self.assignment = Assignment.objects.create(
             name="Before",
@@ -305,16 +332,7 @@ class InlineEditCustomSaveTest(TestCase):
             obj.name = f"Custom:{value}"
             obj.save()
 
-        _register(
-            type(
-                "CustomSaveEditables",
-                (EditableSet,),
-                {
-                    "model": Assignment,
-                    "name": Editable(save=_custom_save),
-                },
-            )
-        )
+        _register(_make_set("CustomSaveEditables", Assignment, name=Editable(save=_custom_save)))
         self.url = reverse("inline-edit", args=["assignment", self.assignment.pk, "name"])
 
     def tearDown(self):
@@ -331,7 +349,15 @@ class InlineEditCustomSaveTest(TestCase):
 class InlineEditDisplayTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(email="disp@rijksoverheid.nl", first_name="D", last_name="D")
+        # Superuser so permission checks pass; this test focuses on
+        # display rendering, not auth.
+        self.user = User.objects.create_user(
+            email="disp@rijksoverheid.nl",
+            first_name="D",
+            last_name="D",
+            is_superuser=True,
+            is_staff=True,
+        )
         self.client.force_login(self.user)
         self.assignment = Assignment.objects.create(
             name="Shown",
@@ -344,26 +370,17 @@ class InlineEditDisplayTest(TestCase):
         REGISTRY.update(self._prev_registry)
 
     def test_default_display_shows_current_value(self):
-        _register(
-            type(
-                "DefaultDisplayEditables",
-                (EditableSet,),
-                {"model": Assignment, "name": Editable()},
-            )
-        )
+        _register(_make_set("DefaultDisplayEditables", Assignment, name=Editable()))
         url = reverse("inline-edit", args=["assignment", self.assignment.pk, "name"])
         resp = self.client.get(url)
         self.assertContains(resp, "Shown")
 
     def test_callable_display_is_invoked(self):
         _register(
-            type(
+            _make_set(
                 "CallableDisplayEditables",
-                (EditableSet,),
-                {
-                    "model": Assignment,
-                    "name": Editable(display=lambda o: f"[[ {o.name} ]]"),
-                },
+                Assignment,
+                name=Editable(display=lambda o: f"[[ {o.name} ]]"),
             )
         )
         url = reverse("inline-edit", args=["assignment", self.assignment.pk, "name"])
@@ -945,38 +962,6 @@ class ColleagueLabelsInlineEditTest(TestCase):
         assert resp.status_code == 404
 
 
-class BuildFormFromErrorTest(TestCase):
-    """`build_form_from` contract: unknown names and unexpected spec
-    types must raise early, not fail silently at render time.
-    """
-
-    def setUp(self):
-        self._prev_registry = dict(REGISTRY)
-
-    def tearDown(self):
-        REGISTRY.clear()
-        REGISTRY.update(self._prev_registry)
-
-    def test_unknown_field_name_raises(self):
-        editables_cls = type(
-            "BffUnknownEditables",
-            (EditableSet,),
-            {"model": Assignment, "name": Editable()},
-        )
-        with self.assertRaises(ValueError) as exc:  # noqa: PT027
-            build_form_from(editables_cls, fields=["not_registered"])
-        assert "not_registered" in str(exc.exception)
-
-    def test_unexpected_spec_type_raises(self):
-        editables_cls = type(
-            "BffBadTypeEditables",
-            (EditableSet,),
-            {"model": Assignment, "name": Editable()},
-        )
-        with self.assertRaises(TypeError):  # noqa: PT027
-            build_form_from(editables_cls, fields=[12345])
-
-
 class UserProfileColleagueAutoCreateTest(TestCase):
     """User.first_name / last_name saves through the inline-edit view
     must create a linked Colleague when none exists, and keep its name
@@ -1040,13 +1025,7 @@ class InlineEditJinjaGlobalErrorTest(TestCase):
 
         # Empty EditableSet so the registry entry exists but the name
         # doesn't resolve statically or dynamically.
-        _register(
-            type(
-                "EmptyAssignmentEditables",
-                (EditableSet,),
-                {"model": Assignment},
-            )
-        )
+        _register(_make_set("EmptyAssignmentEditables", Assignment))
         assignment = Assignment.objects.create(name="X", source="wies")
         with self.assertRaises(RuntimeError) as exc:  # noqa: PT027
             inline_edit_fn({}, assignment, "nonsuch")

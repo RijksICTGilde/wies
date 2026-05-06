@@ -55,7 +55,7 @@ class RvoFormMixin:
         "DateInput": "rvo/forms/widgets/date.html",
         "Textarea": "rvo/forms/widgets/textarea.html",
         "CheckboxInput": "rvo/forms/widgets/checkbox.html",
-        "OrgPickerWidget": "parts/widgets/org_picker.html",
+        "OrgPickerWidget": "rvo/widgets/org_picker.html",
     }
 
     # Per-widget extra configuration applied whenever the widget class is

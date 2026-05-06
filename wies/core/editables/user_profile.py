@@ -1,6 +1,11 @@
-"""Editables for the user's own profile (first_name, last_name)."""
+"""Editables for the user (used by self-edit profile and admin user form).
+
+Permissions live in ``wies/core/permission_rules.py``.
+"""
 
 from typing import TYPE_CHECKING, Any, cast
+
+from django.db import transaction
 
 from wies.core.inline_edit import Editable, EditableSet
 from wies.core.models import Colleague
@@ -12,14 +17,10 @@ if TYPE_CHECKING:
     from django.db.models import Model
 
 
-def _can_edit_own_profile(user, target_user):
-    # Even superusers edit via the regular /profiel/ flow.
-    return user.is_authenticated and user == target_user
-
-
 def _save_user_field_and_sync_colleague(field_name: str) -> Callable[[Model, Any], None]:
     """Update the User field and mirror the full name onto the linked Colleague."""
 
+    @transaction.atomic
     def _save(user: User, value: Any) -> None:
         setattr(user, field_name, value)
         user.save(update_fields=[field_name])
@@ -37,9 +38,9 @@ def _save_user_field_and_sync_colleague(field_name: str) -> Callable[[Model, Any
     return cast("Callable[[Model, Any], None]", _save)
 
 
-class UserProfileEditables(EditableSet):
-    model = User
-    object_permission = staticmethod(_can_edit_own_profile)
+class UserEditables(EditableSet):
+    class Meta:
+        model = User
 
     first_name = Editable(
         label="Voornaam",
@@ -52,4 +53,8 @@ class UserProfileEditables(EditableSet):
         required=True,
         error_messages={"required": "Achternaam is verplicht"},
         save=_save_user_field_and_sync_colleague("last_name"),
+    )
+    email = Editable(
+        label="E-mail (ODI)",
+        required=True,
     )

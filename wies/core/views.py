@@ -20,6 +20,8 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.generic.list import ListView
 
+from wies.core.permissions import Verb, has_permission
+
 from .forms import (
     AssignmentCreateForm,
     LabelCategoryForm,
@@ -41,7 +43,6 @@ from .models import (
     Skill,
 )
 from .querysets import annotate_placement_dates, annotate_usage_counts
-from .roles import user_can_edit_assignment
 from .services.assignments import create_assignment_from_form, extract_services_data
 from .services.events import create_event
 from .services.organizations import (
@@ -238,7 +239,7 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         "close_url": _build_close_url(request),
         "assignment": assignment,
         "team_members": team_members,
-        "user_can_edit": user_can_edit_assignment(request.user, assignment),
+        "user_can_edit": has_permission(Verb.UPDATE, assignment, request.user),
         "show_updates_tab": assignment.source != "otys_iir",
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
         "owner_mailto_href": owner_mailto_href,

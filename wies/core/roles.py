@@ -1,3 +1,10 @@
+"""Group/permission setup for Beheerder, Consultant, BDM.
+
+Per-row authorization for inline-edit and views lives in
+``wies/core/permission_rules.py``. This module is concerned only with
+Django Group definitions and what permissions they carry.
+"""
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -14,34 +21,6 @@ from wies.core.models import (
 )
 
 User = get_user_model()
-
-
-def user_can_edit_assignment(user, assignment):
-    """Any-field access: admin perm, owner, or a placed colleague. Wies-sourced only."""
-    if not user.is_authenticated:
-        return False
-    if assignment.source not in ("wies", ""):
-        return False
-    if user.has_perm("core.change_assignment"):
-        return True
-    if not hasattr(user, "colleague"):
-        return False
-    if assignment.owner and assignment.owner.id == user.colleague.id:
-        return True
-    return Placement.objects.filter(service__assignment=assignment, colleague__id=user.colleague.id).exists()
-
-
-def user_is_assignment_owner_or_admin(user, assignment):
-    """Management-field access (owner/period/organizations/team). Excludes placed consultants."""
-    if not user.is_authenticated:
-        return False
-    if assignment.source not in ("wies", ""):
-        return False
-    if user.has_perm("core.change_assignment"):
-        return True
-    if not hasattr(user, "colleague"):
-        return False
-    return bool(assignment.owner and assignment.owner.id == user.colleague.id)
 
 
 def setup_roles():

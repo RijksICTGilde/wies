@@ -10,18 +10,19 @@ from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 
+from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import (
     Editable,
     EditableCollection,
     EditableGroup,
     EditableSet,
 )
-from wies.core.inline_edit.editables import REGISTRY
 from wies.core.inline_edit.forms import (
     _current_value,
     build_form_class,
     resolve_editables,
 )
+from wies.core.permissions import Verb, has_permission
 
 if TYPE_CHECKING:
     from django.http import HttpRequest, HttpResponse
@@ -49,15 +50,17 @@ PERMISSION_DENIED_ALERT = {
 
 def _permission_denied(
     editable_set: type[EditableSet],
-    spec: Editable | EditableGroup,
+    spec: Editable | EditableGroup | EditableCollection,
     user,
     obj,
 ) -> dict | None:
-    """Return the denial alert when either the set-level or spec-level gate blocks; None when allowed."""
-    op = getattr(editable_set, "object_permission", None)
-    if op is not None and not op(user, obj):
-        return PERMISSION_DENIED_ALERT
-    if spec.permission is not None and not spec.permission(user, obj):
+    """Return the denial alert when the user can't UPDATE this field; None when allowed.
+
+    Permission lookup goes through the registry in
+    ``wies.core.permission_rules``. Field-level rules win over the
+    whole-object rule for the same model.
+    """
+    if not has_permission(Verb.UPDATE, obj, user, spec):
         return PERMISSION_DENIED_ALERT
     return None
 
@@ -88,6 +91,18 @@ def _resolve_display(obj, spec, editables) -> dict:
     return {"text": str(spec.display)}
 
 
+def _base_ctx(editable_set, spec, obj) -> dict:
+    # Shared context for display/form/collection-form renders — target id, URL, label, obj, spec.
+    model_label = editable_set.model._meta.model_name
+    return {
+        "target": f"inline-edit-{model_label}-{obj.pk}-{spec.name}",
+        "url": reverse("inline-edit", args=[model_label, obj.pk, spec.name]),
+        "label": _spec_label(editable_set, spec),
+        "obj": obj,
+        "editable": spec,
+    }
+
+
 def _render_display(
     request: HttpRequest,
     editable_set,
@@ -100,21 +115,22 @@ def _render_display(
     saved: bool = False,
 ) -> HttpResponse:
     # `saved=True` triggers the pencil→check flash; `alert` carries a denial warning.
-    model_label = editable_set.model._meta.model_name
-    name = spec.name
-    display = _resolve_display(obj, spec, editables)
-    if isinstance(spec, EditableCollection):
-        value = spec.initial(obj)
-    elif isinstance(spec, Editable):
-        value = _current_value(obj, spec)
+    # On denial, skip the value/display resolution — it can be heavy (e.g. the
+    # services collection does a per-row Placement query) and the partial
+    # gracefully handles an empty value with the alert banner.
+    if alert is not None:
+        display: dict = {"text": ""}
+        value: object = None
     else:
-        value = {e.field or e.name: _current_value(obj, e) for e in editables}
+        display = _resolve_display(obj, spec, editables)
+        if isinstance(spec, EditableCollection):
+            value = spec.initial(obj)
+        elif isinstance(spec, Editable):
+            value = _current_value(obj, spec)
+        else:
+            value = {e.field or e.name: _current_value(obj, e) for e in editables}
     ctx = {
-        "target": f"inline-edit-{model_label}-{obj.pk}-{name}",
-        "url": reverse("inline-edit", args=[model_label, obj.pk, name]),
-        "label": _spec_label(editable_set, spec),
-        "obj": obj,
-        "editable": spec,
+        **_base_ctx(editable_set, spec, obj),
         "value": value,
         "display": display,
         "user_can_edit": (
@@ -137,16 +153,7 @@ def _render_form(
     form,
 ) -> HttpResponse:
     # Edit-mode partial: form + save/cancel. On validation failure, `form` carries inline errors.
-    model_label = editable_set.model._meta.model_name
-    name = spec.name
-    ctx = {
-        "target": f"inline-edit-{model_label}-{obj.pk}-{name}",
-        "url": reverse("inline-edit", args=[model_label, obj.pk, name]),
-        "label": _spec_label(editable_set, spec),
-        "obj": obj,
-        "editable": spec,
-        "form": form,
-    }
+    ctx = {**_base_ctx(editable_set, spec, obj), "form": form}
     return render(request, "parts/inline_edit/form.html", ctx)
 
 
@@ -158,15 +165,7 @@ def _render_collection_form(
     formset,
 ) -> HttpResponse:
     # Inner body from spec.form_template; receives the formset as `formset`.
-    model_label = editable_set.model._meta.model_name
-    ctx = {
-        "target": f"inline-edit-{model_label}-{obj.pk}-{spec.name}",
-        "url": reverse("inline-edit", args=[model_label, obj.pk, spec.name]),
-        "label": _spec_label(editable_set, spec),
-        "obj": obj,
-        "editable": spec,
-        "formset": formset,
-    }
+    ctx = {**_base_ctx(editable_set, spec, obj), "formset": formset}
     return render(request, "parts/inline_edit/collection_form.html", ctx)
 
 

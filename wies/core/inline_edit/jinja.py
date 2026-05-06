@@ -5,8 +5,8 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 from jinja2 import pass_context
 
+from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import Editable, EditableCollection
-from wies.core.inline_edit.editables import REGISTRY
 from wies.core.inline_edit.forms import _current_value, resolve_editables
 from wies.core.inline_edit.views import (
     _permission_denied,
@@ -31,7 +31,7 @@ def inline_edit(ctx, obj, name, **extras):
     editable_set = REGISTRY.get(model_label)
     if editable_set is None:
         raise RuntimeError(
-            f"No EditableSet registered for model '{model_label}'. Add it to wies.core.inline_edit.editables.REGISTRY."
+            f"No EditableSet registered for model '{model_label}'. Add it to wies.core.editables.REGISTRY."
         )
 
     spec = editable_set._editables.get(name) or editable_set.resolve_dynamic(name)

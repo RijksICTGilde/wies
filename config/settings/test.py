@@ -39,11 +39,6 @@ CACHES = {
 # ----------------------------------------------------------------------------------------------------------------------
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
-# STATIC FILES
-# ----------------------------------------------------------------------------------------------------------------------
-# Drop the WhiteNoise middleware so tests don't warn about a missing staticfiles directory.
-MIDDLEWARE = [m for m in MIDDLEWARE if m != "whitenoise.middleware.WhiteNoiseMiddleware"]  # noqa: F405
-
 # LOGGING
 # ----------------------------------------------------------------------------------------------------------------------
 # Reduce logging noise during tests

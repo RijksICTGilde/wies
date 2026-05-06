@@ -1,4 +1,9 @@
-"""Editables for Colleague — one labels field per LabelCategory, built dynamically."""
+"""Editables for Colleague — one labels field per LabelCategory, built dynamically.
+
+Permissions live in ``wies/core/permission_rules.py``.
+"""
+
+from django.db import transaction
 
 from wies.core.inline_edit import Editable, EditableSet
 from wies.core.models import Colleague, LabelCategory
@@ -10,6 +15,7 @@ LABELS_PREFIX = "labels_"
 def _save_labels_for_category(category_id):
     """Replace labels in this category only; leave other categories untouched."""
 
+    @transaction.atomic
     def _save(colleague, selected_labels):
         current = colleague.labels.filter(category_id=category_id)
         colleague.labels.remove(*current)
@@ -36,7 +42,7 @@ def _build_label_editable(category):
         widget=MultiselectDropdown,
         choices=_labels_choices(category),
         save=_save_labels_for_category(category.id),
-        display="parts/inline_edit/displays/colleague_labels.html",
+        display="rvo/forms/displays/colleague_labels.html",
     )
     editable.name = name
     editable.category = category  # read by the display partial
@@ -44,13 +50,8 @@ def _build_label_editable(category):
 
 
 class ColleagueEditables(EditableSet):
-    model = Colleague
-    object_permission = staticmethod(
-        lambda user, colleague: (
-            user.is_authenticated
-            and (user.has_perm("core.change_colleague") or getattr(user, "colleague", None) == colleague)
-        )
-    )
+    class Meta:
+        model = Colleague
 
     @classmethod
     def resolve_dynamic(cls, name):
