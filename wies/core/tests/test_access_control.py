@@ -57,14 +57,16 @@ class AccessControlTest(TestCase):
                 assert response.url.startswith("/djadmin/login/")
 
     def test_staff_page_requires_authentication(self):
-        """Test that /staff/ redirects unauthenticated users"""
-        response = self.client.get("/staff/", follow=False)
+        """Test that staff subpages redirect unauthenticated users"""
+        for path in ("/beheer/gebruik/", "/beheer/database/"):
+            with self.subTest(path=path):
+                response = self.client.get(path, follow=False)
 
-        assert response.status_code == 302
+                assert response.status_code == 302
 
     @override_settings(STAFF_EMAILS=["admin@rijksoverheid.nl"])
     def test_staff_email_can_access_staff_page(self):
-        """Test that a user whose email is in STAFF_EMAILS can access /staff/"""
+        """Test that a user whose email is in STAFF_EMAILS can access staff subpages"""
         staff_user = User.objects.create_user(
             email="admin@rijksoverheid.nl",
             first_name="Admin",
@@ -72,16 +74,20 @@ class AccessControlTest(TestCase):
         )
         self.client.force_login(staff_user)
 
-        response = self.client.get("/staff/")
+        for path in ("/beheer/gebruik/", "/beheer/database/"):
+            with self.subTest(path=path):
+                response = self.client.get(path)
 
-        assert response.status_code == 200
+                assert response.status_code == 200
 
     @override_settings(STAFF_EMAILS=["other@rijksoverheid.nl"])
     def test_non_staff_email_cannot_access_staff_page(self):
-        """Test that a user whose email is not in STAFF_EMAILS is redirected"""
+        """Test that a user whose email is not in STAFF_EMAILS is redirected away from staff subpages"""
         self.client.force_login(self.test_user)
 
-        response = self.client.get("/staff/", follow=False)
+        for path in ("/beheer/gebruik/", "/beheer/database/"):
+            with self.subTest(path=path):
+                response = self.client.get(path, follow=False)
 
-        assert response.status_code == 302
-        assert response.url.startswith("/geen-toegang/")
+                assert response.status_code == 302
+                assert response.url.startswith("/geen-toegang/")

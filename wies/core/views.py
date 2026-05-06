@@ -43,7 +43,7 @@ from .models import (
     Skill,
 )
 from .querysets import annotate_placement_dates, annotate_usage_counts
-from .roles import user_can_edit_assignment
+from .roles import is_staff_user, user_can_edit_assignment
 from .services.assignments import create_assignment_from_form, extract_services_data
 from .services.events import create_event
 from .services.organizations import (
@@ -442,30 +442,31 @@ def no_access(request):
     return render(request, "no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
 
 
-STAFF_TABS = ("dashboard", "database")
 DESTRUCTIVE_STAFF_ACTIONS = frozenset({"clear_data", "load_base_data"})
 
 
-@user_passes_test(lambda u: u.is_authenticated and u.email.lower() in settings.STAFF_EMAILS, login_url="/geen-toegang/")
-def staff(request):
-    tab = request.GET.get("tab", "dashboard")
-    if tab not in STAFF_TABS:
-        tab = "dashboard"
+def staff_required(view_func):
+    return user_passes_test(is_staff_user, login_url="/geen-toegang/")(view_func)
 
+
+@staff_required
+def staff_dashboard(request):
+    return render(request, "staff_dashboard.html", {"usage": get_usage_stats()})
+
+
+@staff_required
+def staff_database(request):
     context = {
-        "tab": tab,
         "assignment_count": Assignment.objects.count(),
         "colleague_count": Colleague.objects.count(),
         "organization_count": OrganizationUnit.objects.count(),
         "latest_tasks": get_latest_tasks(limit=3),
-        "usage": get_usage_stats(),
         "destructive_actions_enabled": settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS,
     }
     if request.method == "POST":
         action = request.POST.get("action")
         if action in DESTRUCTIVE_STAFF_ACTIONS and not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
             return HttpResponseForbidden("Destructive staff actions are disabled in this environment.")
-        redirect_target = f"{reverse('staff')}?tab=database"
         if action == "clear_data":
             # not using flush, since that would clear users
             Assignment.objects.all().delete()
@@ -500,10 +501,9 @@ def staff(request):
                 context["latest_tasks"] = get_latest_tasks(limit=3)
                 return render(request, "parts/task_list.html", context)
 
-            return redirect(redirect_target)
-        return redirect(redirect_target)
+        return redirect("staff-database")
 
-    return render(request, "admin_db.html", context)
+    return render(request, "staff_database.html", context)
 
 
 class PlacementListView(ListView):

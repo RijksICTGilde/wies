@@ -41,11 +41,11 @@
         {% if user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
           <li>
             <a href="{{ url('admin-users') }}"
-               class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/instellingen/' in request.path %}menu-item--active{% endif %}">
+               class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/beheer/' in request.path %}menu-item--active{% endif %}">
               <span class="utrecht-icon rvo-icon rvo-icon-instellingen rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
                     role="img"
-                    aria-label="Instellingen"></span>
-              Instellingen
+                    aria-label="Beheer"></span>
+              Beheer
             </a>
           </li>
           <li class="menubar__submenu-item">
@@ -75,6 +75,26 @@
                     role="img"
                     aria-label="Labels"></span>
               Labels
+            </a>
+          </li>
+        {% endif %}
+        {% if is_staff_user(user) %}
+          <li class="menubar__submenu-item">
+            <a href="{{ url('staff-dashboard') }}"
+               class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/gebruik/' in request.path %}menu-item--active{% endif %}">
+              <span class="utrecht-icon rvo-icon rvo-icon-grafiek rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
+                    role="img"
+                    aria-label="Gebruik"></span>
+              Gebruik
+            </a>
+          </li>
+          <li class="menubar__submenu-item">
+            <a href="{{ url('staff-database') }}"
+               class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/database/' in request.path %}menu-item--active{% endif %}">
+              <span class="utrecht-icon rvo-icon rvo-icon-database rvo-icon--md rvo-icon--lintblauw rvo-link__icon--before"
+                    role="img"
+                    aria-label="Database"></span>
+              Database
             </a>
           </li>
         {% endif %}

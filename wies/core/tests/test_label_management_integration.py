@@ -57,7 +57,7 @@ class LabelManagementIntegrationTest(TestCase):
 
         # Step 2: Create a label in that category
         response = self.client.post(
-            f"/instellingen/labels/categorie/{category.id}/labels/aanmaken/", {"name": "Test Label"}, follow=True
+            f"/beheer/labels/categorie/{category.id}/labels/aanmaken/", {"name": "Test Label"}, follow=True
         )
         assert response.status_code == 200
 
@@ -197,7 +197,7 @@ class LabelManagementIntegrationTest(TestCase):
         Label.objects.create(name="Duplicate Name", category=category)
 
         # Attempt to create another label with same name in same category
-        self.client.post(f"/instellingen/labels/categorie/{category.id}/labels/aanmaken/", {"name": "Duplicate Name"})
+        self.client.post(f"/beheer/labels/categorie/{category.id}/labels/aanmaken/", {"name": "Duplicate Name"})
 
         # Should show error or validation failure
         # The exact status depends on form validation - could be 200 with error message
@@ -215,14 +215,14 @@ class LabelManagementIntegrationTest(TestCase):
 
         # Create label with same name in both categories
         response1 = self.client.post(
-            f"/instellingen/labels/categorie/{category1.id}/labels/aanmaken/",
+            f"/beheer/labels/categorie/{category1.id}/labels/aanmaken/",
             {"name": "Common Name"},
         )
 
         assert response1.status_code == 200
 
         response2 = self.client.post(
-            f"/instellingen/labels/categorie/{category2.id}/labels/aanmaken/", {"name": "Common Name"}, follow=True
+            f"/beheer/labels/categorie/{category2.id}/labels/aanmaken/", {"name": "Common Name"}, follow=True
         )
         assert response2.status_code == 200
 
@@ -237,10 +237,10 @@ class LabelManagementIntegrationTest(TestCase):
         self.client.force_login(self.regular_user)
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
-        self.assertNotContains(response, "Instellingen")
+        self.assertNotContains(response, "Beheer")
 
         # Admin user with permissions
         self.client.force_login(self.admin_user)
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
-        self.assertContains(response, "Instellingen")
+        self.assertContains(response, "Beheer")

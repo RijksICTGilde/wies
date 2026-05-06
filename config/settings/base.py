@@ -164,10 +164,10 @@ AUTH_NO_ACCESS_URL = "/geen-toegang/"
 # Allowed email domains for ODI users
 ALLOWED_EMAIL_DOMAINS = ["@rijksoverheid.nl", "@minbzk.nl"]
 
-# Comma-separated emails that can access /staff/ (db admin)
+# Comma-separated emails that can access the staff dashboard / database pages.
 STAFF_EMAILS = [email.strip().lower() for email in os.environ.get("STAFF_EMAILS", "").split(",") if email.strip()]
 
-# Toggle for destructive /staff/ database actions (clear data, load dummy data).
+# Toggle for destructive staff database actions (clear data, load dummy data).
 # Default off (production-safe). Set to "true" in local/staging environments.
 ENABLE_DESTRUCTIVE_STAFF_ACTIONS = os.environ.get("ENABLE_DESTRUCTIVE_STAFF_ACTIONS", "").lower() == "true"
 
