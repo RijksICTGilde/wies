@@ -18,7 +18,7 @@ User = get_user_model()
 
 
 def is_staff_user(user) -> bool:
-    """Whether the given user is allowed to access /beheer/gebruik/ and /database/ (STAFF_EMAILS list)."""
+    """Whether the given user is allowed to access /beheer/statistieken/ and /database/ (STAFF_EMAILS list)."""
     return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
 
 

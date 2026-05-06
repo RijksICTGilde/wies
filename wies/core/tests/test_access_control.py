@@ -58,7 +58,7 @@ class AccessControlTest(TestCase):
 
     def test_staff_page_requires_authentication(self):
         """Test that staff subpages redirect unauthenticated users"""
-        for path in ("/beheer/gebruik/", "/beheer/database/"):
+        for path in ("/beheer/statistieken/", "/beheer/database/"):
             with self.subTest(path=path):
                 response = self.client.get(path, follow=False)
 
@@ -74,7 +74,7 @@ class AccessControlTest(TestCase):
         )
         self.client.force_login(staff_user)
 
-        for path in ("/beheer/gebruik/", "/beheer/database/"):
+        for path in ("/beheer/statistieken/", "/beheer/database/"):
             with self.subTest(path=path):
                 response = self.client.get(path)
 
@@ -85,7 +85,7 @@ class AccessControlTest(TestCase):
         """Test that a user whose email is not in STAFF_EMAILS is redirected away from staff subpages"""
         self.client.force_login(self.test_user)
 
-        for path in ("/beheer/gebruik/", "/beheer/database/"):
+        for path in ("/beheer/statistieken/", "/beheer/database/"):
             with self.subTest(path=path):
                 response = self.client.get(path, follow=False)
 

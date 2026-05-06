@@ -94,7 +94,7 @@ urlpatterns = [
     path("beheer/labels/categorie/<int:pk>/labels/aanmaken/", label_create),
     path("beheer/labels/<int:pk>/bewerken/", label_edit, name="label-edit"),
     path("beheer/labels/<int:pk>/verwijderen/", label_delete, name="label-delete"),
-    path("beheer/gebruik/", staff_dashboard, name="staff-dashboard"),
+    path("beheer/statistieken/", staff_dashboard, name="staff-dashboard"),
     path("beheer/database/", staff_database, name="staff-database"),
     path("profiel/", user_profile, name="user-profile"),
     path("profiel/bewerken/<str:attribute>/", user_profile_edit_attribute, name="user-profile-edit-attribute"),
