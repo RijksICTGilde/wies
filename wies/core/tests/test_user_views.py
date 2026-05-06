@@ -791,6 +791,22 @@ Jane,Smith,existing@rijksoverheid.nl"""
         assert User.objects.filter(email="john@rijksoverheid.nl").exists()
         assert User.objects.filter(email="existing@rijksoverheid.nl").count() == 1
 
+    def test_import_skips_existing_users_case_insensitive(self):
+        """Test that existing-user check matches email case-insensitively"""
+        self.client.force_login(self.auth_user)
+        User.objects.create_user(email="existing@rijksoverheid.nl", first_name="Existing", last_name="User")
+
+        csv_content = """first_name,last_name,email
+Jane,Smith,Existing@Rijksoverheid.nl"""
+        csv_file = self._create_csv_file(csv_content)
+
+        response = self.client.post(self.import_url, {"csv_file": csv_file})
+
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "already exists" in content
+        assert User.objects.filter(email__iexact="existing@rijksoverheid.nl").count() == 1
+
     def test_import_without_optional_fields(self):
         """Test import with only required fields (no brand, no groups)"""
         self.client.force_login(self.auth_user)

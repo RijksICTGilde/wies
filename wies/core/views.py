@@ -1564,7 +1564,11 @@ def user_import_csv(request):
         try:
             csv_content = csv_file.read().decode("utf-8")
         except UnicodeDecodeError:
-            return {"success": False, "errors": ["Invalid CSV file encoding. Please use UTF-8."]}
+            return render(
+                request,
+                "user_import.html",
+                {"result": {"success": False, "errors": ["Ongeldige bestandscodering. Gebruik UTF-8."]}},
+            )
 
         result = create_users_from_csv(request.user, csv_content)
 
