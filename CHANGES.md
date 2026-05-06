@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-_ ...
+\_ ...
 
 ## 2026-05-05
 
