@@ -20,7 +20,6 @@ from django.contrib import admin
 from django.urls import path
 from django.views.generic import RedirectView
 
-from wies.core.inline_edit.views import inline_edit_view
 from wies.core.views import (
     AssignmentListView,
     PlacementListView,
@@ -34,6 +33,7 @@ from wies.core.views import (
     error_403,
     error_404,
     error_500,
+    inline_edit_view,
     label_admin,
     label_category_create,
     label_category_delete,

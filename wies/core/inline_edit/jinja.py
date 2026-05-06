@@ -8,7 +8,7 @@ from jinja2 import pass_context
 from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import Editable, EditableCollection
 from wies.core.inline_edit.forms import _current_value, resolve_editables
-from wies.core.inline_edit.views import (
+from wies.core.views import (
     _permission_denied,
     _resolve_display,
     _spec_label,

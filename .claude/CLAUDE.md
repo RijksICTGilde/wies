@@ -51,9 +51,10 @@ Language: Dutch UI, English code.
 When extending an existing form OR adding a new editable field on a model
 that already has an `EditableSet` (Assignment, Colleague, Placement,
 Service, User), declare the field as an `Editable` in
-`wies/core/inline_edit/editables/<model>.py` instead of writing a
-bespoke form field. Full-page forms can compose the same declarations
-via `build_form_from`. Workflow and patterns: `features/inline-editing.md`.
+`wies/core/editables/<model>.py` instead of writing a bespoke form field.
+Full-page forms reference the same declarations via
+`AssignmentEditables.<name>.form_field()`. Workflow and patterns:
+`features/inline-editing.md`.
 
 ### Testing
 

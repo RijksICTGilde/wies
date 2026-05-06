@@ -20,7 +20,7 @@ This files lists the changes during the lifetime of this project.
 - 311: drop `Editable.permission` and `EditableSet.object_permission` callbacks — the rule registry owns all per-row authorization for inline-edit and full-page forms.
 - 311: introduce `class Meta: model = ...` on each `EditableSet` (mirrors Django `ModelForm` convention).
 - 311: add `Editable.form_field()` helper so plain `forms.Form` subclasses can reuse editable-derived fields directly. `AssignmentCreateForm` and `UserForm` migrated; `build_form_from` removed.
-- 311: move `wies/core/inline_edit/editables/` → `wies/core/editables/`, split `org_picker.py` into `widgets.py` + new `fields.py`, move display partials under `rvo/forms/displays/`, move `org_picker.html` under `rvo/widgets/`.
+- 311: move `wies/core/inline_edit/editables/` → `wies/core/editables/`, split `org_picker.py` into `widgets.py` + new `fields.py`, move display partials under `rvo/forms/displays/`, move `org_picker.html` under `rvo/widgets/`, move `inline_edit_view` and its render helpers from `wies/core/inline_edit/views.py` into `wies/core/views.py` (Django convention).
 - 311: drop `_grant_dev_permissions` and the related management command — `ensure_initial_user` already adds the dev user to all groups; the user is also a Django superuser, which the new permission engine short-circuits to god-mode.
 - 311: fix `+Toon meer` toggle on long descriptions — JS was querying selectors that didn't match the template.
 - 311: move `whitenoise` middleware out of `config/settings/base.py` into `production.py` only.

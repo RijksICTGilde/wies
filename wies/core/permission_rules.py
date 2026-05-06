@@ -79,12 +79,7 @@ def update_service(user, s):
 
 @rule(UPDATE, Placement)
 def update_placement(user, p):
-    """Reparenting team members is the assignment owner's call.
-
-    THIS IS THE SECURITY FIX from PR #311: a placed colleague can no
-    longer change other placements on the same assignment because
-    update_assignment no longer passes for them.
-    """
+    """Reparenting team members is the assignment owner's call."""
     return has_permission(UPDATE, p.service.assignment, user)
 
 
@@ -125,11 +120,3 @@ def update_user_email(user, target):
     Stricter than the whole-object User rule: no self-edit branch.
     """
     return _has_change_perm(user, target)
-
-
-# Collection-level access (LIST/CREATE) is handled by Django's
-# `@permission_required` / `@login_required` decorators on the views
-# directly — `setup_roles()` grants the relevant `add_*` / `view_*`
-# permissions to the right groups. This rule registry is intentionally
-# scoped to row-level (per-instance / per-field) authorization where
-# Django's class-level permission system can't reach.
