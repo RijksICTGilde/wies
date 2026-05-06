@@ -21,12 +21,6 @@
   background-color: var(--rvo-color-hemelblauw-150) !important;
 }
 
-/* Buttons: geen underline bij hover, alleen kleurverandering */
-.rvo-button,
-.rvo-button:hover:not(:disabled, [aria-disabled="true"]) {
-  text-decoration: none;
-}
-
 /* Compact header styling */
 .rvo-alert--padding-sm {
   padding: 0.25rem 1rem;

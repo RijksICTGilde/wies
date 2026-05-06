@@ -1,37 +1,36 @@
 <div class="sidebar-footer">
   <div class="sidebar-footer__column">
-    <c-h3 class="sidebar-footer__title" noMargins>Over Wies</c-h3>
+    <span class="sidebar-footer__title">Over Wies</span>
     <ul class="sidebar-footer__menu">
       <li>
-        <c-link href="https://github.com/RijksICTGilde/wies" icon="delta-naar-rechts" iconSize="xs" target="_blank" class="sidebar-footer__link">
+        <c-link href="https://github.com/RijksICTGilde/wies" icon="delta-naar-rechts" iconSize="xs" target="_blank" weight="normal" color="zwart">
         GitHub
         </c-link>
       </li>
       {% if APP_VERSION and '/instellingen/' in request.path %}
         <li>
-          <span class="sidebar-footer__link sidebar-footer__link--static">
-            <c-icon icon="delta-naar-rechts" size="xs" />
-            Versie: <strong>{{ APP_VERSION }}</strong>
-          </span>
+          <c-link icon="delta-naar-rechts" iconSize="xs" weight="normal" color="zwart" noUnderline>
+          Versie: {{ APP_VERSION }}
+          </c-link>
         </li>
       {% endif %}
     </ul>
   </div>
   <div class="sidebar-footer__column">
-    <c-h3 class="sidebar-footer__title" noMargins>Over deze site</c-h3>
+    <span class="sidebar-footer__title">Over deze site</span>
     <ul class="sidebar-footer__menu">
       <li>
-        <c-link href="{{ url('privacy') }}" icon="delta-naar-rechts" iconSize="xs" class="sidebar-footer__link">
+        <c-link href="{{ url('privacy') }}" icon="delta-naar-rechts" iconSize="xs" weight="normal" color="zwart">
         Privacy
         </c-link>
       </li>
       <li>
-        <c-link href="{{ url('toegankelijkheid') }}" icon="delta-naar-rechts" iconSize="xs" class="sidebar-footer__link">
+        <c-link href="{{ url('toegankelijkheid') }}" icon="delta-naar-rechts" iconSize="xs" weight="normal" color="zwart">
         Toegankelijkheid
         </c-link>
       </li>
       <li>
-        <c-link href="{{ url('contact') }}" icon="delta-naar-rechts" iconSize="xs" class="sidebar-footer__link">
+        <c-link href="{{ url('contact') }}" icon="delta-naar-rechts" iconSize="xs" weight="normal" color="zwart">
         Contact
         </c-link>
       </li>

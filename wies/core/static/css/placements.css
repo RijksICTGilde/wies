@@ -57,9 +57,11 @@
   white-space: nowrap;
 }
 
-/* Date column right-aligned */
-.placement-table__date-cell {
-  text-align: right;
+/* Kolom verdeling: Tot kolom compact, rest vult de ruimte */
+.placement-table .rvo-table-header:last-child,
+.placement-table .rvo-table-cell:last-child {
+  width: 9rem;
+  white-space: nowrap;
 }
 
 /* Role tags with overflow protection */
