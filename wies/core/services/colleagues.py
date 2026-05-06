@@ -7,24 +7,6 @@ from django.db.models.functions import Lower
 logger = logging.getLogger(__name__)
 
 
-def _pick_canonical(colleagues):
-    """
-    Pick the canonical colleague from a duplicate group (all sharing one source).
-
-    Tiebreakers, in order:
-    1. has a linked user (only one can — User.colleague is OneToOne)
-    2. lowest id
-    """
-
-    def sort_key(colleague):
-        return (
-            0 if colleague.user_id is not None else 1,
-            colleague.id,
-        )
-
-    return min(colleagues, key=sort_key)
-
-
 def _merge_into_canonical(canonical, duplicate, *, placement_model, assignment_model):
     """
     Repoint all FK and M2M references from `duplicate` to `canonical`, then
@@ -32,6 +14,16 @@ def _merge_into_canonical(canonical, duplicate, *, placement_model, assignment_m
     """
     placement_model.objects.filter(colleague=duplicate).update(colleague=canonical)
     assignment_model.objects.filter(owner=duplicate).update(owner=canonical)
+
+    # If the canonical has no linked user but the duplicate does, hand the
+    # user over so it isn't lost when the duplicate is deleted. user is a
+    # OneToOneField, so clear the duplicate before setting it on the canonical.
+    if canonical.user_id is None and duplicate.user_id is not None:
+        user = duplicate.user
+        duplicate.user = None
+        duplicate.save(update_fields=["user"])
+        canonical.user = user
+        canonical.save(update_fields=["user"])
 
     # M2M labels: union onto canonical, then clear duplicate's set so deleting
     # the duplicate doesn't remove labels that should stay on the canonical.
@@ -64,8 +56,7 @@ def dedupe_colleagues(colleague_model, placement_model, assignment_model):
             continue
 
         with transaction.atomic():
-            canonical = _pick_canonical(members)
-            duplicates = [c for c in members if c.id != canonical.id]
+            canonical, *duplicates = members
             for duplicate in duplicates:
                 logger.info(
                     "Merging Colleague id=%s into id=%s for source=%s email=%s",

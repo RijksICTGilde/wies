@@ -28,12 +28,13 @@ def validate_email_domain(email: str, *, user_facing: bool = False) -> None:
         raise InvalidEmailDomainError(email, user_facing=user_facing)
 
 
-def _find_or_create_colleague_for_user(user, first_name, last_name, email):
+def _find_or_create_colleague_for_user(user, first_name, last_name, email, *, source):
     """
-    Link a `source="wies"` colleague to the given user. If the user is already
-    linked to a colleague, update it in place. Otherwise reuse an unlinked
-    `source="wies"` colleague matching the email case-insensitively. Otherwise
-    create a new one. Colleagues from other sources (e.g. OTYS) are left alone.
+    Link a colleague with the given source to the given user. If the user is
+    already linked to a colleague, update it in place. Otherwise reuse an
+    unlinked colleague matching the email case-insensitively and the given
+    source. Otherwise create a new one. Colleagues from other sources are left
+    alone.
     """
     name = f"{first_name} {last_name}"
 
@@ -44,7 +45,7 @@ def _find_or_create_colleague_for_user(user, first_name, last_name, email):
         existing.save(update_fields=["name", "email"])
         return existing
 
-    unlinked = Colleague.objects.filter(email__iexact=email, user__isnull=True, source="wies").order_by("id").first()
+    unlinked = Colleague.objects.filter(email__iexact=email, user__isnull=True, source=source).order_by("id").first()
     if unlinked is not None:
         unlinked.user = user
         unlinked.name = name
@@ -52,7 +53,7 @@ def _find_or_create_colleague_for_user(user, first_name, last_name, email):
         unlinked.save(update_fields=["user", "name", "email"])
         return unlinked
 
-    return Colleague.objects.create(user=user, name=name, email=email, source="wies")
+    return Colleague.objects.create(user=user, name=name, email=email, source=source)
 
 
 def create_user(creator: User, first_name, last_name, email, labels=None, groups=None):
@@ -75,7 +76,7 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
         last_name=last_name,
     )
 
-    colleague = _find_or_create_colleague_for_user(user, first_name, last_name, email)
+    colleague = _find_or_create_colleague_for_user(user, first_name, last_name, email, source="wies")
 
     label_names = []
     if labels:
@@ -123,7 +124,7 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
     user.email = email
     user.save()
 
-    colleague = _find_or_create_colleague_for_user(user, first_name, last_name, email)
+    colleague = _find_or_create_colleague_for_user(user, first_name, last_name, email, source="wies")
 
     label_names = []
     if labels is not None:

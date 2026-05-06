@@ -66,7 +66,7 @@ class DedupeColleaguesTest(TestCase):
         assert Colleague.objects.filter(id=c1.id).exists()
         assert not Colleague.objects.filter(id=c2.id).exists()
 
-    def test_canonical_prefers_linked_user(self):
+    def test_canonical_takes_over_duplicate_user(self):
         c_no_user = Colleague.objects.create(name="No User", email="x@x.nl", source="wies")
         user = User.objects.create_user(email="x@x.nl", first_name="X", last_name="Y")
         c_with_user = Colleague.objects.create(name="With User", email="X@x.nl", source="wies", user=user)
@@ -74,9 +74,29 @@ class DedupeColleaguesTest(TestCase):
         merged = self._run()
 
         assert merged == 1
-        # The one with the linked user wins, even though the other has a lower id
-        assert Colleague.objects.filter(id=c_with_user.id).exists()
-        assert not Colleague.objects.filter(id=c_no_user.id).exists()
+        # Lowest id wins; it takes over the user from the duplicate
+        assert Colleague.objects.filter(id=c_no_user.id).exists()
+        assert not Colleague.objects.filter(id=c_with_user.id).exists()
+        c_no_user.refresh_from_db()
+        assert c_no_user.user_id == user.id
+
+    def test_canonical_takes_first_duplicate_user_when_multiple(self):
+        # Canonical has no user. Two duplicates each have their own linked user.
+        # Canonical should adopt the first duplicate's user.
+        c_canonical = Colleague.objects.create(name="Canon", email="x@x.nl", source="wies")
+        user_a = User.objects.create_user(email="a@x.nl", first_name="A", last_name="A")
+        c_dup_a = Colleague.objects.create(name="Dup A", email="X@x.nl", source="wies", user=user_a)
+        user_b = User.objects.create_user(email="b@x.nl", first_name="B", last_name="B")
+        c_dup_b = Colleague.objects.create(name="Dup B", email="x@X.nl", source="wies", user=user_b)
+
+        merged = self._run()
+
+        assert merged == 2
+        assert Colleague.objects.filter(id=c_canonical.id).exists()
+        assert not Colleague.objects.filter(id=c_dup_a.id).exists()
+        assert not Colleague.objects.filter(id=c_dup_b.id).exists()
+        c_canonical.refresh_from_db()
+        assert c_canonical.user_id == user_a.id
 
     def test_repoints_placements(self):
         canonical = Colleague.objects.create(name="Canon", email="x@x.nl", source="wies")
@@ -144,9 +164,12 @@ class DedupeColleaguesTest(TestCase):
 
         assert merged == 2
         assert Colleague.objects.filter(email__iexact="a@x.nl").count() == 1
-        assert Colleague.objects.filter(id=c_user.id).exists()
-        assert not Colleague.objects.filter(id=c1.id).exists()
+        # Lowest id wins; it takes over the user from the duplicate that had one.
+        assert Colleague.objects.filter(id=c1.id).exists()
         assert not Colleague.objects.filter(id=c2.id).exists()
+        assert not Colleague.objects.filter(id=c_user.id).exists()
+        c1.refresh_from_db()
+        assert c1.user_id == user.id
 
     def test_cross_source_and_same_source_combined(self):
         # An OTYS row exists alongside two wies casing-variants. The OTYS row is
