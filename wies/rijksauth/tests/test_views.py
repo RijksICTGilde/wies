@@ -157,7 +157,7 @@ class AuthViewsTest(TestCase):
 
     @patch("wies.rijksauth.views._get_oidc")
     def test_login_after_logout_forces_reauth(self, mock_get_oidc):
-        """With the post-logout cookie set, login passes prompt=login and clears the cookie."""
+        """With the post-logout cookie set, login passes prompt=login and keeps the cookie."""
         mock_get_oidc.return_value.authorize_redirect.return_value = HttpResponse(status=302)
         self.client.cookies["wies_post_logout"] = "1"
 
@@ -165,7 +165,46 @@ class AuthViewsTest(TestCase):
 
         call_args = mock_get_oidc.return_value.authorize_redirect.call_args
         assert call_args.kwargs.get("prompt") == "login"
-        # Cookie is cleared on the response (Set-Cookie with empty value + expired date).
+        # Cookie is NOT cleared on the login redirect — only after the full auth
+        # round-trip completes, so abandoning the Keycloak flow doesn't silently
+        # re-enable silent SSO on the next attempt.
+        assert "wies_post_logout" not in response.cookies
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_auth_clears_post_logout_cookie_on_success(self, mock_get_oidc):
+        """After a successful auth round-trip, the post-logout cookie is cleared."""
+        mock_get_oidc.return_value.authorize_access_token.return_value = {
+            "id_token": "fake-id-token",
+            "userinfo": {
+                "sub": "test_sso_user",
+                "given_name": "Test",
+                "family_name": "User",
+                "email": "test@rijksoverheid.nl",
+            },
+        }
+        self.client.cookies["wies_post_logout"] = "1"
+
+        response = self.client.get(reverse("auth"))
+
+        assert response.cookies["wies_post_logout"].value == ""
+        assert response.cookies["wies_post_logout"]["max-age"] == 0
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_auth_clears_post_logout_cookie_on_no_access(self, mock_get_oidc):
+        """After auth completes for a non-whitelisted user, the cookie is still cleared."""
+        mock_get_oidc.return_value.authorize_access_token.return_value = {
+            "id_token": "fake-id-token",
+            "userinfo": {
+                "sub": "unknown_user",
+                "given_name": "Unknown",
+                "family_name": "Person",
+                "email": "unknown@rijksoverheid.nl",
+            },
+        }
+        self.client.cookies["wies_post_logout"] = "1"
+
+        response = self.client.get(reverse("auth"))
+
         assert response.cookies["wies_post_logout"].value == ""
         assert response.cookies["wies_post_logout"]["max-age"] == 0
 
