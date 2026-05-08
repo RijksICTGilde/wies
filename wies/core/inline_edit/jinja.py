@@ -8,11 +8,8 @@ from jinja2 import pass_context
 from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import Editable, EditableCollection
 from wies.core.inline_edit.forms import _current_value, resolve_editables
-from wies.core.views import (
-    _permission_denied,
-    _resolve_display,
-    _spec_label,
-)
+from wies.core.permission_engine import Verb, has_permission
+from wies.core.views import _resolve_display, _spec_label
 
 
 @pass_context
@@ -43,7 +40,7 @@ def inline_edit(ctx, obj, name, **extras):
     is_collection = isinstance(spec, EditableCollection)
     editables = [] if is_collection else resolve_editables(editable_set, spec)
 
-    user_can_edit = user is not None and _permission_denied(editable_set, spec, user, obj) is None
+    user_can_edit = has_permission(Verb.UPDATE, obj, user, spec)
 
     display = _resolve_display(obj, spec, editables)
     if is_collection:
