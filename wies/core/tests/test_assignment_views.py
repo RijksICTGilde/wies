@@ -118,11 +118,9 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.assignment.name == "Owner Updated Name"
 
     def test_assigned_colleague_cannot_edit_name(self):
-        """Placed consultants are limited to description-style fields.
-
-        Regression for the PR #311 placement-bug class: a colleague
-        placed on the assignment must NOT be able to edit the
-        assignment ``name`` (a management field).
+        """A colleague placed on the assignment must not be able to edit
+        a management field like ``name`` — only the description-style
+        fields (``extra_info``) carry a placed-consultant override.
         """
         self.client.force_login(self.assigned_user)
 

@@ -41,8 +41,8 @@ class Editable:
     display: str | Callable[[Model], Any] | None = None
     save: Callable[[Model, Any], None] | None = None
 
-    # For unbound editables (no 1:1 model field). `form_field` takes
-    # priority over field inference; `initial` reads the current value.
+    # For unbound editables (no 1:1 model field). `form_field_factory`
+    # takes priority over field inference; `initial` reads the current value.
     form_field_factory: forms.Field | Callable[[], forms.Field] | None = None
     initial: Callable[[Model], Any] | None = None
 
@@ -139,28 +139,34 @@ class EditableSet:
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
+
+        # Subclasses without `Meta.model` are abstract bases — nothing to bind.
         meta = getattr(cls, "Meta", None)
-        model = getattr(meta, "model", None) if meta is not None else None
+        model = getattr(meta, "model", None)
         if model is None:
             return
+
         cls.model = model
-        cls._editables = {}
-        for attr_name, attr in list(vars(cls).items()):
-            if isinstance(attr, Editable):
-                # `form_field_factory` signals an unbound editable — skip model/field binding.
-                if attr.form_field_factory is None:
-                    if attr.model is None:
-                        attr.model = model
-                    if attr.field is None:
-                        attr.field = attr_name
-                # Even unbound editables get `model` so they can be
-                # referenced as permission-rule keys.
-                elif attr.model is None:
-                    attr.model = model
-                attr.name = attr_name
-                cls._editables[attr_name] = attr
-            elif isinstance(attr, (EditableGroup, EditableCollection)):
-                attr.name = attr_name
-                if attr.model is None:
-                    attr.model = model
-                cls._editables[attr_name] = attr
+        cls._editables = {
+            name: cls._bind(attr, name, model)
+            for name, attr in vars(cls).items()
+            if isinstance(attr, (Editable, EditableGroup, EditableCollection))
+        }
+
+    @staticmethod
+    def _bind(
+        attr: Editable | EditableGroup | EditableCollection,
+        name: str,
+        model: type[Model],
+    ) -> Editable | EditableGroup | EditableCollection:
+        """Backfill metadata on a declared editable so the engine can resolve it later."""
+        attr.name = name
+        if attr.model is None:
+            attr.model = model
+        # Plain Editables default to a model field of the same name.
+        # `form_field_factory` opts out: it lets an Editable supply its own form field when
+        # there's no 1:1 model field to bind to (e.g. composite values like
+        # `Assignment.organizations`, which is served by a custom OrganizationsField).
+        if isinstance(attr, Editable) and attr.field is None and attr.form_field_factory is None:
+            attr.field = name
+        return attr

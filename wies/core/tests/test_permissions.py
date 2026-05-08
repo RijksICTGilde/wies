@@ -2,8 +2,7 @@
 
 Covers the engine surface (verb composition, superuser short-circuit,
 field vs whole-object lookup) and the production rules in
-``permission_rules.py`` — including the placement-bug regression from
-PR #311.
+``permissions.py``.
 """
 
 from django.contrib.auth import get_user_model
@@ -100,12 +99,12 @@ class AssignmentPermissionRulesTest(_Setup):
         assert has_permission(Verb.UPDATE, self.assignment, u) is True
 
 
-class PlacementPermissionBugRegressionTest(_Setup):
-    """Regression for PR #311: a colleague placed on an assignment must
-    NOT be able to update Placement records on the same assignment.
+class PlacementPermissionTest(_Setup):
+    """A colleague placed on an assignment must not be able to update
+    Placement records on the same assignment — only the assignment
+    owner (or an admin holder of ``core.change_assignment``) can.
 
-    Replays the exploit shape from the review: ``POST
-    /inline-edit/placement/<id>/colleague/`` as the placed user.
+    The endpoint shape is ``POST /inline-edit/placement/<id>/colleague/``.
     """
 
     def test_placed_consultant_cannot_update_placement_via_engine(self):

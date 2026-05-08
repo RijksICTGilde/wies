@@ -222,8 +222,10 @@ has_permission(verb, obj, user, field=None) -> bool
   rule bodies never repeat it.
 - Lookup order: `(verb, model, field.name)` → `(verb, model, None)`.
   Field rules override the whole-object rule for the same model.
-- Currently populated only with `UPDATE` rules; the engine supports
-  `LIST/READ/CREATE/DELETE` if a use case appears later.
+- Verbs available: `READ`, `UPDATE`, `DELETE`. Class-level access (LIST
+  overviews, CREATE-new pages) stays on Django's group permissions and
+  `@permission_required` decorators — those operate on the model class,
+  not on rows, so they live outside this engine.
 
 ### Registering rules
 
@@ -250,6 +252,8 @@ def update_placement(user, p):
 
 @rule(UPDATE, AssignmentEditables.extra_info)          # field-level: more permissive
 def update_assignment_extra_info(user, a):
+    if not _is_wies_sourced(a):
+        return False
     return has_permission(UPDATE, a, user) or _is_placed_on_assignment(user, a)
 
 
@@ -283,20 +287,20 @@ def assignment_panel(request, pk):
 ```
 
 Denial in the inline-edit view returns the display partial with a
-warning alert and no pencil. No `permission=` kwargs on Editables, no
-`object_permission` on the set — the registry owns it.
+warning alert and no pencil. The registry is the only place
+authorization is declared — Editables describe rendering, the rule
+file describes who's allowed.
 
 ### Out of scope for this engine
 
-- **Class-level access** (LIST overviews, CREATE-new) — Django's
-  `@permission_required` / `setup_roles()`.
-- **Row-level filtering for LIST** ("which assignments can I see?") —
-  queryset question, lives on the manager.
-- **Parent-bound CREATE** ("create Placement on _this_ Service") —
-  not needed today (the only flow that touches this is `BM adds
-colleague`, which is a field-level UPDATE on `services`). Easy to
-  add via a `parent=` kwarg if a standalone add-placement endpoint
-  appears.
+- **Class-level access** (LIST overviews, CREATE-new) lives on
+  Django's `@permission_required` / `setup_roles()`.
+- **Row-level filtering for LIST** ("which assignments can I see?") is
+  a queryset question — model managers handle it.
+- **Parent-bound CREATE** ("create Placement on _this_ Service") would
+  need a `parent=` kwarg on the engine. The flow doesn't exist yet —
+  team edits go through the assignment's `services` field-level
+  UPDATE.
 
 ## Reusing an editable in a full-page form
 
