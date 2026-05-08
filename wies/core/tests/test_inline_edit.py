@@ -34,7 +34,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.permissions import Verb, registered_rules, rule
+from wies.core.permission_engine import Verb, registered_rules, rule
 from wies.core.widgets import OrgPickerWidget
 
 User = get_user_model()
@@ -71,7 +71,7 @@ def _snapshot_rules():
 
 def _restore_rules(snapshot):
     """Restore the rule registry to a previous snapshot."""
-    from wies.core.permissions import _RULES  # noqa: PLC0415
+    from wies.core.permission_engine import _RULES  # noqa: PLC0415
 
     _RULES.clear()
     _RULES.update(snapshot)

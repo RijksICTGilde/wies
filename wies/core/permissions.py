@@ -1,97 +1,127 @@
-"""Permission engine: ``has_permission(verb, obj, user, field=None)``.
+"""All permission rules for the wies app.
 
-Rules are registered with ``@rule(verb, target)`` against either a model
-class (whole-object/collection verbs like LIST/CREATE/DELETE) or an
-Editable/EditableGroup/EditableCollection instance (field-level UPDATE).
-The engine handles the superuser short-circuit; rule bodies stay focused
-on row-level logic.
+Open this file to see who can do what — every ``@rule`` is a row in the
+permission matrix. Engine: ``wies/core/permission_engine.py``.
+
+Imported in ``wies.core.apps.CoreConfig.ready`` so registrations happen
+at startup.
 """
 
 from __future__ import annotations
 
-from enum import StrEnum
-from typing import TYPE_CHECKING
+from wies.core.editables import (
+    AssignmentEditables,
+    ServiceEditables,
+    UserEditables,
+)
+from wies.core.models import Assignment, Colleague, Placement, Service
+from wies.core.permission_engine import Verb, has_permission, rule
+from wies.rijksauth.models import User
 
-if TYPE_CHECKING:
-    from collections.abc import Callable
-
-    from wies.core.inline_edit.base import Editable, EditableCollection, EditableGroup
-
-
-class Verb(StrEnum):
-    LIST = "list"
-    READ = "read"
-    CREATE = "create"
-    UPDATE = "update"
-    DELETE = "delete"
+UPDATE = Verb.UPDATE
 
 
-# Lookup key: (verb, model class, optional field name)
-_RULES: dict[tuple[Verb, type, str | None], Callable] = {}
+# --- Private predicates ------------------------------------------------------
 
 
-def rule(verb: Verb, target):
-    """Register a rule for a verb on a target.
+def _is_wies_sourced(assignment) -> bool:
+    return assignment.source in ("wies", "")
 
-    ``target`` is either a Django Model class (whole-object/collection verbs)
-    or an Editable / EditableGroup / EditableCollection instance bound to a
-    model (field-level UPDATE rules).
+
+def _has_change_perm(user, obj) -> bool:
+    """True iff `user` holds the standard Django change_<model> permission for `obj`.
+
+    Uses ``app_label`` so models in ``rijksauth`` (User) and ``core``
+    (Assignment, Service, Placement, Colleague) both resolve correctly.
     """
-
-    def register(fn: Callable) -> Callable:
-        if isinstance(target, type):
-            _RULES[(verb, target, None)] = fn
-        else:
-            if target.model is None:
-                msg = (
-                    f"Cannot register rule for unbound editable: {target!r}. "
-                    "Editables get their model from the EditableSet's Meta."
-                )
-                raise ValueError(msg)
-            _RULES[(verb, target.model, target.name)] = fn
-        return fn
-
-    return register
+    return user.has_perm(f"{obj._meta.app_label}.change_{obj._meta.model_name}")  # noqa: SLF001 — _meta is Django's canonical model-introspection API
 
 
-def has_permission(
-    verbs: Verb | list[Verb] | tuple[Verb, ...],
-    obj,
-    user,
-    field: Editable | EditableGroup | EditableCollection | None = None,
-) -> bool:
-    """Return True iff `user` is allowed to perform `verbs` on `obj`.
+def _is_assignment_owner(user, assignment) -> bool:
+    colleague = getattr(user, "colleague", None)
+    return bool(colleague and assignment.owner_id == colleague.id)
 
-    - ``obj`` may be an instance (row verbs) or a model class (LIST/CREATE).
-    - ``field`` is an Editable for field-level checks. Optional.
-    - Multiple verbs (list/tuple) are OR-composed: True if any verb's rule passes.
-    - Returns True for any superuser. Returns False for anonymous users.
-    """
-    if not getattr(user, "is_authenticated", False):
+
+def _is_placed_on_assignment(user, assignment) -> bool:
+    colleague = getattr(user, "colleague", None)
+    if not colleague:
         return False
-    if getattr(user, "is_superuser", False):
-        return True
-
-    if field is not None:
-        if field.model is None:
-            return False
-        model = field.model
-        fname = field.name
-    elif isinstance(obj, type):
-        model = obj
-        fname = None
-    else:
-        model = type(obj)
-        fname = None
-
-    verb_iter = verbs if isinstance(verbs, (list, tuple)) else (verbs,)
-    for verb in verb_iter:
-        fn = _RULES.get((verb, model, fname)) or _RULES.get((verb, model, None))
-        if fn and fn(user, obj):
-            return True
-    return False
+    return Placement.objects.filter(service__assignment=assignment, colleague=colleague).exists()
 
 
-def registered_rules() -> dict[tuple[Verb, type, str | None], Callable]:
-    """Read-only view of the registry. For use in startup checks and tests."""
-    return dict(_RULES)
+def _is_placed_on_service(user, service) -> bool:
+    colleague = getattr(user, "colleague", None)
+    if not colleague:
+        return False
+    return Placement.objects.filter(service=service, colleague=colleague).exists()
+
+
+# --- Whole-object UPDATE rules ----------------------------------------------
+
+
+@rule(UPDATE, Assignment)
+def update_assignment(user, a):
+    """Full edit: BM owner of a wies-sourced assignment, or holder of core.change_assignment.
+
+    Placed colleagues do NOT pass — they get narrower access via the
+    field-level rules for description/extra_info below.
+    """
+    if not _is_wies_sourced(a):
+        return False
+    return _has_change_perm(user, a) or _is_assignment_owner(user, a)
+
+
+@rule(UPDATE, Service)
+def update_service(user, s):
+    """Service edits chain to the parent assignment."""
+    return has_permission(UPDATE, s.assignment, user)
+
+
+@rule(UPDATE, Placement)
+def update_placement(user, p):
+    """Reparenting team members is the assignment owner's call."""
+    return has_permission(UPDATE, p.service.assignment, user)
+
+
+@rule(UPDATE, Colleague)
+def update_colleague(user, c):
+    """Admin (Beheerder via has_perm), or the colleague themselves."""
+    return _has_change_perm(user, c) or getattr(user, "colleague", None) == c
+
+
+@rule(UPDATE, User)
+def update_user(user, target):
+    """Admin path (Beheerder holds rijksauth.change_user) or self-edit."""
+    return _has_change_perm(user, target) or target == user
+
+
+# --- Field-level UPDATE rules -----------------------------------------------
+
+
+@rule(UPDATE, AssignmentEditables.extra_info)
+def update_assignment_extra_info(user, a):
+    """Admin/owner OR any consultant placed on the assignment.
+
+    Wies-sourced only — externally-managed assignments (e.g. IIR) are
+    never editable, regardless of who's placed on them.
+
+    The Assignment model field is ``extra_info`` (the description text).
+    """
+    if not _is_wies_sourced(a):
+        return False
+    return has_permission(UPDATE, a, user) or _is_placed_on_assignment(user, a)
+
+
+@rule(UPDATE, ServiceEditables.description)
+def update_service_description(user, s):
+    """Only the consultant placed on this specific service. The BM uses the team editor."""
+    return _is_wies_sourced(s.assignment) and _is_placed_on_service(user, s)
+
+
+@rule(UPDATE, UserEditables.email)
+def update_user_email(user, target):
+    """Email is admin-only — even on the user's own profile.
+
+    Stricter than the whole-object User rule: no self-edit branch.
+    """
+    return _has_change_perm(user, target)

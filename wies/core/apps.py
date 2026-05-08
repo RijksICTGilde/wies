@@ -12,5 +12,5 @@ class CoreConfig(AppConfig):
         # one per LabelCategory row) are resolved on-demand via
         # `EditableSet.resolve_dynamic` — no DB access at app start.
         import wies.core.editables  # noqa: PLC0415 — force REGISTRY build at startup
-        import wies.core.permission_rules  # noqa: PLC0415 — register all @rule(...) declarations at startup
+        import wies.core.permissions  # noqa: PLC0415 — register all @rule(...) declarations at startup
         import wies.core.signals  # noqa: F401, PLC0415 — signal registration must happen inside ready()

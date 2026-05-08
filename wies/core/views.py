@@ -34,7 +34,7 @@ from wies.core.inline_edit.forms import (
     build_form_class,
     resolve_editables,
 )
-from wies.core.permissions import Verb, has_permission
+from wies.core.permission_engine import Verb, has_permission
 
 from .forms import (
     AssignmentCreateForm,
@@ -2174,6 +2174,15 @@ def assignment_create(request):
             services_data=services_data,
         )
 
+        create_event(
+            object_type="Assignment",
+            action="create",
+            source="user",
+            object_id=assignment.id,
+            user=request.user,
+            context={"name": assignment.name},
+        )
+
         link_url = f"{reverse('assignment-list')}?opdracht={assignment.id}"
         messages.success(
             request,
@@ -2400,7 +2409,7 @@ def _permission_denied(
     """Return the denial alert when the user can't UPDATE this field; None when allowed.
 
     Permission lookup goes through the registry in
-    ``wies.core.permission_rules``. Field-level rules win over the
+    ``wies.core.permissions``. Field-level rules win over the
     whole-object rule for the same model.
     """
     if not has_permission(Verb.UPDATE, obj, user, spec):

@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 
 from wies.core.editables.assignment import AssignmentEditables
-from wies.core.editables.user_profile import UserEditables
+from wies.core.editables.user import UserEditables
 
 from .form_mixins import RvoErrorList, RvoFormMixin, RvoJinja2Renderer
 from .models import Colleague, Label, LabelCategory, Skill

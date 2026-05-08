@@ -147,9 +147,8 @@ def _setup_dev_profile(colleague):
     """Populate the initial user's colleague with labels and placements for dev.
 
     Group/permission membership for the dev user is handled by
-    ``ensure_initial_user`` (it adds the user to all groups). The dev
-    user is also a Django superuser, which bypasses every rule via the
-    ``has_permission`` engine's short-circuit.
+    ``ensure_initial_user`` (it adds the user to all groups), so edit
+    rights flow from the standard Beheerder/BDM group permissions.
     """
     if not colleague.labels.exists():
         _assign_dev_labels(colleague)

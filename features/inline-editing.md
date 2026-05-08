@@ -38,9 +38,9 @@ wies/core/
 │   ├── colleague.py         # dynamic labels_<id> via resolve_dynamic
 │   ├── placement.py
 │   ├── service.py
-│   └── user_profile.py
-├── permissions.py           # Verb, has_permission, @rule
-└── permission_rules.py      # all row-level @rule(...) declarations
+│   └── user.py
+├── permission_engine.py     # Verb, has_permission, @rule
+└── permissions.py           # all row-level @rule(...) declarations
 
 wies/core/jinja2/
 ├── parts/inline_edit/       # display.html, form.html, collection_form.html
@@ -197,7 +197,7 @@ no match. Returning `None` produces a 404.
 ## Permissions
 
 Row-level authorization is its own subsystem
-(`wies/core/permissions.py` + `wies/core/permission_rules.py`) used by
+(`wies/core/permission_engine.py` + `wies/core/permissions.py`) used by
 the inline-edit view and full-page forms alike. Class-level access
 (LIST overview pages, CREATE-new pages) stays on Django's
 `@permission_required` / `@login_required` decorators with group
@@ -206,7 +206,7 @@ permissions in `setup_roles()` — not duplicated here.
 ### Engine
 
 ```python
-from wies.core.permissions import Verb, has_permission, rule
+from wies.core.permission_engine import Verb, has_permission, rule
 
 # Lookup
 has_permission(verb, obj, user, field=None) -> bool
@@ -227,13 +227,13 @@ has_permission(verb, obj, user, field=None) -> bool
 
 ### Registering rules
 
-All rules live in `wies/core/permission_rules.py`, imported in
+All rules live in `wies/core/permissions.py`, imported in
 `CoreConfig.ready()` so registrations happen at startup.
 
 ```python
 from wies.core.editables import AssignmentEditables
 from wies.core.models import Assignment, Placement
-from wies.core.permissions import Verb, has_permission, rule
+from wies.core.permission_engine import Verb, has_permission, rule
 
 UPDATE = Verb.UPDATE
 
@@ -371,7 +371,7 @@ structure.
    `model_label → class` entry to `REGISTRY`. Explicit mapping: no
    metaclass magic, IDE "Find Usages" works, accidental deletion
    fails loudly.
-3. Add per-row rules in `wies/core/permission_rules.py` if any field
+3. Add per-row rules in `wies/core/permissions.py` if any field
    needs row-level authorization beyond the model-level rule.
 
 ## Common pitfalls
@@ -389,7 +389,7 @@ structure.
   re-render** — only the static partial context is available there.
 - **Putting domain access checks inline in the view** — the generic
   view delegates to `has_permission` against the rule registry; add
-  rules in `permission_rules.py` rather than touching the view.
+  rules in `permissions.py` rather than touching the view.
 
 ## Tests
 

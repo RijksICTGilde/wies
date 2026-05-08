@@ -6,7 +6,7 @@ from wies.core.editables.assignment import AssignmentEditables
 from wies.core.editables.colleague import ColleagueEditables
 from wies.core.editables.placement import PlacementEditables
 from wies.core.editables.service import ServiceEditables
-from wies.core.editables.user_profile import UserEditables
+from wies.core.editables.user import UserEditables
 
 if TYPE_CHECKING:
     from wies.core.inline_edit.base import EditableSet

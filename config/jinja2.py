@@ -19,7 +19,7 @@ from wies.core.editables import (
     UserEditables,
 )
 from wies.core.inline_edit.jinja import inline_edit
-from wies.core.permissions import Verb, has_permission
+from wies.core.permission_engine import Verb, has_permission
 from wies.core.services.version import get_app_version
 
 

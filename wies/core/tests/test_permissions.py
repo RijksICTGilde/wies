@@ -17,7 +17,7 @@ from wies.core.editables import (
     UserEditables,
 )
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
-from wies.core.permissions import Verb, has_permission
+from wies.core.permission_engine import Verb, has_permission
 
 User = get_user_model()
 
@@ -57,7 +57,6 @@ class HasPermissionEngineTest(_Setup):
         assert has_permission(Verb.UPDATE, self.assignment, self.superuser) is True
         assert has_permission(Verb.UPDATE, self.placement, self.superuser) is True
         assert has_permission(Verb.UPDATE, self.assignment, self.superuser, AssignmentEditables.extra_info) is True
-        assert has_permission(Verb.LIST, Assignment, self.superuser) is True
 
     def test_field_rule_overrides_object_rule(self):
         # The placed consultant fails the whole-object update rule but
