@@ -1,11 +1,8 @@
 {% extends "base.html" %}
 {% block extra_head %}
   <link rel="stylesheet" href="{{ static('css/assignment_form.css') }}">
-  <link rel="stylesheet" href="{{ static('css/client_modal.css') }}">
   <link rel="stylesheet" href="{{ static('css/filters/filters.css') }}">
   <script src="{{ static('js/dialog.js') }}"></script>
-  <script src="{{ static('js/tree_state.js') }}"></script>
-  <script src="{{ static('js/org_tree_base.js') }}"></script>
   <script src="{{ static('js/assignment_form.js') }}" defer></script>
 {% endblock extra_head %}
 {% macro fieldset(legend, distanced=true, gap="sm", hint="") %}
