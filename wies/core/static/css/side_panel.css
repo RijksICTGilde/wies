@@ -202,14 +202,24 @@ dialog#side_panel::backdrop {
 
 .rvo-item-list__item {
   display: flex;
-  flex-direction: column;
-  gap: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--rvo-color-grijs-300, #c5ced6);
   border-radius: 4px;
   text-decoration: none;
   color: inherit;
   width: 100%;
+}
+
+.rvo-item-list__item .service-row__link {
+  flex: 1;
+  min-width: 0;
+}
+
+.service-card__edit {
+  flex-basis: 100%;
 }
 
 /* Completed assignment tag */
@@ -253,10 +263,14 @@ dialog#side_panel::backdrop {
   color: inherit;
 }
 
-.service-description-edit {
-  padding-left: calc(32px + 0.75rem);
-  color: var(--rvo-color-grijs-600, #6b7280);
-  font-size: var(--rvo-font-size-sm, 0.875rem);
+/* Hide the inline-edit display (description text is in the card link).
+   When the edit form is active, hide the description text in the link. */
+.service-card__edit .editable-field-display {
+  display: none;
+}
+
+.rvo-item-list__item:has(.service-card__edit form) .rvo-text--subtle {
+  display: none;
 }
 
 /* Reusable: icon + text inline (org name, date, etc.) */
