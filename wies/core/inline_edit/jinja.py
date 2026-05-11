@@ -51,7 +51,7 @@ def inline_edit(ctx, obj, name, **extras):
         value = {e.field or e.name: _current_value(obj, e) for e in editables}
     render_ctx = {
         "target": f"inline-edit-{model_label}-{obj.pk}-{name}",
-        "url": reverse("inline-edit", args=[model_label, obj.pk, name]),
+        "edit_url": reverse("inline-edit", args=[model_label, obj.pk, name]),
         "label": _spec_label(editable_set, spec),
         "obj": obj,
         "editable": spec,

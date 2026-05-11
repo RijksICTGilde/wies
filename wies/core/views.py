@@ -2448,7 +2448,7 @@ def _inline_edit_base_ctx(editable_set, spec, obj) -> dict:
     model_label = editable_set.model._meta.model_name
     return {
         "target": f"inline-edit-{model_label}-{obj.pk}-{spec.name}",
-        "url": reverse("inline-edit", args=[model_label, obj.pk, spec.name]),
+        "edit_url": reverse("inline-edit", args=[model_label, obj.pk, spec.name]),
         "label": _spec_label(editable_set, spec),
         "obj": obj,
         "editable": spec,

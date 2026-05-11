@@ -1,31 +1,16 @@
-{# Display for Assignment.organizations. Context:
-    obj         — Assignment
-    value       — [{"organization": OrganizationUnit, "role": "PRIMARY"|"INVOLVED"}, ...]
-    breadcrumbs — (optional extra from the panel template) pre-built
-                  breadcrumb dicts with ancestors, label, role, url.
-                  When present, render the rich panel view; otherwise
-                  fall back to a flat list. Post-save re-renders don't
-                  carry `breadcrumbs` — the flat list is the fallback.
-#}
-{% if breadcrumbs %}
-  {% for crumb in breadcrumbs %}
-    <div class="org-breadcrumb">
-      {% if crumb.ancestors %}
-        {% for ancestor in crumb.ancestors %}
-          <a href="{{ ancestor.url }}" class="org-breadcrumb__ancestor">{{ ancestor.label }}</a>
-          <span class="org-breadcrumb__separator">›</span>
-        {% endfor %}
-      {% endif %}
-      <a href="{{ crumb.url }}" class="rvo-link">{{ crumb.label }}</a>
-      {% if crumb.role == "PRIMARY" and breadcrumbs|length > 1 %}
-        <span class="rvo-text--subtle rvo-text--sm">(primair)</span>
-      {% endif %}
-    </div>
-  {% endfor %}
-{% elif value %}
+{# Display for Assignment.organizations.
+    obj   — Assignment
+    value — [{"organization": OrganizationUnit, "role": "PRIMARY"|"INVOLVED"}, ...]
+
+    Each org renders as a link to the assignment-list filtered by that
+    org id (the same shape `get_org_breadcrumb` produces for the
+    non-`org_self` case). When multiple orgs are present, the primary
+    one is tagged. #}
+{% if value %}
   {% for row in value %}
     <div class="org-breadcrumb">
-      {{ row.organization.name }}
+      <a href="{{ url("assignment-list") }}?org={{ row.organization.id }}"
+         class="rvo-link">{{ row.organization.name }}</a>
       {% if row.role == "PRIMARY" and value|length > 1 %}
         <span class="rvo-text--subtle rvo-text--sm">(primair)</span>
       {% endif %}

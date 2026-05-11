@@ -4,7 +4,7 @@
    the input when editing) is enough that a label would just be noise. #}
 {% set multi = form.fields|length > 1 %}
 <div id="{{ target }}">
-  <form hx-post="{{ url }}"
+  <form hx-post="{{ edit_url }}"
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
         hx-target="#{{ target }}"
         hx-swap="outerHTML">
@@ -22,7 +22,7 @@
     {% for error in form.non_field_errors() %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
     <div class="field-actions">
       <c-button type="submit" kind="primary">Opslaan</c-button>
-      <c-button type="button" kind="secondary" hx-get="{{ url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML">Annuleren</c-button>
+      <c-button type="button" kind="secondary" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML">Annuleren</c-button>
     </div>
   </form>
 </div>

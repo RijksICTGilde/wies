@@ -23,7 +23,7 @@
         widely-used pattern. #}
       <button type="button"
               class="edit-icon-button{% if saved %} edit-icon-button--just-saved{% endif %}"
-              hx-get="{{ url }}?edit=true"
+              hx-get="{{ edit_url }}?edit=true"
               hx-target="#{{ target }}"
               hx-swap="outerHTML"
               aria-label="Bewerk {{ label }}">
