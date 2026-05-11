@@ -8,7 +8,7 @@ dependencies = [
   "gunicorn==25.3.0",
   "Authlib==1.7.0",
   "requests==2.33.1",
-  "urllib3>=2.6.0",  # CVE-2025-66418, CVE-2025-66471
+  "urllib3>=2.7.0",  # CVE-2025-66418, CVE-2025-66471
   "jinja2==3.1.6",
   "jinja_roos_components@git+https://github.com/RijksICTGilde/jinja-roos-components.git@0.5",
   "psycopg[binary]>=3.3.4",
