@@ -1,0 +1,20 @@
+{# Display for Colleague labels filtered by category. Context:
+  obj      — Colleague instance
+  value    — list of Label instances (all categories, on the M2M)
+  editable — the dynamic Editable; `editable.category` is the category.
+#}
+{% set category = editable.category %}
+{% set category_labels = value | selectattr("category_id", "equalto", category.id) | list %}
+<div class="rvo-layout-row rvo-layout-gap--sm" style="flex-wrap: wrap">
+  {% if category_labels %}
+    {% for label in category_labels %}
+      <span class="rvo-badge"
+            style="background-color: {{ category.color }};
+                   padding: 0.25rem 0.5rem;
+                   border-radius: 3px;
+                   white-space: nowrap">{{ label.name }}</span>
+    {% endfor %}
+  {% else %}
+    <span class="rvo-text--italic rvo-text--subtle">Geen labels</span>
+  {% endif %}
+</div>

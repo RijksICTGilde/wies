@@ -1,0 +1,21 @@
+{# Generic edit-mode wrapper for an EditableCollection.
+
+   The inner body — rows, management form, "+ add row" button — comes
+   from ``editable.form_template``, included with the formset available
+   as ``formset`` in its context.
+
+   Matches the display contract: the element id (``target``) is swapped
+   via outerHTML on save / cancel / error.
+#}
+<div id="{{ target }}">
+  <form hx-post="{{ edit_url }}"
+        hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+        hx-target="#{{ target }}"
+        hx-swap="outerHTML">
+    {% include editable.form_template %}
+    <div class="field-actions">
+      <c-button type="submit" kind="primary">Opslaan</c-button>
+      <c-button type="button" kind="secondary" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML">Annuleren</c-button>
+    </div>
+  </form>
+</div>

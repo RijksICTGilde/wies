@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 326: django security update to 6.0.5
+- 311: full inline editing on assignments via the new editables system (declarative `EditableSet` per model, single generic HTMX endpoint, reused by full-page forms); row-level permissions in `wies/core/permissions.py`.
 
 ## 2026-05-05
 

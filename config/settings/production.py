@@ -26,6 +26,25 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 
+# STATIC FILES
+# ----------------------------------------------------------------------------------------------------------------------
+# Hash filenames + gzip. Requires `collectstatic` to have produced a manifest.
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+
+# WhiteNoise serves static files. Insert it directly after SecurityMiddleware
+# per the WhiteNoise docs — kept out of the base MIDDLEWARE list so
+# tests/local don't need to filter it out.
+# F405 (defined-from-star-import): MIDDLEWARE comes from `from .base import *`
+# above; ruff can't see it. Safe to skip — this file is the only place
+# where the star-imported names are mutated.
+_WHITENOISE = "whitenoise.middleware.WhiteNoiseMiddleware"
+_AFTER_SECURITY = MIDDLEWARE.index("django.middleware.security.SecurityMiddleware") + 1  # noqa: F405
+MIDDLEWARE.insert(_AFTER_SECURITY, _WHITENOISE)  # noqa: F405
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

@@ -101,8 +101,13 @@ known-first-party = ["wies", "config"]
 "wies/core/tests/*" = ["E501", "S101", "S106", "PLR2004"]
 "wies/rijksauth/tests/*" = ["E501", "S101", "S106", "PLR2004"]
 "*/migrations/*" = ["E501", "Q000"]
-"wies/core/views.py" = ["C901"]  # complexity (fix later)
+# `views.py` hosts the inline-edit endpoint (a generic view bridging the
+# editables abstraction): it legitimately accesses Django's `_meta`, the
+# package-private `_editables` registry, and FormSet's `_non_form_errors`
+# workaround, and raises Http404 with inline messages.
+"wies/core/views.py" = ["C901", "SLF001", "TRY003", "EM101"]
 "wies/core/services/*" = ["C901"]  # complexity (fix later)
+"wies/core/inline_edit/*" = ["SLF001", "TRY003", "EM101", "EM102"]
 "scripts/*" = ["INP001"]  # standalone scripts, not a package
 
 
