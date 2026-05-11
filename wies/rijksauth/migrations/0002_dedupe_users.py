@@ -1,8 +1,7 @@
 import logging
 from collections import defaultdict
 
-import django.db.models.functions.text
-from django.db import migrations, models, transaction
+from django.db import migrations, transaction
 from django.db.models.functions import Lower
 
 logger = logging.getLogger(__name__)
@@ -104,16 +103,4 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(run_dedupe, migrations.RunPython.noop),
-        migrations.AlterField(
-            model_name="user",
-            name="email",
-            field=models.EmailField(max_length=254),
-        ),
-        migrations.AddConstraint(
-            model_name="user",
-            constraint=models.UniqueConstraint(
-                django.db.models.functions.text.Lower("email"),
-                name="unique_user_email_ci",
-            ),
-        ),
     ]

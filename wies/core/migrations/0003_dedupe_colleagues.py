@@ -1,9 +1,8 @@
 import logging
 from collections import defaultdict
 
-import django.db.models.functions.text
 from django.conf import settings
-from django.db import migrations, models, transaction
+from django.db import migrations, transaction
 from django.db.models.functions import Lower
 
 logger = logging.getLogger(__name__)
@@ -91,16 +90,4 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.RunPython(run_dedupe, migrations.RunPython.noop),
-        migrations.RemoveConstraint(
-            model_name="colleague",
-            name="unique_colleague_email_source",
-        ),
-        migrations.AddConstraint(
-            model_name="colleague",
-            constraint=models.UniqueConstraint(
-                django.db.models.functions.text.Lower("email"),
-                models.F("source"),
-                name="unique_colleague_email_source_ci",
-            ),
-        ),
     ]
