@@ -90,53 +90,6 @@ form#assignment-create-form
   justify-content: space-between;
 }
 
-/* ----------------------------------------------------------------------------
-   Organization Selection List
-   ---------------------------------------------------------------------------- */
-.assignment-org-selections {
-  margin-top: 0.75rem;
-}
-
-.assignment-org-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.assignment-org-table th {
-  text-align: left;
-  font-weight: 600;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 2px solid var(--rvo-color-grijs-300, #ccc);
-  white-space: nowrap;
-}
-
-.assignment-org-table th:last-child {
-  text-align: left;
-}
-
-.assignment-org-table td {
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--rvo-color-grijs-200, #e6e6e6);
-  vertical-align: middle;
-}
-
-.assignment-org-table td:last-child {
-  width: 1%;
-  white-space: nowrap;
-}
-
-.assignment-org-table__actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  white-space: nowrap;
-}
-
-.assignment-org-remove {
-  color: var(--rvo-color-rood-500, #d52b1e);
-}
-
 /* Button group should always be horizontal */
 #assignment-create-form .utrecht-button-group {
   display: flex;

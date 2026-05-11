@@ -136,7 +136,7 @@ class RvoFormMixinTest(TestCase):
             document = forms.FileField(label="Document")
 
         # Create the form and check that a warning is logged
-        with self.assertLogs("wies.core.forms", level="WARNING") as log:
+        with self.assertLogs("wies.core.form_mixins", level="WARNING") as log:
             TestForm()
 
         # Verify the warning was logged

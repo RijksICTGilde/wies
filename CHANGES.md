@@ -7,6 +7,11 @@ This files lists the changes during the lifetime of this project.
 - 324: replace raw HTML with JRC components across templates and include roos.css
 - 324: add sortable Tot column to placement table
 
+## 2026-05-11
+
+- 326: django security update to 6.0.5
+- 311: full inline editing on assignments via the new editables system (declarative `EditableSet` per model, single generic HTMX endpoint, reused by full-page forms); row-level permissions in `wies/core/permissions.py`.
+
 ## 2026-05-05
 
 - 319: fix user import non-utf8

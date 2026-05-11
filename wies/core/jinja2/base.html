@@ -27,9 +27,16 @@
     <link rel="stylesheet" href="{{ static('css/rvo_overwrite.css') }}">
     <link rel="stylesheet" href="{{ static('css/base.css') }}">
     <link rel="stylesheet" href="{{ static('css/modals.css') }}">
+    <link rel="stylesheet" href="{{ static('css/org_picker.css') }}">
+    <link rel="stylesheet" href="{{ static('css/client_modal.css') }}">
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
     <script src="{{ static('js/filters/filters.js') }}"></script>
     <script src="{{ static('js/show_more.js') }}"></script>
+    {# Org-picker stack: tree_state → org_tree_base → assignment_org_tree.
+       Order matters; the later scripts reference symbols from the earlier ones. #}
+    <script src="{{ static('js/tree_state.js') }}"></script>
+    <script src="{{ static('js/org_tree_base.js') }}"></script>
+    <script src="{{ static('js/assignment_org_tree.js') }}" defer></script>
     {% block extra_head %}
     {% endblock extra_head %}
   </head>
