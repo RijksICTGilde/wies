@@ -2,9 +2,9 @@
 
 Status: concept
 
-E-mail: [wies-odi@rijksoverheid.nl](mailto:wies-odi@rijksoverheid.nl)
-Mattermost: [https://digilab.overheid.nl/chat/odi/channels/wies](https://digilab.overheid.nl/chat/odi/channels/wies)
-Code: [https://github.com/RijksICTGilde/wies](https://github.com/RijksICTGilde/wies)
+- E-mail: [wies-odi@rijksoverheid.nl](mailto:wies-odi@rijksoverheid.nl)
+- Mattermost: [https://digilab.overheid.nl/chat/odi/channels/wies](https://digilab.overheid.nl/chat/odi/channels/wies)
+- Code: [https://github.com/RijksICTGilde/wies](https://github.com/RijksICTGilde/wies)
 
 ## 1\. Doel & scope
 
@@ -19,7 +19,7 @@ Wies is een interne webapplicatie voor medewerkers bij ODI om inzicht te krijgen
 | Technisch beheerder   | Robbert Uittenbroek Matthijs Beekman               | Hosting, deployment, updates, monitoring             |
 | Functioneel beheerder | Robbert Uittenbroek Ruben Rouwhof Matthijs Beekman | Gebruikersbeheer, feedback, testen                   |
 | Ontwikkelteam         | Robbert Uittenbroek Ruben Rouwhof Matthijs Beekman | Ontwikkeling, bugfixes, releases                     |
-| Security/Privacy      | CISO & CPO ODIEiric Vellinga                       | Beleid, AVG compliance, advisering                   |
+| Security/Privacy      | CISO & CPO ODI, Eiric Vellinga                       | Beleid, AVG compliance, advisering                   |
 
 ## 3\. Hosting & infrastructuur
 
