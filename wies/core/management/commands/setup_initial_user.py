@@ -6,9 +6,11 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand
 from django.db import models
+from django.db.models.functions import Lower
 from django.utils import timezone
 
 from wies.core.models import Assignment, Colleague, Event, Label, Placement, Service
+from wies.core.services.users import _find_or_create_colleague_for_user
 
 logger = logging.getLogger(__name__)
 
@@ -134,10 +136,13 @@ def _link_users_to_colleagues():
 
 def _link_events_to_users():
     """Back-fill user FK on events that have a user_email matching an existing user."""
+    matching_user = User.objects.annotate(email_lower=Lower("email")).filter(
+        email_lower=Lower(models.OuterRef("user_email"))
+    )
     updated = (
         Event.objects.filter(user__isnull=True)
         .exclude(user_email="")
-        .update(user=models.Subquery(User.objects.filter(email=models.OuterRef("user_email")).values("pk")[:1]))
+        .update(user=models.Subquery(matching_user.values("pk")[:1]))
     )
     if updated:
         logger.info("Linked %d events to users", updated)
@@ -173,25 +178,13 @@ class Command(BaseCommand):
             logger.info("INITIAL_USER_EMAIL not set, skipping")
             return
 
-        user = User.objects.filter(email=email).first()
+        user = User.objects.filter(email__iexact=email).first()
         if not user:
             logger.info("User %s not found, skipping (run ensure_initial_user first)", email)
             return
 
         # Ensure Colleague exists (needed before dev profile setup)
-        colleague, created = Colleague.objects.get_or_create(
-            email=email,
-            source="wies",
-            defaults={
-                "name": f"{user.first_name} {user.last_name}".strip() or email,
-                "user": user,
-            },
-        )
-        if created:
-            logger.info("Created initial colleague: %s", email)
-        elif colleague.user_id != user.id:
-            colleague.user = user
-            colleague.save(update_fields=["user"])
+        colleague = _find_or_create_colleague_for_user(user, user.first_name, user.last_name, email, source="wies")
 
         if settings.DEBUG:
             _setup_dev_profile(colleague)

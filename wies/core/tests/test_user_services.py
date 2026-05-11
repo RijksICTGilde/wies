@@ -169,6 +169,63 @@ class CreateUserColleagueLinkTest(TestCase):
         colleague = Colleague.objects.get(user=user)
         assert colleague.email == "new@rijksoverheid.nl"
 
+    def test_create_user_does_not_reuse_otys_colleague(self):
+        """An OTYS-synced colleague is left untouched; a new wies colleague is created."""
+        otys_colleague = Colleague.objects.create(
+            name="OTYS Name", email="shared@rijksoverheid.nl", source="otys_iir", source_id="42"
+        )
+
+        user = create_user(
+            None,
+            first_name="Csv",
+            last_name="User",
+            email="shared@rijksoverheid.nl",
+        )
+
+        otys_colleague.refresh_from_db()
+        assert otys_colleague.user is None
+        assert otys_colleague.source == "otys_iir"
+
+        wies_colleague = Colleague.objects.get(user=user)
+        assert wies_colleague.id != otys_colleague.id
+        assert wies_colleague.source == "wies"
+        assert Colleague.objects.filter(email__iexact="shared@rijksoverheid.nl").count() == 2
+
+    def test_create_user_reuses_colleague_with_different_email_casing(self):
+        """An existing colleague matched case-insensitively is reused, not duplicated."""
+        existing = Colleague.objects.create(name="Existing", email="John.Doe@rijksoverheid.nl", source="wies")
+
+        user = create_user(
+            None,
+            first_name="John",
+            last_name="Doe",
+            email="john.doe@rijksoverheid.nl",
+        )
+
+        existing.refresh_from_db()
+        assert existing.user == user
+        assert Colleague.objects.filter(email__iexact="john.doe@rijksoverheid.nl").count() == 1
+
+    def test_update_user_email_casing_change_does_not_duplicate_colleague(self):
+        """Changing email casing via update_user must not create a second colleague."""
+        user = create_user(
+            None,
+            first_name="Test",
+            last_name="User",
+            email="test@rijksoverheid.nl",
+        )
+
+        update_user(
+            None,
+            user=user,
+            first_name="Test",
+            last_name="User",
+            email="TEST@rijksoverheid.nl",
+        )
+
+        assert Colleague.objects.filter(user=user).count() == 1
+        assert Colleague.objects.filter(email__iexact="test@rijksoverheid.nl").count() == 1
+
 
 class UpdateUserServiceTest(TestCase):
     """Tests for update_user service function"""
