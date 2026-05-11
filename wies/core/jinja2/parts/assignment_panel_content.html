@@ -33,19 +33,11 @@
           <dl class="rvo-data-list">
             <dt>Opdracht naam</dt>
             <dd>
-              <div id="assignment-name-content">
-                {% with target_element="assignment-name-content", field_value=panel_data.assignment.name, field_label="Opdracht naam", edit_url=url("assignment-edit-attribute", args=[panel_data.assignment.id, "name"]), user_can_edit=panel_data.user_can_edit %}
-                  {% include "parts/editable_text_field.html" %}
-                {% endwith %}
-              </div>
+              {{ inline_edit(panel_data.assignment, "name") }}
             </dd>
             <dt>Beschrijving</dt>
             <dd>
-              <div id="assignment-extra-info-content">
-                {% with target_element="assignment-extra-info-content", field_value=panel_data.assignment.extra_info, field_label="Beschrijving", edit_url=url("assignment-edit-attribute", args=[panel_data.assignment.id, "extra_info"]), user_can_edit=panel_data.user_can_edit, expanded=false %}
-                  {% include "parts/editable_textarea_field.html" %}
-                {% endwith %}
-              </div>
+              {{ inline_edit(panel_data.assignment, "extra_info") }}
             </dd>
             {% if panel_data.assignment.source not in ('wies', '') %}
               <dt>Externe bron</dt>
@@ -64,42 +56,19 @@
                 {% endif %}
               </dd>
             {% endif %}
-            {% if panel_data.org_breadcrumbs %}
-              {% for org_breadcrumb in panel_data.org_breadcrumbs %}
-                <dt>
-                  {% if loop.first %}
-                    Opdrachtgever
-                    {%- if panel_data.org_breadcrumbs|length > 1 %}s{% endif %}
-                  {% endif %}
-                </dt>
-                <dd>
-                  <div class="org-breadcrumb">
-                    {% if org_breadcrumb.ancestors %}
-                      {% for ancestor in org_breadcrumb.ancestors %}
-                        <a href="{{ ancestor.url }}" class="org-breadcrumb__ancestor">{{ ancestor.label }}</a>
-                        <span class="org-breadcrumb__separator">›</span>
-                      {% endfor %}
-                    {% endif %}
-                    <a href="{{ org_breadcrumb.url }}" class="rvo-link">{{ org_breadcrumb.label }}</a>
-                    {% if org_breadcrumb.role == "PRIMARY" and panel_data.org_breadcrumbs|length > 1 %}
-                      <span class="rvo-text--subtle rvo-text--sm">(primair)</span>
-                    {% endif %}
-                  </div>
-                </dd>
-              {% endfor %}
-            {% else %}
-              <dt>Opdrachtgever</dt>
-              <dd>
-                <span class="rvo-text--italic rvo-text--subtle">Geen organisatie opgegeven</span>
-              </dd>
-            {% endif %}
+            <dt>
+              {% if panel_data.org_breadcrumbs and panel_data.org_breadcrumbs|length > 1 %}
+                Opdrachtgevers
+              {% else %}
+                Opdrachtgever
+              {% endif %}
+            </dt>
+            <dd>
+              {{ inline_edit(panel_data.assignment, "organizations") }}
+            </dd>
             <dt>Periode</dt>
             <dd>
-              {% if panel_data.assignment.start_date or panel_data.assignment.end_date %}
-                {{ panel_data.assignment.start_date|datum_nl("j F Y") }} - {{ panel_data.assignment.end_date|datum_nl("j F Y") }}
-              {% else %}
-                <span class="rvo-text--italic rvo-text--subtle">Geen periode opgegeven</span>
-              {% endif %}
+              {{ inline_edit(panel_data.assignment, "period") }}
             </dd>
             {% if panel_data.assignment.created_at %}
               <dt>Plaatsingsdatum</dt>
@@ -107,96 +76,18 @@
                 {{ panel_data.assignment.created_at|datum_nl("j F Y") }}
               </dd>
             {% endif %}
-            {% if panel_data.assignment.owner %}
-              <dt>Business Manager</dt>
-              <dd>
-                {% if panel_data.owner_url %}
-                  <a href="{{ panel_data.owner_url }}"
-                     hx-get="{{ panel_data.owner_url }}"
-                     hx-target="#side_panel-content"
-                     class="rvo-link">{{ panel_data.assignment.owner.name }}</a>
-                {% else %}
-                  {{ panel_data.assignment.owner.name }}
-                {% endif %}
-                {% if panel_data.owner_mailto_href %}
-                  <br>
-                  <a href="{{ panel_data.owner_mailto_href }}" class="rvo-link">{{ panel_data.assignment.owner.email }}</a>
-                {% endif %}
-              </dd>
-            {% endif %}
+            <dt>Business Manager</dt>
+            <dd>
+              {{ inline_edit(panel_data.assignment, "owner",
+                            owner_url=panel_data.owner_url,
+                            owner_mailto=panel_data.owner_mailto_href) }}
+            </dd>
           </dl>
         </section>
-        {% if panel_data.team_members %}
-          <section>
-            <h2>Team</h2>
-            <div class="rvo-item-list">
-              {% for member in panel_data.team_members %}
-                {% if member.is_vacancy %}
-                  <div class="rvo-item-list__item rvo-item-list__item--vacant">
-                    <div class="user-avatar user-avatar--vacant">?</div>
-                    <div class="rvo-item-list__content">
-                      <span class="rvo-text--italic rvo-text--subtle">Openstaand</span>
-                      {% for skill in member.skills %}
-                        <div class="service-description-line">
-                          {{ skill.name }}
-                          {% if skill.description %}· <span class="rvo-text--subtle">{{ skill.description }}</span>{% endif %}
-                        </div>
-                      {% endfor %}
-                    </div>
-                  </div>
-                {% elif not member.historical %}
-                  <a href="{{ member.colleague_url }}"
-                     hx-get="{{ member.colleague_url }}"
-                     hx-target="#side_panel-content"
-                     class="rvo-item-list__item rvo-item-list__item--filled"
-                     title="Bekijk {{ member.colleague.name }}">
-                    <div class="user-avatar">{{ member.colleague.name|first|upper }}</div>
-                    <div class="rvo-item-list__content">
-                      <strong>{{ member.colleague.name }}</strong>
-                      {% for skill in member.skills %}
-                        <div class="service-description-line">
-                          {{ skill.name }}
-                          {% if skill.description %}· <span class="rvo-text--subtle">{{ skill.description }}</span>{% endif %}
-                        </div>
-                      {% endfor %}
-                    </div>
-                  </a>
-                {% else %}
-                  <a href="{{ member.colleague_url }}"
-                     hx-get="{{ member.colleague_url }}"
-                     hx-target="#side_panel-content"
-                     class="rvo-item-list__item rvo-item-list__item--filled"
-                     title="Bekijk {{ member.colleague.name }}">
-                    <div class="user-avatar">{{ member.colleague.name|first|upper }}</div>
-                    <div class="rvo-item-list__content">
-                      <div style="display: flex;
-                                  justify-content: space-between;
-                                  align-items: center;
-                                  width: 100%">
-                        <strong>{{ member.colleague.name }}</strong>
-                        <span class="rvo-tag assignment-tag--completed">Afgelopen</span>
-                      </div>
-                      {% for skill in member.skills %}
-                        <div class="service-description-line">
-                          {{ skill.name }}
-                          {% if skill.description %}· <span class="rvo-text--subtle">{{ skill.description }}</span>{% endif %}
-                        </div>
-                      {% endfor %}
-                      {% if member.privacy_warning_text %}
-                        <span class="icon-text-inline rvo-text--subtle rvo-text--xs">
-                          <span class="utrecht-icon rvo-icon rvo-icon-hangslot-dicht rvo-icon--sm rvo-icon--rvo-grijs-700"
-                                role="img"
-                                aria-label="Privé"></span>
-                          {{ member.privacy_warning_text }}
-                        </span>
-                      {% endif %}
-                    </div>
-                  </a>
-                {% endif %}
-              {% endfor %}
-            </div>
-          </section>
-        {% endif %}
+        <section>
+          <h2>Team</h2>
+          {{ inline_edit(panel_data.assignment, "services") }}
+        </section>
       </div>
     </div>
     {% if panel_data.show_updates_tab %}

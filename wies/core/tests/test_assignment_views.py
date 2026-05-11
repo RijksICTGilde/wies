@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -89,7 +89,7 @@ class AssignmentEditAttributeTest(TestCase):
 
     def test_assignment_edit_requires_login(self):
         """Test that unauthenticated users cannot edit assignments"""
-        response = self.client.get(reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]))
+        response = self.client.get(reverse("inline-edit", args=["assignment", self.assignment.id, "name"]))
         # Should redirect to login or return 403
         assert response.status_code in [302, 403]
 
@@ -98,7 +98,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         response = self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]), {"name": "Updated Assignment Name"}
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Updated Assignment Name"}
         )
 
         assert response.status_code == 200
@@ -110,49 +110,134 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.owner_user)
 
         response = self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]), {"name": "Owner Updated Name"}
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Owner Updated Name"}
         )
 
         assert response.status_code == 200
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Owner Updated Name"
 
-    def test_assignment_edit_as_assigned_colleague_without_permission(self):
-        """Test that assigned colleague can edit without explicit permission"""
+    def test_assigned_colleague_cannot_edit_name(self):
+        """A colleague placed on the assignment must not be able to edit
+        a management field like ``name`` — only the description-style
+        fields (``extra_info``) carry a placed-consultant override.
+        """
         self.client.force_login(self.assigned_user)
 
         response = self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]), {"name": "Colleague Updated Name"}
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            {"name": "Colleague Updated Name"},
+        )
+
+        assert response.status_code == 200
+        self.assertContains(response, "geen rechten")
+        self.assignment.refresh_from_db()
+        assert self.assignment.name == "Test Assignment"
+
+    def test_assigned_colleague_can_edit_extra_info(self):
+        """Placed consultants do gain narrow access to ``extra_info`` (description)."""
+        self.client.force_login(self.assigned_user)
+
+        response = self.client.post(
+            reverse("inline-edit", args=["assignment", self.assignment.id, "extra_info"]),
+            {"extra_info": "Description by colleague"},
         )
 
         assert response.status_code == 200
         self.assignment.refresh_from_db()
-        assert self.assignment.name == "Colleague Updated Name"
+        assert self.assignment.extra_info == "Description by colleague"
+
+    def test_assigned_colleague_cannot_edit_owner_field(self):
+        """Placed consultant is limited to name/extra_info. Attempting
+        to edit ``owner`` (a management field) returns the display
+        partial with a Dutch denial alert; DB unchanged."""
+        self.client.force_login(self.assigned_user)
+        other_colleague = Colleague.objects.create(
+            name="Other BDM",
+            email="other-bdm@rijksoverheid.nl",
+            source="wies",
+        )
+
+        response = self.client.post(
+            reverse("inline-edit", args=["assignment", self.assignment.id, "owner"]),
+            {"owner": other_colleague.id},
+        )
+
+        assert response.status_code == 200
+        self.assertContains(response, "geen rechten")
+        self.assignment.refresh_from_db()
+        assert self.assignment.owner_id == self.owner_colleague.id
+
+    def test_assigned_colleague_cannot_edit_period(self):
+        """Placed consultant cannot edit the looptijd group."""
+        self.client.force_login(self.assigned_user)
+
+        response = self.client.post(
+            reverse("inline-edit", args=["assignment", self.assignment.id, "period"]),
+            {"start_date": "2026-01-01", "end_date": "2026-12-31"},
+        )
+
+        assert response.status_code == 200
+        self.assertContains(response, "geen rechten")
+        self.assignment.refresh_from_db()
+        assert self.assignment.start_date is None
+        assert self.assignment.end_date is None
+
+    def test_owner_can_edit_owner_field(self):
+        """The BDM owner can edit the ``owner`` field — sanity check
+        that the field permission doesn't accidentally block owners."""
+        self.client.force_login(self.owner_user)
+        new_bdm_user = User.objects.create_user(
+            email="new-bdm@rijksoverheid.nl",
+            first_name="New",
+            last_name="BDM",
+        )
+        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
+        new_bdm_user.groups.add(bdm_group)
+        new_bdm = Colleague.objects.create(
+            user=new_bdm_user,
+            name="New BDM",
+            email="new-bdm@rijksoverheid.nl",
+            source="wies",
+        )
+
+        response = self.client.post(
+            reverse("inline-edit", args=["assignment", self.assignment.id, "owner"]),
+            {"owner": new_bdm.id},
+        )
+
+        assert response.status_code == 200
+        self.assignment.refresh_from_db()
+        assert self.assignment.owner_id == new_bdm.id
 
     def test_assignment_edit_as_unrelated_user_denied(self):
-        """Test that unrelated user without permission cannot edit"""
+        """Unrelated users get the display partial + a Dutch denial alert
+        (never a bare 403); the DB is not modified."""
         self.client.force_login(self.unrelated_user)
 
         response = self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]), {"name": "Unauthorized Update"}
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Unauthorized Update"}
         )
 
-        assert response.status_code == 403
+        assert response.status_code == 200
+        self.assertContains(response, "geen rechten")
         self.assignment.refresh_from_db()
-        assert self.assignment.name == "Test Assignment"  # Should not change
+        assert self.assignment.name == "Test Assignment"
 
     def test_external_source_assignment_not_editable_even_with_permission(self):
-        """Test that assignments from external sources (otys_iir) cannot be edited even by authorized users"""
+        """External-source (otys_iir) assignments are read-only — display
+        partial + denial alert, DB unchanged."""
         self.client.force_login(self.user_with_permission)
 
         response = self.client.post(
-            reverse("assignment-edit-attribute", args=[self.external_assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.external_assignment.id, "name"]),
             {"name": "Attempted Update"},
         )
 
-        assert response.status_code == 403
+        assert response.status_code == 200
+        self.assertContains(response, "geen rechten")
         self.external_assignment.refresh_from_db()
-        assert self.external_assignment.name == "External Assignment"  # Should not change
+        assert self.external_assignment.name == "External Assignment"
 
     # ========== Name Field Validation Tests ==========
 
@@ -161,7 +246,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         response = self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]), {"name": "Valid New Name"}
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Valid New Name"}
         )
 
         assert response.status_code == 200
@@ -173,7 +258,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         response = self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]), {"name": ""}
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": ""}
         )
 
         assert response.status_code == 200
@@ -184,22 +269,26 @@ class AssignmentEditAttributeTest(TestCase):
     # ========== HTMX Workflow Tests ==========
 
     def test_assignment_edit_get_returns_edit_form(self):
-        """Test that GET request returns edit form HTML"""
+        """GET with `?edit=true` returns the edit form HTML. Plain GET
+        returns the display partial (the pencil button triggers the
+        `?edit=true` request)."""
         self.client.force_login(self.user_with_permission)
 
-        response = self.client.get(reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]))
+        response = self.client.get(
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]) + "?edit=true"
+        )
 
         assert response.status_code == 200
-        self.assertContains(response, "<form")  # Form element
-        self.assertContains(response, "Test Assignment")  # Current value in form
-        self.assertContains(response, 'name="name"')  # Input name attribute
+        self.assertContains(response, "<form")
+        self.assertContains(response, "Test Assignment")
+        self.assertContains(response, 'name="name"')
 
     def test_assignment_edit_post_returns_display_view(self):
         """Test that POST request with valid data returns display view"""
         self.client.force_login(self.user_with_permission)
 
         response = self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]), {"name": "Updated Name"}
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Updated Name"}
         )
 
         assert response.status_code == 200
@@ -212,7 +301,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         response = self.client.get(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]) + "?cancel=true"
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]) + "?cancel=true"
         )
 
         assert response.status_code == 200
@@ -225,7 +314,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         response = self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": ""},  # Empty (invalid)
         )
 
@@ -242,26 +331,24 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         response = self.client.get(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "extra_info"]) + "?cancel=true"
+            reverse("inline-edit", args=["assignment", self.assignment.id, "extra_info"]) + "?cancel=true"
         )
 
         assert response.status_code == 200
 
-        # Should contain "Toon meer" link for long text
+        # Should contain "Toon meer" toggle label for long text
         self.assertContains(response, "Toon meer")
 
-        # Should contain truncated text class
-        self.assertContains(response, 'class="truncated-text"')
+        # Truncated + full spans render with the inline-edit classes;
+        # visibility is toggled via the HTML `hidden` attribute.
+        self.assertContains(response, 'class="inline-edit-long-text__truncated"')
+        self.assertContains(response, 'class="inline-edit-long-text__full"')
 
-        # Should contain full text class (hidden initially)
-        self.assertContains(response, 'class="full-text"')
-
-        # Should contain the beginning of the text in truncated version
+        # Beginning of the text appears in the truncated version.
         self.assertContains(response, "Lorem ipsum dolor sit amet")
 
-        # The full text should be present in the DOM (even if hidden)
-        # This allows client-side toggle without backend call
-        self.assertContains(response, "display: none", count=1)  # Full text is hidden
+        # Full text is hidden initially (client-side toggle flips it).
+        self.assertContains(response, "hidden>", count=1)
 
     def test_assignment_extra_info_short_text_no_toggle(self):
         """Test that short descriptions don't have toggle functionality"""
@@ -272,7 +359,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.assignment.save()
 
         response = self.client.get(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "extra_info"]) + "?cancel=true"
+            reverse("inline-edit", args=["assignment", self.assignment.id, "extra_info"]) + "?cancel=true"
         )
 
         assert response.status_code == 200
@@ -293,7 +380,7 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that invalid attribute name returns 404"""
         self.client.force_login(self.user_with_permission)
 
-        response = self.client.get(reverse("assignment-edit-attribute", args=[self.assignment.id, "invalid_field"]))
+        response = self.client.get(reverse("inline-edit", args=["assignment", self.assignment.id, "invalid_field"]))
 
         assert response.status_code == 404
 
@@ -301,7 +388,7 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that nonexistent assignment ID returns 404"""
         self.client.force_login(self.user_with_permission)
 
-        response = self.client.get(reverse("assignment-edit-attribute", args=[99999, "name"]))
+        response = self.client.get(reverse("inline-edit", args=["assignment", 99999, "name"]))
 
         assert response.status_code == 404
 
@@ -312,7 +399,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Event Test Name"},
         )
 
@@ -331,7 +418,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Test Assignment"},  # Same as current value
         )
 
@@ -342,7 +429,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.owner_user)
 
         self.client.post(
-            reverse("assignment-edit-attribute", args=[self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Owner Changed Name"},
         )
 
