@@ -29,7 +29,7 @@
          {% if panel_data.show_updates_tab %}class="rvo-tabs__panel" role="tabpanel" aria-labelledby="tab-gegevens" tabindex="0"{% endif %}>
       <div class="rvo-layout-column rvo-layout-gap--lg">
         <section>
-          <h2>Opdracht gegevens</h2>
+          <h2>Opdrachtgegevens</h2>
           <dl class="rvo-data-list">
             <dt>Opdracht naam</dt>
             <dd>
@@ -85,8 +85,17 @@
           </dl>
         </section>
         <section>
-          <h2>Team</h2>
-          {{ inline_edit(panel_data.assignment, "services") }}
+          <div class="section-header">
+            <h2>Team ({{ panel_data.assignment.services.count() }})</h2>
+            {% set a = panel_data.assignment %}
+            {% set ie_target = "inline-edit-assignment-" ~ a.pk ~ "-services" %}
+            {% if has_permission(Verb.UPDATE, a, request.user, AssignmentEditables.services) %}
+              <c-button kind="tertiary" icon="bewerken" iconPlacement="after" hx-get="{{ url('inline-edit', args=[a._meta.model_name, a.pk, 'services']) }}?edit=true" hx-target="#{{ ie_target }}" hx-swap="outerHTML">
+              Team bewerken
+              </c-button>
+            {% endif %}
+          </div>
+          {{ inline_edit(a, "services", hide_edit_button=true) }}
         </section>
       </div>
     </div>

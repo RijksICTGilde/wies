@@ -2491,7 +2491,10 @@ def _render_inline_edit_display(
         "alert": alert,
         "saved": saved,
     }
-    return render(request, "parts/inline_edit/display.html", ctx)
+    response = render(request, "parts/inline_edit/display.html", ctx)
+    if saved:
+        response["HX-Trigger-After-Swap"] = "inline-edit-saved"
+    return response
 
 
 def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) -> HttpResponse:
