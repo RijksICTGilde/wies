@@ -11,7 +11,16 @@ from django.utils.html import format_html, json_script
 from jinja2 import Environment
 from jinja_roos_components import setup_components
 
-from wies.core.roles import is_staff_user
+from wies.core.editables import (
+    AssignmentEditables,
+    ColleagueEditables,
+    PlacementEditables,
+    ServiceEditables,
+    UserEditables,
+)
+from wies.core.inline_edit.jinja import inline_edit
+from wies.core.permission_engine import Verb, has_permission
+from wies.core.permissions import can_view_staff_page
 from wies.core.services.version import get_app_version
 
 
@@ -130,9 +139,17 @@ def environment(**options):
             "get_toggle_sort_url": get_toggle_sort_url,
             "get_sort_state": get_sort_state,
             "get_messages": get_messages,
-            "is_staff_user": is_staff_user,
+            "can_view_staff_page": can_view_staff_page,
             "DEBUG": settings.DEBUG,
             "APP_VERSION": get_app_version(),
+            "inline_edit": inline_edit,
+            "has_permission": has_permission,
+            "Verb": Verb,
+            "AssignmentEditables": AssignmentEditables,
+            "ColleagueEditables": ColleagueEditables,
+            "PlacementEditables": PlacementEditables,
+            "ServiceEditables": ServiceEditables,
+            "UserEditables": UserEditables,
         }
     )
     env.filters["datum_nl"] = datum_nl

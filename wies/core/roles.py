@@ -1,4 +1,3 @@
-from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
@@ -15,11 +14,6 @@ from wies.core.models import (
 )
 
 User = get_user_model()
-
-
-def is_staff_user(user) -> bool:
-    """Whether the given user is allowed to access /beheer/statistieken/ and /database/ (STAFF_EMAILS list)."""
-    return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
 
 
 def user_can_edit_assignment(user, assignment):

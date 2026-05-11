@@ -78,7 +78,7 @@
             </a>
           </li>
         {% endif %}
-        {% if is_staff_user(user) %}
+        {% if can_view_staff_page(user) %}
           <li class="menubar__submenu-item">
             <a href="{{ url('staff-dashboard') }}"
                class="rvo-link rvo-link--with-icon rvo-link--no-underline rvo-link--lintblauw {% if '/statistieken/' in request.path %}menu-item--active{% endif %}">

@@ -40,7 +40,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "wies.core.middleware.SecurityHeadersMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    # WhiteNoise is added in production.py only — see prod settings.
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -141,13 +141,6 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 
-STORAGES = {
-    # ...
-    "staticfiles": {
-        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-    },
-}
-
 SESSION_COOKIE_AGE = 8 * 60 * 60  # 8 hours (workday)
 
 LOGIN_URL = "login"
@@ -158,6 +151,11 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 AUTH_USER_MODEL = "rijksauth.User"
+
+# User.email uniqueness is enforced by a case-insensitive UniqueConstraint
+# (Lower("email")), not by field-level unique=True, so Django's W004 doesn't
+# apply.
+SILENCED_SYSTEM_CHECKS = ["auth.W004"]
 
 AUTH_NO_ACCESS_URL = "/geen-toegang/"
 

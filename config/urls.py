@@ -25,7 +25,6 @@ from wies.core.views import (
     PlacementListView,
     UserListView,
     assignment_create,
-    assignment_edit_attribute,
     assignment_events_partial,
     assignment_import_csv,
     client_modal,
@@ -34,6 +33,7 @@ from wies.core.views import (
     error_403,
     error_404,
     error_500,
+    inline_edit_view,
     label_admin,
     label_category_create,
     label_category_delete,
@@ -54,7 +54,6 @@ from wies.core.views import (
     user_edit,
     user_import_csv,
     user_profile,
-    user_profile_edit_attribute,
 )
 from wies.rijksauth.views import auth, login, logout
 
@@ -78,7 +77,6 @@ urlpatterns = [
     path("opdrachten/", AssignmentListView.as_view(), name="assignment-list"),
     path("opdrachten/aanmaken/", assignment_create, name="assignment-create"),
     path("opdrachten/importeren/", assignment_import_csv, name="assignment-import-csv"),
-    path("opdrachten/<int:pk>/edit/<str:attribute>/", assignment_edit_attribute, name="assignment-edit-attribute"),
     path("opdrachten/<int:pk>/events/", assignment_events_partial, name="assignment-events-partial"),
     path("beheer/", RedirectView.as_view(pattern_name="admin-users", permanent=False), name="admin"),
     path("beheer/gebruikers/", UserListView.as_view(), name="admin-users"),
@@ -97,12 +95,16 @@ urlpatterns = [
     path("beheer/statistieken/", staff_dashboard, name="staff-dashboard"),
     path("beheer/database/", staff_database, name="staff-database"),
     path("profiel/", user_profile, name="user-profile"),
-    path("profiel/bewerken/<str:attribute>/", user_profile_edit_attribute, name="user-profile-edit-attribute"),
     path("contact/", contact, name="contact"),
     path("privacy/", privacy, name="privacy"),
     path("toegankelijkheid/", toegankelijkheid, name="toegankelijkheid"),
     path("zoek-suggesties/", search_suggestions, name="search-suggestions"),
     path("client-modal/", client_modal, name="client-modal"),
+    path(
+        "inline-edit/<slug:model_label>/<int:pk>/<slug:name>/",
+        inline_edit_view,
+        name="inline-edit",
+    ),
 ]
 
 # Custom error handlers

@@ -65,7 +65,16 @@ RUN rm -rf /app/docker && \
   rm -rf /app/uv.lock && \
   rm -rf /app/temp
 
-RUN python manage.py collectstatic
+# Run collectstatic against production settings so the manifest is
+# baked into the image. Runtime env vars aren't set at build time, so
+# pass harmless placeholders; the running container supplies the real
+# values.
+RUN DJANGO_SETTINGS_MODULE=config.settings.production \
+    DJANGO_SECRET_KEY=build-time-placeholder \
+    OIDC_CLIENT_ID=build-time-placeholder \
+    OIDC_CLIENT_SECRET=build-time-placeholder \
+    OIDC_DISCOVERY_URL=https://build-time-placeholder \
+    python manage.py collectstatic --noinput
 
 # Bake the CI-provided version (immutable image tag) into the image so the
 # running app can report which build it is. Falls back to "onbekend" when

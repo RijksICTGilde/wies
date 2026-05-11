@@ -10,22 +10,35 @@ from django.contrib.auth.decorators import login_not_required, permission_requir
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
+from django.core.exceptions import ValidationError
 from django.db.models import Case, Exists, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
+from django.forms.utils import ErrorList
 from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views.generic.list import ListView
 
+from wies.core.editables import REGISTRY
+from wies.core.inline_edit.base import (
+    Editable,
+    EditableCollection,
+    EditableGroup,
+    EditableSet,
+)
+from wies.core.inline_edit.forms import (
+    _current_value,
+    build_form_class,
+    resolve_editables,
+)
+from wies.core.permission_engine import Verb, has_permission
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
     AssignmentCreateForm,
     LabelCategoryForm,
     LabelForm,
-    OrganizationFormSet,
-    ProfileLabelsForm,
     ServiceFormSet,
     UserForm,
 )
@@ -42,8 +55,8 @@ from .models import (
     Service,
     Skill,
 )
+from .permissions import can_view_staff_page
 from .querysets import annotate_placement_dates, annotate_usage_counts
-from .roles import is_staff_user, user_can_edit_assignment
 from .services.assignments import create_assignment_from_form, extract_services_data
 from .services.events import create_event
 from .services.organizations import (
@@ -239,7 +252,7 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         "close_url": _build_close_url(request),
         "assignment": assignment,
         "team_members": team_members,
-        "user_can_edit": user_can_edit_assignment(request.user, assignment),
+        "user_can_edit": has_permission(Verb.UPDATE, assignment, request.user),
         "show_updates_tab": assignment.source != "otys_iir",
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
         "owner_mailto_href": owner_mailto_href,
@@ -443,7 +456,7 @@ def no_access(request):
 
 
 def staff_required(view_func):
-    return user_passes_test(is_staff_user, login_url="/geen-toegang/")(view_func)
+    return user_passes_test(can_view_staff_page, login_url="/geen-toegang/")(view_func)
 
 
 @staff_required
@@ -1910,31 +1923,6 @@ def label_delete(request, pk):
     return HttpResponse(status=405)
 
 
-# Configuration for editable assignment fields
-EDITABLE_ASSIGNMENT_FIELDS = {
-    "name": {
-        "field_type": "text",
-        "field_name": "name",
-        "max_length": 200,
-        "required": True,
-        "label": "Opdracht naam",
-        "display_template": "parts/editable_text_field.html",
-        "form_template": "parts/editable_text_field_form.html",
-        "target_element": "assignment-name-content",
-    },
-    "extra_info": {
-        "field_type": "textarea",
-        "field_name": "extra_info",
-        "max_length": 5000,
-        "required": False,
-        "label": "Beschrijving",
-        "display_template": "parts/editable_textarea_field.html",
-        "form_template": "parts/editable_textarea_field_form.html",
-        "target_element": "assignment-extra-info-content",
-    },
-}
-
-
 def assignment_events_partial(request, pk):
     assignment = get_object_or_404(Assignment, pk=pk)
     events = (
@@ -1946,125 +1934,6 @@ def assignment_events_partial(request, pk):
         .order_by("-timestamp")[:20]
     )
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
-
-
-# Permission check is done in function body, not decorator
-def assignment_edit_attribute(request, pk, attribute):
-    """
-    Generic inline editor for assignment attributes.
-    Handles both GET (show form) and POST (save) for any configured attribute.
-    Returns a partial html page, to be used with htmx.
-
-    Args:
-        request: HttpRequest object
-        pk: Assignment primary key
-        attribute: Name of the attribute to edit (must be in EDITABLE_ASSIGNMENT_FIELDS)
-    """
-    # Validate attribute
-    if attribute not in EDITABLE_ASSIGNMENT_FIELDS:
-        return HttpResponse(status=404)
-
-    field_config = EDITABLE_ASSIGNMENT_FIELDS[attribute]
-    assignment = get_object_or_404(Assignment, pk=pk)
-
-    # Check if user is authorized: has permission OR is owner OR is assigned colleague
-    if not user_can_edit_assignment(request.user, assignment):
-        return HttpResponse(status=403)
-
-    # Build edit URL
-    edit_url = reverse("assignment-edit-attribute", kwargs={"pk": assignment.id, "attribute": attribute})
-
-    if request.method == "POST":
-        # Process form submission
-        field_name = field_config["field_name"]
-        new_value = request.POST.get(field_name, "").strip()
-
-        # Validate
-        errors = {}
-        if field_config["required"] and not new_value:
-            errors[field_name] = f"{field_config['label']} is verplicht"
-        elif field_config.get("max_length") and len(new_value) > field_config["max_length"]:
-            errors[field_name] = f"{field_config['label']} mag maximaal {field_config['max_length']} tekens bevatten"
-
-        if errors:
-            # Return form with errors
-            return render(
-                request,
-                field_config["form_template"],
-                {
-                    "target_element": field_config["target_element"],
-                    "field_name": field_name,
-                    "field_value": new_value,
-                    "edit_url": edit_url,
-                    "errors": errors,
-                },
-            )
-
-        # Save
-        old_value = getattr(assignment, field_name) or ""
-        setattr(assignment, field_name, new_value)
-        assignment.save()
-
-        # Log change event
-        if str(old_value) != str(new_value):
-            create_event(
-                object_type="Assignment",
-                action="update",
-                source="user",
-                object_id=assignment.id,
-                user=request.user,
-                context={
-                    "field_type": field_config["field_type"],
-                    "field_name": field_name,
-                    "field_label": field_config["label"],
-                    "old_value": str(old_value),
-                    "new_value": str(new_value),
-                },
-            )
-
-        # Return updated display after save
-        return render(
-            request,
-            field_config["display_template"],
-            {
-                "target_element": field_config["target_element"],
-                "field_label": field_config["label"],
-                "field_value": getattr(assignment, field_name),
-                "edit_url": edit_url,
-                "user_can_edit": True,
-            },
-        )
-
-    if request.method == "GET":
-        current_value = getattr(assignment, field_config["field_name"])
-
-        # Check if this is a cancel request
-        if request.GET.get("cancel"):
-            # Return display mode
-            return render(
-                request,
-                field_config["display_template"],
-                {
-                    "target_element": field_config["target_element"],
-                    "field_label": field_config["label"],
-                    "field_value": current_value,
-                    "edit_url": edit_url,
-                    "user_can_edit": True,
-                },
-            )
-        # Return edit form
-        return render(
-            request,
-            field_config["form_template"],
-            {
-                "target_element": field_config["target_element"],
-                "field_name": field_config["field_name"],
-                "field_value": current_value or "",
-                "edit_url": edit_url,
-            },
-        )
-
-    return HttpResponse(status=405)
 
 
 def user_profile(request):
@@ -2116,190 +1985,6 @@ def user_profile(request):
             "panel_data": panel_data,
         },
     )
-
-
-# Configuration for editable profile fields
-EDITABLE_PROFILE_FIELDS = {
-    "first_name": {
-        "field_type": "text",
-        "field_name": "first_name",
-        "max_length": 150,
-        "required": True,
-        "label": "Voornaam",
-        "display_template": "parts/editable_text_field.html",
-        "form_template": "parts/editable_text_field_form.html",
-        "target_element": "profile-first-name-content",
-    },
-    "last_name": {
-        "field_type": "text",
-        "field_name": "last_name",
-        "max_length": 150,
-        "required": True,
-        "label": "Achternaam",
-        "display_template": "parts/editable_text_field.html",
-        "form_template": "parts/editable_text_field_form.html",
-        "target_element": "profile-last-name-content",
-    },
-}
-
-
-def user_profile_edit_attribute(request, attribute):
-    """
-    Inline editor for user profile attributes.
-    Handles text fields (first_name, last_name) and label categories (labels_<category_id>).
-    """
-    user = request.user
-
-    # Handle label category editing: labels_<category_id>
-    if attribute.startswith("labels_"):
-        return _handle_label_edit(request, attribute)
-
-    # Handle text field editing
-    if attribute not in EDITABLE_PROFILE_FIELDS:
-        return HttpResponse(status=404)
-
-    field_config = EDITABLE_PROFILE_FIELDS[attribute]
-    edit_url = reverse("user-profile-edit-attribute", kwargs={"attribute": attribute})
-
-    if request.method == "POST":
-        field_name = field_config["field_name"]
-        new_value = request.POST.get(field_name, "").strip()
-
-        errors = {}
-        if field_config["required"] and not new_value:
-            errors[field_name] = f"{field_config['label']} is verplicht"
-        elif field_config.get("max_length") and len(new_value) > field_config["max_length"]:
-            errors[field_name] = f"{field_config['label']} mag maximaal {field_config['max_length']} tekens bevatten"
-
-        if errors:
-            return render(
-                request,
-                field_config["form_template"],
-                {
-                    "target_element": field_config["target_element"],
-                    "field_name": field_name,
-                    "field_value": new_value,
-                    "edit_url": edit_url,
-                    "errors": errors,
-                },
-            )
-
-        # Save to User
-        setattr(user, field_name, new_value)
-        user.save(update_fields=[field_name])
-
-        # Sync name to Colleague
-        colleague, _ = Colleague.objects.get_or_create(
-            user=user, defaults={"name": f"{user.first_name} {user.last_name}", "email": user.email, "source": "wies"}
-        )
-        colleague.name = f"{user.first_name} {user.last_name}"
-        colleague.save(update_fields=["name"])
-
-        return render(
-            request,
-            field_config["display_template"],
-            {
-                "target_element": field_config["target_element"],
-                "field_label": field_config["label"],
-                "field_value": getattr(user, field_name),
-                "edit_url": edit_url,
-                "user_can_edit": True,
-            },
-        )
-
-    if request.method == "GET":
-        current_value = getattr(user, field_config["field_name"])
-
-        if request.GET.get("cancel"):
-            return render(
-                request,
-                field_config["display_template"],
-                {
-                    "target_element": field_config["target_element"],
-                    "field_label": field_config["label"],
-                    "field_value": current_value,
-                    "edit_url": edit_url,
-                    "user_can_edit": True,
-                },
-            )
-        return render(
-            request,
-            field_config["form_template"],
-            {
-                "target_element": field_config["target_element"],
-                "field_name": field_config["field_name"],
-                "field_value": current_value or "",
-                "edit_url": edit_url,
-            },
-        )
-
-    return HttpResponse(status=405)
-
-
-def _handle_label_edit(request, attribute):
-    """Handle inline label editing for a specific category."""
-    try:
-        category_id = int(attribute.split("_", 1)[1])
-    except ValueError, IndexError:
-        return HttpResponse(status=404)
-
-    category = get_object_or_404(LabelCategory, pk=category_id)
-    user = request.user
-
-    colleague, _ = Colleague.objects.get_or_create(
-        user=user, defaults={"name": f"{user.first_name} {user.last_name}", "email": user.email, "source": "wies"}
-    )
-
-    edit_url = reverse("user-profile-edit-attribute", kwargs={"attribute": attribute})
-    target_element = f"profile-labels-{category_id}-content"
-
-    if request.method == "POST":
-        form = ProfileLabelsForm(request.POST, category=category)
-        if form.is_valid():
-            selected_labels = form.cleaned_data["labels"]
-            colleague.labels.remove(*colleague.labels.filter(category=category))
-            colleague.labels.add(*selected_labels)
-
-        updated_labels = list(colleague.labels.filter(category=category).order_by("name"))
-        return render(
-            request,
-            "parts/editable_labels_field.html",
-            {
-                "category": category,
-                "labels": updated_labels,
-                "edit_url": edit_url,
-                "target_element": target_element,
-            },
-        )
-
-    if request.method == "GET":
-        selected_labels = list(colleague.labels.filter(category=category).order_by("name"))
-
-        if request.GET.get("cancel"):
-            return render(
-                request,
-                "parts/editable_labels_field.html",
-                {
-                    "category": category,
-                    "labels": selected_labels,
-                    "edit_url": edit_url,
-                    "target_element": target_element,
-                },
-            )
-
-        selected_ids = [label.pk for label in selected_labels]
-        form = ProfileLabelsForm(category=category, initial={"labels": selected_ids})
-        return render(
-            request,
-            "parts/editable_labels_field_form.html",
-            {
-                "form": form,
-                "edit_url": edit_url,
-                "target_element": target_element,
-            },
-        )
-
-    return HttpResponse(status=405)
 
 
 @login_not_required
@@ -2400,13 +2085,11 @@ def assignment_create(request):
             initial["owner"] = request.user.colleague
         form = AssignmentCreateForm(initial=initial)
         service_formset = ServiceFormSet(prefix="service", form_kwargs={"skill_choices": skill_choices})
-        org_formset = OrganizationFormSet(prefix="org")
-        return render(request, template, {"form": form, "service_formset": service_formset, "org_formset": org_formset})
+        return render(request, template, {"form": form, "service_formset": service_formset})
 
     if request.method == "POST":
         form = AssignmentCreateForm(request.POST)
         service_formset = ServiceFormSet(request.POST, prefix="service", form_kwargs={"skill_choices": skill_choices})
-        org_formset = OrganizationFormSet(request.POST, prefix="org")
 
         # Check if at least one service has a skill selected (works even when formset is invalid)
         total_forms = min(int(request.POST.get("service-TOTAL_FORMS", 0)), 100)
@@ -2415,19 +2098,16 @@ def assignment_create(request):
 
         form_valid = form.is_valid()
         formset_valid = service_formset.is_valid()
-        org_formset_valid = org_formset.is_valid()
 
-        if not form_valid or not formset_valid or not org_formset_valid or services_error:
+        if not form_valid or not formset_valid or services_error:
             if services_error:
                 form.add_error(None, services_error)
-            return render(
-                request, template, {"form": form, "service_formset": service_formset, "org_formset": org_formset}
-            )
+            return render(request, template, {"form": form, "service_formset": service_formset})
 
         services_data = extract_services_data(service_formset)
-        org_data = [f.cleaned_data for f in org_formset if f.cleaned_data]
-        primary_org = next(o["organization"] for o in org_data if o["role"] == "PRIMARY")
-        involved_orgs = [o["organization"] for o in org_data if o["role"] == "INVOLVED"]
+        orgs = form.cleaned_data["organizations"]
+        primary_org = next(o["organization"] for o in orgs if o["role"] == "PRIMARY")
+        involved_orgs = [o["organization"] for o in orgs if o["role"] == "INVOLVED"]
 
         assignment = create_assignment_from_form(
             name=form.cleaned_data["name"],
@@ -2438,6 +2118,15 @@ def assignment_create(request):
             primary_organization_id=primary_org.id,
             involved_organization_ids=[o.id for o in involved_orgs],
             services_data=services_data,
+        )
+
+        create_event(
+            object_type="Assignment",
+            action="create",
+            source="user",
+            object_id=assignment.id,
+            user=request.user,
+            context={"name": assignment.name},
         )
 
         link_url = f"{reverse('assignment-list')}?opdracht={assignment.id}"
@@ -2629,3 +2318,279 @@ def client_modal(request):
         template,
         {"hierarchy": hierarchy, "current_selections": current_selections},
     )
+
+
+# ---------------------------------------------------------------------------
+# Inline-edit view (generic HTMX endpoint).
+# See ``features/inline-editing.md`` for the full contract.
+# ---------------------------------------------------------------------------
+
+
+def _spec_label(editable_set: type[EditableSet], spec: Editable | EditableGroup | EditableCollection) -> str:
+    # Editable: explicit label → model field's verbose_name → attr name. Groups/Collections always carry a label.
+    if isinstance(spec, EditableGroup | EditableCollection):
+        return spec.label
+    if spec.label:
+        return spec.label
+    if spec.model is not None and spec.field is not None:
+        try:
+            return spec.model._meta.get_field(spec.field).verbose_name
+        except Exception:  # noqa: BLE001
+            return spec.name or spec.field or ""
+    return spec.name or ""
+
+
+PERMISSION_DENIED_ALERT = {
+    "kind": "warning",
+    "message": "Je hebt geen rechten om dit veld te bewerken.",
+}
+
+
+def _permission_denied(
+    editable_set: type[EditableSet],
+    spec: Editable | EditableGroup | EditableCollection,
+    user,
+    obj,
+) -> dict | None:
+    """Return the denial alert when the user can't UPDATE this field; None when allowed.
+
+    Permission lookup goes through the registry in
+    ``wies.core.permissions``. Field-level rules win over the
+    whole-object rule for the same model.
+    """
+    if not has_permission(Verb.UPDATE, obj, user, spec):
+        return PERMISSION_DENIED_ALERT
+    return None
+
+
+def _resolve_display(obj, spec, editables) -> dict:
+    # Returns {"template": path} to include a partial or {"text": str} for plain rendering.
+    if spec.display is None:
+        if isinstance(spec, EditableCollection):
+            # Collections without an explicit display fall back to a
+            # newline-joined string of the initial row dicts — rarely
+            # useful, so collections are expected to declare display.
+            return {"text": str(spec.initial(obj))}
+        if isinstance(spec, EditableGroup):
+            # No explicit group display — render each member's value.
+            parts = []
+            for e in editables:
+                v = _current_value(obj, e)
+                parts.append("" if v is None else str(v))
+            return {"text": " · ".join(p for p in parts if p)}
+        value = _current_value(obj, spec)
+        return {"text": "" if value is None else str(value)}
+
+    if callable(spec.display):
+        return {"text": str(spec.display(obj))}
+
+    if isinstance(spec.display, str) and spec.display.endswith(".html"):
+        return {"template": spec.display}
+    return {"text": str(spec.display)}
+
+
+def _inline_edit_base_ctx(editable_set, spec, obj) -> dict:
+    # Shared context for display/form/collection-form renders — target id, URL, label, obj, spec.
+    model_label = editable_set.model._meta.model_name
+    return {
+        "target": f"inline-edit-{model_label}-{obj.pk}-{spec.name}",
+        "edit_url": reverse("inline-edit", args=[model_label, obj.pk, spec.name]),
+        "label": _spec_label(editable_set, spec),
+        "obj": obj,
+        "editable": spec,
+    }
+
+
+def _render_inline_edit_display(
+    request,
+    editable_set,
+    spec,
+    editables,
+    obj,
+    *,
+    alert: dict | None = None,
+    user_can_edit: bool | None = None,
+    saved: bool = False,
+) -> HttpResponse:
+    # `saved=True` triggers the pencil→check flash; `alert` carries a denial warning.
+    # On denial, skip the value/display resolution — it can be heavy (e.g. the
+    # services collection does a per-row Placement query) and the partial
+    # gracefully handles an empty value with the alert banner.
+    if alert is not None:
+        display: dict = {"text": ""}
+        value: object = None
+    else:
+        display = _resolve_display(obj, spec, editables)
+        if isinstance(spec, EditableCollection):
+            value = spec.initial(obj)
+        elif isinstance(spec, Editable):
+            value = _current_value(obj, spec)
+        else:
+            value = {e.field or e.name: _current_value(obj, e) for e in editables}
+    ctx = {
+        **_inline_edit_base_ctx(editable_set, spec, obj),
+        "value": value,
+        "display": display,
+        "user_can_edit": (
+            user_can_edit if user_can_edit is not None else has_permission(Verb.UPDATE, obj, request.user, spec)
+        ),
+        "alert": alert,
+        "saved": saved,
+    }
+    return render(request, "parts/inline_edit/display.html", ctx)
+
+
+def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) -> HttpResponse:
+    # Edit-mode partial: form + save/cancel. On validation failure, `form` carries inline errors.
+    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "form": form}
+    return render(request, "parts/inline_edit/form.html", ctx)
+
+
+def _render_inline_edit_collection_form(request, editable_set, spec, obj, formset) -> HttpResponse:
+    # Inner body from spec.form_template; receives the formset as `formset`.
+    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "formset": formset}
+    return render(request, "parts/inline_edit/collection_form.html", ctx)
+
+
+def _attach_formset_error(formset, message: str) -> None:
+    # FormSets lack a public API for this; _non_form_errors is the documented workaround
+    # (is_valid() uses the same internal path when clean() raises).
+    existing = list(formset.non_form_errors()) if hasattr(formset, "_non_form_errors") else []
+    formset._non_form_errors = ErrorList([*existing, message])
+
+
+def _handle_inline_edit_collection(request, editable_set, spec: EditableCollection, obj) -> HttpResponse:
+    # FormSet equivalent of the Editable/Group path in inline_edit_view.
+    if request.method == "POST":
+        formset = spec.formset_factory(data=request.POST)
+        if formset.is_valid():
+            try:
+                spec.save(obj, formset)
+            except ValidationError as exc:
+                for message in exc.messages:
+                    _attach_formset_error(formset, message)
+                return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
+            return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj, saved=True)
+        return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
+
+    if request.GET.get("cancel"):
+        return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
+    if request.GET.get("edit"):
+        formset = spec.formset_factory(initial=spec.initial(obj))
+        return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
+    return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
+
+
+_AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "OrganizationUnit": "OrganizationUnit"}
+
+
+def _emit_inline_edit_audit_event(spec, obj, old_value, new_value, user) -> None:
+    """Record an audit event for a single-Editable change on a tracked model.
+
+    Only fires for `Editable` (not Group/Collection) on models in
+    `_AUDIT_OBJECT_TYPES`. No-op when old == new so editing without a
+    real change doesn't create noise.
+    """
+    if not isinstance(spec, Editable):
+        return
+    object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
+    if object_type is None:
+        return
+    if str(old_value or "") == str(new_value or ""):
+        return
+    from django import forms  # noqa: PLC0415
+
+    widget = spec.widget
+    is_textarea = isinstance(widget, forms.Textarea) or (
+        isinstance(widget, type) and issubclass(widget, forms.Textarea)
+    )
+    create_event(
+        object_type=object_type,
+        action="update",
+        source="user",
+        object_id=obj.id,
+        user=user,
+        context={
+            "field_type": "textarea" if is_textarea else "text",
+            "field_name": spec.field or spec.name or "",
+            "field_label": spec.label or spec.name or "",
+            "old_value": str(old_value or ""),
+            "new_value": str(new_value or ""),
+        },
+    )
+
+
+def inline_edit_view(request, model_label, pk, name):
+    """Generic HTMX endpoint. See ``features/inline-editing.md`` for the full contract."""
+    editable_set = REGISTRY.get(model_label)
+    if editable_set is None:
+        raise Http404("Unknown model")
+    spec = editable_set._editables.get(name) or editable_set.resolve_dynamic(name)
+    if spec is None:
+        raise Http404("Unknown editable")
+
+    obj = get_object_or_404(editable_set.model, pk=pk)
+
+    # Permission ladder — denial always returns display partial with alert.
+    denial = _permission_denied(editable_set, spec, request.user, obj)
+    if denial:
+        editables_for_display: list[Editable] = (
+            [] if isinstance(spec, EditableCollection) else resolve_editables(editable_set, spec)
+        )
+        return _render_inline_edit_display(
+            request,
+            editable_set,
+            spec,
+            editables_for_display,
+            obj,
+            alert=denial,
+            user_can_edit=False,
+        )
+
+    if isinstance(spec, EditableCollection):
+        return _handle_inline_edit_collection(request, editable_set, spec, obj)
+
+    editables = resolve_editables(editable_set, spec)
+
+    # Import here to avoid circulars at module load time.
+    from wies.core.inline_edit.forms import save_spec  # noqa: PLC0415
+
+    if request.method == "POST":
+        form_cls, _ = build_form_class(
+            editables,
+            obj=obj,
+            group_clean=getattr(spec, "clean", None),
+        )
+        form = form_cls(request.POST)
+        if form.is_valid():
+            old_value = _current_value(obj, spec) if isinstance(spec, Editable) else None
+            save_spec(spec, editables, form.cleaned_data, obj)
+            new_value = _current_value(obj, spec) if isinstance(spec, Editable) else None
+            _emit_inline_edit_audit_event(spec, obj, old_value, new_value, request.user)
+            return _render_inline_edit_display(
+                request,
+                editable_set,
+                spec,
+                editables,
+                obj,
+                saved=True,
+            )
+        return _render_inline_edit_form(request, editable_set, spec, editables, obj, form)
+
+    if request.GET.get("cancel"):
+        return _render_inline_edit_display(request, editable_set, spec, editables, obj)
+    if request.GET.get("edit"):
+        form_cls, initial = build_form_class(
+            editables,
+            obj=obj,
+            group_clean=getattr(spec, "clean", None),
+        )
+        return _render_inline_edit_form(
+            request,
+            editable_set,
+            spec,
+            editables,
+            obj,
+            form_cls(initial=initial),
+        )
+    return _render_inline_edit_display(request, editable_set, spec, editables, obj)

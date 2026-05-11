@@ -19,9 +19,8 @@ class AuthBackend(BaseBackend):
             msg = "email is required"
             raise ValueError(msg)
 
-        try:
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
+        user = User.objects.filter(email__iexact=email).first()
+        if user is None:
             logger.info("User not authenticated, user not known.")
             create_auth_event(
                 email,

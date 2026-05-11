@@ -42,16 +42,6 @@ CACHES = {
 # ----------------------------------------------------------------------------------------------------------------------
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
-# STATIC FILES
-# ----------------------------------------------------------------------------------------------------------------------
-# Disable WhiteNoise middleware and storage to avoid warnings about missing staticfiles directory
-MIDDLEWARE = [m for m in MIDDLEWARE if m != "whitenoise.middleware.WhiteNoiseMiddleware"]  # noqa: F405
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
-
 # LOGGING
 # ----------------------------------------------------------------------------------------------------------------------
 # Reduce logging noise during tests
