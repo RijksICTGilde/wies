@@ -2486,9 +2486,7 @@ def _render_inline_edit_display(
         "value": value,
         "display": display,
         "user_can_edit": (
-            user_can_edit
-            if user_can_edit is not None
-            else _permission_denied(editable_set, spec, request.user, obj) is None
+            user_can_edit if user_can_edit is not None else has_permission(Verb.UPDATE, obj, request.user, spec)
         ),
         "alert": alert,
         "saved": saved,
