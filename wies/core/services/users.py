@@ -232,10 +232,11 @@ def create_users_from_csv(creator, csv_content: str):
                     row_errors.append(f"Row {row_num}: {group_name} must be 'y' or 'n', got '{row[group_name]}'")
 
         if email:
-            if email in emails_found:
+            email_key = email.lower()
+            if email_key in emails_found:
                 row_errors.append(f"Row {row_num}: duplicate email '{email}' in CSV")
             else:
-                emails_found.add(email)
+                emails_found.add(email_key)
 
         if row_errors:
             errors.extend(row_errors)
