@@ -39,7 +39,7 @@ class StaffDestructiveActionsGuardTest(TestCase):
 
     @override_settings(ENABLE_DESTRUCTIVE_STAFF_ACTIONS=False)
     def test_clear_data_post_returns_403_and_does_not_delete(self):
-        Assignment.objects.create(name="Should survive", source="manual")
+        Assignment.objects.create(name="Should survive", source="wies")
 
         response = self.client.post("/beheer/database/", {"action": "clear_data"})
 
