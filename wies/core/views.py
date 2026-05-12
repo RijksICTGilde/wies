@@ -14,7 +14,7 @@ from django.core.exceptions import ValidationError
 from django.db.models import Case, Exists, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
-from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
+from django.http import Http404, HttpResponse, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -477,7 +477,7 @@ def staff_database(request):
         action = request.POST.get("action")
         if action == "clear_data":
             if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
-                return HttpResponseForbidden("Destructive staff actions are disabled in this environment.")
+                return HttpResponse(status=405)
             # not using flush, since that would clear users
             Assignment.objects.all().delete()
             Colleague.objects.all().delete()
@@ -491,7 +491,7 @@ def staff_database(request):
             OrganizationType.objects.all().delete()
         elif action == "load_base_data":
             if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
-                return HttpResponseForbidden("Destructive staff actions are disabled in this environment.")
+                return HttpResponse(status=405)
             management.call_command("loaddata", "base_dummy_data.json")
             messages.success(request, "Data geladen uit base_dummy_data.json")
         elif action == "sync_organizations":

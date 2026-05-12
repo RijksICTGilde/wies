@@ -38,23 +38,23 @@ class StaffDestructiveActionsGuardTest(TestCase):
         assert "Organisaties synchroniseren" in body
 
     @override_settings(ENABLE_DESTRUCTIVE_STAFF_ACTIONS=False)
-    def test_clear_data_post_returns_403_and_does_not_delete(self):
+    def test_clear_data_post_returns_405_and_does_not_delete(self):
         Assignment.objects.create(name="Should survive", source="wies")
 
         response = self.client.post("/beheer/database/", {"action": "clear_data"})
 
-        assert response.status_code == 403
+        assert response.status_code == 405
         assert Assignment.objects.filter(name="Should survive").exists()
 
     @override_settings(ENABLE_DESTRUCTIVE_STAFF_ACTIONS=False)
-    def test_load_base_data_post_returns_403(self):
+    def test_load_base_data_post_returns_405(self):
         response = self.client.post("/beheer/database/", {"action": "load_base_data"})
 
-        assert response.status_code == 403
+        assert response.status_code == 405
 
     @override_settings(ENABLE_DESTRUCTIVE_STAFF_ACTIONS=False)
     def test_sync_organizations_post_still_works(self):
         # Non-destructive action must not be blocked by the guard.
         response = self.client.post("/beheer/database/", {"action": "sync_organizations"}, follow=False)
 
-        assert response.status_code != 403
+        assert response.status_code != 405
