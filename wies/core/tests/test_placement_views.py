@@ -194,6 +194,32 @@ Test Assignment,Test Description,John Owner,john@rijksoverheid.nl,,01-01-2024,31
         # Verify the service function was called
         mock_create_placements.assert_called_once()
 
+    @patch("wies.core.views.create_assignments_from_csv")
+    def test_import_strips_utf8_bom(self, mock_create_placements):
+        """Test that a UTF-8 BOM at the start of the file is stripped before parsing"""
+        mock_create_placements.return_value = {
+            "success": True,
+            "colleagues_created": 0,
+            "assignments_created": 0,
+            "services_created": 0,
+            "skills_created": 0,
+            "placements_created": 0,
+            "errors": [],
+        }
+
+        self.client.force_login(self.auth_user)
+        csv_content = "assignment_name,assignment_description\nTest,Desc"
+        csv_file = SimpleUploadedFile(
+            "placements.csv", b"\xef\xbb\xbf" + csv_content.encode("utf-8"), content_type="text/csv"
+        )
+
+        response = self.client.post(self.import_url, {"csv_file": csv_file})
+
+        assert response.status_code == 200
+        mock_create_placements.assert_called_once()
+        passed_content = mock_create_placements.call_args[0][1]
+        assert passed_content.startswith("assignment_name")
+
 
 class PlacementListHistoricalFilterTest(TestCase):
     """Tests for historical placement filtering in PlacementListView"""

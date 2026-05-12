@@ -670,6 +670,41 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         assert jane.groups.filter(name="Consultant").exists()
         assert not jane.groups.filter(name="Beheerder").exists()
 
+    def test_import_accepts_semicolon_delimiter(self):
+        """Test that import accepts CSV files using `;` as the delimiter (Excel default on many locales)"""
+        self.client.force_login(self.auth_user)
+        csv_content = (
+            "first_name;last_name;email;brand;Beheerder;Consultant;BDM\n"
+            "John;Doe;john.doe@rijksoverheid.nl;Brand A;y;n;n\n"
+            "Jane;Smith;jane.smith@rijksoverheid.nl;Brand B;n;y;n"
+        )
+        csv_file = self._create_csv_file(csv_content)
+
+        response = self.client.post(self.import_url, {"csv_file": csv_file})
+
+        assert response.status_code == 200
+        assert "Import geslaagd" in response.content.decode()
+        assert User.objects.filter(email="john.doe@rijksoverheid.nl").exists()
+        assert User.objects.filter(email="jane.smith@rijksoverheid.nl").exists()
+
+    def test_import_accepts_utf8_bom(self):
+        """Test that import accepts CSV files saved with a UTF-8 BOM (Excel on Windows)"""
+        self.client.force_login(self.auth_user)
+        csv_content = (
+            "first_name,last_name,email,brand,Beheerder,Consultant,BDM\n"
+            "John,Doe,john.doe@rijksoverheid.nl,Brand A,y,n,n"
+        )
+        csv_file = SimpleUploadedFile(
+            "users.csv", b"\xef\xbb\xbf" + csv_content.encode("utf-8"), content_type="text/csv"
+        )
+
+        response = self.client.post(self.import_url, {"csv_file": csv_file})
+
+        assert response.status_code == 200
+        assert "Import geslaagd" in response.content.decode()
+        john = User.objects.get(email="john.doe@rijksoverheid.nl")
+        assert john.first_name == "John"
+
     def test_import_reuses_existing_labels(self):
         """Test that import reuses existing labels instead of creating duplicates"""
         self.client.force_login(self.auth_user)
