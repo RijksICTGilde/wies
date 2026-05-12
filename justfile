@@ -81,7 +81,7 @@ test target="all":
 
 # Run Django tests
 test-django:
-  docker compose run --rm django uv run pytest
+  docker compose run --rm django uv run --active pytest
 
 # Run JavaScript tests
 test-js:

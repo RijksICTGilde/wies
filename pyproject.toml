@@ -23,6 +23,8 @@ dev = [
   "pytest-django>=4.9",
   "pytest-cov>=6.0",
   "coverage[toml]>=7.13.5",
+  "playwright>=1.50.0",
+  "pytest-playwright>=0.7.0",
 ]
 
 [tool.setuptools]
