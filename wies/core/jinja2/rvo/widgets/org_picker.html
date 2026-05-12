@@ -1,0 +1,51 @@
+{# Widget template for OrgPickerWidget.
+
+  Renders the raw data only — trigger button, hidden formset inputs
+  (each carrying `data-org-name` so the JS can build labels), and the
+  modal mount point. The visible selection UI (table with radios +
+  remove buttons, trigger text) is rendered by assignment_org_tree.js
+  on page load, HTMX swap, and after a modal apply — one code path,
+  no server/client divergence.
+
+  Only one instance per page (the JS hard-codes element IDs). #}
+{% set selections = widget.selections %}
+{% set prefix = widget.prefix %}
+<div class="utrecht-form-field rvo-form-field" id="assignment-org-picker">
+  <button type="button"
+          class="org-filter-trigger"
+          id="assignment-org-trigger-btn"
+          hx-get="{{ url("client-modal") }}?count_mode=none"
+          hx-target="#assignmentOrgModal"
+          hx-swap="innerHTML"
+          hx-params="none"
+          hx-push-url="false">
+    <span class="org-filter-trigger__text" id="assignment-org-trigger-text"></span>
+  </button>
+  <div id="assignment-org-selections" class="assignment-org-selections"></div>
+  <div id="assignment-org-inputs">
+    {% if selections %}
+      <input type="hidden"
+             name="{{ prefix }}-TOTAL_FORMS"
+             value="{{ selections|length }}">
+      <input type="hidden" name="{{ prefix }}-INITIAL_FORMS" value="0">
+      <input type="hidden" name="{{ prefix }}-MIN_NUM_FORMS" value="1">
+      <input type="hidden" name="{{ prefix }}-MAX_NUM_FORMS" value="1000">
+      {% for row in selections %}
+        {% set org_id = row.organization.id if row.organization.id is defined else row.organization %}
+        {% set org_name = row.organization.name if row.organization.name is defined else '' %}
+        <input type="hidden"
+               name="{{ prefix }}-{{ loop.index0 }}-organization"
+               value="{{ org_id }}"
+               data-org-id="{{ org_id }}"
+               data-org-name="{{ org_name }}"
+               data-org-role="{{ row.role }}">
+        <input type="hidden"
+               name="{{ prefix }}-{{ loop.index0 }}-role"
+               value="{{ row.role }}">
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+{# Modal target — assignment_org_tree.js loads the tree picker into
+  this div via HTMX on trigger click. #}
+<div id="assignmentOrgModal"></div>

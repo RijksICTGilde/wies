@@ -257,6 +257,27 @@ dialog#side_panel::backdrop {
   flex-shrink: 0;
 }
 
+/* Team row: clickable link on top, per-service inline-edit block below. */
+.service-row {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--rvo-space-2xs);
+}
+
+.service-row__link {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+}
+
+.service-row__description {
+  padding-left: calc(
+    32px + 0.75rem
+  ); /* align with content column (avatar + gap) */
+}
+
 /* Reusable: icon + text inline (org name, date, etc.) */
 .icon-text-inline {
   display: inline-flex;
@@ -311,9 +332,12 @@ dialog#side_panel::backdrop {
   position: relative;
 }
 
-.editable-field-display > span:first-child,
-.editable-field-display > div:first-child {
+.editable-field-display__value {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rvo-space-2xs);
+  min-width: 0;
 }
 
 .edit-icon-button {
@@ -328,6 +352,7 @@ dialog#side_panel::backdrop {
   color: var(--rvo-color-hemelblauw);
   transition: color 0.2s ease;
   flex-shrink: 0;
+  position: relative;
 }
 
 .edit-icon-button:hover {
@@ -337,6 +362,74 @@ dialog#side_panel::backdrop {
 .edit-icon-button:focus {
   outline: 2px solid var(--rvo-color-focus);
   outline-offset: 2px;
+}
+
+/* Initial summary of selected organizations in the picker widget. */
+.assignment-org-summary {
+  list-style: none;
+  padding: 0;
+  margin: var(--rvo-space-xs) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rvo-space-2xs);
+}
+
+/* Post-save flash: the pencil is briefly replaced by a green check
+   overlaid on top, which fades back to the pencil. Pure CSS — the
+   server re-renders the partial with the `--just-saved` modifier and
+   the animation runs once client-side. */
+.edit-icon-button__check {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rvo-color-grasgroen, #39870c);
+  font-weight: bold;
+  font-size: 1.1em;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.edit-icon-button--just-saved .edit-icon-button__pencil {
+  animation: inline-edit-pencil-return 1.6s ease-out forwards;
+}
+
+.edit-icon-button--just-saved .edit-icon-button__check {
+  animation: inline-edit-check-flash 1.6s ease-out forwards;
+}
+
+@keyframes inline-edit-check-flash {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  15% {
+    opacity: 1;
+    transform: scale(1.25);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+
+@keyframes inline-edit-pencil-return {
+  0%,
+  70% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .field-actions {
@@ -371,8 +464,11 @@ dialog#side_panel::backdrop {
   white-space: pre-wrap;
 }
 
-/* Show more toggle - consistent with checkbox_filter__toggle */
-.show-more-toggle {
+/* Show more toggle - consistent with checkbox_filter__toggle.
+   Used by both the legacy `.show-more-toggle` callers and the
+   inline-edit display partials (`.inline-edit-show-more`). */
+.show-more-toggle,
+.inline-edit-show-more {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -385,17 +481,20 @@ dialog#side_panel::backdrop {
   font-size: var(--rvo-font-size-sm);
 }
 
-.show-more-toggle:hover {
+.show-more-toggle:hover,
+.inline-edit-show-more:hover {
   color: var(--rvo-color-donkerblauw);
   text-decoration: underline;
 }
 
-.show-more-toggle:focus {
+.show-more-toggle:focus,
+.inline-edit-show-more:focus {
   outline: 2px solid var(--rvo-color-focus);
   outline-offset: 2px;
 }
 
-.show-more-toggle__icon {
+.show-more-toggle__icon,
+.inline-edit-show-more__icon {
   font-weight: bold;
   font-size: 1em;
 }
@@ -473,4 +572,29 @@ dialog#side_panel::backdrop {
 /* Tabs panel spacing inside side panel */
 .rvo-dialog .rvo-tabs__panel {
   padding-block: var(--rvo-space-md) 0;
+}
+
+/* Remove bottom border on active tab to blend with content */
+.rvo-dialog .rvo-tabs__tab--active {
+  border-bottom-color: transparent;
+}
+
+/* Long-text wrapper for inline-edit display partials.
+   `flex: 1` keeps the wrapper expanding next to the pencil button;
+   the inner truncated/full spans use `white-space: pre-wrap` so user
+   line breaks survive. Visibility is toggled via the `hidden` HTML
+   attribute (managed by inline_edit.js) — no JS-driven inline styles. */
+.inline-edit-long-text {
+  flex: 1;
+}
+
+.inline-edit-long-text__truncated,
+.inline-edit-long-text__full {
+  white-space: pre-wrap;
+  display: block;
+}
+
+.inline-edit-long-text__truncated[hidden],
+.inline-edit-long-text__full[hidden] {
+  display: none;
 }

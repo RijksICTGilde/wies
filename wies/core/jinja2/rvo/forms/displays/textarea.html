@@ -1,0 +1,21 @@
+{# Truncates text >300 chars OR >5 lines. Toggle in inline_edit.js. #}
+{% if value %}
+  {% set lines = value.splitlines() %}
+  {% set too_many_chars = value|length > 300 %}
+  {% set too_many_lines = lines|length > 5 %}
+  {% if too_many_chars or too_many_lines %}
+    {% set truncated = lines[:5]|join('\n') if too_many_lines else value[:300] %}
+    <span class="inline-edit-long-text">
+      <span class="inline-edit-long-text__truncated">{{ truncated }}…</span>
+      <span class="inline-edit-long-text__full" hidden>{{ value }}</span>
+      <button type="button" class="inline-edit-show-more">
+        <span class="inline-edit-show-more__icon">+</span>
+        <span class="inline-edit-show-more__label">Toon meer</span>
+      </button>
+    </span>
+  {% else %}
+    <span class="inline-edit-long-text__truncated">{{ value }}</span>
+  {% endif %}
+{% else %}
+  <span class="rvo-text--italic rvo-text--subtle">Niet ingevuld</span>
+{% endif %}
