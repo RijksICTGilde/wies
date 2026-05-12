@@ -137,9 +137,8 @@ def create_assignments_from_csv(creator, csv_content: str):
                 assignment_owner_email = row["assignment_owner_email"]
                 if assignment_owner_email != "":
                     validate_email(assignment_owner_email)
-                    if Colleague.objects.filter(email=assignment_owner_email).exists():
-                        owner = Colleague.objects.get(email=assignment_owner_email)
-                    else:
+                    owner = Colleague.objects.filter(email__iexact=assignment_owner_email).order_by("id").first()
+                    if owner is None:
                         owner = Colleague.objects.create(
                             name=row["assignment_owner"],
                             email=assignment_owner_email,
@@ -221,9 +220,8 @@ def create_assignments_from_csv(creator, csv_content: str):
                 colleague_email = (row["placement_colleague_email"] or "").strip()
                 if colleague_email:
                     validate_email(colleague_email)
-                    if Colleague.objects.filter(email=colleague_email).exists():
-                        colleague = Colleague.objects.get(email=colleague_email)
-                    else:
+                    colleague = Colleague.objects.filter(email__iexact=colleague_email).order_by("id").first()
+                    if colleague is None:
                         colleague = Colleague.objects.create(
                             name=row["placement_colleague_name"],
                             email=colleague_email,

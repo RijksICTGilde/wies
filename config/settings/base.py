@@ -152,6 +152,11 @@ AUTHENTICATION_BACKENDS = [
 
 AUTH_USER_MODEL = "rijksauth.User"
 
+# User.email uniqueness is enforced by a case-insensitive UniqueConstraint
+# (Lower("email")), not by field-level unique=True, so Django's W004 doesn't
+# apply.
+SILENCED_SYSTEM_CHECKS = ["auth.W004"]
+
 AUTH_NO_ACCESS_URL = "/geen-toegang/"
 
 # Allowed email domains for ODI users
