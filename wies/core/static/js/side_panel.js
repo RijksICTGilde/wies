@@ -102,10 +102,11 @@ document.addEventListener("htmx:afterSettle", function (event) {
   }
 });
 
-// Backdrop click → close
+// Backdrop click → close (unless an inline-edit form is open)
 document.addEventListener("click", function (e) {
   const panel = document.getElementById("side_panel");
   if (panel && panel.open && e.target === panel) {
+    if (panel.querySelector("form[hx-post]")) return;
     closeSidePanel();
   }
 });

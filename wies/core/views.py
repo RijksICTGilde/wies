@@ -2148,7 +2148,7 @@ def assignment_create(request):
         # Check if at least one service has a skill selected (works even when formset is invalid)
         total_forms = min(int(request.POST.get("service-TOTAL_FORMS", 0)), 100)
         has_any_service = any(request.POST.get(f"service-{i}-skill") for i in range(total_forms))
-        services_error = "" if has_any_service else "Voeg minimaal één dienst toe."
+        services_error = "" if has_any_service else "Voeg minimaal één rol toe."
 
         form_valid = form.is_valid()
         formset_valid = service_formset.is_valid()

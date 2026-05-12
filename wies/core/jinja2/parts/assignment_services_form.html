@@ -9,7 +9,7 @@
        surfaces alongside formset-level errors.
 #}
 <p class="rvo-text--sm">
-  Vul je een consultant in? Dan is de dienst direct bezet. Laat je het veld leeg, dan wordt de dienst als vacature geplaatst.
+  Voeg één of meer rollen toe. Is de consultant al bekend? Vink dan "Consultant bekend" aan om deze direct te koppelen.
 </p>
 {{ formset.management_form }}
 {% set _extra_errors = extra_errors if extra_errors is defined else [] %}
@@ -34,6 +34,6 @@
         class="rvo-button rvo-button--tertiary rvo-button--size-sm rvo-button--icon-before">
   <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before"
         role="img"
-        aria-label="Dienst toevoegen"></span>
-  Dienst toevoegen
+        aria-label="Rol toevoegen"></span>
+  Rol toevoegen
 </button>
