@@ -10,7 +10,12 @@
 {% endif %}
 {% if user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
   {% set menu_items = menu_items + [
-      {"label": "Instellingen", "link": url('admin-users'), "icon": "instellingen", "active": '/instellingen/' in request.path, "align": "right"},
+      {"label": "Beheer", "link": url('admin-users'), "icon": "instellingen", "active": '/beheer/' in request.path, "align": "right"},
+    ] %}
+{% endif %}
+{% if can_view_staff_page(user) %}
+  {% set menu_items = menu_items + [
+      {"label": "Statistieken", "link": url('staff-dashboard'), "icon": "grafiek", "active": '/statistieken/' in request.path, "align": "right"},
     ] %}
 {% endif %}
 <div class="menubar">

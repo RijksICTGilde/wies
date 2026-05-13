@@ -9,6 +9,8 @@ at startup.
 
 from __future__ import annotations
 
+from django.conf import settings
+
 from wies.core.editables import (
     AssignmentEditables,
     ServiceEditables,
@@ -54,6 +56,11 @@ def _is_placed_on_service(user, service) -> bool:
     if not colleague:
         return False
     return Placement.objects.filter(service=service, colleague=colleague).exists()
+
+
+def can_view_staff_page(user):
+    """Whether the given user is allowed to access /beheer/statistieken/ and /beheer/database/ (STAFF_EMAILS list)."""
+    return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
 
 
 # --- Whole-object UPDATE rules ----------------------------------------------

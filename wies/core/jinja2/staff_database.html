@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
+  <link rel="stylesheet" href="{{ static('css/staff.css') }}">
+{% endblock extra_head %}
+{% block sidebar %}
+  {% include "parts/admin_sidebar.html" %}
+{% endblock sidebar %}
+{% block content %}
+  <div class="rvo-layout-column rvo-layout-gap--xl">
+    <c-h1>Database</c-h1>
+    <div class="staff-counts">
+      <span>Opdrachten: <strong>{{ assignment_count }}</strong></span>
+      <span>Collega's: <strong>{{ colleague_count }}</strong></span>
+      <span>Organisaties: <strong>{{ organization_count }}</strong></span>
+    </div>
+    {% if destructive_actions_enabled %}
+      <div class="staff-action-card">
+        <h2>Database leegmaken</h2>
+        <p>Verwijder alle opdrachten, collega's, organisaties en labels. Gebruikers blijven behouden.</p>
+        <form method="post"
+              onsubmit="return confirm('Weet je zeker dat je alle data wilt verwijderen?');">
+          {{ get_csrf_hidden_input(request) }}
+          <input type="hidden" name="action" value="clear_data">
+          <c-button kind="warning-subtle" type="submit">Database leegmaken</c-button>
+        </form>
+      </div>
+      <div class="staff-action-card">
+        <h2>Dummy data laden</h2>
+        <p>
+          Laad de basis dummydataset uit <code>base_dummy_data.json</code>.
+        </p>
+        <form method="post">
+          {{ get_csrf_hidden_input(request) }}
+          <input type="hidden" name="action" value="load_base_data">
+          <c-button kind="primary" type="submit">Dummy data laden</c-button>
+        </form>
+      </div>
+    {% endif %}
+    <div class="staff-action-card">
+      <h2>Organisaties synchroniseren</h2>
+      <p>Start een achtergrondtaak die organisaties synchroniseert.</p>
+      <form method="post"
+            hx-post="{{ url('staff-database') }}"
+            hx-target="#task-list"
+            hx-swap="innerHTML">
+        {{ get_csrf_hidden_input(request) }}
+        <input type="hidden" name="action" value="sync_organizations">
+        <c-button kind="primary" type="submit">Organisaties synchroniseren</c-button>
+      </form>
+    </div>
+    <div id="task-list">{% include "parts/task_list.html" %}</div>
+  </div>
+{% endblock content %}

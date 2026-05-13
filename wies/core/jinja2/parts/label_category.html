@@ -33,7 +33,7 @@
   </c-table>
   <div class="label-form-container">
     <form class="label-form"
-          hx-post="/instellingen/labels/categorie/{{ category.id }}/labels/aanmaken/"
+          hx-post="/beheer/labels/categorie/{{ category.id }}/labels/aanmaken/"
           hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
           hx-target="#label_category_{{ category.id }}">
       <c-input name="name" />
@@ -47,7 +47,7 @@
   <c-paragraph class="empty-category-message">Geen labels in deze categorie</c-paragraph>
   <div class="label-form-container">
     <form class="label-form"
-          hx-post="/instellingen/labels/categorie/{{ category.id }}/labels/aanmaken/"
+          hx-post="/beheer/labels/categorie/{{ category.id }}/labels/aanmaken/"
           hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
           hx-target="#label_category_{{ category.id }}">
       <c-input name="name" />

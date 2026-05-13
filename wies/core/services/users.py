@@ -172,7 +172,13 @@ def create_users_from_csv(creator, csv_content: str):
     - errors: List of validation error messages (empty if success=True)
     """
 
-    csv_reader = csv.DictReader(StringIO(csv_content))
+    try:
+        delimiter = csv.Sniffer().sniff(csv_content[:1024], delimiters=",;").delimiter
+    except csv.Error:
+        # Empty input or single column with no delimiter — fall back to ',' and
+        # let the headers/required-columns checks below produce the user-facing error.
+        delimiter = ","
+    csv_reader = csv.DictReader(StringIO(csv_content), delimiter=delimiter)
 
     # Validate required columns
     required_columns = {"first_name", "last_name", "email"}

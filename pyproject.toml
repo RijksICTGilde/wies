@@ -6,7 +6,7 @@ dependencies = [
   "django==6.0.5",
   "whitenoise==6.12.0",
   "gunicorn==25.3.0",
-  "Authlib==1.7.0",
+  "Authlib==1.7.2",
   "requests==2.33.1",
   "urllib3>=2.7.0",  # CVE-2025-66418, CVE-2025-66471
   "jinja2==3.1.6",
