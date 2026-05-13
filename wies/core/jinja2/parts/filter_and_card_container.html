@@ -11,9 +11,11 @@
         Filters
         </c-button>
         {% if primary_button %}
-          <c-button kind="primary" size="md" icon="plus" iconPlacement="before" href="{{ primary_button.href }}">
-          {{ primary_button.button_text }}
-          </c-button>
+          <a href="{{ primary_button.href }}"
+             class="rvo-button rvo-button--primary rvo-button--size-md rvo-button--icon-before">
+            <c-icon icon="plus" size="md" class="rvo-link__icon--before" />
+            {{ primary_button.button_text }}
+          </a>
         {% endif %}
         <!-- Search Field -->
         <div class="search-field-wrapper">
