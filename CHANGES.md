@@ -4,8 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- fix user CSV import to accept `;` delimiter and files with UTF-8 BOM
-- fix assignment CSV import to accept files with UTF-8 BOM
+- 336: fix user CSV import to accept `;` delimiter and files with UTF-8 BOM
+- 336: fix assignment CSV import to accept files with UTF-8 BOM
 
 ## 2026-05-11_2
 
