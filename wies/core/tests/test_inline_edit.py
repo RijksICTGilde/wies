@@ -155,8 +155,12 @@ class InlineEditInfrastructureTest(TestCase):
         resp = self.client.post(self.url, {"name": "Updated name"})
         assert resp.status_code == 200
         self.assertContains(resp, "Updated name")
-        # Save feedback is a toast triggered client-side via HX-Trigger.
-        assert resp["HX-Trigger-After-Swap"] == "inline-edit-saved"
+        # No big alert banner on the happy path — instead the pencil
+        # button carries a `--just-saved` class that drives a CSS
+        # pencil→checkmark→pencil flash.
+        self.assertNotContains(resp, "rvo-alert--success")
+        self.assertContains(resp, "edit-icon-button--just-saved")
+        self.assertContains(resp, "edit-icon-button__check")
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Updated name"
 

@@ -18,7 +18,7 @@ User = get_user_model()
 
 
 class AssignmentListViewTest(TestCase):
-    """Tests for the assignment list (aanvragen cards) view"""
+    """Tests for the assignment list (vacancy cards) view"""
 
     def setUp(self):
         self.client = Client()
@@ -35,9 +35,9 @@ class AssignmentListViewTest(TestCase):
         self.skill = Skill.objects.create(name="Python Developer")
         self.skill2 = Skill.objects.create(name="Data Engineer")
 
-        # Aanvraag assignment (has unfilled OPEN service → should appear)
+        # Vacancy assignment (has unfilled OPEN service → should appear)
         self.vacancy = Assignment.objects.create(
-            name="Open Aanvraag",
+            name="Open Vacature",
             start_date=date(2025, 1, 1),
             end_date=date(2025, 12, 31),
             source="wies",
@@ -72,43 +72,43 @@ class AssignmentListViewTest(TestCase):
         assert response.status_code == 302
         assert "/inloggen/" in response.url
 
-    def test_shows_only_aanvraag_assignments(self):
+    def test_shows_only_vacature_assignments(self):
         self.client.force_login(self.auth_user)
         response = self.client.get(self.list_url)
         assert response.status_code == 200
         content = response.content.decode()
-        assert "Open Aanvraag" in content
+        assert "Open Vacature" in content
         assert "Ingevulde Opdracht" not in content
 
     def test_search_filter(self):
         self.client.force_login(self.auth_user)
-        response = self.client.get(self.list_url, {"zoek": "Open Aanvraag"})
+        response = self.client.get(self.list_url, {"zoek": "Open Vacature"})
         content = response.content.decode()
-        assert "Open Aanvraag" in content
+        assert "Open Vacature" in content
 
         response = self.client.get(self.list_url, {"zoek": "nonexistent"})
         content = response.content.decode()
-        assert "Open Aanvraag" not in content
+        assert "Open Vacature" not in content
 
     def test_filter_by_rol(self):
         self.client.force_login(self.auth_user)
         response = self.client.get(self.list_url, {"rol": str(self.skill.id)})
         content = response.content.decode()
-        assert "Open Aanvraag" in content
+        assert "Open Vacature" in content
 
         response = self.client.get(self.list_url, {"rol": str(self.skill2.id)})
         content = response.content.decode()
-        assert "Open Aanvraag" not in content
+        assert "Open Vacature" not in content
 
     def test_filter_by_org(self):
         self.client.force_login(self.auth_user)
         response = self.client.get(self.list_url, {"org_self": str(self.org.id)})
         content = response.content.decode()
-        assert "Open Aanvraag" in content
+        assert "Open Vacature" in content
 
         response = self.client.get(self.list_url, {"org_self": str(self.org2.id)})
         content = response.content.decode()
-        assert "Open Aanvraag" not in content
+        assert "Open Vacature" not in content
 
     def test_htmx_filter_returns_card_container(self):
         self.client.force_login(self.auth_user)

@@ -2151,7 +2151,7 @@ def assignment_create(request):
         # Check if at least one service has a skill selected (works even when formset is invalid)
         total_forms = min(int(request.POST.get("service-TOTAL_FORMS", 0)), 100)
         has_any_service = any(request.POST.get(f"service-{i}-skill") for i in range(total_forms))
-        services_error = "" if has_any_service else "Voeg minimaal één rol toe."
+        services_error = "" if has_any_service else "Voeg minimaal één dienst toe."
 
         form_valid = form.is_valid()
         formset_valid = service_formset.is_valid()
@@ -2469,7 +2469,7 @@ def _render_inline_edit_display(
     user_can_edit: bool | None = None,
     saved: bool = False,
 ) -> HttpResponse:
-    # `saved=True` triggers the toast via data-just-saved attribute; `alert` carries a denial warning.
+    # `saved=True` triggers the pencil→check flash; `alert` carries a denial warning.
     # On denial, skip the value/display resolution — it can be heavy (e.g. the
     # services collection does a per-row Placement query) and the partial
     # gracefully handles an empty value with the alert banner.
@@ -2494,10 +2494,7 @@ def _render_inline_edit_display(
         "alert": alert,
         "saved": saved,
     }
-    response = render(request, "parts/inline_edit/display.html", ctx)
-    if saved:
-        response["HX-Trigger-After-Swap"] = "inline-edit-saved"
-    return response
+    return render(request, "parts/inline_edit/display.html", ctx)
 
 
 def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) -> HttpResponse:
