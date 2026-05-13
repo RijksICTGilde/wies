@@ -1,43 +1,45 @@
 {# Shared assignment card list for colleague panel and profile page.
    Expects: assignments (list), hx_target (string) #}
 {% if assignments %}
-  <div class="rvo-layout-column rvo-layout-gap--sm">
+  <div class="rvo-layout-column rvo-layout-gap--xs">
     {% for assignment in assignments %}
       <a href="{{ assignment.assignment_url }}"
          hx-get="{{ assignment.assignment_url }}"
          hx-target="{{ hx_target }}"
-         class="rvo-card rvo-card--outline rvo-card--padding--md clickable-row panel-card-link">
-        <div class="rvo-card__content">
-          <div class="colleague-assignment-header">
-            <span class="colleague-assignment-name">
-              <strong>{{ assignment.name }}</strong>
-              {% if assignment.organization %}
-                <span class="icon-text-inline">
-                  <c-icon icon="basis-kantoorgebouw" size="md" color="grijs-700" />
-                  {{ assignment.organization }}
-                </span>
-              {% endif %}
+         class="assignment-card">
+        <div class="assignment-card__name">
+          <strong class="assignment-card__title">{{ assignment.name }}</strong>
+          {% if assignment.historical %}
+            <c-tag type="default" class="assignment-tag--completed">Afgelopen</c-tag>
+          {% elif assignment.start_date or assignment.end_date %}
+            <span class="icon-text-inline rvo-text--sm">
+              <c-icon icon="kalender" size="md" color="grijs-700" />
+              {{ assignment.start_date|datum_nl("N y") }} - {{ assignment.end_date|datum_nl("N y") }}
             </span>
-            {% if assignment.start_date or assignment.end_date %}
-              <span class="colleague-assignment-date">
-                <c-icon icon="kalender" size="md" color="grijs-700" />
-                {{ assignment.start_date|datum_nl("N y") }} - {{ assignment.end_date|datum_nl("N y") }}
+          {% endif %}
+        </div>
+        <div class="assignment-card__body">
+          <div class="assignment-card__info">
+            {% if assignment.organization %}
+              <span class="icon-text-inline">
+                <c-icon icon="basis-kantoorgebouw" size="md" color="grijs-700" />
+                {{ assignment.organization }}
               </span>
             {% endif %}
-          </div>
-          <div class="rvo-layout-row colleague-assignment-tags">
-            <div>
-              {% for tag in assignment.tags %}
-                <div class="service-description-line">
-                  {{ tag.skill if tag is mapping else tag }}
-                  {% if tag is mapping and tag.description %}· <span class="rvo-text--subtle">{{ tag.description }}</span>{% endif %}
-                </div>
-              {% endfor %}
+            <div class="assignment-card__subtitle">
+              {% for tag in assignment.tags %}<c-tag type="default">{{ tag.skill if tag is mapping else tag }}</c-tag>{% endfor %}
             </div>
-            {% if assignment.historical %}<c-tag type="default" class="assignment-tag--completed">Afgelopen</c-tag>{% endif %}
           </div>
+          {% set descriptions = [] %}
+          {% for tag in assignment.tags %}{% if tag is mapping and tag.description %}{% set _ = descriptions.append(tag.description) %}{% endif %}{% endfor %}
+          {% if descriptions %}
+            <hr class="assignment-card__divider">
+            {% for desc in descriptions %}
+              <div>{{ desc }}</div>
+            {% endfor %}
+          {% endif %}
           {% if assignment.privacy_warning_text %}
-            <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
+            <div class="assignment-card__privacy">
               <c-icon icon="hangslot-dicht" size="sm" color="grijs-700" />
               <span class="rvo-text--subtle rvo-text--xs">{{ assignment.privacy_warning_text }}</span>
             </div>
