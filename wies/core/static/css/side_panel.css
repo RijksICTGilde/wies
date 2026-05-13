@@ -214,9 +214,8 @@ dialog#side_panel::backdrop {
 
 .rvo-item-list__item {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--rvo-color-grijs-300, #c5ced6);
   border-radius: 4px;
@@ -225,18 +224,12 @@ dialog#side_panel::backdrop {
   width: 100%;
 }
 
-.rvo-item-list__item .service-row__link {
-  flex: 1;
-  min-width: 0;
+.service-card__actions {
+  padding-left: calc(32px + 0.75rem);
 }
 
-.rvo-item-list__item .rvo-button {
+.service-card__actions .rvo-button {
   inline-size: auto;
-  flex-shrink: 0;
-}
-
-.service-card__edit {
-  flex-basis: 100%;
 }
 
 /* Completed assignment tag */
@@ -282,7 +275,7 @@ dialog#side_panel::backdrop {
 
 /* When the description edit form is open inside the card,
    hide the inline description text in the card link. */
-.rvo-item-list__item:has(.service-card__edit form) .service-description-line .rvo-text--subtle {
+.rvo-item-list__item:has(.service-card__actions form) .service-description-line {
   display: none;
 }
 

@@ -27,16 +27,15 @@
             <div class="user-avatar">{{ row.colleague.name|first|upper }}</div>
             <div class="rvo-item-list__content">
               <strong>{{ row.colleague.name }}</strong>
-              <div class="service-description-line">
-                {{ row.skill_name }}
-                {% if row.description %}· <span class="rvo-text--subtle">{{ row.description }}</span>{% endif %}
-              </div>
+              <div class="service-description-line">{{ row.skill_name }}{% if row.description %} · {{ row.description }}{% endif %}</div>
             </div>
           </a>
-          {% if has_permission(Verb.UPDATE, row.service, request.user, ServiceEditables.description) %}
-            <c-button kind="tertiary" icon="bewerken" iconPlacement="after" hx-get="{{ url('inline-edit', args=['service', row.service.pk, 'description']) }}?edit=true" hx-target="#{{ ie_target }}" hx-swap="outerHTML">Beschrijving bewerken</c-button>
-          {% endif %}
-          <div class="service-card__edit" id="{{ ie_target }}"></div>
+          <div class="service-card__actions">
+            {% if has_permission(Verb.UPDATE, row.service, request.user, ServiceEditables.description) %}
+              <c-button kind="tertiary" icon="bewerken" iconPlacement="after" hx-get="{{ url('inline-edit', args=['service', row.service.pk, 'description']) }}?edit=true" hx-target="#{{ ie_target }}" hx-swap="outerHTML">Beschrijving bewerken</c-button>
+            {% endif %}
+            <div id="{{ ie_target }}"></div>
+          </div>
         </div>
       {% else %}
         {% set ie_target = "inline-edit-service-" ~ row.service.pk ~ "-description" %}
@@ -45,16 +44,15 @@
             <div class="user-avatar user-avatar--vacant">?</div>
             <div class="rvo-item-list__content">
               <span class="rvo-text--italic rvo-text--subtle">Openstaand</span>
-              <div class="service-description-line">
-                {{ row.skill_name }}
-                {% if row.description %}· <span class="rvo-text--subtle">{{ row.description }}</span>{% endif %}
-              </div>
+              <div class="service-description-line">{{ row.skill_name }}{% if row.description %} · {{ row.description }}{% endif %}</div>
             </div>
           </div>
-          {% if has_permission(Verb.UPDATE, row.service, request.user, ServiceEditables.description) %}
-            <c-button kind="tertiary" icon="bewerken" iconPlacement="after" hx-get="{{ url('inline-edit', args=['service', row.service.pk, 'description']) }}?edit=true" hx-target="#{{ ie_target }}" hx-swap="outerHTML">Beschrijving bewerken</c-button>
-          {% endif %}
-          <div class="service-card__edit" id="{{ ie_target }}"></div>
+          <div class="service-card__actions">
+            {% if has_permission(Verb.UPDATE, row.service, request.user, ServiceEditables.description) %}
+              <c-button kind="tertiary" icon="bewerken" iconPlacement="after" hx-get="{{ url('inline-edit', args=['service', row.service.pk, 'description']) }}?edit=true" hx-target="#{{ ie_target }}" hx-swap="outerHTML">Beschrijving bewerken</c-button>
+            {% endif %}
+            <div id="{{ ie_target }}"></div>
+          </div>
         </div>
       {% endif %}
     {% endfor %}
