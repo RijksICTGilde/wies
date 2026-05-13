@@ -16,7 +16,6 @@ Including another URLconf
 """
 
 from django.conf import settings
-from django.contrib import admin
 from django.urls import path
 from django.views.generic import RedirectView
 
@@ -66,8 +65,6 @@ urlpatterns = [
         RedirectView.as_view(url="https://www.ncsc.nl/.well-known/security.txt", permanent=False),
         name="security-txt",
     ),
-    # Admin
-    path("djadmin/", admin.site.urls),
     # Wies
     path("", PlacementListView.as_view(), name="home"),
     path("inloggen/", login, name="login"),
