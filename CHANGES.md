@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ?: remove django admin
 - 336: fix user CSV import to accept `;` delimiter and files with UTF-8 BOM
 - 336: fix assignment CSV import to accept files with UTF-8 BOM
 - 332: fix CSV import collapsing multiple placements onto one Service (e.g. two `Architect` rows on JusticeLink hid one team member); each placed row now gets its own Service, re-uploads stay idempotent
