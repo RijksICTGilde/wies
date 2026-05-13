@@ -21,11 +21,11 @@
     <div class="rvo-form">
       <div class="rvo-layout-column rvo-layout-gap--md">
         <div class="rvo-layout-column rvo-layout-gap--sm">
-          <c-link href="{{ url('assignment-list') }}" icon="terug" iconPlacement="before" noUnderline>Terug naar vacatures</c-link>
+          <c-link href="{{ url('assignment-list') }}" icon="terug" iconPlacement="before" noUnderline>Terug naar aanvragen</c-link>
           <div>
             <c-h1>Opdracht invoeren</c-h1>
             <p>
-              Voer hier de gegevens in van een opdracht. Dit formulier kan gebruikt worden voor nieuwe opdrachten, bestaande opdrachten en vacatures.
+              Voer hier de gegevens in van een opdracht. Dit formulier kan gebruikt worden voor nieuwe opdrachten, bestaande opdrachten en aanvragen.
             </p>
           </div>
         </div>
@@ -47,7 +47,7 @@
               {% for error in form.organizations.errors %}<c-alert kind="error">{{ error }}</c-alert>{% endfor %}
               {{ form.organizations.as_widget() }}
             {% endcall %}
-            {% call fieldset("Diensten", distanced=false, gap="xs", id="diensten", hint="voeg minimaal 1 dienst toe") %}
+            {% call fieldset("Rollen", distanced=false, gap="xs", id="diensten", hint="voeg minimaal 1 rol toe") %}
               {% with formset=service_formset, extra_errors=form.non_field_errors() %}
                 {% include "parts/assignment_services_form.html" %}
               {% endwith %}

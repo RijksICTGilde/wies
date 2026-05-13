@@ -196,9 +196,9 @@ class ServiceForm(RvoFormMixin, forms.Form):
         required=False,
         empty_label=" ",
     )
-    description = forms.CharField(label="Omschrijving", max_length=500, required=False)
+    description = forms.CharField(label="Toelichting", max_length=500, required=False)
     new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)
-    is_filled = forms.BooleanField(label="Rol ingevuld", required=False)
+    is_filled = forms.BooleanField(label="Consultant bekend", required=False)
     colleague = forms.ModelChoiceField(
         label="Consultant",
         queryset=Colleague.objects.order_by("name"),
@@ -234,7 +234,7 @@ class ServiceForm(RvoFormMixin, forms.Form):
         is_filled = cleaned_data.get("is_filled")
         colleague = cleaned_data.get("colleague")
         if is_filled and not colleague:
-            self.add_error("colleague", "Selecteer een consultant als de rol is ingevuld.")
+            self.add_error("colleague", "Selecteer een consultant.")
         # "Rol ingevuld" is the authoritative on/off for the placement.
         # The UI hides (not clears) the colleague select when the
         # checkbox is off, so the posted colleague id would otherwise
