@@ -6,6 +6,10 @@ This files lists the changes during the lifetime of this project.
 
 - 324: replace raw HTML with JRC components across templates and include roos.css
 - 324: add sortable Tot column to placement table
+- UX improvements for assignment detail panel: text buttons, compact team cards, floating toast on save
+- Rename "Vacatures" to "Aanvragen" throughout the UI
+- UX improvements for the assignment create form: rename "Diensten" to "Rollen", clarify labels and help text
+- Prevent side panel from closing on backdrop click while editing
 
 ## 2026-05-11_2
 
