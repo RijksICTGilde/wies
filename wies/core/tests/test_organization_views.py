@@ -14,7 +14,7 @@ class OrganizationAdminViewTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(email="test@rijksoverheid.nl", password="testpass123")
-        self.url = "/instellingen/organisaties/"
+        self.url = "/beheer/organisaties/"
 
     def test_requires_authentication(self):
         response = self.client.get(self.url, follow=False)

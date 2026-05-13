@@ -38,7 +38,8 @@ just load-full-data
 Then update `.env`:
 
 - Fill in OIDC credentials
-- Set DEV firstname, lastname and email (yourself)
+- Set `INITIAL_USER_FIRSTNAME`, `INITIAL_USER_LASTNAME`, `INITIAL_USER_EMAIL` (yourself)
+- Set `STAFF_EMAILS`
 
 ### Start
 

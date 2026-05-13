@@ -6,6 +6,10 @@ This files lists the changes during the lifetime of this project.
 
 - 336: fix user CSV import to accept `;` delimiter and files with UTF-8 BOM
 - 336: fix assignment CSV import to accept files with UTF-8 BOM
+- 320: move /staff content to instellingen
+- 320: rename instellingen to beheer
+- 320: remove database dump download/upload and 'Sync OTYS' actions
+- 320: guard destructive /staff/ actions (clear data, load dummy data) behind the `ENABLE_DESTRUCTIVE_STAFF_ACTIONS` env var
 
 ## 2026-05-11_2
 
