@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 332: fix CSV import collapsing multiple placements onto one Service (e.g. two `Architect` rows on JusticeLink hid one team member); each placed row now gets its own Service, re-uploads stay idempotent
+- 332: (migration) split existing CSV-sourced Services that have >1 Placement so each Placement gets its own Service (OTYS-sourced services untouched)
 - 320: move /staff content to instellingen
 - 320: rename instellingen to beheer
 - 320: remove database dump download/upload and 'Sync OTYS' actions
