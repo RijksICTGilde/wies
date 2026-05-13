@@ -158,12 +158,7 @@ dialog#side_panel::backdrop {
 .rvo-item-list {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-}
-
-.rvo-item-list__item--filled:hover {
-  border-color: var(--rvo-color-hemelblauw, #007bc7);
-  background: var(--rvo-color-hemelblauw-150, #f0f6fc);
+  gap: var(--rvo-space-xs, 0.25rem);
 }
 
 .rvo-item-list__item--vacant {
@@ -191,37 +186,110 @@ dialog#side_panel::backdrop {
 }
 
 /* Colleague panel: assignment cards */
-.colleague-assignment-header {
+.assignment-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--rvo-color-grijs-300, #c5ced6);
+  border-radius: 4px;
+  text-decoration: none;
+  color: inherit;
+  overflow: hidden;
+}
+
+.assignment-card:hover {
+  border-color: var(--rvo-color-hemelblauw, #007bc7);
+}
+
+.assignment-card__name {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--rvo-color-grijs-100, #f3f4f6);
 }
 
-.colleague-assignment-date {
-  display: inline-flex;
+.assignment-card:hover .assignment-card__name {
+  background: var(--rvo-color-hemelblauw-150, #f0f6fc);
+}
+
+.assignment-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.assignment-card__info {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
+  gap: 0.5rem;
+}
+
+.assignment-card__title {
+  font-size: 1.1rem;
+}
+
+.assignment-card__meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
   gap: 0.25rem;
   flex-shrink: 0;
-  margin-left: 0.5rem;
+  text-align: right;
 }
 
-.colleague-assignment-tag {
-  margin-top: 0.25rem;
+.assignment-card__subtitle {
   display: flex;
-  align-items: baseline;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: 0.25rem;
+}
+
+.assignment-card__divider {
+  margin: 0.25rem 0;
+  border: none;
+  border-top: 1px solid var(--rvo-color-grijs-200, #e2e8f0);
+}
+
+.assignment-card__privacy {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.assignment-card__role {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
 
 .rvo-item-list__item {
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  padding: 0.75rem;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
   border: 1px solid var(--rvo-color-grijs-300, #c5ced6);
   border-radius: 4px;
   text-decoration: none;
   color: inherit;
   width: 100%;
+  overflow: hidden;
+}
+
+.service-card__name {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--rvo-color-grijs-100, #f3f4f6);
+}
+
+.service-card__description {
+  padding: 0.5rem 0.75rem 0.5rem calc(32px + 1.5rem);
+  font-style: italic;
 }
 
 /* Completed assignment tag */
@@ -257,25 +325,12 @@ dialog#side_panel::backdrop {
   flex-shrink: 0;
 }
 
-/* Team row: clickable link on top, per-service inline-edit block below. */
-.service-row {
-  flex-direction: column;
-  align-items: stretch;
-  gap: var(--rvo-space-2xs);
-}
-
 .service-row__link {
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
   text-decoration: none;
   color: inherit;
-}
-
-.service-row__description {
-  padding-left: calc(
-    32px + 0.75rem
-  ); /* align with content column (avatar + gap) */
 }
 
 /* Reusable: icon + text inline (org name, date, etc.) */
@@ -322,6 +377,13 @@ dialog#side_panel::backdrop {
   flex-wrap: wrap;
   gap: 0.5rem;
   margin-top: 8px;
+}
+
+/* Section header — heading + action link side by side */
+.section-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
 }
 
 /* Editable field styles */
@@ -374,68 +436,19 @@ dialog#side_panel::backdrop {
   gap: var(--rvo-space-2xs);
 }
 
-/* Post-save flash: the pencil is briefly replaced by a green check
-   overlaid on top, which fades back to the pencil. Pure CSS — the
-   server re-renders the partial with the `--just-saved` modifier and
-   the animation runs once client-side. */
-.edit-icon-button__check {
-  position: absolute;
-  inset: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--rvo-color-grasgroen, #39870c);
-  font-weight: bold;
-  font-size: 1.1em;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.edit-icon-button--just-saved .edit-icon-button__pencil {
-  animation: inline-edit-pencil-return 1.6s ease-out forwards;
-}
-
-.edit-icon-button--just-saved .edit-icon-button__check {
-  animation: inline-edit-check-flash 1.6s ease-out forwards;
-}
-
-@keyframes inline-edit-check-flash {
-  0% {
-    opacity: 0;
-    transform: scale(0.5);
-  }
-  15% {
-    opacity: 1;
-    transform: scale(1.25);
-  }
-  40% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  80% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1);
-  }
-}
-
-@keyframes inline-edit-pencil-return {
-  0%,
-  70% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
+/* Post-save animation keyframes removed — save feedback now uses the
+   floating toast (flash-messages) triggered by the inline-edit-saved
+   HX-Trigger event in inline_edit.js. */
 
 .field-actions {
   display: flex;
+  align-items: center;
   gap: var(--rvo-space-sm);
-  margin-top: var(--rvo-space-md);
+  margin-top: var(--rvo-space-sm);
+}
+
+.field-actions .rvo-button {
+  inline-size: auto;
 }
 
 /* Form field error styling */
