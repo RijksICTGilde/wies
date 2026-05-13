@@ -161,7 +161,6 @@ dialog#side_panel::backdrop {
   gap: var(--rvo-space-xs, 0.25rem);
 }
 
-
 .rvo-item-list__item--vacant {
   border-style: dashed;
   background: var(--rvo-color-grijs-50, #f9fafb);
@@ -232,7 +231,6 @@ dialog#side_panel::backdrop {
   font-size: 1.1rem;
 }
 
-
 .assignment-card__meta {
   display: flex;
   flex-direction: column;
@@ -241,7 +239,6 @@ dialog#side_panel::backdrop {
   flex-shrink: 0;
   text-align: right;
 }
-
 
 .assignment-card__subtitle {
   display: flex;
@@ -262,7 +259,6 @@ dialog#side_panel::backdrop {
   align-items: center;
   gap: 0.25rem;
 }
-
 
 .assignment-card__role {
   display: flex;

@@ -31,12 +31,14 @@
             </div>
           </div>
           {% set descriptions = [] %}
-          {% for tag in assignment.tags %}{% if tag is mapping and tag.description %}{% set _ = descriptions.append(tag.description) %}{% endif %}{% endfor %}
+          {% for tag in assignment.tags %}
+            {% if tag is mapping and tag.description %}
+              {% set _ = descriptions.append(tag.description) %}
+            {% endif %}
+          {% endfor %}
           {% if descriptions %}
             <hr class="assignment-card__divider">
-            {% for desc in descriptions %}
-              <div class="rvo-text--italic">{{ desc }}</div>
-            {% endfor %}
+            {% for desc in descriptions %}<div class="rvo-text--italic">{{ desc }}</div>{% endfor %}
           {% endif %}
           {% if assignment.privacy_warning_text %}
             <div class="assignment-card__privacy">
