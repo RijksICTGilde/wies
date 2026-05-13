@@ -1,29 +1,6 @@
-.rvo-table-header--active-sort {
-  background-color: var(--rvo-color-hemelblauw-150) !important;
-  color: var(--rvo-color-hemelblauw-750) !important;
-}
-
-.rvo-table-header__sortable-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.rvo--table-header__sorting-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
 /* enforce that row is colored also when not clickable */
 .rvo-table-row:hover {
   background-color: var(--rvo-color-hemelblauw-150) !important;
-}
-
-/* Compact header styling */
-.rvo-alert--padding-sm {
-  padding: 0.25rem 1rem;
 }
 
 /* Select chevron fix */

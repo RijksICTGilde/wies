@@ -3,46 +3,37 @@
   Contact - Wies
 {% endblock title %}
 {% block content %}
-  <div class="rvo-layout-column rvo-layout-gap--xl">
-    <section>
-      <c-h1>Contact</c-h1>
-      <c-paragraph>
-      Het team kan je het beste bereiken op Mattermost. Daarnaast kun je ons altijd een e-mail sturen:
-      </c-paragraph>
-      <c-alert kind="info">
-      <a href="mailto:wies-odi@rijksoverheid.nl" class="rvo-link">wies-odi@rijksoverheid.nl</a>
-      </c-alert>
-    </section>
-    <section>
-      <c-h2>Mattermost chat</c-h2>
-      <c-paragraph>
-      Kom in contact met ons op Mattermost. Je kunt hier vragen stellen, ervaringen delen, meelezen en in
-      contact komen met de mensen die aan Wies werken.
-      </c-paragraph>
-      <c-alert kind="info">
-      <c-h3>Mattermost instellen</c-h3>
-      <ol>
-        <li>
-          <a href="https://digilab.overheid.nl/chat"
-             class="rvo-link"
-             target="_blank"
-             rel="noopener noreferrer">Login op Mattermost</a> via GitLab → Pleio
-        </li>
-        <li>
-          <a href="https://digilab.overheid.nl/chat/odi/channels/wies"
-             class="rvo-link"
-             target="_blank"
-             rel="noopener noreferrer">Ga naar het Wies kanaal</a>
-        </li>
-      </ol>
-      <c-paragraph>
-      Nog geen account? <a href="https://pleio.nl/register"
-    class="rvo-link"
-    target="_blank"
-    rel="noopener noreferrer">Registreer op Pleio</a>.
-      Kom je er niet uit? <a href="mailto:wies-odi@rijksoverheid.nl" class="rvo-link">Stuur ons een e-mail</a>!
-      </c-paragraph>
-      </c-alert>
-    </section>
-  </div>
+  <c-layout-flow gap="xl">
+  <section>
+    <c-h1>Contact</c-h1>
+    <c-paragraph>
+    Het team kan je het beste bereiken op Mattermost. Daarnaast kun je ons altijd een e-mail sturen:
+    </c-paragraph>
+    <c-alert kind="info">
+    <c-link href="mailto:wies-odi@rijksoverheid.nl">wies-odi@rijksoverheid.nl</c-link>
+    </c-alert>
+  </section>
+  <section>
+    <c-h2>Mattermost chat</c-h2>
+    <c-paragraph>
+    Kom in contact met ons op Mattermost. Je kunt hier vragen stellen, ervaringen delen, meelezen en in
+    contact komen met de mensen die aan Wies werken.
+    </c-paragraph>
+    <c-alert kind="info">
+    <c-h3>Mattermost instellen</c-h3>
+    <ol>
+      <li>
+        <c-link href="https://digilab.overheid.nl/chat" target="_blank">Login op Mattermost</c-link> via GitLab → Pleio
+      </li>
+      <li>
+        <c-link href="https://digilab.overheid.nl/chat/odi/channels/wies" target="_blank">Ga naar het Wies kanaal</c-link>
+      </li>
+    </ol>
+    <c-paragraph>
+    Nog geen account? <c-link href="https://pleio.nl/register" target="_blank">Registreer op Pleio</c-link>.
+    Kom je er niet uit? <c-link href="mailto:wies-odi@rijksoverheid.nl">Stuur ons een e-mail</c-link>!
+    </c-paragraph>
+    </c-alert>
+  </section>
+  </c-layout-flow>
 {% endblock content %}

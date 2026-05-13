@@ -178,6 +178,18 @@ dialog#side_panel::backdrop {
   flex: 1;
 }
 
+.item-list__name-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.colleague-assignment-tags {
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
 /* Colleague panel: assignment cards */
 .colleague-assignment-header {
   display: flex;
@@ -557,11 +569,8 @@ dialog#side_panel::backdrop {
   line-height: 1.4;
 }
 
-/* Tabs inside side panel — strip panel border/background, keep content spacing */
+/* Tabs panel spacing inside side panel */
 .rvo-dialog .rvo-tabs__panel {
-  border: none;
-  background: none;
-  padding-inline: 0;
   padding-block: var(--rvo-space-md) 0;
 }
 

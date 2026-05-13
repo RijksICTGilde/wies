@@ -563,13 +563,16 @@ class PlacementListView(ListView):
             "name": "colleague__name",
             "assignment": "service__assignment__name",
             "skill": "service__skill__name",
+            "end_date": "service__assignment__end_date",
         }
 
         order_param = self.request.GET.get("order")
         if order_param:
-            order_by = order_mapping.get(order_param)
+            descending = order_param.startswith("-")
+            field_name = order_param.lstrip("-")
+            order_by = order_mapping.get(field_name)
             if order_by:
-                qs = qs.order_by(order_by)
+                qs = qs.order_by(f"-{order_by}" if descending else order_by)
 
         # filter out historical placements
         qs = annotate_placement_dates(qs)

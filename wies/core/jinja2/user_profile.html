@@ -18,32 +18,32 @@
         <img alt="Profielfoto van {{ user.get_full_name() }}"
              src="{{ static('img/placeholder-avatar.svg') }}"
              class="profile-avatar" />
-        <h1 class="utrecht-heading-1 rvo-heading rvo-heading--no-margin">Mijn profiel</h1>
+        <c-h1 noMargins>Mijn profiel</c-h1>
       </div>
-      <dl class="rvo-data-list profile-data-list">
-        <dt>Voornaam</dt>
+      <c-data-list class="profile-data-list">
+      <dt>Voornaam</dt>
+      <dd>
+        {{ inline_edit(user, "first_name") }}
+      </dd>
+      <dt>Achternaam</dt>
+      <dd>
+        {{ inline_edit(user, "last_name") }}
+      </dd>
+      <dt>E-mail</dt>
+      <dd>
+        <c-link href="mailto:{{ user.email }}">{{ user.email }}</c-link>
+      </dd>
+      {% for item in label_categories %}
+        <dt>{{ item.category.name }}</dt>
         <dd>
-          {{ inline_edit(user, "first_name") }}
+          {{ inline_edit(colleague, "labels_" ~ item.category.id) }}
         </dd>
-        <dt>Achternaam</dt>
-        <dd>
-          {{ inline_edit(user, "last_name") }}
-        </dd>
-        <dt>E-mail</dt>
-        <dd>
-          <a href="mailto:{{ user.email }}" class="rvo-link">{{ user.email }}</a>
-        </dd>
-        {% for item in label_categories %}
-          <dt>{{ item.category.name }}</dt>
-          <dd>
-            {{ inline_edit(colleague, "labels_" ~ item.category.id) }}
-          </dd>
-        {% endfor %}
-      </dl>
+      {% endfor %}
+      </c-data-list>
     </section>
     {# Assignments section #}
     <section>
-      <h2 class="utrecht-heading-2">Opdrachten</h2>
+      <c-h2>Opdrachten</c-h2>
       {% with assignments=assignment_list, hx_target="#side_panel-container" %}
         {% include "parts/colleague_assignment_cards.html" %}
       {% endwith %}

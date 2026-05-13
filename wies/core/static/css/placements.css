@@ -57,6 +57,13 @@
   white-space: nowrap;
 }
 
+/* Kolom verdeling: Tot kolom compact, rest vult de ruimte */
+.placement-table .rvo-table-header:last-child,
+.placement-table .rvo-table-cell:last-child {
+  width: 9rem;
+  white-space: nowrap;
+}
+
 /* Role tags with overflow protection */
 .placement-table .rvo-tag {
   max-width: 100%;

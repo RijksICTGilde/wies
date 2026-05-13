@@ -5,7 +5,7 @@
       {% set link = message.extra_tags|parse_message_link %}
       <c-alert kind="{{ 'success' if 'success' in message.tags else 'error' if 'error' in message.tags else 'info' }}">
       {{ message }}
-      {% if link %}<a href="{{ link.url }}" class="rvo-link">{{ link.text }}</a>{% endif %}
+      {% if link %}<c-link href="{{ link.url }}">{{ link.text }}</c-link>{% endif %}
       </c-alert>
     {% endfor %}
   </div>
