@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.14"
 
 [[package]]
@@ -352,7 +352,7 @@ wheels = [
 [[package]]
 name = "jinja-roos-components"
 version = "0.5"
-source = { git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=0.6#df0124e265c95b9c685a074f87057edab3ff9402" }
+source = { git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=component-fixes#6c37ffbce49fa69c7d026658532b6231e100fb19" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "jinja2" },
@@ -883,7 +883,7 @@ requires-dist = [
     { name = "authlib", specifier = "==1.7.0" },
     { name = "django", specifier = "==6.0.5" },
     { name = "gunicorn", specifier = "==25.3.0" },
-    { name = "jinja-roos-components", git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=0.6" },
+    { name = "jinja-roos-components", git = "https://github.com/RijksICTGilde/jinja-roos-components.git?rev=component-fixes" },
     { name = "jinja2", specifier = "==3.1.6" },
     { name = "psycopg", extras = ["binary"], specifier = ">=3.3.4" },
     { name = "requests", specifier = "==2.33.1" },
