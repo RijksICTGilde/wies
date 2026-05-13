@@ -159,6 +159,9 @@ SILENCED_SYSTEM_CHECKS = ["auth.W004"]
 
 AUTH_NO_ACCESS_URL = "/geen-toegang/"
 
+OIDC_ID_TOKEN_SESSION_KEY = "oidc_id_token"  # noqa: S105 (hardcoded-password) — session key name, not a secret
+OIDC_POST_LOGOUT_COOKIE_NAME = "wies_post_logout"
+
 # Allowed email domains for ODI users
 ALLOWED_EMAIL_DOMAINS = ["@rijksoverheid.nl", "@minbzk.nl"]
 
