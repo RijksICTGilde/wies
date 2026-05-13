@@ -209,14 +209,6 @@ def create_assignments_from_csv(creator, csv_content: str):
                 else:
                     skill = None
 
-                service, created = Service.objects.get_or_create(
-                    assignment=assignment,
-                    skill=skill,
-                    source="wies",
-                )
-                if created:
-                    services_created += 1
-
                 colleague_email = (row["placement_colleague_email"] or "").strip()
                 if colleague_email:
                     validate_email(colleague_email)
@@ -231,6 +223,23 @@ def create_assignments_from_csv(creator, csv_content: str):
                             colleague.labels.add(colleague_brand_label)
                         colleagues_created += 1
 
+                    existing_placement = Placement.objects.filter(
+                        colleague=colleague,
+                        service__assignment=assignment,
+                        service__skill=skill,
+                        service__source="wies",
+                        source="wies",
+                    ).first()
+                    if existing_placement is not None:
+                        service = existing_placement.service
+                    else:
+                        service = Service.objects.create(
+                            assignment=assignment,
+                            skill=skill,
+                            source="wies",
+                        )
+                        services_created += 1
+
                     _, created = Placement.objects.get_or_create(
                         colleague=colleague,
                         service=service,
@@ -238,6 +247,20 @@ def create_assignments_from_csv(creator, csv_content: str):
                     )
                     if created:
                         placements_created += 1
+                else:
+                    service = Service.objects.filter(
+                        assignment=assignment,
+                        skill=skill,
+                        source="wies",
+                        placements__isnull=True,
+                    ).first()
+                    if service is None:
+                        Service.objects.create(
+                            assignment=assignment,
+                            skill=skill,
+                            source="wies",
+                        )
+                        services_created += 1
 
     except ValueError as e:
         return {"success": False, "errors": [str(e)]}
