@@ -263,6 +263,11 @@ dialog#side_panel::backdrop {
   gap: 0.25rem;
 }
 
+.assignment-card__tags {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
 
 .assignment-card__role {
   display: flex;
@@ -293,7 +298,6 @@ dialog#side_panel::backdrop {
 
 .service-card__description {
   padding: 0.5rem 0.75rem 0.5rem calc(32px + 1.5rem);
-  font-style: italic;
 }
 
 /* Completed assignment tag */
