@@ -13,11 +13,6 @@
       {"label": "Beheer", "link": url('admin-users'), "icon": "instellingen", "active": '/beheer/' in request.path, "align": "right"},
     ] %}
 {% endif %}
-{% if can_view_staff_page(user) %}
-  {% set menu_items = menu_items + [
-      {"label": "Statistieken", "link": url('staff-dashboard'), "icon": "grafiek", "active": '/statistieken/' in request.path, "align": "right"},
-    ] %}
-{% endif %}
 <div class="menubar">
   <div class="menubar__sidebar-section"></div>
   <div class="menubar__nav-section">
