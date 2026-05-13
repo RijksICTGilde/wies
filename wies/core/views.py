@@ -1518,7 +1518,7 @@ def user_import_csv(request):
             )
 
         try:
-            csv_content = csv_file.read().decode("utf-8")
+            csv_content = csv_file.read().decode("utf-8-sig")
         except UnicodeDecodeError:
             return render(
                 request,
@@ -1572,7 +1572,7 @@ def assignment_import_csv(request):
             )
 
         try:
-            csv_content = csv_file.read().decode("utf-8")
+            csv_content = csv_file.read().decode("utf-8-sig")
         except UnicodeDecodeError:
             return render(
                 request,
