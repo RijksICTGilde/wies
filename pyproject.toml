@@ -17,7 +17,7 @@ dependencies = [
 [dependency-groups]
 dev = [
   "pre-commit>=4.6.0",
-  "ruff>=0.15.12",
+  "ruff>=0.15.13",
   "djlint>=1.36.0",
   "pytest>=9.0.3",
   "pytest-django>=4.9",
