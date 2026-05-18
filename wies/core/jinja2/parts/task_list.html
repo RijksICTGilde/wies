@@ -1,63 +1,63 @@
-<h3>Recente taken</h3>
+<c-h3>Recente taken</c-h3>
 {% if latest_tasks %}
-  <table border="1" cellpadding="5" cellspacing="0">
-    <thead>
-      <tr>
-        <th>Status</th>
-        <th>Aangemaakt</th>
-        <th>Gestart</th>
-        <th>Afgerond</th>
-        <th>Door</th>
-        <th>Resultaat</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for task in latest_tasks %}
-        <tr>
-          <td>
-            {% if task.status == 'pending' %}
-              <strong>Wachtend</strong>
-            {% elif task.status == 'running' %}
-              <strong style="color: blue;">Bezig</strong>
-            {% elif task.status == 'completed' %}
-              <strong style="color: green;">Voltooid</strong>
-            {% elif task.status == 'failed' %}
-              <strong style="color: red;">Mislukt</strong>
-            {% endif %}
-          </td>
-          <td>{{ task.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</td>
-          <td>
-            {% if task.started_at %}
-              {{ task.started_at.strftime("%Y-%m-%d %H:%M:%S") }}
-            {% else %}
-              -
-            {% endif %}
-          </td>
-          <td>
-            {% if task.completed_at %}
-              {{ task.completed_at.strftime("%Y-%m-%d %H:%M:%S") }}
-            {% else %}
-              -
-            {% endif %}
-          </td>
-          <td>
-            {% if task.created_by %}
-              {{ task.created_by.get_full_name() or task.created_by.username }}
-            {% else %}
-              -
-            {% endif %}
-          </td>
-          <td>
-            {% if task.result %}
-              Aangemaakt: {{ task.result.created }}, Bijgewerkt: {{ task.result.updated }}, Ongewijzigd: {{ task.result.unchanged }}, Gedeactiveerd: {{ task.result.deactivated }}, Verwijderd: {{ task.result.deleted }}
-            {% else %}
-              -
-            {% endif %}
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+  <c-table>
+  <c-table-head>
+  <c-table-row>
+  <c-table-header>Status</c-table-header>
+  <c-table-header>Aangemaakt</c-table-header>
+  <c-table-header>Gestart</c-table-header>
+  <c-table-header>Afgerond</c-table-header>
+  <c-table-header>Door</c-table-header>
+  <c-table-header>Resultaat</c-table-header>
+  </c-table-row>
+  </c-table-head>
+  <c-table-body>
+  {% for task in latest_tasks %}
+    <c-table-row>
+    <c-table-cell>
+    {% if task.status == 'pending' %}
+      <c-status-icon type="info" size="sm" /> <strong>Wachtend</strong>
+    {% elif task.status == 'running' %}
+      <c-status-icon type="info" size="sm" /> <strong>Bezig</strong>
+    {% elif task.status == 'completed' %}
+      <c-status-icon type="bevestiging" size="sm" /> <strong>Voltooid</strong>
+    {% elif task.status == 'failed' %}
+      <c-status-icon type="foutmelding" size="sm" /> <strong>Mislukt</strong>
+    {% endif %}
+    </c-table-cell>
+    <c-table-cell>{{ task.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</c-table-cell>
+    <c-table-cell>
+    {% if task.started_at %}
+      {{ task.started_at.strftime("%Y-%m-%d %H:%M:%S") }}
+    {% else %}
+      -
+    {% endif %}
+    </c-table-cell>
+    <c-table-cell>
+    {% if task.completed_at %}
+      {{ task.completed_at.strftime("%Y-%m-%d %H:%M:%S") }}
+    {% else %}
+      -
+    {% endif %}
+    </c-table-cell>
+    <c-table-cell>
+    {% if task.created_by %}
+      {{ task.created_by.get_full_name() or task.created_by.username }}
+    {% else %}
+      -
+    {% endif %}
+    </c-table-cell>
+    <c-table-cell>
+    {% if task.result %}
+      Aangemaakt: {{ task.result.created }}, Bijgewerkt: {{ task.result.updated }}, Ongewijzigd: {{ task.result.unchanged }}, Gedeactiveerd: {{ task.result.deactivated }}, Verwijderd: {{ task.result.deleted }}
+    {% else %}
+      -
+    {% endif %}
+    </c-table-cell>
+    </c-table-row>
+  {% endfor %}
+  </c-table-body>
+  </c-table>
 {% else %}
-  <p>Geen taken gevonden.</p>
+  <c-paragraph>Geen taken gevonden.</c-paragraph>
 {% endif %}
