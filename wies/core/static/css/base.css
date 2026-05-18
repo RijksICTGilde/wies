@@ -451,6 +451,9 @@ body {
   .sidebar {
     /* Mobile: hidden by default, becomes full-screen overlay when opened */
     display: none;
+    position: static;
+    max-height: none;
+    overflow: visible;
   }
 
   /* Show sidebar as full-screen overlay when filters are open on mobile */
@@ -466,6 +469,7 @@ body {
     flex-direction: column;
     transform: translateX(0);
     transition: transform var(--animation-duration) cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
   }
 
   .layout--mobile-filters-open .sidebar__content {
@@ -474,6 +478,12 @@ body {
     position: static;
     visibility: visible;
     padding: 0;
+  }
+
+  .layout--mobile-filters-open .sidebar > form {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
   }
 
   .layout--mobile-filters-open .sidebar__content > * {
