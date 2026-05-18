@@ -1,37 +1,45 @@
 {% for assignment in object_list %}
-  <c-card outline padding="md" class="assignment-card assignment-card--clickable" tabindex="0" role="link" aria-label="{{ assignment.name }}" hx-get="{{ assignment.panel_url }}" hx-target="#side_panel-container" onkeydown="if(event.key==='Enter')htmx.trigger(this,'click')" style="cursor: pointer">
-  <div class="assignment-card__header">
-    <c-h3 noMargins class="assignment-card__title">{{ assignment.name }}</c-h3>
-  </div>
-  {% if assignment.org_breadcrumb %}
-    <span class="rvo-text">
-      <c-icon icon="basis-kantoorgebouw" size="md" color="grijs-700" />
-      {{ assignment.org_breadcrumb.label }}
-    </span>
-  {% endif %}
-  {% if assignment.start_date or assignment.end_date %}
-    <span class="assignment-card__meta-item rvo-text rvo-text--subtle">
-      <c-icon icon="kalender" size="md" />
-      {{ assignment.start_date|datum_nl("N Y") }}
-      {% if assignment.end_date %}- {{ assignment.end_date|datum_nl("N Y") }}{% endif %}
-    </span>
-  {% endif %}
-  {% if assignment.services_with_skills %}
-    <div class="assignment-card__tags"
-         role="list"
-         aria-label="Gezochte rollen">
-      {% for service in assignment.services_with_skills[:3] %}
-        <span role="listitem"><c-tag>{{ service.skill.name }}</c-tag></span>
-      {% endfor %}
-      {% if assignment.services_with_skills|length > 3 %}
-        <span role="listitem"><c-tag>+{{ assignment.services_with_skills|length - 3 }} meer</c-tag></span>
+  <div class="assignment-card assignment-card--clickable"
+       tabindex="0"
+       role="link"
+       aria-label="{{ assignment.name }}"
+       hx-get="{{ assignment.panel_url }}"
+       hx-target="#side_panel-container"
+       onkeydown="if(event.key==='Enter')htmx.trigger(this,'click')">
+    <div class="assignment-card__name">
+      <strong class="assignment-card__title truncate" title="{{ assignment.name }}">{{ assignment.name }}</strong>
+    </div>
+    <div class="assignment-card__body">
+      <div class="assignment-card__info">
+        {% if assignment.org_breadcrumb %}
+          <span class="truncate" title="{{ assignment.org_breadcrumb.label }}">{{ assignment.org_breadcrumb.label }}</span>
+        {% endif %}
+        {% if assignment.start_date or assignment.end_date %}
+          <span class="icon-text-inline">
+            <c-icon icon="kalender" size="md" color="grijs-700" />
+            {{ assignment.start_date|datum_nl("N Y") }}
+            {% if assignment.end_date %}- {{ assignment.end_date|datum_nl("N Y") }}{% endif %}
+          </span>
+        {% endif %}
+      </div>
+      {% if assignment.services_with_skills %}
+        <hr class="assignment-card__divider">
+        <div class="assignment-card__tags"
+             role="list"
+             aria-label="Gezochte rollen">
+          {% for service in assignment.services_with_skills[:3] %}
+            <span role="listitem"><c-tag type="info">{{ service.skill.name }}</c-tag></span>
+          {% endfor %}
+          {% if assignment.services_with_skills|length > 3 %}
+            <span role="listitem"><c-tag type="info">+{{ assignment.services_with_skills|length - 3 }} meer</c-tag></span>
+          {% endif %}
+        </div>
       {% endif %}
     </div>
-  {% endif %}
-  </c-card>
+  </div>
 {% else %}
   <div class="assignment-card-grid__empty">
-    <span class="rvo-text--italic rvo-text--subtle">Geen vacatures gevonden.</span>
+    <span class="rvo-text--italic rvo-text--subtle">Geen aanvragen gevonden.</span>
   </div>
 {% endfor %}
 {% if next_page_url %}

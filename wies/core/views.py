@@ -11,7 +11,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
 from django.core.exceptions import ValidationError
-from django.db.models import Case, Exists, OuterRef, Prefetch, Q, Value, When
+from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
 from django.http import Http404, HttpResponse, QueryDict
@@ -906,7 +906,7 @@ class AssignmentListView(ListView):
                 placements__isnull=True,
             )
         )
-        qs = Assignment.objects.filter(has_unfilled_open_service).order_by("-created_at")
+        qs = Assignment.objects.filter(has_unfilled_open_service).order_by(F("created_at").desc(nulls_last=True))
         search_filter = self.request.GET.get("zoek")
         if search_filter:
             qs = qs.filter(
@@ -2097,7 +2097,7 @@ def assignment_create(request):
         # Check if at least one service has a skill selected (works even when formset is invalid)
         total_forms = min(int(request.POST.get("service-TOTAL_FORMS", 0)), 100)
         has_any_service = any(request.POST.get(f"service-{i}-skill") for i in range(total_forms))
-        services_error = "" if has_any_service else "Voeg minimaal één dienst toe."
+        services_error = "" if has_any_service else "Voeg minimaal één rol toe."
 
         form_valid = form.is_valid()
         formset_valid = service_formset.is_valid()
@@ -2415,7 +2415,7 @@ def _render_inline_edit_display(
     user_can_edit: bool | None = None,
     saved: bool = False,
 ) -> HttpResponse:
-    # `saved=True` triggers the pencil→check flash; `alert` carries a denial warning.
+    # `saved=True` triggers the toast via data-just-saved attribute; `alert` carries a denial warning.
     # On denial, skip the value/display resolution — it can be heavy (e.g. the
     # services collection does a per-row Placement query) and the partial
     # gracefully handles an empty value with the alert banner.
@@ -2440,7 +2440,10 @@ def _render_inline_edit_display(
         "alert": alert,
         "saved": saved,
     }
-    return render(request, "parts/inline_edit/display.html", ctx)
+    response = render(request, "parts/inline_edit/display.html", ctx)
+    if saved:
+        response["HX-Trigger-After-Swap"] = "inline-edit-saved"
+    return response
 
 
 def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) -> HttpResponse:

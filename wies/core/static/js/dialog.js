@@ -1,7 +1,7 @@
 // HTMX + Dialog integration - hybrid approach
 document.addEventListener("htmx:afterSwap", function (e) {
   // When HTMX loads modal content into a container, find any dialogs and show them
-  const dialogs = e.detail.target.querySelectorAll('dialog[closedby="any"]');
+  const dialogs = e.detail.target.querySelectorAll("dialog[closedby]");
 
   dialogs.forEach(function (dialog) {
     // Auto-show dialog when HTMX loads content
@@ -23,6 +23,19 @@ document.addEventListener("htmx:afterSwap", function (e) {
       });
     });
   });
+});
+
+// ESC key → close topmost modal dialog (closedby="none" blocks native ESC)
+document.addEventListener("keydown", function (e) {
+  if (e.key !== "Escape") return;
+  // Find the topmost open modal dialog (not the side panel, that has its own handler)
+  const dialogs = document.querySelectorAll('dialog[closedby="none"][open]');
+  for (const dialog of dialogs) {
+    if (dialog.id === "side_panel") continue;
+    e.preventDefault();
+    dialog.close();
+    return;
+  }
 });
 
 // Listen for closeModal trigger from server

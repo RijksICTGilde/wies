@@ -16,18 +16,13 @@
               justify-content: space-between">
     <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
       {% for group in user.groups.all() %}
-        <span class="rvo-text rvo-text--sm"
-              style="background-color: #e6f0ff;
-                     color: #154273;
-                     padding: 0.125rem 0.5rem;
-                     border-radius: 0.25rem;
-                     white-space: nowrap">
-          {% if group.name == 'Business Development Manager' %}
-            BDM
-          {% else %}
-            {{ group.name }}
-          {% endif %}
-        </span>
+        <c-tag type="info">
+        {% if group.name == 'Business Development Manager' %}
+          BDM
+        {% else %}
+          {{ group.name }}
+        {% endif %}
+        </c-tag>
       {% else %}
         <span class="rvo-text rvo-text--sm rvo-text--subtle">-</span>
       {% endfor %}
