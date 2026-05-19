@@ -116,6 +116,7 @@ def _build_panel_url(request, **overrides):
     params.pop("pagina", None)
     params.pop("collega", None)
     params.pop("opdracht", None)
+    params.pop("plaatsing", None)
     for key, value in overrides.items():
         params[key] = value
     return f"{request.path}?{params.urlencode()}"
@@ -128,6 +129,7 @@ def _build_close_url(request):
     params.pop("pagina", None)
     params.pop("collega", None)
     params.pop("opdracht", None)
+    params.pop("plaatsing", None)
     return f"{request.path}?{params.urlencode()}" if params else request.path
 
 
@@ -448,6 +450,54 @@ def _build_colleague_panel_data(colleague, request):
     }
 
 
+def _build_placement_panel_data(placement, request):
+    """Build panel context for a single placement (colleague-on-assignment view)."""
+    assignment = placement.service.assignment
+    colleague = placement.colleague
+    service = placement.service
+
+    # Build assignment card in the same format as colleague_assignment_cards.html expects
+    primary_org = (
+        AssignmentOrganizationUnit.objects.filter(assignment=assignment, role="PRIMARY")
+        .values_list("organization__name", flat=True)
+        .first()
+    )
+
+    # Active team members on this assignment
+    team_members = list(
+        Placement.objects.filter(
+            service__assignment=assignment,
+        )
+        .select_related("colleague")
+        .values_list("colleague__name", flat=True)
+        .distinct()
+    )
+
+    assignment_card = {
+        "name": assignment.name,
+        "id": assignment.id,
+        "assignment_url": _build_panel_url(request, opdracht=assignment.id),
+        "start_date": None,
+        "end_date": None,
+        "organization": primary_org,
+        "tags": [],
+        "historical": False,
+        "privacy_warning_text": None,
+        "team_members": team_members,
+        "show_read_more": True,
+    }
+
+    return {
+        "panel_content_template": "parts/placement_panel_content.html",
+        "panel_title": f"{colleague.name} - {assignment.name}",
+        "close_url": _build_close_url(request),
+        "placement": placement,
+        "colleague": colleague,
+        "service": service,
+        "assignment_card": assignment_card,
+    }
+
+
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
 def no_access(request):
     email = request.session.pop("failed_login_email", None)
@@ -682,9 +732,12 @@ class PlacementListView(ListView):
             if self.request.headers.get("HX-Target") == "side_panel-container":
                 return ["parts/side_panel.html"]
             if self.request.headers.get("HX-Target") == "side_panel-content":
+                placement_id = self.request.GET.get("plaatsing")
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
 
+                if placement_id:
+                    return ["parts/placement_panel_content.html"]
                 if colleague_id and not assignment_id:
                     return ["parts/colleague_panel_content.html"]
                 if assignment_id:
@@ -699,9 +752,9 @@ class PlacementListView(ListView):
         context = super().get_context_data(**kwargs)
         context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
 
-        # Add colleague URLs to placement objects
+        # Add panel URLs to placement objects
         for placement in context["object_list"]:
-            placement.colleague_url = _build_panel_url(self.request, collega=placement.colleague.id)
+            placement.panel_url = _build_panel_url(self.request, plaatsing=placement.id)
 
         context["filter_target_url"] = reverse("home")
         context["search_field"] = "zoek"
@@ -872,10 +925,21 @@ class PlacementListView(ListView):
         else:
             context["next_page_url"] = None
 
+        placement_id = self.request.GET.get("plaatsing")
         colleague_id = self.request.GET.get("collega")
         assignment_id = self.request.GET.get("opdracht")
 
-        if colleague_id and not assignment_id:
+        if placement_id:
+            try:
+                placement = Placement.objects.select_related(
+                    "colleague",
+                    "service__assignment",
+                    "service__skill",
+                ).get(id=placement_id)
+                context["panel_data"] = _build_placement_panel_data(placement, self.request)
+            except Placement.DoesNotExist:
+                pass
+        elif colleague_id and not assignment_id:
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)

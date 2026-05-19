@@ -22,4 +22,4 @@ class ServiceEditables(EditableSet):
     period_source = Editable(label="Periode gebaseerd op")
     specific_start_date = Editable(label="Specifieke startdatum")
     specific_end_date = Editable(label="Specifieke einddatum")
-    status = Editable(label="Status")
+    status = Editable(label="Status", display=lambda s: s.get_status_display())

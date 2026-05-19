@@ -11,6 +11,8 @@
           <strong class="assignment-card__title">{{ assignment.name }}</strong>
           {% if assignment.historical %}
             <c-tag type="default" class="assignment-tag--completed">Afgelopen</c-tag>
+          {% elif assignment.show_read_more %}
+            <span class="assignment-card__read-more">Lees meer ›</span>
           {% elif assignment.start_date or assignment.end_date %}
             <span class="icon-text-inline">
               <c-icon icon="kalender" size="md" color="grijs-700" />
@@ -25,6 +27,14 @@
                 <c-icon icon="basis-kantoorgebouw" size="md" color="grijs-700" />
                 {{ assignment.organization }}
               </span>
+            {% endif %}
+            {% if assignment.team_members %}
+              <div class="assignment-card__team">
+                <span class="rvo-text--subtle rvo-text--sm">Collega's op deze opdracht:</span>
+                {% for member in assignment.team_members %}
+                  <div class="user-avatar user-avatar--sm" title="{{ member }}">{{ member|first|upper }}</div>
+                {% endfor %}
+              </div>
             {% endif %}
             <div class="assignment-card__subtitle">
               {% for tag in assignment.tags %}<c-tag type="default">{{ tag.skill if tag is mapping else tag }}</c-tag>{% endfor %}

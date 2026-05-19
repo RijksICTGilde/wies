@@ -1,0 +1,59 @@
+{% set colleague = panel_data.colleague %}
+{% set service = panel_data.service %}
+{% set placement = panel_data.placement %}
+<div class="rvo-layout-column rvo-layout-gap--lg">
+  <section>
+    <div class="card card--horizontal">
+      <div class="card__image">
+        <img alt="Profielfoto van {{ colleague.name }}"
+             src="{{ static('img/placeholder-avatar.svg') }}" />
+      </div>
+      <div class="card__content">
+        <c-h3 noMargins>{{ colleague.name }}</c-h3>
+        <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
+          <c-icon icon="mail" size="md" color="hemelblauw" />
+          <c-link href="mailto:{{ colleague.email }}">{{ colleague.email }}</c-link>
+        </div>
+      </div>
+    </div>
+  </section>
+  {% set labels = colleague.labels.all() %}
+  {% if labels %}
+    <div class="rvo-layout-row rvo-layout-gap--sm label-badge-list">
+      {% for label in labels %}
+        <c-tag type="default" class="label-badge" style="background-color: {{ label.category.color }}">{{ label.name }}</c-tag>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <section>
+    <c-h2 style="margin-bottom: var(--rvo-space-sm);">Informatie over huidige opdracht</c-h2>
+    {% with assignments=[panel_data.assignment_card], hx_target="#side_panel-content" %}
+      {% include "parts/colleague_assignment_cards.html" %}
+    {% endwith %}
+  </section>
+  <section>
+    <c-data-list>
+    <dt>Rol van {{ colleague.name.split()[0] }}</dt>
+    <dd>
+      {{ inline_edit(service, "skill") }}
+    </dd>
+    <dt>Omschrijving</dt>
+    <dd>
+      {{ inline_edit(service, "description") }}
+    </dd>
+    <dt>Periode</dt>
+    <dd>
+      {% if placement.start_date or placement.end_date %}
+        <span class="icon-text-inline">
+          <c-icon icon="kalender" size="md" color="grijs-700" />
+          {{ placement.start_date|datum_nl("j F Y") if placement.start_date else "–" }}
+          t/m
+          {{ placement.end_date|datum_nl("j F Y") if placement.end_date else "heden" }}
+        </span>
+      {% else %}
+        <span class="rvo-text--italic">Geen periode ingesteld</span>
+      {% endif %}
+    </dd>
+    </c-data-list>
+  </section>
+</div>

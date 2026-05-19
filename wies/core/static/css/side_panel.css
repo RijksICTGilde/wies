@@ -297,6 +297,25 @@ dialog#side_panel::backdrop {
   border-top: 1px solid var(--rvo-color-grijs-200, #e2e8f0);
 }
 
+.assignment-card__read-more {
+  color: var(--rvo-color-hemelblauw);
+  font-size: var(--rvo-font-size-sm);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.assignment-card:hover .assignment-card__read-more {
+  text-decoration: underline;
+}
+
+.assignment-card__team {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
 .assignment-card__privacy {
   display: flex;
   align-items: center;
@@ -333,6 +352,12 @@ dialog#side_panel::backdrop {
 .service-card__description {
   padding: 0.5rem 0.75rem 0.5rem calc(32px + 1.5rem);
   font-style: italic;
+}
+
+/* Remove misleading hover on team cards (only the name link is clickable) */
+.rvo-item-list__item--filled:hover {
+  border-color: var(--rvo-color-grijs-300, #c5ced6);
+  background: inherit;
 }
 
 /* Completed assignment tag */

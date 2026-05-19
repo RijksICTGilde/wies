@@ -32,6 +32,7 @@ function closeSidePanel() {
   const url = new URL(window.location);
   url.searchParams.delete("collega");
   url.searchParams.delete("opdracht");
+  url.searchParams.delete("plaatsing");
   history.replaceState({}, "", url.toString());
 }
 
@@ -40,7 +41,11 @@ function panelBack() {
     const prevUrl = panelStack.pop();
     const url = new URL(prevUrl, window.location.origin);
 
-    if (url.searchParams.has("collega") || url.searchParams.has("opdracht")) {
+    if (
+      url.searchParams.has("collega") ||
+      url.searchParams.has("opdracht") ||
+      url.searchParams.has("plaatsing")
+    ) {
       history.replaceState({}, "", prevUrl);
       _skipNextPush = true;
       swapPanel(prevUrl);
@@ -112,7 +117,9 @@ document.addEventListener("click", function (e) {
 window.addEventListener("popstate", function () {
   const url = new URL(window.location);
   const hasPanel =
-    url.searchParams.has("collega") || url.searchParams.has("opdracht");
+    url.searchParams.has("collega") ||
+    url.searchParams.has("opdracht") ||
+    url.searchParams.has("plaatsing");
   const panel = document.getElementById("side_panel");
 
   if (!hasPanel && panel && panel.open) {
