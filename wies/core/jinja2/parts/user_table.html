@@ -1,13 +1,11 @@
-<div class="rvo-table--responsive user-table" id="user_table">
-  <table class="rvo-table">
-    <thead class="rvo-table-head">
-      <tr class="rvo-table-row">
-        <th class="rvo-table-header">Naam</th>
-        <th class="rvo-table-header">Rollen</th>
-      </tr>
-    </thead>
-    <tbody>
-      {% include "parts/user_table_rows.html" %}
-    </tbody>
-  </table>
-</div>
+<c-table id="user_table" class="user-table">
+<c-table-head>
+<c-table-row>
+<c-table-header>Naam</c-table-header>
+<c-table-header>Rollen</c-table-header>
+</c-table-row>
+</c-table-head>
+<c-table-body>
+{% include "parts/user_table_rows.html" %}
+</c-table-body>
+</c-table>

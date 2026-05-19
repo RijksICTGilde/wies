@@ -146,6 +146,10 @@
   margin: 0;
 }
 
+.modal-body__warning {
+  padding: 1rem;
+}
+
 .modal-close-button {
   background: none;
   border: none;

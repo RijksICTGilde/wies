@@ -15,16 +15,8 @@
 <fieldset class="checkbox-filter" data-checkbox-filter data-name="{{ name }}">
   <legend class="checkbox-filter__legend-sr-only">{{ label }}</legend>
   <button type="button" class="checkbox-filter__header">
-    <span class="checkbox-filter__label rvo-label">{{ label }}</span>
-    <svg class="checkbox-filter__header-icon"
-         viewBox="0 0 24 24"
-         fill="none"
-         stroke="currentColor"
-         stroke-width="2.5"
-         width="20"
-         height="20">
-      <path d="M6 9l6 6 6-6" />
-    </svg>
+    <c-label>{{ label }}</c-label>
+    <c-icon icon="delta-omlaag" size="sm" class="checkbox-filter__header-icon" />
   </button>
   <div class="checkbox-filter__body">
     <div class="checkbox-filter__options">
@@ -54,23 +46,11 @@
           </label>
         {% endfor %}
       </div>
-      <button type="button"
-              class="checkbox-filter__toggle{% if has_selected_extra %} checkbox-filter__toggle--expanded{% endif %}">
-        <span class="checkbox-filter__toggle-icon">
-          {% if has_selected_extra %}
-            −
-          {% else %}
-            +
-          {% endif %}
-        </span>
-        <span class="checkbox-filter__toggle-text">
-          {% if has_selected_extra %}
-            Toon minder
-          {% else %}
-            Toon meer
-          {% endif %}
-        </span>
-      </button>
+      {% if has_selected_extra %}
+        <c-button type="button" kind="tertiary" size="sm" class="checkbox-filter__toggle checkbox-filter__toggle--expanded">− Toon minder</c-button>
+      {% else %}
+        <c-button type="button" kind="tertiary" size="sm" class="checkbox-filter__toggle">+ Toon meer</c-button>
+      {% endif %}
     {% endif %}
   </div>
   {# Hidden inputs for form submission - one per selected value #}
