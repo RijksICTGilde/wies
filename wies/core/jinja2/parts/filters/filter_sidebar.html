@@ -1,7 +1,7 @@
 <div class="sidebar__toggle-row">
-  <h3 class="sidebar__title">
-    <span class="sidebar__title-text">Filters</span>
-  </h3>
+  <c-h3 class="sidebar__title" noMargins>
+  <span class="sidebar__title-text">Filters</span>
+  </c-h3>
   <button type="button"
           class="sidebar-toggle"
           data-toggle-filters
@@ -13,9 +13,7 @@
          stroke-width="2">
       <path d="M15 18l-6-6 6-6" />
     </svg>
-    <span class="sidebar-toggle__icon sidebar-toggle__icon--close utrecht-icon rvo-icon rvo-icon-kruis rvo-icon--md"
-          role="img"
-          aria-label="Sluiten"></span>
+    <c-icon icon="kruis" size="md" class="sidebar-toggle__icon sidebar-toggle__icon--close" />
   </button>
 </div>
 <form class="rvo-form filter-sidebar-form"

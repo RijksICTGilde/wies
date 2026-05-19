@@ -1,6 +1,6 @@
 <div>
   {% if panel_data.show_updates_tab %}
-    <div class="rvo-tabs rvo-tabs--md">
+    <div class="rvo-tabs rvo-tabs--md rvo-tabs--borderless">
       <div class="rvo-tabs__tablist" role="tablist" aria-label="Tabs">
         <button id="tab-gegevens"
                 type="button"
@@ -29,63 +29,59 @@
          {% if panel_data.show_updates_tab %}class="rvo-tabs__panel" role="tabpanel" aria-labelledby="tab-gegevens" tabindex="0"{% endif %}>
       <div class="rvo-layout-column rvo-layout-gap--lg">
         <section>
-          <h2>Opdracht gegevens</h2>
-          <dl class="rvo-data-list">
-            <dt>Opdracht naam</dt>
+          <c-h2>Opdracht gegevens</c-h2>
+          <c-data-list>
+          <dt>Opdracht naam</dt>
+          <dd>
+            {{ inline_edit(panel_data.assignment, "name") }}
+          </dd>
+          <dt>Beschrijving</dt>
+          <dd>
+            {{ inline_edit(panel_data.assignment, "extra_info") }}
+          </dd>
+          {% if panel_data.assignment.source not in ('wies', '') %}
+            <dt>Externe bron</dt>
             <dd>
-              {{ inline_edit(panel_data.assignment, "name") }}
-            </dd>
-            <dt>Beschrijving</dt>
-            <dd>
-              {{ inline_edit(panel_data.assignment, "extra_info") }}
-            </dd>
-            {% if panel_data.assignment.source not in ('wies', '') %}
-              <dt>Externe bron</dt>
-              <dd>
-                {% if panel_data.assignment.source_url %}
-                  <a href="{{ panel_data.assignment.source_url }}"
-                     target="_blank"
-                     class="rvo-link">
-                    {{ panel_data.assignment.get_source_display() }}
-                    <span class="utrecht-icon rvo-icon rvo-icon-externe-link rvo-icon--xs"
-                          role="img"
-                          aria-label="Externe link"></span>
-                  </a>
-                {% else %}
-                  {{ panel_data.assignment.get_source_display() }}
-                {% endif %}
-              </dd>
-            {% endif %}
-            <dt>
-              {% if panel_data.org_breadcrumbs and panel_data.org_breadcrumbs|length > 1 %}
-                Opdrachtgevers
+              {% if panel_data.assignment.source_url %}
+                <c-link href="{{ panel_data.assignment.source_url }}" target="_blank">
+                {{ panel_data.assignment.get_source_display() }}
+                <c-icon icon="externe-link" size="xs" />
+                </c-link>
               {% else %}
-                Opdrachtgever
+                {{ panel_data.assignment.get_source_display() }}
               {% endif %}
-            </dt>
-            <dd>
-              {{ inline_edit(panel_data.assignment, "organizations") }}
             </dd>
-            <dt>Periode</dt>
-            <dd>
-              {{ inline_edit(panel_data.assignment, "period") }}
-            </dd>
-            {% if panel_data.assignment.created_at %}
-              <dt>Plaatsingsdatum</dt>
-              <dd>
-                {{ panel_data.assignment.created_at|datum_nl("j F Y") }}
-              </dd>
+          {% endif %}
+          <dt>
+            {% if panel_data.org_breadcrumbs and panel_data.org_breadcrumbs|length > 1 %}
+              Opdrachtgevers
+            {% else %}
+              Opdrachtgever
             {% endif %}
-            <dt>Business Manager</dt>
+          </dt>
+          <dd>
+            {{ inline_edit(panel_data.assignment, "organizations") }}
+          </dd>
+          <dt>Periode</dt>
+          <dd>
+            {{ inline_edit(panel_data.assignment, "period") }}
+          </dd>
+          {% if panel_data.assignment.created_at %}
+            <dt>Plaatsingsdatum</dt>
             <dd>
-              {{ inline_edit(panel_data.assignment, "owner",
-                            owner_url=panel_data.owner_url,
-                            owner_mailto=panel_data.owner_mailto_href) }}
+              {{ panel_data.assignment.created_at|datum_nl("j F Y") }}
             </dd>
-          </dl>
+          {% endif %}
+          <dt>Business Manager</dt>
+          <dd>
+            {{ inline_edit(panel_data.assignment, "owner",
+                        owner_url=panel_data.owner_url,
+                        owner_mailto=panel_data.owner_mailto_href) }}
+          </dd>
+          </c-data-list>
         </section>
         <section>
-          <h2>Team</h2>
+          <c-h2>Team</c-h2>
           {{ inline_edit(panel_data.assignment, "services") }}
         </section>
       </div>

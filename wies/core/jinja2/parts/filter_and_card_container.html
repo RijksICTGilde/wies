@@ -7,20 +7,13 @@
       <c-h1 noMargins>Vacatures</c-h1>
       <div class="header-actions">
         <!-- Mobile filter toggle -->
-        <button type="button"
-                class="rvo-button rvo-button--secondary rvo-button--size-md rvo-button--icon-before mobile-filter-toggle"
-                data-toggle-filters>
-          <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before"
-                role="img"
-                aria-label=""></span>
-          Filters
-        </button>
+        <c-button kind="secondary" size="md" icon="trechter" iconPlacement="before" type="button" class="mobile-filter-toggle" data-toggle-filters>
+        Filters
+        </c-button>
         {% if primary_button %}
           <a href="{{ primary_button.href }}"
              class="rvo-button rvo-button--primary rvo-button--size-md rvo-button--icon-before">
-            <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before"
-                  role="img"
-                  aria-label="Plus"></span>
+            <c-icon icon="plus" size="md" class="rvo-link__icon--before" />
             {{ primary_button.button_text }}
           </a>
         {% endif %}
@@ -35,9 +28,9 @@
     </div>
     <!-- Row 2: Result count + Active Filter Chips -->
     <div class="header-row">
-      <p class="results-count">
-        <b>{{ page_obj.paginator.count }}</b> resultaten
-      </p>
+      <c-paragraph class="results-count">
+      <b>{{ page_obj.paginator.count }}</b> resultaten
+      </c-paragraph>
       <!-- Active Filter Chips -->
       {% include "parts/filters/filter_chips.html" %}
     </div>
