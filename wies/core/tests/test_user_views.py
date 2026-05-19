@@ -223,7 +223,7 @@ class UserViewsTest(TestCase):
         """Test that a new user cannot be created with an existing email"""
         self.client.force_login(self.auth_user)
 
-        # Try to create a user with an email that already exists
+        initial_count = User.objects.count()
         response = self.client.post(
             reverse("user-create"),
             {
@@ -233,17 +233,68 @@ class UserViewsTest(TestCase):
             },
         )
 
-        # Should return 200 with form errors (re-rendered modal)
         assert response.status_code == 200
         content = response.content.decode()
-
-        # Modal should be shown with errors
         assert "modal-content" in content
-        # Should contain error message about duplicate email
-        assert "email" in content.lower()
-
-        # User should not be created
+        assert "Er bestaat al een gebruiker met dit e-mailadres." in content
+        assert User.objects.count() == initial_count
         assert User.objects.filter(email="user1@rijksoverheid.nl").count() == 1
+
+    def test_user_create_duplicate_email_case_insensitive(self):
+        """Duplicate detection must match the case-insensitive DB constraint"""
+        self.client.force_login(self.auth_user)
+
+        initial_count = User.objects.count()
+        response = self.client.post(
+            reverse("user-create"),
+            {
+                "first_name": "Duplicate",
+                "last_name": "User",
+                "email": "USER1@rijksoverheid.nl",
+            },
+        )
+
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "Er bestaat al een gebruiker met dit e-mailadres." in content
+        assert User.objects.count() == initial_count
+
+    def test_user_edit_same_email_succeeds(self):
+        """Editing a user without changing their email must succeed"""
+        self.client.force_login(self.auth_user)
+
+        response = self.client.post(
+            reverse("user-edit", args=[self.user1.id]),
+            {
+                "first_name": "Johnny",
+                "last_name": "Doe",
+                "email": self.user1.email,
+            },
+        )
+
+        # Non-HTMX POST → standard redirect to admin-users
+        assert response.status_code == 302
+        self.user1.refresh_from_db()
+        assert self.user1.first_name == "Johnny"
+
+    def test_user_edit_duplicate_email_other_user(self):
+        """Editing a user and setting their email to another user's email shows inline error"""
+        self.client.force_login(self.auth_user)
+
+        response = self.client.post(
+            reverse("user-edit", args=[self.user1.id]),
+            {
+                "first_name": self.user1.first_name,
+                "last_name": self.user1.last_name,
+                "email": self.user2.email,  # belongs to user2
+            },
+        )
+
+        assert response.status_code == 200
+        content = response.content.decode()
+        assert "Er bestaat al een gebruiker met dit e-mailadres." in content
+        self.user1.refresh_from_db()
+        assert self.user1.email == "user1@rijksoverheid.nl"
 
     def test_user_create_requires_login(self):
         """Test that user creation requires authentication"""

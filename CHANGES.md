@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 342: fix "Nieuwe gebruiker" form silently failing on duplicate e-mail — error is now shown inline next to the e-mailveld (regressie van #322)
 - 324: replace raw HTML with JRC components across templates and include roos.css
 - 324: add sortable Tot column to placement table
 - 336: fix user CSV import to accept `;` delimiter and files with UTF-8 BOM

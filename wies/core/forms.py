@@ -111,6 +111,12 @@ class UserForm(RvoFormMixin, forms.ModelForm):
     def clean_email(self):
         email = self.cleaned_data.get("email", "").lower()
         validate_email_domain(email, user_facing=True)
+        qs = User.objects.filter(email__iexact=email)
+        if self.instance and self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            msg = "Er bestaat al een gebruiker met dit e-mailadres."
+            raise ValidationError(msg)
         return email
 
     def __init__(self, *args, **kwargs):
