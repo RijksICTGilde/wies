@@ -5,6 +5,13 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 342: fix "Nieuwe gebruiker" form silently failing on duplicate e-mail — error is now shown inline next to the e-mailveld (regressie van #322)
+- 341: Add placement panel: clicking a row in "Wie zit waar?" now shows placement-specific info (role, description, period) instead of the generic colleague profile
+- 341: UX improvements for assignment detail panel: text buttons, compact team cards, floating toast on save
+- 341: Rename "Vacatures" to "Aanvragen" throughout the UI
+- 341: UX improvements for the assignment create form: rename "Diensten" to "Rollen", clarify labels and help text
+- 341: Prevent side panel and modals from closing on backdrop click while editing
+- 341: Make entire inline-edit row clickable (not just the pencil icon)
+- 341: Fix sidebar filter scroll: dynamically adjust max-height for header offset
 - 324: replace raw HTML with JRC components across templates and include roos.css
 - 324: add sortable Tot column to placement table
 - 336: fix user CSV import to accept `;` delimiter and files with UTF-8 BOM
@@ -335,5 +342,3 @@ This files lists the changes during the lifetime of this project.
 - add syncing between exact and wies colleagues
 
 ## demo-2025-08-04
-
-...

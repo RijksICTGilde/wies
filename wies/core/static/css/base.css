@@ -161,7 +161,7 @@ body {
   min-width: 0;
   position: sticky;
   top: 0;
-  max-height: 100vh;
+  max-height: calc(100vh - var(--sidebar-offset, 0px));
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--rvo-color-grijs-400, #b4b4b4) transparent;

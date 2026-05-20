@@ -32,6 +32,7 @@ function closeSidePanel() {
   const url = new URL(window.location);
   url.searchParams.delete("collega");
   url.searchParams.delete("opdracht");
+  url.searchParams.delete("plaatsing");
   history.replaceState({}, "", url.toString());
 }
 
@@ -40,7 +41,11 @@ function panelBack() {
     const prevUrl = panelStack.pop();
     const url = new URL(prevUrl, window.location.origin);
 
-    if (url.searchParams.has("collega") || url.searchParams.has("opdracht")) {
+    if (
+      url.searchParams.has("collega") ||
+      url.searchParams.has("opdracht") ||
+      url.searchParams.has("plaatsing")
+    ) {
       history.replaceState({}, "", prevUrl);
       _skipNextPush = true;
       swapPanel(prevUrl);
@@ -62,18 +67,15 @@ document.addEventListener("DOMContentLoaded", function () {
     document.documentElement.style.overflow = "hidden";
   }
 
-  // ESC key → close (capturing so it works on replaced dialogs)
-  const container = document.getElementById("side_panel-container");
-  if (container) {
-    container.addEventListener(
-      "cancel",
-      function (e) {
-        e.preventDefault();
-        closeSidePanel();
-      },
-      true,
-    );
-  }
+  // ESC key → close (blocked when an inline-edit form is open)
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    const panel = document.getElementById("side_panel");
+    if (!panel || !panel.open) return;
+    e.preventDefault();
+    if (panel.querySelector("form[hx-post]")) return;
+    closeSidePanel();
+  });
 });
 
 // After HTMX panel swaps: push URL and track in panel stack.
@@ -102,10 +104,11 @@ document.addEventListener("htmx:afterSettle", function (event) {
   }
 });
 
-// Backdrop click → close
+// Backdrop click → close (unless an inline-edit form is open)
 document.addEventListener("click", function (e) {
   const panel = document.getElementById("side_panel");
   if (panel && panel.open && e.target === panel) {
+    if (panel.querySelector("form[hx-post]")) return;
     closeSidePanel();
   }
 });
@@ -114,7 +117,9 @@ document.addEventListener("click", function (e) {
 window.addEventListener("popstate", function () {
   const url = new URL(window.location);
   const hasPanel =
-    url.searchParams.has("collega") || url.searchParams.has("opdracht");
+    url.searchParams.has("collega") ||
+    url.searchParams.has("opdracht") ||
+    url.searchParams.has("plaatsing");
   const panel = document.getElementById("side_panel");
 
   if (!hasPanel && panel && panel.open) {
