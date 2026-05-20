@@ -2479,7 +2479,7 @@ def _render_inline_edit_display(
     user_can_edit: bool | None = None,
     saved: bool = False,
 ) -> HttpResponse:
-    # `saved=True` triggers the toast via data-just-saved attribute; `alert` carries a denial warning.
+    # `saved=True` triggers the toast via HX-Trigger-After-Swap; `alert` carries a denial warning.
     # On denial, skip the value/display resolution — it can be heavy (e.g. the
     # services collection does a per-row Placement query) and the partial
     # gracefully handles an empty value with the alert banner.
@@ -2502,7 +2502,6 @@ def _render_inline_edit_display(
             user_can_edit if user_can_edit is not None else has_permission(Verb.UPDATE, obj, request.user, spec)
         ),
         "alert": alert,
-        "saved": saved,
     }
     response = render(request, "parts/inline_edit/display.html", ctx)
     if saved:

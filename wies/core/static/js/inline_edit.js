@@ -41,13 +41,8 @@ function showSavedToast() {
 }
 
 // Show toast after successful inline-edit save.
-document.addEventListener("htmx:afterSettle", (event) => {
-  const saved = document.querySelector("[data-just-saved]");
-  if (saved) {
-    saved.removeAttribute("data-just-saved");
-    showSavedToast();
-  }
-});
+// The view sets HX-Trigger-After-Swap: inline-edit-saved on the response.
+document.addEventListener("inline-edit-saved", () => showSavedToast());
 
 document.addEventListener("click", (event) => {
   const toggle = event.target.closest(".inline-edit-show-more");

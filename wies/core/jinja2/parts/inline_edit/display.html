@@ -1,7 +1,7 @@
 {# Wrapper stays classless so HTMX swaps between display/form/collection
   modes don't toggle layout classes on the target. The display layout
-  (value + pencil, flex row) lives on the inner block. #}
-<div id="{{ target }}"{% if saved %} data-just-saved{% endif %}>
+  (clickable value row + optional pencil, flex row) lives on the inner block. #}
+<div id="{{ target }}">
   <div class="editable-field-display">
     {% if alert %}
       <div class="rvo-alert rvo-alert--{{ alert.kind }} rvo-margin-block-end--xs"
