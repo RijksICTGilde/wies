@@ -19,7 +19,7 @@ class AutoLoginMiddleware:
             dev_email = os.environ.get("INITIAL_USER_EMAIL", "")
             user = None
             if dev_email:
-                user = User.objects.filter(email=dev_email).first()
+                user = User.objects.filter(email__iexact=dev_email).first()
             if not user:
                 user = User.objects.filter(is_superuser=True).first() or User.objects.first()
             if user:

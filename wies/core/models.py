@@ -112,7 +112,7 @@ class Colleague(models.Model):
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=["email", "source"], name="unique_colleague_email_source"),
+            models.UniqueConstraint(Lower("email"), "source", name="unique_colleague_email_source_ci"),
         ]
 
     def __str__(self):

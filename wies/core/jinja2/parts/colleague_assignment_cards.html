@@ -13,25 +13,19 @@
               <strong>{{ assignment.name }}</strong>
               {% if assignment.organization %}
                 <span class="icon-text-inline">
-                  <span class="utrecht-icon rvo-icon rvo-icon-basis-kantoorgebouw rvo-icon--md rvo-icon--rvo-grijs-700"
-                        role="img"
-                        aria-label="Opdrachtgever"></span>
+                  <c-icon icon="basis-kantoorgebouw" size="md" color="grijs-700" />
                   {{ assignment.organization }}
                 </span>
               {% endif %}
             </span>
             {% if assignment.start_date or assignment.end_date %}
               <span class="colleague-assignment-date">
-                <span class="utrecht-icon rvo-icon rvo-icon-kalender rvo-icon--md rvo-icon--rvo-grijs-700"
-                      role="img"
-                      aria-label="Periode"></span>
+                <c-icon icon="kalender" size="md" color="grijs-700" />
                 {{ assignment.start_date|datum_nl("N y") }} - {{ assignment.end_date|datum_nl("N y") }}
               </span>
             {% endif %}
           </div>
-          <div class="rvo-layout-row"
-               style="justify-content: space-between;
-                      align-items: flex-start">
+          <div class="rvo-layout-row colleague-assignment-tags">
             <div>
               {% for tag in assignment.tags %}
                 <div class="service-description-line">
@@ -40,13 +34,11 @@
                 </div>
               {% endfor %}
             </div>
-            {% if assignment.historical %}<span class="rvo-tag assignment-tag--completed">Afgelopen</span>{% endif %}
+            {% if assignment.historical %}<c-tag type="default" class="assignment-tag--completed">Afgelopen</c-tag>{% endif %}
           </div>
           {% if assignment.privacy_warning_text %}
             <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
-              <span class="utrecht-icon rvo-icon rvo-icon-hangslot-dicht rvo-icon--sm rvo-icon--rvo-grijs-700"
-                    role="img"
-                    aria-label="Privé"></span>
+              <c-icon icon="hangslot-dicht" size="sm" color="grijs-700" />
               <span class="rvo-text--subtle rvo-text--xs">{{ assignment.privacy_warning_text }}</span>
             </div>
           {% endif %}
@@ -57,9 +49,7 @@
 {% else %}
   <div class="rvo-card rvo-card--outline rvo-card--padding--md">
     <div class="rvo-layout-row rvo-layout-gap--sm rvo-layout-align--center">
-      <span class="utrecht-icon rvo-icon rvo-icon-info rvo-icon--lg rvo-icon--rvo-grijs-700"
-            role="img"
-            aria-label="Informatie"></span>
+      <c-icon icon="info" size="lg" color="grijs-700" />
       <span class="rvo-text--italic rvo-text--subtle">Geen opdrachten gevonden.</span>
     </div>
   </div>

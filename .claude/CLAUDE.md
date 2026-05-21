@@ -11,6 +11,7 @@ Language: Dutch UI, English code.
 - HTMX for interactivity
 - OIDC authentication via Keycloak
 - uv for Python dependencies
+- Inline editing (pencil icon, HTMX swap) via the Editables system in `wies/core/inline_edit/` — see `features/inline-editing.md`. Same declarations back full-page forms (e.g. `AssignmentCreateForm`).
 
 ## Commands
 
@@ -44,6 +45,16 @@ Language: Dutch UI, English code.
 - Reference: https://github.com/RijksICTGilde/jinja-roos-components
 - Use RVO CSS classes for layout (fallback: https://github.com/nl-design-system/rvo)
 - Dutch labels and messages
+
+### Forms & Inline Editing
+
+When extending an existing form OR adding a new editable field on a model
+that already has an `EditableSet` (Assignment, Colleague, Placement,
+Service, User), declare the field as an `Editable` in
+`wies/core/editables/<model>.py` instead of writing a bespoke form field.
+Full-page forms reference the same declarations via
+`AssignmentEditables.<name>.form_field()`. Workflow and patterns:
+`features/inline-editing.md`.
 
 ### Testing
 

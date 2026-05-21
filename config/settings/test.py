@@ -20,6 +20,9 @@ OIDC_CLIENT_ID = None
 OIDC_CLIENT_SECRET = None
 OIDC_DISCOVERY_URL = None
 
+# Tests rely on clear_data / load_base_data; keep them enabled by default.
+ENABLE_DESTRUCTIVE_STAFF_ACTIONS = True
+
 # PASSWORDS
 # ----------------------------------------------------------------------------------------------------------------------
 # Use fast password hasher for tests
@@ -38,16 +41,6 @@ CACHES = {
 # EMAIL
 # ----------------------------------------------------------------------------------------------------------------------
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
-
-# STATIC FILES
-# ----------------------------------------------------------------------------------------------------------------------
-# Disable WhiteNoise middleware and storage to avoid warnings about missing staticfiles directory
-MIDDLEWARE = [m for m in MIDDLEWARE if m != "whitenoise.middleware.WhiteNoiseMiddleware"]  # noqa: F405
-STORAGES = {
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
 
 # LOGGING
 # ----------------------------------------------------------------------------------------------------------------------

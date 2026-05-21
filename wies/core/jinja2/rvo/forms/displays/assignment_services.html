@@ -1,0 +1,54 @@
+{# Display partial for the Assignment services EditableCollection.
+
+   Renders the team list from `value` (the row dicts produced by
+   _services_initial). Matches the visual of the previous team block
+   in parts/assignment_panel_content.html, but driven off the editable's
+   initial data so the whole block toggles with edit mode — on edit the
+   inline-edit wrapper is swapped for the formset; on save/cancel it
+   swaps back to this display.
+
+   Nuance around historical placements and privacy notes is NOT
+   rendered here; the pre-existing team_members computation in
+   views.py carried that, and needs to be ported into this partial
+   as a follow-up.
+#}
+{% if value %}
+  <div class="rvo-item-list">
+    {% for row in value %}
+      {% if row.colleague %}
+        {% set colleague_url = '/opdrachten/?collega=' ~ row.colleague.id %}
+        <div class="rvo-item-list__item rvo-item-list__item--filled service-row">
+          <a href="{{ colleague_url }}"
+             hx-get="{{ colleague_url }}"
+             hx-target="#side_panel-content"
+             class="service-row__link"
+             title="Bekijk {{ row.colleague.name }}">
+            <div class="user-avatar">{{ row.colleague.name|first|upper }}</div>
+            <div class="rvo-item-list__content">
+              <strong>{{ row.colleague.name }}</strong>
+              <div class="service-description-line">{{ row.skill_name }}</div>
+            </div>
+          </a>
+          {# Description lives outside the anchor: it carries its own
+             inline-edit pencil (a consultant placed on this service may
+             rewrite their role description), and a button may not nest
+             inside an <a>. #}
+          <div class="service-row__description">{{ inline_edit(row.service, "description") }}</div>
+        </div>
+      {% else %}
+        <div class="rvo-item-list__item rvo-item-list__item--vacant service-row">
+          <div class="service-row__link">
+            <div class="user-avatar user-avatar--vacant">?</div>
+            <div class="rvo-item-list__content">
+              <span class="rvo-text--italic rvo-text--subtle">Openstaand</span>
+              <div class="service-description-line">{{ row.skill_name }}</div>
+            </div>
+          </div>
+          <div class="service-row__description">{{ inline_edit(row.service, "description") }}</div>
+        </div>
+      {% endif %}
+    {% endfor %}
+  </div>
+{% else %}
+  <span class="rvo-text--italic rvo-text--subtle">Geen team gevonden.</span>
+{% endif %}

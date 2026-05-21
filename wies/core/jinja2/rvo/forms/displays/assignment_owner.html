@@ -1,0 +1,28 @@
+{# Display for Assignment.owner. Context:
+  obj              — Assignment
+  value            — Colleague | None
+  owner_url        — optional: side-panel URL for navigating to the
+                     owner's profile. When absent, the name renders
+                     plain (post-save re-renders lose this extra).
+  owner_mailto     — optional: prefilled mailto URL. Falls back to
+                     a plain mailto:<email> when absent.
+#}
+{% if value %}
+  <span class="inline-edit-owner">
+    {% if owner_url %}
+      <a href="{{ owner_url }}"
+         hx-get="{{ owner_url }}"
+         hx-target="#side_panel-content"
+         class="rvo-link">{{ value.name }}</a>
+    {% else %}
+      {{ value.name }}
+    {% endif %}
+    {% if value.email %}
+      <br>
+      <a href="{{ owner_mailto or ('mailto:' ~ value.email) }}"
+         class="rvo-link">{{ value.email }}</a>
+    {% endif %}
+  </span>
+{% else %}
+  <em class="rvo-text--italic rvo-text--subtle">Niet toegewezen</em>
+{% endif %}

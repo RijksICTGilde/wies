@@ -1,0 +1,21 @@
+{# Display for the Assignment `period` group. Context:
+  obj      — Assignment
+  value    — {"start_date": date|None, "end_date": date|None}
+#}
+{% if value.start_date or value.end_date %}
+  <span>
+    {% if value.start_date %}
+      {{ value.start_date|datum_nl("j F Y") }}
+    {% else %}
+      ?
+    {% endif %}
+    –
+    {% if value.end_date %}
+      {{ value.end_date|datum_nl("j F Y") }}
+    {% else %}
+      ?
+    {% endif %}
+  </span>
+{% else %}
+  <span class="rvo-text--italic rvo-text--subtle">Geen periode opgegeven</span>
+{% endif %}

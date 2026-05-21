@@ -1,0 +1,80 @@
+/* Staff dashboard / database subpages */
+
+.staff-tiles {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.staff-tile {
+  flex: 1;
+  min-width: 9rem;
+  background: #fff;
+  border: 1px solid var(--rvo-color-grijs-200, #cfd2d5);
+  border-radius: 4px;
+  padding: 0.85rem 1rem;
+}
+
+.staff-tile__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.staff-tile__label {
+  font-size: 0.85rem;
+  color: var(--rvo-color-grijs-700, #535353);
+  margin-top: 0.25rem;
+}
+
+.staff-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 80px;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--rvo-color-grijs-200, #cfd2d5);
+  margin-bottom: 1.5rem;
+}
+
+.staff-chart__bar {
+  flex: 1;
+  background: var(--rvo-color-hemelblauw, #01689b);
+  min-height: 1px;
+  border-radius: 1px 1px 0 0;
+}
+
+.staff-chart__bar:hover {
+  background: var(--rvo-color-donkerblauw, #00476b);
+}
+
+.staff-counts {
+  display: flex;
+  gap: 1.5rem;
+  color: var(--rvo-color-grijs-700, #535353);
+  margin-bottom: 1rem;
+}
+
+.staff-counts strong {
+  color: var(--rvo-color-zwart, #1a1a1a);
+}
+
+.staff-action-card {
+  border: 1px solid var(--rvo-color-grijs-200, #cfd2d5);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  background: #fff;
+}
+
+.staff-action-card h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.staff-action-card p {
+  margin: 0 0 0.75rem;
+  color: var(--rvo-color-grijs-700, #535353);
+  font-size: 0.9rem;
+}

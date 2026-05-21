@@ -4,7 +4,28 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 342: fix "Nieuwe gebruiker" form silently failing on duplicate e-mail — error is now shown inline next to the e-mailveld (regressie van #322)
+- 324: replace raw HTML with JRC components across templates and include roos.css
+- 324: add sortable Tot column to placement table
+- 336: fix user CSV import to accept `;` delimiter and files with UTF-8 BOM
+- 336: fix assignment CSV import to accept files with UTF-8 BOM
+- 332: fix CSV import collapsing multiple placements onto one Service (e.g. two `Architect` rows on JusticeLink hid one team member); each placed row now gets its own Service, re-uploads stay idempotent
+- 332: (migration) split existing CSV-sourced Services that have >1 Placement so each Placement gets its own Service (OTYS-sourced services untouched)
+- 320: move /staff content to instellingen
+- 320: rename instellingen to beheer
+- 320: remove database dump download/upload and 'Sync OTYS' actions
+- 320: guard destructive /staff/ actions (clear data, load dummy data) behind the `ENABLE_DESTRUCTIVE_STAFF_ACTIONS` env var
+
+## 2026-05-11_2
+
+- 322: (migration) deduplicate Colleague and User records and make Colleague and User unique constraint case-insensitive
+- 322: fix duplicate Colleague creation on user create/update by reusing an existing unlinked Colleague with the same email (case-insensitive)
+- 322: treat email as case-insensitive in user create/update uniqueness checks
+
+## 2026-05-11
+
 - 326: django security update to 6.0.5
+- 311: full inline editing on assignments via the new editables system (declarative `EditableSet` per model, single generic HTMX endpoint, reused by full-page forms); row-level permissions in `wies/core/permissions.py`.
 
 ## 2026-05-05
 
@@ -16,6 +37,9 @@ This files lists the changes during the lifetime of this project.
 - 309: add sidebar footer with links to privacy, toegankelijkheid, contact and GitHub
 - 309: add privacy, toegankelijkheid and contact pages
 - 309: make sidebar sticky so footer stays visible during scroll
+- 58: add logout button to profile and no-access pages
+- 58: on logout, clear Django session and redirect to Keycloak's OIDC end_session endpoint
+- 58: force credential re-prompt after logout via a session-scoped post_logout cookie + prompt=login, preventing silent re-auth until the browser is closed
 
 ## 2026-04-23
 

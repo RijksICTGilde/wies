@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
-from wies.core.models import Colleague, Label, LabelCategory
+from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service
 from wies.core.services.placements import create_assignments_from_csv
 from wies.core.services.sync import sync_all_otys_iir_records
 from wies.core.services.users import create_users_from_csv
@@ -359,3 +359,85 @@ Test,User,testuser@rijksoverheid.nl,Test Brand"""
         # Verify label appears in queryset (simulating UI display via colleague)
         users_with_label = User.objects.filter(colleague__labels=test_label)
         assert user in users_with_label
+
+    def test_csv_two_rows_same_skill_different_colleagues_create_two_services(self):
+        """Test: Two CSV rows with the same skill and different colleagues create two Services."""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
+JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Anuj Gupta,anuj@x.com
+JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Jurre Heesbeen,jurre@x.com"""
+
+        result = create_assignments_from_csv(None, csv_content)
+
+        assert result["success"]
+        assert result["assignments_created"] == 1
+        assert result["services_created"] == 2
+        assert result["placements_created"] == 2
+
+        assignment = Assignment.objects.get(name="JusticeLink")
+        services = Service.objects.filter(assignment=assignment, source="wies")
+        assert services.count() == 2
+        for service in services:
+            assert service.placements.count() == 1
+
+    def test_csv_reupload_idempotent(self):
+        """Test: Re-uploading the same CSV creates no duplicate Services or Placements."""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
+JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Anuj Gupta,anuj@x.com
+JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Jurre Heesbeen,jurre@x.com"""
+
+        first = create_assignments_from_csv(None, csv_content)
+        assert first["success"]
+        assert first["services_created"] == 2
+        assert first["placements_created"] == 2
+
+        second = create_assignments_from_csv(None, csv_content)
+        assert second["success"]
+        assert second["services_created"] == 0
+        assert second["placements_created"] == 0
+        assert second["assignments_created"] == 0
+
+        assignment = Assignment.objects.get(name="JusticeLink")
+        assert Service.objects.filter(assignment=assignment, source="wies").count() == 2
+        assert Placement.objects.filter(service__assignment=assignment, source="wies").count() == 2
+
+    def test_csv_vacancy_row_dedupes_by_skill(self):
+        """Test: A placed row + a vacancy row (empty email) for the same skill create two Services."""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
+JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Anuj Gupta,anuj@x.com
+JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,,"""
+
+        result = create_assignments_from_csv(None, csv_content)
+
+        assert result["success"]
+        assert result["services_created"] == 2
+        assert result["placements_created"] == 1
+
+        assignment = Assignment.objects.get(name="JusticeLink")
+        services = Service.objects.filter(assignment=assignment, source="wies")
+        assert services.count() == 2
+
+        # The vacancy service has zero placements.
+        vacancy_services = [s for s in services if s.placements.count() == 0]
+        placed_services = [s for s in services if s.placements.count() == 1]
+        assert len(vacancy_services) == 1
+        assert len(placed_services) == 1
+
+        # Re-uploading must not create a second vacancy for the same skill.
+        result2 = create_assignments_from_csv(None, csv_content)
+        assert result2["success"]
+        assert result2["services_created"] == 0
+        assert result2["placements_created"] == 0
+        assert Service.objects.filter(assignment=assignment, source="wies").count() == 2
+
+    def test_csv_sourced_services_have_at_most_one_placement(self):
+        """Regression invariant: every CSV-sourced Service has at most one Placement."""
+        csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
+JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Anuj Gupta,anuj@x.com
+JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Jurre Heesbeen,jurre@x.com
+OtherProject,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Python,Dev One,dev1@x.com"""
+
+        result = create_assignments_from_csv(None, csv_content)
+        assert result["success"]
+
+        for svc in Service.objects.filter(source="wies"):
+            assert svc.placements.count() <= 1, f"Service {svc.id} has {svc.placements.count()} placements"

@@ -15,12 +15,12 @@ def link_colleague_on_login(sender, request, user, **kwargs):
     Only looks at source="wies" colleagues. OTYS-imported colleagues are matched
     separately during sync — TODO: handle OTYS-imported users here when that's implemented.
     """
-    try:
-        colleague = Colleague.objects.get(email=user.email, source="wies")
+    colleague = Colleague.objects.filter(email__iexact=user.email, source="wies").first()
+    if colleague is not None:
         if colleague.user_id != user.id:
             colleague.user = user
             colleague.save(update_fields=["user"])
-    except Colleague.DoesNotExist:
+    else:
         Colleague.objects.create(
             user=user,
             name=f"{user.first_name} {user.last_name}".strip() or user.email,
