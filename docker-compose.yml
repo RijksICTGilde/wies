@@ -1,7 +1,6 @@
 services:
   postgres:
     image: postgres:17
-    container_name: wies-postgres
     env_file: .env
     volumes:
       - postgres_data:/var/lib/postgresql/data

@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 343: remove explicit container name to improve worktrees experience
+- 343: remove django admin
 - 342: fix "Nieuwe gebruiker" form silently failing on duplicate e-mail — error is now shown inline next to the e-mailveld (regressie van #322)
 - 341: Add placement panel: clicking a row in "Wie zit waar?" now shows placement-specific info (role, description, period) instead of the generic colleague profile
 - 341: UX improvements for assignment detail panel: text buttons, compact team cards, floating toast on save

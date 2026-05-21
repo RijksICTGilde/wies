@@ -23,7 +23,6 @@ class AccessControlTest(TestCase):
         """Test that login-not-required endpoints are accessible without authentication and do not redirect to login"""
 
         login_not_required_paths = [
-            "/djadmin/login/",
             "/geen-toegang/",
             # Endpoints where login is not required but which are tested separately
             # '/auth/',    # /auth/ requires OIDC state and will raise an error without it. This path is tested in
@@ -42,19 +41,6 @@ class AccessControlTest(TestCase):
 
         assert response.status_code == 302
         assert response.url.startswith(reverse("login"))
-
-    def test_admin_views_require_authentication(self):
-        """Test that admin views require authentication"""
-        admin_paths = [
-            "/djadmin/",
-        ]
-
-        for path in admin_paths:
-            with self.subTest(path=path):
-                response = self.client.get(path, follow=False)
-
-                assert response.status_code == 302
-                assert response.url.startswith("/djadmin/login/")
 
     def test_staff_page_requires_authentication(self):
         """Test that staff subpages redirect unauthenticated users"""

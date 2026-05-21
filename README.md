@@ -137,7 +137,6 @@ just manage test wies.core.tests.test_roles
 
 Not linked in the UI:
 
-- `/djadmin/` - Django admin
 - `/staff/` - Staff actions (clear data, load fixtures, sync)
 - `/plaatsingen/import/` - Import placements from CSV
 
