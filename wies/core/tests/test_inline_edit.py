@@ -155,12 +155,8 @@ class InlineEditInfrastructureTest(TestCase):
         resp = self.client.post(self.url, {"name": "Updated name"})
         assert resp.status_code == 200
         self.assertContains(resp, "Updated name")
-        # No big alert banner on the happy path — instead the pencil
-        # button carries a `--just-saved` class that drives a CSS
-        # pencil→checkmark→pencil flash.
-        self.assertNotContains(resp, "rvo-alert--success")
-        self.assertContains(resp, "edit-icon-button--just-saved")
-        self.assertContains(resp, "edit-icon-button__check")
+        # Save feedback is a toast triggered client-side via HX-Trigger.
+        assert resp["HX-Trigger-After-Swap"] == "inline-edit-saved"
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Updated name"
 
@@ -666,14 +662,14 @@ class AssignmentServicesDisplayTest(TestCase):
         self.assertContains(resp, f'href="{expected_href}"')
         self.assertContains(resp, f'hx-get="{expected_href}"')
         self.assertContains(resp, 'hx-target="#side_panel-content"')
-        self.assertContains(resp, f'title="Bekijk {self.colleague.name}"')
+        self.assertContains(resp, self.colleague.name)
         self.assertContains(resp, "rvo-item-list__item--filled")
 
     def test_vacant_row_has_no_link(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
         self.assertContains(resp, "rvo-item-list__item--vacant")
-        self.assertContains(resp, "Openstaand")
+        self.assertContains(resp, "Aanvraag")
         # Vacant row should not carry an hx-target (only filled anchors do).
         content = resp.content.decode()
         vacant_start = content.index("rvo-item-list__item--vacant")

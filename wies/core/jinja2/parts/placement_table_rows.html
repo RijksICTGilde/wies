@@ -1,5 +1,5 @@
 {% for placement in object_list %}
-  <c-table-row class="clickable-row" hx-get="{{ placement.colleague_url }}" hx-target="#side_panel-container">
+  <c-table-row class="clickable-row" hx-get="{{ placement.panel_url }}" hx-target="#side_panel-container">
   <c-table-cell>
   <div class="user-table-cell">
     <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>

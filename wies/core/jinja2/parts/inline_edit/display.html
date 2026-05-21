@@ -1,6 +1,6 @@
 {# Wrapper stays classless so HTMX swaps between display/form/collection
   modes don't toggle layout classes on the target. The display layout
-  (value + pencil, flex row) lives on the inner block. #}
+  (clickable value row + optional pencil, flex row) lives on the inner block. #}
 <div id="{{ target }}">
   <div class="editable-field-display">
     {% if alert %}
@@ -9,20 +9,17 @@
         <p>{{ alert.message }}</p>
       </div>
     {% endif %}
-    <div class="editable-field-display__value">
+    <div class="editable-field-display__value"
+         {% if user_can_edit and not hide_edit_button %} hx-get="{{ edit_url }}?edit=true" hx-target="#{{ target }}" hx-swap="outerHTML" role="button" tabindex="0" style="cursor: pointer" {% endif %}>
       {% if display and display.template %}
         {% include display.template %}
       {% else %}
         <span>{{ display.text if display else "" }}</span>
       {% endif %}
     </div>
-    {% if user_can_edit %}
-      {# Icon-only trigger — a raw <button> with RVO icon span. c-button
-        doesn't support a truly label-less button (its default label
-        renders as "Button" when content is empty), so we stay with this
-        widely-used pattern. #}
+    {% if user_can_edit and not hide_edit_button %}
       <button type="button"
-              class="edit-icon-button{% if saved %} edit-icon-button--just-saved{% endif %}"
+              class="edit-icon-button"
               hx-get="{{ edit_url }}?edit=true"
               hx-target="#{{ target }}"
               hx-swap="outerHTML"
@@ -30,7 +27,6 @@
         <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md edit-icon-button__pencil"
               role="img"
               aria-label="Bewerk"></span>
-        {% if saved %}<span class="edit-icon-button__check" role="status" aria-label="Opgeslagen">✓</span>{% endif %}
       </button>
     {% endif %}
   </div>
