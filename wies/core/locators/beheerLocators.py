@@ -19,11 +19,5 @@ knopZoekenOpdrachtgever = "Zoeken in organisaties"
 knopLabelsTab = "Label Labels"
 knopCategorieToevoegen = "Categorie toevoegen"
 knopCategerieBewerken = "Bewerk categorie"
-kleurLabels = [
-    "Grijs", 
-    "Blauw", 
-    "Geel", 
-    "Groen", 
-    "Rood"
-]
+kleurLabels = ["Grijs", "Blauw", "Geel", "Groen", "Rood"]
 knopLabelToevoegen = "Label toevoegen"
