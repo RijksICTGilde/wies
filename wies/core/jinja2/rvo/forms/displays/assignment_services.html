@@ -16,16 +16,24 @@
   <div class="rvo-item-list">
     {% for row in value %}
       {% if row.colleague %}
-        {% set colleague_url = '/opdrachten/?collega=' ~ row.colleague.id %}
-        <div class="rvo-item-list__item rvo-item-list__item--filled">
+        {% set pl = row.placement %}
+        <div class="rvo-item-list__item rvo-item-list__item--filled{% if pl %} clickable-row{% endif %}"
+             {% if pl %}hx-get="/?plaatsing={{ pl.id }}" hx-target="#side_panel-container"{% endif %}>
           <div class="service-card__name">
             <div class="user-avatar">{{ row.colleague.name|first|upper }}</div>
-            <span>
-              <a href="{{ colleague_url }}"
-                 hx-get="{{ colleague_url }}"
-                 hx-target="#side_panel-content"
-                 class="rvo-link">{{ row.colleague.name }}</a> · {{ row.skill_name }}
-            </span>
+            <span>{{ row.colleague.name }} · {{ row.skill_name }}</span>
+            {% if pl and (pl.start_date or pl.end_date) %}
+              <span class="service-card__period">
+                <span class="rvo-icon rvo-icon-kalender rvo-icon--sm" aria-hidden="true"></span>
+                {% if pl.start_date and pl.end_date %}
+                  {{ pl.start_date|datum_nl("j M Y") }} – {{ pl.end_date|datum_nl("j M Y") }}
+                {% elif pl.start_date %}
+                  {{ pl.start_date|datum_nl("j M Y") }} – heden
+                {% elif pl.end_date %}
+                  t/m {{ pl.end_date|datum_nl("j M Y") }}
+                {% endif %}
+              </span>
+            {% endif %}
           </div>
           <div class="service-card__description">{{ inline_edit(row.service, "description") }}</div>
         </div>

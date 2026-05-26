@@ -211,6 +211,9 @@ class ServiceForm(RvoFormMixin, forms.Form):
         required=False,
         empty_label=" ",
     )
+    has_custom_period = forms.BooleanField(label="Afwijkende periode", required=False)
+    placement_start_date = forms.DateField(label="Startdatum", required=False)
+    placement_end_date = forms.DateField(label="Einddatum", required=False)
 
     def __init__(self, *args, skill_choices=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -247,6 +250,17 @@ class ServiceForm(RvoFormMixin, forms.Form):
         # leak through — treat an unchecked row as "no placement".
         if not is_filled:
             cleaned_data["colleague"] = None
+            cleaned_data["has_custom_period"] = False
+            cleaned_data["placement_start_date"] = None
+            cleaned_data["placement_end_date"] = None
+        elif not cleaned_data.get("has_custom_period"):
+            cleaned_data["placement_start_date"] = None
+            cleaned_data["placement_end_date"] = None
+        else:
+            p_start = cleaned_data.get("placement_start_date")
+            p_end = cleaned_data.get("placement_end_date")
+            if p_start and p_end and p_end < p_start:
+                self.add_error("placement_end_date", "Einddatum moet na startdatum liggen.")
         return cleaned_data
 
 

@@ -65,6 +65,10 @@ def _services_initial(assignment):
                 "description": service.description,
                 "is_filled": placement is not None,
                 "colleague": placement.colleague if placement else None,
+                "has_custom_period": placement.period_source == Placement.PLACEMENT if placement else False,
+                "placement_start_date": placement.specific_start_date if placement else None,
+                "placement_end_date": placement.specific_end_date if placement else None,
+                "placement": placement,
                 "service": service,
             }
         )
@@ -95,6 +99,31 @@ def _validate_period(cleaned):
     if start and end and end < start:
         raise ValidationError({"end_date": "Einddatum moet na startdatum liggen."})
     return cleaned
+
+
+def _save_period(assignment, cleaned):
+    """Save assignment period and extend placements with custom periods if needed."""
+    from wies.core.models import Placement  # noqa: PLC0415
+
+    old_end = assignment.end_date
+    new_start = cleaned.get("start_date")
+    new_end = cleaned.get("end_date")
+
+    assignment.start_date = new_start
+    assignment.end_date = new_end
+    assignment.save(update_fields=["start_date", "end_date"])
+
+    # Extend placements that have their own period and whose end_date matched
+    # the old assignment end_date (i.e. they were "in sync" with the assignment).
+    if old_end and new_end and new_end != old_end:
+        placements = Placement.objects.filter(
+            service__assignment=assignment,
+            period_source=Placement.PLACEMENT,
+            specific_end_date=old_end,
+        )
+        updated = placements.update(specific_end_date=new_end)
+        if updated:
+            assignment.placements_extended = updated
 
 
 class AssignmentEditables(EditableSet):
@@ -129,6 +158,7 @@ class AssignmentEditables(EditableSet):
         label="Looptijd",
         fields=[start_date, end_date],
         clean=_validate_period,
+        save=_save_period,
         display="rvo/forms/displays/assignment_period.html",
     )
 

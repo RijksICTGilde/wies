@@ -14,6 +14,20 @@
       {{ svc_form.colleague }}
     </div>
   </div>
+  <div class="service-period-section" style="display: none">
+    <div class="service-row__checkbox-line">
+      <label class="rvo-checkbox">{{ svc_form.has_custom_period }} Afwijkende periode</label>
+    </div>
+    <div class="service-period-fields" style="display: none">
+      <div class="assignment-form-row">
+        {{ svc_form.placement_start_date.as_field_group() }}
+        {{ svc_form.placement_end_date.as_field_group() }}
+      </div>
+    </div>
+    {% if svc_form.placement_end_date.errors %}
+      {% for error in svc_form.placement_end_date.errors %}<c-alert kind="error">{{ error }}</c-alert>{% endfor %}
+    {% endif %}
+  </div>
   {% if svc_form.colleague.errors %}
     {% for error in svc_form.colleague.errors %}<c-alert kind="error">{{ error }}</c-alert>{% endfor %}
   {% endif %}

@@ -59,6 +59,8 @@
         if (field.id) field.id = field.id.replace(/-0-/, "-" + index + "-");
         if (field.tagName === "SELECT") {
           field.selectedIndex = 0;
+        } else if (field.type === "checkbox") {
+          field.checked = false;
         } else {
           field.value = "";
         }
@@ -70,7 +72,7 @@
       });
 
       row
-        .querySelectorAll(".service-new-skill, .service-colleague-field")
+        .querySelectorAll(".service-new-skill, .service-colleague-field, .service-period-section, .service-period-fields")
         .forEach(function (el) {
           el.style.display = "none";
         });
@@ -87,6 +89,7 @@
 
       updateRemoveButtons();
       initStatusToggle(row);
+      initPeriodToggle(row);
       initInlineCreate(row);
     }
 
@@ -95,10 +98,28 @@
     function initStatusToggle(row) {
       var checkbox = row.querySelector("[name$='-is_filled']");
       var colleagueField = row.querySelector(".service-colleague-field");
+      var periodSection = row.querySelector(".service-period-section");
       if (!checkbox || !colleagueField) return;
 
       function update() {
-        colleagueField.style.display = checkbox.checked ? "" : "none";
+        var show = checkbox.checked;
+        colleagueField.style.display = show ? "" : "none";
+        if (periodSection) {
+          periodSection.style.display = show ? "" : "none";
+        }
+      }
+
+      checkbox.addEventListener("change", update);
+      update();
+    }
+
+    function initPeriodToggle(row) {
+      var checkbox = row.querySelector("[name$='-has_custom_period']");
+      var periodFields = row.querySelector(".service-period-fields");
+      if (!checkbox || !periodFields) return;
+
+      function update() {
+        periodFields.style.display = checkbox.checked ? "" : "none";
       }
 
       checkbox.addEventListener("change", update);
@@ -118,6 +139,7 @@
 
     container.querySelectorAll(".service-row").forEach(function (row) {
       initStatusToggle(row);
+      initPeriodToggle(row);
       initInlineCreate(row);
     });
     updateRemoveButtons();

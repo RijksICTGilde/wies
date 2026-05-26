@@ -12,6 +12,25 @@ from wies.core.permission_engine import Verb, has_permission
 from wies.core.views import _resolve_display, _spec_label
 
 
+def _get_external_source(obj) -> str | None:
+    """Return the governing source label if external, else None.
+
+    For Service/Placement the assignment source is authoritative (matches
+    the permission check in ``_is_wies_sourced``).
+    """
+    from wies.core.models import Placement, Service  # noqa: PLC0415
+
+    if isinstance(obj, Service):
+        src = obj.assignment.source
+    elif isinstance(obj, Placement):
+        src = obj.service.assignment.source
+    else:
+        src = getattr(obj, "source", None)
+    if src and src not in ("wies", ""):
+        return src.upper()
+    return None
+
+
 @pass_context
 def inline_edit(ctx, obj, name, **extras):
     """Render the display partial for ``obj.<name>``.
@@ -42,6 +61,9 @@ def inline_edit(ctx, obj, name, **extras):
 
     user_can_edit = has_permission(Verb.UPDATE, obj, user, spec)
 
+    # Determine if external source prevents editing (for lock icon display).
+    external_source = _get_external_source(obj)
+
     display = _resolve_display(obj, spec, editables)
     if is_collection:
         value = spec.initial(obj)
@@ -58,6 +80,7 @@ def inline_edit(ctx, obj, name, **extras):
         "value": value,
         "display": display,
         "user_can_edit": user_can_edit,
+        "external_source": external_source,
         "alert": None,
         "saved": False,
         **extras,

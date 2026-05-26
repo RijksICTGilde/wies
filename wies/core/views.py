@@ -270,13 +270,14 @@ def _merge_date_range(existing: dict, start, end):
         existing["end_date"] = end
 
 
-def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, **extra):
+def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, placement_id=None, **extra):
     """Build a standard assignment dict for panel display."""
+    url = _build_panel_url(request, plaatsing=placement_id) if placement_id else _build_panel_url(request, opdracht=aid)
     return {
         "name": name,
         "id": aid,
         "tags": {},
-        "assignment_url": _build_panel_url(request, opdracht=aid),
+        "assignment_url": url,
         "start_date": start_date,
         "end_date": end_date,
         "historical": False,
@@ -324,6 +325,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     request,
                     start_date=placement.get("actual_start_date"),
                     end_date=placement.get("actual_end_date"),
+                    placement_id=placement["id"],
                 )
             else:
                 _merge_date_range(
@@ -343,6 +345,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     end_date=placement.get("actual_end_date"),
                     historical=True,
                     privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
+                    placement_id=placement["id"],
                 )
             else:
                 _merge_date_range(
@@ -365,6 +368,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     end_date=placement.get("actual_end_date"),
                     historical=True,
                     privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
+                    placement_id=placement["id"],
                 )
             else:
                 _merge_date_range(
@@ -2011,9 +2015,20 @@ def user_profile(request):
     # Side panel handling
     colleague_id = request.GET.get("collega")
     assignment_id = request.GET.get("opdracht")
+    placement_id = request.GET.get("plaatsing")
     panel_data = None
 
-    if assignment_id:
+    if placement_id:
+        try:
+            placement = Placement.objects.select_related(
+                "colleague",
+                "service__assignment",
+                "service__skill",
+            ).get(id=placement_id)
+            panel_data = _build_placement_panel_data(placement, request)
+        except Placement.DoesNotExist:
+            pass
+    elif assignment_id:
         try:
             assignment = Assignment.objects.get(id=assignment_id)
             panel_data = _build_assignment_panel_data(assignment, request, reverse("home"))

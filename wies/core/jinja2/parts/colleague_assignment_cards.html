@@ -32,7 +32,7 @@
               <div class="assignment-card__team">
                 <span class="rvo-text--subtle rvo-text--sm">Collega's op deze opdracht:</span>
                 {% for member in assignment.team_members %}
-                  <div class="user-avatar user-avatar--sm" title="{{ member }}">{{ member|first|upper }}</div>
+                  <div class="user-avatar user-avatar--sm" data-tooltip="{{ member }}">{{ member|first|upper }}</div>
                 {% endfor %}
               </div>
             {% endif %}

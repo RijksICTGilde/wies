@@ -42,6 +42,9 @@ def extract_services_data(service_formset) -> list[dict]:
                 "new_skill_name": new_skill if skill_val == "__new__" else None,
                 "status": "OPEN",
                 "colleague_id": cd["colleague"].id if cd.get("colleague") else None,
+                "has_custom_period": cd.get("has_custom_period", False),
+                "placement_start_date": cd.get("placement_start_date"),
+                "placement_end_date": cd.get("placement_end_date"),
             }
         )
     return services_data
@@ -134,17 +137,45 @@ def apply_services_to_assignment(assignment: Assignment, services_data: list[dic
                 msg = "Een plaatsing verwijst naar een andere dienst. Herlaad de pagina en probeer opnieuw."
                 raise ValidationError(msg)
             if colleague_id:
+                update_fields = []
                 if placement.colleague_id != int(colleague_id):
                     placement.colleague_id = int(colleague_id)
-                    placement.save(update_fields=["colleague_id"])
+                    update_fields.append("colleague_id")
+
+                if svc.get("has_custom_period"):
+                    new_source = Placement.PLACEMENT
+                    new_start = svc.get("placement_start_date")
+                    new_end = svc.get("placement_end_date")
+                else:
+                    new_source = Placement.SERVICE
+                    new_start = None
+                    new_end = None
+
+                if placement.period_source != new_source:
+                    placement.period_source = new_source
+                    update_fields.append("period_source")
+                if placement.specific_start_date != new_start:
+                    placement.specific_start_date = new_start
+                    update_fields.append("specific_start_date")
+                if placement.specific_end_date != new_end:
+                    placement.specific_end_date = new_end
+                    update_fields.append("specific_end_date")
+
+                if update_fields:
+                    placement.save(update_fields=update_fields)
             else:
                 placement.delete()
         elif colleague_id:
-            Placement.objects.create(
-                colleague_id=int(colleague_id),
-                service=service,
-                source="wies",
-            )
+            create_kwargs = {
+                "colleague_id": int(colleague_id),
+                "service": service,
+                "source": "wies",
+            }
+            if svc.get("has_custom_period"):
+                create_kwargs["period_source"] = Placement.PLACEMENT
+                create_kwargs["specific_start_date"] = svc.get("placement_start_date")
+                create_kwargs["specific_end_date"] = svc.get("placement_end_date")
+            Placement.objects.create(**create_kwargs)
 
 
 @transaction.atomic

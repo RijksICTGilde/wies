@@ -655,15 +655,13 @@ class AssignmentServicesDisplayTest(TestCase):
         )
         self.url = reverse("inline-edit", args=["assignment", self.assignment.id, "services"])
 
-    def test_filled_row_is_anchor_to_colleague_panel(self):
+    def test_filled_row_is_clickable_to_placement_panel(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        expected_href = f"/opdrachten/?collega={self.colleague.id}"
-        self.assertContains(resp, f'href="{expected_href}"')
-        self.assertContains(resp, f'hx-get="{expected_href}"')
-        self.assertContains(resp, 'hx-target="#side_panel-content"')
+        self.assertContains(resp, 'hx-target="#side_panel-container"')
         self.assertContains(resp, self.colleague.name)
         self.assertContains(resp, "rvo-item-list__item--filled")
+        self.assertContains(resp, "clickable-row")
 
     def test_vacant_row_has_no_link(self):
         resp = self.client.get(self.url + "?cancel=true")
