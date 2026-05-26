@@ -1,0 +1,5 @@
+knopWiezitwaar = "Wie zit waar?"
+knopZoeken = "Zoeken"
+sorterenWie = "Wie"
+sorterenWatwaar = "Wat & waar"
+sorterenTot = "Tot"
