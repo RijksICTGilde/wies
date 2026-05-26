@@ -29,7 +29,8 @@
               aria-label="Bewerk"></span>
       </button>
     {% elif not user_can_edit and external_source %}
-      <span class="source-lock" data-tooltip="Wordt beheerd in {{ external_source }}">
+      <span class="source-lock"
+            data-tooltip="Wordt beheerd in {{ external_source }}">
         <span class="utrecht-icon rvo-icon rvo-icon-hangslot-dicht rvo-icon--md"
               role="img"
               aria-label="Vergrendeld"></span>

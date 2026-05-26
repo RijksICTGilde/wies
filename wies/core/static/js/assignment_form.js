@@ -72,7 +72,9 @@
       });
 
       row
-        .querySelectorAll(".service-new-skill, .service-colleague-field, .service-period-section, .service-period-fields")
+        .querySelectorAll(
+          ".service-new-skill, .service-colleague-field, .service-period-section, .service-period-fields",
+        )
         .forEach(function (el) {
           el.style.display = "none";
         });

@@ -49,8 +49,6 @@
   </section>
   <section>
     {% set colleague_url = '/opdrachten/?collega=' ~ colleague.id %}
-    <c-link href="{{ colleague_url }}"
-            hx-get="{{ colleague_url }}"
-            hx-target="#side_panel-content">Bekijk alle opdrachten van {{ colleague.name.split()[0] }} ›</c-link>
+    <c-link href="{{ colleague_url }}" hx-get="{{ colleague_url }}" hx-target="#side_panel-content">Bekijk alle opdrachten van {{ colleague.name.split()[0] }} ›</c-link>
   </section>
 </div>
