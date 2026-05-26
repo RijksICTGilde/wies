@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 318: allow placement periods independent from assignment — period fields added to the service form (create and edit), shown in team cards with calendar icon, and editable via inline-edit on the placement panel; auto-extends placement periods when the assignment period changes
+- 318: clickable team cards on assignment detail open the placement panel; "Bekijk alle opdrachten" link added to placement panel; profile page assignment cards now deep-link to the placement panel
+- 318: lock icon on inline-edit fields managed by an external source (e.g. OTYS) with tooltip explaining why the field is read-only
+- 318: instant CSS tooltips (`data-tooltip`) replacing slow native browser `title` tooltips on avatars, timestamps, and lock icons
 - 343: remove explicit container name to improve worktrees experience
 - 343: remove django admin
 - 342: fix "Nieuwe gebruiker" form silently failing on duplicate e-mail — error is now shown inline next to the e-mailveld (regressie van #322)
