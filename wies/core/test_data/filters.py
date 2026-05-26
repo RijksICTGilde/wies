@@ -1,11 +1,11 @@
 knopToonmeer = "+ Toon meer"
 knopBeschikbaarvanaf = "Beschikbaar vanaf"
 knopFilters = "Toggle filters"
-knopRol ="Rol Delta Omlaag"
-knopExpertise ="Expertise Delta Omlaag"
-knopMerk ="Merk Delta Omlaag"
-knopThema ="Thema Delta Omlaag"
-knopLooptAf ="Loopt af Delta Omlaag"
+knopRol = "Rol Delta Omlaag"
+knopExpertise = "Expertise Delta Omlaag"
+knopMerk = "Merk Delta Omlaag"
+knopThema = "Thema Delta Omlaag"
+knopLooptAf = "Loopt af Delta Omlaag"
 knopSelecteerOpdrachtgever = "Selecteer"
 
 opdrachtgevers = [
@@ -27,7 +27,7 @@ opdrachtgevers = [
     {"Ministerie van Onderwijs,"},
     {"Ministerie van Onderwijs,"},
     {"Ministerie van Sociale Zaken"},
-    {"Ministerie van Volksgezondheid, Welzijn en Sport"}
+    {"Ministerie van Volksgezondheid, Welzijn en Sport"},
 ]
 
 rollen = [
@@ -57,7 +57,7 @@ rollen = [
     {"Solution Architect"},
     {"Test Manager"},
     {"UX designer"},
-    {"Verandermanager"}
+    {"Verandermanager"},
 ]
 
 expertise = [
@@ -73,7 +73,7 @@ expertise = [
     {"Security en privacy"},
     {"Software en data engineering"},
     {"Strategie, beleid, governance"},
-    {"Verander- en"}
+    {"Verander- en"},
 ]
 
 merk = [
@@ -87,7 +87,7 @@ merk = [
     {"RADIO"},
     {"Rijksconsultants"},
     {"Rijks ICT Gilde"},
-    {"Rijks I-Traineeship"}
+    {"Rijks I-Traineeship"},
 ]
 
 thema = [
@@ -95,12 +95,7 @@ thema = [
     {"Artificiële intelligentie"},
     {"Digitale weerbaarheid"},
     {"Innovatieve en lerende"},
-    {"Netwerksamenwerking"}
+    {"Netwerksamenwerking"},
 ]
 
-loopt_af = [
-    {"Binnen 3 maanden"},
-    {"Binnen 6 maanden"},
-    {"Langer dan 6 maanden"}
-]
-
+loopt_af = [{"Binnen 3 maanden"}, {"Binnen 6 maanden"}, {"Langer dan 6 maanden"}]
