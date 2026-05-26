@@ -6,7 +6,7 @@ opdrachtgevers = [
     {"Ministeries*"},
     {"Ministerie van Algemene Zaken*"},
     {"Ministerie van Financiën*"},
-    {"Directoraat-generaal*"}
+    {"Directoraat-generaal*"},
 ]
 
 rollen = [
@@ -36,7 +36,7 @@ rollen = [
     {"Solution Architect"},
     {"Test Manager"},
     {"UX designer"},
-    {"Verandermanager"}
+    {"Verandermanager"},
 ]
 
 expertise = [
@@ -52,7 +52,7 @@ expertise = [
     {"Security en privacy"},
     {"Software en data engineering"},
     {"Strategie, beleid, governance"},
-    {"Verander- en"}
+    {"Verander- en"},
 ]
 
 merk = [
@@ -66,7 +66,7 @@ merk = [
     {"RADIO"},
     {"Rijksconsultants"},
     {"Rijks ICT Gilde"},
-    {"Rijks I-Traineeship"}
+    {"Rijks I-Traineeship"},
 ]
 
 thema = [
@@ -74,11 +74,7 @@ thema = [
     {"Artificiële intelligentie"},
     {"Digitale weerbaarheid"},
     {"Innovatieve en lerende"},
-    {"Netwerksamenwerking"}
+    {"Netwerksamenwerking"},
 ]
 
-loopt_af = [
-    {"Binnen 3 maanden"},
-    {"Binnen 6 maanden"},
-    {"Langer dan 6 maanden"}
-]
+loopt_af = [{"Binnen 3 maanden"}, {"Binnen 6 maanden"}, {"Langer dan 6 maanden"}]
