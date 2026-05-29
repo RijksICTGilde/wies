@@ -2523,12 +2523,15 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
     if request.method == "POST":
         formset = spec.formset_factory(data=request.POST)
         if formset.is_valid():
+            before = spec.initial(obj)
             try:
                 spec.save(obj, formset)
             except ValidationError as exc:
                 for message in exc.messages:
                     _attach_formset_error(formset, message)
                 return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
+            after = spec.initial(obj)
+            _emit_inline_edit_audit_event(spec, obj, before, after, request.user)
             return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj, saved=True)
         return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
 
@@ -2543,23 +2546,13 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
 _AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "OrganizationUnit": "OrganizationUnit"}
 
 
-def _emit_inline_edit_audit_event(spec, obj, old_value, new_value, user) -> None:
-    """Record an audit event for a single-Editable change on a tracked model.
-
-    Only fires for `Editable` (not Group/Collection) on models in
-    `_AUDIT_OBJECT_TYPES`. No-op when old == new so editing without a
-    real change doesn't create noise.
-    """
-    if not isinstance(spec, Editable):
-        return
-    object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
-    if object_type is None:
-        return
+def _record_editable_change(editable, obj, object_type, old_value, new_value, user) -> None:
+    """Building block: emit a single 'field X changed' event if old != new."""
     if str(old_value or "") == str(new_value or ""):
         return
     from django import forms  # noqa: PLC0415
 
-    widget = spec.widget
+    widget = editable.widget
     is_textarea = isinstance(widget, forms.Textarea) or (
         isinstance(widget, type) and issubclass(widget, forms.Textarea)
     )
@@ -2571,12 +2564,61 @@ def _emit_inline_edit_audit_event(spec, obj, old_value, new_value, user) -> None
         user=user,
         context={
             "field_type": "textarea" if is_textarea else "text",
-            "field_name": spec.field or spec.name or "",
-            "field_label": spec.label or spec.name or "",
+            "field_name": editable.field or editable.name or "",
+            "field_label": editable.label or editable.name or "",
             "old_value": str(old_value or ""),
             "new_value": str(new_value or ""),
         },
     )
+
+
+def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_editables=None) -> None:
+    """Record audit events for an inline-edit save on a tracked model.
+
+    Dispatches by spec type:
+    - Editable: ``before``/``after`` are values; one event when changed.
+    - EditableGroup: ``before``/``after`` are dicts keyed by child name;
+      one event per changed child (``child_editables`` is the resolved
+      list of child Editables).
+    - EditableCollection: ``before``/``after`` are row lists from
+      ``spec.initial(obj)``; one event when ``spec.summary`` differs.
+
+    No-op on models not in ``_AUDIT_OBJECT_TYPES``.
+    """
+    object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
+    if object_type is None:
+        return
+
+    if isinstance(spec, Editable):
+        _record_editable_change(spec, obj, object_type, before, after, user)
+        return
+
+    if isinstance(spec, EditableGroup):
+        for child in child_editables or []:
+            _record_editable_change(child, obj, object_type, before.get(child.name), after.get(child.name), user)
+        return
+
+    if isinstance(spec, EditableCollection):
+        if spec.summary is None:
+            return
+        old_text = spec.summary(before)
+        new_text = spec.summary(after)
+        if old_text == new_text:
+            return
+        create_event(
+            object_type=object_type,
+            action="update",
+            source="user",
+            object_id=obj.id,
+            user=user,
+            context={
+                "field_type": "text",
+                "field_name": spec.name or "",
+                "field_label": spec.label or spec.name or "",
+                "old_value": old_text,
+                "new_value": new_text,
+            },
+        )
 
 
 def inline_edit_view(request, model_label, pk, name):
@@ -2622,10 +2664,23 @@ def inline_edit_view(request, model_label, pk, name):
         )
         form = form_cls(request.POST)
         if form.is_valid():
-            old_value = _current_value(obj, spec) if isinstance(spec, Editable) else None
+            if isinstance(spec, EditableGroup):
+                before = {e.name: _current_value(obj, e) for e in editables}
+            else:
+                before = _current_value(obj, spec)
             save_spec(spec, editables, form.cleaned_data, obj)
-            new_value = _current_value(obj, spec) if isinstance(spec, Editable) else None
-            _emit_inline_edit_audit_event(spec, obj, old_value, new_value, request.user)
+            if isinstance(spec, EditableGroup):
+                after = {e.name: _current_value(obj, e) for e in editables}
+            else:
+                after = _current_value(obj, spec)
+            _emit_inline_edit_audit_event(
+                spec,
+                obj,
+                before,
+                after,
+                request.user,
+                child_editables=editables if isinstance(spec, EditableGroup) else None,
+            )
             return _render_inline_edit_display(
                 request,
                 editable_set,

@@ -27,6 +27,7 @@ from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    Event,
     Label,
     LabelCategory,
     OrganizationUnit,
@@ -298,6 +299,39 @@ class InlineEditGroupTest(TestCase):
         self.assignment.refresh_from_db()
         assert self.assignment.start_date is None
         assert self.assignment.end_date is None
+
+    def test_group_post_emits_event_per_changed_field(self):
+        resp = self.client.post(
+            self.url,
+            {"start_date": "2026-03-01", "end_date": "2026-06-30"},
+        )
+        assert resp.status_code == 200
+        events = Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update")
+        field_names = sorted(e.context["field_name"] for e in events)
+        assert field_names == ["end_date", "start_date"]
+
+    def test_group_post_emits_event_only_for_changed_field(self):
+        self.assignment.start_date = "2026-03-01"
+        self.assignment.save()
+        resp = self.client.post(
+            self.url,
+            {"start_date": "2026-03-01", "end_date": "2026-06-30"},
+        )
+        assert resp.status_code == 200
+        events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
+        assert len(events) == 1
+        assert events[0].context["field_name"] == "end_date"
+
+    def test_group_post_no_change_no_events(self):
+        self.assignment.start_date = "2026-03-01"
+        self.assignment.end_date = "2026-06-30"
+        self.assignment.save()
+        resp = self.client.post(
+            self.url,
+            {"start_date": "2026-03-01", "end_date": "2026-06-30"},
+        )
+        assert resp.status_code == 200
+        assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
 
 
 class InlineEditCustomSaveTest(TestCase):
@@ -670,6 +704,105 @@ class AssignmentServicesDisplayTest(TestCase):
         vacant_end = content.index("</div>", vacant_start)
         assert "hx-get" not in content[vacant_start:vacant_end]
         assert "href=" not in content[vacant_start:vacant_end]
+
+
+class AssignmentServicesAuditTest(TestCase):
+    """Saving the services collection emits one audit event with a
+    before/after team summary."""
+
+    FORMSET_MGMT_KEYS = {
+        "service-INITIAL_FORMS": "2",
+        "service-MIN_NUM_FORMS": "1",
+        "service-MAX_NUM_FORMS": "1000",
+    }
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            email="svc-audit@rijksoverheid.nl",
+            first_name="Svc",
+            last_name="Audit",
+            is_superuser=True,
+            is_staff=True,
+        )
+        self.client.force_login(self.user)
+        self.colleague = Colleague.objects.get(user=self.user)
+        self.assignment = Assignment.objects.create(name="A", owner=self.colleague, source="wies")
+        self.skill_python = Skill.objects.create(name="Python")
+        self.skill_java = Skill.objects.create(name="Java")
+        self.filled_service = Service.objects.create(
+            description="Filled", assignment=self.assignment, skill=self.skill_python, source="wies"
+        )
+        Placement.objects.create(colleague=self.colleague, service=self.filled_service, source="wies")
+        self.vacant_service = Service.objects.create(
+            description="Vacant", assignment=self.assignment, skill=self.skill_java, source="wies", status="OPEN"
+        )
+        self.url = reverse("inline-edit", args=["assignment", self.assignment.id, "services"])
+
+    def _row(self, idx, *, service, skill, description, is_filled=False, colleague=None):
+        data = {
+            f"service-{idx}-id": str(service.id),
+            f"service-{idx}-skill": str(skill.id),
+            f"service-{idx}-description": description,
+        }
+        if is_filled and colleague is not None:
+            data[f"service-{idx}-is_filled"] = "on"
+            data[f"service-{idx}-colleague"] = str(colleague.id)
+            placement = Placement.objects.filter(service=service).first()
+            if placement is not None:
+                data[f"service-{idx}-placement_id"] = str(placement.id)
+        return data
+
+    def test_services_post_emits_event_on_change(self):
+        # Fill the previously vacant Java service with the colleague — a real
+        # team-composition change the summary picks up.
+        data = {
+            "service-TOTAL_FORMS": "2",
+            **self.FORMSET_MGMT_KEYS,
+            **self._row(
+                0,
+                service=self.filled_service,
+                skill=self.skill_python,
+                description="Filled",
+                is_filled=True,
+                colleague=self.colleague,
+            ),
+            **self._row(
+                1,
+                service=self.vacant_service,
+                skill=self.skill_java,
+                description="Vacant",
+                is_filled=True,
+                colleague=self.colleague,
+            ),
+        }
+        resp = self.client.post(self.url, data)
+        assert resp.status_code == 200
+        events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
+        assert len(events) == 1
+        event = events[0]
+        assert event.context["field_name"] == "services"
+        assert event.context["field_label"] == "Team"
+        assert "Java (open)" in event.context["old_value"]
+        assert f"Java ({self.colleague.name})" in event.context["new_value"]
+
+    def test_services_post_no_change_no_event(self):
+        data = {
+            "service-TOTAL_FORMS": "2",
+            **self.FORMSET_MGMT_KEYS,
+            **self._row(
+                0,
+                service=self.filled_service,
+                skill=self.skill_python,
+                description="Filled",
+                is_filled=True,
+                colleague=self.colleague,
+            ),
+            **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
+        }
+        resp = self.client.post(self.url, data)
+        assert resp.status_code == 200
+        assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
 
 
 class ServiceDescriptionPermissionTest(TestCase):

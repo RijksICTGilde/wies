@@ -102,6 +102,10 @@ class EditableCollection:
     # formset as ``formset``.
     form_template: str | None = None
     display: str | Callable[[Model], Any] | None = None
+    # Compact human-readable summary of `initial(obj)` rows, used to
+    # render the before/after values in audit events. None disables
+    # audit emission for this collection.
+    summary: Callable[[list[dict]], str] | None = None
     name: str | None = None
     # Set by EditableSet.__init_subclass__ — the model owning this collection.
     model: type[Model] | None = None

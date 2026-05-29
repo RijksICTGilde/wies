@@ -87,6 +87,18 @@ def _save_services(assignment, formset):
     apply_services_to_assignment(assignment, services_data)
 
 
+def _services_summary(rows: list[dict]) -> str:
+    """Compact "Skill (Colleague-or-open), ..." used in audit events."""
+    if not rows:
+        return "geen"
+    parts = []
+    for row in rows:
+        skill = row.get("skill_name") or "?"
+        colleague = row.get("colleague")
+        parts.append(f"{skill} ({colleague.name if colleague else 'open'})")
+    return ", ".join(parts)
+
+
 def _validate_period(cleaned):
     """Reject end-before-start. Cross-field validation for the period group."""
     from django.core.exceptions import ValidationError  # noqa: PLC0415
@@ -145,6 +157,7 @@ class AssignmentEditables(EditableSet):
         formset_factory=_services_formset_factory,
         initial=_services_initial,
         save=_save_services,
+        summary=_services_summary,
         form_template="parts/assignment_services_form.html",
         display="rvo/forms/displays/assignment_services.html",
     )
