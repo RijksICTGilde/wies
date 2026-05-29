@@ -147,7 +147,7 @@ def _make_team_member_entry(
     }
 
 
-def _build_assignment_panel_data(assignment, request, breadcrumb_base):
+def _build_assignment_panel_data(assignment, request):
     """Shared helper to build assignment panel context data for both views."""
     today = timezone.now().date()
     viewer = getattr(request.user, "colleague", None)
@@ -221,16 +221,6 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
 
     team_members = vacancy_list + list(current_grouped.values()) + list(historical_grouped.values())
 
-    primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
-        "organization__parent__parent__parent__parent"
-    )
-    involved = assignment.organization_relations.filter(role="INVOLVED").select_related(
-        "organization__parent__parent__parent__parent"
-    )
-    org_breadcrumbs = [
-        {**get_org_breadcrumb(rel.organization, breadcrumb_base), "role": rel.role} for rel in [*primary, *involved]
-    ]
-
     owner_mailto_href = ""
     if assignment.owner and assignment.owner.email:
         opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.id}")
@@ -258,7 +248,7 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         "show_updates_tab": assignment.source != "otys_iir",
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
         "owner_mailto_href": owner_mailto_href,
-        "org_breadcrumbs": org_breadcrumbs,
+        "organization_count": assignment.organization_relations.count(),
     }
 
 
@@ -948,7 +938,7 @@ class PlacementListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
             except Assignment.DoesNotExist:
                 pass
         return context
@@ -1202,7 +1192,7 @@ class AssignmentListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
             except Assignment.DoesNotExist:
                 pass
 
@@ -2016,7 +2006,7 @@ def user_profile(request):
     if assignment_id:
         try:
             assignment = Assignment.objects.get(id=assignment_id)
-            panel_data = _build_assignment_panel_data(assignment, request, reverse("home"))
+            panel_data = _build_assignment_panel_data(assignment, request)
         except Assignment.DoesNotExist:
             pass
     elif colleague_id:
