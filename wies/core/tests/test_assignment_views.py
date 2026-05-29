@@ -117,10 +117,10 @@ class AssignmentEditAttributeTest(TestCase):
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Owner Updated Name"
 
-    def test_assigned_colleague_cannot_edit_name(self):
-        """A colleague placed on the assignment must not be able to edit
-        a management field like ``name`` — only the description-style
-        fields (``extra_info``) carry a placed-consultant override.
+    def test_assigned_colleague_can_edit_name(self):
+        """A consultant placed on the assignment can edit ``name`` —
+        same scope as ``extra_info``. Restores pre-editables behavior
+        (issue #331).
         """
         self.client.force_login(self.assigned_user)
 
@@ -130,9 +130,8 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-        self.assertContains(response, "geen rechten")
         self.assignment.refresh_from_db()
-        assert self.assignment.name == "Test Assignment"
+        assert self.assignment.name == "Colleague Updated Name"
 
     def test_assigned_colleague_can_edit_extra_info(self):
         """Placed consultants do gain narrow access to ``extra_info`` (description)."""
