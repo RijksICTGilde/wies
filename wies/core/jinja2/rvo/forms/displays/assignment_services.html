@@ -18,15 +18,13 @@
       {% if row.colleague %}
         {% set colleague_url = '/opdrachten/?collega=' ~ row.colleague.id %}
         <div class="rvo-item-list__item rvo-item-list__item--filled">
-          <div class="service-card__name">
+          <a href="{{ colleague_url }}"
+             hx-get="{{ colleague_url }}"
+             hx-target="#side_panel-content"
+             class="service-card__name service-card__name--link">
             <div class="user-avatar">{{ row.colleague.name|first|upper }}</div>
-            <span>
-              <a href="{{ colleague_url }}"
-                 hx-get="{{ colleague_url }}"
-                 hx-target="#side_panel-content"
-                 class="rvo-link">{{ row.colleague.name }}</a> · {{ row.skill_name }}
-            </span>
-          </div>
+            <span><span class="rvo-link">{{ row.colleague.name }}</span> · {{ row.skill_name }}</span>
+          </a>
           <div class="service-card__description">{{ inline_edit(row.service, "description") }}</div>
         </div>
       {% else %}

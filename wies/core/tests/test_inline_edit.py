@@ -705,6 +705,27 @@ class AssignmentServicesDisplayTest(TestCase):
         assert "hx-get" not in content[vacant_start:vacant_end]
         assert "href=" not in content[vacant_start:vacant_end]
 
+    def test_vacant_row_renders_before_filled_row(self):
+        """Vacancies-first ordering (issue #331) — even though the filled
+        service was created first."""
+        resp = self.client.get(self.url + "?cancel=true")
+        assert resp.status_code == 200
+        content = resp.content.decode()
+        vacant_pos = content.index("rvo-item-list__item--vacant")
+        filled_pos = content.index("rvo-item-list__item--filled")
+        assert vacant_pos < filled_pos
+
+    def test_filled_row_click_area_includes_avatar_and_skill(self):
+        """Whole avatar + name + skill section is the anchor, not just the name."""
+        resp = self.client.get(self.url + "?cancel=true")
+        assert resp.status_code == 200
+        content = resp.content.decode()
+        anchor_start = content.index('class="service-card__name service-card__name--link"')
+        anchor_end = content.index("</a>", anchor_start)
+        anchor_html = content[anchor_start:anchor_end]
+        assert "user-avatar" in anchor_html
+        assert self.colleague.name in anchor_html
+
 
 class AssignmentServicesAuditTest(TestCase):
     """Saving the services collection emits one audit event with a

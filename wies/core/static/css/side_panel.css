@@ -349,15 +349,14 @@ dialog#side_panel::backdrop {
   background: var(--rvo-color-grijs-100, #f3f4f6);
 }
 
+a.service-card__name--link {
+  text-decoration: none;
+  color: inherit;
+}
+
 .service-card__description {
   padding: 0.5rem 0.75rem 0.5rem calc(32px + 1.5rem);
   font-style: italic;
-}
-
-/* Remove misleading hover on team cards (only the name link is clickable) */
-.rvo-item-list__item--filled:hover {
-  border-color: var(--rvo-color-grijs-300, #c5ced6);
-  background: inherit;
 }
 
 /* Completed assignment tag */
