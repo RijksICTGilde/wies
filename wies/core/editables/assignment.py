@@ -20,9 +20,9 @@ def _bdm_queryset():
 def _organizations_initial(assignment):
     return [
         {"organization": rel.organization, "role": rel.role}
-        for rel in assignment.organization_relations.select_related("organization").order_by(
-            "-role", "organization__name"
-        )
+        for rel in assignment.organization_relations.select_related(
+            "organization__parent__parent__parent__parent"
+        ).order_by("-role", "organization__name")
     ]
 
 

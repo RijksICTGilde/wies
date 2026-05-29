@@ -21,6 +21,7 @@ from wies.core.editables import (
 from wies.core.inline_edit.jinja import inline_edit
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.permissions import can_view_staff_page
+from wies.core.services.organizations import get_org_breadcrumb
 from wies.core.services.version import get_app_version
 
 
@@ -143,6 +144,7 @@ def environment(**options):
             "DEBUG": settings.DEBUG,
             "APP_VERSION": get_app_version(),
             "inline_edit": inline_edit,
+            "get_org_breadcrumb": get_org_breadcrumb,
             "has_permission": has_permission,
             "Verb": Verb,
             "AssignmentEditables": AssignmentEditables,

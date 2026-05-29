@@ -883,6 +883,22 @@ class InlineOrganizationsEditTest(TestCase):
         self.assertContains(resp, 'data-org-role="PRIMARY"')
         self.assertContains(resp, 'data-org-role="INVOLVED"')
 
+    def test_display_renders_breadcrumb_ancestors(self):
+        """Regression for issue #331 — the editables refactor dropped the
+        ancestor chain; it must render as clickable links with separators
+        above the org label itself."""
+        ministry = OrganizationUnit.objects.create(name="Ministerie X", label="MinX")
+        directorate = OrganizationUnit.objects.create(name="Directie Y", label="DirY", parent=ministry)
+        team = OrganizationUnit.objects.create(name="Team Z", label="TeamZ", parent=directorate)
+        AssignmentOrganizationUnit.objects.create(assignment=self.assignment, organization=team, role="PRIMARY")
+        url = reverse("inline-edit", args=["assignment", self.assignment.id, "organizations"])
+        resp = self.client.get(url)
+        assert resp.status_code == 200
+        content = resp.content.decode()
+        assert content.index("MinX") < content.index("DirY") < content.index("TeamZ")
+        self.assertContains(resp, 'class="org-breadcrumb__ancestor"')
+        self.assertContains(resp, 'class="org-breadcrumb__separator"')
+
 
 class ColleagueLabelsInlineEditTest(TestCase):
     """End-to-end inline editing of labels_<category_id>. Verifies the
