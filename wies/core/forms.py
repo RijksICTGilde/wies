@@ -244,7 +244,6 @@ class ServiceForm(RvoFormMixin, forms.Form):
         has_other_data = cleaned_data.get("description") or cleaned_data.get("colleague")
         if not has_skill and has_other_data:
             self.add_error("skill", "Selecteer een rol.")
-        colleague = cleaned_data.get("colleague")
         is_filled = cleaned_data.get("is_filled") == "ingevuld"
         cleaned_data["is_filled"] = is_filled
         if not is_filled:
