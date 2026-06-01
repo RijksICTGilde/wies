@@ -130,10 +130,8 @@ class ServiceDescriptionRuleTest(_Setup):
     def test_placed_on_service_can_update_description(self):
         assert has_permission(Verb.UPDATE, self.service, self.placed_user, ServiceEditables.description) is True
 
-    def test_owner_cannot_update_service_description_inline(self):
-        # BM uses the team editor for service descriptions — the
-        # field-level rule excludes them on purpose.
-        assert has_permission(Verb.UPDATE, self.service, self.owner_user, ServiceEditables.description) is False
+    def test_owner_can_update_service_description(self):
+        assert has_permission(Verb.UPDATE, self.service, self.owner_user, ServiceEditables.description) is True
 
 
 class UserEmailFieldRuleTest(TestCase):

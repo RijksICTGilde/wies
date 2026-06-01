@@ -121,8 +121,10 @@ def update_assignment_extra_info(user, a):
 
 @rule(UPDATE, ServiceEditables.description)
 def update_service_description(user, s):
-    """Only the consultant placed on this specific service. The BM uses the team editor."""
-    return _is_wies_sourced(s.assignment) and _is_placed_on_service(user, s)
+    """Assignment owner (BM) or the consultant placed on this specific service."""
+    return _is_wies_sourced(s.assignment) and (
+        has_permission(UPDATE, s.assignment, user) or _is_placed_on_service(user, s)
+    )
 
 
 @rule(UPDATE, UserEditables.email)

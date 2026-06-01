@@ -1046,6 +1046,9 @@ class AssignmentListView(ListView):
             if self.request.headers.get("HX-Target") == "side_panel-content":
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
+                placement_id = self.request.GET.get("plaatsing")
+                if placement_id:
+                    return ["parts/placement_panel_content.html"]
                 if colleague_id and not assignment_id:
                     return ["parts/colleague_panel_content.html"]
                 return ["parts/assignment_panel_content.html"]
@@ -1194,10 +1197,19 @@ class AssignmentListView(ListView):
             }
 
         # Side panel
+        placement_id = self.request.GET.get("plaatsing")
         colleague_id = self.request.GET.get("collega")
         assignment_id = self.request.GET.get("opdracht")
 
-        if colleague_id and not assignment_id:
+        if placement_id:
+            try:
+                placement = Placement.objects.select_related(
+                    "colleague", "service__assignment", "service__skill"
+                ).get(id=placement_id)
+                context["panel_data"] = _build_placement_panel_data(placement, self.request)
+            except Placement.DoesNotExist:
+                pass
+        elif colleague_id and not assignment_id:
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
@@ -2526,8 +2538,11 @@ def _render_inline_edit_display(
 
 def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) -> HttpResponse:
     # Edit-mode partial: form + save/cancel. On validation failure, `form` carries inline errors.
-    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "form": form}
-    return render(request, "parts/inline_edit/form.html", ctx)
+    from wies.core.inline_edit.base import EditableGroup  # noqa: PLC0415
+
+    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "form": form, "editable": spec}
+    template = spec.form_template if isinstance(spec, EditableGroup) and spec.form_template else "parts/inline_edit/form.html"
+    return render(request, template, ctx)
 
 
 def _render_inline_edit_collection_form(request, editable_set, spec, obj, formset) -> HttpResponse:

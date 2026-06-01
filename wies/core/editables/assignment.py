@@ -63,7 +63,7 @@ def _services_initial(assignment):
                 "skill": str(service.skill_id) if service.skill_id else "",
                 "skill_name": service.skill.name if service.skill else "",
                 "description": service.description,
-                "is_filled": placement is not None,
+                "is_filled": "ingevuld" if placement is not None else "aanvraag",
                 "colleague": placement.colleague if placement else None,
                 "has_custom_period": placement.period_source == Placement.PLACEMENT if placement else False,
                 "placement_start_date": placement.specific_start_date if placement else None,

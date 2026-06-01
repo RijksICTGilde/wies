@@ -740,15 +740,14 @@ class ServiceDescriptionPermissionTest(TestCase):
         self.my_service.refresh_from_db()
         assert self.my_service.skill_id != new_skill.id
 
-    def test_owner_cannot_use_inline_pencil(self):
-        """BM edits descriptions via the team editor, not the per-row
-        pencil — so the inline description edit is denied for them."""
+    def test_owner_can_use_inline_pencil(self):
+        """BM can edit descriptions inline, consistent with skill and period."""
         self.client.force_login(self.owner_user)
-        resp = self.client.post(self._desc_url(self.my_service), {"description": "BM probeert"})
+        resp = self.client.post(self._desc_url(self.my_service), {"description": "BM past aan"})
         assert resp.status_code == 200
-        self.assertContains(resp, "geen rechten")
+        self.assertNotContains(resp, "geen rechten")
         self.my_service.refresh_from_db()
-        assert self.my_service.description == "Mijn rol"
+        assert self.my_service.description == "BM past aan"
 
 
 class OrgPickerWidgetTest(TestCase):

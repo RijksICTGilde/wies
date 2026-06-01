@@ -76,6 +76,10 @@ class EditableGroup:
     # Group-level save; takes the whole cleaned_data dict. Use when
     # several fields must persist atomically.
     save: Callable[[Model, dict], None] | None = None
+    # Custom form body template (path relative to jinja2 roots). When set,
+    # the view renders this template instead of the generic form.html.
+    # Template receives the same context as form.html plus ``editable`` (the group).
+    form_template: str | None = None
     name: str | None = None
     # Set by EditableSet.__init_subclass__ — the model owning this group.
     # Required so the group can be used as a permission-rule key.

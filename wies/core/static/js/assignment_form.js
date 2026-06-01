@@ -1,7 +1,6 @@
 /**
- * Services formset behaviours: dynamic row add/remove, "Rol ingevuld"
- * colleague reveal, inline skill creation, and create-form-specific
- * cancel + error-scroll helpers.
+ * Services formset behaviours: dynamic row add/remove, status-reveals-details,
+ * inline skill creation, and create-form-specific cancel + error-scroll helpers.
  *
  * Runs on DOMContentLoaded AND on htmx:afterSwap so the side-panel
  * inline-edit form (which injects the same services-container into
@@ -12,22 +11,25 @@
   function initServicesForm() {
     var container = document.querySelector("#services-container");
     if (!container) return;
-    // HTMX swaps replace the node wholesale, so this flag is fresh on
-    // each swap. The guard protects against repeat DOMContentLoaded /
-    // afterSwap firings against the same node.
     if (container.dataset.servicesFormInitialized === "1") return;
-    var addBtn = document.querySelector("#add-service-btn");
     var totalFormsInput = document.querySelector("#id_service-TOTAL_FORMS");
-    if (!addBtn || !totalFormsInput) return;
+    if (!totalFormsInput) return;
     container.dataset.servicesFormInitialized = "1";
 
+    // Hide the single empty template row on page load.
+    var initialRows = container.querySelectorAll(".service-row");
+    if (initialRows.length === 1 && initialRows[0].dataset.hasChoice === "false") {
+      initialRows[0].style.display = "none";
+      initialRows[0].dataset.hiddenTemplate = "1";
+    }
+
     function updateRemoveButtons() {
-      var rows = container.querySelectorAll(".service-row");
-      rows.forEach(function (row) {
-        var checkboxLine = row.querySelector(".service-row__checkbox-line");
-        if (!checkboxLine) return;
-        var existing = checkboxLine.querySelector(".service-row__remove");
-        if (rows.length > 1) {
+      var visibleRows = container.querySelectorAll(".service-row:not([data-hidden-template='1'])");
+      visibleRows.forEach(function (row) {
+        var actionsDiv = row.querySelector(".service-row__actions");
+        if (!actionsDiv) return;
+        var existing = actionsDiv.querySelector(".service-row__remove");
+        if (visibleRows.length > 1) {
           if (!existing) {
             var btn = document.createElement("button");
             btn.type = "button";
@@ -39,7 +41,7 @@
               row.remove();
               updateRemoveButtons();
             });
-            checkboxLine.appendChild(btn);
+            actionsDiv.appendChild(btn);
           }
         } else {
           if (existing) existing.remove();
@@ -47,86 +49,96 @@
       });
     }
 
-    function addServiceRow() {
+    function addServiceRow(status) {
       var index = parseInt(totalFormsInput.value, 10);
-      var firstRow = container.querySelector(".service-row");
-      var row = firstRow.cloneNode(true);
-      row.dataset.serviceIndex = index;
 
-      row.querySelectorAll("input, select, textarea").forEach(function (field) {
-        if (field.name)
-          field.name = field.name.replace(/-0-/, "-" + index + "-");
-        if (field.id) field.id = field.id.replace(/-0-/, "-" + index + "-");
-        if (field.tagName === "SELECT") {
-          field.selectedIndex = 0;
-        } else if (field.type === "checkbox") {
-          field.checked = false;
-        } else {
-          field.value = "";
-        }
-      });
-      row.querySelectorAll("label").forEach(function (label) {
-        var forAttr = label.getAttribute("for");
-        if (forAttr)
-          label.setAttribute("for", forAttr.replace(/-0-/, "-" + index + "-"));
-      });
+      // Use the hidden template row for the first add, clone for subsequent.
+      var templateRow = container.querySelector("[data-hidden-template='1']");
+      var row;
+      if (templateRow) {
+        row = templateRow;
+        row.style.display = "";
+        delete row.dataset.hiddenTemplate;
+      } else {
+        var sourceRow = container.querySelector(".service-row");
+        row = sourceRow.cloneNode(true);
+        row.dataset.serviceIndex = index;
 
-      row
-        .querySelectorAll(
-          ".service-new-skill, .service-colleague-field, .service-period-section, .service-period-fields",
-        )
-        .forEach(function (el) {
-          el.style.display = "none";
+        row.querySelectorAll("input, select, textarea").forEach(function (field) {
+          if (field.name) field.name = field.name.replace(/-\d+-/, "-" + index + "-");
+          if (field.id) field.id = field.id.replace(/-\d+-/, "-" + index + "-");
+          if (field.tagName === "SELECT") {
+            field.selectedIndex = 0;
+          } else if (field.type === "radio") {
+            field.checked = false;
+          } else if (field.type === "checkbox") {
+            field.checked = false;
+          } else {
+            field.value = "";
+          }
+        });
+        row.querySelectorAll("label").forEach(function (label) {
+          var forAttr = label.getAttribute("for");
+          if (forAttr)
+            label.setAttribute("for", forAttr.replace(/-\d+-/, "-" + index + "-"));
         });
 
-      var existingBtn = row.querySelector(".service-row__remove");
-      if (existingBtn) existingBtn.remove();
+        var newSkill = row.querySelector(".service-new-skill");
+        if (newSkill) newSkill.style.display = "none";
 
-      row.querySelectorAll(".rvo-form-field__error").forEach(function (el) {
-        el.remove();
-      });
+        var existingBtn = row.querySelector(".service-row__remove");
+        if (existingBtn) existingBtn.remove();
 
-      container.appendChild(row);
-      totalFormsInput.value = index + 1;
+        row.querySelectorAll(".rvo-form-field__error").forEach(function (el) {
+          el.remove();
+        });
+
+        container.appendChild(row);
+        totalFormsInput.value = index + 1;
+      }
+
+      // Pre-select the chosen status radio.
+      var radio = row.querySelector("input[type='radio'][value='" + status + "']");
+      if (radio) {
+        radio.checked = true;
+        row.dataset.hasChoice = "true";
+      }
+
+      // Show details immediately (status already chosen).
+      var details = row.querySelector(".service-row__details");
+      if (details) details.style.display = "";
+
+      // For "aanvraag", hide consultant field as it's not relevant.
+      if (status === "aanvraag") {
+        var colleagueField = row.querySelector(".service-colleague-field");
+        if (colleagueField) colleagueField.style.display = "none";
+      } else {
+        var colleagueField = row.querySelector(".service-colleague-field");
+        if (colleagueField) colleagueField.style.display = "";
+      }
 
       updateRemoveButtons();
-      initStatusToggle(row);
-      initPeriodToggle(row);
       initInlineCreate(row);
+      initColleagueToggle(row);
     }
 
-    addBtn.addEventListener("click", addServiceRow);
-
-    function initStatusToggle(row) {
-      var checkbox = row.querySelector("[name$='-is_filled']");
+    function initColleagueToggle(row) {
+      var radios = row.querySelectorAll(".service-row__status-toggle input[type='radio']");
       var colleagueField = row.querySelector(".service-colleague-field");
-      var periodSection = row.querySelector(".service-period-section");
-      if (!checkbox || !colleagueField) return;
-
-      function update() {
-        var show = checkbox.checked;
-        colleagueField.style.display = show ? "" : "none";
-        if (periodSection) {
-          periodSection.style.display = show ? "" : "none";
-        }
-      }
-
-      checkbox.addEventListener("change", update);
-      update();
+      if (!colleagueField) return;
+      radios.forEach(function (radio) {
+        radio.addEventListener("change", function () {
+          colleagueField.style.display = radio.value === "aanvraag" ? "none" : "";
+        });
+      });
     }
 
-    function initPeriodToggle(row) {
-      var checkbox = row.querySelector("[name$='-has_custom_period']");
-      var periodFields = row.querySelector(".service-period-fields");
-      if (!checkbox || !periodFields) return;
-
-      function update() {
-        periodFields.style.display = checkbox.checked ? "" : "none";
-      }
-
-      checkbox.addEventListener("change", update);
-      update();
-    }
+    // Bind the two add buttons.
+    document.querySelectorAll("[data-add-service]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        addServiceRow(btn.dataset.addService);
+      });
+    });
 
     function initInlineCreate(row) {
       var skillSelect = row.querySelector("[name$='-skill']");
@@ -140,9 +152,8 @@
     }
 
     container.querySelectorAll(".service-row").forEach(function (row) {
-      initStatusToggle(row);
-      initPeriodToggle(row);
       initInlineCreate(row);
+      initColleagueToggle(row);
     });
     updateRemoveButtons();
   }

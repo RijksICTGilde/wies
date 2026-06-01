@@ -204,7 +204,13 @@ class ServiceForm(RvoFormMixin, forms.Form):
     )
     description = forms.CharField(label="Toelichting", max_length=500, required=False)
     new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)
-    is_filled = forms.BooleanField(label="Consultant bekend", required=False)
+    is_filled = forms.ChoiceField(
+        label="Status",
+        choices=[("aanvraag", "Aanvraag"), ("ingevuld", "Geplaatste consultant")],
+        widget=forms.RadioSelect,
+        initial="aanvraag",
+        required=False,
+    )
     colleague = forms.ModelChoiceField(
         label="Consultant",
         queryset=Colleague.objects.order_by("name"),
@@ -235,30 +241,20 @@ class ServiceForm(RvoFormMixin, forms.Form):
         if skill_val == "__new__" and not new_skill_name:
             self.add_error("new_skill_name", "Voer een naam in voor de nieuwe rol.")
         has_skill = (skill_val and skill_val != "__new__") or new_skill_name
-        has_other_data = (
-            cleaned_data.get("description") or cleaned_data.get("is_filled") or cleaned_data.get("colleague")
-        )
+        has_other_data = cleaned_data.get("description") or cleaned_data.get("colleague")
         if not has_skill and has_other_data:
             self.add_error("skill", "Selecteer een rol.")
-        is_filled = cleaned_data.get("is_filled")
         colleague = cleaned_data.get("colleague")
-        if is_filled and not colleague:
-            self.add_error("colleague", "Selecteer een consultant.")
-        # "Rol ingevuld" is the authoritative on/off for the placement.
-        # The UI hides (not clears) the colleague select when the
-        # checkbox is off, so the posted colleague id would otherwise
-        # leak through — treat an unchecked row as "no placement".
+        is_filled = cleaned_data.get("is_filled") == "ingevuld"
+        cleaned_data["is_filled"] = is_filled
         if not is_filled:
-            cleaned_data["colleague"] = None
             cleaned_data["has_custom_period"] = False
-            cleaned_data["placement_start_date"] = None
-            cleaned_data["placement_end_date"] = None
-        elif not cleaned_data.get("has_custom_period"):
             cleaned_data["placement_start_date"] = None
             cleaned_data["placement_end_date"] = None
         else:
             p_start = cleaned_data.get("placement_start_date")
             p_end = cleaned_data.get("placement_end_date")
+            cleaned_data["has_custom_period"] = bool(p_start or p_end)
             if p_start and p_end and p_end < p_start:
                 self.add_error("placement_end_date", "Einddatum moet na startdatum liggen.")
         return cleaned_data
