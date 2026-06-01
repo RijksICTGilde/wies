@@ -3,11 +3,12 @@
    For existing rows (with data) the details are shown immediately via data-has-choice.
 #}
 {% set _has_choice = svc_form.is_bound or (svc_form.initial and svc_form.initial.get('is_filled') is not none) %}
-<div class="service-row" data-service-index="{{ row_index }}" data-has-choice="{{ 'true' if _has_choice else 'false' }}">
-  <div class="service-row__status-toggle">
-    {{ svc_form.is_filled.as_widget() }}
-  </div>
-  <div class="service-row__details"{% if not _has_choice %} style="display:none"{% endif %}>
+<div class="service-row"
+     data-service-index="{{ row_index }}"
+     data-has-choice="{{ 'true' if _has_choice else 'false' }}">
+  <div class="service-row__status-toggle">{{ svc_form.is_filled.as_widget() }}</div>
+  <div class="service-row__details"
+       {% if not _has_choice %}style="display:none"{% endif %}>
     {{ svc_form.skill.as_field_group() }}
     <div class="service-new-skill" style="display: none">{{ svc_form.new_skill_name.as_field_group() }}</div>
     <div class="assignment-form-row">
@@ -15,7 +16,8 @@
       {{ svc_form.placement_end_date.as_field_group() }}
     </div>
     {% set _is_aanvraag = svc_form.is_filled.value() == "aanvraag" %}
-    <div class="service-colleague-field"{% if _is_aanvraag %} style="display:none"{% endif %}>
+    <div class="service-colleague-field"
+         {% if _is_aanvraag %}style="display:none"{% endif %}>
       <div class="utrecht-form-field">
         <div class="rvo-form-field__label">
           <label class="rvo-label" for="{{ svc_form.colleague.id_for_label }}">{{ svc_form.colleague.label }}</label>

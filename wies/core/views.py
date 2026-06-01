@@ -1203,9 +1203,9 @@ class AssignmentListView(ListView):
 
         if placement_id:
             try:
-                placement = Placement.objects.select_related(
-                    "colleague", "service__assignment", "service__skill"
-                ).get(id=placement_id)
+                placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
+                    id=placement_id
+                )
                 context["panel_data"] = _build_placement_panel_data(placement, self.request)
             except Placement.DoesNotExist:
                 pass
@@ -2541,7 +2541,9 @@ def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) 
     from wies.core.inline_edit.base import EditableGroup  # noqa: PLC0415
 
     ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "form": form, "editable": spec}
-    template = spec.form_template if isinstance(spec, EditableGroup) and spec.form_template else "parts/inline_edit/form.html"
+    template = (
+        spec.form_template if isinstance(spec, EditableGroup) and spec.form_template else "parts/inline_edit/form.html"
+    )
     return render(request, template, ctx)
 
 

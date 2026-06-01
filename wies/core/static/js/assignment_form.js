@@ -18,13 +18,18 @@
 
     // Hide the single empty template row on page load.
     var initialRows = container.querySelectorAll(".service-row");
-    if (initialRows.length === 1 && initialRows[0].dataset.hasChoice === "false") {
+    if (
+      initialRows.length === 1 &&
+      initialRows[0].dataset.hasChoice === "false"
+    ) {
       initialRows[0].style.display = "none";
       initialRows[0].dataset.hiddenTemplate = "1";
     }
 
     function updateRemoveButtons() {
-      var visibleRows = container.querySelectorAll(".service-row:not([data-hidden-template='1'])");
+      var visibleRows = container.querySelectorAll(
+        ".service-row:not([data-hidden-template='1'])",
+      );
       visibleRows.forEach(function (row) {
         var actionsDiv = row.querySelector(".service-row__actions");
         if (!actionsDiv) return;
@@ -64,23 +69,30 @@
         row = sourceRow.cloneNode(true);
         row.dataset.serviceIndex = index;
 
-        row.querySelectorAll("input, select, textarea").forEach(function (field) {
-          if (field.name) field.name = field.name.replace(/-\d+-/, "-" + index + "-");
-          if (field.id) field.id = field.id.replace(/-\d+-/, "-" + index + "-");
-          if (field.tagName === "SELECT") {
-            field.selectedIndex = 0;
-          } else if (field.type === "radio") {
-            field.checked = false;
-          } else if (field.type === "checkbox") {
-            field.checked = false;
-          } else {
-            field.value = "";
-          }
-        });
+        row
+          .querySelectorAll("input, select, textarea")
+          .forEach(function (field) {
+            if (field.name)
+              field.name = field.name.replace(/-\d+-/, "-" + index + "-");
+            if (field.id)
+              field.id = field.id.replace(/-\d+-/, "-" + index + "-");
+            if (field.tagName === "SELECT") {
+              field.selectedIndex = 0;
+            } else if (field.type === "radio") {
+              field.checked = false;
+            } else if (field.type === "checkbox") {
+              field.checked = false;
+            } else {
+              field.value = "";
+            }
+          });
         row.querySelectorAll("label").forEach(function (label) {
           var forAttr = label.getAttribute("for");
           if (forAttr)
-            label.setAttribute("for", forAttr.replace(/-\d+-/, "-" + index + "-"));
+            label.setAttribute(
+              "for",
+              forAttr.replace(/-\d+-/, "-" + index + "-"),
+            );
         });
 
         var newSkill = row.querySelector(".service-new-skill");
@@ -98,7 +110,9 @@
       }
 
       // Pre-select the chosen status radio.
-      var radio = row.querySelector("input[type='radio'][value='" + status + "']");
+      var radio = row.querySelector(
+        "input[type='radio'][value='" + status + "']",
+      );
       if (radio) {
         radio.checked = true;
         row.dataset.hasChoice = "true";
@@ -123,12 +137,15 @@
     }
 
     function initColleagueToggle(row) {
-      var radios = row.querySelectorAll(".service-row__status-toggle input[type='radio']");
+      var radios = row.querySelectorAll(
+        ".service-row__status-toggle input[type='radio']",
+      );
       var colleagueField = row.querySelector(".service-colleague-field");
       if (!colleagueField) return;
       radios.forEach(function (radio) {
         radio.addEventListener("change", function () {
-          colleagueField.style.display = radio.value === "aanvraag" ? "none" : "";
+          colleagueField.style.display =
+            radio.value === "aanvraag" ? "none" : "";
         });
       });
     }
