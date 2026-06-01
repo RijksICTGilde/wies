@@ -24,6 +24,7 @@ This files lists the changes during the lifetime of this project.
 - 320: rename instellingen to beheer
 - 320: remove database dump download/upload and 'Sync OTYS' actions
 - 320: guard destructive /staff/ actions (clear data, load dummy data) behind the `ENABLE_DESTRUCTIVE_STAFF_ACTIONS` env var
+- 320: add usage dashboard for staff members
 
 ## 2026-05-11_2
 
