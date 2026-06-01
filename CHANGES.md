@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+_ ...
+
+## 2026-06-01
+
 - 343: remove explicit container name to improve worktrees experience
 - 343: remove django admin
 - 342: fix "Nieuwe gebruiker" form silently failing on duplicate e-mail — error is now shown inline next to the e-mailveld (regressie van #322)
