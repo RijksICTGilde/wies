@@ -21,6 +21,7 @@ from wies.core.permission_engine import Verb, has_permission, rule
 from wies.rijksauth.models import User
 
 UPDATE = Verb.UPDATE
+DELETE = Verb.DELETE
 
 
 # --- Private predicates ------------------------------------------------------
@@ -113,6 +114,20 @@ def update_colleague(user, c):
 def update_user(user, target):
     """Admin path (Beheerder holds rijksauth.change_user) or self-edit."""
     return _has_change_perm(user, target) or target == user
+
+
+# --- Whole-object DELETE rules ----------------------------------------------
+
+
+@rule(DELETE, Assignment)
+def delete_assignment(user, a):
+    """Only the BM-owner of a wies-sourced opdracht (issue #313).
+
+    Beheerder (``core.change_assignment``) is intentionally NOT
+    included here — deletion stays with the owner who has end-to-end
+    accountability for the opdracht.
+    """
+    return _is_wies_sourced(a) and _is_assignment_owner(user, a)
 
 
 # --- Field-level UPDATE rules -----------------------------------------------
