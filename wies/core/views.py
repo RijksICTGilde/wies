@@ -601,7 +601,21 @@ def staff_database(request):
                 with transaction.atomic():
                     total = sum(len(g) - 1 for g in groups)
                     for group in groups:
+                        target = group[0]
+                        deleted_ids = [a.id for a in group[1:]]
                         merge_group(group, dry_run=False)
+                        create_event(
+                            object_type="Assignment",
+                            action="update",
+                            source="user",
+                            object_id=target.id,
+                            user=request.user,
+                            context={
+                                "merge": True,
+                                "merged_ids": deleted_ids,
+                                "name": target.name,
+                            },
+                        )
                     messages.success(
                         request,
                         f"{total} dubbele opdracht(en) samengevoegd in {len(groups)} groep(en).",
