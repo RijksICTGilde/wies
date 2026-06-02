@@ -58,9 +58,9 @@ def _is_placed_on_service(user, service) -> bool:
     return Placement.objects.filter(service=service, colleague=colleague).exists()
 
 
-def _placed_consultant_or_admin(user, assignment) -> bool:
-    """Field-level scope shared by Assignment editables that placed
-    consultants are allowed to edit (name, extra_info)."""
+def _can_edit_assignment_text_field(user, assignment) -> bool:
+    """BM-owner, Beheerder (``change_assignment``) or a placed
+    consultant — but only on wies-sourced opdrachten."""
     if not _is_wies_sourced(assignment):
         return False
     return has_permission(UPDATE, assignment, user) or _is_placed_on_assignment(user, assignment)
@@ -115,18 +115,12 @@ def update_user(user, target):
 
 @rule(UPDATE, AssignmentEditables.extra_info)
 def update_assignment_extra_info(user, a):
-    """Admin/owner OR any consultant placed on the assignment."""
-    return _placed_consultant_or_admin(user, a)
+    return _can_edit_assignment_text_field(user, a)
 
 
 @rule(UPDATE, AssignmentEditables.name)
 def update_assignment_name(user, a):
-    """Admin/owner OR any consultant placed on the assignment.
-
-    Pre-editables, the single coarse permission let placed consultants
-    fix the name; issue #331 restored that.
-    """
-    return _placed_consultant_or_admin(user, a)
+    return _can_edit_assignment_text_field(user, a)
 
 
 @rule(UPDATE, ServiceEditables.description)

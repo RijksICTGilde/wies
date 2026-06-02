@@ -715,16 +715,22 @@ class AssignmentServicesDisplayTest(TestCase):
         filled_pos = content.index("rvo-item-list__item--filled")
         assert vacant_pos < filled_pos
 
-    def test_filled_row_click_area_includes_avatar_and_skill(self):
-        """Whole avatar + name + skill section is the anchor, not just the name."""
-        resp = self.client.get(self.url + "?cancel=true")
+    def test_display_omits_team_level_edit_button(self):
+        """`EditableCollection.hide_edit_button=True` must apply on every
+        render path — the panel template, the post-save re-render, and
+        a direct GET on the inline-edit URL all suppress the team-level
+        pencil. The parent template provides its own "Team bewerken"
+        trigger."""
+        resp = self.client.get(self.url)
         assert resp.status_code == 200
         content = resp.content.decode()
-        anchor_start = content.index('class="service-card__name service-card__name--link"')
-        anchor_end = content.index("</a>", anchor_start)
-        anchor_html = content[anchor_start:anchor_end]
-        assert "user-avatar" in anchor_html
-        assert self.colleague.name in anchor_html
+        team_wrapper = content.split('id="inline-edit-assignment-')[1]
+        # No clickable wrapper, no pencil button on the team-level
+        # editable-field-display (per-row description pencils are still
+        # rendered and unrelated to this check).
+        team_outer = team_wrapper.split("rvo-item-list")[0]
+        assert 'role="button"' not in team_outer
+        assert "edit-icon-button" not in team_outer
 
 
 class AssignmentServicesAuditTest(TestCase):

@@ -46,6 +46,10 @@ class Editable:
     form_field_factory: forms.Field | Callable[[], forms.Field] | None = None
     initial: Callable[[Model], Any] | None = None
 
+    # Render the current value as a short human string for audit events.
+    # Defaults to ``str(value or "")`` when unset.
+    audit_format: Callable[[Any], str] | None = None
+
     # Set by EditableSet.__init_subclass__ — the attribute name on the set.
     # Identifier used in URLs / registry keys / DOM target ids.
     name: str | None = None
@@ -106,6 +110,10 @@ class EditableCollection:
     # render the before/after values in audit events. None disables
     # audit emission for this collection.
     summary: Callable[[list[dict]], str] | None = None
+    # Suppress the auto-rendered pencil + clickable-value wrapper on the
+    # display partial. Use when the parent template provides its own
+    # edit trigger (e.g. the "Team bewerken" button).
+    hide_edit_button: bool = False
     name: str | None = None
     # Set by EditableSet.__init_subclass__ — the model owning this collection.
     model: type[Model] | None = None

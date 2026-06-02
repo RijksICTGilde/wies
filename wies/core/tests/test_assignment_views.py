@@ -118,10 +118,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert self.assignment.name == "Owner Updated Name"
 
     def test_assigned_colleague_can_edit_name(self):
-        """A consultant placed on the assignment can edit ``name`` —
-        same scope as ``extra_info``. Restores pre-editables behavior
-        (issue #331).
-        """
+        """A consultant placed on the assignment can edit ``name``."""
         self.client.force_login(self.assigned_user)
 
         response = self.client.post(

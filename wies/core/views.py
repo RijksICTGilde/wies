@@ -11,6 +11,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
@@ -2491,6 +2492,7 @@ def _render_inline_edit_display(
         "user_can_edit": (
             user_can_edit if user_can_edit is not None else has_permission(Verb.UPDATE, obj, request.user, spec)
         ),
+        "hide_edit_button": getattr(spec, "hide_edit_button", False),
         "alert": alert,
     }
     response = render(request, "parts/inline_edit/display.html", ctx)
@@ -2525,13 +2527,14 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
         if formset.is_valid():
             before = spec.initial(obj)
             try:
-                spec.save(obj, formset)
+                with transaction.atomic():
+                    spec.save(obj, formset)
+                    after = spec.initial(obj)
+                    _emit_inline_edit_audit_event(spec, obj, before, after, request.user)
             except ValidationError as exc:
                 for message in exc.messages:
                     _attach_formset_error(formset, message)
                 return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
-            after = spec.initial(obj)
-            _emit_inline_edit_audit_event(spec, obj, before, after, request.user)
             return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj, saved=True)
         return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
 
@@ -2548,7 +2551,10 @@ _AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "Organization
 
 def _record_editable_change(editable, obj, object_type, old_value, new_value, user) -> None:
     """Building block: emit a single 'field X changed' event if old != new."""
-    if str(old_value or "") == str(new_value or ""):
+    formatter = editable.audit_format or (lambda v: str(v or ""))
+    old_text = formatter(old_value)
+    new_text = formatter(new_value)
+    if old_text == new_text:
         return
     from django import forms  # noqa: PLC0415
 
@@ -2566,8 +2572,8 @@ def _record_editable_change(editable, obj, object_type, old_value, new_value, us
             "field_type": "textarea" if is_textarea else "text",
             "field_name": editable.field or editable.name or "",
             "field_label": editable.label or editable.name or "",
-            "old_value": str(old_value or ""),
-            "new_value": str(new_value or ""),
+            "old_value": old_text,
+            "new_value": new_text,
         },
     )
 
@@ -2668,19 +2674,20 @@ def inline_edit_view(request, model_label, pk, name):
                 before = {e.name: _current_value(obj, e) for e in editables}
             else:
                 before = _current_value(obj, spec)
-            save_spec(spec, editables, form.cleaned_data, obj)
-            if isinstance(spec, EditableGroup):
-                after = {e.name: _current_value(obj, e) for e in editables}
-            else:
-                after = _current_value(obj, spec)
-            _emit_inline_edit_audit_event(
-                spec,
-                obj,
-                before,
-                after,
-                request.user,
-                child_editables=editables if isinstance(spec, EditableGroup) else None,
-            )
+            with transaction.atomic():
+                save_spec(spec, editables, form.cleaned_data, obj)
+                if isinstance(spec, EditableGroup):
+                    after = {e.name: _current_value(obj, e) for e in editables}
+                else:
+                    after = _current_value(obj, spec)
+                _emit_inline_edit_audit_event(
+                    spec,
+                    obj,
+                    before,
+                    after,
+                    request.user,
+                    child_editables=editables if isinstance(spec, EditableGroup) else None,
+                )
             return _render_inline_edit_display(
                 request,
                 editable_set,

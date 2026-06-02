@@ -1,11 +1,6 @@
-{# Display for Assignment.organizations.
-    obj   — Assignment
-    value — [{"organization": OrganizationUnit, "role": "PRIMARY"|"INVOLVED"}, ...]
-
-    Renders the same breadcrumb (ancestors + label, primary tagged) the
-    panel showed before inline-edit landed, via `get_org_breadcrumb`. #}
+{# Renders breadcrumbs with ancestors + label and the primary organization tagged. #}
 {% if value %}
-  {% set base_url = url("assignment-list") %}
+  {% set base_url = breadcrumb_base_url(request) %}
   {% for row in value %}
     {% set org_breadcrumb = get_org_breadcrumb(row.organization, base_url) %}
     <div class="org-breadcrumb">

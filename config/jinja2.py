@@ -1,4 +1,5 @@
 from datetime import date
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.messages import get_messages
@@ -128,6 +129,22 @@ def get_sort_state(request, field):
     return None
 
 
+def breadcrumb_base_url(request):
+    """Path of the page hosting the side panel, so breadcrumb links stay there.
+
+    For HTMX requests (inline-edit re-renders), use ``HX-Current-URL`` —
+    ``request.path`` would point at the inline-edit endpoint.
+    """
+    hx_url = request.headers.get("HX-Current-URL", "")
+    if hx_url:
+        path = urlparse(hx_url).path
+        if path:
+            return path
+    if request.path.startswith("/inline-edit/"):
+        return reverse("assignment-list")
+    return request.path
+
+
 def environment(**options):
     env = Environment(**options)  # noqa: S701 - autoescape handled by Django
     setup_components(env)
@@ -145,6 +162,7 @@ def environment(**options):
             "APP_VERSION": get_app_version(),
             "inline_edit": inline_edit,
             "get_org_breadcrumb": get_org_breadcrumb,
+            "breadcrumb_base_url": breadcrumb_base_url,
             "has_permission": has_permission,
             "Verb": Verb,
             "AssignmentEditables": AssignmentEditables,

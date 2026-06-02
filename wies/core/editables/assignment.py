@@ -38,6 +38,21 @@ def _save_organizations(assignment, value):
             )
 
 
+def _organizations_audit_format(value) -> str:
+    """`OrgName (primair), OrgName, ...` for audit events."""
+    if not value:
+        return "geen"
+    parts = []
+    for row in value:
+        org = row["organization"]
+        name = org.label or org.name
+        if row["role"] == "PRIMARY":
+            parts.append(f"{name} (primair)")
+        else:
+            parts.append(name)
+    return ", ".join(parts)
+
+
 def _skill_choices():
     # Matches the shape used by assignment-create so service_row.html renders identically.
     choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
@@ -154,6 +169,7 @@ class AssignmentEditables(EditableSet):
         form_field_factory=lambda: OrganizationsField(required=True),
         initial=_organizations_initial,
         save=_save_organizations,
+        audit_format=_organizations_audit_format,
         display="rvo/forms/displays/organizations.html",
     )
 
@@ -163,6 +179,7 @@ class AssignmentEditables(EditableSet):
         initial=_services_initial,
         save=_save_services,
         summary=_services_summary,
+        hide_edit_button=True,
         form_template="parts/assignment_services_form.html",
         display="rvo/forms/displays/assignment_services.html",
     )
