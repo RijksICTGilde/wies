@@ -7,8 +7,8 @@ This files lists the changes during the lifetime of this project.
 - 374: (migration)(remove env vars) remove super users and remove automatic generation during container start
 - 331: restore organization breadcrumbs in opdracht side panel; breadcrumb links stay on the page you came from (aanvragen or wie-zit-waar)
 - 331: log audit events for changes to the looptijd (start/end date) and team (rollen + plaatsingen) on opdrachten
-- 331: placed consultants kunnen weer de opdrachtnaam aanpassen
-- 331: open rollen (aanvragen) staan weer bovenaan in het team
+- 331: restore the ability for placed consultants to edit the opdracht name
+- 331: show open rollen (aanvragen) first in the team list again
 
 ## 2026-06-01
 
