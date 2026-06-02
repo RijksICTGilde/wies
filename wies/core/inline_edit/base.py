@@ -106,10 +106,14 @@ class EditableCollection:
     # formset as ``formset``.
     form_template: str | None = None
     display: str | Callable[[Model], Any] | None = None
-    # Compact human-readable summary of `initial(obj)` rows, used to
-    # render the before/after values in audit events. None disables
-    # audit emission for this collection.
+    # Compact human-readable summary of `initial(obj)` rows, used as
+    # the old/new value in audit events when `diff` is not set.
     summary: Callable[[list[dict]], str] | None = None
+    # Bullet lines describing what changed between two `initial(obj)`
+    # snapshots — preferred over `summary` for collection audit events
+    # because it lets the timeline render added/removed/changed bullets
+    # instead of dumping full before/after blobs. Empty list = no event.
+    diff: Callable[[list[dict], list[dict]], list[str]] | None = None
     # Suppress the auto-rendered pencil + clickable-value wrapper on the
     # display partial. Use when the parent template provides its own
     # edit trigger (e.g. the "Team bewerken" button).

@@ -781,8 +781,8 @@ class AssignmentServicesAuditTest(TestCase):
         return data
 
     def test_services_post_emits_event_on_change(self):
-        # Fill the previously vacant Java service with the colleague — a real
-        # team-composition change the summary picks up.
+        # Fill the previously vacant Java service with the colleague — the
+        # diff should list one "Gewijzigd" line for it.
         data = {
             "service-TOTAL_FORMS": "2",
             **self.FORMSET_MGMT_KEYS,
@@ -810,8 +810,10 @@ class AssignmentServicesAuditTest(TestCase):
         event = events[0]
         assert event.context["field_name"] == "services"
         assert event.context["field_label"] == "Team"
-        assert "Java (open)" in event.context["old_value"]
-        assert f"Java ({self.colleague.name})" in event.context["new_value"]
+        assert event.context["field_type"] == "diff"
+        assert event.context["diff_lines"] == [
+            f"Gewijzigd: Java (open) -> Java ({self.colleague.name})",
+        ]
 
     def test_services_post_no_change_no_event(self):
         data = {

@@ -16,6 +16,8 @@
           <strong>{{ author }}</strong>
           {% if event.action == "create" %}
             maakte deze opdracht aan
+          {% elif event.context.field_type == "diff" %}
+            wijzigde <strong>{{ event.context.field_label }}</strong>
           {% else %}
             wijzigde <strong>{{ event.context.field_label }}</strong>
             {% if event.context.field_type != "textarea" %}
@@ -38,6 +40,11 @@
               </span>
             {% endif %}
           </div>
+          {% if event.context.field_type == "diff" and event.context.diff_lines %}
+            <ul class="rvo-list rvo-margin-block-start--xs">
+              {% for line in event.context.diff_lines %}<li>{{ line }}</li>{% endfor %}
+            </ul>
+          {% endif %}
           {% if event.context.field_type == "textarea" %}
             {% if event.context.old_value %}
               <div class="rvo-margin-block-start--xs">
