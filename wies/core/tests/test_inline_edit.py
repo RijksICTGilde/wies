@@ -6,6 +6,8 @@ persistence behaviour. Registrations are cleaned up in tearDown to
 avoid leaking into unrelated tests.
 """
 
+import re
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
@@ -13,7 +15,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.editables import REGISTRY
-from wies.core.editables.assignment import AssignmentEditables
+from wies.core.editables.assignment import AssignmentEditables, _services_diff
 from wies.core.editables.placement import PlacementEditables
 from wies.core.editables.service import ServiceEditables
 from wies.core.fields import OrganizationsField
@@ -760,7 +762,7 @@ class AssignmentServicesAuditTest(TestCase):
         self.filled_service = Service.objects.create(
             description="Filled", assignment=self.assignment, skill=self.skill_python, source="wies"
         )
-        Placement.objects.create(colleague=self.colleague, service=self.filled_service, source="wies")
+        self.placement = Placement.objects.create(colleague=self.colleague, service=self.filled_service, source="wies")
         self.vacant_service = Service.objects.create(
             description="Vacant", assignment=self.assignment, skill=self.skill_java, source="wies", status="OPEN"
         )
@@ -832,6 +834,116 @@ class AssignmentServicesAuditTest(TestCase):
         resp = self.client.post(self.url, data)
         assert resp.status_code == 200
         assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
+
+    def test_edit_formset_renders_pk_hidden_inputs(self):
+        """The hidden ``service-N-id`` and ``service-N-placement_id``
+        inputs must render so the formset round-trips PKs back to
+        apply_services_to_assignment. Without them every save would
+        delete-and-recreate (silently dropping Placement metadata)."""
+        resp = self.client.get(self.url + "?edit=true")
+        assert resp.status_code == 200
+        content = resp.content.decode()
+
+        def hidden_value(field_name):
+            m = re.search(
+                rf'<input type="hidden"\s+name="{re.escape(field_name)}"\s+value="([^"]*)"',
+                content,
+            )
+            return m.group(1) if m else None
+
+        # Vacancies-first sort: vacant row renders at index 0, filled at 1.
+        assert hidden_value("service-0-id") == str(self.vacant_service.id)
+        assert hidden_value("service-0-placement_id") == ""
+        assert hidden_value("service-1-id") == str(self.filled_service.id)
+        assert hidden_value("service-1-placement_id") == str(self.placement.id)
+
+    def test_description_only_edit_preserves_pks_and_emits_one_diff_line(self):
+        """Editing only the description must update the existing Service
+        in place (same PK, Placement kept with its metadata) and the
+        audit event must list exactly one Toelichting line."""
+        original_service_id = self.filled_service.id
+        original_placement_id = self.placement.id
+        # Vacancies-first ordering: vacant row is index 0, filled at index 1.
+        data = {
+            "service-TOTAL_FORMS": "2",
+            **self.FORMSET_MGMT_KEYS,
+            **self._row(0, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
+            **self._row(
+                1,
+                service=self.filled_service,
+                skill=self.skill_python,
+                description="New description",
+                is_filled=True,
+                colleague=self.colleague,
+            ),
+        }
+        resp = self.client.post(self.url, data)
+        assert resp.status_code == 200
+
+        self.filled_service.refresh_from_db()
+        self.placement.refresh_from_db()
+        assert self.filled_service.id == original_service_id
+        assert self.filled_service.description == "New description"
+        assert self.placement.id == original_placement_id
+
+        events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
+        assert len(events) == 1
+        assert events[0].context["diff_lines"] == [
+            f"Toelichting gewijzigd op Python ({self.colleague.name})",
+        ]
+
+
+class ServicesDiffUnitTests(TestCase):
+    """Pure-function checks for `_services_diff` covering each branch
+    (added / removed / changed skill / changed colleague / description
+    only / no-op)."""
+
+    def _row(self, sid, skill_name, colleague_name=None, description=""):
+        col = type("Col", (), {"name": colleague_name})() if colleague_name else None
+        return {"id": sid, "skill_name": skill_name, "colleague": col, "description": description}
+
+    def test_no_change(self):
+
+        rows = [self._row(1, "Python", "Jan", "x")]
+        assert _services_diff(rows, rows) == []
+
+    def test_added(self):
+
+        before = [self._row(1, "Python", "Jan")]
+        after = [self._row(1, "Python", "Jan"), self._row(2, "Java", None)]
+        assert _services_diff(before, after) == ["Toegevoegd: Java (open)"]
+
+    def test_removed(self):
+
+        before = [self._row(1, "Python", "Jan"), self._row(2, "Java", None)]
+        after = [self._row(1, "Python", "Jan")]
+        assert _services_diff(before, after) == ["Verwijderd: Java (open)"]
+
+    def test_colleague_filled(self):
+
+        before = [self._row(1, "Java", None)]
+        after = [self._row(1, "Java", "Anna")]
+        assert _services_diff(before, after) == ["Gewijzigd: Java (open) -> Java (Anna)"]
+
+    def test_skill_changed(self):
+
+        before = [self._row(1, "Python", "Jan")]
+        after = [self._row(1, "TypeScript", "Jan")]
+        assert _services_diff(before, after) == ["Gewijzigd: Python (Jan) -> TypeScript (Jan)"]
+
+    def test_description_only(self):
+
+        before = [self._row(1, "Python", "Jan", description="oud")]
+        after = [self._row(1, "Python", "Jan", description="nieuw")]
+        assert _services_diff(before, after) == ["Toelichting gewijzigd op Python (Jan)"]
+
+    def test_skill_change_overrides_description_line(self):
+        """A skill change yields a Gewijzigd line; description-only
+        line is suppressed for the same row to avoid double-reporting."""
+
+        before = [self._row(1, "Python", "Jan", description="oud")]
+        after = [self._row(1, "TypeScript", "Jan", description="nieuw")]
+        assert _services_diff(before, after) == ["Gewijzigd: Python (Jan) -> TypeScript (Jan)"]
 
 
 class ServiceDescriptionPermissionTest(TestCase):
