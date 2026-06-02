@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-_ ...
+- ?: (migration)(remove env vars) remove super users and remove automatic generation during container start
 
 ## 2026-06-01
 
@@ -51,9 +51,6 @@ _ ...
 - 309: add sidebar footer with links to privacy, toegankelijkheid, contact and GitHub
 - 309: add privacy, toegankelijkheid and contact pages
 - 309: make sidebar sticky so footer stays visible during scroll
-- 58: add logout button to profile and no-access pages
-- 58: on logout, clear Django session and redirect to Keycloak's OIDC end_session endpoint
-- 58: force credential re-prompt after logout via a session-scoped post_logout cookie + prompt=login, preventing silent re-auth until the browser is closed
 
 ## 2026-04-23
 
@@ -349,3 +346,5 @@ _ ...
 - add syncing between exact and wies colleagues
 
 ## demo-2025-08-04
+
+...
