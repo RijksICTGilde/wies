@@ -18,12 +18,7 @@ logger = logging.getLogger(__name__)
 
 def find_duplicate_groups():
     """Find assignments that share the same name and owner."""
-    dupes = (
-        Assignment.objects.values("name", "owner")
-        .annotate(count=Count("id"))
-        .filter(count__gt=1)
-        .order_by("name")
-    )
+    dupes = Assignment.objects.values("name", "owner").annotate(count=Count("id")).filter(count__gt=1).order_by("name")
 
     groups = []
     for dupe in dupes:
@@ -59,10 +54,7 @@ def describe_assignment(assignment):
         placements = svc.placements.all()
         if placements:
             for pl in placements:
-                lines.append(
-                    f"    service #{svc.id}: {svc.skill or '?'} — {pl.colleague.name}"
-                    f" (placement #{pl.id})"
-                )
+                lines.append(f"    service #{svc.id}: {svc.skill or '?'} — {pl.colleague.name} (placement #{pl.id})")
         else:
             lines.append(f"    service #{svc.id}: {svc.skill or '?'} — (vacant)")
     return "\n".join(lines)
@@ -91,10 +83,7 @@ def merge_group(assignments, *, dry_run=True):
     new_end = max(all_ends) if all_ends else None
 
     if new_start != target.start_date or new_end != target.end_date:
-        actions.append(
-            f"  Update period: {target.start_date}–{target.end_date}"
-            f" → {new_start}–{new_end}"
-        )
+        actions.append(f"  Update period: {target.start_date}–{target.end_date} → {new_start}–{new_end}")
         if not dry_run:
             target.start_date = new_start
             target.end_date = new_end
@@ -111,9 +100,7 @@ def merge_group(assignments, *, dry_run=True):
 
     # Existing org relations on the target.
     target_orgs = set(
-        AssignmentOrganizationUnit.objects.filter(assignment=target).values_list(
-            "organization_id", "role"
-        )
+        AssignmentOrganizationUnit.objects.filter(assignment=target).values_list("organization_id", "role")
     )
     has_primary = any(role == "PRIMARY" for _, role in target_orgs)
 
@@ -121,10 +108,7 @@ def merge_group(assignments, *, dry_run=True):
         # Move services.
         services = dupe.services.all()
         for svc in services:
-            actions.append(
-                f"  Move service #{svc.id} ({svc.skill or '?'}) "
-                f"from assignment #{dupe.id} → #{target.id}"
-            )
+            actions.append(f"  Move service #{svc.id} ({svc.skill or '?'}) from assignment #{dupe.id} → #{target.id}")
         if not dry_run:
             services.update(assignment=target)
 
@@ -132,10 +116,7 @@ def merge_group(assignments, *, dry_run=True):
         for org_rel in dupe.organization_relations.all():
             key = (org_rel.organization_id, org_rel.role)
             if key in target_orgs:
-                actions.append(
-                    f"  Skip org {org_rel.organization.name} ({org_rel.role})"
-                    f" — already on target"
-                )
+                actions.append(f"  Skip org {org_rel.organization.name} ({org_rel.role}) — already on target")
             elif org_rel.role == "PRIMARY" and has_primary:
                 # Target already has a PRIMARY; demote to INVOLVED.
                 new_key = (org_rel.organization_id, "INVOLVED")
@@ -150,14 +131,10 @@ def merge_group(assignments, *, dry_run=True):
                         org_rel.save(update_fields=["assignment", "role"])
                     target_orgs.add(new_key)
                 else:
-                    actions.append(
-                        f"  Skip org {org_rel.organization.name}"
-                        f" — already INVOLVED on target"
-                    )
+                    actions.append(f"  Skip org {org_rel.organization.name} — already INVOLVED on target")
             else:
                 actions.append(
-                    f"  Move org {org_rel.organization.name} ({org_rel.role})"
-                    f" from #{dupe.id} → #{target.id}"
+                    f"  Move org {org_rel.organization.name} ({org_rel.role}) from #{dupe.id} → #{target.id}"
                 )
                 if not dry_run:
                     org_rel.assignment = target
@@ -173,8 +150,7 @@ def merge_group(assignments, *, dry_run=True):
             remaining = dupe.services.count()
             if remaining > 0:
                 msg = (
-                    f"Assignment #{dupe.id} still has {remaining} services after merge!"
-                    " Aborting to prevent data loss."
+                    f"Assignment #{dupe.id} still has {remaining} services after merge! Aborting to prevent data loss."
                 )
                 raise RuntimeError(msg)
             # Delete org relations first (CASCADE would do it, but be explicit).
@@ -203,17 +179,12 @@ class Command(BaseCommand):
             self.stdout.write(self.style.SUCCESS("No duplicate assignments found."))
             return
 
-        self.stdout.write(
-            f"Found {len(groups)} group(s) of duplicate assignments:\n"
-        )
+        self.stdout.write(f"Found {len(groups)} group(s) of duplicate assignments:\n")
 
         for group in groups:
-            self.stdout.write(self.style.WARNING(f"\n{'='*60}"))
+            self.stdout.write(self.style.WARNING(f"\n{'=' * 60}"))
             self.stdout.write(
-                self.style.WARNING(
-                    f"Group: \"{group[0].name}\" (owner: {group[0].owner})"
-                    f" — {len(group)} assignments"
-                )
+                self.style.WARNING(f'Group: "{group[0].name}" (owner: {group[0].owner}) — {len(group)} assignments')
             )
             self.stdout.write(f"Target (keep): #{group[0].id}")
             self.stdout.write("")
@@ -226,15 +197,13 @@ class Command(BaseCommand):
             self.stdout.write(self.style.NOTICE("\nDry run — showing merge plan:\n"))
 
             for group in groups:
-                self.stdout.write(self.style.WARNING(f"Group: \"{group[0].name}\""))
+                self.stdout.write(self.style.WARNING(f'Group: "{group[0].name}"'))
                 actions = merge_group(group, dry_run=True)
                 for action in actions:
                     self.stdout.write(action)
                 self.stdout.write("")
 
-            self.stdout.write(
-                self.style.NOTICE("Run with --apply to execute the merge.")
-            )
+            self.stdout.write(self.style.NOTICE("Run with --apply to execute the merge."))
             return
 
         # Apply mode.
@@ -242,16 +211,10 @@ class Command(BaseCommand):
 
         with transaction.atomic():
             for group in groups:
-                self.stdout.write(
-                    self.style.WARNING(f"Merging: \"{group[0].name}\"")
-                )
+                self.stdout.write(self.style.WARNING(f'Merging: "{group[0].name}"'))
                 actions = merge_group(group, dry_run=False)
                 for action in actions:
                     self.stdout.write(action)
                 self.stdout.write("")
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Done. Merged {len(groups)} group(s) of duplicate assignments."
-            )
-        )
+        self.stdout.write(self.style.SUCCESS(f"Done. Merged {len(groups)} group(s) of duplicate assignments."))
