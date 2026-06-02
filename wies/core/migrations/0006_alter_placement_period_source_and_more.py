@@ -4,20 +4,27 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0005_split_collapsed_csv_services'),
+        ("core", "0005_split_collapsed_csv_services"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='placement',
-            name='period_source',
-            field=models.CharField(choices=[('SERVICE', 'Zelfde als opdracht'), ('PLACEMENT', 'Afwijkend van opdracht')], default='SERVICE', max_length=10),
+            model_name="placement",
+            name="period_source",
+            field=models.CharField(
+                choices=[("SERVICE", "Zelfde als opdracht"), ("PLACEMENT", "Afwijkend van opdracht")],
+                default="SERVICE",
+                max_length=10,
+            ),
         ),
         migrations.AlterField(
-            model_name='service',
-            name='period_source',
-            field=models.CharField(choices=[('ASSIGNMENT', 'Zelfde als opdracht'), ('SERVICE', 'Afwijkend van opdracht')], default='ASSIGNMENT', max_length=10),
+            model_name="service",
+            name="period_source",
+            field=models.CharField(
+                choices=[("ASSIGNMENT", "Zelfde als opdracht"), ("SERVICE", "Afwijkend van opdracht")],
+                default="ASSIGNMENT",
+                max_length=10,
+            ),
         ),
     ]
