@@ -8,6 +8,7 @@ This files lists the changes during the lifetime of this project.
 - 368: assignment team form redesigned — separate "Aanvraag toevoegen" and "Geplaatste consultant toevoegen" buttons with progressive field reveal
 - 368: lock icon on externally managed fields (e.g. OTYS)
 - 368: merge duplicate assignments tool in beheer — preview and confirm UI to combine assignments with the same name and owner
+- 368: BM can now edit service descriptions (role omschrijving) via inline-edit
 
 ## 2026-06-01
 
