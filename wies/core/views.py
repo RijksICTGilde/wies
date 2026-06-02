@@ -568,7 +568,7 @@ def staff_database(request):
                 return render(request, "parts/task_list.html", context)
 
         elif action == "merge_duplicates_preview":
-            from wies.core.management.commands.merge_duplicate_assignments import (
+            from wies.core.management.commands.merge_duplicate_assignments import (  # noqa: PLC0415 — conditional import for rare admin action
                 find_duplicate_groups,
             )
 
@@ -589,7 +589,7 @@ def staff_database(request):
             return render(request, "staff_database.html", context)
 
         elif action == "merge_duplicates_apply":
-            from wies.core.management.commands.merge_duplicate_assignments import (
+            from wies.core.management.commands.merge_duplicate_assignments import (  # noqa: PLC0415 — conditional import for rare admin action
                 find_duplicate_groups,
                 merge_group,
             )
