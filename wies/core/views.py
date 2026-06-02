@@ -2606,8 +2606,8 @@ def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_edita
 
     if isinstance(spec, EditableCollection):
         if spec.diff is not None:
-            lines = spec.diff(before, after)
-            if not lines:
+            entries = spec.diff(before, after)
+            if not entries:
                 return
             create_event(
                 object_type=object_type,
@@ -2619,7 +2619,7 @@ def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_edita
                     "field_type": "diff",
                     "field_name": spec.name or "",
                     "field_label": spec.label or spec.name or "",
-                    "diff_lines": lines,
+                    "diff_entries": entries,
                 },
             )
             return

@@ -109,11 +109,16 @@ class EditableCollection:
     # Compact human-readable summary of `initial(obj)` rows, used as
     # the old/new value in audit events when `diff` is not set.
     summary: Callable[[list[dict]], str] | None = None
-    # Bullet lines describing what changed between two `initial(obj)`
+    # Bullet entries describing what changed between two `initial(obj)`
     # snapshots — preferred over `summary` for collection audit events
     # because it lets the timeline render added/removed/changed bullets
-    # instead of dumping full before/after blobs. Empty list = no event.
-    diff: Callable[[list[dict], list[dict]], list[str]] | None = None
+    # instead of dumping full before/after blobs.
+    #
+    # Each entry is a ``{"text": str, "old"?: str, "new"?: str}`` dict.
+    # ``old`` + ``new`` are optional; when present the timeline renders
+    # a collapsible Van/Naar block under the bullet (same UX as
+    # ``extra_info``). Empty list = no event.
+    diff: Callable[[list[dict], list[dict]], list[dict]] | None = None
     # Suppress the auto-rendered pencil + clickable-value wrapper on the
     # display partial. Use when the parent template provides its own
     # edit trigger (e.g. the "Team bewerken" button).

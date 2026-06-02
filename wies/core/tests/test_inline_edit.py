@@ -813,8 +813,8 @@ class AssignmentServicesAuditTest(TestCase):
         assert event.context["field_name"] == "services"
         assert event.context["field_label"] == "Team"
         assert event.context["field_type"] == "diff"
-        assert event.context["diff_lines"] == [
-            f"Gewijzigd: Java (open) -> Java ({self.colleague.name})",
+        assert event.context["diff_entries"] == [
+            {"text": f"Gewijzigd: Java (open) -> Java ({self.colleague.name})"},
         ]
 
     def test_services_post_no_change_no_event(self):
@@ -888,8 +888,12 @@ class AssignmentServicesAuditTest(TestCase):
 
         events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
         assert len(events) == 1
-        assert events[0].context["diff_lines"] == [
-            f"Toelichting gewijzigd op Python ({self.colleague.name})",
+        assert events[0].context["diff_entries"] == [
+            {
+                "text": f"Toelichting gewijzigd op Python ({self.colleague.name})",
+                "old": "Filled",
+                "new": "New description",
+            },
         ]
 
 
@@ -903,47 +907,42 @@ class ServicesDiffUnitTests(TestCase):
         return {"id": sid, "skill_name": skill_name, "colleague": col, "description": description}
 
     def test_no_change(self):
-
         rows = [self._row(1, "Python", "Jan", "x")]
         assert _services_diff(rows, rows) == []
 
     def test_added(self):
-
         before = [self._row(1, "Python", "Jan")]
         after = [self._row(1, "Python", "Jan"), self._row(2, "Java", None)]
-        assert _services_diff(before, after) == ["Toegevoegd: Java (open)"]
+        assert _services_diff(before, after) == [{"text": "Toegevoegd: Java (open)"}]
 
     def test_removed(self):
-
         before = [self._row(1, "Python", "Jan"), self._row(2, "Java", None)]
         after = [self._row(1, "Python", "Jan")]
-        assert _services_diff(before, after) == ["Verwijderd: Java (open)"]
+        assert _services_diff(before, after) == [{"text": "Verwijderd: Java (open)"}]
 
     def test_colleague_filled(self):
-
         before = [self._row(1, "Java", None)]
         after = [self._row(1, "Java", "Anna")]
-        assert _services_diff(before, after) == ["Gewijzigd: Java (open) -> Java (Anna)"]
+        assert _services_diff(before, after) == [{"text": "Gewijzigd: Java (open) -> Java (Anna)"}]
 
     def test_skill_changed(self):
-
         before = [self._row(1, "Python", "Jan")]
         after = [self._row(1, "TypeScript", "Jan")]
-        assert _services_diff(before, after) == ["Gewijzigd: Python (Jan) -> TypeScript (Jan)"]
+        assert _services_diff(before, after) == [{"text": "Gewijzigd: Python (Jan) -> TypeScript (Jan)"}]
 
     def test_description_only(self):
-
         before = [self._row(1, "Python", "Jan", description="oud")]
         after = [self._row(1, "Python", "Jan", description="nieuw")]
-        assert _services_diff(before, after) == ["Toelichting gewijzigd op Python (Jan)"]
+        assert _services_diff(before, after) == [
+            {"text": "Toelichting gewijzigd op Python (Jan)", "old": "oud", "new": "nieuw"},
+        ]
 
     def test_skill_change_overrides_description_line(self):
         """A skill change yields a Gewijzigd line; description-only
         line is suppressed for the same row to avoid double-reporting."""
-
         before = [self._row(1, "Python", "Jan", description="oud")]
         after = [self._row(1, "TypeScript", "Jan", description="nieuw")]
-        assert _services_diff(before, after) == ["Gewijzigd: Python (Jan) -> TypeScript (Jan)"]
+        assert _services_diff(before, after) == [{"text": "Gewijzigd: Python (Jan) -> TypeScript (Jan)"}]
 
 
 class ServiceDescriptionPermissionTest(TestCase):

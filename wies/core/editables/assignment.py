@@ -120,23 +120,29 @@ def _service_row_label(row: dict) -> str:
     return f"{skill} ({colleague.name if colleague else 'open'})"
 
 
-def _services_diff(before: list[dict], after: list[dict]) -> list[str]:
-    """Bullet lines: added rows, removed rows, and rows whose skill /
-    colleague / description changed. Returns [] when nothing changed."""
+def _services_diff(before: list[dict], after: list[dict]) -> list[dict]:
+    """Bullet entries: added rows, removed rows, and rows whose skill /
+    colleague / description changed. Returns [] when nothing changed.
+
+    Each entry is a dict with ``text`` and (for description changes)
+    ``old`` + ``new`` so the timeline can render a Van/Naar block.
+    """
     before_by_id = {r["id"]: r for r in before}
     after_by_id = {r["id"]: r for r in after}
 
-    lines: list[str] = [f"Toegevoegd: {_service_row_label(row)}" for row in after if row["id"] not in before_by_id]
-    lines.extend(f"Verwijderd: {_service_row_label(row)}" for row in before if row["id"] not in after_by_id)
+    entries: list[dict] = [
+        {"text": f"Toegevoegd: {_service_row_label(row)}"} for row in after if row["id"] not in before_by_id
+    ]
+    entries.extend({"text": f"Verwijderd: {_service_row_label(row)}"} for row in before if row["id"] not in after_by_id)
     for sid in before_by_id.keys() & after_by_id.keys():
         b, a = before_by_id[sid], after_by_id[sid]
         b_label, a_label = _service_row_label(b), _service_row_label(a)
         b_desc, a_desc = b.get("description") or "", a.get("description") or ""
         if b_label != a_label:
-            lines.append(f"Gewijzigd: {b_label} -> {a_label}")
+            entries.append({"text": f"Gewijzigd: {b_label} -> {a_label}"})
         elif b_desc != a_desc:
-            lines.append(f"Toelichting gewijzigd op {a_label}")
-    return lines
+            entries.append({"text": f"Toelichting gewijzigd op {a_label}", "old": b_desc, "new": a_desc})
+    return entries
 
 
 def _validate_period(cleaned):
