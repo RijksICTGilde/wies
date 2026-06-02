@@ -8,6 +8,9 @@ This files lists the changes during the lifetime of this project.
 - 368: assignment team form redesigned — separate "Aanvraag toevoegen" and "Geplaatste consultant toevoegen" buttons with progressive field reveal
 - 368: lock icon on externally managed fields (e.g. OTYS)
 - 368: merge duplicate assignments tool in beheer — preview and confirm UI to combine assignments with the same name and owner
+
+## 2026-06-01
+
 - 343: remove explicit container name to improve worktrees experience
 - 343: remove django admin
 - 342: fix "Nieuwe gebruiker" form silently failing on duplicate e-mail — error is now shown inline next to the e-mailveld (regressie van #322)
@@ -28,6 +31,7 @@ This files lists the changes during the lifetime of this project.
 - 320: rename instellingen to beheer
 - 320: remove database dump download/upload and 'Sync OTYS' actions
 - 320: guard destructive /staff/ actions (clear data, load dummy data) behind the `ENABLE_DESTRUCTIVE_STAFF_ACTIONS` env var
+- 320: add usage dashboard for staff members
 
 ## 2026-05-11_2
 
