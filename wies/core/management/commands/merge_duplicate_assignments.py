@@ -19,15 +19,23 @@ logger = logging.getLogger(__name__)
 def find_duplicate_groups():
     """Find assignments that share the same name, owner, and primary organization."""
     # Annotate each assignment with its primary org so we can group on it.
-    qs = Assignment.objects.filter(
-        organization_relations__role="PRIMARY",
-    ).values(
-        "name", "owner", "organization_relations__organization",
-    ).annotate(
-        count=Count("id"),
-    ).filter(
-        count__gt=1,
-    ).order_by("name")
+    qs = (
+        Assignment.objects.filter(
+            organization_relations__role="PRIMARY",
+        )
+        .values(
+            "name",
+            "owner",
+            "organization_relations__organization",
+        )
+        .annotate(
+            count=Count("id"),
+        )
+        .filter(
+            count__gt=1,
+        )
+        .order_by("name")
+    )
 
     groups = []
     for dupe in qs:
@@ -167,23 +175,24 @@ def merge_group(assignments, *, dry_run=True):
         # period doesn't change when they move to the (possibly wider) target.
         services = list(dupe.services.all())
         for svc in services:
-            actions.append(
-                f"  Move service #{svc.id} ({svc.skill or '?'}) from assignment #{dupe.id} -> #{target.id}"
-            )
+            actions.append(f"  Move service #{svc.id} ({svc.skill or '?'}) from assignment #{dupe.id} -> #{target.id}")
             if svc.period_source == "ASSIGNMENT" and (dupe.start_date or dupe.end_date):
                 actions.append(
-                    f"    Pin service period to {dupe.start_date}-{dupe.end_date}"
-                    " (was inheriting from assignment)"
+                    f"    Pin service period to {dupe.start_date}-{dupe.end_date} (was inheriting from assignment)"
                 )
                 if not dry_run:
                     svc.period_source = "SERVICE"
                     svc.specific_start_date = dupe.start_date
                     svc.specific_end_date = dupe.end_date
                     svc.assignment = target
-                    svc.save(update_fields=[
-                        "assignment", "period_source",
-                        "specific_start_date", "specific_end_date",
-                    ])
+                    svc.save(
+                        update_fields=[
+                            "assignment",
+                            "period_source",
+                            "specific_start_date",
+                            "specific_end_date",
+                        ]
+                    )
             elif not dry_run:
                 svc.assignment = target
                 svc.save(update_fields=["assignment"])
