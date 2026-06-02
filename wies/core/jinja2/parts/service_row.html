@@ -1,5 +1,5 @@
 {# Single service row within the formset.
-   .service-row__details is hidden until the user picks a status (Aanvraag/Consultant geplaatst).
+   .service-row__details is hidden until the user picks a status (Aanvraag/Geplaatste consultant).
    For existing rows (with data) the details are shown immediately via data-has-choice.
 #}
 {% set _has_choice = svc_form.is_bound or (svc_form.initial and svc_form.initial.get('is_filled') is not none) %}
