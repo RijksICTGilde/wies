@@ -814,7 +814,7 @@ class AssignmentServicesAuditTest(TestCase):
         assert event.context["field_label"] == "Team"
         assert event.context["field_type"] == "diff"
         assert event.context["diff_entries"] == [
-            {"text": f"Gewijzigd: Java (open) -> Java ({self.colleague.name})"},
+            {"text": f"Gewijzigd: van Java (open) naar Java ({self.colleague.name})"},
         ]
 
     def test_services_post_no_change_no_event(self):
@@ -923,12 +923,12 @@ class ServicesDiffUnitTests(TestCase):
     def test_colleague_filled(self):
         before = [self._row(1, "Java", None)]
         after = [self._row(1, "Java", "Anna")]
-        assert _services_diff(before, after) == [{"text": "Gewijzigd: Java (open) -> Java (Anna)"}]
+        assert _services_diff(before, after) == [{"text": "Gewijzigd: van Java (open) naar Java (Anna)"}]
 
     def test_skill_changed(self):
         before = [self._row(1, "Python", "Jan")]
         after = [self._row(1, "TypeScript", "Jan")]
-        assert _services_diff(before, after) == [{"text": "Gewijzigd: Python (Jan) -> TypeScript (Jan)"}]
+        assert _services_diff(before, after) == [{"text": "Gewijzigd: van Python (Jan) naar TypeScript (Jan)"}]
 
     def test_description_only(self):
         before = [self._row(1, "Python", "Jan", description="oud")]
@@ -942,7 +942,7 @@ class ServicesDiffUnitTests(TestCase):
         line is suppressed for the same row to avoid double-reporting."""
         before = [self._row(1, "Python", "Jan", description="oud")]
         after = [self._row(1, "TypeScript", "Jan", description="nieuw")]
-        assert _services_diff(before, after) == [{"text": "Gewijzigd: Python (Jan) -> TypeScript (Jan)"}]
+        assert _services_diff(before, after) == [{"text": "Gewijzigd: van Python (Jan) naar TypeScript (Jan)"}]
 
 
 class ServiceDescriptionPermissionTest(TestCase):

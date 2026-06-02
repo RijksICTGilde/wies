@@ -139,7 +139,7 @@ def _services_diff(before: list[dict], after: list[dict]) -> list[dict]:
         b_label, a_label = _service_row_label(b), _service_row_label(a)
         b_desc, a_desc = b.get("description") or "", a.get("description") or ""
         if b_label != a_label:
-            entries.append({"text": f"Gewijzigd: {b_label} -> {a_label}"})
+            entries.append({"text": f"Gewijzigd: van {b_label} naar {a_label}"})
         elif b_desc != a_desc:
             entries.append({"text": f"Toelichting gewijzigd op {a_label}", "old": b_desc, "new": a_desc})
     return entries
