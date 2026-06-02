@@ -70,8 +70,6 @@ def has_permission(
     """
     if not getattr(user, "is_authenticated", False):
         return False
-    if getattr(user, "is_superuser", False):
-        return True
 
     if field is not None:
         if field.model is None:

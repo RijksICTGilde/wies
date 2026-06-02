@@ -21,7 +21,7 @@ class AutoLoginMiddleware:
             if dev_email:
                 user = User.objects.filter(email__iexact=dev_email).first()
             if not user:
-                user = User.objects.filter(is_superuser=True).first() or User.objects.first()
+                user = User.objects.first()
             if user:
                 login(request, user, backend="django.contrib.auth.backends.ModelBackend")
                 logger.info("Auto-login: logged in as %s", user)

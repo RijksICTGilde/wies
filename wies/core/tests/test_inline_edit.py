@@ -35,6 +35,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.permission_engine import Verb, registered_rules, rule
+from wies.core.services.users import create_user
 from wies.core.widgets import OrgPickerWidget
 
 User = get_user_model()
@@ -234,19 +235,15 @@ class InlineEditPermissionTest(TestCase):
 class InlineEditGroupTest(TestCase):
     def setUp(self):
         self.client = Client()
-        # Superuser so the engine's is_superuser short-circuit allows
-        # all UPDATEs — these tests focus on group rendering/save, not auth.
-        self.user = User.objects.create_user(
-            email="group@rijksoverheid.nl",
-            first_name="G",
-            last_name="G",
-            is_superuser=True,
-            is_staff=True,
-        )
+        self.user = create_user(None, "G", "G", "group@rijksoverheid.nl")
         self.client.force_login(self.user)
+
+        # Owner so the permission engine allows all UPDATEs
+        # these tests focus on group rendering/save, not auth.
         self.assignment = Assignment.objects.create(
             name="G",
             source="wies",
+            owner=self.user.colleague,
         )
         self._prev_registry = dict(REGISTRY)
 
@@ -306,19 +303,15 @@ class InlineEditGroupTest(TestCase):
 class InlineEditCustomSaveTest(TestCase):
     def setUp(self):
         self.client = Client()
-        # Superuser so permission checks pass; this test focuses on the
-        # custom-save dispatch, not auth.
-        self.user = User.objects.create_user(
-            email="cs@rijksoverheid.nl",
-            first_name="C",
-            last_name="S",
-            is_superuser=True,
-            is_staff=True,
-        )
+        self.user = create_user(None, email="cs@rijksoverheid.nl", first_name="C", last_name="S")
         self.client.force_login(self.user)
+
+        # Owner so permission checks pass;
+        # this test focuses on the custom-save dispatch, not auth.
         self.assignment = Assignment.objects.create(
             name="Before",
             source="wies",
+            owner=self.user.colleague,
         )
         self._prev_registry = dict(REGISTRY)
         self.save_calls = []
@@ -345,19 +338,20 @@ class InlineEditCustomSaveTest(TestCase):
 class InlineEditDisplayTest(TestCase):
     def setUp(self):
         self.client = Client()
-        # Superuser so permission checks pass; this test focuses on
-        # display rendering, not auth.
-        self.user = User.objects.create_user(
+        self.user = create_user(
+            None,
             email="disp@rijksoverheid.nl",
             first_name="D",
             last_name="D",
-            is_superuser=True,
-            is_staff=True,
         )
         self.client.force_login(self.user)
+
+        # Owner so permission checks pass;
+        # this test focuses on display rendering, not auth.
         self.assignment = Assignment.objects.create(
             name="Shown",
             source="wies",
+            owner=self.user.colleague,
         )
         self._prev_registry = dict(REGISTRY)
 
