@@ -2098,15 +2098,18 @@ def assignment_delete(request, pk):
         )
     if request.method == "POST":
         name = assignment.name
-        assignment.delete()
-        create_event(
-            object_type="Assignment",
-            action="delete",
-            source="user",
-            object_id=pk,
-            user=request.user,
-            context={"name": name},
-        )
+        # Atomic so a failed audit insert rolls back the delete — losing
+        # the opdracht without a trace would be the worst outcome.
+        with transaction.atomic():
+            assignment.delete()
+            create_event(
+                object_type="Assignment",
+                action="delete",
+                source="user",
+                object_id=pk,
+                user=request.user,
+                context={"name": name},
+            )
         messages.success(request, f"Opdracht '{name}' succesvol verwijderd")
         response = HttpResponse(status=200)
         response["HX-Redirect"] = reverse("assignment-list")
