@@ -11,6 +11,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
@@ -565,6 +566,46 @@ def staff_database(request):
             if request.headers.get("HX-Request"):
                 context["latest_tasks"] = get_latest_tasks(limit=3)
                 return render(request, "parts/task_list.html", context)
+
+        elif action == "merge_duplicates_preview":
+            from wies.core.management.commands.merge_duplicate_assignments import (
+                find_duplicate_groups,
+            )
+
+            groups = find_duplicate_groups()
+            if not groups:
+                messages.info(request, "Geen dubbele opdrachten gevonden.")
+            else:
+                context["merge_groups"] = [
+                    {
+                        "name": group[0].name,
+                        "owner": str(group[0].owner),
+                        "count": len(group),
+                        "target": group[0],
+                        "duplicates": group[1:],
+                    }
+                    for group in groups
+                ]
+            return render(request, "staff_database.html", context)
+
+        elif action == "merge_duplicates_apply":
+            from wies.core.management.commands.merge_duplicate_assignments import (
+                find_duplicate_groups,
+                merge_group,
+            )
+
+            groups = find_duplicate_groups()
+            if not groups:
+                messages.info(request, "Geen dubbele opdrachten gevonden.")
+            else:
+                with transaction.atomic():
+                    total = sum(len(g) - 1 for g in groups)
+                    for group in groups:
+                        merge_group(group, dry_run=False)
+                    messages.success(
+                        request,
+                        f"{total} dubbele opdracht(en) samengevoegd in {len(groups)} groep(en).",
+                    )
 
         return redirect("staff-database")
 

@@ -7,6 +7,7 @@ This files lists the changes during the lifetime of this project.
 - 368: placement periods can now be set independently from the assignment period via inline-edit on the placement panel; team cards are clickable and open the placement panel
 - 368: assignment team form redesigned — separate "Aanvraag toevoegen" and "Geplaatste consultant toevoegen" buttons with progressive field reveal
 - 368: lock icon on externally managed fields (e.g. OTYS)
+- 368: merge duplicate assignments tool in beheer — preview and confirm UI to combine assignments with the same name and owner
 - 343: remove explicit container name to improve worktrees experience
 - 343: remove django admin
 - 342: fix "Nieuwe gebruiker" form silently failing on duplicate e-mail — error is now shown inline next to the e-mailveld (regressie van #322)
