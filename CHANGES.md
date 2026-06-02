@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: (migration)(remove env vars) remove super users and remove automatic generation during container start
+- 374: (migration)(remove env vars) remove super users and remove automatic generation during container start
 
 ## 2026-06-01
 
