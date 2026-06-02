@@ -22,7 +22,9 @@
   {% endfor %}
   </c-alert>
 {% endif %}
-<div id="services-container">
+<div id="services-container"
+     {% if obj is defined and obj.start_date %}data-assignment-start="{{ obj.start_date.isoformat() }}"{% endif %}
+     {% if obj is defined and obj.end_date %}data-assignment-end="{{ obj.end_date.isoformat() }}"{% endif %}>
   {% for svc_form in formset %}
     {% with row_index=loop.index0, is_first=loop.first %}
       {% include "parts/service_row.html" %}

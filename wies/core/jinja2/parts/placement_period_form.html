@@ -1,7 +1,7 @@
 {# Custom form for PlacementEditables.period.
-   Shows/hides the specific date fields based on the period_source dropdown.
-   When "Zelfde als opdracht" (SERVICE) is selected, dates are pre-filled
-   from the service and the inputs are hidden.
+   Shows/disables the specific date fields based on a checkbox.
+   When checked ("Neem opdrachtperiode over"), dates are pre-filled from the
+   service and the inputs are disabled.
    Context: target, edit_url, form, obj (Placement instance). #}
 <div id="{{ target }}">
   <form hx-post="{{ edit_url }}"
@@ -9,10 +9,14 @@
         hx-target="#{{ target }}"
         hx-swap="outerHTML">
     <c-layout-flow gap="md">
+    {{ form.period_source.as_widget(attrs={"style": "display:none", "data-period-source": ""}) }}
     <div class="rvo-form-field">
-      <label class="rvo-label" for="{{ form.period_source.id_for_label }}">{{ form.period_source.label }}</label>
-      {{ form.period_source.as_widget(attrs={"autofocus": true, "data-period-source": ""}) }}
-      {% for error in form.period_source.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
+      <span class="rvo-label">Periode</span>
+      <label class="service-period-toggle">
+        <input type="checkbox" id="placement-inherit-period"
+               {% if form.period_source.value() == "SERVICE" %}checked{% endif %}>
+        <span>Neem opdrachtperiode over</span>
+      </label>
     </div>
     <div class="rvo-form-field">
       <label class="rvo-label" for="{{ form.specific_start_date.id_for_label }}">{{ form.specific_start_date.label }}</label>
@@ -35,27 +39,26 @@
 <script>
 (function () {
   const form = document.getElementById({{ target|tojson }}).querySelector("form");
-  const select = form.querySelector("[data-period-source]");
+  const checkbox = form.querySelector("#placement-inherit-period");
+  const hiddenSelect = form.querySelector("[data-period-source]");
   const serviceStart = {{ obj.service.start_date.isoformat()|tojson if obj.service.start_date else "null" }};
   const serviceEnd = {{ obj.service.end_date.isoformat()|tojson if obj.service.end_date else "null" }};
 
   const startInput = form.querySelector("[data-specific-start]");
   const endInput = form.querySelector("[data-specific-end]");
 
-  function update(clearSpecific) {
-    const isService = select.value === "SERVICE";
-    startInput.disabled = isService;
-    endInput.disabled = isService;
-    if (isService) {
+  function update() {
+    const inherit = checkbox.checked;
+    hiddenSelect.value = inherit ? "SERVICE" : "PLACEMENT";
+    startInput.disabled = inherit;
+    endInput.disabled = inherit;
+    if (inherit) {
       startInput.value = serviceStart ?? "";
       endInput.value = serviceEnd ?? "";
-    } else if (clearSpecific) {
-      startInput.value = "";
-      endInput.value = "";
     }
   }
 
-  select.addEventListener("change", () => update(true));
-  update(false);
+  checkbox.addEventListener("change", update);
+  update();
 })();
 </script>

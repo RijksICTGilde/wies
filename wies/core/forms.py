@@ -217,7 +217,7 @@ class ServiceForm(RvoFormMixin, forms.Form):
         required=False,
         empty_label=" ",
     )
-    has_custom_period = forms.BooleanField(label="Neem opdrachtperiode over", required=False)
+    has_custom_period = forms.BooleanField(label="Neem opdrachtperiode over", required=False, initial=True)
     placement_start_date = forms.DateField(label="Startdatum", required=False)
     placement_end_date = forms.DateField(label="Einddatum", required=False)
 
@@ -246,10 +246,10 @@ class ServiceForm(RvoFormMixin, forms.Form):
             self.add_error("skill", "Selecteer een rol.")
         is_filled = cleaned_data.get("is_filled") == "ingevuld"
         cleaned_data["is_filled"] = is_filled
-        # has_custom_period checkbox now means "Neem over van opdracht" (inverted).
+        # has_custom_period checkbox means "Neem opdrachtperiode over" (inverted).
         # Checked = take from assignment = no custom period.
         inherit_from_assignment = cleaned_data.get("has_custom_period", False)
-        if not is_filled or inherit_from_assignment:
+        if inherit_from_assignment:
             cleaned_data["has_custom_period"] = False
             cleaned_data["placement_start_date"] = None
             cleaned_data["placement_end_date"] = None
@@ -257,7 +257,9 @@ class ServiceForm(RvoFormMixin, forms.Form):
             p_start = cleaned_data.get("placement_start_date")
             p_end = cleaned_data.get("placement_end_date")
             cleaned_data["has_custom_period"] = bool(p_start or p_end)
-            if p_start and p_end and p_end < p_start:
+            if not p_start and not p_end:
+                self.add_error("placement_start_date", "Vul een periode in of neem de opdrachtperiode over.")
+            elif p_start and p_end and p_end < p_start:
                 self.add_error("placement_end_date", "Einddatum moet na startdatum liggen.")
         return cleaned_data
 

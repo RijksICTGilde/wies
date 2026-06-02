@@ -178,9 +178,13 @@
   }
 
   function initPeriodToggles() {
-    // Assignment dates from the create form or from a data attribute on the container.
+    // Assignment dates: from the create form inputs, or from data attributes
+    // on the services container (set by the inline-edit template).
     var assignmentStartEl = document.querySelector("#id_start_date");
     var assignmentEndEl = document.querySelector("#id_end_date");
+    var container = document.querySelector("#services-container");
+    var assignmentStartAttr = container && container.dataset.assignmentStart;
+    var assignmentEndAttr = container && container.dataset.assignmentEnd;
 
     document.querySelectorAll(".service-row").forEach(function (row) {
       if (row.dataset.periodToggleInit === "1") return;
@@ -201,15 +205,22 @@
         checkbox.closest(".service-period-section").appendChild(hint);
       }
 
+      function getAssignmentStart() {
+        return (assignmentStartEl && assignmentStartEl.value) || assignmentStartAttr || "";
+      }
+      function getAssignmentEnd() {
+        return (assignmentEndEl && assignmentEndEl.value) || assignmentEndAttr || "";
+      }
+
       function updateDateFields() {
         startInput.disabled = checkbox.checked;
         endInput.disabled = checkbox.checked;
         if (checkbox.checked) {
-          var hasStart = assignmentStartEl && assignmentStartEl.value;
-          var hasEnd = assignmentEndEl && assignmentEndEl.value;
-          if (hasStart) startInput.value = assignmentStartEl.value;
-          if (hasEnd) endInput.value = assignmentEndEl.value;
-          hint.style.display = (!hasStart && !hasEnd) ? "" : "none";
+          var aStart = getAssignmentStart();
+          var aEnd = getAssignmentEnd();
+          if (aStart) startInput.value = aStart;
+          if (aEnd) endInput.value = aEnd;
+          hint.style.display = (!aStart && !aEnd) ? "" : "none";
         } else {
           hint.style.display = "none";
         }

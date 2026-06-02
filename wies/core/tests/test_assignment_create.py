@@ -114,6 +114,7 @@ class AssignmentCreateTest(TestCase):
                 **FORMSET_MGMT_1,
                 "service-0-description": "Backend ontwikkeling",
                 "service-0-skill": self.skill.id,
+                "service-0-has_custom_period": "on",
             },
         )
         assert response.status_code == 302
@@ -137,6 +138,7 @@ class AssignmentCreateTest(TestCase):
                 "service-0-description": "Backend ontwikkeling",
                 "service-0-skill": self.skill.id,
                 "service-0-is_filled": "ingevuld",
+                "service-0-has_custom_period": "on",
                 "service-0-colleague": self.colleague.id,
             },
         )
@@ -157,6 +159,7 @@ class AssignmentCreateTest(TestCase):
                 **FORMSET_MGMT_1,
                 "service-0-description": "Dienst",
                 "service-0-skill": self.skill.id,
+                "service-0-has_custom_period": "on",
             },
         )
         assert response.status_code == 302
@@ -177,8 +180,10 @@ class AssignmentCreateTest(TestCase):
                 **FORMSET_MGMT_2,
                 "service-0-description": "Frontend",
                 "service-0-skill": self.skill.id,
+                "service-0-has_custom_period": "on",
                 "service-1-description": "Backend",
                 "service-1-skill": self.skill.id,
+                "service-1-has_custom_period": "on",
             },
         )
         assert response.status_code == 302
@@ -249,6 +254,7 @@ class AssignmentCreateTest(TestCase):
                 "service-0-description": "Nieuwe dienst",
                 "service-0-skill": "__new__",
                 "service-0-new_skill_name": "Blockchain Developer",
+                "service-0-has_custom_period": "on",
             },
         )
         assert response.status_code == 302
@@ -344,6 +350,7 @@ class AssignmentCreateTest(TestCase):
                 "service-0-skill": self.skill.id,
                 "service-0-description": "Dienst",
                 "service-0-is_filled": "ingevuld",
+                "service-0-has_custom_period": "on",
                 "service-0-colleague": self.colleague.id,
             },
         )
