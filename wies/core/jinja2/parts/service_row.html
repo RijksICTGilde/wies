@@ -12,7 +12,9 @@
     {{ svc_form.skill.as_field_group() }}
     <div class="service-new-skill" style="display: none">{{ svc_form.new_skill_name.as_field_group() }}</div>
     <div class="service-period-section">
-      <div class="rvo-form-field__label"><span class="rvo-label">Periode</span></div>
+      <div class="rvo-form-field__label">
+        <span class="rvo-label">Periode</span>
+      </div>
       <label class="service-period-toggle">
         {{ svc_form.has_custom_period.as_widget() }}
         <span>Neem opdrachtperiode over</span>

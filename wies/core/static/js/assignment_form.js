@@ -209,7 +209,7 @@
           var hasEnd = assignmentEndEl && assignmentEndEl.value;
           if (hasStart) startInput.value = assignmentStartEl.value;
           if (hasEnd) endInput.value = assignmentEndEl.value;
-          hint.style.display = (!hasStart && !hasEnd) ? "" : "none";
+          hint.style.display = !hasStart && !hasEnd ? "" : "none";
         } else {
           hint.style.display = "none";
         }
@@ -219,12 +219,14 @@
       updateDateFields();
 
       // Also update when assignment dates change.
-      if (assignmentStartEl) assignmentStartEl.addEventListener("change", function () {
-        if (checkbox.checked) startInput.value = assignmentStartEl.value;
-      });
-      if (assignmentEndEl) assignmentEndEl.addEventListener("change", function () {
-        if (checkbox.checked) endInput.value = assignmentEndEl.value;
-      });
+      if (assignmentStartEl)
+        assignmentStartEl.addEventListener("change", function () {
+          if (checkbox.checked) startInput.value = assignmentStartEl.value;
+        });
+      if (assignmentEndEl)
+        assignmentEndEl.addEventListener("change", function () {
+          if (checkbox.checked) endInput.value = assignmentEndEl.value;
+        });
     });
   }
 
