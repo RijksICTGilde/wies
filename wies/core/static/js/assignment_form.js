@@ -134,6 +134,7 @@
       updateRemoveButtons();
       initInlineCreate(row);
       initColleagueToggle(row);
+      initPeriodToggles();
     }
 
     function initColleagueToggle(row) {
@@ -170,9 +171,61 @@
 
     container.querySelectorAll(".service-row").forEach(function (row) {
       initInlineCreate(row);
+      initPeriodToggles();
       initColleagueToggle(row);
     });
     updateRemoveButtons();
+  }
+
+  function initPeriodToggles() {
+    // Assignment dates from the create form or from a data attribute on the container.
+    var assignmentStartEl = document.querySelector("#id_start_date");
+    var assignmentEndEl = document.querySelector("#id_end_date");
+
+    document.querySelectorAll(".service-row").forEach(function (row) {
+      if (row.dataset.periodToggleInit === "1") return;
+      var checkbox = row.querySelector("[name$='-has_custom_period']");
+      if (!checkbox) return;
+      var startInput = row.querySelector("[name$='-placement_start_date']");
+      var endInput = row.querySelector("[name$='-placement_end_date']");
+      if (!startInput || !endInput) return;
+      row.dataset.periodToggleInit = "1";
+
+      // Hint element shown when checkbox is checked but assignment has no dates.
+      var hint = row.querySelector(".service-period-hint");
+      if (!hint) {
+        hint = document.createElement("p");
+        hint.className = "service-period-hint rvo-text--sm rvo-text--subtle";
+        hint.style.display = "none";
+        hint.textContent = "Vul eerst de opdrachtperiode in hierboven.";
+        checkbox.closest(".service-period-section").appendChild(hint);
+      }
+
+      function updateDateFields() {
+        startInput.disabled = checkbox.checked;
+        endInput.disabled = checkbox.checked;
+        if (checkbox.checked) {
+          var hasStart = assignmentStartEl && assignmentStartEl.value;
+          var hasEnd = assignmentEndEl && assignmentEndEl.value;
+          if (hasStart) startInput.value = assignmentStartEl.value;
+          if (hasEnd) endInput.value = assignmentEndEl.value;
+          hint.style.display = (!hasStart && !hasEnd) ? "" : "none";
+        } else {
+          hint.style.display = "none";
+        }
+      }
+
+      checkbox.addEventListener("change", updateDateFields);
+      updateDateFields();
+
+      // Also update when assignment dates change.
+      if (assignmentStartEl) assignmentStartEl.addEventListener("change", function () {
+        if (checkbox.checked) startInput.value = assignmentStartEl.value;
+      });
+      if (assignmentEndEl) assignmentEndEl.addEventListener("change", function () {
+        if (checkbox.checked) endInput.value = assignmentEndEl.value;
+      });
+    });
   }
 
   function initCancelButton() {
@@ -191,6 +244,7 @@
 
   function initAll() {
     initServicesForm();
+    initPeriodToggles();
     initCancelButton();
     scrollToDienstenError();
   }

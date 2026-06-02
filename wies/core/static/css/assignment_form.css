@@ -36,6 +36,13 @@ form#assignment-create-form
   flex: 1;
 }
 
+.service-period-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  cursor: pointer;
+}
+
 /* ----------------------------------------------------------------------------
    Service Rows — compact inline layout
    ---------------------------------------------------------------------------- */
@@ -51,9 +58,10 @@ form#assignment-create-form
 
 .service-add-buttons {
   display: flex;
-  gap: 0.75rem;
+  gap: 1rem;
   flex-wrap: wrap;
   align-items: flex-start;
+  padding-top: 0.5rem;
 }
 
 .service-row__details {

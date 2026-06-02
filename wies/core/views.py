@@ -2584,6 +2584,7 @@ def _render_inline_edit_display(
             user_can_edit if user_can_edit is not None else has_permission(Verb.UPDATE, obj, request.user, spec)
         ),
         "alert": alert,
+        "hide_edit_button": isinstance(spec, EditableCollection),
     }
     response = render(request, "parts/inline_edit/display.html", ctx)
     if saved:

@@ -454,7 +454,7 @@ class AssignmentEditAttributeTest(TestCase):
             context={
                 "field_type": "textarea",
                 "field_name": "extra_info",
-                "field_label": "Beschrijving",
+                "field_label": "Opdrachtomschrijving",
                 "old_value": long_old,
                 "new_value": long_new,
             },
@@ -463,7 +463,7 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
 
         assert response.status_code == 200
-        self.assertContains(response, "Beschrijving")
+        self.assertContains(response, "Opdrachtomschrijving")
         self.assertContains(response, "truncated-text")
         self.assertContains(response, "show-more-toggle")
         self.assertContains(response, "Toon meer")
@@ -483,7 +483,7 @@ class AssignmentEditAttributeTest(TestCase):
             context={
                 "field_type": "textarea",
                 "field_name": "extra_info",
-                "field_label": "Beschrijving",
+                "field_label": "Opdrachtomschrijving",
                 "old_value": "short old",
                 "new_value": "short new",
             },

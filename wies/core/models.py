@@ -158,7 +158,7 @@ class Assignment(models.Model):
 class Placement(models.Model):
     SERVICE = "SERVICE"
     PLACEMENT = "PLACEMENT"
-    PERIOD_SOURCE_CHOICES = {SERVICE: "Neem over van dienst", PLACEMENT: "Specifiek voor inzet"}
+    PERIOD_SOURCE_CHOICES = {SERVICE: "Zelfde als opdracht", PLACEMENT: "Afwijkend van opdracht"}
 
     colleague = models.ForeignKey(
         "Colleague", models.CASCADE, related_name="placements"
@@ -198,7 +198,7 @@ class Placement(models.Model):
 class Service(models.Model):
     ASSIGNMENT = "ASSIGNMENT"
     SERVICE = "SERVICE"
-    PERIOD_SOURCE_CHOICES = {ASSIGNMENT: "Neem over van opdracht", SERVICE: "Specifiek voor dienst"}
+    PERIOD_SOURCE_CHOICES = {ASSIGNMENT: "Zelfde als opdracht", SERVICE: "Afwijkend van opdracht"}
 
     assignment = models.ForeignKey("Assignment", models.CASCADE, related_name="services")
     description = models.CharField(max_length=500)

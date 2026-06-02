@@ -202,7 +202,7 @@ class ServiceForm(RvoFormMixin, forms.Form):
         required=False,
         empty_label=" ",
     )
-    description = forms.CharField(label="Toelichting", max_length=500, required=False)
+    description = forms.CharField(label="Omschrijving rol", max_length=500, required=False)
     new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)
     is_filled = forms.ChoiceField(
         label="Status",
@@ -217,7 +217,7 @@ class ServiceForm(RvoFormMixin, forms.Form):
         required=False,
         empty_label=" ",
     )
-    has_custom_period = forms.BooleanField(label="Afwijkende periode", required=False)
+    has_custom_period = forms.BooleanField(label="Neem opdrachtperiode over", required=False)
     placement_start_date = forms.DateField(label="Startdatum", required=False)
     placement_end_date = forms.DateField(label="Einddatum", required=False)
 
@@ -246,7 +246,10 @@ class ServiceForm(RvoFormMixin, forms.Form):
             self.add_error("skill", "Selecteer een rol.")
         is_filled = cleaned_data.get("is_filled") == "ingevuld"
         cleaned_data["is_filled"] = is_filled
-        if not is_filled:
+        # has_custom_period checkbox now means "Neem over van opdracht" (inverted).
+        # Checked = take from assignment = no custom period.
+        inherit_from_assignment = cleaned_data.get("has_custom_period", False)
+        if not is_filled or inherit_from_assignment:
             cleaned_data["has_custom_period"] = False
             cleaned_data["placement_start_date"] = None
             cleaned_data["placement_end_date"] = None

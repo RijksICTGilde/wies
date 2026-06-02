@@ -263,7 +263,7 @@ class InlineEditGroupTest(TestCase):
                 start_date=Editable(),
                 end_date=Editable(),
                 period=EditableGroup(
-                    label="Looptijd",
+                    label="Opdrachtperiode",
                     fields=["start_date", "end_date"],
                     clean=_period_clean,
                 ),

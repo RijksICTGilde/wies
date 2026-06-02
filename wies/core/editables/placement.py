@@ -23,7 +23,7 @@ class PlacementEditables(EditableSet):
         model = Placement
 
     colleague = Editable(label="Collega")
-    period_source = Editable(label="Periode gebaseerd op")
+    period_source = Editable(label="Periode")
     specific_start_date = Editable(label="Startdatum")
     specific_end_date = Editable(label="Einddatum")
 

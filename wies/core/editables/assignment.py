@@ -65,7 +65,7 @@ def _services_initial(assignment):
                 "description": service.description,
                 "is_filled": "ingevuld" if placement is not None else "aanvraag",
                 "colleague": placement.colleague if placement else None,
-                "has_custom_period": placement.period_source == Placement.PLACEMENT if placement else False,
+                "has_custom_period": placement.period_source != Placement.PLACEMENT if placement else True,
                 "placement_start_date": placement.specific_start_date if placement else None,
                 "placement_end_date": placement.specific_end_date if placement else None,
                 "placement": placement,
@@ -136,7 +136,7 @@ class AssignmentEditables(EditableSet):
     )
 
     extra_info = Editable(
-        label="Beschrijving",
+        label="Opdrachtomschrijving",
         widget=forms.Textarea(attrs={"rows": 4}),
         display="rvo/forms/displays/textarea.html",
     )
@@ -155,7 +155,7 @@ class AssignmentEditables(EditableSet):
     )
 
     period = EditableGroup(
-        label="Looptijd",
+        label="Opdrachtperiode",
         fields=[start_date, end_date],
         clean=_validate_period,
         save=_save_period,

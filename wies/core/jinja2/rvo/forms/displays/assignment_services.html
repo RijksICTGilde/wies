@@ -34,7 +34,6 @@
                 {% endif %}
               </span>
             {% endif %}
-            <c-tag type="success">Plaatsing</c-tag>
           </div>
         </div>
       {% else %}
@@ -42,7 +41,7 @@
           <div class="service-card__name">
             <div class="user-avatar user-avatar--vacant">?</div>
             <span>{{ row.skill_name }}</span>
-            <c-tag type="default">Aanvraag</c-tag>
+            <span class="service-card__tag"><c-tag type="default">Aanvraag</c-tag></span>
           </div>
         </div>
       {% endif %}
