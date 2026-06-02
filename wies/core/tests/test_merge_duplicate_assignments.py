@@ -73,7 +73,15 @@ class MergeDuplicateAssignmentsTest(TestCase):
         owner2 = Colleague.objects.create(user=user2, name="Other BDM", email="other@x.nl", source="wies")
 
         self._make_assignment("CIV", self.org)
-        Assignment.objects.create(name="CIV", owner=owner2, source="wies")
+        a2 = Assignment.objects.create(name="CIV", owner=owner2, source="wies")
+        AssignmentOrganizationUnit.objects.create(assignment=a2, organization=self.org, role="PRIMARY")
+
+        groups = find_duplicate_groups()
+        assert len(groups) == 0
+
+    def test_different_primary_org_not_grouped(self):
+        self._make_assignment("CIV", self.org)
+        self._make_assignment("CIV", self.org_b)
 
         groups = find_duplicate_groups()
         assert len(groups) == 0
@@ -106,6 +114,14 @@ class MergeDuplicateAssignmentsTest(TestCase):
         a1.refresh_from_db()
         assert str(a1.start_date) == "2026-01-01"
         assert str(a1.end_date) == "2026-09-01"
+
+        # Service from duplicate has its period pinned (was inheriting from assignment).
+        assert svc2.period_source == "SERVICE"
+        assert str(svc2.specific_start_date) == "2026-03-01"
+        assert str(svc2.specific_end_date) == "2026-09-01"
+
+        # Service on target keeps inheriting.
+        assert svc1.period_source == "ASSIGNMENT"
 
     def test_merge_consolidates_orgs(self):
         a1 = self._make_assignment("CIV", self.org)
