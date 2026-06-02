@@ -17,7 +17,7 @@
           {% if event.action == "create" %}
             maakte deze opdracht aan
           {% elif event.context.get("merge") %}
-            voegde {{ event.context.merged_ids|length }} dubbele opdracht(en) samen (#{{ event.context.merged_ids|join(', #') }})
+            voegde {{ event.context.merged_ids|length }} dubbele opdracht(en) samen (#{{ event.context.merged_ids|join(", #") }})
           {% else %}
             wijzigde <strong>{{ event.context.field_label }}</strong>
             {% if event.context.field_type != "textarea" %}

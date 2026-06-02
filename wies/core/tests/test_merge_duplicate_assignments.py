@@ -28,19 +28,13 @@ class MergeDuplicateAssignmentsTest(TestCase):
         self._user_counter = 0
 
     def _make_assignment(self, name, org=None, **kwargs):
-        a = Assignment.objects.create(
-            name=name, owner=self.owner, source="wies", **kwargs
-        )
+        a = Assignment.objects.create(name=name, owner=self.owner, source="wies", **kwargs)
         if org:
-            AssignmentOrganizationUnit.objects.create(
-                assignment=a, organization=org, role="PRIMARY"
-            )
+            AssignmentOrganizationUnit.objects.create(assignment=a, organization=org, role="PRIMARY")
         return a
 
     def _make_service(self, assignment, colleague_name=None):
-        svc = Service.objects.create(
-            assignment=assignment, skill=self.skill, description="desc", source="wies"
-        )
+        svc = Service.objects.create(assignment=assignment, skill=self.skill, description="desc", source="wies")
         if colleague_name:
             self._user_counter += 1
             u = User.objects.create_user(
@@ -49,8 +43,10 @@ class MergeDuplicateAssignmentsTest(TestCase):
                 last_name=colleague_name.split()[-1] if " " in colleague_name else "X",
             )
             col = Colleague.objects.create(
-                user=u, name=colleague_name,
-                email=f"user{self._user_counter}@x.nl", source="wies",
+                user=u,
+                name=colleague_name,
+                email=f"user{self._user_counter}@x.nl",
+                source="wies",
             )
             Placement.objects.create(colleague=col, service=svc, source="wies")
         return svc
@@ -114,9 +110,7 @@ class MergeDuplicateAssignmentsTest(TestCase):
     def test_merge_consolidates_orgs(self):
         a1 = self._make_assignment("CIV", self.org)
         a2 = self._make_assignment("CIV", None)
-        AssignmentOrganizationUnit.objects.create(
-            assignment=a2, organization=self.org_b, role="PRIMARY"
-        )
+        AssignmentOrganizationUnit.objects.create(assignment=a2, organization=self.org_b, role="PRIMARY")
 
         merge_group([a1, a2], dry_run=False)
 
@@ -130,9 +124,7 @@ class MergeDuplicateAssignmentsTest(TestCase):
         a1 = self._make_assignment("CIV", self.org)
         a2 = self._make_assignment("CIV", None)
         # Same org as PRIMARY on the duplicate.
-        AssignmentOrganizationUnit.objects.create(
-            assignment=a2, organization=self.org, role="PRIMARY"
-        )
+        AssignmentOrganizationUnit.objects.create(assignment=a2, organization=self.org, role="PRIMARY")
 
         merge_group([a1, a2], dry_run=False)
 
