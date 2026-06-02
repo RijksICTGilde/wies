@@ -944,6 +944,20 @@ class ServicesDiffUnitTests(TestCase):
         after = [self._row(1, "TypeScript", "Jan", description="nieuw")]
         assert _services_diff(before, after) == [{"text": "Gewijzigd: van Python (Jan) naar TypeScript (Jan)"}]
 
+    def test_description_added_from_empty(self):
+        before = [self._row(1, "Python", "Jan", description="")]
+        after = [self._row(1, "Python", "Jan", description="nieuw")]
+        assert _services_diff(before, after) == [
+            {"text": "Toelichting toegevoegd op Python (Jan)", "new": "nieuw"},
+        ]
+
+    def test_description_removed_to_empty(self):
+        before = [self._row(1, "Python", "Jan", description="oud")]
+        after = [self._row(1, "Python", "Jan", description="")]
+        assert _services_diff(before, after) == [
+            {"text": "Toelichting verwijderd op Python (Jan)", "old": "oud"},
+        ]
+
 
 class ServiceDescriptionPermissionTest(TestCase):
     """Field-level permission: a consultant placed on a service may

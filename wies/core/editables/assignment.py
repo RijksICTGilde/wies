@@ -141,8 +141,19 @@ def _services_diff(before: list[dict], after: list[dict]) -> list[dict]:
         if b_label != a_label:
             entries.append({"text": f"Gewijzigd: van {b_label} naar {a_label}"})
         elif b_desc != a_desc:
-            entries.append({"text": f"Toelichting gewijzigd op {a_label}", "old": b_desc, "new": a_desc})
+            entries.append(_toelichting_entry(a_label, b_desc, a_desc))
     return entries
+
+
+def _toelichting_entry(label: str, old: str, new: str) -> dict:
+    """Use toegevoegd / verwijderd / gewijzigd based on whether the
+    old or new description is empty, and only carry the side(s) that
+    have a value so the template skips empty Van/Naar blocks."""
+    if not old:
+        return {"text": f"Toelichting toegevoegd op {label}", "new": new}
+    if not new:
+        return {"text": f"Toelichting verwijderd op {label}", "old": old}
+    return {"text": f"Toelichting gewijzigd op {label}", "old": old, "new": new}
 
 
 def _validate_period(cleaned):

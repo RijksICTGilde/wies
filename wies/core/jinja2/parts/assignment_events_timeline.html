@@ -45,12 +45,12 @@
               {% for entry in event.context.diff_entries %}
                 <li>
                   {{ entry.text }}
-                  {% if entry.old is defined %}
+                  {% if entry.old %}
                     {% with label="Van", value=entry.old %}
                       {% include "parts/event_value_block.html" %}
                     {% endwith %}
                   {% endif %}
-                  {% if entry.new is defined %}
+                  {% if entry.new %}
                     {% with label="Naar", value=entry.new %}
                       {% include "parts/event_value_block.html" %}
                     {% endwith %}
