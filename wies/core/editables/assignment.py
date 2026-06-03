@@ -3,8 +3,8 @@
 Permissions live in ``wies/core/permission_rules.py``.
 """
 
-from django import forms
 from django.db import transaction
+from django_prose_editor.widgets import ProseEditorWidget
 
 from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
@@ -108,8 +108,8 @@ class AssignmentEditables(EditableSet):
 
     extra_info = Editable(
         label="Beschrijving",
-        widget=forms.Textarea(attrs={"rows": 4}),
-        display="rvo/forms/displays/textarea.html",
+        widget=ProseEditorWidget(),
+        display="rvo/forms/displays/prose_editor.html",
     )
 
     start_date = Editable(label="Startdatum")

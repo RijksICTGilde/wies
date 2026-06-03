@@ -4,6 +4,7 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
+from django_prose_editor.fields import ProseEditorFormField
 
 from wies.core.editables.assignment import AssignmentEditables
 from wies.core.editables.user import UserEditables
@@ -202,7 +203,20 @@ class ServiceForm(RvoFormMixin, forms.Form):
         required=False,
         empty_label=" ",
     )
-    description = forms.CharField(label="Toelichting", max_length=500, required=False)
+    description = ProseEditorFormField(
+        label="Toelichting",
+        required=False,
+        extensions={
+            "Bold": True,
+            "Italic": True,
+            "BulletList": True,
+            "OrderedList": True,
+            "ListItem": True,
+            "Link": True,
+        },
+        preset="default",
+        sanitize=True,
+    )
     new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)
     is_filled = forms.BooleanField(label="Consultant bekend", required=False)
     colleague = forms.ModelChoiceField(

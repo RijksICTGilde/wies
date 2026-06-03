@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-\_ ...
+- 373: rich text editing voor omschrijvingen (Service.description, Assignment.extra_info) via django-prose-editor (#379)
 
 ## 2026-06-01
 

@@ -29,6 +29,14 @@
     <link rel="stylesheet" href="{{ static('css/modals.css') }}">
     <link rel="stylesheet" href="{{ static('css/org_picker.css') }}">
     <link rel="stylesheet" href="{{ static('css/client_modal.css') }}">
+    <link rel="stylesheet"
+          href="{{ static('django_prose_editor/material-icons.css') }}">
+    <link rel="stylesheet"
+          href="{{ static('django_prose_editor/editor.css') }}">
+    <script type="importmap">{"imports": {"django-prose-editor/editor": "{{ static('django_prose_editor/editor.js') }}"}}</script>
+    <script src="{{ static('django_prose_editor/editor.js') }}" type="module"></script>
+    <script src="{{ static('django_prose_editor/default.js') }}" type="module"></script>
+    <script src="{{ static('js/prose_editor_init.js') }}"></script>
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
     <script src="{{ static('js/filters/filters.js') }}"></script>
     <script src="{{ static('js/show_more.js') }}"></script>
