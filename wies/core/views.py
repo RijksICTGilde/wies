@@ -2015,11 +2015,8 @@ def _attach_audit_render_data(event) -> None:
 
     if isinstance(spec, EditableCollection):
         event.render_kind = "collection"
-        if spec.diff is not None:
-            event.diff_entries = spec.diff(
-                event.context.get("old_value") or [],
-                event.context.get("new_value") or [],
-            )
+        if spec.render_change is not None:
+            event.diff_entries = [spec.render_change(c) for c in event.context.get("changes", [])]
         return
 
     from django import forms  # noqa: PLC0415
@@ -2637,7 +2634,10 @@ def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_edita
         return
 
     if isinstance(spec, EditableCollection):
-        if spec.audit_state is None or before == after:
+        if spec.audit_state is None:
+            return
+        changes = _diff_collection_state(before, after)
+        if not changes:
             return
         create_event(
             object_type=object_type,
@@ -2648,10 +2648,26 @@ def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_edita
             context={
                 "field_name": spec.name or "",
                 "field_label": spec.label or spec.name or "",
-                "old_value": before,
-                "new_value": after,
+                "changes": changes,
             },
         )
+
+
+def _diff_collection_state(old_state: list[dict], new_state: list[dict]) -> list[dict]:
+    """Generic by-``id`` diff between two audit_state snapshots —
+    produces ``[{"old": row|None, "new": row|None}, ...]``. Added rows
+    have ``old=None``, removed rows have ``new=None``, modified rows
+    carry both. Order: additions, removals, modifications."""
+    old_by_id = {r["id"]: r for r in old_state}
+    new_by_id = {r["id"]: r for r in new_state}
+    changes: list[dict] = [{"old": None, "new": r} for r in new_state if r["id"] not in old_by_id]
+    changes.extend({"old": r, "new": None} for r in old_state if r["id"] not in new_by_id)
+    changes.extend(
+        {"old": old_by_id[sid], "new": new_by_id[sid]}
+        for sid in old_by_id.keys() & new_by_id.keys()
+        if old_by_id[sid] != new_by_id[sid]
+    )
+    return changes
 
 
 def inline_edit_view(request, model_label, pk, name):

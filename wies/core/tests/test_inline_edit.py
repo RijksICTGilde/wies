@@ -15,7 +15,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.editables import REGISTRY
-from wies.core.editables.assignment import AssignmentEditables, _services_diff
+from wies.core.editables.assignment import AssignmentEditables, _services_render_change
 from wies.core.editables.placement import PlacementEditables
 from wies.core.editables.service import ServiceEditables
 from wies.core.fields import OrganizationsField
@@ -812,14 +812,14 @@ class AssignmentServicesAuditTest(TestCase):
         event = events[0]
         assert event.context["field_name"] == "services"
         assert event.context["field_label"] == "Team"
-        # Event stores raw audit_state snapshots; diff format is applied
-        # at render time. Both rows present in both snapshots; only the
-        # vacant row's colleague_name flipped from None to the user.
-        before = {r["id"]: r for r in event.context["old_value"]}
-        after = {r["id"]: r for r in event.context["new_value"]}
-        assert before[self.vacant_service.id]["colleague_name"] is None
-        assert after[self.vacant_service.id]["colleague_name"] == self.colleague.name
-        assert before[self.filled_service.id] == after[self.filled_service.id]
+        # Event stores only the rows that changed (delta), not full
+        # team state. Here only the vacant row flipped — one change.
+        changes = event.context["changes"]
+        assert len(changes) == 1
+        change = changes[0]
+        assert change["old"]["id"] == self.vacant_service.id
+        assert change["old"]["colleague_name"] is None
+        assert change["new"]["colleague_name"] == self.colleague.name
 
     def test_services_post_no_change_no_event(self):
         data = {
@@ -892,72 +892,69 @@ class AssignmentServicesAuditTest(TestCase):
 
         events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
         assert len(events) == 1
-        # Audit snapshot: only the filled row's description differs.
-        before = {r["id"]: r for r in events[0].context["old_value"]}
-        after = {r["id"]: r for r in events[0].context["new_value"]}
-        assert before[self.filled_service.id]["description"] == "Filled"
-        assert after[self.filled_service.id]["description"] == "New description"
+        changes = events[0].context["changes"]
+        assert len(changes) == 1
+        assert changes[0]["old"]["id"] == self.filled_service.id
+        assert changes[0]["old"]["description"] == "Filled"
+        assert changes[0]["new"]["description"] == "New description"
 
 
-class ServicesDiffUnitTests(TestCase):
-    """Pure-function checks for `_services_diff` covering each branch
-    (added / removed / changed skill / changed colleague / description
-    only / no-op)."""
+class ServicesRenderChangeUnitTests(TestCase):
+    """Pure-function checks for `_services_render_change` covering each
+    branch (added / removed / skill changed / colleague filled /
+    description add/remove/change)."""
 
     def _row(self, sid, skill_name, colleague_name=None, description=""):
         return {"id": sid, "skill_name": skill_name, "colleague_name": colleague_name, "description": description}
 
-    def test_no_change(self):
-        rows = [self._row(1, "Python", "Jan", "x")]
-        assert _services_diff(rows, rows) == []
-
     def test_added(self):
-        before = [self._row(1, "Python", "Jan")]
-        after = [self._row(1, "Python", "Jan"), self._row(2, "Java", None)]
-        assert _services_diff(before, after) == [{"text": "Toegevoegd: Java (open)"}]
+        change = {"old": None, "new": self._row(2, "Java", None)}
+        assert _services_render_change(change) == {"text": "Toegevoegd: Java (open)"}
 
     def test_removed(self):
-        before = [self._row(1, "Python", "Jan"), self._row(2, "Java", None)]
-        after = [self._row(1, "Python", "Jan")]
-        assert _services_diff(before, after) == [{"text": "Verwijderd: Java (open)"}]
+        change = {"old": self._row(2, "Java", None), "new": None}
+        assert _services_render_change(change) == {"text": "Verwijderd: Java (open)"}
 
     def test_colleague_filled(self):
-        before = [self._row(1, "Java", None)]
-        after = [self._row(1, "Java", "Anna")]
-        assert _services_diff(before, after) == [{"text": "Gewijzigd: van Java (open) naar Java (Anna)"}]
+        change = {"old": self._row(1, "Java", None), "new": self._row(1, "Java", "Anna")}
+        assert _services_render_change(change) == {"text": "Gewijzigd: van Java (open) naar Java (Anna)"}
 
     def test_skill_changed(self):
-        before = [self._row(1, "Python", "Jan")]
-        after = [self._row(1, "TypeScript", "Jan")]
-        assert _services_diff(before, after) == [{"text": "Gewijzigd: van Python (Jan) naar TypeScript (Jan)"}]
+        change = {"old": self._row(1, "Python", "Jan"), "new": self._row(1, "TypeScript", "Jan")}
+        assert _services_render_change(change) == {
+            "text": "Gewijzigd: van Python (Jan) naar TypeScript (Jan)",
+        }
 
-    def test_description_only(self):
-        before = [self._row(1, "Python", "Jan", description="oud")]
-        after = [self._row(1, "Python", "Jan", description="nieuw")]
-        assert _services_diff(before, after) == [
-            {"text": "Toelichting gewijzigd op Python (Jan)", "old": "oud", "new": "nieuw"},
-        ]
-
-    def test_skill_change_overrides_description_line(self):
-        """A skill change yields a Gewijzigd line; description-only
-        line is suppressed for the same row to avoid double-reporting."""
-        before = [self._row(1, "Python", "Jan", description="oud")]
-        after = [self._row(1, "TypeScript", "Jan", description="nieuw")]
-        assert _services_diff(before, after) == [{"text": "Gewijzigd: van Python (Jan) naar TypeScript (Jan)"}]
+    def test_description_changed(self):
+        change = {
+            "old": self._row(1, "Python", "Jan", description="oud"),
+            "new": self._row(1, "Python", "Jan", description="nieuw"),
+        }
+        assert _services_render_change(change) == {
+            "text": "Toelichting gewijzigd op Python (Jan)",
+            "old": "oud",
+            "new": "nieuw",
+        }
 
     def test_description_added_from_empty(self):
-        before = [self._row(1, "Python", "Jan", description="")]
-        after = [self._row(1, "Python", "Jan", description="nieuw")]
-        assert _services_diff(before, after) == [
-            {"text": "Toelichting toegevoegd op Python (Jan)", "new": "nieuw"},
-        ]
+        change = {
+            "old": self._row(1, "Python", "Jan", description=""),
+            "new": self._row(1, "Python", "Jan", description="nieuw"),
+        }
+        assert _services_render_change(change) == {
+            "text": "Toelichting toegevoegd op Python (Jan)",
+            "new": "nieuw",
+        }
 
     def test_description_removed_to_empty(self):
-        before = [self._row(1, "Python", "Jan", description="oud")]
-        after = [self._row(1, "Python", "Jan", description="")]
-        assert _services_diff(before, after) == [
-            {"text": "Toelichting verwijderd op Python (Jan)", "old": "oud"},
-        ]
+        change = {
+            "old": self._row(1, "Python", "Jan", description="oud"),
+            "new": self._row(1, "Python", "Jan", description=""),
+        }
+        assert _services_render_change(change) == {
+            "text": "Toelichting verwijderd op Python (Jan)",
+            "old": "oud",
+        }
 
 
 class ServiceDescriptionPermissionTest(TestCase):

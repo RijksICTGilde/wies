@@ -490,9 +490,9 @@ class AssignmentEditAttributeTest(TestCase):
         self.assertNotContains(response, "show-more-toggle")
 
     def test_timeline_renders_collection_event_as_bullets(self):
-        """A services-collection event stores raw audit_state lists;
-        the timeline view computes diff entries at render time via
-        the spec's `diff` callable and shows them as bullets."""
+        """A services-collection event stores per-change deltas; the
+        timeline view formats each change at render time via the spec's
+        `render_change` callable and shows them as bullets."""
         self.client.force_login(self.user_with_permission)
         Event.objects.create(
             user=self.user_with_permission,
@@ -504,12 +504,11 @@ class AssignmentEditAttributeTest(TestCase):
             context={
                 "field_name": "services",
                 "field_label": "Team",
-                "old_value": [
-                    {"id": 1, "skill_name": "Python", "colleague_name": "Jan", "description": ""},
-                ],
-                "new_value": [
-                    {"id": 1, "skill_name": "Python", "colleague_name": "Jan", "description": ""},
-                    {"id": 2, "skill_name": "Java", "colleague_name": None, "description": ""},
+                "changes": [
+                    {
+                        "old": None,
+                        "new": {"id": 2, "skill_name": "Java", "colleague_name": None, "description": ""},
+                    },
                 ],
             },
         )

@@ -106,19 +106,18 @@ class EditableCollection:
     # formset as ``formset``.
     form_template: str | None = None
     display: str | Callable[[Model], Any] | None = None
-    # Primitive snapshot (JSON-serializable: no model instances) of the
-    # collection state at audit time, stored as the event's
-    # ``old_value`` / ``new_value``. Required to opt this collection
-    # into audit events.
+    # Primitive snapshot (JSON-serializable: rows of dicts keyed by
+    # ``id``) of the collection state, used at save time to diff against
+    # the post-save state. Required to opt this collection into audit
+    # events; the resulting per-row changes are stored as
+    # ``context["changes"]``.
     audit_state: Callable[[Model], list[dict]] | None = None
-    # Bullet entries describing what changed between two audit_state
-    # snapshots. Called at *render* time (not save time) so changes to
-    # the formatter apply retroactively to existing events.
-    #
-    # Each entry is a ``{"text": str, "old"?: str, "new"?: str}`` dict.
-    # ``old`` + ``new`` are optional; when present the timeline renders
-    # a collapsible Van/Naar block under the bullet.
-    diff: Callable[[list[dict], list[dict]], list[dict]] | None = None
+    # Render-time formatter for one change. Receives
+    # ``{"old": dict|None, "new": dict|None}`` and returns the bullet
+    # entry ``{"text": str, "old"?: str, "new"?: str}`` the timeline
+    # shows. Called at render time so format / language changes apply
+    # retroactively to existing events.
+    render_change: Callable[[dict], dict] | None = None
     # Suppress the auto-rendered pencil + clickable-value wrapper on the
     # display partial. Use when the parent template provides its own
     # edit trigger (e.g. the "Team bewerken" button).

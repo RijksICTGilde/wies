@@ -127,39 +127,29 @@ def _service_row_label(row: dict) -> str:
     return f"{skill} ({name if name else 'open'})"
 
 
-def _services_diff(old_state: list[dict], new_state: list[dict]) -> list[dict]:
-    """Render-time formatter: bullet entries for added / removed /
-    changed rows. Operates on the audit_state primitives, so changing
-    this function affects how existing events render."""
-    old_by_id = {r["id"]: r for r in old_state}
-    new_by_id = {r["id"]: r for r in new_state}
-
-    entries: list[dict] = [
-        {"text": f"Toegevoegd: {_service_row_label(row)}"} for row in new_state if row["id"] not in old_by_id
-    ]
-    entries.extend(
-        {"text": f"Verwijderd: {_service_row_label(row)}"} for row in old_state if row["id"] not in new_by_id
-    )
-    for sid in old_by_id.keys() & new_by_id.keys():
-        b, a = old_by_id[sid], new_by_id[sid]
-        b_label, a_label = _service_row_label(b), _service_row_label(a)
-        b_desc, a_desc = b.get("description") or "", a.get("description") or ""
-        if b_label != a_label:
-            entries.append({"text": f"Gewijzigd: van {b_label} naar {a_label}"})
-        elif b_desc != a_desc:
-            entries.append(_toelichting_entry(a_label, b_desc, a_desc))
-    return entries
-
-
-def _toelichting_entry(label: str, old: str, new: str) -> dict:
-    """Use toegevoegd / verwijderd / gewijzigd based on whether the
-    old or new description is empty, and only carry the side(s) that
-    have a value so the template skips empty Van/Naar blocks."""
-    if not old:
-        return {"text": f"Toelichting toegevoegd op {label}", "new": new}
-    if not new:
-        return {"text": f"Toelichting verwijderd op {label}", "old": old}
-    return {"text": f"Toelichting gewijzigd op {label}", "old": old, "new": new}
+def _services_render_change(change: dict) -> dict:
+    """Render-time formatter for one services change. Receives
+    ``{"old": row|None, "new": row|None}`` and returns the bullet entry
+    the timeline shows."""
+    old, new = change.get("old"), change.get("new")
+    if old is None:
+        return {"text": f"Toegevoegd: {_service_row_label(new)}"}
+    if new is None:
+        return {"text": f"Verwijderd: {_service_row_label(old)}"}
+    old_label = _service_row_label(old)
+    new_label = _service_row_label(new)
+    if old_label != new_label:
+        return {"text": f"Gewijzigd: van {old_label} naar {new_label}"}
+    # Description-only change: emit toegevoegd / verwijderd / gewijzigd
+    # depending on whether either side was empty, so the bullet stays
+    # honest and the template skips empty Van/Naar blocks.
+    old_desc = old.get("description") or ""
+    new_desc = new.get("description") or ""
+    if not old_desc:
+        return {"text": f"Toelichting toegevoegd op {new_label}", "new": new_desc}
+    if not new_desc:
+        return {"text": f"Toelichting verwijderd op {new_label}", "old": old_desc}
+    return {"text": f"Toelichting gewijzigd op {new_label}", "old": old_desc, "new": new_desc}
 
 
 def _validate_period(cleaned):
@@ -222,7 +212,7 @@ class AssignmentEditables(EditableSet):
         initial=_services_initial,
         save=_save_services,
         audit_state=_services_audit_state,
-        diff=_services_diff,
+        render_change=_services_render_change,
         hide_edit_button=True,
         form_template="parts/assignment_services_form.html",
         display="rvo/forms/displays/assignment_services.html",
