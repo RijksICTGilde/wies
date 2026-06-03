@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-\_ ...
+- 374: (migration)(remove env vars) remove super users and remove automatic generation during container start
 
 ## 2026-06-01
 
@@ -349,3 +349,5 @@ This files lists the changes during the lifetime of this project.
 - add syncing between exact and wies colleagues
 
 ## demo-2025-08-04
+
+...
