@@ -97,8 +97,4 @@ thema = [
     "Netwerksamenwerking",
 ]
 
-loopt_af = [
-    "Binnen 3 maanden", 
-    "Binnen 6 maanden", 
-    "Langer dan 6 maanden"
-]
+loopt_af = ["Binnen 3 maanden", "Binnen 6 maanden", "Langer dan 6 maanden"]
