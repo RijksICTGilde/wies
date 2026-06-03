@@ -341,8 +341,8 @@ class AssignmentEditAttributeTest(TestCase):
 
         # Truncated + full spans render with the inline-edit classes;
         # visibility is toggled via the HTML `hidden` attribute.
-        self.assertContains(response, 'class="inline-edit-long-text__truncated"')
-        self.assertContains(response, 'class="inline-edit-long-text__full"')
+        self.assertContains(response, "inline-edit-long-text__truncated")
+        self.assertContains(response, "inline-edit-long-text__full")
 
         # Beginning of the text appears in the truncated version.
         self.assertContains(response, "Lorem ipsum dolor sit amet")

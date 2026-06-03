@@ -4,7 +4,7 @@ cannot be reparented.
 Permissions live in ``wies/core/permission_rules.py``.
 """
 
-from django import forms
+from django_prose_editor.widgets import ProseEditorWidget
 
 from wies.core.inline_edit import Editable, EditableSet
 from wies.core.models import Service
@@ -16,7 +16,8 @@ class ServiceEditables(EditableSet):
 
     description = Editable(
         label="Omschrijving",
-        widget=forms.Textarea(attrs={"rows": 4}),
+        widget=ProseEditorWidget(),
+        display="rvo/forms/displays/prose_editor.html",
     )
     skill = Editable(label="Rol")
     period_source = Editable(label="Periode gebaseerd op")

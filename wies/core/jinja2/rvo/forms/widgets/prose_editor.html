@@ -1,0 +1,6 @@
+<textarea name="{{ widget.name }}"
+          class="utrecht-textarea utrecht-textarea--html-textarea rvo-textarea"
+          {% for name, value in widget.attrs.items() %} {% if value is not sameas False %} {% if name.startswith('data-django-prose-editor') %} {{ name }}='{{ value|safe }}' {% else %} {{ name }} {% if value is not sameas True %}="{{ value }}"{% endif %}
+          {% endif %}
+          {% endif %}
+          {% endfor %}>{% if widget.value %}{{ widget.value }}{% endif %}</textarea>

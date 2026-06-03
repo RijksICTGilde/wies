@@ -1,0 +1,25 @@
+{# Renders sanitized HTML from a ProseEditorField.
+   The value is already sanitized server-side by django-prose-editor (nh3).
+   Long content is collapsed with a "Toon meer" toggle. #}
+{% if value %}
+  {% set plain = value|striptags %}
+  {% if plain|length > 500 %}
+    <span class="inline-edit-long-text">
+      <div class="inline-edit-long-text__truncated prose-editor-display prose-editor-display--collapsed">
+        {%- autoescape false %}{{ value }}
+        {% endautoescape -%}
+      </div>
+      <div class="inline-edit-long-text__full prose-editor-display" hidden>{{ value|safe }}</div>
+      <button type="button"
+              class="inline-edit-show-more"
+              onclick="event.stopPropagation(); var w=this.parentElement, t=w.querySelector('.inline-edit-long-text__truncated'), f=w.querySelector('.inline-edit-long-text__full'), exp=!f.hidden; t.hidden=!exp; f.hidden=exp; this.querySelector('.inline-edit-show-more__icon').textContent=exp?'+':'−'; this.querySelector('.inline-edit-show-more__label').textContent=exp?'Toon meer':'Toon minder'">
+        <span class="inline-edit-show-more__icon">+</span>
+        <span class="inline-edit-show-more__label">Toon meer</span>
+      </button>
+    </span>
+  {% else %}
+    <div class="prose-editor-display">{{ value|safe }}</div>
+  {% endif %}
+{% else %}
+  <span class="rvo-text--italic rvo-text--subtle">Niet ingevuld</span>
+{% endif %}
