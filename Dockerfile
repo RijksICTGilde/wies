@@ -18,6 +18,7 @@ ENV UV_CACHE_DIR=/opt/uv-cache/
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 ENV VIRTUAL_ENV=/opt/venv
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
 
 # Install git to enable installation of jrc from github
 # can be removed when jrc is on pypi
@@ -31,7 +32,8 @@ RUN --mount=from=uv,source=/uv,target=/bin/uv \
   --mount=type=cache,target=/opt/uv-cache/ \
   --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
   --mount=type=bind,source=uv.lock,target=uv.lock \
-  uv sync --active --frozen
+  uv sync --active --frozen \
+  && /opt/venv/bin/playwright install chromium
 
 
 #-----------------------------------------------------------------------------------------------------------------------
@@ -47,12 +49,20 @@ RUN groupadd --gid 1000 app \
 RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
   # Devcontainer dependencies and utils
   sudo git bash-completion vim \
+  # Chromium runtime libs for Playwright (Debian trixie names; t64 = 64-bit time_t transition)
+  libglib2.0-0t64 libnss3 libnspr4 libdbus-1-3 \
+  libatk1.0-0t64 libatk-bridge2.0-0t64 libcups2t64 libasound2t64 libatspi2.0-0t64 \
+  libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 libxfixes3 libxrandr2 \
+  libgbm1 libpango-1.0-0 libcairo2 libx11-6 libxcb1 libxext6 fonts-liberation \
   # Cleaning up unused files
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
 
 # copy results from build stages
 COPY --from=python-build --chown=app:app /opt/venv /opt/venv
+COPY --from=python-build --chown=app:app /opt/playwright-browsers /opt/playwright-browsers
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/playwright-browsers
+ENV VIRTUAL_ENV=/opt/venv
 
 # copy uv to enable runtime including editable package during development
 COPY --from=uv /uv /bin/uv
