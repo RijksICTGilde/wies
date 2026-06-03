@@ -206,10 +206,16 @@
       }
 
       function getAssignmentStart() {
-        return (assignmentStartEl && assignmentStartEl.value) || assignmentStartAttr || "";
+        return (
+          (assignmentStartEl && assignmentStartEl.value) ||
+          assignmentStartAttr ||
+          ""
+        );
       }
       function getAssignmentEnd() {
-        return (assignmentEndEl && assignmentEndEl.value) || assignmentEndAttr || "";
+        return (
+          (assignmentEndEl && assignmentEndEl.value) || assignmentEndAttr || ""
+        );
       }
 
       function updateDateFields() {
@@ -220,7 +226,7 @@
           var aEnd = getAssignmentEnd();
           if (aStart) startInput.value = aStart;
           if (aEnd) endInput.value = aEnd;
-          hint.style.display = (!aStart && !aEnd) ? "" : "none";
+          hint.style.display = !aStart && !aEnd ? "" : "none";
         } else {
           hint.style.display = "none";
         }
@@ -230,12 +236,14 @@
       updateDateFields();
 
       // Also update when assignment dates change.
-      if (assignmentStartEl) assignmentStartEl.addEventListener("change", function () {
-        if (checkbox.checked) startInput.value = assignmentStartEl.value;
-      });
-      if (assignmentEndEl) assignmentEndEl.addEventListener("change", function () {
-        if (checkbox.checked) endInput.value = assignmentEndEl.value;
-      });
+      if (assignmentStartEl)
+        assignmentStartEl.addEventListener("change", function () {
+          if (checkbox.checked) startInput.value = assignmentStartEl.value;
+        });
+      if (assignmentEndEl)
+        assignmentEndEl.addEventListener("change", function () {
+          if (checkbox.checked) endInput.value = assignmentEndEl.value;
+        });
     });
   }
 
