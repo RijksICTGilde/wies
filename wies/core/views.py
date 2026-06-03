@@ -1983,7 +1983,7 @@ def label_delete(request, pk):
 
 def assignment_events_partial(request, pk):
     assignment = get_object_or_404(Assignment, pk=pk)
-    events = (
+    events = list(
         Event.objects.filter(
             object_type="Assignment",
             object_id=assignment.id,
@@ -1991,7 +1991,42 @@ def assignment_events_partial(request, pk):
         .select_related("user__colleague")
         .order_by("-timestamp")[:20]
     )
+    for event in events:
+        _attach_audit_render_data(event)
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
+
+
+def _attach_audit_render_data(event) -> None:
+    """Decide how to render this event (inline / textarea / collection)
+    by looking up the matching Editable spec. Done here so presentation
+    changes apply to existing events."""
+    event.render_kind = "text"
+    event.diff_entries = None
+
+    if event.action != "update":
+        return
+    model_label = event.object_type.lower()
+    editable_set = REGISTRY.get(model_label)
+    if editable_set is None:
+        return
+    spec = editable_set._editables.get(event.context.get("field_name", ""))
+    if spec is None:
+        return
+
+    if isinstance(spec, EditableCollection):
+        event.render_kind = "collection"
+        if spec.diff is not None:
+            event.diff_entries = spec.diff(
+                event.context.get("old_value") or [],
+                event.context.get("new_value") or [],
+            )
+        return
+
+    from django import forms  # noqa: PLC0415
+
+    widget = getattr(spec, "widget", None)
+    if isinstance(widget, forms.Textarea) or (isinstance(widget, type) and issubclass(widget, forms.Textarea)):
+        event.render_kind = "textarea"
 
 
 def user_profile(request):
@@ -2525,11 +2560,11 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
     if request.method == "POST":
         formset = spec.formset_factory(data=request.POST)
         if formset.is_valid():
-            before = spec.initial(obj)
+            before = spec.audit_state(obj) if spec.audit_state else None
             try:
                 with transaction.atomic():
                     spec.save(obj, formset)
-                    after = spec.initial(obj)
+                    after = spec.audit_state(obj) if spec.audit_state else None
                     _emit_inline_edit_audit_event(spec, obj, before, after, request.user)
             except ValidationError as exc:
                 for message in exc.messages:
@@ -2550,18 +2585,17 @@ _AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "Organization
 
 
 def _record_editable_change(editable, obj, object_type, old_value, new_value, user) -> None:
-    """Building block: emit a single 'field X changed' event if old != new."""
+    """Building block: emit a single 'field X changed' event if old != new.
+
+    Stores raw values only. Presentation (textarea-vs-inline, etc.) is
+    decided at render time from the spec — keeping events forward-
+    compatible with format / language changes.
+    """
     formatter = editable.audit_format or (lambda v: str(v or ""))
     old_text = formatter(old_value)
     new_text = formatter(new_value)
     if old_text == new_text:
         return
-    from django import forms  # noqa: PLC0415
-
-    widget = editable.widget
-    is_textarea = isinstance(widget, forms.Textarea) or (
-        isinstance(widget, type) and issubclass(widget, forms.Textarea)
-    )
     create_event(
         object_type=object_type,
         action="update",
@@ -2569,7 +2603,6 @@ def _record_editable_change(editable, obj, object_type, old_value, new_value, us
         object_id=obj.id,
         user=user,
         context={
-            "field_type": "textarea" if is_textarea else "text",
             "field_name": editable.field or editable.name or "",
             "field_label": editable.label or editable.name or "",
             "old_value": old_text,
@@ -2582,12 +2615,11 @@ def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_edita
     """Record audit events for an inline-edit save on a tracked model.
 
     Dispatches by spec type:
-    - Editable: ``before``/``after`` are values; one event when changed.
-    - EditableGroup: ``before``/``after`` are dicts keyed by child name;
-      one event per changed child (``child_editables`` is the resolved
-      list of child Editables).
-    - EditableCollection: ``before``/``after`` are row lists from
-      ``spec.initial(obj)``; one event when ``spec.summary`` differs.
+    - Editable: emit one event when the formatted value changed.
+    - EditableGroup: emit one event per child Editable that changed.
+    - EditableCollection: emit one event storing the audit_state
+      snapshots as raw old_value / new_value. The diff function runs
+      at render time, not here.
 
     No-op on models not in ``_AUDIT_OBJECT_TYPES``.
     """
@@ -2605,29 +2637,7 @@ def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_edita
         return
 
     if isinstance(spec, EditableCollection):
-        if spec.diff is not None:
-            entries = spec.diff(before, after)
-            if not entries:
-                return
-            create_event(
-                object_type=object_type,
-                action="update",
-                source="user",
-                object_id=obj.id,
-                user=user,
-                context={
-                    "field_type": "diff",
-                    "field_name": spec.name or "",
-                    "field_label": spec.label or spec.name or "",
-                    "diff_entries": entries,
-                },
-            )
-            return
-        if spec.summary is None:
-            return
-        old_text = spec.summary(before)
-        new_text = spec.summary(after)
-        if old_text == new_text:
+        if spec.audit_state is None or before == after:
             return
         create_event(
             object_type=object_type,
@@ -2636,11 +2646,10 @@ def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_edita
             object_id=obj.id,
             user=user,
             context={
-                "field_type": "text",
                 "field_name": spec.name or "",
                 "field_label": spec.label or spec.name or "",
-                "old_value": old_text,
-                "new_value": new_text,
+                "old_value": before,
+                "new_value": after,
             },
         )
 

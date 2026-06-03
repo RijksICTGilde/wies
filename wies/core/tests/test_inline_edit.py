@@ -812,10 +812,14 @@ class AssignmentServicesAuditTest(TestCase):
         event = events[0]
         assert event.context["field_name"] == "services"
         assert event.context["field_label"] == "Team"
-        assert event.context["field_type"] == "diff"
-        assert event.context["diff_entries"] == [
-            {"text": f"Gewijzigd: van Java (open) naar Java ({self.colleague.name})"},
-        ]
+        # Event stores raw audit_state snapshots; diff format is applied
+        # at render time. Both rows present in both snapshots; only the
+        # vacant row's colleague_name flipped from None to the user.
+        before = {r["id"]: r for r in event.context["old_value"]}
+        after = {r["id"]: r for r in event.context["new_value"]}
+        assert before[self.vacant_service.id]["colleague_name"] is None
+        assert after[self.vacant_service.id]["colleague_name"] == self.colleague.name
+        assert before[self.filled_service.id] == after[self.filled_service.id]
 
     def test_services_post_no_change_no_event(self):
         data = {
@@ -888,13 +892,11 @@ class AssignmentServicesAuditTest(TestCase):
 
         events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
         assert len(events) == 1
-        assert events[0].context["diff_entries"] == [
-            {
-                "text": f"Toelichting gewijzigd op Python ({self.colleague.name})",
-                "old": "Filled",
-                "new": "New description",
-            },
-        ]
+        # Audit snapshot: only the filled row's description differs.
+        before = {r["id"]: r for r in events[0].context["old_value"]}
+        after = {r["id"]: r for r in events[0].context["new_value"]}
+        assert before[self.filled_service.id]["description"] == "Filled"
+        assert after[self.filled_service.id]["description"] == "New description"
 
 
 class ServicesDiffUnitTests(TestCase):
@@ -903,8 +905,7 @@ class ServicesDiffUnitTests(TestCase):
     only / no-op)."""
 
     def _row(self, sid, skill_name, colleague_name=None, description=""):
-        col = type("Col", (), {"name": colleague_name})() if colleague_name else None
-        return {"id": sid, "skill_name": skill_name, "colleague": col, "description": description}
+        return {"id": sid, "skill_name": skill_name, "colleague_name": colleague_name, "description": description}
 
     def test_no_change(self):
         rows = [self._row(1, "Python", "Jan", "x")]

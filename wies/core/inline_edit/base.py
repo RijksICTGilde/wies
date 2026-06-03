@@ -106,18 +106,18 @@ class EditableCollection:
     # formset as ``formset``.
     form_template: str | None = None
     display: str | Callable[[Model], Any] | None = None
-    # Compact human-readable summary of `initial(obj)` rows, used as
-    # the old/new value in audit events when `diff` is not set.
-    summary: Callable[[list[dict]], str] | None = None
-    # Bullet entries describing what changed between two `initial(obj)`
-    # snapshots — preferred over `summary` for collection audit events
-    # because it lets the timeline render added/removed/changed bullets
-    # instead of dumping full before/after blobs.
+    # Primitive snapshot (JSON-serializable: no model instances) of the
+    # collection state at audit time, stored as the event's
+    # ``old_value`` / ``new_value``. Required to opt this collection
+    # into audit events.
+    audit_state: Callable[[Model], list[dict]] | None = None
+    # Bullet entries describing what changed between two audit_state
+    # snapshots. Called at *render* time (not save time) so changes to
+    # the formatter apply retroactively to existing events.
     #
     # Each entry is a ``{"text": str, "old"?: str, "new"?: str}`` dict.
     # ``old`` + ``new`` are optional; when present the timeline renders
-    # a collapsible Van/Naar block under the bullet (same UX as
-    # ``extra_info``). Empty list = no event.
+    # a collapsible Van/Naar block under the bullet.
     diff: Callable[[list[dict], list[dict]], list[dict]] | None = None
     # Suppress the auto-rendered pencil + clickable-value wrapper on the
     # display partial. Use when the parent template provides its own

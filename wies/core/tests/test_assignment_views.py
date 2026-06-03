@@ -403,7 +403,6 @@ class AssignmentEditAttributeTest(TestCase):
         assert event.object_id == self.assignment.id
         assert event.user == self.user_with_permission
         assert event.user_email == "perm@rijksoverheid.nl"
-        assert event.context["field_type"] == "text"
         assert event.context["field_name"] == "name"
         assert event.context["field_label"] == "Opdracht naam"
         assert event.context["old_value"] == "Test Assignment"
@@ -448,7 +447,6 @@ class AssignmentEditAttributeTest(TestCase):
             source="user",
             object_id=self.assignment.id,
             context={
-                "field_type": "textarea",
                 "field_name": "extra_info",
                 "field_label": "Beschrijving",
                 "old_value": long_old,
@@ -477,7 +475,6 @@ class AssignmentEditAttributeTest(TestCase):
             source="user",
             object_id=self.assignment.id,
             context={
-                "field_type": "textarea",
                 "field_name": "extra_info",
                 "field_label": "Beschrijving",
                 "old_value": "short old",
@@ -492,6 +489,38 @@ class AssignmentEditAttributeTest(TestCase):
         self.assertContains(response, "short new")
         self.assertNotContains(response, "show-more-toggle")
 
+    def test_timeline_renders_collection_event_as_bullets(self):
+        """A services-collection event stores raw audit_state lists;
+        the timeline view computes diff entries at render time via
+        the spec's `diff` callable and shows them as bullets."""
+        self.client.force_login(self.user_with_permission)
+        Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_name": "services",
+                "field_label": "Team",
+                "old_value": [
+                    {"id": 1, "skill_name": "Python", "colleague_name": "Jan", "description": ""},
+                ],
+                "new_value": [
+                    {"id": 1, "skill_name": "Python", "colleague_name": "Jan", "description": ""},
+                    {"id": 2, "skill_name": "Java", "colleague_name": None, "description": ""},
+                ],
+            },
+        )
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, "Team")
+        self.assertContains(response, "Toegevoegd: Java (open)")
+        self.assertContains(response, "rvo-list")
+
     def test_timeline_renders_text_change_inline(self):
         """Text field changes render inline as 'van X naar Y'"""
         self.client.force_login(self.user_with_permission)
@@ -503,7 +532,6 @@ class AssignmentEditAttributeTest(TestCase):
             source="user",
             object_id=self.assignment.id,
             context={
-                "field_type": "text",
                 "field_name": "name",
                 "field_label": "Opdracht naam",
                 "old_value": "Old Name",

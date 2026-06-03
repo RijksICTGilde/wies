@@ -107,35 +107,41 @@ def _save_services(assignment, formset):
     apply_services_to_assignment(assignment, services_data)
 
 
-def _services_summary(rows: list[dict]) -> str:
-    """Compact "Skill (Colleague-or-open), ..." used in audit events."""
-    if not rows:
-        return "geen"
-    return ", ".join(_service_row_label(r) for r in rows)
+def _services_audit_state(assignment) -> list[dict]:
+    """Primitive snapshot of services + their placement for audit
+    storage — no model instances, all JSON-serializable."""
+    return [
+        {
+            "id": row["id"],
+            "skill_name": row["skill_name"],
+            "colleague_name": row["colleague"].name if row["colleague"] else None,
+            "description": row["description"] or "",
+        }
+        for row in _services_initial(assignment)
+    ]
 
 
 def _service_row_label(row: dict) -> str:
     skill = row.get("skill_name") or "?"
-    colleague = row.get("colleague")
-    return f"{skill} ({colleague.name if colleague else 'open'})"
+    name = row.get("colleague_name")
+    return f"{skill} ({name if name else 'open'})"
 
 
-def _services_diff(before: list[dict], after: list[dict]) -> list[dict]:
-    """Bullet entries: added rows, removed rows, and rows whose skill /
-    colleague / description changed. Returns [] when nothing changed.
-
-    Each entry is a dict with ``text`` and (for description changes)
-    ``old`` + ``new`` so the timeline can render a Van/Naar block.
-    """
-    before_by_id = {r["id"]: r for r in before}
-    after_by_id = {r["id"]: r for r in after}
+def _services_diff(old_state: list[dict], new_state: list[dict]) -> list[dict]:
+    """Render-time formatter: bullet entries for added / removed /
+    changed rows. Operates on the audit_state primitives, so changing
+    this function affects how existing events render."""
+    old_by_id = {r["id"]: r for r in old_state}
+    new_by_id = {r["id"]: r for r in new_state}
 
     entries: list[dict] = [
-        {"text": f"Toegevoegd: {_service_row_label(row)}"} for row in after if row["id"] not in before_by_id
+        {"text": f"Toegevoegd: {_service_row_label(row)}"} for row in new_state if row["id"] not in old_by_id
     ]
-    entries.extend({"text": f"Verwijderd: {_service_row_label(row)}"} for row in before if row["id"] not in after_by_id)
-    for sid in before_by_id.keys() & after_by_id.keys():
-        b, a = before_by_id[sid], after_by_id[sid]
+    entries.extend(
+        {"text": f"Verwijderd: {_service_row_label(row)}"} for row in old_state if row["id"] not in new_by_id
+    )
+    for sid in old_by_id.keys() & new_by_id.keys():
+        b, a = old_by_id[sid], new_by_id[sid]
         b_label, a_label = _service_row_label(b), _service_row_label(a)
         b_desc, a_desc = b.get("description") or "", a.get("description") or ""
         if b_label != a_label:
@@ -215,7 +221,7 @@ class AssignmentEditables(EditableSet):
         formset_factory=_services_formset_factory,
         initial=_services_initial,
         save=_save_services,
-        summary=_services_summary,
+        audit_state=_services_audit_state,
         diff=_services_diff,
         hide_edit_button=True,
         form_template="parts/assignment_services_form.html",

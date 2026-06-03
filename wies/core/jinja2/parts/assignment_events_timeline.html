@@ -16,14 +16,12 @@
           <strong>{{ author }}</strong>
           {% if event.action == "create" %}
             maakte deze opdracht aan
-          {% elif event.context.field_type == "diff" %}
+          {% elif event.render_kind == "text" %}
             wijzigde <strong>{{ event.context.field_label }}</strong>
+            {% if event.context.old_value %}van "{{ event.context.old_value }}"{% endif %}
+            naar "{{ event.context.new_value }}"
           {% else %}
             wijzigde <strong>{{ event.context.field_label }}</strong>
-            {% if event.context.field_type != "textarea" %}
-              {% if event.context.old_value %}van "{{ event.context.old_value }}"{% endif %}
-              naar "{{ event.context.new_value }}"
-            {% endif %}
           {% endif %}
           <div class="event-timeline__meta">
             <span class="rvo-text--subtle rvo-text--xs"
@@ -40,9 +38,9 @@
               </span>
             {% endif %}
           </div>
-          {% if event.context.field_type == "diff" and event.context.diff_entries %}
+          {% if event.render_kind == "collection" and event.diff_entries %}
             <ul class="rvo-list rvo-margin-block-start--xs">
-              {% for entry in event.context.diff_entries %}
+              {% for entry in event.diff_entries %}
                 <li>
                   {{ entry.text }}
                   {% if entry.old %}
@@ -58,8 +56,7 @@
                 </li>
               {% endfor %}
             </ul>
-          {% endif %}
-          {% if event.context.field_type == "textarea" %}
+          {% elif event.render_kind == "textarea" %}
             {% if event.context.old_value %}
               {% with label="Van", value=event.context.old_value %}
                 {% include "parts/event_value_block.html" %}
