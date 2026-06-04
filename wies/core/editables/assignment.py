@@ -61,15 +61,7 @@ def _skill_choices():
 
 
 def _services_initial(assignment):
-    """One row per service. Active placement only — historical rows live elsewhere.
-
-    Vacancies (no placement) come before filled rows so users spot open
-    aanvragen quickly even on assignments with large teams; FIFO order
-    is preserved within each group via the stable sort.
-
-    ``skill_name`` / ``service`` are extras for the display partial; the
-    formset ignores unknown keys in ``initial``.
-    """
+    """One row per service, vacancies first."""
     from wies.core.models import Placement  # noqa: PLC0415 — avoids circular import
 
     rows = []
