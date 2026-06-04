@@ -135,8 +135,6 @@ def breadcrumb_base_url(request):
         path = urlparse(hx_url).path
         if path:
             return path
-    if request.path.startswith("/inline-edit/"):
-        return reverse("assignment-list")
     return request.path
 
 
