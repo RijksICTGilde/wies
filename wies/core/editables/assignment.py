@@ -39,7 +39,6 @@ def _save_organizations(assignment, value):
 
 
 def _organizations_audit_format(value) -> str:
-    """`OrgName (primair), OrgName, ...` for audit events."""
     if not value:
         return "geen"
     parts = []

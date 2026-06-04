@@ -130,11 +130,6 @@ def get_sort_state(request, field):
 
 
 def breadcrumb_base_url(request):
-    """Path of the page hosting the side panel, so breadcrumb links stay there.
-
-    For HTMX requests (inline-edit re-renders), use ``HX-Current-URL`` —
-    ``request.path`` would point at the inline-edit endpoint.
-    """
     hx_url = request.headers.get("HX-Current-URL", "")
     if hx_url:
         path = urlparse(hx_url).path

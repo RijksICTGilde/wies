@@ -1997,9 +1997,6 @@ def assignment_events_partial(request, pk):
 
 
 def _attach_audit_render_data(event) -> None:
-    """Decide how to render this event (inline / textarea / collection)
-    by looking up the matching Editable spec. Done here so presentation
-    changes apply to existing events."""
     event.render_kind = "text"
     event.diff_entries = None
 
@@ -2582,12 +2579,6 @@ _AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "Organization
 
 
 def _record_editable_change(editable, obj, object_type, old_value, new_value, user) -> None:
-    """Building block: emit a single 'field X changed' event if old != new.
-
-    Stores raw values only. Presentation (textarea-vs-inline, etc.) is
-    decided at render time from the spec — keeping events forward-
-    compatible with format / language changes.
-    """
     formatter = editable.audit_format or (lambda v: str(v or ""))
     old_text = formatter(old_value)
     new_text = formatter(new_value)
@@ -2609,17 +2600,6 @@ def _record_editable_change(editable, obj, object_type, old_value, new_value, us
 
 
 def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_editables=None) -> None:
-    """Record audit events for an inline-edit save on a tracked model.
-
-    Dispatches by spec type:
-    - Editable: emit one event when the formatted value changed.
-    - EditableGroup: emit one event per child Editable that changed.
-    - EditableCollection: emit one event storing the audit_state
-      snapshots as raw old_value / new_value. The diff function runs
-      at render time, not here.
-
-    No-op on models not in ``_AUDIT_OBJECT_TYPES``.
-    """
     object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
     if object_type is None:
         return
@@ -2654,10 +2634,6 @@ def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_edita
 
 
 def _diff_collection_state(old_state: list[dict], new_state: list[dict]) -> list[dict]:
-    """Generic by-``id`` diff between two audit_state snapshots —
-    produces ``[{"old": row|None, "new": row|None}, ...]``. Added rows
-    have ``old=None``, removed rows have ``new=None``, modified rows
-    carry both. Order: additions, removals, modifications."""
     old_by_id = {r["id"]: r for r in old_state}
     new_by_id = {r["id"]: r for r in new_state}
     changes: list[dict] = [{"old": None, "new": r} for r in new_state if r["id"] not in old_by_id]

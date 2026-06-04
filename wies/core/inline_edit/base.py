@@ -41,17 +41,13 @@ class Editable:
     display: str | Callable[[Model], Any] | None = None
     save: Callable[[Model, Any], None] | None = None
 
-    # For unbound editables (no 1:1 model field). `form_field_factory`
-    # takes priority over field inference; `initial` reads the current value.
+    # For unbound editables (no 1:1 model field).
     form_field_factory: forms.Field | Callable[[], forms.Field] | None = None
     initial: Callable[[Model], Any] | None = None
 
-    # Render the current value as a short human string for audit events.
-    # Defaults to ``str(value or "")`` when unset.
     audit_format: Callable[[Any], str] | None = None
 
-    # Set by EditableSet.__init_subclass__ — the attribute name on the set.
-    # Identifier used in URLs / registry keys / DOM target ids.
+    # Set by EditableSet.__init_subclass__.
     name: str | None = None
 
     def form_field(self) -> forms.Field:
@@ -102,28 +98,13 @@ class EditableCollection:
     formset_factory: Callable[..., Any]
     initial: Callable[[Model], list[dict]]
     save: Callable[[Model, Any], None]
-    # Body template included inside collection_form.html; receives the
-    # formset as ``formset``.
     form_template: str | None = None
     display: str | Callable[[Model], Any] | None = None
-    # Primitive snapshot (JSON-serializable: rows of dicts keyed by
-    # ``id``) of the collection state, used at save time to diff against
-    # the post-save state. Required to opt this collection into audit
-    # events; the resulting per-row changes are stored as
-    # ``context["changes"]``.
     audit_state: Callable[[Model], list[dict]] | None = None
-    # Render-time formatter for one change. Receives
-    # ``{"old": dict|None, "new": dict|None}`` and returns the bullet
-    # entry ``{"text": str, "old"?: str, "new"?: str}`` the timeline
-    # shows. Called at render time so format / language changes apply
-    # retroactively to existing events.
     render_change: Callable[[dict], dict] | None = None
-    # Suppress the auto-rendered pencil + clickable-value wrapper on the
-    # display partial. Use when the parent template provides its own
-    # edit trigger (e.g. the "Team bewerken" button).
     hide_edit_button: bool = False
     name: str | None = None
-    # Set by EditableSet.__init_subclass__ — the model owning this collection.
+    # Set by EditableSet.__init_subclass__.
     model: type[Model] | None = None
 
 
