@@ -100,8 +100,6 @@ def _save_services(assignment, formset):
 
 
 def _services_audit_state(assignment) -> list[dict]:
-    """Primitive snapshot of services + their placement for audit
-    storage — no model instances, all JSON-serializable."""
     return [
         {
             "id": row["id"],
@@ -120,9 +118,6 @@ def _service_row_label(row: dict) -> str:
 
 
 def _services_render_change(change: dict) -> dict:
-    """Render-time formatter for one services change. Receives
-    ``{"old": row|None, "new": row|None}`` and returns the bullet entry
-    the timeline shows."""
     old, new = change.get("old"), change.get("new")
     if old is None:
         return {"text": f"Toegevoegd: {_service_row_label(new)}"}
@@ -132,9 +127,6 @@ def _services_render_change(change: dict) -> dict:
     new_label = _service_row_label(new)
     if old_label != new_label:
         return {"text": f"Gewijzigd: van {old_label} naar {new_label}"}
-    # Description-only change: emit toegevoegd / verwijderd / gewijzigd
-    # depending on whether either side was empty, so the bullet stays
-    # honest and the template skips empty Van/Naar blocks.
     old_desc = old.get("description") or ""
     new_desc = new.get("description") or ""
     if not old_desc:
