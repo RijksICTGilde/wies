@@ -18,8 +18,8 @@
             maakte deze opdracht aan
           {% elif event.render_kind == "text" %}
             wijzigde <strong>{{ event.context.field_label }}</strong>
-            {% if event.context.old_value %}van "{{ event.context.old_value }}"{% endif %}
-            naar "{{ event.context.new_value }}"
+            {% if event.formatted_old %}van "{{ event.formatted_old }}"{% endif %}
+            naar "{{ event.formatted_new }}"
           {% else %}
             wijzigde <strong>{{ event.context.field_label }}</strong>
           {% endif %}
@@ -57,12 +57,12 @@
               {% endfor %}
             </ul>
           {% elif event.render_kind == "textarea" %}
-            {% if event.context.old_value %}
-              {% with label="Van", value=event.context.old_value %}
+            {% if event.formatted_old %}
+              {% with label="Van", value=event.formatted_old %}
                 {% include "parts/event_value_block.html" %}
               {% endwith %}
             {% endif %}
-            {% with label="Naar", value=event.context.new_value %}
+            {% with label="Naar", value=event.formatted_new %}
               {% include "parts/event_value_block.html" %}
             {% endwith %}
           {% endif %}

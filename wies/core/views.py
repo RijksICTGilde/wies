@@ -1999,6 +1999,8 @@ def assignment_events_partial(request, pk):
 def _attach_audit_render_data(event) -> None:
     event.render_kind = "text"
     event.diff_entries = None
+    event.formatted_old = event.context.get("old_value")
+    event.formatted_new = event.context.get("new_value")
 
     if event.action != "update":
         return
@@ -2021,6 +2023,10 @@ def _attach_audit_render_data(event) -> None:
     widget = getattr(spec, "widget", None)
     if isinstance(widget, forms.Textarea) or (isinstance(widget, type) and issubclass(widget, forms.Textarea)):
         event.render_kind = "textarea"
+
+    formatter = getattr(spec, "render_value", None) or (lambda v: str(v or ""))
+    event.formatted_old = formatter(event.context.get("old_value"))
+    event.formatted_new = formatter(event.context.get("new_value"))
 
 
 def user_profile(request):
@@ -2578,11 +2584,19 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
 _AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "OrganizationUnit": "OrganizationUnit"}
 
 
+def _default_audit_state(value):
+    """Fallback that keeps JSON-native types intact and stringifies the rest
+    (dates, model instances, etc.)."""
+    if value is None or isinstance(value, (str, int, float, bool, list, dict)):
+        return value
+    return str(value)
+
+
 def _record_editable_change(editable, obj, object_type, old_value, new_value, user) -> None:
-    formatter = editable.audit_format or (lambda v: str(v or ""))
-    old_text = formatter(old_value)
-    new_text = formatter(new_value)
-    if old_text == new_text:
+    to_state = editable.audit_state or _default_audit_state
+    old_state = to_state(old_value)
+    new_state = to_state(new_value)
+    if old_state == new_state:
         return
     create_event(
         object_type=object_type,
@@ -2593,8 +2607,8 @@ def _record_editable_change(editable, obj, object_type, old_value, new_value, us
         context={
             "field_name": editable.field or editable.name or "",
             "field_label": editable.label or editable.name or "",
-            "old_value": old_text,
-            "new_value": new_text,
+            "old_value": old_state,
+            "new_value": new_state,
         },
     )
 

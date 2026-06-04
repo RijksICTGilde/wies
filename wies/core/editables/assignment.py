@@ -38,17 +38,21 @@ def _save_organizations(assignment, value):
             )
 
 
-def _organizations_audit_format(value) -> str:
+def _organizations_audit_state(value) -> list[dict]:
     if not value:
+        return []
+    return [{"name": (row["organization"].label or row["organization"].name), "role": row["role"]} for row in value]
+
+
+def _organizations_render_value(state) -> str:
+    if not state:
         return "geen"
     parts = []
-    for row in value:
-        org = row["organization"]
-        name = org.label or org.name
+    for row in state:
         if row["role"] == "PRIMARY":
-            parts.append(f"{name} (primair)")
+            parts.append(f"{row['name']} (primair)")
         else:
-            parts.append(name)
+            parts.append(row["name"])
     return ", ".join(parts)
 
 
@@ -185,7 +189,8 @@ class AssignmentEditables(EditableSet):
         form_field_factory=lambda: OrganizationsField(required=True),
         initial=_organizations_initial,
         save=_save_organizations,
-        audit_format=_organizations_audit_format,
+        audit_state=_organizations_audit_state,
+        render_value=_organizations_render_value,
         display="rvo/forms/displays/organizations.html",
     )
 

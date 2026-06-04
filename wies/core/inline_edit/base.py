@@ -46,9 +46,14 @@ class Editable:
     form_field_factory: forms.Field | Callable[[], forms.Field] | None = None
     initial: Callable[[Model], Any] | None = None
 
-    # Render the current value as a short human string for audit events.
-    # Defaults to ``str(value or "")`` when unset.
-    audit_format: Callable[[Any], str] | None = None
+    # Convert the field's raw value to a JSON-serializable snapshot
+    # stored as the event's ``old_value`` / ``new_value``. Default:
+    # identity (the value must already be JSON-serializable).
+    audit_state: Callable[[Any], Any] | None = None
+    # Render the audit snapshot as a string for the timeline. Called at
+    # render time, so format / language changes apply retroactively to
+    # existing events. Default: ``str(value or "")``.
+    render_value: Callable[[Any], str] | None = None
 
     # Set by EditableSet.__init_subclass__ — the attribute name on the set.
     # Identifier used in URLs / registry keys / DOM target ids.
