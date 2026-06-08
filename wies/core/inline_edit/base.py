@@ -46,9 +46,9 @@ class Editable:
     form_field_factory: forms.Field | Callable[[], forms.Field] | None = None
     initial: Callable[[Model], Any] | None = None
 
-    # Convert the field's raw value to a JSON-serializable snapshot
-    # stored as the event's ``old_value`` / ``new_value``. Default:
-    # identity (the value must already be JSON-serializable).
+    # Convert the field's raw value to a snapshot stored as the event's
+    # ``old_value`` / ``new_value``. Required when the raw value isn't
+    # encodable by ``DjangoJSONEncoder`` (e.g. a model instance).
     audit_state: Callable[[Any], Any] | None = None
     # Format an audit snapshot as a string for the timeline.
     # Default: ``str(value or "")``.
@@ -110,9 +110,9 @@ class EditableCollection:
     # formset as ``formset``.
     form_template: str | None = None
     display: str | Callable[[Model], Any] | None = None
-    # Primitive snapshot (JSON-serializable rows keyed by ``id``) of
-    # the collection state. Required to opt this collection into audit
-    # events.
+    # Snapshot of the collection state — rows keyed by ``id``, each
+    # encodable by ``DjangoJSONEncoder``. Required to opt this
+    # collection into audit events.
     audit_state: Callable[[Model], list[dict]] | None = None
     # Formatter for one ``{"old": dict|None, "new": dict|None}`` change
     # entry; returns ``{"text": str, "old"?: str, "new"?: str}`` for the

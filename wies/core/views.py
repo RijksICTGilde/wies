@@ -2584,14 +2584,8 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
 _AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "OrganizationUnit": "OrganizationUnit"}
 
 
-def _default_audit_state(value):
-    if value is None or isinstance(value, (str, int, float, bool, list, dict)):
-        return value
-    return str(value)
-
-
 def _record_editable_change(editable, obj, object_type, old_value, new_value, user) -> None:
-    to_state = editable.audit_state or _default_audit_state
+    to_state = editable.audit_state or (lambda v: v)
     old_state = to_state(old_value)
     new_state = to_state(new_value)
     if old_state == new_state:

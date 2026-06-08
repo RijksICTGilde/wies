@@ -174,6 +174,7 @@ class AssignmentEditables(EditableSet):
         required=True,
         empty_label=" ",
         error_messages={"required": "Selecteer een business manager."},
+        audit_state=lambda c: c.name if c else None,
         display="rvo/forms/displays/assignment_owner.html",
     )
 
