@@ -2585,8 +2585,6 @@ _AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "Organization
 
 
 def _default_audit_state(value):
-    """Fallback that keeps JSON-native types intact and stringifies the rest
-    (dates, model instances, etc.)."""
     if value is None or isinstance(value, (str, int, float, bool, list, dict)):
         return value
     return str(value)

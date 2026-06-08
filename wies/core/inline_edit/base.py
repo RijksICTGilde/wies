@@ -50,9 +50,8 @@ class Editable:
     # stored as the event's ``old_value`` / ``new_value``. Default:
     # identity (the value must already be JSON-serializable).
     audit_state: Callable[[Any], Any] | None = None
-    # Format one side of an audit snapshot for the timeline. Called once
-    # with the old_value, once with the new_value. Default:
-    # ``str(value or "")``.
+    # Format an audit snapshot as a string for the timeline.
+    # Default: ``str(value or "")``.
     render_change: Callable[[Any], str] | None = None
 
     # Set by EditableSet.__init_subclass__ — the attribute name on the set.
@@ -111,17 +110,13 @@ class EditableCollection:
     # formset as ``formset``.
     form_template: str | None = None
     display: str | Callable[[Model], Any] | None = None
-    # Primitive snapshot (JSON-serializable: rows of dicts keyed by
-    # ``id``) of the collection state, used at save time to diff against
-    # the post-save state. Required to opt this collection into audit
-    # events; the resulting per-row changes are stored as
-    # ``context["changes"]``.
+    # Primitive snapshot (JSON-serializable rows keyed by ``id``) of
+    # the collection state. Required to opt this collection into audit
+    # events.
     audit_state: Callable[[Model], list[dict]] | None = None
-    # Render-time formatter for one change. Receives
-    # ``{"old": dict|None, "new": dict|None}`` and returns the bullet
-    # entry ``{"text": str, "old"?: str, "new"?: str}`` the timeline
-    # shows. Called at render time so format / language changes apply
-    # retroactively to existing events.
+    # Formatter for one ``{"old": dict|None, "new": dict|None}`` change
+    # entry; returns ``{"text": str, "old"?: str, "new"?: str}`` for the
+    # timeline.
     render_change: Callable[[dict], dict] | None = None
     # Suppress the auto-rendered pencil + clickable-value wrapper on the
     # display partial. Use when the parent template provides its own

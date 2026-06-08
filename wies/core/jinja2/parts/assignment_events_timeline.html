@@ -20,7 +20,7 @@
             wijzigde <strong>{{ event.context.field_label }}</strong>
             {% if event.formatted_old %}van "{{ event.formatted_old }}"{% endif %}
             naar "{{ event.formatted_new }}"
-          {% else %}
+          {% elif event.render_kind in ("textarea", "collection") %}
             wijzigde <strong>{{ event.context.field_label }}</strong>
           {% endif %}
           <div class="event-timeline__meta">
