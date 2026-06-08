@@ -37,7 +37,9 @@
               </div>
             {% endif %}
             <div class="assignment-card__subtitle">
-              {% for tag in assignment.tags %}<c-tag type="default">{{ tag.skill if tag is mapping else tag }}</c-tag>{% endfor %}
+              {% for tag in assignment.tags %}
+                <c-tag type="default">{{ tag.skill if tag is mapping else tag }}</c-tag>
+              {% endfor %}
             </div>
           </div>
           {% set descriptions = [] %}

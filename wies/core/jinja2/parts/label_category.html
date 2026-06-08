@@ -41,7 +41,9 @@
       Label toevoegen
       </c-button>
     </form>
-    {% if errors and errors.name %}<div class="form-error">{{ errors.name }}</div>{% endif %}
+    {% if errors and errors.name %}
+      <div class="form-error">{{ errors.name }}</div>
+    {% endif %}
   </div>
 {% else %}
   <c-paragraph class="empty-category-message">Geen labels in deze categorie</c-paragraph>
