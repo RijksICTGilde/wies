@@ -11,6 +11,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
@@ -147,7 +148,7 @@ def _make_team_member_entry(
     }
 
 
-def _build_assignment_panel_data(assignment, request, breadcrumb_base):
+def _build_assignment_panel_data(assignment, request):
     """Shared helper to build assignment panel context data for both views."""
     today = timezone.now().date()
     viewer = getattr(request.user, "colleague", None)
@@ -221,16 +222,6 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
 
     team_members = vacancy_list + list(current_grouped.values()) + list(historical_grouped.values())
 
-    primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
-        "organization__parent__parent__parent__parent"
-    )
-    involved = assignment.organization_relations.filter(role="INVOLVED").select_related(
-        "organization__parent__parent__parent__parent"
-    )
-    org_breadcrumbs = [
-        {**get_org_breadcrumb(rel.organization, breadcrumb_base), "role": rel.role} for rel in [*primary, *involved]
-    ]
-
     owner_mailto_href = ""
     if assignment.owner and assignment.owner.email:
         opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.id}")
@@ -258,7 +249,7 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         "show_updates_tab": assignment.source != "otys_iir",
         "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
         "owner_mailto_href": owner_mailto_href,
-        "org_breadcrumbs": org_breadcrumbs,
+        "organization_count": assignment.organization_relations.count(),
     }
 
 
@@ -948,7 +939,7 @@ class PlacementListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
             except Assignment.DoesNotExist:
                 pass
         return context
@@ -1202,7 +1193,7 @@ class AssignmentListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
             except Assignment.DoesNotExist:
                 pass
 
@@ -1992,7 +1983,7 @@ def label_delete(request, pk):
 
 def assignment_events_partial(request, pk):
     assignment = get_object_or_404(Assignment, pk=pk)
-    events = (
+    events = list(
         Event.objects.filter(
             object_type="Assignment",
             object_id=assignment.id,
@@ -2000,7 +1991,42 @@ def assignment_events_partial(request, pk):
         .select_related("user__colleague")
         .order_by("-timestamp")[:20]
     )
+    for event in events:
+        _attach_audit_render_data(event)
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
+
+
+def _attach_audit_render_data(event) -> None:
+    event.render_kind = "text"
+    event.diff_entries = None
+    event.formatted_old = event.context.get("old_value")
+    event.formatted_new = event.context.get("new_value")
+
+    if event.action != "update":
+        return
+    model_label = event.object_type.lower()
+    editable_set = REGISTRY.get(model_label)
+    if editable_set is None:
+        return
+    spec = editable_set._editables.get(event.context.get("field_name", ""))
+    if spec is None:
+        return
+
+    if isinstance(spec, EditableCollection):
+        event.render_kind = "collection"
+        if spec.render_change is not None:
+            event.diff_entries = [spec.render_change(c) for c in event.context.get("changes", [])]
+        return
+
+    from django import forms  # noqa: PLC0415
+
+    widget = getattr(spec, "widget", None)
+    if isinstance(widget, forms.Textarea) or (isinstance(widget, type) and issubclass(widget, forms.Textarea)):
+        event.render_kind = "textarea"
+
+    formatter = getattr(spec, "render_change", None) or (lambda v: str(v or ""))
+    event.formatted_old = formatter(event.context.get("old_value"))
+    event.formatted_new = formatter(event.context.get("new_value"))
 
 
 def user_profile(request):
@@ -2016,7 +2042,7 @@ def user_profile(request):
     if assignment_id:
         try:
             assignment = Assignment.objects.get(id=assignment_id)
-            panel_data = _build_assignment_panel_data(assignment, request, reverse("home"))
+            panel_data = _build_assignment_panel_data(assignment, request)
         except Assignment.DoesNotExist:
             pass
     elif colleague_id:
@@ -2501,6 +2527,7 @@ def _render_inline_edit_display(
         "user_can_edit": (
             user_can_edit if user_can_edit is not None else has_permission(Verb.UPDATE, obj, request.user, spec)
         ),
+        "hide_edit_button": getattr(spec, "hide_edit_button", False),
         "alert": alert,
     }
     response = render(request, "parts/inline_edit/display.html", ctx)
@@ -2533,8 +2560,12 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
     if request.method == "POST":
         formset = spec.formset_factory(data=request.POST)
         if formset.is_valid():
+            before = spec.audit_state(obj) if spec.audit_state else None
             try:
-                spec.save(obj, formset)
+                with transaction.atomic():
+                    spec.save(obj, formset)
+                    after = spec.audit_state(obj) if spec.audit_state else None
+                    _emit_inline_edit_audit_event(spec, obj, before, after, request.user)
             except ValidationError as exc:
                 for message in exc.messages:
                     _attach_formset_error(formset, message)
@@ -2553,26 +2584,12 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
 _AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "OrganizationUnit": "OrganizationUnit"}
 
 
-def _emit_inline_edit_audit_event(spec, obj, old_value, new_value, user) -> None:
-    """Record an audit event for a single-Editable change on a tracked model.
-
-    Only fires for `Editable` (not Group/Collection) on models in
-    `_AUDIT_OBJECT_TYPES`. No-op when old == new so editing without a
-    real change doesn't create noise.
-    """
-    if not isinstance(spec, Editable):
+def _record_editable_change(editable, obj, object_type, old_value, new_value, user) -> None:
+    to_state = editable.audit_state or (lambda v: v)
+    old_state = to_state(old_value)
+    new_state = to_state(new_value)
+    if old_state == new_state:
         return
-    object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
-    if object_type is None:
-        return
-    if str(old_value or "") == str(new_value or ""):
-        return
-    from django import forms  # noqa: PLC0415
-
-    widget = spec.widget
-    is_textarea = isinstance(widget, forms.Textarea) or (
-        isinstance(widget, type) and issubclass(widget, forms.Textarea)
-    )
     create_event(
         object_type=object_type,
         action="update",
@@ -2580,13 +2597,59 @@ def _emit_inline_edit_audit_event(spec, obj, old_value, new_value, user) -> None
         object_id=obj.id,
         user=user,
         context={
-            "field_type": "textarea" if is_textarea else "text",
-            "field_name": spec.field or spec.name or "",
-            "field_label": spec.label or spec.name or "",
-            "old_value": str(old_value or ""),
-            "new_value": str(new_value or ""),
+            "field_name": editable.field or editable.name or "",
+            "field_label": editable.label or editable.name or "",
+            "old_value": old_state,
+            "new_value": new_state,
         },
     )
+
+
+def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_editables=None) -> None:
+    object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
+    if object_type is None:
+        return
+
+    if isinstance(spec, Editable):
+        _record_editable_change(spec, obj, object_type, before, after, user)
+        return
+
+    if isinstance(spec, EditableGroup):
+        for child in child_editables or []:
+            _record_editable_change(child, obj, object_type, before.get(child.name), after.get(child.name), user)
+        return
+
+    if isinstance(spec, EditableCollection):
+        if spec.audit_state is None:
+            return
+        changes = _diff_collection_state(before, after)
+        if not changes:
+            return
+        create_event(
+            object_type=object_type,
+            action="update",
+            source="user",
+            object_id=obj.id,
+            user=user,
+            context={
+                "field_name": spec.name or "",
+                "field_label": spec.label or spec.name or "",
+                "changes": changes,
+            },
+        )
+
+
+def _diff_collection_state(old_state: list[dict], new_state: list[dict]) -> list[dict]:
+    old_by_id = {r["id"]: r for r in old_state}
+    new_by_id = {r["id"]: r for r in new_state}
+    changes: list[dict] = [{"old": None, "new": r} for r in new_state if r["id"] not in old_by_id]
+    changes.extend({"old": r, "new": None} for r in old_state if r["id"] not in new_by_id)
+    changes.extend(
+        {"old": old_by_id[sid], "new": new_by_id[sid]}
+        for sid in old_by_id.keys() & new_by_id.keys()
+        if old_by_id[sid] != new_by_id[sid]
+    )
+    return changes
 
 
 def inline_edit_view(request, model_label, pk, name):
@@ -2632,10 +2695,24 @@ def inline_edit_view(request, model_label, pk, name):
         )
         form = form_cls(request.POST)
         if form.is_valid():
-            old_value = _current_value(obj, spec) if isinstance(spec, Editable) else None
-            save_spec(spec, editables, form.cleaned_data, obj)
-            new_value = _current_value(obj, spec) if isinstance(spec, Editable) else None
-            _emit_inline_edit_audit_event(spec, obj, old_value, new_value, request.user)
+            if isinstance(spec, EditableGroup):
+                before = {e.name: _current_value(obj, e) for e in editables}
+            else:
+                before = _current_value(obj, spec)
+            with transaction.atomic():
+                save_spec(spec, editables, form.cleaned_data, obj)
+                if isinstance(spec, EditableGroup):
+                    after = {e.name: _current_value(obj, e) for e in editables}
+                else:
+                    after = _current_value(obj, spec)
+                _emit_inline_edit_audit_event(
+                    spec,
+                    obj,
+                    before,
+                    after,
+                    request.user,
+                    child_editables=editables if isinstance(spec, EditableGroup) else None,
+                )
             return _render_inline_edit_display(
                 request,
                 editable_set,

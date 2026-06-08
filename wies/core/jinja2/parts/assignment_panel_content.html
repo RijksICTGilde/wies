@@ -53,7 +53,7 @@
             </dd>
           {% endif %}
           <dt>
-            {% if panel_data.org_breadcrumbs and panel_data.org_breadcrumbs|length > 1 %}
+            {% if panel_data.organization_count > 1 %}
               Opdrachtgevers
             {% else %}
               Opdrachtgever
@@ -91,7 +91,7 @@
               </c-button>
             {% endif %}
           </div>
-          {{ inline_edit(a, "services", hide_edit_button=true) }}
+          {{ inline_edit(a, "services") }}
         </section>
       </div>
     </div>

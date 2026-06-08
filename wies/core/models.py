@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.functions import Lower
@@ -258,7 +259,7 @@ class Event(models.Model):
     action = models.CharField(max_length=16, choices=EventAction)
     source = models.CharField(max_length=16, choices=EventSource)
     object_id = models.IntegerField(null=True, blank=True)
-    context = models.JSONField(default=dict)
+    context = models.JSONField(default=dict, encoder=DjangoJSONEncoder)
 
     class Meta:
         indexes = [models.Index(fields=["object_type", "object_id"])]

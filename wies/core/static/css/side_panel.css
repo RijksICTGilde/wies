@@ -354,7 +354,7 @@ dialog#side_panel::backdrop {
   font-style: italic;
 }
 
-/* Remove misleading hover on team cards (only the name link is clickable) */
+/* Only the colleague-name link is clickable; suppress the row-wide hover. */
 .rvo-item-list__item--filled:hover {
   border-color: var(--rvo-color-grijs-300, #c5ced6);
   background: inherit;
