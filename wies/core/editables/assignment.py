@@ -44,7 +44,7 @@ def _organizations_audit_state(value) -> list[dict]:
     return [{"name": (row["organization"].label or row["organization"].name), "role": row["role"]} for row in value]
 
 
-def _organizations_render_value(state) -> str:
+def _organizations_render_change(state) -> str:
     if not state:
         return "geen"
     parts = []
@@ -190,7 +190,7 @@ class AssignmentEditables(EditableSet):
         initial=_organizations_initial,
         save=_save_organizations,
         audit_state=_organizations_audit_state,
-        render_value=_organizations_render_value,
+        render_change=_organizations_render_change,
         display="rvo/forms/displays/organizations.html",
     )
 

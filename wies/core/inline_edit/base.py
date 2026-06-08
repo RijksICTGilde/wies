@@ -50,10 +50,10 @@ class Editable:
     # stored as the event's ``old_value`` / ``new_value``. Default:
     # identity (the value must already be JSON-serializable).
     audit_state: Callable[[Any], Any] | None = None
-    # Render the audit snapshot as a string for the timeline. Called at
-    # render time, so format / language changes apply retroactively to
-    # existing events. Default: ``str(value or "")``.
-    render_value: Callable[[Any], str] | None = None
+    # Format one side of an audit snapshot for the timeline. Called once
+    # with the old_value, once with the new_value. Default:
+    # ``str(value or "")``.
+    render_change: Callable[[Any], str] | None = None
 
     # Set by EditableSet.__init_subclass__ — the attribute name on the set.
     # Identifier used in URLs / registry keys / DOM target ids.

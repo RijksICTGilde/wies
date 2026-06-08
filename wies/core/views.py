@@ -2024,7 +2024,7 @@ def _attach_audit_render_data(event) -> None:
     if isinstance(widget, forms.Textarea) or (isinstance(widget, type) and issubclass(widget, forms.Textarea)):
         event.render_kind = "textarea"
 
-    formatter = getattr(spec, "render_value", None) or (lambda v: str(v or ""))
+    formatter = getattr(spec, "render_change", None) or (lambda v: str(v or ""))
     event.formatted_old = formatter(event.context.get("old_value"))
     event.formatted_new = formatter(event.context.get("new_value"))
 
