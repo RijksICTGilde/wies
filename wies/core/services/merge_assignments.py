@@ -1,14 +1,9 @@
-"""Merge duplicate assignments that share the same name and owner.
+"""Merge duplicate assignments that share the same name and owner."""
 
-Usage:
-    python manage.py merge_duplicate_assignments           # dry-run, shows plan
-    python manage.py merge_duplicate_assignments --apply   # executes the merge
-"""
+from __future__ import annotations
 
 import logging
 
-from django.core.management.base import BaseCommand
-from django.db import transaction
 from django.db.models import Count
 
 from wies.core.models import Assignment, AssignmentOrganizationUnit
@@ -212,63 +207,3 @@ def merge_group(assignments, *, dry_run=True):
             dupe.delete()
 
     return actions
-
-
-class Command(BaseCommand):
-    help = "Merge duplicate assignments that share the same name and owner."
-
-    def add_arguments(self, parser):
-        parser.add_argument(
-            "--apply",
-            action="store_true",
-            help="Actually perform the merge. Without this flag, only shows the plan.",
-        )
-
-    def handle(self, *args, **options):
-        apply = options["apply"]
-
-        groups = find_duplicate_groups()
-
-        if not groups:
-            self.stdout.write(self.style.SUCCESS("No duplicate assignments found."))
-            return
-
-        self.stdout.write(f"Found {len(groups)} group(s) of duplicate assignments:\n")
-
-        for group in groups:
-            self.stdout.write(self.style.WARNING(f"\n{'=' * 60}"))
-            self.stdout.write(
-                self.style.WARNING(f'Group: "{group[0].name}" (owner: {group[0].owner}) - {len(group)} assignments')
-            )
-            self.stdout.write(f"Target (keep): #{group[0].id}")
-            self.stdout.write("")
-
-            for assignment in group:
-                self.stdout.write(describe_assignment(assignment))
-                self.stdout.write("")
-
-        if not apply:
-            self.stdout.write(self.style.NOTICE("\nDry run - showing merge plan:\n"))
-
-            for group in groups:
-                self.stdout.write(self.style.WARNING(f'Group: "{group[0].name}"'))
-                actions = merge_group(group, dry_run=True)
-                for action in actions:
-                    self.stdout.write(action)
-                self.stdout.write("")
-
-            self.stdout.write(self.style.NOTICE("Run with --apply to execute the merge."))
-            return
-
-        # Apply mode.
-        self.stdout.write(self.style.WARNING("\nApplying merge...\n"))
-
-        with transaction.atomic():
-            for group in groups:
-                self.stdout.write(self.style.WARNING(f'Merging: "{group[0].name}"'))
-                actions = merge_group(group, dry_run=False)
-                for action in actions:
-                    self.stdout.write(action)
-                self.stdout.write("")
-
-        self.stdout.write(self.style.SUCCESS(f"Done. Merged {len(groups)} group(s) of duplicate assignments."))

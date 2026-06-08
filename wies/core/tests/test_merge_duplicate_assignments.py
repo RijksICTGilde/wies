@@ -1,10 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from wies.core.management.commands.merge_duplicate_assignments import (
-    find_duplicate_groups,
-    merge_group,
-)
 from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -13,6 +9,10 @@ from wies.core.models import (
     Placement,
     Service,
     Skill,
+)
+from wies.core.services.merge_assignments import (
+    find_duplicate_groups,
+    merge_group,
 )
 
 User = get_user_model()

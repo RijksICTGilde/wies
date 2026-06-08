@@ -771,9 +771,10 @@ class AssignmentServicesAuditTest(TestCase):
             f"service-{idx}-id": str(service.id),
             f"service-{idx}-skill": str(skill.id),
             f"service-{idx}-description": description,
+            f"service-{idx}-is_filled": "ingevuld" if is_filled else "aanvraag",
+            f"service-{idx}-has_custom_period": "on",  # inherit assignment period
         }
         if is_filled and colleague is not None:
-            data[f"service-{idx}-is_filled"] = "on"
             data[f"service-{idx}-colleague"] = str(colleague.id)
             placement = Placement.objects.filter(service=service).first()
             if placement is not None:
