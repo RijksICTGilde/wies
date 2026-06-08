@@ -50,8 +50,8 @@ class Editable:
     # ``old_value`` / ``new_value``. Required when the raw value isn't
     # encodable by ``DjangoJSONEncoder`` (e.g. a model instance).
     audit_state: Callable[[Any], Any] | None = None
-    # Format an audit snapshot as a string for the timeline.
-    # Default: ``str(value or "")``.
+    # Build the display string shown in the audit log UI for this
+    # field's audit value. Default: ``str(value or "")``.
     render_change: Callable[[Any], str] | None = None
 
     # Set by EditableSet.__init_subclass__ — the attribute name on the set.
@@ -114,9 +114,9 @@ class EditableCollection:
     # encodable by ``DjangoJSONEncoder``. Required to opt this
     # collection into audit events.
     audit_state: Callable[[Model], list[dict]] | None = None
-    # Formatter for one ``{"old": dict|None, "new": dict|None}`` change
-    # entry; returns ``{"text": str, "old"?: str, "new"?: str}`` for the
-    # timeline.
+    # Render one ``{"old": row|None, "new": row|None}`` change as a
+    # bullet line in the audit log UI, optionally with an inline
+    # Van/Naar block under the bullet for long values.
     render_change: Callable[[dict], dict] | None = None
     # Suppress the auto-rendered pencil + clickable-value wrapper on the
     # display partial. Use when the parent template provides its own
