@@ -9,6 +9,12 @@ This files lists the changes during the lifetime of this project.
 - 368: lock icon on externally managed fields (e.g. OTYS)
 - 368: merge duplicate assignments tool in beheer — preview and confirm UI to combine assignments with the same name and owner
 - 368: BM can now edit service descriptions (role omschrijving) via inline-edit
+- 374: (migration)(remove env vars) remove super users and remove automatic generation during container start
+- 331: restore organization breadcrumbs in opdracht side panel; breadcrumb links stay on the page you came from (aanvragen or wie-zit-waar)
+- 331: log audit events for changes to the looptijd (start/end date) and team (rollen + plaatsingen) on opdrachten
+- 331: restore the ability for placed consultants to edit the opdracht name
+- 331: show open rollen (aanvragen) first in the team list again
+- 331: fix team-edit silently wiping placement metadata (specific-dates, source_id) on every save by round-tripping Service/Placement PKs through the formset
 
 ## 2026-06-01
 
@@ -353,3 +359,5 @@ This files lists the changes during the lifetime of this project.
 - add syncing between exact and wies colleagues
 
 ## demo-2025-08-04
+
+...

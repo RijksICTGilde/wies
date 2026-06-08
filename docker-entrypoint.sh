@@ -25,7 +25,5 @@ echo "Database is ready."
 
 python manage.py migrate
 python manage.py setup
-# do not exist if superuser already exists
-python manage.py createsuperuser --noinput || true
 python manage.py ensure_initial_user
 gunicorn -b 0.0.0.0:8000 -w 3 --no-control-socket config.wsgi

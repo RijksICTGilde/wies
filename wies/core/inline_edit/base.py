@@ -46,6 +46,14 @@ class Editable:
     form_field_factory: forms.Field | Callable[[], forms.Field] | None = None
     initial: Callable[[Model], Any] | None = None
 
+    # Convert the field's raw value to a snapshot stored as the event's
+    # ``old_value`` / ``new_value``. Required when the raw value isn't
+    # encodable by ``DjangoJSONEncoder`` (e.g. a model instance).
+    audit_state: Callable[[Any], Any] | None = None
+    # Build the display string shown in the audit log UI for this
+    # field's audit value. Default: ``str(value or "")``.
+    render_change: Callable[[Any], str] | None = None
+
     # Set by EditableSet.__init_subclass__ — the attribute name on the set.
     # Identifier used in URLs / registry keys / DOM target ids.
     name: str | None = None
@@ -106,6 +114,18 @@ class EditableCollection:
     # formset as ``formset``.
     form_template: str | None = None
     display: str | Callable[[Model], Any] | None = None
+    # Snapshot of the collection state — rows keyed by ``id``, each
+    # encodable by ``DjangoJSONEncoder``. Required to opt this
+    # collection into audit events.
+    audit_state: Callable[[Model], list[dict]] | None = None
+    # Render one ``{"old": row|None, "new": row|None}`` change as a
+    # bullet line in the audit log UI, optionally with an inline
+    # Van/Naar block under the bullet for long values.
+    render_change: Callable[[dict], dict] | None = None
+    # Suppress the auto-rendered pencil + clickable-value wrapper on the
+    # display partial. Use when the parent template provides its own
+    # edit trigger (e.g. the "Team bewerken" button).
+    hide_edit_button: bool = False
     name: str | None = None
     # Set by EditableSet.__init_subclass__ — the model owning this collection.
     model: type[Model] | None = None

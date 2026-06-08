@@ -81,6 +81,7 @@ def inline_edit(ctx, obj, name, **extras):
         "display": display,
         "user_can_edit": user_can_edit,
         "external_source": external_source,
+        "hide_edit_button": getattr(spec, "hide_edit_button", False),
         "alert": None,
         "saved": False,
         **extras,

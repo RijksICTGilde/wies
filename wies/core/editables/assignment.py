@@ -20,9 +20,9 @@ def _bdm_queryset():
 def _organizations_initial(assignment):
     return [
         {"organization": rel.organization, "role": rel.role}
-        for rel in assignment.organization_relations.select_related("organization").order_by(
-            "-role", "organization__name"
-        )
+        for rel in assignment.organization_relations.select_related(
+            "organization__parent__parent__parent__parent"
+        ).order_by("-role", "organization__name")
     ]
 
 
@@ -38,6 +38,24 @@ def _save_organizations(assignment, value):
             )
 
 
+def _organizations_audit_state(value) -> list[dict]:
+    if not value:
+        return []
+    return [{"name": (row["organization"].label or row["organization"].name), "role": row["role"]} for row in value]
+
+
+def _organizations_render_change(state) -> str:
+    if not state:
+        return "geen"
+    parts = []
+    for row in state:
+        if row["role"] == "PRIMARY":
+            parts.append(f"{row['name']} (primair)")
+        else:
+            parts.append(row["name"])
+    return ", ".join(parts)
+
+
 def _skill_choices():
     # Matches the shape used by assignment-create so service_row.html renders identically.
     choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
@@ -46,11 +64,7 @@ def _skill_choices():
 
 
 def _services_initial(assignment):
-    """One row per service. Active placement only — historical rows live elsewhere.
-
-    ``skill_name`` / ``service`` are extras for the display partial; the
-    formset ignores unknown keys in ``initial``.
-    """
+    """One row per service, vacancies first."""
     from wies.core.models import Placement  # noqa: PLC0415 — avoids circular import
 
     rows = []
@@ -72,6 +86,7 @@ def _services_initial(assignment):
                 "service": service,
             }
         )
+    rows.sort(key=lambda r: r["is_filled"])
     return rows
 
 
@@ -89,6 +104,43 @@ def _services_formset_factory(data=None, initial=None):
 def _save_services(assignment, formset):
     services_data = extract_services_data(formset)
     apply_services_to_assignment(assignment, services_data)
+
+
+def _services_audit_state(assignment) -> list[dict]:
+    return [
+        {
+            "id": row["id"],
+            "skill_name": row["skill_name"],
+            "colleague_name": row["colleague"].name if row["colleague"] else None,
+            "description": row["description"] or "",
+        }
+        for row in _services_initial(assignment)
+    ]
+
+
+def _service_row_label(row: dict) -> str:
+    skill = row.get("skill_name") or "?"
+    name = row.get("colleague_name")
+    return f"{skill} ({name if name else 'open'})"
+
+
+def _services_render_change(change: dict) -> dict:
+    old, new = change.get("old"), change.get("new")
+    if old is None:
+        return {"text": f"Toegevoegd: {_service_row_label(new)}"}
+    if new is None:
+        return {"text": f"Verwijderd: {_service_row_label(old)}"}
+    old_label = _service_row_label(old)
+    new_label = _service_row_label(new)
+    if old_label != new_label:
+        return {"text": f"Gewijzigd: van {old_label} naar {new_label}"}
+    old_desc = old.get("description") or ""
+    new_desc = new.get("description") or ""
+    if not old_desc:
+        return {"text": f"Toelichting toegevoegd op {new_label}", "new": new_desc}
+    if not new_desc:
+        return {"text": f"Toelichting verwijderd op {new_label}", "old": old_desc}
+    return {"text": f"Toelichting gewijzigd op {new_label}", "old": old_desc, "new": new_desc}
 
 
 def _validate_period(cleaned):
@@ -151,6 +203,7 @@ class AssignmentEditables(EditableSet):
         required=True,
         empty_label=" ",
         error_messages={"required": "Selecteer een business manager."},
+        audit_state=lambda c: c.name if c else None,
         display="rvo/forms/displays/assignment_owner.html",
     )
 
@@ -167,6 +220,8 @@ class AssignmentEditables(EditableSet):
         form_field_factory=lambda: OrganizationsField(required=True),
         initial=_organizations_initial,
         save=_save_organizations,
+        audit_state=_organizations_audit_state,
+        render_change=_organizations_render_change,
         display="rvo/forms/displays/organizations.html",
     )
 
@@ -175,6 +230,9 @@ class AssignmentEditables(EditableSet):
         formset_factory=_services_formset_factory,
         initial=_services_initial,
         save=_save_services,
+        audit_state=_services_audit_state,
+        render_change=_services_render_change,
+        hide_edit_button=True,
         form_template="parts/assignment_services_form.html",
         display="rvo/forms/displays/assignment_services.html",
     )

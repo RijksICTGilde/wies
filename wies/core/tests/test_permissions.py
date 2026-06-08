@@ -1,8 +1,7 @@
 """Tests for the permission engine and the rules registered against it.
 
-Covers the engine surface (verb composition, superuser short-circuit,
-field vs whole-object lookup) and the production rules in
-``permissions.py``.
+Covers the engine surface (verb composition, field vs whole-object
+lookup) and the production rules in ``permissions.py``.
 """
 
 from django.contrib.auth import get_user_model
@@ -51,8 +50,10 @@ class HasPermissionEngineTest(_Setup):
 
         assert has_permission(Verb.UPDATE, self.assignment, AnonymousUser()) is False
 
-    def test_superuser_short_circuits_every_check(self):
-        # Even rules that would deny return True for superusers.
+    def test_superuser_gets_all_perms_via_django_model_backend(self):
+        # The engine no longer short-circuits superusers; they pass because
+        # rules consult user.has_perm(...) and Django's ModelBackend grants
+        # superusers every permission.
         assert has_permission(Verb.UPDATE, self.assignment, self.superuser) is True
         assert has_permission(Verb.UPDATE, self.placement, self.superuser) is True
         assert has_permission(Verb.UPDATE, self.assignment, self.superuser, AssignmentEditables.extra_info) is True

@@ -496,7 +496,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        panel_data = _build_assignment_panel_data(assignment, request, request.path)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         # Verify only current placement's colleague is in current members
         current = [m for m in panel_data["team_members"] if not m["historical"] and not m["is_vacancy"]]
@@ -540,7 +540,7 @@ class AssignmentSidePanelHistoricalFilterTest(TestCase):
         request = factory.get(self.list_url)
         request.user = self.auth_user
 
-        panel_data = _build_assignment_panel_data(assignment, request, request.path)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         # Verify placement ending today is included in current members
         current = [m for m in panel_data["team_members"] if not m["historical"] and not m["is_vacancy"]]
@@ -608,7 +608,7 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        panel_data = _build_assignment_panel_data(assignment, request, request.path)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         historical = [m for m in panel_data["team_members"] if m["historical"]]
         ids = [m["colleague"].id for m in historical]
@@ -637,7 +637,7 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_bob)
-        panel_data = _build_assignment_panel_data(assignment, request, request.path)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         historical = [m for m in panel_data["team_members"] if m["historical"]]
         ids = [m["colleague"].id for m in historical]
@@ -666,7 +666,7 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_unrelated)
-        panel_data = _build_assignment_panel_data(assignment, request, request.path)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         historical = [m for m in panel_data["team_members"] if m["historical"]]
         assert historical == []
@@ -699,7 +699,7 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        panel_data = _build_assignment_panel_data(assignment, request, request.path)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         current_ids = [
             m["colleague"].id for m in panel_data["team_members"] if not m["historical"] and not m["is_vacancy"]
@@ -753,7 +753,7 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        panel_data = _build_assignment_panel_data(assignment, request, request.path)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         current = {
             m["colleague"].id: m["skills"]
@@ -788,7 +788,7 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(user_no_colleague)
-        panel_data = _build_assignment_panel_data(assignment, request, request.path)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         historical = [m for m in panel_data["team_members"] if m["historical"]]
         assert historical == [], "User without colleague should not see historical placements"
@@ -812,7 +812,7 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_unrelated)
-        panel_data = _build_assignment_panel_data(assignment, request, request.path)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         current = [m for m in panel_data["team_members"] if not m["historical"] and not m["is_vacancy"]]
         ids = [m["colleague"].id for m in current]
@@ -837,7 +837,7 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        panel_data = _build_assignment_panel_data(assignment, request, request.path)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         historical = [m for m in panel_data["team_members"] if m["historical"]]
         assert len(historical) == 1
@@ -862,7 +862,7 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_bob)
-        panel_data = _build_assignment_panel_data(assignment, request, request.path)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         historical = [m for m in panel_data["team_members"] if m["historical"]]
         assert len(historical) == 1
@@ -887,7 +887,7 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         )
 
         request = self._make_request(self.user_alice)
-        panel_data = _build_assignment_panel_data(assignment, request, request.path)
+        panel_data = _build_assignment_panel_data(assignment, request)
 
         current = [m for m in panel_data["team_members"] if not m["historical"] and not m["is_vacancy"]]
         assert len(current) == 1

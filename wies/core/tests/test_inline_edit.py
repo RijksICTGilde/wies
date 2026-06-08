@@ -6,6 +6,8 @@ persistence behaviour. Registrations are cleaned up in tearDown to
 avoid leaking into unrelated tests.
 """
 
+import re
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.exceptions import ValidationError
@@ -13,7 +15,7 @@ from django.test import Client, TestCase
 from django.urls import reverse
 
 from wies.core.editables import REGISTRY
-from wies.core.editables.assignment import AssignmentEditables
+from wies.core.editables.assignment import AssignmentEditables, _services_render_change
 from wies.core.editables.placement import PlacementEditables
 from wies.core.editables.service import ServiceEditables
 from wies.core.fields import OrganizationsField
@@ -27,6 +29,7 @@ from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    Event,
     Label,
     LabelCategory,
     OrganizationUnit,
@@ -35,6 +38,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.permission_engine import Verb, registered_rules, rule
+from wies.core.services.users import create_user
 from wies.core.widgets import OrgPickerWidget
 
 User = get_user_model()
@@ -234,19 +238,15 @@ class InlineEditPermissionTest(TestCase):
 class InlineEditGroupTest(TestCase):
     def setUp(self):
         self.client = Client()
-        # Superuser so the engine's is_superuser short-circuit allows
-        # all UPDATEs — these tests focus on group rendering/save, not auth.
-        self.user = User.objects.create_user(
-            email="group@rijksoverheid.nl",
-            first_name="G",
-            last_name="G",
-            is_superuser=True,
-            is_staff=True,
-        )
+        self.user = create_user(None, "G", "G", "group@rijksoverheid.nl")
         self.client.force_login(self.user)
+
+        # Owner so the permission engine allows all UPDATEs
+        # these tests focus on group rendering/save, not auth.
         self.assignment = Assignment.objects.create(
             name="G",
             source="wies",
+            owner=self.user.colleague,
         )
         self._prev_registry = dict(REGISTRY)
 
@@ -302,23 +302,52 @@ class InlineEditGroupTest(TestCase):
         assert self.assignment.start_date is None
         assert self.assignment.end_date is None
 
+    def test_group_post_emits_event_per_changed_field(self):
+        resp = self.client.post(
+            self.url,
+            {"start_date": "2026-03-01", "end_date": "2026-06-30"},
+        )
+        assert resp.status_code == 200
+        events = Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update")
+        field_names = sorted(e.context["field_name"] for e in events)
+        assert field_names == ["end_date", "start_date"]
+
+    def test_group_post_emits_event_only_for_changed_field(self):
+        self.assignment.start_date = "2026-03-01"
+        self.assignment.save()
+        resp = self.client.post(
+            self.url,
+            {"start_date": "2026-03-01", "end_date": "2026-06-30"},
+        )
+        assert resp.status_code == 200
+        events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
+        assert len(events) == 1
+        assert events[0].context["field_name"] == "end_date"
+
+    def test_group_post_no_change_no_events(self):
+        self.assignment.start_date = "2026-03-01"
+        self.assignment.end_date = "2026-06-30"
+        self.assignment.save()
+        resp = self.client.post(
+            self.url,
+            {"start_date": "2026-03-01", "end_date": "2026-06-30"},
+        )
+        assert resp.status_code == 200
+        assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
+
 
 class InlineEditCustomSaveTest(TestCase):
     def setUp(self):
         self.client = Client()
-        # Superuser so permission checks pass; this test focuses on the
-        # custom-save dispatch, not auth.
-        self.user = User.objects.create_user(
-            email="cs@rijksoverheid.nl",
-            first_name="C",
-            last_name="S",
-            is_superuser=True,
-            is_staff=True,
-        )
+        self.user = create_user(None, email="cs@rijksoverheid.nl", first_name="C", last_name="S")
         self.client.force_login(self.user)
+
+        # Owner so permission checks pass;
+        # this test focuses on the custom-save dispatch, not auth.
         self.assignment = Assignment.objects.create(
             name="Before",
             source="wies",
+            owner=self.user.colleague,
         )
         self._prev_registry = dict(REGISTRY)
         self.save_calls = []
@@ -345,19 +374,20 @@ class InlineEditCustomSaveTest(TestCase):
 class InlineEditDisplayTest(TestCase):
     def setUp(self):
         self.client = Client()
-        # Superuser so permission checks pass; this test focuses on
-        # display rendering, not auth.
-        self.user = User.objects.create_user(
+        self.user = create_user(
+            None,
             email="disp@rijksoverheid.nl",
             first_name="D",
             last_name="D",
-            is_superuser=True,
-            is_staff=True,
         )
         self.client.force_login(self.user)
+
+        # Owner so permission checks pass;
+        # this test focuses on display rendering, not auth.
         self.assignment = Assignment.objects.create(
             name="Shown",
             source="wies",
+            owner=self.user.colleague,
         )
         self._prev_registry = dict(REGISTRY)
 
@@ -675,6 +705,255 @@ class AssignmentServicesDisplayTest(TestCase):
         assert "hx-get" not in content[vacant_start:vacant_end]
         assert "href=" not in content[vacant_start:vacant_end]
 
+    def test_vacant_row_renders_before_filled_row(self):
+        """Vacancies-first ordering (issue #331) — even though the filled
+        service was created first."""
+        resp = self.client.get(self.url + "?cancel=true")
+        assert resp.status_code == 200
+        content = resp.content.decode()
+        vacant_pos = content.index("rvo-item-list__item--vacant")
+        filled_pos = content.index("rvo-item-list__item--filled")
+        assert vacant_pos < filled_pos
+
+    def test_display_omits_team_level_edit_button(self):
+        """`EditableCollection.hide_edit_button=True` must apply on every
+        render path — the panel template, the post-save re-render, and
+        a direct GET on the inline-edit URL all suppress the team-level
+        pencil. The parent template provides its own "Team bewerken"
+        trigger."""
+        resp = self.client.get(self.url)
+        assert resp.status_code == 200
+        content = resp.content.decode()
+        team_wrapper = content.split('id="inline-edit-assignment-')[1]
+        # No clickable wrapper, no pencil button on the team-level
+        # editable-field-display (per-row description pencils are still
+        # rendered and unrelated to this check).
+        team_outer = team_wrapper.split("rvo-item-list")[0]
+        assert 'role="button"' not in team_outer
+        assert "edit-icon-button" not in team_outer
+
+
+class AssignmentServicesAuditTest(TestCase):
+    """Saving the services collection emits one audit event with a
+    before/after team summary."""
+
+    FORMSET_MGMT_KEYS = {
+        "service-INITIAL_FORMS": "2",
+        "service-MIN_NUM_FORMS": "1",
+        "service-MAX_NUM_FORMS": "1000",
+    }
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(
+            email="svc-audit@rijksoverheid.nl",
+            first_name="Svc",
+            last_name="Audit",
+            is_superuser=True,
+            is_staff=True,
+        )
+        self.client.force_login(self.user)
+        self.colleague = Colleague.objects.get(user=self.user)
+        self.assignment = Assignment.objects.create(name="A", owner=self.colleague, source="wies")
+        self.skill_python = Skill.objects.create(name="Python")
+        self.skill_java = Skill.objects.create(name="Java")
+        self.filled_service = Service.objects.create(
+            description="Filled", assignment=self.assignment, skill=self.skill_python, source="wies"
+        )
+        self.placement = Placement.objects.create(colleague=self.colleague, service=self.filled_service, source="wies")
+        self.vacant_service = Service.objects.create(
+            description="Vacant", assignment=self.assignment, skill=self.skill_java, source="wies", status="OPEN"
+        )
+        self.url = reverse("inline-edit", args=["assignment", self.assignment.id, "services"])
+
+    def _row(self, idx, *, service, skill, description, is_filled=False, colleague=None):
+        data = {
+            f"service-{idx}-id": str(service.id),
+            f"service-{idx}-skill": str(skill.id),
+            f"service-{idx}-description": description,
+        }
+        if is_filled and colleague is not None:
+            data[f"service-{idx}-is_filled"] = "on"
+            data[f"service-{idx}-colleague"] = str(colleague.id)
+            placement = Placement.objects.filter(service=service).first()
+            if placement is not None:
+                data[f"service-{idx}-placement_id"] = str(placement.id)
+        return data
+
+    def test_services_post_emits_event_on_change(self):
+        # Fill the previously vacant Java service with the colleague — the
+        # diff should list one "Gewijzigd" line for it.
+        data = {
+            "service-TOTAL_FORMS": "2",
+            **self.FORMSET_MGMT_KEYS,
+            **self._row(
+                0,
+                service=self.filled_service,
+                skill=self.skill_python,
+                description="Filled",
+                is_filled=True,
+                colleague=self.colleague,
+            ),
+            **self._row(
+                1,
+                service=self.vacant_service,
+                skill=self.skill_java,
+                description="Vacant",
+                is_filled=True,
+                colleague=self.colleague,
+            ),
+        }
+        resp = self.client.post(self.url, data)
+        assert resp.status_code == 200
+        events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
+        assert len(events) == 1
+        event = events[0]
+        assert event.context["field_name"] == "services"
+        assert event.context["field_label"] == "Team"
+        # Event stores only the rows that changed (delta), not full
+        # team state. Here only the vacant row flipped — one change.
+        changes = event.context["changes"]
+        assert len(changes) == 1
+        change = changes[0]
+        assert change["old"]["id"] == self.vacant_service.id
+        assert change["old"]["colleague_name"] is None
+        assert change["new"]["colleague_name"] == self.colleague.name
+
+    def test_services_post_no_change_no_event(self):
+        data = {
+            "service-TOTAL_FORMS": "2",
+            **self.FORMSET_MGMT_KEYS,
+            **self._row(
+                0,
+                service=self.filled_service,
+                skill=self.skill_python,
+                description="Filled",
+                is_filled=True,
+                colleague=self.colleague,
+            ),
+            **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
+        }
+        resp = self.client.post(self.url, data)
+        assert resp.status_code == 200
+        assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
+
+    def test_edit_formset_renders_pk_hidden_inputs(self):
+        """The hidden ``service-N-id`` and ``service-N-placement_id``
+        inputs must render so the formset round-trips PKs back to
+        apply_services_to_assignment. Without them every save would
+        delete-and-recreate (silently dropping Placement metadata)."""
+        resp = self.client.get(self.url + "?edit=true")
+        assert resp.status_code == 200
+        content = resp.content.decode()
+
+        def hidden_value(field_name):
+            m = re.search(
+                rf'<input type="hidden"\s+name="{re.escape(field_name)}"\s+value="([^"]*)"',
+                content,
+            )
+            return m.group(1) if m else None
+
+        # Vacancies-first sort: vacant row renders at index 0, filled at 1.
+        assert hidden_value("service-0-id") == str(self.vacant_service.id)
+        assert hidden_value("service-0-placement_id") == ""
+        assert hidden_value("service-1-id") == str(self.filled_service.id)
+        assert hidden_value("service-1-placement_id") == str(self.placement.id)
+
+    def test_description_only_edit_preserves_pks_and_emits_one_diff_line(self):
+        """Editing only the description must update the existing Service
+        in place (same PK, Placement kept with its metadata) and the
+        audit event must list exactly one Toelichting line."""
+        original_service_id = self.filled_service.id
+        original_placement_id = self.placement.id
+        # Vacancies-first ordering: vacant row is index 0, filled at index 1.
+        data = {
+            "service-TOTAL_FORMS": "2",
+            **self.FORMSET_MGMT_KEYS,
+            **self._row(0, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
+            **self._row(
+                1,
+                service=self.filled_service,
+                skill=self.skill_python,
+                description="New description",
+                is_filled=True,
+                colleague=self.colleague,
+            ),
+        }
+        resp = self.client.post(self.url, data)
+        assert resp.status_code == 200
+
+        self.filled_service.refresh_from_db()
+        self.placement.refresh_from_db()
+        assert self.filled_service.id == original_service_id
+        assert self.filled_service.description == "New description"
+        assert self.placement.id == original_placement_id
+
+        events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
+        assert len(events) == 1
+        changes = events[0].context["changes"]
+        assert len(changes) == 1
+        assert changes[0]["old"]["id"] == self.filled_service.id
+        assert changes[0]["old"]["description"] == "Filled"
+        assert changes[0]["new"]["description"] == "New description"
+
+
+class ServicesRenderChangeUnitTests(TestCase):
+    """Pure-function checks for `_services_render_change` covering each
+    branch (added / removed / skill changed / colleague filled /
+    description add/remove/change)."""
+
+    def _row(self, sid, skill_name, colleague_name=None, description=""):
+        return {"id": sid, "skill_name": skill_name, "colleague_name": colleague_name, "description": description}
+
+    def test_added(self):
+        change = {"old": None, "new": self._row(2, "Java", None)}
+        assert _services_render_change(change) == {"text": "Toegevoegd: Java (open)"}
+
+    def test_removed(self):
+        change = {"old": self._row(2, "Java", None), "new": None}
+        assert _services_render_change(change) == {"text": "Verwijderd: Java (open)"}
+
+    def test_colleague_filled(self):
+        change = {"old": self._row(1, "Java", None), "new": self._row(1, "Java", "Anna")}
+        assert _services_render_change(change) == {"text": "Gewijzigd: van Java (open) naar Java (Anna)"}
+
+    def test_skill_changed(self):
+        change = {"old": self._row(1, "Python", "Jan"), "new": self._row(1, "TypeScript", "Jan")}
+        assert _services_render_change(change) == {
+            "text": "Gewijzigd: van Python (Jan) naar TypeScript (Jan)",
+        }
+
+    def test_description_changed(self):
+        change = {
+            "old": self._row(1, "Python", "Jan", description="oud"),
+            "new": self._row(1, "Python", "Jan", description="nieuw"),
+        }
+        assert _services_render_change(change) == {
+            "text": "Toelichting gewijzigd op Python (Jan)",
+            "old": "oud",
+            "new": "nieuw",
+        }
+
+    def test_description_added_from_empty(self):
+        change = {
+            "old": self._row(1, "Python", "Jan", description=""),
+            "new": self._row(1, "Python", "Jan", description="nieuw"),
+        }
+        assert _services_render_change(change) == {
+            "text": "Toelichting toegevoegd op Python (Jan)",
+            "new": "nieuw",
+        }
+
+    def test_description_removed_to_empty(self):
+        change = {
+            "old": self._row(1, "Python", "Jan", description="oud"),
+            "new": self._row(1, "Python", "Jan", description=""),
+        }
+        assert _services_render_change(change) == {
+            "text": "Toelichting verwijderd op Python (Jan)",
+            "old": "oud",
+        }
+
 
 class ServiceDescriptionPermissionTest(TestCase):
     """Field-level permission: a consultant placed on a service may
@@ -885,6 +1164,22 @@ class InlineOrganizationsEditTest(TestCase):
         self.assertContains(resp, f'data-org-id="{self.org_b.id}"')
         self.assertContains(resp, 'data-org-role="PRIMARY"')
         self.assertContains(resp, 'data-org-role="INVOLVED"')
+
+    def test_display_renders_breadcrumb_ancestors(self):
+        """Regression for issue #331 — the editables refactor dropped the
+        ancestor chain; it must render as clickable links with separators
+        above the org label itself."""
+        ministry = OrganizationUnit.objects.create(name="Ministerie X", label="MinX")
+        directorate = OrganizationUnit.objects.create(name="Directie Y", label="DirY", parent=ministry)
+        team = OrganizationUnit.objects.create(name="Team Z", label="TeamZ", parent=directorate)
+        AssignmentOrganizationUnit.objects.create(assignment=self.assignment, organization=team, role="PRIMARY")
+        url = reverse("inline-edit", args=["assignment", self.assignment.id, "organizations"])
+        resp = self.client.get(url)
+        assert resp.status_code == 200
+        content = resp.content.decode()
+        assert content.index("MinX") < content.index("DirY") < content.index("TeamZ")
+        self.assertContains(resp, 'class="org-breadcrumb__ancestor"')
+        self.assertContains(resp, 'class="org-breadcrumb__separator"')
 
 
 class ColleagueLabelsInlineEditTest(TestCase):

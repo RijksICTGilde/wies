@@ -6,6 +6,13 @@
 <div class="service-row"
      data-service-index="{{ row_index }}"
      data-has-choice="{{ 'true' if _has_choice else 'false' }}">
+  {# Round-trip PKs so apply_services_to_assignment can update in place. #}
+  <input type="hidden"
+         name="{{ svc_form.id.html_name }}"
+         value="{{ svc_form.id.value() or '' }}">
+  <input type="hidden"
+         name="{{ svc_form.placement_id.html_name }}"
+         value="{{ svc_form.placement_id.value() or '' }}">
   <div class="service-row__status-toggle">{{ svc_form.is_filled.as_widget() }}</div>
   <div class="service-row__details"
        {% if not _has_choice %}style="display:none"{% endif %}>
