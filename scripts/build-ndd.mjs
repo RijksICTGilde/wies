@@ -70,9 +70,24 @@ for (const fname of readdirSync(fontsDir)) {
   copyFileSync(join(fontsDir, fname), join(assetsDir, fname));
 }
 
-// 5. Concatenate CSS files, rewriting font url(../fonts/...) to assets/...
+// 5. Inline @import statements and rewrite font url() references
+const cssDir = join(pkgRoot, "dist/css");
+
+function resolveImports(css, baseDir) {
+  return css.replace(/@import\s+["'](.+?)["']\s*;/g, (match, importPath) => {
+    const resolved = join(baseDir, importPath);
+    if (existsSync(resolved)) {
+      const imported = readFileSync(resolved, "utf8");
+      return `/* inlined: ${importPath} */\n${resolveImports(imported, dirname(resolved))}`;
+    }
+    console.warn(`  warn: unresolved @import '${importPath}'`);
+    return match;
+  });
+}
+
 function loadAndRewrite(src) {
-  const css = readFileSync(src, "utf8");
+  let css = readFileSync(src, "utf8");
+  css = resolveImports(css, dirname(src));
   return css.replace(
     /url\(\s*(['"]?)([^'")]+)\1\s*\)/g,
     (match, quote, ref) => {
@@ -90,7 +105,7 @@ function loadAndRewrite(src) {
 }
 
 const combined = [
-  `/* @nldd/design-system ${pkg.version} — settings.css */`,
+  `/* @nldd/design-system ${pkg.version} — settings.css (with inlined imports) */`,
   loadAndRewrite(cssSrc),
   `/* @nldd/design-system ${pkg.version} — rich-text.css */`,
   loadAndRewrite(richTextCssSrc),
