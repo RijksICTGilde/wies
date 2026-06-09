@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/nldd/filters.css') }}">
+  <link rel="stylesheet" href="{{ static('css/nldd/table.css') }}">
+  <link rel="stylesheet" href="{{ static('css/nldd/side_panel.css') }}">
+  <link rel="stylesheet" href="{{ static('css/nldd/client_modal.css') }}">
+  <script src="{{ static('js/nldd/htmx-bridge.js') }}" defer></script>
+  <script src="{{ static('js/nldd/side_panel.js') }}" defer></script>
+  <script src="{{ static('js/nldd/client_modal.js') }}" defer></script>
+{% endblock extra_head %}
+{% block sidebar %}
+  {% include "parts/filter_sidebar.html" %}
+{% endblock sidebar %}
+{% block content %}
+  {% include "parts/filter_and_table_container.html" %}
+{% endblock content %}
+{% block panel %}
+  {# nldd-sheet zit altijd in de DOM; HTMX vult #nldd-side-panel-content #}
+  <nldd-sheet id="nldd-side-panel" placement="right" accessible-label="Detail">
+  <div id="nldd-side-panel-content">
+    {% if panel_data %}
+      {% include panel_data.panel_content_template %}
+    {% endif %}
+  </div>
+  </nldd-sheet>
+  <div id="nldd-client-modal-container"></div>
+{% endblock panel %}

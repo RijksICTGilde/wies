@@ -1,25 +1,25 @@
 {% if value %}
-  <div class="ndd-team-list">
+  <div class="nldd-team-list">
     {% for row in value %}
       {% if row.colleague %}
         {% set colleague_url = '/opdrachten/?collega=' ~ row.colleague.id %}
-        <div class="ndd-team-member">
+        <div class="nldd-team-member">
           <div class="service-card__name">
-            <span class="ndd-avatar">{{ row.colleague.name|first|upper }}</span>
+            <span class="nldd-avatar">{{ row.colleague.name|first|upper }}</span>
             <span>
               <a href="{{ colleague_url }}"
                  hx-get="{{ colleague_url }}"
-                 hx-target="#ndd-side-panel-content">{{ row.colleague.name }}</a> · {{ row.skill_name }}
+                 hx-target="#nldd-side-panel-content">{{ row.colleague.name }}</a> · {{ row.skill_name }}
             </span>
           </div>
           <div class="service-card__description">{{ inline_edit(row.service, "description") }}</div>
         </div>
       {% else %}
-        <div class="ndd-team-member ndd-team-member--vacant">
+        <div class="nldd-team-member nldd-team-member--vacant">
           <div class="service-card__name">
-            <span class="ndd-avatar ndd-avatar--vacant">?</span>
+            <span class="nldd-avatar nldd-avatar--vacant">?</span>
             <span>
-              <em class="ndd-text-secondary">Aanvraag</em>
+              <em class="nldd-text-secondary">Aanvraag</em>
               <div class="service-description-line">{{ row.skill_name }}</div>
             </span>
           </div>
@@ -29,5 +29,5 @@
     {% endfor %}
   </div>
 {% else %}
-  <em class="ndd-text-secondary">Geen team gevonden.</em>
+  <em class="nldd-text-secondary">Geen team gevonden.</em>
 {% endif %}

@@ -249,7 +249,7 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         owner_mailto_href = f"mailto:{assignment.owner.email}?subject={subject}&body={body}"
 
     return {
-        "panel_content_template": "ndd/parts/assignment_panel_content.html",
+        "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
         "close_url": _build_close_url(request),
         "assignment": assignment,
@@ -442,7 +442,7 @@ def _build_colleague_panel_data(colleague, request):
     assignments = _get_colleague_assignments(request, colleague, viewer)
 
     return {
-        "panel_content_template": "ndd/parts/colleague_panel_content.html",
+        "panel_content_template": "parts/colleague_panel_content.html",
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
@@ -488,7 +488,7 @@ def _build_placement_panel_data(placement, request):
     }
 
     return {
-        "panel_content_template": "ndd/parts/placement_panel_content.html",
+        "panel_content_template": "parts/placement_panel_content.html",
         "panel_title": f"{colleague.name} - {assignment.name}",
         "close_url": _build_close_url(request),
         "placement": placement,
@@ -502,7 +502,7 @@ def _build_placement_panel_data(placement, request):
 def no_access(request):
     email = request.session.pop("failed_login_email", None)
     is_allowed_domain = email and is_allowed_email_domain(email)
-    return render(request, "ndd/no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
+    return render(request, "no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
 
 
 def staff_required(view_func):
@@ -511,7 +511,7 @@ def staff_required(view_func):
 
 @staff_required
 def staff_dashboard(request):
-    return render(request, "ndd/staff_dashboard.html", {"usage": get_usage_stats()})
+    return render(request, "staff_dashboard.html", {"usage": get_usage_stats()})
 
 
 @staff_required
@@ -560,18 +560,18 @@ def staff_database(request):
             # If this is an HTMX request, return partial HTML
             if request.headers.get("HX-Request"):
                 context["latest_tasks"] = get_latest_tasks(limit=3)
-                return render(request, "ndd/parts/task_list.html", context)
+                return render(request, "parts/task_list.html", context)
 
         return redirect("staff-database")
 
-    return render(request, "ndd/staff_database.html", context)
+    return render(request, "staff_database.html", context)
 
 
 class PlacementListView(ListView):
     """View for placements table view with infinite scroll pagination"""
 
     model = Placement
-    template_name = "ndd/placements.html"
+    template_name = "placements.html"
     paginate_by = 50
     page_kwarg = "pagina"
 
@@ -730,21 +730,21 @@ class PlacementListView(ListView):
         """Return appropriate template based on request type"""
         if "HX-Request" in self.request.headers:
             hx_target = self.request.headers.get("HX-Target", "")
-            if hx_target in ("ndd-side-panel-content", "side_panel-content", "side_panel-container"):
+            if hx_target in ("nldd-side-panel-content", "side_panel-content", "side_panel-container"):
                 placement_id = self.request.GET.get("plaatsing")
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
 
                 if placement_id:
-                    return ["ndd/parts/placement_panel_content.html"]
+                    return ["parts/placement_panel_content.html"]
                 if colleague_id and not assignment_id:
-                    return ["ndd/parts/colleague_panel_content.html"]
+                    return ["parts/colleague_panel_content.html"]
                 if assignment_id:
-                    return ["ndd/parts/assignment_panel_content.html"]
+                    return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
-                return ["ndd/parts/placement_table_rows.html"]
-            return ["ndd/parts/filter_and_table_container.html"]
-        return ["ndd/placements.html"]
+                return ["parts/placement_table_rows.html"]
+            return ["parts/filter_and_table_container.html"]
+        return ["placements.html"]
 
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
@@ -956,24 +956,24 @@ class PlacementListView(ListView):
 class PlacementListNDDView(PlacementListView):
     """PoC view: inzettenlijst met NDD Design System (MinBZK)."""
 
-    template_name = "ndd/placements.html"
+    template_name = "placements.html"
 
     def get_template_names(self) -> list[str]:
         if "HX-Request" in self.request.headers:
-            if self.request.headers.get("HX-Target") == "ndd-side-panel-content":
+            if self.request.headers.get("HX-Target") == "nldd-side-panel-content":
                 placement_id = self.request.GET.get("plaatsing")
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
                 if placement_id:
-                    return ["ndd/parts/placement_panel_content.html"]
+                    return ["parts/placement_panel_content.html"]
                 if colleague_id and not assignment_id:
-                    return ["ndd/parts/colleague_panel_content.html"]
+                    return ["parts/colleague_panel_content.html"]
                 if assignment_id:
-                    return ["ndd/parts/assignment_panel_content.html"]
+                    return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
-                return ["ndd/parts/placement_table_rows.html"]
-            return ["ndd/parts/filter_and_table_container.html"]
-        return ["ndd/placements.html"]
+                return ["parts/placement_table_rows.html"]
+            return ["parts/filter_and_table_container.html"]
+        return ["placements.html"]
 
     def get_context_data(self, **kwargs: object) -> dict:
         context = super().get_context_data(**kwargs)
@@ -985,7 +985,7 @@ class AssignmentListView(ListView):
     """View for vacancy assignments displayed as cards with infinite scroll pagination"""
 
     model = Assignment
-    template_name = "ndd/assignments.html"
+    template_name = "assignments.html"
     paginate_by = 24
     page_kwarg = "pagina"
 
@@ -1065,16 +1065,16 @@ class AssignmentListView(ListView):
     def get_template_names(self):
         if "HX-Request" in self.request.headers:
             hx_target = self.request.headers.get("HX-Target", "")
-            if hx_target in ("ndd-side-panel-content", "side_panel-content", "side_panel-container"):
+            if hx_target in ("nldd-side-panel-content", "side_panel-content", "side_panel-container"):
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
                 if colleague_id and not assignment_id:
-                    return ["ndd/parts/colleague_panel_content.html"]
-                return ["ndd/parts/assignment_panel_content.html"]
+                    return ["parts/colleague_panel_content.html"]
+                return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
-                return ["ndd/parts/assignment_card_rows.html"]
-            return ["ndd/parts/filter_and_card_container_assignments.html"]
-        return ["ndd/assignments.html"]
+                return ["parts/assignment_card_rows.html"]
+            return ["parts/filter_and_card_container_assignments.html"]
+        return ["assignments.html"]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1238,20 +1238,20 @@ class AssignmentListView(ListView):
 class AssignmentListNDDView(AssignmentListView):
     """PoC view: vacaturelijst met NDD Design System (MinBZK)."""
 
-    template_name = "ndd/assignments.html"
+    template_name = "assignments.html"
 
     def get_template_names(self) -> list[str]:
         if "HX-Request" in self.request.headers:
-            if self.request.headers.get("HX-Target") == "ndd-side-panel-content":
+            if self.request.headers.get("HX-Target") == "nldd-side-panel-content":
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
                 if colleague_id and not assignment_id:
-                    return ["ndd/parts/colleague_panel_content.html"]
-                return ["ndd/parts/assignment_panel_content.html"]
+                    return ["parts/colleague_panel_content.html"]
+                return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
-                return ["ndd/parts/assignment_card_rows.html"]
-            return ["ndd/parts/filter_and_card_container_assignments.html"]
-        return ["ndd/assignments.html"]
+                return ["parts/assignment_card_rows.html"]
+            return ["parts/filter_and_card_container_assignments.html"]
+        return ["assignments.html"]
 
     def get_context_data(self, **kwargs: object) -> dict:
         context = super().get_context_data(**kwargs)
@@ -1263,7 +1263,7 @@ class UserListNDDView(PermissionRequiredMixin, ListView):
     """PoC view: gebruikerslijst met NDD Design System."""
 
     model = User
-    template_name = "ndd/user_admin.html"
+    template_name = "user_admin.html"
     paginate_by = 50
     page_kwarg = "pagina"
     permission_required = "rijksauth.view_user"
@@ -1292,9 +1292,9 @@ class UserListNDDView(PermissionRequiredMixin, ListView):
     def get_template_names(self):
         if "HX-Request" in self.request.headers:
             if self.request.GET.get("pagina"):
-                return ["ndd/parts/user_table_rows.html"]
-            return ["ndd/parts/user_table.html"]
-        return ["ndd/user_admin.html"]
+                return ["parts/user_table_rows.html"]
+            return ["parts/user_table.html"]
+        return ["user_admin.html"]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1312,7 +1312,7 @@ class UserListView(PermissionRequiredMixin, ListView):
     """View for user list with filtering and infinite scroll pagination"""
 
     model = User
-    template_name = "ndd/user_admin.html"
+    template_name = "user_admin.html"
     paginate_by = 50
     page_kwarg = "pagina"
     permission_required = "rijksauth.view_user"
@@ -1381,10 +1381,10 @@ class UserListView(PermissionRequiredMixin, ListView):
         if "HX-Request" in self.request.headers:
             # If paginating, return only rows
             if self.request.GET.get("pagina"):
-                return ["ndd/parts/user_table_rows.html"]
+                return ["parts/user_table_rows.html"]
             # Otherwise, return full table (for filter changes)
-            return ["ndd/parts/user_table.html"]
-        return ["ndd/user_admin.html"]
+            return ["parts/user_table.html"]
+        return ["user_admin.html"]
 
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
@@ -1499,7 +1499,7 @@ def user_create(request):
         form = UserForm()
         return render(
             request,
-            "ndd/parts/user_form_modal.html",
+            "parts/user_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1530,7 +1530,7 @@ def user_create(request):
         # Re-render form with errors (stays in modal with HTMX)
         return render(
             request,
-            "ndd/parts/user_form_modal.html",
+            "parts/user_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1556,7 +1556,7 @@ def user_edit(request, pk):
         form = UserForm(instance=edited_user)
         return render(
             request,
-            "ndd/parts/user_form_modal.html",
+            "parts/user_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1591,7 +1591,7 @@ def user_edit(request, pk):
         # Re-render form with errors (stays in modal with HTMX)
         return render(
             request,
-            "ndd/parts/user_form_modal.html",
+            "parts/user_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1616,7 +1616,7 @@ def user_delete(request, pk):
         # Show delete confirmation modal
         return render(
             request,
-            "ndd/parts/generic_form_modal.html",
+            "parts/generic_form_modal.html",
             {
                 "modal_title": f"Verwijder gebruiker: {user.first_name} {user.last_name}",
                 "warning_modal": True,
@@ -1665,12 +1665,12 @@ def user_import_csv(request):
     For expected CSV format, see create_users_from_csv function
     """
     if request.method == "GET":
-        return render(request, "ndd/user_import.html")
+        return render(request, "user_import.html")
     if request.method == "POST":
         if "csv_file" not in request.FILES:
             return render(
                 request,
-                "ndd/user_import.html",
+                "user_import.html",
                 {"result": {"success": False, "errors": ["Geen bestand geüpload. Upload een CSV-bestand."]}},
             )
 
@@ -1679,7 +1679,7 @@ def user_import_csv(request):
         if not csv_file.name.endswith(".csv"):
             return render(
                 request,
-                "ndd/user_import.html",
+                "user_import.html",
                 {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
             )
 
@@ -1688,14 +1688,14 @@ def user_import_csv(request):
         except UnicodeDecodeError:
             return render(
                 request,
-                "ndd/user_import.html",
+                "user_import.html",
                 {"result": {"success": False, "errors": ["Ongeldige bestandscodering. Gebruik UTF-8."]}},
             )
 
         result = create_users_from_csv(request.user, csv_content)
 
         # Return results in the form
-        return render(request, "ndd/user_import.html", {"result": result})
+        return render(request, "user_import.html", {"result": result})
     return HttpResponse(status=405)
 
 
@@ -1719,12 +1719,12 @@ def assignment_import_csv(request):
     For expected CSV format, see create_assignment_from_csv function
     """
     if request.method == "GET":
-        return render(request, "ndd/assignment_import.html")
+        return render(request, "assignment_import.html")
     if request.method == "POST":
         if "csv_file" not in request.FILES:
             return render(
                 request,
-                "ndd/assignment_import.html",
+                "assignment_import.html",
                 {"result": {"success": False, "errors": ["Geen bestand geüpload. Upload een CSV-bestand."]}},
             )
 
@@ -1733,7 +1733,7 @@ def assignment_import_csv(request):
         if not csv_file.name.endswith(".csv"):
             return render(
                 request,
-                "ndd/assignment_import.html",
+                "assignment_import.html",
                 {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
             )
 
@@ -1742,14 +1742,14 @@ def assignment_import_csv(request):
         except UnicodeDecodeError:
             return render(
                 request,
-                "ndd/assignment_import.html",
+                "assignment_import.html",
                 {"result": {"success": False, "errors": ["Invalid CSV file encoding. Please use UTF-8."]}},
             )
 
         result = create_assignments_from_csv(request.user, csv_content)
 
         # Return results in the form
-        return render(request, "ndd/assignment_import.html", {"result": result})
+        return render(request, "assignment_import.html", {"result": result})
     return HttpResponse(status=405)
 
 
@@ -1773,12 +1773,12 @@ def assignment_import_csv_ndd(request):
     For expected CSV format, see create_assignment_from_csv function
     """
     if request.method == "GET":
-        return render(request, "ndd/assignment_import.html")
+        return render(request, "assignment_import.html")
     if request.method == "POST":
         if "csv_file" not in request.FILES:
             return render(
                 request,
-                "ndd/assignment_import.html",
+                "assignment_import.html",
                 {"result": {"success": False, "errors": ["Geen bestand geüpload. Upload een CSV-bestand."]}},
             )
 
@@ -1787,7 +1787,7 @@ def assignment_import_csv_ndd(request):
         if not csv_file.name.endswith(".csv"):
             return render(
                 request,
-                "ndd/assignment_import.html",
+                "assignment_import.html",
                 {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
             )
 
@@ -1796,14 +1796,14 @@ def assignment_import_csv_ndd(request):
         except UnicodeDecodeError:
             return render(
                 request,
-                "ndd/assignment_import.html",
+                "assignment_import.html",
                 {"result": {"success": False, "errors": ["Invalid CSV file encoding. Please use UTF-8."]}},
             )
 
         result = create_assignments_from_csv(csv_content)
 
         # Return results in the form
-        return render(request, "ndd/assignment_import.html", {"result": result})
+        return render(request, "assignment_import.html", {"result": result})
     return HttpResponse(status=405)
 
 
@@ -1866,21 +1866,21 @@ def organization_admin(request):
     if ungrouped:
         type_groups.append(("Overig", ungrouped))
 
-    return render(request, "ndd/organization_admin.html", {"type_groups": type_groups})
+    return render(request, "organization_admin.html", {"type_groups": type_groups})
 
 
 @permission_required("core.view_labelcategory", raise_exception=True)
 def label_admin(request):
     """Main label admin pag"""
     categories = annotate_usage_counts(LabelCategory.objects.all())
-    return render(request, "ndd/label_admin.html", {"categories": categories})
+    return render(request, "label_admin.html", {"categories": categories})
 
 
 @permission_required("core.view_labelcategory", raise_exception=True)
 def label_admin_ndd(request):
     """PoC view: label admin met NDD Design System."""
     categories = annotate_usage_counts(LabelCategory.objects.all())
-    return render(request, "ndd/label_admin.html", {"categories": categories})
+    return render(request, "label_admin.html", {"categories": categories})
 
 
 @permission_required("core.change_labelcategory", raise_exception=True)
@@ -1899,7 +1899,7 @@ def label_category_create(request):
         form = LabelCategoryForm()
         return render(
             request,
-            "ndd/parts/generic_form_modal.html",
+            "parts/generic_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1919,7 +1919,7 @@ def label_category_create(request):
             return response
         return render(
             request,
-            "ndd/parts/generic_form_modal.html",
+            "parts/generic_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1949,7 +1949,7 @@ def label_category_edit(request, pk):
         form = LabelCategoryForm(instance=category)
         return render(
             request,
-            "ndd/parts/generic_form_modal.html",
+            "parts/generic_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1970,7 +1970,7 @@ def label_category_edit(request, pk):
 
         return render(
             request,
-            "ndd/parts/generic_form_modal.html",
+            "parts/generic_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1993,7 +1993,7 @@ def label_category_delete(request, pk):
     if request.method == "GET":
         return render(
             request,
-            "ndd/parts/generic_form_modal.html",
+            "parts/generic_form_modal.html",
             {
                 "modal_title": f"Verwijder categorie: {category.name}",
                 "warning_modal": True,
@@ -2034,11 +2034,11 @@ def label_create(request, pk):
             category_qs = LabelCategory.objects.filter(id=category.id)
             category = annotate_usage_counts(category_qs).get()
 
-            return render(request, "ndd/parts/label_category.html", {"category": category})
+            return render(request, "parts/label_category.html", {"category": category})
         errors = dict(form.errors.items())
         return render(
             request,
-            "ndd/parts/label_category.html",
+            "parts/label_category.html",
             {
                 "category": category,
                 "errors": errors,
@@ -2063,7 +2063,7 @@ def label_edit(request, pk):
         form = LabelForm(instance=label, category_id=category.id)
         return render(
             request,
-            "ndd/parts/generic_form_modal.html",
+            "parts/generic_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -2082,13 +2082,13 @@ def label_edit(request, pk):
             category_qs = LabelCategory.objects.filter(id=category.id)
             category = annotate_usage_counts(category_qs).get()
 
-            response = render(request, "ndd/parts/label_category.html", {"category": category})
+            response = render(request, "parts/label_category.html", {"category": category})
             response["HX-Retarget"] = f"#label_category_{category.id}"
             response["HX-Trigger"] = "closeModal"
             return response
         return render(
             request,
-            "ndd/parts/generic_form_modal.html",
+            "parts/generic_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -2116,7 +2116,7 @@ def label_delete(request, pk):
     if request.method == "GET":
         return render(
             request,
-            "ndd/parts/generic_form_modal.html",
+            "parts/generic_form_modal.html",
             {
                 "modal_title": f"Verwijder label: {label.name}",
                 "warning_modal": True,
@@ -2137,7 +2137,7 @@ def label_delete(request, pk):
 
         response = render(
             request,
-            "ndd/parts/label_category.html",
+            "parts/label_category.html",
             {
                 "category": category,
             },
@@ -2158,7 +2158,7 @@ def assignment_events_partial(request, pk):
         .select_related("user__colleague")
         .order_by("-timestamp")[:20]
     )
-    return render(request, "ndd/parts/assignment_events_timeline.html", {"events": events})
+    return render(request, "parts/assignment_events_timeline.html", {"events": events})
 
 
 def user_profile_ndd(request):
@@ -2187,7 +2187,7 @@ def user_profile_ndd(request):
     # HTMX partial responses for panel swaps
     if "HX-Request" in request.headers:
         hx_target = request.headers.get("HX-Target")
-        if hx_target == "ndd-side-panel-content" and panel_data:
+        if hx_target == "nldd-side-panel-content" and panel_data:
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
     # Build label data per category for the data list rows
@@ -2200,7 +2200,7 @@ def user_profile_ndd(request):
 
     return render(
         request,
-        "ndd/user_profile.html",
+        "user_profile.html",
         {
             "colleague": colleague,
             "label_categories": label_categories,
@@ -2211,20 +2211,20 @@ def user_profile_ndd(request):
 
 
 def contact_ndd(request):
-    return render(request, "ndd/contact.html")
+    return render(request, "contact.html")
 
 
 def privacy_ndd(request):
-    return render(request, "ndd/privacy.html")
+    return render(request, "privacy.html")
 
 
 def toegankelijkheid_ndd(request):
-    return render(request, "ndd/toegankelijkheid.html")
+    return render(request, "toegankelijkheid.html")
 
 
 @staff_required
 def staff_dashboard_ndd(request):
-    return render(request, "ndd/staff_dashboard.html", {"usage": get_usage_stats()})
+    return render(request, "staff_dashboard.html", {"usage": get_usage_stats()})
 
 
 @staff_required
@@ -2264,9 +2264,9 @@ def staff_database_ndd(request):
                 messages.success(request, "Organisatiesynchronisatie is gestart")
             if request.headers.get("HX-Request"):
                 context["latest_tasks"] = get_latest_tasks(limit=3)
-                return render(request, "ndd/parts/task_list.html", context)
+                return render(request, "parts/task_list.html", context)
         return redirect("ndd-staff-database")
-    return render(request, "ndd/staff_database.html", context)
+    return render(request, "staff_database.html", context)
 
 
 def organization_admin_ndd(request):
@@ -2320,12 +2320,12 @@ def organization_admin_ndd(request):
     if ungrouped:
         type_groups.append(("Overig", ungrouped))
 
-    return render(request, "ndd/organization_admin.html", {"type_groups": type_groups})
+    return render(request, "organization_admin.html", {"type_groups": type_groups})
 
 
 def user_import_csv_ndd(request):
     """NDD variant of user CSV import. Same logic, NDD template."""
-    template = "ndd/user_import.html"
+    template = "user_import.html"
     if request.method == "GET":
         return render(request, template)
     if request.method != "POST":
@@ -2369,7 +2369,7 @@ def user_profile(request):
     # HTMX partial responses for panel swaps
     if "HX-Request" in request.headers:
         hx_target = request.headers.get("HX-Target")
-        if hx_target in ("ndd-side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
+        if hx_target in ("nldd-side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
     # Build label data per category for the data list rows
@@ -2382,7 +2382,7 @@ def user_profile(request):
 
     return render(
         request,
-        "ndd/user_profile.html",
+        "user_profile.html",
         {
             "colleague": colleague,
             "label_categories": label_categories,
@@ -2394,34 +2394,34 @@ def user_profile(request):
 
 @login_not_required
 def contact(request):
-    return render(request, "ndd/contact.html")
+    return render(request, "contact.html")
 
 
 def privacy(request):
-    return render(request, "ndd/privacy.html")
+    return render(request, "privacy.html")
 
 
 def toegankelijkheid(request):
-    return render(request, "ndd/toegankelijkheid.html")
+    return render(request, "toegankelijkheid.html")
 
 
 def error_400(request, exception=None):
-    return render(request, "ndd/400.html", status=400)
+    return render(request, "400.html", status=400)
 
 
 @login_not_required
 def error_403(request, exception=None):
-    return render(request, "ndd/403.html", status=403)
+    return render(request, "403.html", status=403)
 
 
 @login_not_required
 def error_404(request, exception=None):
-    return render(request, "ndd/404.html", status=404)
+    return render(request, "404.html", status=404)
 
 
 @login_not_required
 def error_500(request):
-    return render(request, "ndd/500.html", status=500)
+    return render(request, "500.html", status=500)
 
 
 @login_not_required
@@ -2479,7 +2479,7 @@ Disallow: /
 @permission_required("core.add_assignment", raise_exception=True)
 def assignment_create(request):
     """Handle assignment creation - standalone form page."""
-    template = "ndd/assignment_create.html"
+    template = "assignment_create.html"
 
     skill_choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
     skill_choices.extend((str(s.id), s.name) for s in Skill.objects.order_by("name"))
@@ -2548,7 +2548,7 @@ def search_suggestions(request):
     """Return org abbreviation suggestions for the search input (HTMX partial)."""
     term = request.GET.get("zoek", "")
     orgs = find_orgs_by_abbreviation(term)
-    return render(request, "ndd/parts/search_suggestions.html", {"org_suggestions": orgs})
+    return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs})
 
 
 def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int]:
@@ -2717,7 +2717,7 @@ def client_modal(request):
     hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 
-    template = "ndd/parts/assignment_org_modal.html" if count_mode == "none" else "ndd/parts/client_modal.html"
+    template = "parts/assignment_org_modal.html" if count_mode == "none" else "parts/client_modal.html"
     return render(
         request,
         template,

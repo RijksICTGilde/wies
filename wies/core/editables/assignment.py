@@ -145,6 +145,6 @@ class AssignmentEditables(EditableSet):
         formset_factory=_services_formset_factory,
         initial=_services_initial,
         save=_save_services,
-        form_template="ndd/parts/assignment_services_form.html",
+        form_template="parts/assignment_services_form.html",
         display="nldd/forms/displays/assignment_services.html",
     )

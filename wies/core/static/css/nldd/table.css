@@ -1,0 +1,43 @@
+/* NDD placement list */
+
+/* Kolom-verhoudingen: Wie | Wat & waar */
+.nldd-col-who {
+  flex: 0 0 35%;
+  min-width: 0;
+}
+.nldd-col-what {
+  flex: 0 0 45%;
+  min-width: 0;
+}
+
+/* Avatar in nldd-icon-cell */
+.nldd-avatar {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  background: var(
+    --semantics-content-accent-color,
+    var(--primitives-color-accent-700, #2060d0)
+  );
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+.nldd-avatar--lg {
+  width: 3rem;
+  height: 3rem;
+  font-size: 1.1rem;
+}
+.nldd-avatar--vacant {
+  background: var(--semantics-surfaces-tinted-background-color, #eee);
+  color: var(--semantics-content-secondary-color, #666);
+}
+
+/* Subtle tekst (secondary content color) */
+.nldd-text-secondary {
+  color: var(--semantics-content-secondary-color, #666);
+}

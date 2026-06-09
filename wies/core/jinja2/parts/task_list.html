@@ -1,0 +1,39 @@
+<nldd-rich-text>
+<h3>Recente taken</h3>
+</nldd-rich-text>
+{% if latest_tasks %}
+  <nldd-list>
+  {% for task in latest_tasks %}
+    <nldd-list-item>
+    <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
+    <nldd-icon-cell slot="start" size="20">
+    {% if task.status == 'completed' %}
+      <nldd-icon name="check-circle" color="success"></nldd-icon>
+    {% elif task.status == 'failed' %}
+      <nldd-icon name="error" color="error"></nldd-icon>
+    {% elif task.status == 'running' %}
+      <nldd-icon name="refresh"></nldd-icon>
+    {% else %}
+      <nldd-icon name="clock"></nldd-icon>
+    {% endif %}
+    </nldd-icon-cell>
+    <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
+    {# djlint:off T028 #}
+    {% set supporting = task.created_at.strftime("%Y-%m-%d %H:%M:%S") %}
+    {% if task.created_by %}
+      {% set supporting = supporting ~ " door " ~ (task.created_by.get_full_name() or task.created_by.username) %}
+    {% endif %}
+    <nldd-title-cell text="{{ task.status|capitalize }}" supporting-text="{{ supporting }}"></nldd-title-cell>
+    {% if task.result %}
+      {% set result_text = "Aangemaakt: " ~ task.result.created ~ ", Bijgewerkt: " ~ task.result.updated %}
+    {% else %}
+      {% set result_text = "-" %}
+    {% endif %}
+    <nldd-text-cell text="{{ result_text }}"></nldd-text-cell>
+    {# djlint:on #}
+    </nldd-list-item>
+  {% endfor %}
+  </nldd-list>
+{% else %}
+  <p class="nldd-text-secondary">Geen taken gevonden.</p>
+{% endif %}

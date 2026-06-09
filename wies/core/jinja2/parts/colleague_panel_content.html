@@ -1,0 +1,55 @@
+{% set colleague = panel_data.colleague %}
+<div class="nldd-panel">
+  <header class="nldd-panel__bar">
+    <h2 class="nldd-panel__bar-title">Persoonsgegevens</h2>
+    <button type="button"
+            class="nldd-panel__bar-action"
+            data-nldd-action="panel-close">Sluit</button>
+  </header>
+  <section class="nldd-panel__identity">
+    <span class="nldd-avatar nldd-avatar--lg" aria-hidden="true">{{ colleague.name|first|upper }}</span>
+    <div class="nldd-panel__identity-info">
+      <strong style="font-size: 1.25rem;">{{ colleague.name }}</strong>
+      {% if colleague.email %}
+        <a class="nldd-panel__email" href="mailto:{{ colleague.email }}">{{ colleague.email }}</a>
+      {% endif %}
+    </div>
+  </section>
+  {% set labels = colleague.labels.all() %}
+  {% if labels %}
+    <div class="nldd-panel__tokens">
+      {% for label in labels %}
+        <nldd-token style="--nldd-token-bg: {{ label.category.color }}">{{ label.name }}</nldd-token>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <nldd-rich-text spacing="snug">
+  <h3>Opdrachten</h3>
+  {% if panel_data.assignments %}
+    <div class="nldd-assignment-cards">
+      {% for assignment in panel_data.assignments %}
+        <a class="nldd-assignment-card{% if assignment.historical %} nldd-assignment-card--historical{% endif %}"
+           href="{{ assignment.assignment_url }}"
+           hx-get="{{ assignment.assignment_url }}"
+           hx-target="#nldd-side-panel-content"
+           hx-swap="innerHTML">
+          <div class="nldd-assignment-card__top">
+            <strong>{{ assignment.name }}</strong>
+            {% if assignment.start_date or assignment.end_date %}
+              <span class="nldd-text-secondary">
+                {{ assignment.start_date|datum_nl("N y") if assignment.start_date else "?" }}
+                – {{ assignment.end_date|datum_nl("N y") if assignment.end_date else "?" }}
+              </span>
+            {% endif %}
+          </div>
+          {% if assignment.historical %}<nldd-token>Afgelopen</nldd-token>{% endif %}
+        </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <p class="nldd-text-secondary">
+      <em>Geen opdrachten gevonden.</em>
+    </p>
+  {% endif %}
+  </nldd-rich-text>
+</div>

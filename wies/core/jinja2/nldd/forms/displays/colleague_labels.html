@@ -1,11 +1,11 @@
 {% set category = editable.category %}
 {% set category_labels = value | selectattr("category_id", "equalto", category.id) | list %}
-<div class="ndd-panel__tokens">
+<div class="nldd-panel__tokens">
   {% if category_labels %}
     {% for label in category_labels %}
-      <nldd-token style="--ndd-token-bg: {{ category.color }}">{{ label.name }}</nldd-token>
+      <nldd-token style="--nldd-token-bg: {{ category.color }}">{{ label.name }}</nldd-token>
     {% endfor %}
   {% else %}
-    <em class="ndd-text-secondary">Geen labels</em>
+    <em class="nldd-text-secondary">Geen labels</em>
   {% endif %}
 </div>

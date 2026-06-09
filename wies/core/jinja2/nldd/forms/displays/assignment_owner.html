@@ -3,7 +3,7 @@
     {% if owner_url %}
       <a href="{{ owner_url }}"
          hx-get="{{ owner_url }}"
-         hx-target="#ndd-side-panel-content">{{ value.name }}</a>
+         hx-target="#nldd-side-panel-content">{{ value.name }}</a>
     {% else %}
       {{ value.name }}
     {% endif %}
@@ -13,5 +13,5 @@
     {% endif %}
   </span>
 {% else %}
-  <em class="ndd-text-secondary">Niet toegewezen</em>
+  <em class="nldd-text-secondary">Niet toegewezen</em>
 {% endif %}

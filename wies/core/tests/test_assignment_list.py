@@ -115,7 +115,7 @@ class AssignmentListViewTest(TestCase):
         response = self.client.get(self.list_url, headers={"hx-request": "true"})
         assert response.status_code == 200
         content = response.content.decode()
-        assert 'id="ndd-filter-and-table-container"' in content
+        assert 'id="nldd-filter-and-table-container"' in content
 
     def test_htmx_pagina_returns_card_rows(self):
         self.client.force_login(self.auth_user)

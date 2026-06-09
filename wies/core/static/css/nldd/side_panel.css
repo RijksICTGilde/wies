@@ -1,0 +1,227 @@
+/* NDD side panel — minimale styling, nldd-sheet doet het meeste werk. */
+
+#nldd-side-panel {
+  --components-sheet-side-md-width: 700px;
+  --components-sheet-side-lg-width: 800px;
+}
+
+#nldd-side-panel-content {
+  padding: var(--primitives-space-24, 24px);
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+/* --- Panel inner content -------------------------------------------- */
+.nldd-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-16, 16px);
+}
+
+/* Bar bovenin: titel links + Sluit-link rechts (matcht Storybook nldd-sheet patroon).
+   Sticky zodat het altijd zichtbaar is bij scrollen.
+   Negatieve margin compenseert de panel padding zodat de bar volledig de breedte heeft. */
+.nldd-panel__bar {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-12, 12px);
+  margin: calc(-1 * var(--primitives-space-24, 24px))
+    calc(-1 * var(--primitives-space-24, 24px)) 0;
+  padding: var(--primitives-space-16, 16px) var(--primitives-space-24, 24px);
+  background: var(--semantics-surfaces-background-color, #fff);
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.nldd-panel__bar-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nldd-panel__bar-action {
+  background: none;
+  border: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--semantics-links-color, #0d4a8a);
+  cursor: pointer;
+  padding: var(--primitives-space-6, 6px) var(--primitives-space-8, 8px);
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.nldd-panel__bar-action:hover {
+  color: var(--semantics-links-is-hovered-color, #0a3a6e);
+}
+.nldd-panel__bar-action:focus-visible {
+  outline: 2px solid var(--semantics-links-color, #0d4a8a);
+  outline-offset: 1px;
+}
+
+.nldd-panel__bar-back {
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  padding: var(--primitives-space-6, 6px);
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.nldd-panel__bar-back:hover {
+  background: var(--semantics-surfaces-tinted-background-color, #f4f6f9);
+}
+
+/* Identity sectie (avatar + email) onder de bar */
+.nldd-panel__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-12, 12px);
+}
+.nldd-panel__identity-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.nldd-panel__email {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--semantics-links-color, #0d4a8a);
+  text-decoration: none;
+  margin-top: 0.15rem;
+}
+.nldd-panel__email:hover {
+  text-decoration: underline;
+}
+
+.nldd-panel__tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--primitives-space-6, 6px);
+}
+
+/* Detail list (icon + tekst) */
+.nldd-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-12, 12px);
+}
+.nldd-detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--primitives-space-10, 10px);
+}
+.nldd-detail-item > nldd-icon {
+  width: 20px;
+  height: 20px;
+  margin-top: 2px;
+  color: var(--semantics-content-secondary-color, #666);
+}
+
+/* Data list (key/value gegevens) */
+.nldd-data-list {
+  display: grid;
+  grid-template-columns: minmax(120px, max-content) 1fr;
+  gap: var(--primitives-space-6, 6px) var(--primitives-space-16, 16px);
+  margin: 0;
+}
+.nldd-data-list dt {
+  font-weight: 600;
+  color: var(--semantics-content-color, #333);
+}
+.nldd-data-list dd {
+  margin: 0;
+}
+
+.nldd-org-crumb {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--primitives-space-4, 4px);
+}
+.nldd-org-crumb__sep {
+  color: var(--semantics-content-secondary-color, #666);
+}
+
+/* Assignment cards */
+.nldd-assignment-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-8, 8px);
+}
+.nldd-assignment-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-4, 4px);
+  padding: var(--primitives-space-12, 12px) var(--primitives-space-14, 14px);
+  border: 1px solid var(--components-top-title-bar-divider-color, #e5e5e5);
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  background: var(--semantics-surfaces-background-color, #fff);
+  cursor: pointer;
+}
+.nldd-assignment-card:hover {
+  background: var(
+    --semantics-surfaces-interactive-hovered-background-color,
+    #f0f4ff
+  );
+  border-color: var(--semantics-content-accent-color, #0d4a8a);
+}
+.nldd-assignment-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--primitives-space-8, 8px);
+  flex-wrap: wrap;
+}
+.nldd-assignment-card--historical {
+  opacity: 0.75;
+}
+
+/* Team list */
+.nldd-team-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-4, 4px);
+}
+.nldd-team-member {
+  display: flex;
+  gap: var(--primitives-space-12, 12px);
+  align-items: center;
+  padding: var(--primitives-space-8, 8px) var(--primitives-space-12, 12px);
+  border-radius: 6px;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+.nldd-team-member:hover {
+  background: var(
+    --semantics-surfaces-interactive-hovered-background-color,
+    #f0f4ff
+  );
+}
+.nldd-team-member--vacant {
+  cursor: default;
+}
+.nldd-team-member--historical {
+  opacity: 0.7;
+}
+.nldd-team-member__info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+}
+.nldd-team-member__skill {
+  font-size: 0.85rem;
+  color: var(--semantics-content-secondary-color, #666);
+}

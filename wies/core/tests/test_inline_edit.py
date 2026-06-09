@@ -655,18 +655,18 @@ class AssignmentServicesDisplayTest(TestCase):
         expected_href = f"/opdrachten/?collega={self.colleague.id}"
         self.assertContains(resp, f'href="{expected_href}"')
         self.assertContains(resp, f'hx-get="{expected_href}"')
-        self.assertContains(resp, 'hx-target="#ndd-side-panel-content"')
+        self.assertContains(resp, 'hx-target="#nldd-side-panel-content"')
         self.assertContains(resp, self.colleague.name)
-        self.assertContains(resp, "ndd-team-member")
+        self.assertContains(resp, "nldd-team-member")
 
     def test_vacant_row_has_no_link(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        self.assertContains(resp, "ndd-team-member--vacant")
+        self.assertContains(resp, "nldd-team-member--vacant")
         self.assertContains(resp, "Aanvraag")
         # Vacant row should not carry an hx-target (only filled anchors do).
         content = resp.content.decode()
-        vacant_start = content.index("ndd-team-member--vacant")
+        vacant_start = content.index("nldd-team-member--vacant")
         vacant_end = content.index("</div>", vacant_start)
         assert "hx-get" not in content[vacant_start:vacant_end]
         assert "href=" not in content[vacant_start:vacant_end]

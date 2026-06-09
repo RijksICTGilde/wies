@@ -1,0 +1,34 @@
+{% for placement in object_list %}
+  {% set clients = placement.service.assignment.sorted_clients %}
+  {% set client_label = clients[0].organization.label or clients[0].organization.name if clients else "" %}
+  {% if clients|length > 1 %}
+    {% set client_label = client_label ~ " (+" ~ (clients|length - 1) ~ ")" %}
+  {% endif %}
+  <nldd-list-item type="button" hx-get="{{ placement.panel_url }}" hx-target="#nldd-side-panel-content" hx-swap="innerHTML">
+  <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
+  <nldd-icon-cell slot="start" size="40" vertical-alignment="top">
+  <span class="nldd-avatar" aria-hidden="true">{{ placement.colleague.name|first|upper }}</span>
+  </nldd-icon-cell>
+  <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
+  <nldd-title-cell class="nldd-col-who" text="{{ placement.colleague.name }}" supporting-text="{{ placement.service.skill.name if placement.service.skill else '' }}">
+  </nldd-title-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell class="nldd-col-what" text="{{ placement.service.assignment.name }}" supporting-text="{{ client_label }}">
+  </nldd-text-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell color="secondary" width="fit-content" text="{{ placement.service.assignment.end_date|datum_nl('j M Y') if placement.service.assignment.end_date else '' }}">
+  </nldd-text-cell>
+  <nldd-icon-cell color="secondary" size="16" style="margin-left: auto; padding-inline: 12px;">
+  <nldd-icon name="chevron-right"></nldd-icon>
+  </nldd-icon-cell>
+  </nldd-list-item>
+{% else %}
+  <nldd-list-item>
+  <nldd-text-cell text="Geen inzetten gevonden."></nldd-text-cell>
+  </nldd-list-item>
+{% endfor %}
+{% if next_page_url %}
+  <nldd-list-item hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
+  <nldd-text-cell text="Meer laden…"></nldd-text-cell>
+  </nldd-list-item>
+{% endif %}

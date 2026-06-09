@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block header %}
+{% endblock header %}
+{% block content %}
+  <nldd-container padding="24" style="min-height: 70vh; display: flex; align-items: center; justify-content: center;">
+  <div style="max-width: 500px; text-align: center;">
+    <nldd-rich-text>
+    <h1>
+      {% block error_title %}
+        Fout
+      {% endblock error_title %}
+    </h1>
+    <p>
+      {% block error_message %}
+        Er is iets misgegaan.
+      {% endblock error_message %}
+    </p>
+    {% block error_extra %}
+    {% endblock error_extra %}
+    </nldd-rich-text>
+  </div>
+  </nldd-container>
+{% endblock content %}

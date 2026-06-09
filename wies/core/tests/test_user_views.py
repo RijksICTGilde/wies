@@ -139,7 +139,7 @@ class UserViewsTest(TestCase):
 
         assert response.status_code == 200
         content = response.content.decode()
-        assert "ndd-window" in content or "modal-content" in content
+        assert "nldd-window" in content or "modal-content" in content
         assert "Nieuwe gebruiker" in content
 
     def test_user_create_success(self):
@@ -217,7 +217,7 @@ class UserViewsTest(TestCase):
         assert response.status_code == 200
         content = response.content.decode()
         # Modal should be shown with errors
-        assert "ndd-window" in content or "modal-content" in content
+        assert "nldd-window" in content or "modal-content" in content
 
     def test_user_create_duplicate_email(self):
         """Test that a new user cannot be created with an existing email"""
@@ -235,7 +235,7 @@ class UserViewsTest(TestCase):
 
         assert response.status_code == 200
         content = response.content.decode()
-        assert "ndd-window" in content or "modal-content" in content
+        assert "nldd-window" in content or "modal-content" in content
         assert "Er bestaat al een gebruiker met dit e-mailadres." in content
         assert User.objects.count() == initial_count
         assert User.objects.filter(email="user1@rijksoverheid.nl").count() == 1
@@ -455,7 +455,7 @@ class UserViewsTest(TestCase):
 
         assert response.status_code == 200
         content = response.content.decode()
-        assert "ndd-window" in content or "modal-content" in content
+        assert "nldd-window" in content or "modal-content" in content
         assert "Gebruiker bewerken" in content
         # Check that form is pre-populated
         assert self.user1.first_name in content
@@ -511,7 +511,7 @@ class UserViewsTest(TestCase):
         assert response.status_code == 200
         content = response.content.decode()
         # Modal should be shown with errors
-        assert "ndd-window" in content or "modal-content" in content
+        assert "nldd-window" in content or "modal-content" in content
         assert "Gebruiker bewerken" in content
 
         # User should not be updated

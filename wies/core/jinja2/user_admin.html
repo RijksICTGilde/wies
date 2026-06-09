@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/nldd/side_panel.css') }}">
+  <link rel="stylesheet" href="{{ static('css/modals.css') }}">
+  <script src="{{ static('js/nldd/htmx-bridge.js') }}" defer></script>
+  <script src="{{ static('js/dialog.js') }}" defer></script>
+{% endblock extra_head %}
+{% block sidebar %}
+  {% include "parts/admin_sidebar.html" %}
+{% endblock sidebar %}
+{% block content %}
+  <nldd-container slot="header" padding="16">
+  <div style="display: flex; align-items: center; gap: 12px;">
+    <nldd-search-field id="nldd-search-input" style="flex: 1;" placeholder="Zoek op naam of email..." value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" hx-get="{{ url('admin-users') }}" hx-trigger="input changed delay:300ms" hx-target="#nldd-user-table" hx-swap="outerHTML" name="zoek">
+    </nldd-search-field>
+    <nldd-button variant="primary" text="Gebruiker toevoegen" hx-get="{{ url('user-create') }}" hx-target="#userFormModal" hx-swap="innerHTML">
+    </nldd-button>
+  </div>
+  </nldd-container>
+  <div id="nldd-user-content">
+    <div class="nldd-results-bar">
+      <p class="nldd-results-bar__count">
+        <strong>{{ paginator.count }}</strong>
+        {{ "gebruiker" if paginator.count == 1 else "gebruikers" }}
+      </p>
+    </div>
+    {% include "parts/user_table.html" %}
+  </div>
+  <div id="userFormModal"></div>
+{% endblock content %}

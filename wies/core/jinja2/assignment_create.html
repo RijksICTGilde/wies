@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/assignment_form.css') }}">
+  <script src="{{ static('js/dialog.js') }}"></script>
+  <script src="{{ static('js/assignment_form.js') }}" defer></script>
+{% endblock extra_head %}
+{% block content %}
+  <nldd-container padding="24" style="max-width: 700px;">
+  <div style="margin-bottom: 1rem;">
+    <a href="{{ url('assignment-list') }}">← Terug naar aanvragen</a>
+  </div>
+  <nldd-rich-text>
+  <h1>Opdracht invoeren</h1>
+  <p>
+    Voer hier de gegevens in van een opdracht. Dit formulier kan gebruikt worden voor nieuwe opdrachten, bestaande opdrachten en aanvragen.
+  </p>
+  </nldd-rich-text>
+  <form method="post"
+        action="{{ url('assignment-create') }}"
+        id="assignment-create-form">
+    {{ get_csrf_hidden_input(request) }}
+    <div class="nldd-form-fields nldd-form-fields--spaced">
+      <fieldset class="nldd-fieldset">
+        <legend class="nldd-fieldset__legend">Opdrachtgegevens</legend>
+        <div class="nldd-form-fields">
+          {{ form.name.as_field_group() }}
+          {{ form.extra_info.as_field_group() }}
+          <div class="assignment-form-row">
+            {{ form.start_date.as_field_group() }}
+            {{ form.end_date.as_field_group() }}
+          </div>
+          {{ form.owner.as_field_group() }}
+        </div>
+      </fieldset>
+      <fieldset class="nldd-fieldset">
+        <legend class="nldd-fieldset__legend">
+          Opdrachtgever(s) <span class="nldd-fieldset__hint">(voeg minimaal 1 opdrachtgever toe)</span>
+        </legend>
+        {% for error in form.organizations.errors %}<div class="nldd-alert nldd-alert--error">{{ error }}</div>{% endfor %}
+        {{ form.organizations.as_widget() }}
+      </fieldset>
+      <fieldset class="nldd-fieldset" id="diensten">
+        <legend class="nldd-fieldset__legend">
+          Rollen <span class="nldd-fieldset__hint">(voeg minimaal 1 rol toe)</span>
+        </legend>
+        {% with formset=service_formset, extra_errors=form.non_field_errors() %}
+          {% include "parts/assignment_services_form.html" %}
+        {% endwith %}
+      </fieldset>
+      <div style="display: flex; gap: 0.5rem;">
+        <nldd-button variant="primary" type="submit" text="Opdracht aanmaken"></nldd-button>
+        <nldd-button variant="secondary" type="button" id="assignment-cancel-btn" text="Annuleren" data-cancel-url="{{ url('assignment-list') }}"></nldd-button>
+      </div>
+    </div>
+  </form>
+  </nldd-container>
+{% endblock content %}

@@ -1,0 +1,63 @@
+<nldd-window id="{{ modal_element_id }}" accessible-label="{{ modal_title }}" width="800px">
+<nldd-page sticky-header sticky-footer>
+<nldd-top-title-bar slot="header" text="{{ modal_title }}" dismiss-text="Sluiten"></nldd-top-title-bar>
+<form method="post"
+      action="{{ form_post_url }}"
+      hx-post="{{ form_post_url }}"
+      hx-target="#{{ target_element_id }}"
+      style="display: flex;
+             flex-direction: column;
+             height: 100%">
+  {{ get_csrf_hidden_input(request) }}
+  <div style="flex: 1; padding: var(--primitives-space-16, 16px);">
+    {% if delete_warning %}
+      <nldd-rich-text>
+      <p>{{ delete_warning }}</p>
+      </nldd-rich-text>
+    {% else %}
+      <div style="display: grid;
+                  grid-template-columns: 1fr 1px 1fr;
+                  gap: var(--primitives-space-24, 24px)">
+        <div>
+          <nldd-rich-text>
+          <h3>Gebruikersgegevens</h3>
+          </nldd-rich-text>
+          <div style="display: flex;
+                      flex-direction: column;
+                      gap: var(--primitives-space-12, 12px);
+                      margin-top: var(--primitives-space-12, 12px)">
+            {{ content.first_name.as_field_group() }}
+            {{ content.last_name.as_field_group() }}
+            {{ content.email.as_field_group() }}
+            {{ content.groups.as_field_group() }}
+          </div>
+        </div>
+        <div style="background: var(--semantics-dividers-color, #e0e0e0);"></div>
+        <div>
+          <nldd-rich-text>
+          <h3>Labels</h3>
+          </nldd-rich-text>
+          <div style="display: flex;
+                      flex-direction: column;
+                      gap: var(--primitives-space-12, 12px);
+                      margin-top: var(--primitives-space-12, 12px)">
+            {% for field_name in content.fields %}
+              {% if field_name.startswith('category_') %}{{ content[field_name].as_field_group() }}{% endif %}
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+  <nldd-container slot="footer" padding-inline="16" padding-bottom="16">
+  <nldd-button-group orientation="horizontal">
+  <nldd-button variant="{{ 'warning' if warning_modal else 'primary' }}" type="submit" text="{{ form_button_label }}"></nldd-button>
+  {% if delete_url %}
+    <nldd-button variant="warning-subtle" text="Verwijderen" hx-get="{{ delete_url }}" hx-target="#{{ modal_element_id }}" hx-swap="outerHTML"></nldd-button>
+  {% endif %}
+  <nldd-button variant="secondary" type="button" text="Annuleren" onclick="this.closest('nldd-window').hide()"></nldd-button>
+  </nldd-button-group>
+  </nldd-container>
+</form>
+</nldd-page>
+</nldd-window>
