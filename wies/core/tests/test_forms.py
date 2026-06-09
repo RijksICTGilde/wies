@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
+from wies.core.form_mixins import NlddFormMixin
 from wies.core.forms import RvoFormMixin, UserForm
 from wies.core.models import Label, LabelCategory
 
@@ -143,7 +144,7 @@ class RvoFormMixinTest(TestCase):
         assert len(log.output) == 1
         assert "FileInput" in log.output[0]
         assert "document" in log.output[0]
-        assert "not in RVO widget_templates mapping" in log.output[0]
+        assert "not in widget_templates mapping" in log.output[0]
 
 
 class UserFormEmailDomainValidationTest(TestCase):
@@ -247,3 +248,76 @@ class UserFormEmailDomainValidationTest(TestCase):
         )
         assert not form.is_valid()
         assert "email" in form.errors
+
+
+class NlddFormMixinTest(TestCase):
+    """Tests that NlddFormMixin renders forms without any RVO classes."""
+
+    RVO_MARKERS = (
+        "rvo-",
+        "utrecht-textbox",
+        "utrecht-select",
+        "utrecht-textarea",
+        "utrecht-form-field",
+        "utrecht-radio-button",
+    )
+
+    def setUp(self):
+        Group.objects.get_or_create(name="Beheerder")
+        Group.objects.get_or_create(name="Consultant")
+        Group.objects.get_or_create(name="Business Development Manager")
+        self.category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
+        Label.objects.create(name="Brand A", category=self.category)
+
+    def _make_nldd_test_form(self, **kwargs):
+        """Create a simple test form using NlddFormMixin."""
+
+        class NlddTestForm(NlddFormMixin, forms.Form):
+            first_name = forms.CharField(label="Voornaam", required=True)
+            last_name = forms.CharField(label="Achternaam", required=True)
+            email = forms.EmailField(label="E-mailadres", required=True)
+            role = forms.ChoiceField(label="Rol", choices=[("a", "Admin"), ("b", "User")], required=False)
+            notes = forms.CharField(label="Notities", widget=forms.Textarea, required=False)
+            active = forms.BooleanField(label="Actief", required=False)
+
+        return NlddTestForm(**kwargs)
+
+    def test_nldd_form_renders_without_rvo_classes(self):
+        form = self._make_nldd_test_form()
+        rendered = str(form)
+
+        for marker in self.RVO_MARKERS:
+            assert marker not in rendered, f"RVO marker '{marker}' found in NLDD form output"
+
+    def test_nldd_form_renders_with_nldd_classes(self):
+        form = self._make_nldd_test_form()
+        rendered = str(form)
+
+        assert "nldd-form-field" in rendered
+        assert "nldd-form-field__label" in rendered
+        assert "nldd-input" in rendered
+
+    def test_nldd_form_errors_without_rvo_classes(self):
+        form = self._make_nldd_test_form(data={})
+        assert not form.is_valid()
+        rendered = str(form)
+
+        for marker in self.RVO_MARKERS:
+            assert marker not in rendered, f"RVO marker '{marker}' found in NLDD form error output"
+        assert "nldd-form-field__error" in rendered
+
+    def test_nldd_form_required_label_class(self):
+        form = self._make_nldd_test_form()
+        rendered = str(form)
+
+        first_name_label = re.search(r'<label[^>]*for="id_first_name"[^>]*>', rendered)
+        assert first_name_label is not None
+        assert "nldd-form-field__label--required" in first_name_label.group(0)
+
+    def test_nldd_form_no_required_attribute(self):
+        form = self._make_nldd_test_form()
+        rendered = str(form)
+
+        first_name_input = re.search(r'<input[^>]*name="first_name"[^>]*>', rendered)
+        assert first_name_input is not None
+        assert "required" not in first_name_input.group(0)

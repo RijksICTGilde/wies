@@ -1,0 +1,9 @@
+<div class="nldd-form-field">
+  {% if field.label %}
+    <label class="nldd-form-field__label{% if field.field.required %} nldd-form-field__label--required{% endif %}"
+           {% if field.id_for_label %}for="{{ field.id_for_label }}"{% endif %}
+           id="label-{{ field.html_name }}">{{ field.label }}</label>
+  {% endif %}
+  {{ field }}
+  {% if field.errors %}{{ field.errors }}{% endif %}
+</div>

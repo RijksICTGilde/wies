@@ -1,7 +1,7 @@
-"""Shared form-rendering helpers for the RVO design system.
+"""Shared form-rendering helpers for design system integration.
 
 Lives in its own module so both ``wies.core.forms`` and
-``wies.core.inline_edit.forms`` can import ``RvoFormMixin`` without
+``wies.core.inline_edit.forms`` can import form mixins without
 creating a circular dependency.
 """
 
@@ -14,12 +14,16 @@ from django.template import engines
 logger = logging.getLogger(__name__)
 
 
-class RvoJinja2Renderer(Jinja2):
+class WiesJinja2Renderer(Jinja2):
     """Custom renderer that uses Django's configured Jinja2 environment with all globals."""
 
     @property
     def engine(self):
         return engines["jinja2"]
+
+
+# Keep old name as alias for backward compat during migration.
+RvoJinja2Renderer = WiesJinja2Renderer
 
 
 class RvoErrorList(ErrorList):
@@ -28,52 +32,50 @@ class RvoErrorList(ErrorList):
     template_name = "rvo/forms/errors/list/default.html"
 
 
-class RvoFormMixin:
+class NlddErrorList(ErrorList):
+    """Custom ErrorList with NLDD template"""
+
+    template_name = "nldd/forms/errors/list/default.html"
+
+
+class _BaseFormMixin:
+    """Shared form configuration logic for any design system.
+
+    Subclasses set ``_form_template``, ``_field_template``, ``_error_class``,
+    and ``widget_templates`` to wire up the correct templates.
     """
-    Mixin to automatically configure forms for RVO design system rendering.
 
-    Usage:
-        class MyForm(RvoFormMixin, forms.ModelForm):
-            # Just define fields as normal
-            name = forms.CharField()
+    _form_template: str
+    _field_template: str
+    _error_class: type[ErrorList]
 
-    All RVO templates, error styling, and widget configuration happens automatically.
-    This Mixin also disables client-side required checks on fields.
-    """
+    default_renderer = WiesJinja2Renderer()
 
-    template_name = "rvo/forms/form.html"
-    default_renderer = RvoJinja2Renderer()
-
-    # Widget type to template mapping (only includes widgets with existing templates)
-    widget_templates = {
-        "TextInput": "rvo/forms/widgets/text.html",
-        "EmailInput": "rvo/forms/widgets/email.html",
-        "Select": "rvo/forms/widgets/select.html",
-        "CheckboxSelectMultiple": "rvo/forms/widgets/checkbox_select.html",
-        "MultiselectDropdown": "rvo/forms/widgets/multiselect.html",
-        "RadioSelect": "rvo/forms/widgets/radio.html",
-        "DateInput": "rvo/forms/widgets/date.html",
-        "Textarea": "rvo/forms/widgets/textarea.html",
-        "CheckboxInput": "rvo/forms/widgets/checkbox.html",
-        "OrgPickerWidget": "rvo/widgets/org_picker.html",
-    }
+    widget_templates: dict[str, str] = {}
 
     # Per-widget extra configuration applied whenever the widget class is
-    # mapped to an RVO template. Each entry is merged onto the widget
-    # instance. `DateInput` rendering — HTML5 <input type="date"> demands
-    # ISO yyyy-mm-dd in its value attribute or the browser silently
+    # mapped to a template. `DateInput` rendering — HTML5 <input type="date">
+    # demands ISO yyyy-mm-dd in its value attribute or the browser silently
     # blanks the field; Django's DateInput defaults to the active
     # locale (Dutch dd-mm-yyyy), so we force ISO here.
     widget_config = {
         "DateInput": {"format": "%Y-%m-%d"},
     }
 
-    def _configure_field_for_rvo(self, field_name):
+    @property
+    def template_name(self):
+        return self._form_template
+
+    @template_name.setter
+    def template_name(self, value):
+        self._form_template = value
+
+    def _configure_field(self, field_name: str) -> None:
         field = self.fields[field_name]
 
         # Disable HTML5 client-side required validation
         field.widget.use_required_attribute = lambda _: False
-        field.template_name = "rvo/forms/field.html"
+        field.template_name = self._field_template
 
         # Turn off browser autocomplete for every form field by default
         # — Wies fields are domain-specific (Opdracht naam, Looptijd,
@@ -89,16 +91,64 @@ class RvoFormMixin:
                 setattr(field.widget, attr, value)
         else:
             logger.warning(
-                "Widget '%s' for field '%s' not in RVO widget_templates mapping. Using default Django template.",
+                "Widget '%s' for field '%s' not in widget_templates mapping. Using default Django template.",
                 widget_class_name,
                 field_name,
             )
 
     def __init__(self, *args, **kwargs):
-        # Set custom error class before calling super
-        kwargs.setdefault("error_class", RvoErrorList)
+        kwargs.setdefault("error_class", self._error_class)
         super().__init__(*args, **kwargs)
 
-        # Configure all fields and widgets for RVO
         for field_name in self.fields:
-            self._configure_field_for_rvo(field_name)
+            self._configure_field(field_name)
+
+    # Backward-compat alias used by forms that dynamically add fields
+    # after __init__ and then configure them individually.
+    _configure_field_for_rvo = _configure_field
+
+
+class RvoFormMixin(_BaseFormMixin):
+    """Configure forms for RVO design system rendering."""
+
+    _form_template = "rvo/forms/form.html"
+    _field_template = "rvo/forms/field.html"
+    _error_class = RvoErrorList
+
+    widget_templates = {
+        "TextInput": "rvo/forms/widgets/text.html",
+        "EmailInput": "rvo/forms/widgets/email.html",
+        "Select": "rvo/forms/widgets/select.html",
+        "CheckboxSelectMultiple": "rvo/forms/widgets/checkbox_select.html",
+        "MultiselectDropdown": "rvo/forms/widgets/multiselect.html",
+        "RadioSelect": "rvo/forms/widgets/radio.html",
+        "DateInput": "rvo/forms/widgets/date.html",
+        "Textarea": "rvo/forms/widgets/textarea.html",
+        "CheckboxInput": "rvo/forms/widgets/checkbox.html",
+        "OrgPickerWidget": "rvo/widgets/org_picker.html",
+    }
+
+
+class NlddFormMixin(_BaseFormMixin):
+    """Configure forms for NLDD design system rendering.
+
+    Uses native HTML inputs (no Shadow DOM web components) so HTMX
+    and Django form handling work without a bridge layer.
+    """
+
+    _form_template = "nldd/forms/form.html"
+    _field_template = "nldd/forms/field.html"
+    _error_class = NlddErrorList
+
+    widget_templates = {
+        "TextInput": "nldd/forms/widgets/text.html",
+        "EmailInput": "nldd/forms/widgets/email.html",
+        "Select": "nldd/forms/widgets/select.html",
+        "CheckboxSelectMultiple": "nldd/forms/widgets/checkbox_select.html",
+        "MultiselectDropdown": "nldd/forms/widgets/multiselect.html",
+        "RadioSelect": "nldd/forms/widgets/radio.html",
+        "DateInput": "nldd/forms/widgets/date.html",
+        "Textarea": "nldd/forms/widgets/textarea.html",
+        "CheckboxInput": "nldd/forms/widgets/checkbox.html",
+        "OrgPickerWidget": "nldd/widgets/org_picker.html",
+    }

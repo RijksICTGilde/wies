@@ -1,0 +1,5 @@
+<input type="checkbox"
+       name="{{ widget.name }}"
+       {% if widget.value %}checked{% endif %}
+       class="nldd-checkbox"
+       {% include "nldd/forms/widgets/attrs.html" %}>

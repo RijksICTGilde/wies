@@ -146,8 +146,9 @@ class NDDIsolationTest(TestCase):
     def test_no_ndd_tags_in_rvo_templates(self):
         offenders = []
         for path in self.JINJA_ROOT.rglob("*.html"):
-            # Sla NDD subtree over
-            if "ndd/" in str(path.relative_to(self.JINJA_ROOT)):
+            # Sla NDD en NLDD subtrees over
+            rel = str(path.relative_to(self.JINJA_ROOT))
+            if "ndd/" in rel or "nldd/" in rel:
                 continue
             text = path.read_text(encoding="utf-8")
             if "ndd-" in text or "<ndd-" in text:

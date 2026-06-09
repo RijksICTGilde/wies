@@ -1,0 +1,17 @@
+{% if value %}
+  <span class="inline-edit-owner">
+    {% if owner_url %}
+      <a href="{{ owner_url }}"
+         hx-get="{{ owner_url }}"
+         hx-target="#ndd-side-panel-content">{{ value.name }}</a>
+    {% else %}
+      {{ value.name }}
+    {% endif %}
+    {% if value.email %}
+      <br>
+      <a href="{{ owner_mailto or ('mailto:' ~ value.email) }}">{{ value.email }}</a>
+    {% endif %}
+  </span>
+{% else %}
+  <em class="ndd-text-secondary">Niet toegewezen</em>
+{% endif %}

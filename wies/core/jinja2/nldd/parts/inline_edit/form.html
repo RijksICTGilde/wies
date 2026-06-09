@@ -1,0 +1,24 @@
+{% set multi = form.fields|length > 1 %}
+<div id="{{ target }}">
+  <form hx-post="{{ edit_url }}"
+        hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+        hx-target="#{{ target }}"
+        hx-swap="outerHTML">
+    <div class="nldd-form-fields{% if multi %} nldd-form-fields--spaced{% endif %}">
+      {% for bound in form %}
+        <div class="nldd-form-field">
+          {% if multi and bound.label %}
+            <label class="nldd-form-field__label" for="{{ bound.id_for_label }}">{{ bound.label }}</label>
+          {% endif %}
+          {{ bound.as_widget(attrs={"autofocus": loop.first}) }}
+          {% for error in bound.errors %}<p class="nldd-form-field__error-text">{{ error }}</p>{% endfor %}
+        </div>
+      {% endfor %}
+    </div>
+    {% for error in form.non_field_errors() %}<p class="nldd-form-field__error-text">{{ error }}</p>{% endfor %}
+    <div class="field-actions">
+      <ndd-button type="submit" variant="primary" text="Opslaan"></ndd-button>
+      <ndd-button type="button" variant="secondary" text="Annuleren" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML"></ndd-button>
+    </div>
+  </form>
+</div>

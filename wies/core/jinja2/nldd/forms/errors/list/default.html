@@ -1,0 +1,5 @@
+{% if errors %}
+  <div class="nldd-form-field__error">
+    {% for error in errors %}<span class="nldd-form-field__error-text">{{ error }}</span>{% endfor %}
+  </div>
+{% endif %}

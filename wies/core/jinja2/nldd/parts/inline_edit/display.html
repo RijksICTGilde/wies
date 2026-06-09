@@ -1,0 +1,28 @@
+<div id="{{ target }}">
+  <div class="editable-field-display">
+    {% if alert %}
+      <div class="nldd-alert nldd-alert--{{ alert.kind }}"
+           role="{%- if alert.kind == 'error' -%}alert{%- else -%}status{%- endif -%}">
+        <p>{{ alert.message }}</p>
+      </div>
+    {% endif %}
+    <div class="editable-field-display__value"
+         {% if user_can_edit and not hide_edit_button %} hx-get="{{ edit_url }}?edit=true" hx-target="#{{ target }}" hx-swap="outerHTML" role="button" tabindex="0" style="cursor: pointer" {% endif %}>
+      {% if display and display.template %}
+        {% include display.template %}
+      {% else %}
+        <span>{{ display.text if display else "" }}</span>
+      {% endif %}
+    </div>
+    {% if user_can_edit and not hide_edit_button %}
+      <button type="button"
+              class="edit-icon-button"
+              hx-get="{{ edit_url }}?edit=true"
+              hx-target="#{{ target }}"
+              hx-swap="outerHTML"
+              aria-label="Bewerk {{ label }}">
+        <ndd-icon name="edit" class="edit-icon-button__pencil"></ndd-icon>
+      </button>
+    {% endif %}
+  </div>
+</div>
