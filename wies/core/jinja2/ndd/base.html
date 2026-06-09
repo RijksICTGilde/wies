@@ -30,31 +30,31 @@
     </script>
   </head>
   <body class="ndd-app">
-    <ndd-top-navigation-bar></ndd-top-navigation-bar>
+    <nldd-top-navigation-bar></nldd-top-navigation-bar>
     <nav class="ndd-app__nav">
       <div class="ndd-app__nav-inner">
-        <ndd-menu-bar accessible-label="Hoofdnavigatie" overflow-text="Meer opties">
-        <ndd-menu-bar-item text="Wie zit waar?" href="{{ url('home') }}"
+        <nldd-menu-bar accessible-label="Hoofdnavigatie" overflow-text="Meer opties">
+        <nldd-menu-bar-item text="Wie zit waar?" href="{{ url('home') }}"
         {% if request.path == '/' %}current{% endif %}
         >
-        </ndd-menu-bar-item>
-        <ndd-menu-bar-item text="Aanvragen" href="{{ url('assignment-list') }}"
+        </nldd-menu-bar-item>
+        <nldd-menu-bar-item text="Aanvragen" href="{{ url('assignment-list') }}"
         {% if '/opdrachten/' in request.path %}current{% endif %}
         >
-        </ndd-menu-bar-item>
-        </ndd-menu-bar>
+        </nldd-menu-bar-item>
+        </nldd-menu-bar>
         {% if request.user.is_authenticated %}
-          <ndd-menu-bar accessible-label="Gebruikersmenu" overflow-text="Meer">
-          <ndd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="person" expandable content-priority="text">
-          <ndd-menu-item text="Profiel" data-href="{{ url('user-profile') }}"></ndd-menu-item>
+          <nldd-menu-bar accessible-label="Gebruikersmenu" overflow-text="Meer">
+          <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="person" expandable content-priority="text">
+          <nldd-menu-item text="Profiel" data-href="{{ url('user-profile') }}"></nldd-menu-item>
           {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
-            <ndd-menu-divider></ndd-menu-divider>
-            <ndd-menu-item text="Beheer" data-href="{{ url('admin-users') }}"></ndd-menu-item>
+            <nldd-menu-divider></nldd-menu-divider>
+            <nldd-menu-item text="Beheer" data-href="{{ url('admin-users') }}"></nldd-menu-item>
           {% endif %}
-          <ndd-menu-divider></ndd-menu-divider>
-          <ndd-menu-item text="Uitloggen" data-href="{{ url('logout') }}"></ndd-menu-item>
-          </ndd-menu-bar-item>
-          </ndd-menu-bar>
+          <nldd-menu-divider></nldd-menu-divider>
+          <nldd-menu-item text="Uitloggen" data-href="{{ url('logout') }}"></nldd-menu-item>
+          </nldd-menu-bar-item>
+          </nldd-menu-bar>
         {% endif %}
       </div>
     </nav>
@@ -66,19 +66,19 @@
         </div>
       </aside>
       <div id="ndd-main-pane">
-        <ndd-page sticky-header
+        <nldd-page sticky-header
         {% block page_attrs %}
         {% endblock page_attrs %}
         >
         {% block content %}
         {% endblock content %}
-        </ndd-page>
+        </nldd-page>
       </div>
     </div>
     {% block panel %}
     {% endblock panel %}
     {# Mobile filter sheet #}
-    <ndd-sheet id="ndd-filter-sheet" placement="left" accessible-label="Filters">
+    <nldd-sheet id="ndd-filter-sheet" placement="left" accessible-label="Filters">
     <div id="ndd-filter-sheet-content"
          class="ndd-panel"
          style="padding: var(--primitives-space-24, 24px)">
@@ -89,6 +89,6 @@
                 data-ndd-action="panel-close">Sluit</button>
       </header>
     </div>
-    </ndd-sheet>
+    </nldd-sheet>
   </body>
 </html>

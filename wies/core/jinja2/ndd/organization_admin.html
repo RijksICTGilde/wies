@@ -15,7 +15,7 @@
           {% if child.tree_children %}
             <details class="org-tree__details">
               <summary class="org-tree__summary">
-                <ndd-icon name="chevron-right" class="org-tree__chevron"></ndd-icon>
+                <nldd-icon name="chevron-right" class="org-tree__chevron"></nldd-icon>
                 <span class="org-tree__label">{{ child.label or child.name }}</span>
                 {% if child.abbreviations %}<span class="org-tree__abbr">({{ child.abbreviations[0] }})</span>{% endif %}
                 {% if child.is_inactive %}<span class="org-tree__badge--inactive">(inactief)</span>{% endif %}
@@ -34,12 +34,12 @@
       {% endfor %}
     </ul>
   {% endmacro %}
-  <ndd-container padding="24">
-  <ndd-rich-text>
+  <nldd-container padding="24">
+  <nldd-rich-text>
   <h1>Opdrachtgevers</h1>
-  </ndd-rich-text>
+  </nldd-rich-text>
   <div style="max-width: 400px; margin-bottom: 1rem;">
-    <ndd-search-field id="org-search" placeholder="Zoeken..." aria-label="Zoeken in organisaties"></ndd-search-field>
+    <nldd-search-field id="org-search" placeholder="Zoeken..." aria-label="Zoeken in organisaties"></nldd-search-field>
   </div>
   <p id="org-search-empty" class="org-tree__empty" style="display: none;">Geen organisaties gevonden.</p>
   <ul class="org-tree__list org-tree__list--root" id="org-tree-root">
@@ -48,7 +48,7 @@
           data-label="{{ type_name|lower }}">
         <details class="org-tree__details">
           <summary class="org-tree__summary">
-            <ndd-icon name="chevron-right" class="org-tree__chevron"></ndd-icon>
+            <nldd-icon name="chevron-right" class="org-tree__chevron"></nldd-icon>
             <span class="org-tree__label">{{ type_name }}</span>
           </summary>
           {{ render_tree(units) }}
@@ -56,6 +56,6 @@
       </li>
     {% endfor %}
   </ul>
-  </ndd-container>
+  </nldd-container>
   <script src="{{ static('js/admin_org_search.js') }}"></script>
 {% endblock content %}

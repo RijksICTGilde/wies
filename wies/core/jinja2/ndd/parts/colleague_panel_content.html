@@ -19,11 +19,11 @@
   {% if labels %}
     <div class="ndd-panel__tokens">
       {% for label in labels %}
-        <ndd-token style="--ndd-token-bg: {{ label.category.color }}">{{ label.name }}</ndd-token>
+        <nldd-token style="--ndd-token-bg: {{ label.category.color }}">{{ label.name }}</nldd-token>
       {% endfor %}
     </div>
   {% endif %}
-  <ndd-rich-text spacing="snug">
+  <nldd-rich-text spacing="snug">
   <h3>Opdrachten</h3>
   {% if panel_data.assignments %}
     <div class="ndd-assignment-cards">
@@ -42,7 +42,7 @@
               </span>
             {% endif %}
           </div>
-          {% if assignment.historical %}<ndd-token>Afgelopen</ndd-token>{% endif %}
+          {% if assignment.historical %}<nldd-token>Afgelopen</nldd-token>{% endif %}
         </a>
       {% endfor %}
     </div>
@@ -51,5 +51,5 @@
       <em>Geen opdrachten gevonden.</em>
     </p>
   {% endif %}
-  </ndd-rich-text>
+  </nldd-rich-text>
 </div>

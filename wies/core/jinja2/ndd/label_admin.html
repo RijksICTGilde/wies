@@ -13,15 +13,15 @@
   {% include "ndd/parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  <ndd-container slot="header" padding="16">
+  <nldd-container slot="header" padding="16">
   <div style="display: flex;
               align-items: center;
               justify-content: space-between">
-    <ndd-rich-text><strong>Labels</strong></ndd-rich-text>
-    <ndd-button variant="primary" text="Categorie toevoegen" hx-get="{{ url('label-category-create') }}" hx-target="#labelFormModal" hx-swap="innerHTML">
-    </ndd-button>
+    <nldd-rich-text><strong>Labels</strong></nldd-rich-text>
+    <nldd-button variant="primary" text="Categorie toevoegen" hx-get="{{ url('label-category-create') }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+    </nldd-button>
   </div>
-  </ndd-container>
+  </nldd-container>
   <div style="padding: var(--primitives-space-16, 16px);">
     {% if categories %}
       {% for category in categories %}
@@ -32,19 +32,19 @@
                       gap: 8px;
                       margin-bottom: var(--primitives-space-12, 12px)">
             <h2 style="font-size: 1.125rem; font-weight: 600; margin: 0;">{{ category.name }}</h2>
-            <ndd-icon-button icon="pencil" variant="neutral-transparent" size="sm" aria-label="Bewerk {{ category.name }}" hx-get="{{ url('label-category-edit', args=[category.id]) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
-            </ndd-icon-button>
+            <nldd-icon-button icon="pencil" variant="neutral-transparent" size="sm" aria-label="Bewerk {{ category.name }}" hx-get="{{ url('label-category-edit', args=[category.id]) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+            </nldd-icon-button>
           </div>
           {% if category.labels.all() %}
             <div class="ndd-panel__tokens">
               {% for label in category.labels.all() %}
                 {% set token_style = "cursor: pointer; background-color: " ~ category.color ~ ";" if category.color else "cursor: pointer;" %}
-                <ndd-token style="{{ token_style }}" hx-get="{{ url('label-edit', args=[label.id]) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+                <nldd-token style="{{ token_style }}" hx-get="{{ url('label-edit', args=[label.id]) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
                 {{ label.name }}
                 <span style="color: var(--semantics-content-secondary-color, #666);
                              font-size: 0.85em;
                              margin-left: 0.25em">({{ label.usage_count|default(0) }})</span>
-                </ndd-token>
+                </nldd-token>
               {% endfor %}
             </div>
           {% else %}

@@ -11,7 +11,7 @@
         <div class="ndd-assignment-card__top">
           <strong>{{ assignment.name }}</strong>
           {% if assignment.historical %}
-            <ndd-token>Afgelopen</ndd-token>
+            <nldd-token>Afgelopen</nldd-token>
           {% elif assignment.start_date or assignment.end_date %}
             <span class="ndd-text-secondary">
               {{ assignment.start_date|datum_nl("N y") if assignment.start_date else "?" }}
@@ -29,12 +29,12 @@
         {% endif %}
         {% if assignment.tags %}
           <div style="margin-top: 0.25rem;">
-            {% for tag in assignment.tags %}<ndd-token>{{ tag.skill if tag is mapping else tag }}</ndd-token>{% endfor %}
+            {% for tag in assignment.tags %}<nldd-token>{{ tag.skill if tag is mapping else tag }}</nldd-token>{% endfor %}
           </div>
         {% endif %}
         {% if assignment.privacy_warning_text %}
           <div style="margin-top: 0.25rem;">
-            <ndd-icon name="lock" size="16"></ndd-icon>
+            <nldd-icon name="lock" size="16"></nldd-icon>
             <span class="ndd-text-secondary">{{ assignment.privacy_warning_text }}</span>
           </div>
         {% endif %}

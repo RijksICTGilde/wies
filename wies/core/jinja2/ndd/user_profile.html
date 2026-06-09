@@ -11,9 +11,9 @@
 {% block sidebar %}
 {% endblock sidebar %}
 {% block content %}
-  <ndd-container>
-  <ndd-simple-section>
-  <ndd-rich-text>
+  <nldd-container>
+  <nldd-simple-section>
+  <nldd-rich-text>
   <section class="ndd-panel__identity" style="margin-bottom: 1.5rem;">
     <span class="ndd-avatar ndd-avatar--lg" aria-hidden="true">{{ user.first_name|first|upper if user.first_name else "?" }}</span>
     <div class="ndd-panel__identity-info">
@@ -45,7 +45,7 @@
         {% if item.labels %}
           <div class="ndd-panel__tokens">
             {% for label in item.labels %}
-              <ndd-token style="--ndd-token-bg: {{ label.category.color }}">{{ label.name }}</ndd-token>
+              <nldd-token style="--ndd-token-bg: {{ label.category.color }}">{{ label.name }}</nldd-token>
             {% endfor %}
           </div>
         {% else %}
@@ -83,7 +83,7 @@
               {% endfor %}
             </div>
           {% endif %}
-          {% if assignment.historical %}<ndd-token>Afgelopen</ndd-token>{% endif %}
+          {% if assignment.historical %}<nldd-token>Afgelopen</nldd-token>{% endif %}
         </a>
       {% endfor %}
     </div>
@@ -92,16 +92,16 @@
       <em>Geen opdrachten gevonden.</em>
     </p>
   {% endif %}
-  </ndd-rich-text>
-  </ndd-simple-section>
-  </ndd-container>
+  </nldd-rich-text>
+  </nldd-simple-section>
+  </nldd-container>
 {% endblock content %}
 {% block panel %}
-  <ndd-sheet id="ndd-side-panel" placement="right" accessible-label="Detail">
+  <nldd-sheet id="ndd-side-panel" placement="right" accessible-label="Detail">
   <div id="ndd-side-panel-content">
     {% if panel_data %}
       {% include panel_data.panel_content_template %}
     {% endif %}
   </div>
-  </ndd-sheet>
+  </nldd-sheet>
 {% endblock panel %}

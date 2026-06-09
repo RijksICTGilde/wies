@@ -1,62 +1,62 @@
 {# NDD admin sidebar — navigatie voor beheerpagina's. #}
-<ndd-list>
-<ndd-list-item type="link" href="{{ url('admin-users') }}"
+<nldd-list>
+<nldd-list-item type="link" href="{{ url('admin-users') }}"
 {% if '/beheer/gebruikers/' in request.path %}current{% endif %}
 >
-<ndd-spacer-cell slot="start" size="12"></ndd-spacer-cell>
-<ndd-icon-cell slot="start" size="20">
-<ndd-icon name="person"></ndd-icon>
-</ndd-icon-cell>
-<ndd-spacer-cell slot="start" size="8"></ndd-spacer-cell>
-<ndd-title-cell text="Gebruikers"></ndd-title-cell>
-<ndd-spacer-cell slot="end" size="12"></ndd-spacer-cell>
-</ndd-list-item>
+<nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
+<nldd-icon-cell slot="start" size="20">
+<nldd-icon name="person"></nldd-icon>
+</nldd-icon-cell>
+<nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
+<nldd-title-cell text="Gebruikers"></nldd-title-cell>
+<nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+</nldd-list-item>
 {% if DEBUG %}
-  <ndd-list-item type="link" href="{{ url('organization-admin') }}"
+  <nldd-list-item type="link" href="{{ url('organization-admin') }}"
   {% if '/organisaties/' in request.path %}current{% endif %}
   >
-  <ndd-spacer-cell slot="start" size="12"></ndd-spacer-cell>
-  <ndd-icon-cell slot="start" size="20">
-  <ndd-icon name="apartment-building"></ndd-icon>
-  </ndd-icon-cell>
-  <ndd-spacer-cell slot="start" size="8"></ndd-spacer-cell>
-  <ndd-title-cell text="Opdrachtgevers"></ndd-title-cell>
-  <ndd-spacer-cell slot="end" size="12"></ndd-spacer-cell>
-  </ndd-list-item>
+  <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
+  <nldd-icon-cell slot="start" size="20">
+  <nldd-icon name="apartment-building"></nldd-icon>
+  </nldd-icon-cell>
+  <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
+  <nldd-title-cell text="Opdrachtgevers"></nldd-title-cell>
+  <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+  </nldd-list-item>
 {% endif %}
-<ndd-list-item type="link" href="{{ url('label-admin') }}"
+<nldd-list-item type="link" href="{{ url('label-admin') }}"
 {% if '/beheer/labels/' in request.path %}current{% endif %}
 >
-<ndd-spacer-cell slot="start" size="12"></ndd-spacer-cell>
-<ndd-icon-cell slot="start" size="20">
-<ndd-icon name="tag"></ndd-icon>
-</ndd-icon-cell>
-<ndd-spacer-cell slot="start" size="8"></ndd-spacer-cell>
-<ndd-title-cell text="Labels"></ndd-title-cell>
-<ndd-spacer-cell slot="end" size="12"></ndd-spacer-cell>
-</ndd-list-item>
+<nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
+<nldd-icon-cell slot="start" size="20">
+<nldd-icon name="tag"></nldd-icon>
+</nldd-icon-cell>
+<nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
+<nldd-title-cell text="Labels"></nldd-title-cell>
+<nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+</nldd-list-item>
 {% if can_view_staff_page(user) %}
-  <ndd-list-item type="link" href="{{ url('staff-dashboard') }}"
+  <nldd-list-item type="link" href="{{ url('staff-dashboard') }}"
   {% if '/statistieken/' in request.path %}current{% endif %}
   >
-  <ndd-spacer-cell slot="start" size="12"></ndd-spacer-cell>
-  <ndd-icon-cell slot="start" size="20">
-  <ndd-icon name="chart-bar"></ndd-icon>
-  </ndd-icon-cell>
-  <ndd-spacer-cell slot="start" size="8"></ndd-spacer-cell>
-  <ndd-title-cell text="Statistieken"></ndd-title-cell>
-  <ndd-spacer-cell slot="end" size="12"></ndd-spacer-cell>
-  </ndd-list-item>
-  <ndd-list-item type="link" href="{{ url('staff-database') }}"
+  <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
+  <nldd-icon-cell slot="start" size="20">
+  <nldd-icon name="chart-bar"></nldd-icon>
+  </nldd-icon-cell>
+  <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
+  <nldd-title-cell text="Statistieken"></nldd-title-cell>
+  <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+  </nldd-list-item>
+  <nldd-list-item type="link" href="{{ url('staff-database') }}"
   {% if '/database/' in request.path %}current{% endif %}
   >
-  <ndd-spacer-cell slot="start" size="12"></ndd-spacer-cell>
-  <ndd-icon-cell slot="start" size="20">
-  <ndd-icon name="database"></ndd-icon>
-  </ndd-icon-cell>
-  <ndd-spacer-cell slot="start" size="8"></ndd-spacer-cell>
-  <ndd-title-cell text="Database"></ndd-title-cell>
-  <ndd-spacer-cell slot="end" size="12"></ndd-spacer-cell>
-  </ndd-list-item>
+  <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
+  <nldd-icon-cell slot="start" size="20">
+  <nldd-icon name="database"></nldd-icon>
+  </nldd-icon-cell>
+  <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
+  <nldd-title-cell text="Database"></nldd-title-cell>
+  <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+  </nldd-list-item>
 {% endif %}
-</ndd-list>
+</nldd-list>

@@ -8,16 +8,16 @@
 // Deze bridge:
 //   1. Hangt change/input listeners aan elke ndd-* form input zodat we
 //      events kunnen opvangen voordat ze verloren gaan.
-//   2. Spiegelt ndd-checkbox-field state naar standaard <input type="hidden">
+//   2. Spiegelt nldd-checkbox-field state naar standaard <input type="hidden">
 //      siblings binnen [data-ndd-fieldset] zodat hx-include die meeneemt.
-//   3. Spiegelt ndd-search-field naar #ndd-search-hidden met debounce.
-//   4. Spiegelt ndd-text-field (incl. type=date) als hidden input naast zich.
+//   3. Spiegelt nldd-search-field naar #ndd-search-hidden met debounce.
+//   4. Spiegelt nldd-text-field (incl. type=date) als hidden input naast zich.
 //   5. Re-dispatcht een synthetische `change` op een hidden input zodat
 //      HTMX's hx-trigger="change from:[data-filter-input]" afvuurt.
 //   6. MutationObserver gescoped op .ndd-app vangt nieuwe NDD elementen
 //      (ook na HTMX swaps).
-//   7. Click bridge voor ndd-button met hx-* attributen.
-//   8. Dismiss handler voor ndd-token chips → verwijdert filter.
+//   7. Click bridge voor nldd-button met hx-* attributen.
+//   8. Dismiss handler voor nldd-token chips → verwijdert filter.
 //   9. Sidebar collapse toggle.
 // ----------------------------------------------------------------------------
 
@@ -25,11 +25,11 @@
   "use strict";
 
   const NDD_CHECKBOX =
-    "ndd-checkbox-field, ndd-switch-field, input[type='checkbox'][data-ndd-input]";
-  const NDD_TEXT = "ndd-text-field";
-  const NDD_SEARCH = "ndd-search-field";
+    "nldd-checkbox-field, ndd-switch-field, input[type='checkbox'][data-ndd-input]";
+  const NDD_TEXT = "nldd-text-field";
+  const NDD_SEARCH = "nldd-search-field";
 
-  // --- ndd-checkbox-field -> hidden input mirror ---------------------
+  // --- nldd-checkbox-field -> hidden input mirror ---------------------
   function rebuildCheckboxesIn(fieldset) {
     const name = fieldset.dataset.name;
     if (!name) return;
@@ -37,7 +37,7 @@
     if (!slot) return;
     slot.innerHTML = "";
     fieldset
-      .querySelectorAll("ndd-checkbox-field, input[type='checkbox']")
+      .querySelectorAll("nldd-checkbox-field, input[type='checkbox']")
       .forEach((cb) => {
         const checked =
           cb.checked === true ||
@@ -73,13 +73,13 @@
     el.addEventListener("input", onChange);
   }
 
-  // --- ndd-text-field (date etc.) -> hidden input mirror ------------
+  // --- nldd-text-field (date etc.) -> hidden input mirror ------------
   function attachTextField(el) {
     if (el.__nddBridgeAttached) return;
     el.__nddBridgeAttached = true;
     const name = el.getAttribute("name");
     if (!name) return;
-    // Schrijf hidden input direct na het ndd-text-field element.
+    // Schrijf hidden input direct na het nldd-text-field element.
     let hidden =
       el.parentElement &&
       el.parentElement.querySelector(
@@ -107,7 +107,7 @@
     el.addEventListener("input", sync);
   }
 
-  // --- ndd-search-field -> #ndd-search-hidden -----------------------
+  // --- nldd-search-field -> #ndd-search-hidden -----------------------
   function attachSearchField(el) {
     if (el.__nddSearchAttached) return;
     el.__nddSearchAttached = true;
@@ -132,7 +132,7 @@
     });
   }
 
-  // --- ndd-token dismiss -> verwijder filter ------------------------
+  // --- nldd-token dismiss -> verwijder filter ------------------------
   function removeFilter(name, value) {
     const form = document.getElementById("ndd-filter-form");
     if (!form) return;
@@ -150,13 +150,15 @@
       return;
     }
 
-    // Multi-select: vink corresponderende ndd-checkbox-field uit.
+    // Multi-select: vink corresponderende nldd-checkbox-field uit.
     const fieldset = form.querySelector(
       `[data-ndd-fieldset][data-name="${CSS.escape(name)}"]`,
     );
     if (fieldset && value !== null) {
       const cb = Array.from(
-        fieldset.querySelectorAll("ndd-checkbox-field, input[type='checkbox']"),
+        fieldset.querySelectorAll(
+          "nldd-checkbox-field, input[type='checkbox']",
+        ),
       ).find((el) => el.getAttribute("value") === value);
       if (cb) {
         try {
@@ -182,13 +184,13 @@
     }
   }
 
-  // ndd-token "dismiss" event is composed:true (volgens NDD code)
+  // nldd-token "dismiss" event is composed:true (volgens NDD code)
   function setupTokenDismiss() {
     document.addEventListener("dismiss", (e) => {
       const path = e.composedPath();
       const token = path.find(
         (el) =>
-          el instanceof Element && el.tagName?.toLowerCase() === "ndd-token",
+          el instanceof Element && el.tagName?.toLowerCase() === "nldd-token",
       );
       if (!token) return;
       if (token.dataset.nddDismiss !== "filter") return;

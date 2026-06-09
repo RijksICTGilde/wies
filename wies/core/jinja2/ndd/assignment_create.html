@@ -5,16 +5,16 @@
   <script src="{{ static('js/assignment_form.js') }}" defer></script>
 {% endblock extra_head %}
 {% block content %}
-  <ndd-container padding="24" style="max-width: 700px;">
+  <nldd-container padding="24" style="max-width: 700px;">
   <div style="margin-bottom: 1rem;">
     <a href="{{ url('assignment-list') }}">← Terug naar aanvragen</a>
   </div>
-  <ndd-rich-text>
+  <nldd-rich-text>
   <h1>Opdracht invoeren</h1>
   <p>
     Voer hier de gegevens in van een opdracht. Dit formulier kan gebruikt worden voor nieuwe opdrachten, bestaande opdrachten en aanvragen.
   </p>
-  </ndd-rich-text>
+  </nldd-rich-text>
   <form method="post"
         action="{{ url('assignment-create') }}"
         id="assignment-create-form">
@@ -48,10 +48,10 @@
         {% endwith %}
       </fieldset>
       <div style="display: flex; gap: 0.5rem;">
-        <ndd-button variant="primary" type="submit" text="Opdracht aanmaken"></ndd-button>
-        <ndd-button variant="secondary" type="button" id="assignment-cancel-btn" text="Annuleren" data-cancel-url="{{ url('assignment-list') }}"></ndd-button>
+        <nldd-button variant="primary" type="submit" text="Opdracht aanmaken"></nldd-button>
+        <nldd-button variant="secondary" type="button" id="assignment-cancel-btn" text="Annuleren" data-cancel-url="{{ url('assignment-list') }}"></nldd-button>
       </div>
     </div>
   </form>
-  </ndd-container>
+  </nldd-container>
 {% endblock content %}

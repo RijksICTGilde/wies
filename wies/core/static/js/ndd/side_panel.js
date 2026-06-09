@@ -1,4 +1,4 @@
-// NDD side panel — gebruikt ndd-sheet API (.show()/.hide()).
+// NDD side panel — gebruikt nldd-sheet API (.show()/.hide()).
 // Manages: panel stack voor back-navigation, URL sync, popstate.
 
 (function () {
@@ -16,7 +16,7 @@
 
   function isSheetOpen(sheet) {
     if (!sheet) return false;
-    // ndd-sheet exposeert open state via shadow root <dialog open>
+    // nldd-sheet exposeert open state via shadow root <dialog open>
     const dlg = sheet.shadowRoot && sheet.shadowRoot.querySelector("dialog");
     return !!(dlg && dlg.open);
   }
@@ -80,13 +80,13 @@
     // Open sheet als content al server-side gerendered is (initial load met ?collega=N)
     const content = document.getElementById(CONTENT_ID);
     if (content && content.innerHTML.trim()) {
-      // Wacht tot ndd-sheet web component klaar is
+      // Wacht tot nldd-sheet web component klaar is
       const sheet = getSheet();
       if (sheet) {
         if (sheet.shadowRoot) {
           openSheet();
         } else {
-          customElements.whenDefined("ndd-sheet").then(() => openSheet());
+          customElements.whenDefined("nldd-sheet").then(() => openSheet());
         }
       }
     }
@@ -108,7 +108,7 @@
       }
     });
 
-    // ndd-sheet emit een 'close' event wanneer gebruiker op backdrop klikt of ESC drukt
+    // nldd-sheet emit een 'close' event wanneer gebruiker op backdrop klikt of ESC drukt
     const sheet = getSheet();
     if (sheet) {
       sheet.addEventListener("close", () => {

@@ -1,9 +1,9 @@
 {% extends "ndd/base.html" %}
 {% block content %}
-  <ndd-container padding="24" style="max-width: 700px;">
-  <ndd-rich-text>
+  <nldd-container padding="24" style="max-width: 700px;">
+  <nldd-rich-text>
   <h1>Gebruikers importeren</h1>
-  </ndd-rich-text>
+  </nldd-rich-text>
   <form method="post"
         action="{{ url('user-import-csv') }}"
         enctype="multipart/form-data">
@@ -59,7 +59,7 @@
         {% endif %}
       </div>
     {% endif %}
-    <ndd-button variant="primary" type="submit" text="Importeren"></ndd-button>
+    <nldd-button variant="primary" type="submit" text="Importeren"></nldd-button>
   </form>
-  </ndd-container>
+  </nldd-container>
 {% endblock content %}

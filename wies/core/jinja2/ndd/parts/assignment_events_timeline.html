@@ -28,12 +28,12 @@
                   title="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
             {% if event.action == "create" %}
               <span class="event-tag event-tag--create">
-                <ndd-icon name="plus" size="16"></ndd-icon>
+                <nldd-icon name="plus" size="16"></nldd-icon>
                 Aangemaakt
               </span>
             {% else %}
               <span class="event-tag event-tag--update">
-                <ndd-icon name="edit" size="16"></ndd-icon>
+                <nldd-icon name="edit" size="16"></nldd-icon>
                 Gewijzigd
               </span>
             {% endif %}

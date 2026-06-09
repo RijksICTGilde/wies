@@ -4,19 +4,19 @@
 {% block sidebar %}
 {% endblock sidebar %}
 {% block content %}
-  <ndd-container padding="24">
-  <ndd-rich-text>
+  <nldd-container padding="24">
+  <nldd-rich-text>
   <h1>Plaatsingen importeren</h1>
-  </ndd-rich-text>
+  </nldd-rich-text>
   <form method="post"
         action="{{ url('assignment-import-csv') }}"
         enctype="multipart/form-data">
     {{ get_csrf_hidden_input(request) }}
-    <ndd-rich-text>
+    <nldd-rich-text>
     <p>
       Upload een CSV-bestand met plaatsingsgegevens. <a href="{{ static('example_assignment_import.csv') }}">Download het voorbeeldbestand</a>
     </p>
-    </ndd-rich-text>
+    </nldd-rich-text>
     <br>
     <label for="csv_file">
       <strong>CSV-bestand</strong>
@@ -26,7 +26,7 @@
     <br>
     <br>
     {% if result and result.success %}
-      <ndd-rich-text>
+      <nldd-rich-text>
       <p style="color: var(--ndd-color-success, green);">
         <strong>Import geslaagd!</strong>
       </p>
@@ -47,19 +47,19 @@
           <strong>{{ result.skills_created }}</strong> nieuwe rollen aangemaakt
         </li>
       </ul>
-      </ndd-rich-text>
+      </nldd-rich-text>
       {% if result.errors and result.errors|length > 0 %}
-        <ndd-rich-text>
+        <nldd-rich-text>
         <p style="color: var(--ndd-color-warning, orange);">
           <strong>Waarschuwingen:</strong>
         </p>
         <ul>
           {% for error in result.errors %}<li>{{ error }}</li>{% endfor %}
         </ul>
-        </ndd-rich-text>
+        </nldd-rich-text>
       {% endif %}
     {% elif result %}
-      <ndd-rich-text>
+      <nldd-rich-text>
       <p style="color: var(--ndd-color-error, red);">
         <strong>Import mislukt</strong>
       </p>
@@ -69,9 +69,9 @@
           {% for error in result.errors %}<li>{{ error }}</li>{% endfor %}
         </ul>
       {% endif %}
-      </ndd-rich-text>
+      </nldd-rich-text>
     {% endif %}
-    <ndd-button variant="primary" type="submit">Importeren</ndd-button>
+    <nldd-button variant="primary" type="submit">Importeren</nldd-button>
   </form>
-  </ndd-container>
+  </nldd-container>
 {% endblock content %}

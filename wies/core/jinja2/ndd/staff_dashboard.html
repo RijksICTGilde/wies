@@ -6,10 +6,10 @@
   {% include "ndd/parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  <ndd-container padding="24">
-  <ndd-rich-text>
+  <nldd-container padding="24">
+  <nldd-rich-text>
   <h1>Statistieken</h1>
-  </ndd-rich-text>
+  </nldd-rich-text>
   <div class="staff-tiles">
     <div class="staff-tile">
       <div class="staff-tile__value">{{ usage.mau }}</div>
@@ -40,5 +40,5 @@
            style="height: {{ (count / usage.max_daily * 100) if usage.max_daily else 0 }}%"></div>
     {% endfor %}
   </div>
-  </ndd-container>
+  </nldd-container>
 {% endblock content %}

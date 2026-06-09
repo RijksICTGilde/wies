@@ -16,12 +16,12 @@
 {% endblock content %}
 {% block panel %}
   {# ndd-sheet zit altijd in de DOM; HTMX vult #ndd-side-panel-content #}
-  <ndd-sheet id="ndd-side-panel" placement="right" accessible-label="Detail">
+  <nldd-sheet id="ndd-side-panel" placement="right" accessible-label="Detail">
   <div id="ndd-side-panel-content">
     {% if panel_data %}
       {% include panel_data.panel_content_template %}
     {% endif %}
   </div>
-  </ndd-sheet>
+  </nldd-sheet>
   <div id="ndd-client-modal-container"></div>
 {% endblock panel %}

@@ -9,14 +9,14 @@
   {% include "ndd/parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  <ndd-container slot="header" padding="16">
+  <nldd-container slot="header" padding="16">
   <div style="display: flex; align-items: center; gap: 12px;">
-    <ndd-search-field id="ndd-search-input" style="flex: 1;" placeholder="Zoek op naam of email..." value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" hx-get="{{ url('admin-users') }}" hx-trigger="input changed delay:300ms" hx-target="#ndd-user-table" hx-swap="outerHTML" name="zoek">
-    </ndd-search-field>
-    <ndd-button variant="primary" text="Gebruiker toevoegen" hx-get="{{ url('user-create') }}" hx-target="#userFormModal" hx-swap="innerHTML">
-    </ndd-button>
+    <nldd-search-field id="ndd-search-input" style="flex: 1;" placeholder="Zoek op naam of email..." value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" hx-get="{{ url('admin-users') }}" hx-trigger="input changed delay:300ms" hx-target="#ndd-user-table" hx-swap="outerHTML" name="zoek">
+    </nldd-search-field>
+    <nldd-button variant="primary" text="Gebruiker toevoegen" hx-get="{{ url('user-create') }}" hx-target="#userFormModal" hx-swap="innerHTML">
+    </nldd-button>
   </div>
-  </ndd-container>
+  </nldd-container>
   <div id="ndd-user-content">
     <div class="ndd-results-bar">
       <p class="ndd-results-bar__count">

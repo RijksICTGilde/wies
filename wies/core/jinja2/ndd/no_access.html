@@ -3,8 +3,8 @@
   Geen toegang - Wies
 {% endblock title %}
 {% block content %}
-  <ndd-container padding="24" style="padding-top: 2rem;">
-  <ndd-rich-text>
+  <nldd-container padding="24" style="padding-top: 2rem;">
+  <nldd-rich-text>
   <h1>Geen toegang</h1>
   {% if is_allowed_domain %}
     <p>
@@ -22,10 +22,10 @@
       Mogelijk ben je ingelogd met het e-mailadres van een opdrachtgever. Log uit en probeer het opnieuw met je ODI-account.
     </p>
   {% endif %}
-  </ndd-rich-text>
+  </nldd-rich-text>
   <form action="{{ url('logout') }}" method="post" style="margin-top: 1rem;">
     {{ get_csrf_hidden_input(request) }}
-    <ndd-button variant="secondary" type="submit" text="Uitloggen en opnieuw proberen"></ndd-button>
+    <nldd-button variant="secondary" type="submit" text="Uitloggen en opnieuw proberen"></nldd-button>
   </form>
-  </ndd-container>
+  </nldd-container>
 {% endblock content %}

@@ -24,13 +24,13 @@ document.addEventListener("htmx:afterSwap", function (e) {
     });
   });
 
-  // NDD: auto-show ndd-window when HTMX loads content
-  const windows = e.detail.target.querySelectorAll("ndd-window");
+  // NDD: auto-show nldd-window when HTMX loads content
+  const windows = e.detail.target.querySelectorAll("nldd-window");
   windows.forEach(function (win) {
     if (typeof win.show === "function") {
       win.show();
     } else {
-      customElements.whenDefined("ndd-window").then(() => win.show());
+      customElements.whenDefined("nldd-window").then(() => win.show());
     }
   });
 });
@@ -61,7 +61,7 @@ document.addEventListener("closeModal", function () {
     if (modalContainer) {
       const dialog = modalContainer.querySelector("dialog");
       if (dialog) dialog.close();
-      const win = modalContainer.querySelector("ndd-window");
+      const win = modalContainer.querySelector("nldd-window");
       if (win && typeof win.hide === "function") win.hide();
     }
   });

@@ -1,13 +1,13 @@
 {# NDD vacatures — filter chips + card grid container. #}
 {% if not request.headers.get("HX-Request") %}
-  <ndd-container slot="header" padding="16">
+  <nldd-container slot="header" padding="16">
   <div class="ndd-search-row">
-    <ndd-button id="ndd-sidebar-toggle" variant="secondary" start-icon="chevron-left" end-icon="filter" text="Filters">
-    </ndd-button>
-    <ndd-search-field id="ndd-search-input" placeholder="Zoek op opdracht of opdrachtgever…" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-ndd-search-input class="ndd-search-row__field">
-    </ndd-search-field>
+    <nldd-button id="ndd-sidebar-toggle" variant="secondary" start-icon="chevron-left" end-icon="filter" text="Filters">
+    </nldd-button>
+    <nldd-search-field id="ndd-search-input" placeholder="Zoek op opdracht of opdrachtgever…" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-ndd-search-input class="ndd-search-row__field">
+    </nldd-search-field>
   </div>
-  </ndd-container>
+  </nldd-container>
 {% endif %}
 <div id="ndd-filter-and-table-container">
   {% set has_active_filters = (org_chip_data|length > 0) or search_filter or (active_filters|length > 0) %}
@@ -19,10 +19,10 @@
     {% if has_active_filters %}
       <div class="ndd-filter-tokens">
         {% for chip in org_chip_data %}
-          <ndd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-ndd-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</ndd-token>
+          <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-ndd-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
         {% endfor %}
         {% if search_filter %}
-          <ndd-token control="dismiss" dismiss-text="Verwijder zoekopdracht" data-ndd-dismiss="filter" data-filter-name="zoek">{{ search_filter }}</ndd-token>
+          <nldd-token control="dismiss" dismiss-text="Verwijder zoekopdracht" data-ndd-dismiss="filter" data-filter-name="zoek">{{ search_filter }}</nldd-token>
         {% endif %}
         {% for filter_group in filter_groups %}
           {% if filter_group.type == 'select-multi' %}
@@ -31,7 +31,7 @@
               {% for selected_value in values %}
                 {% for option in filter_group.options %}
                   {% if option.value == selected_value %}
-                    <ndd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-ndd-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</ndd-token>
+                    <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-ndd-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
                   {% endif %}
                 {% endfor %}
               {% endfor %}
@@ -41,9 +41,9 @@
       </div>
     {% endif %}
   </div>
-  <ndd-collection layout="grid" id="ndd-assignment-card-grid">
+  <nldd-collection layout="grid" id="ndd-assignment-card-grid">
   {% include "ndd/parts/assignment_card_rows.html" %}
-  </ndd-collection>
+  </nldd-collection>
 </div>
 {% if render_filter_fields_oob %}
   <div hx-swap-oob="outerHTML:#ndd-filter-form">{% include "ndd/parts/filter_sidebar.html" %}</div>

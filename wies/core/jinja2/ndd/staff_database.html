@@ -6,10 +6,10 @@
   {% include "ndd/parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  <ndd-container padding="24">
-  <ndd-rich-text>
+  <nldd-container padding="24">
+  <nldd-rich-text>
   <h1>Database</h1>
-  </ndd-rich-text>
+  </nldd-rich-text>
   <div class="staff-counts">
     <span>Opdrachten: <strong>{{ assignment_count }}</strong></span>
     <span>Collega's: <strong>{{ colleague_count }}</strong></span>
@@ -23,7 +23,7 @@
             onsubmit="return confirm('Weet je zeker dat je alle data wilt verwijderen?');">
         {{ get_csrf_hidden_input(request) }}
         <input type="hidden" name="action" value="clear_data">
-        <ndd-button variant="warning" type="submit" text="Database leegmaken"></ndd-button>
+        <nldd-button variant="warning" type="submit" text="Database leegmaken"></nldd-button>
       </form>
     </div>
     <div class="staff-action-card">
@@ -34,7 +34,7 @@
       <form method="post">
         {{ get_csrf_hidden_input(request) }}
         <input type="hidden" name="action" value="load_base_data">
-        <ndd-button variant="primary" type="submit" text="Dummy data laden"></ndd-button>
+        <nldd-button variant="primary" type="submit" text="Dummy data laden"></nldd-button>
       </form>
     </div>
   {% endif %}
@@ -47,9 +47,9 @@
           hx-swap="innerHTML">
       {{ get_csrf_hidden_input(request) }}
       <input type="hidden" name="action" value="sync_organizations">
-      <ndd-button variant="primary" type="submit" text="Organisaties synchroniseren"></ndd-button>
+      <nldd-button variant="primary" type="submit" text="Organisaties synchroniseren"></nldd-button>
     </form>
   </div>
   <div id="task-list">{% include "ndd/parts/task_list.html" %}</div>
-  </ndd-container>
+  </nldd-container>
 {% endblock content %}

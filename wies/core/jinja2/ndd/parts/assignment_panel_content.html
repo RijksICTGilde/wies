@@ -20,7 +20,7 @@
             class="ndd-panel__bar-action"
             data-ndd-action="panel-close">Sluit</button>
   </header>
-  <ndd-rich-text spacing="snug">
+  <nldd-rich-text spacing="snug">
   <h2>{{ assignment.name }}</h2>
   {% if assignment.extra_info %}<p class="ndd-text-secondary">{{ assignment.extra_info }}</p>{% endif %}
   <dl class="ndd-data-list">
@@ -98,7 +98,7 @@
             <span class="ndd-avatar" aria-hidden="true">{{ member.colleague.name|first|upper }}</span>
             <div class="ndd-team-member__info">
               <strong>{{ member.colleague.name }}</strong>
-              {% if member.historical %}<ndd-token>Afgelopen</ndd-token>{% endif %}
+              {% if member.historical %}<nldd-token>Afgelopen</nldd-token>{% endif %}
               {% for skill in member.skills %}
                 <div class="ndd-team-member__skill">
                   {{ skill.name }}
@@ -111,5 +111,5 @@
       {% endfor %}
     </div>
   {% endif %}
-  </ndd-rich-text>
+  </nldd-rich-text>
 </div>

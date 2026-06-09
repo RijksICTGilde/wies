@@ -1,10 +1,10 @@
-<ndd-window id="assignmentOrgPickerModal" accessible-label="Selecteer opdrachtgever(s)" width="900px" height="600px">
-<ndd-page sticky-header sticky-footer>
-<ndd-top-title-bar slot="header" text="Selecteer opdrachtgever(s)" dismiss-text="Sluiten"></ndd-top-title-bar>
-<ndd-container>
+<nldd-window id="assignmentOrgPickerModal" accessible-label="Selecteer opdrachtgever(s)" width="900px" height="600px">
+<nldd-page sticky-header sticky-footer>
+<nldd-top-title-bar slot="header" text="Selecteer opdrachtgever(s)" dismiss-text="Sluiten"></nldd-top-title-bar>
+<nldd-container>
 <div class="ndd-client-modal__body">
   <div class="ndd-client-modal__search">
-    <ndd-search-field id="assignment-org-search" placeholder="Zoek opdrachtgever..." aria-label="Zoek opdrachtgever"></ndd-search-field>
+    <nldd-search-field id="assignment-org-search" placeholder="Zoek opdrachtgever..." aria-label="Zoek opdrachtgever"></nldd-search-field>
   </div>
   <div class="ndd-client-modal__layout">
     <div class="ndd-client-modal__tree" id="assignment-org-tree-container"></div>
@@ -22,15 +22,15 @@
     </div>
   </div>
 </div>
-</ndd-container>
-<ndd-container slot="footer" padding="16">
-<ndd-button-group orientation="horizontal">
-<ndd-button variant="secondary" type="button" text="Annuleren" onclick="this.closest('ndd-window').hide()"></ndd-button>
-<ndd-button variant="neutral-transparent" type="button" id="assignment-org-clear-btn" text="Selectie wissen"></ndd-button>
-<ndd-button variant="primary" type="button" id="assignment-org-apply-btn" text="Toevoegen"></ndd-button>
-</ndd-button-group>
-</ndd-container>
-</ndd-page>
+</nldd-container>
+<nldd-container slot="footer" padding="16">
+<nldd-button-group orientation="horizontal">
+<nldd-button variant="secondary" type="button" text="Annuleren" onclick="this.closest('ndd-window').hide()"></nldd-button>
+<nldd-button variant="neutral-transparent" type="button" id="assignment-org-clear-btn" text="Selectie wissen"></nldd-button>
+<nldd-button variant="primary" type="button" id="assignment-org-apply-btn" text="Toevoegen"></nldd-button>
+</nldd-button-group>
+</nldd-container>
+</nldd-page>
 {{ hierarchy|json_script("assignment-org-data") }}
 {{ current_selections|json_script("assignment-org-current-selections") }}
-</ndd-window>
+</nldd-window>

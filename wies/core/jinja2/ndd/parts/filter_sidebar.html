@@ -29,8 +29,8 @@
     {% if filter_group.type == 'modal' %}
       <div class="ndd-filter-group">
         <span class="ndd-filter-group__label">{{ filter_group.label }}</span>
-        <ndd-button variant="secondary" type="button" full-width text="{%- if active_org_filter_count == 1 -%}{{ active_org_filter_label }}{%- elif active_org_filter_count > 1 -%}{{ active_org_filter_count }} geselecteerd{%- else -%}Selecteer{%- endif -%}" hx-get="/client-modal/?count_mode={{ client_modal_count_mode }}&ndd=1" hx-target="#ndd-client-modal-container" hx-swap="innerHTML" hx-push-url="false" hx-include="#ndd-org-filter-inputs">
-        </ndd-button>
+        <nldd-button variant="secondary" type="button" full-width text="{%- if active_org_filter_count == 1 -%}{{ active_org_filter_label }}{%- elif active_org_filter_count > 1 -%}{{ active_org_filter_count }} geselecteerd{%- else -%}Selecteer{%- endif -%}" hx-get="/client-modal/?count_mode={{ client_modal_count_mode }}&ndd=1" hx-target="#ndd-client-modal-container" hx-swap="innerHTML" hx-push-url="false" hx-include="#ndd-org-filter-inputs">
+        </nldd-button>
       </div>
     {% elif filter_group.type == 'select-multi' %}
       {% set real_options = filter_group.options|selectattr('value')|list %}
@@ -74,7 +74,7 @@
               <button type="button"
                       class="ndd-checkbox-filter__toggle{% if has_selected_extra %} ndd-checkbox-filter__toggle--expanded{% endif %}">
                 {% set toggle_icon = "minus" if has_selected_extra else "plus" %}
-                <ndd-icon name="{{ toggle_icon }}" class="ndd-checkbox-filter__toggle-icon"></ndd-icon>
+                <nldd-icon name="{{ toggle_icon }}" class="ndd-checkbox-filter__toggle-icon"></nldd-icon>
                 <span class="ndd-checkbox-filter__toggle-text">
                   {% if has_selected_extra %}
                     Toon minder
@@ -97,8 +97,8 @@
       {% endif %}
     {% elif filter_group.type == 'date' %}
       <div class="ndd-filter-group">
-        <ndd-text-field type="date" label="{{ filter_group.label }}" data-ndd-input name="{{ filter_group.name }}" value="{%- if active_filters.get(filter_group.name) -%}{{ active_filters.get(filter_group.name) }}{%- endif -%}">
-        </ndd-text-field>
+        <nldd-text-field type="date" label="{{ filter_group.label }}" data-ndd-input name="{{ filter_group.name }}" value="{%- if active_filters.get(filter_group.name) -%}{{ active_filters.get(filter_group.name) }}{%- endif -%}">
+        </nldd-text-field>
       </div>
     {% endif %}
   {% endfor %}

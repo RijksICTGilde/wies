@@ -3,7 +3,7 @@
 <div class="ndd-panel__tokens">
   {% if category_labels %}
     {% for label in category_labels %}
-      <ndd-token style="--ndd-token-bg: {{ category.color }}">{{ label.name }}</ndd-token>
+      <nldd-token style="--ndd-token-bg: {{ category.color }}">{{ label.name }}</nldd-token>
     {% endfor %}
   {% else %}
     <em class="ndd-text-secondary">Geen labels</em>
