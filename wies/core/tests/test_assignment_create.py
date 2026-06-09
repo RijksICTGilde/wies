@@ -7,6 +7,7 @@ from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    Event,
     OrganizationUnit,
     Skill,
 )
@@ -168,6 +169,31 @@ class AssignmentCreateTest(TestCase):
         assert primary.organization == self.org
         involved = AssignmentOrganizationUnit.objects.get(assignment=assignment, role="INVOLVED")
         assert involved.organization == self.org2
+
+    def test_post_emits_create_event_with_snapshot(self):
+        """The create event captures name + placement-colleague names +
+        organisation names so the audit trail still tells what was created."""
+        self.client.force_login(self.bdm_user)
+        self.client.post(
+            reverse("assignment-create"),
+            {
+                "name": "Audit Snapshot Opdracht",
+                "owner": self.bdm_colleague.id,
+                **org_formset_data([(self.org, "PRIMARY"), (self.org2, "INVOLVED")]),
+                **FORMSET_MGMT_1,
+                "service-0-description": "Dienst",
+                "service-0-skill": self.skill.id,
+                "service-0-is_filled": "on",
+                "service-0-colleague": self.colleague.id,
+            },
+        )
+        assignment = Assignment.objects.get(name="Audit Snapshot Opdracht")
+        event = Event.objects.get(object_type="Assignment", action="create", object_id=assignment.id)
+        assert event.context["name"] == "Audit Snapshot Opdracht"
+        assert event.context["placements"] == [self.colleague.name]
+        assert sorted(event.context["organizations"]) == sorted(
+            [self.org.label or self.org.name, self.org2.label or self.org2.name]
+        )
 
     def test_post_multiple_services(self):
         self.client.force_login(self.bdm_user)
