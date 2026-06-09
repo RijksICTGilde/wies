@@ -109,23 +109,6 @@ def get_delete_context(delete_url_name, object_pk, object_name):
     }
 
 
-def _is_ndd_request(request) -> bool:
-    """Check if the request came from an NDD page."""
-    return "/ndd/" in (request.headers.get("HX-Current-URL", "") or request.headers.get("Referer", ""))
-
-
-def _ndd_redirect_url(request, rvo_name: str, ndd_name: str) -> str:
-    """Return NDD URL if the request came from an NDD page, else RVO URL."""
-    if _is_ndd_request(request):
-        return reverse(ndd_name)
-    return reverse(rvo_name)
-
-
-def _modal_template(request, rvo_template: str) -> str:
-    # Always use NDD modal templates
-    return f"ndd/{rvo_template}"
-
-
 def _build_panel_url(request, **overrides):
     """Build a URL on the current path, preserving filters but replacing panel params."""
     params = QueryDict(mutable=True)
@@ -1516,7 +1499,7 @@ def user_create(request):
         form = UserForm()
         return render(
             request,
-            _modal_template(request, "parts/user_form_modal.html"),
+            "ndd/parts/user_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1541,13 +1524,13 @@ def user_create(request):
             # For standard form posts, use normal redirect
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
-                response["HX-Redirect"] = _ndd_redirect_url(request, "admin-users", "ndd-admin-users")
+                response["HX-Redirect"] = reverse("ndd-admin-users")
                 return response
-            return redirect(_ndd_redirect_url(request, "admin-users", "ndd-admin-users"))
+            return redirect(reverse("ndd-admin-users"))
         # Re-render form with errors (stays in modal with HTMX)
         return render(
             request,
-            _modal_template(request, "parts/user_form_modal.html"),
+            "ndd/parts/user_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1573,7 +1556,7 @@ def user_edit(request, pk):
         form = UserForm(instance=edited_user)
         return render(
             request,
-            _modal_template(request, "parts/user_form_modal.html"),
+            "ndd/parts/user_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1602,13 +1585,13 @@ def user_edit(request, pk):
             # For standard form posts, use normal redirect
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
-                response["HX-Redirect"] = _ndd_redirect_url(request, "admin-users", "ndd-admin-users")
+                response["HX-Redirect"] = reverse("ndd-admin-users")
                 return response
-            return redirect(_ndd_redirect_url(request, "admin-users", "ndd-admin-users"))
+            return redirect(reverse("ndd-admin-users"))
         # Re-render form with errors (stays in modal with HTMX)
         return render(
             request,
-            _modal_template(request, "parts/user_form_modal.html"),
+            "ndd/parts/user_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1633,7 +1616,7 @@ def user_delete(request, pk):
         # Show delete confirmation modal
         return render(
             request,
-            _modal_template(request, "parts/generic_form_modal.html"),
+            "ndd/parts/generic_form_modal.html",
             {
                 "modal_title": f"Verwijder gebruiker: {user.first_name} {user.last_name}",
                 "warning_modal": True,
@@ -1666,7 +1649,7 @@ def user_delete(request, pk):
             context=context,
         )
         response = HttpResponse(status=200)
-        response["HX-Redirect"] = _ndd_redirect_url(request, "admin-users", "ndd-admin-users")
+        response["HX-Redirect"] = reverse("ndd-admin-users")
         return response
     return HttpResponse(status=405)
 
@@ -1916,7 +1899,7 @@ def label_category_create(request):
         form = LabelCategoryForm()
         return render(
             request,
-            _modal_template(request, "parts/generic_form_modal.html"),
+            "ndd/parts/generic_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1932,11 +1915,11 @@ def label_category_create(request):
             form.save()
             messages.success(request, f"Categorie '{form.cleaned_data['name']}' succesvol aangemaakt")
             response = HttpResponse(status=200)
-            response["HX-Redirect"] = _ndd_redirect_url(request, "label-admin", "ndd-label-admin")
+            response["HX-Redirect"] = reverse("ndd-label-admin")
             return response
         return render(
             request,
-            _modal_template(request, "parts/generic_form_modal.html"),
+            "ndd/parts/generic_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1966,7 +1949,7 @@ def label_category_edit(request, pk):
         form = LabelCategoryForm(instance=category)
         return render(
             request,
-            _modal_template(request, "parts/generic_form_modal.html"),
+            "ndd/parts/generic_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -1982,12 +1965,12 @@ def label_category_edit(request, pk):
         if form.is_valid():
             form.save()
             response = HttpResponse(status=200)
-            response["HX-Redirect"] = _ndd_redirect_url(request, "label-admin", "ndd-label-admin")
+            response["HX-Redirect"] = reverse("ndd-label-admin")
             return response
 
         return render(
             request,
-            _modal_template(request, "parts/generic_form_modal.html"),
+            "ndd/parts/generic_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -2010,7 +1993,7 @@ def label_category_delete(request, pk):
     if request.method == "GET":
         return render(
             request,
-            _modal_template(request, "parts/generic_form_modal.html"),
+            "ndd/parts/generic_form_modal.html",
             {
                 "modal_title": f"Verwijder categorie: {category.name}",
                 "warning_modal": True,
@@ -2029,7 +2012,7 @@ def label_category_delete(request, pk):
         category.delete()
         messages.success(request, f"Categorie '{category_name}' succesvol verwijderd")
         response = HttpResponse(status=200)
-        response["HX-Redirect"] = _ndd_redirect_url(request, "label-admin", "ndd-label-admin")
+        response["HX-Redirect"] = reverse("ndd-label-admin")
         return response
     return HttpResponse(status=405)
 
@@ -2080,7 +2063,7 @@ def label_edit(request, pk):
         form = LabelForm(instance=label, category_id=category.id)
         return render(
             request,
-            _modal_template(request, "parts/generic_form_modal.html"),
+            "ndd/parts/generic_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -2105,7 +2088,7 @@ def label_edit(request, pk):
             return response
         return render(
             request,
-            _modal_template(request, "parts/generic_form_modal.html"),
+            "ndd/parts/generic_form_modal.html",
             {
                 "content": form,
                 "form_post_url": form_post_url,
@@ -2133,7 +2116,7 @@ def label_delete(request, pk):
     if request.method == "GET":
         return render(
             request,
-            _modal_template(request, "parts/generic_form_modal.html"),
+            "ndd/parts/generic_form_modal.html",
             {
                 "modal_title": f"Verwijder label: {label.name}",
                 "warning_modal": True,
@@ -2496,7 +2479,7 @@ Disallow: /
 @permission_required("core.add_assignment", raise_exception=True)
 def assignment_create(request):
     """Handle assignment creation - standalone form page."""
-    template = "assignment_create.html"
+    template = "ndd/assignment_create.html"
 
     skill_choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
     skill_choices.extend((str(s.id), s.name) for s in Skill.objects.order_by("name"))
@@ -2734,12 +2717,7 @@ def client_modal(request):
     hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 
-    if request.GET.get("ndd"):
-        template = "ndd/parts/client_modal.html"
-    elif count_mode == "none":
-        template = "parts/assignment_org_modal.html"
-    else:
-        template = "parts/client_modal.html"
+    template = "ndd/parts/assignment_org_modal.html" if count_mode == "none" else "ndd/parts/client_modal.html"
     return render(
         request,
         template,

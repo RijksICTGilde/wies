@@ -9,7 +9,6 @@ from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.html import format_html, json_script
 from jinja2 import Environment
-from jinja_roos_components import setup_components
 
 from wies.core.editables import (
     AssignmentEditables,
@@ -129,7 +128,6 @@ def get_sort_state(request, field):
 
 def environment(**options):
     env = Environment(**options)  # noqa: S701 - autoescape handled by Django
-    setup_components(env)
     env.globals.update(
         {
             "static": static,

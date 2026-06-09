@@ -161,7 +161,7 @@ class UserViewsTest(TestCase):
 
         # Should redirect to users list
         assert response.status_code == 302
-        assert response.url == reverse("admin-users")
+        assert response.url == reverse("ndd-admin-users")
 
         # User should be created
         assert User.objects.filter(is_superuser=False).count() == initial_count + 1
@@ -195,7 +195,7 @@ class UserViewsTest(TestCase):
 
         # Should redirect to users list
         assert response.status_code == 302
-        assert response.url == reverse("admin-users")
+        assert response.url == reverse("ndd-admin-users")
 
         new_user = User.objects.get(email="nolabels@rijksoverheid.nl")
         assert new_user.colleague.labels.count() == 0
@@ -479,7 +479,7 @@ class UserViewsTest(TestCase):
 
         # Should redirect to users list
         assert response.status_code == 302
-        assert response.url == reverse("admin-users")
+        assert response.url == reverse("ndd-admin-users")
 
         # User should be updated
         self.user1.refresh_from_db()

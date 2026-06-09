@@ -117,21 +117,12 @@ class NDDClientModalTest(TestCase):
         self.client = Client()
         _login(self.client)
 
-    def test_ndd_modal_query_param_returns_ndd_template(self):
-        response = self.client.get("/client-modal/", {"ndd": "1"})
+    def test_client_modal_returns_ndd_template(self):
+        response = self.client.get("/client-modal/")
         assert response.status_code == 200
         body = response.content.decode()
         assert 'id="ndd-client-modal"' in body
         assert "js/ndd/client_tree.js" in body
-        # RVO modal-id mag NIET in deze response zitten
-        assert 'id="clientModal"' not in body
-
-    def test_rvo_modal_default_returns_rvo_template(self):
-        response = self.client.get("/client-modal/")
-        assert response.status_code == 200
-        body = response.content.decode()
-        assert 'id="clientModal"' in body
-        assert 'id="ndd-client-modal"' not in body
 
 
 class NDDIsolationTest(TestCase):
