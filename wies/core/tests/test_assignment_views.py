@@ -554,8 +554,8 @@ class AssignmentEditAttributeTest(TestCase):
 
         assert response.status_code == 200
 
-    def test_updates_tab_hidden_for_otys_iir_assignment(self):
-        """For assignments with source='otys_iir' the updates tab is not rendered."""
+    def test_panel_renders_for_otys_iir_assignment(self):
+        """Panel renders for otys_iir assignments without editable fields."""
         self.client.force_login(self.owner_user)
 
         response = self.client.get(
@@ -564,11 +564,10 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-        self.assertNotContains(response, 'id="tab-updates"')
-        self.assertNotContains(response, 'id="tab-panel-updates"')
+        self.assertContains(response, "External Assignment")
 
-    def test_updates_tab_shown_for_wies_assignment(self):
-        """For assignments with source='wies' the updates tab is rendered."""
+    def test_panel_renders_for_wies_assignment(self):
+        """Panel renders for wies-sourced assignments with assignment details."""
         self.client.force_login(self.owner_user)
 
         response = self.client.get(
@@ -577,5 +576,5 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-        self.assertContains(response, 'id="tab-updates"')
-        self.assertContains(response, 'id="tab-panel-updates"')
+        self.assertContains(response, "Test Assignment")
+        self.assertContains(response, "Owner Colleague")

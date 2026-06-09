@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from wies.core.editables.assignment import AssignmentEditables
 from wies.core.editables.user import UserEditables
 
-from .form_mixins import RvoErrorList, RvoFormMixin, RvoJinja2Renderer
+from .form_mixins import NlddFormMixin, RvoErrorList, RvoFormMixin, RvoJinja2Renderer
 from .models import Colleague, Label, LabelCategory, Skill
 from .services.users import validate_email_domain
 from .widgets import MultiselectDropdown
@@ -29,7 +29,7 @@ __all__ = [
 ]
 
 
-class LabelCategoryForm(RvoFormMixin, forms.ModelForm):
+class LabelCategoryForm(NlddFormMixin, forms.ModelForm):
     """Form for creating and updating LabelCategory instances"""
 
     name = forms.CharField(label="Naam", required=True)
@@ -50,7 +50,7 @@ class LabelCategoryForm(RvoFormMixin, forms.ModelForm):
         fields = ["name", "color"]
 
 
-class LabelForm(RvoFormMixin, forms.ModelForm):
+class LabelForm(NlddFormMixin, forms.ModelForm):
     """Form for creating and updating Label instances"""
 
     name = forms.CharField(label="Naam", required=True)
@@ -83,7 +83,7 @@ class LabelForm(RvoFormMixin, forms.ModelForm):
         return new_name
 
 
-class UserForm(RvoFormMixin, forms.ModelForm):
+class UserForm(NlddFormMixin, forms.ModelForm):
     """Form for creating and updating User instances.
 
     Field configurations for first_name/last_name/email come from
@@ -159,7 +159,7 @@ class UserForm(RvoFormMixin, forms.ModelForm):
         return cleaned_data
 
 
-class AssignmentCreateForm(RvoFormMixin, forms.Form):
+class AssignmentCreateForm(NlddFormMixin, forms.Form):
     """Full-page form for creating a new Assignment.
 
     Field configurations come from ``AssignmentEditables`` so the create
@@ -184,7 +184,7 @@ class AssignmentCreateForm(RvoFormMixin, forms.Form):
         return cleaned
 
 
-class ServiceForm(RvoFormMixin, forms.Form):
+class ServiceForm(NlddFormMixin, forms.Form):
     """Form for a single service row within assignment creation and edit.
 
     ``id`` and ``placement_id`` are hidden round-trip identifiers used by the

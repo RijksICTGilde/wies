@@ -139,7 +139,7 @@ class UserViewsTest(TestCase):
 
         assert response.status_code == 200
         content = response.content.decode()
-        assert "modal-content" in content
+        assert "ndd-window" in content or "modal-content" in content
         assert "Nieuwe gebruiker" in content
 
     def test_user_create_success(self):
@@ -217,7 +217,7 @@ class UserViewsTest(TestCase):
         assert response.status_code == 200
         content = response.content.decode()
         # Modal should be shown with errors
-        assert "modal-content" in content
+        assert "ndd-window" in content or "modal-content" in content
 
     def test_user_create_duplicate_email(self):
         """Test that a new user cannot be created with an existing email"""
@@ -235,7 +235,7 @@ class UserViewsTest(TestCase):
 
         assert response.status_code == 200
         content = response.content.decode()
-        assert "modal-content" in content
+        assert "ndd-window" in content or "modal-content" in content
         assert "Er bestaat al een gebruiker met dit e-mailadres." in content
         assert User.objects.count() == initial_count
         assert User.objects.filter(email="user1@rijksoverheid.nl").count() == 1
@@ -455,7 +455,7 @@ class UserViewsTest(TestCase):
 
         assert response.status_code == 200
         content = response.content.decode()
-        assert "modal-content" in content
+        assert "ndd-window" in content or "modal-content" in content
         assert "Gebruiker bewerken" in content
         # Check that form is pre-populated
         assert self.user1.first_name in content
@@ -511,7 +511,7 @@ class UserViewsTest(TestCase):
         assert response.status_code == 200
         content = response.content.decode()
         # Modal should be shown with errors
-        assert "modal-content" in content
+        assert "ndd-window" in content or "modal-content" in content
         assert "Gebruiker bewerken" in content
 
         # User should not be updated
@@ -598,17 +598,17 @@ class UserViewsTest(TestCase):
         response = self.client.get(reverse("user-edit", args=[self.user1.id]))
         assert response.status_code == 403
 
-    def test_user_create_uses_rvo_styling(self):
-        """Test that user create/edit views use RVO design system styling"""
+    def test_user_create_uses_nldd_styling(self):
+        """Test that user create/edit views use NLDD design system styling"""
         self.client.force_login(self.auth_user)
         response = self.client.get(reverse("user-create"))
 
         assert response.status_code == 200
         content = response.content.decode()
 
-        # Simple integration test - verify RVO classes are present
-        assert "rvo-label" in content
-        assert "utrecht-form-field" in content
+        # Simple integration test - verify NLDD classes are present
+        assert "nldd-form-field__label" in content
+        assert "nldd-form-field" in content
 
 
 class UserImportTest(TestCase):

@@ -109,7 +109,7 @@ class AssignmentEditables(EditableSet):
     extra_info = Editable(
         label="Beschrijving",
         widget=forms.Textarea(attrs={"rows": 4}),
-        display="rvo/forms/displays/textarea.html",
+        display="nldd/forms/displays/textarea.html",
     )
 
     start_date = Editable(label="Startdatum")
@@ -122,14 +122,14 @@ class AssignmentEditables(EditableSet):
         required=True,
         empty_label=" ",
         error_messages={"required": "Selecteer een business manager."},
-        display="rvo/forms/displays/assignment_owner.html",
+        display="nldd/forms/displays/assignment_owner.html",
     )
 
     period = EditableGroup(
         label="Looptijd",
         fields=[start_date, end_date],
         clean=_validate_period,
-        display="rvo/forms/displays/assignment_period.html",
+        display="nldd/forms/displays/assignment_period.html",
     )
 
     organizations = Editable(
@@ -137,7 +137,7 @@ class AssignmentEditables(EditableSet):
         form_field_factory=lambda: OrganizationsField(required=True),
         initial=_organizations_initial,
         save=_save_organizations,
-        display="rvo/forms/displays/organizations.html",
+        display="nldd/forms/displays/organizations.html",
     )
 
     services = EditableCollection(
@@ -145,6 +145,6 @@ class AssignmentEditables(EditableSet):
         formset_factory=_services_formset_factory,
         initial=_services_initial,
         save=_save_services,
-        form_template="parts/assignment_services_form.html",
-        display="rvo/forms/displays/assignment_services.html",
+        form_template="ndd/parts/assignment_services_form.html",
+        display="nldd/forms/displays/assignment_services.html",
     )

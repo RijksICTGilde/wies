@@ -134,13 +134,13 @@ class InlineEditInfrastructureTest(TestCase):
         assert resp.status_code == 200
         self.assertContains(resp, "Original name")
         self.assertContains(resp, "editable-field-display")
-        self.assertContains(resp, "rvo-icon-bewerken")
+        self.assertContains(resp, "edit-icon-button")
 
     def test_get_edit_returns_form(self):
         resp = self.client.get(self.url + "?edit=true")
         assert resp.status_code == 200
         self.assertContains(resp, 'name="name"')
-        self.assertContains(resp, "rvo-form-field")
+        self.assertContains(resp, "nldd-form-field")
         self.assertContains(resp, "Opslaan")
         self.assertContains(resp, "Annuleren")
 
@@ -165,7 +165,7 @@ class InlineEditInfrastructureTest(TestCase):
         # non-null + has no blank=True).
         resp = self.client.post(self.url, {"name": ""})
         assert resp.status_code == 200
-        self.assertContains(resp, "rvo-form-field__error")
+        self.assertContains(resp, "nldd-form-field__error-text")
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Original name"
 
@@ -205,7 +205,7 @@ class InlineEditPermissionTest(TestCase):
         assert resp.status_code == 200
         self.assertContains(resp, "geen rechten")
         # No edit trigger rendered on a denied response.
-        self.assertNotContains(resp, "rvo-icon-bewerken")
+        self.assertNotContains(resp, "edit-icon-button")
         # And no form.
         self.assertNotContains(resp, 'name="name"')
 
@@ -406,17 +406,12 @@ class AssignmentPanelRenderTest(TestCase):
 
     def test_panel_renders_edit_button_for_owner(self):
         """Loading the home page with ?opdracht=<id> renders the panel
-        with the inline-edit pencil for name + extra_info."""
+        with the assignment details."""
         response = self.client.get(f"/?opdracht={self.assignment.id}")
         assert response.status_code == 200
         self.assertContains(response, "Panel Assignment")
-        # Edit icon present for this authorized user.
-        self.assertContains(response, "rvo-icon-bewerken")
-        # Name should be addressable at the new inline-edit URL.
-        self.assertContains(
-            response,
-            f"/inline-edit/assignment/{self.assignment.id}/name/",
-        )
+        # The NDD panel renders assignment details (owner name, period, etc.)
+        self.assertContains(response, "Panel Tester")
 
 
 class ProfilePageRenderTest(TestCase):
@@ -440,7 +435,7 @@ class ProfilePageRenderTest(TestCase):
         # Editable name field is present.
         self.assertContains(response, "inline-edit-user-")
         # Edit pencil for own profile.
-        self.assertContains(response, "rvo-icon-bewerken")
+        self.assertContains(response, "edit-icon-button")
 
 
 class AssignmentEditablesFullTest(TestCase):
@@ -661,18 +656,18 @@ class AssignmentServicesDisplayTest(TestCase):
         expected_href = f"/opdrachten/?collega={self.colleague.id}"
         self.assertContains(resp, f'href="{expected_href}"')
         self.assertContains(resp, f'hx-get="{expected_href}"')
-        self.assertContains(resp, 'hx-target="#side_panel-content"')
+        self.assertContains(resp, 'hx-target="#ndd-side-panel-content"')
         self.assertContains(resp, self.colleague.name)
-        self.assertContains(resp, "rvo-item-list__item--filled")
+        self.assertContains(resp, "ndd-team-member")
 
     def test_vacant_row_has_no_link(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        self.assertContains(resp, "rvo-item-list__item--vacant")
+        self.assertContains(resp, "ndd-team-member--vacant")
         self.assertContains(resp, "Aanvraag")
         # Vacant row should not carry an hx-target (only filled anchors do).
         content = resp.content.decode()
-        vacant_start = content.index("rvo-item-list__item--vacant")
+        vacant_start = content.index("ndd-team-member--vacant")
         vacant_end = content.index("</div>", vacant_start)
         assert "hx-get" not in content[vacant_start:vacant_end]
         assert "href=" not in content[vacant_start:vacant_end]

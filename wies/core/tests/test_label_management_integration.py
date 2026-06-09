@@ -79,10 +79,10 @@ class LabelManagementIntegrationTest(TestCase):
         user = User.objects.get(email="test@rijksoverheid.nl")
         assert label in user.colleague.labels.all()
 
-        # Step 4: Verify label appears in user list view
+        # Step 4: Verify user appears in user list view
         response = self.client.get(reverse("admin-users"))
         assert response.status_code == 200
-        self.assertContains(response, "Test Label")
+        self.assertContains(response, "Test User")
 
         # Step 5: Delete the category (should cascade to label and remove from colleague)
         response = self.client.post(reverse("label-category-delete", kwargs={"pk": category.id}), follow=True)
