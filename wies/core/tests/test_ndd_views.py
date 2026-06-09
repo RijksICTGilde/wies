@@ -41,10 +41,10 @@ class NDDViewRendersTest(TestCase):
         response = self.client.get(reverse("ndd-home"))
         assert response.status_code == 200
         body = response.content.decode()
-        # NLDD vendor + layout assets aanwezig
+        # NLDD vendor assets aanwezig
         assert "vendor/ndd/ndd.styles.css" in body
         assert "vendor/ndd/ndd.bundle.js" in body
-        assert "nldd-app-view" in body
+        assert "nldd-top-navigation-bar" in body
         # Géén RVO assets
         assert "@nl-rvo/component-library-css" not in body
         assert "rvo-theme" not in body

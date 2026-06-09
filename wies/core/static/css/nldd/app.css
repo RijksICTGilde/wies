@@ -6,16 +6,47 @@
   box-sizing: border-box;
 }
 
-/* The NLDD app-view needs a flex parent with explicit height.
-   This is the only layout override — the NLDD components handle
-   everything else (sidebar split, scrolling, responsive collapse). */
+/* Minimal layout: nav top, optional sidebar left, scrollable main right.
+   Uses NLDD design tokens for colors/spacing where possible. */
 html,
 body {
   margin: 0;
   padding: 0;
-  height: 100dvh;
+}
+
+body {
+  font-family: "RijksSansVF", system-ui, sans-serif;
+  color: var(--semantics-content-color, #1a1a1a);
+  background: var(--semantics-surfaces-background-color, #fff);
+}
+
+.wies-layout {
   display: flex;
-  flex-direction: column;
+  min-height: calc(100dvh - 120px); /* subtract nav bar height */
+}
+
+.wies-layout__sidebar {
+  width: 320px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--semantics-controls-border-color, #e2e8f0);
+  background: var(--semantics-surfaces-tinted-background-color, #f8fafc);
+  overflow-y: auto;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  max-height: calc(100dvh - 120px);
+}
+
+.wies-layout__main {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .wies-layout__sidebar {
+    display: none;
+  }
 }
 
 a {

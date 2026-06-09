@@ -31,59 +31,50 @@
     </script>
   </head>
   <body>
-    <nldd-app-view>
-    <nldd-top-navigation-bar logo-title="Rijksorganisatie voor Ontwikkeling," logo-subtitle="Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}">
-    <nldd-menu-bar slot="global" accessible-label="Hoofdnavigatie">
-    <nldd-menu-bar-item text="Wie zit waar?" href="{{ url('home') }}"
-    {% if request.path == '/' %}current{% endif %}
-    ></nldd-menu-bar-item>
-    <nldd-menu-bar-item text="Aanvragen" href="{{ url('assignment-list') }}"
-    {% if '/opdrachten/' in request.path %}current{% endif %}
-    ></nldd-menu-bar-item>
-    </nldd-menu-bar>
-    {% if request.user.is_authenticated %}
-      <nldd-menu-bar slot="utility" accessible-label="Gebruikersmenu">
-      <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="person" expandable content-priority="text">
-      <nldd-menu>
-      <nldd-menu-item text="Profiel" data-href="{{ url('user-profile') }}"></nldd-menu-item>
-      {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
-        <nldd-menu-divider></nldd-menu-divider>
-        <nldd-menu-item text="Beheer" data-href="{{ url('admin-users') }}"></nldd-menu-item>
-      {% endif %}
-      <nldd-menu-divider></nldd-menu-divider>
-      <nldd-menu-item text="Uitloggen" data-href="{{ url('logout') }}"></nldd-menu-item>
-      </nldd-menu>
-      </nldd-menu-bar-item>
+    {% block header %}
+      <nldd-top-navigation-bar logo-title="Rijksorganisatie voor Ontwikkeling," logo-subtitle="Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}">
+      <nldd-menu-bar slot="global" accessible-label="Hoofdnavigatie">
+      <nldd-menu-bar-item text="Wie zit waar?" href="{{ url('home') }}"
+      {% if request.path == '/' %}current{% endif %}
+      ></nldd-menu-bar-item>
+      <nldd-menu-bar-item text="Aanvragen" href="{{ url('assignment-list') }}"
+      {% if '/opdrachten/' in request.path %}current{% endif %}
+      ></nldd-menu-bar-item>
       </nldd-menu-bar>
-    {% endif %}
-    </nldd-top-navigation-bar>
-    <nldd-navigation-split-view inspector-accessible-label="Detail" sidebar-accessible-label="Filters">
-    {% set _sidebar_content %}
-      {% block sidebar %}
-      {% endblock sidebar %}
-    {% endset %}
-    {% if _sidebar_content.strip() %}
-      <nldd-split-view-pane slot="sidebar" has-content background="tinted">
-      {{ _sidebar_content }}
-      </nldd-split-view-pane>
-    {% endif %}
-    <nldd-split-view-pane slot="main" has-content>
-    <nldd-page sticky-header
-    {% block page_attrs %}
-    {% endblock page_attrs %}
-    >
-    {% block page_header %}
-    {% endblock page_header %}
-    {% include "ndd/parts/flash_messages.html" %}
-    {% block content %}
-    {% endblock content %}
-    </nldd-page>
-    </nldd-split-view-pane>
-    {% block inspector %}
-    {% endblock inspector %}
-    </nldd-navigation-split-view>
+      {% if request.user.is_authenticated %}
+        <nldd-menu-bar slot="utility" accessible-label="Gebruikersmenu">
+        <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="person" expandable content-priority="text">
+        <nldd-menu>
+        <nldd-menu-item text="Profiel" data-href="{{ url('user-profile') }}"></nldd-menu-item>
+        {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
+          <nldd-menu-divider></nldd-menu-divider>
+          <nldd-menu-item text="Beheer" data-href="{{ url('admin-users') }}"></nldd-menu-item>
+        {% endif %}
+        <nldd-menu-divider></nldd-menu-divider>
+        <nldd-menu-item text="Uitloggen" data-href="{{ url('logout') }}"></nldd-menu-item>
+        </nldd-menu>
+        </nldd-menu-bar-item>
+        </nldd-menu-bar>
+      {% endif %}
+      </nldd-top-navigation-bar>
+    {% endblock header %}
+    <div class="wies-layout">
+      {% set _sidebar_content %}
+        {% block sidebar %}
+        {% endblock sidebar %}
+      {% endset %}
+      {% if _sidebar_content.strip() %}
+        <aside class="wies-layout__sidebar">
+          {{ _sidebar_content }}
+        </aside>
+      {% endif %}
+      <main class="wies-layout__main">
+        {% include "ndd/parts/flash_messages.html" %}
+        {% block content %}
+        {% endblock content %}
+      </main>
+    </div>
     {% block panel %}
     {% endblock panel %}
-    </nldd-app-view>
   </body>
 </html>
