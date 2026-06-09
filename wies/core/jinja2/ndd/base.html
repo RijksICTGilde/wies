@@ -45,6 +45,7 @@
         {% if request.user.is_authenticated %}
           <nldd-menu-bar accessible-label="Gebruikersmenu" overflow-text="Meer">
           <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="person" expandable content-priority="text">
+          <nldd-menu>
           <nldd-menu-item text="Profiel" data-href="{{ url('user-profile') }}"></nldd-menu-item>
           {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
             <nldd-menu-divider></nldd-menu-divider>
@@ -52,6 +53,7 @@
           {% endif %}
           <nldd-menu-divider></nldd-menu-divider>
           <nldd-menu-item text="Uitloggen" data-href="{{ url('logout') }}"></nldd-menu-item>
+          </nldd-menu>
           </nldd-menu-bar-item>
           </nldd-menu-bar>
         {% endif %}
