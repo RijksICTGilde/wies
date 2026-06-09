@@ -1,0 +1,218 @@
+/* NLDD app-level overrides for Wies */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+a {
+  color: var(--semantics-links-color, inherit);
+}
+
+/* Avatar circles (used in tables, panels, teams) */
+.nldd-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--semantics-content-accent-color, #154273);
+  color: #fff;
+  font-weight: 600;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.nldd-avatar--sm {
+  width: 28px;
+  height: 28px;
+  font-size: 0.75rem;
+}
+.nldd-avatar--lg {
+  width: 56px;
+  height: 56px;
+  font-size: 1.5rem;
+}
+.nldd-avatar--vacant {
+  background: var(--semantics-content-secondary-color, #94a3b8);
+}
+
+/* Secondary text helper */
+.nldd-text-secondary {
+  color: var(--semantics-content-secondary-color, #64748b);
+  font-size: 0.875rem;
+}
+
+/* Alert blocks (inline edit, import results, etc.) */
+.nldd-alert {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+.nldd-alert--success {
+  background: var(
+    --semantics-feedback-positive-subtle-background-color,
+    #f0fdf4
+  );
+  border: 1px solid var(--semantics-feedback-positive-border-color, #86efac);
+}
+.nldd-alert--error {
+  background: var(
+    --semantics-feedback-negative-subtle-background-color,
+    #fef2f2
+  );
+  border: 1px solid var(--semantics-feedback-negative-border-color, #fca5a5);
+}
+.nldd-alert--warning {
+  background: var(
+    --semantics-feedback-cautionary-subtle-background-color,
+    #fffbeb
+  );
+  border: 1px solid var(--semantics-feedback-cautionary-border-color, #fcd34d);
+}
+.nldd-alert--info {
+  background: var(
+    --semantics-feedback-informative-subtle-background-color,
+    #eff6ff
+  );
+  border: 1px solid var(--semantics-feedback-informative-border-color, #93c5fd);
+}
+
+/* Form field styling (for NlddFormMixin templates) */
+.nldd-form-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.nldd-form-fields--spaced {
+  gap: 1.5rem;
+}
+.nldd-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.nldd-form-field__label {
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+.nldd-form-field__label--required::after {
+  content: " *";
+  color: var(--semantics-feedback-negative-color, #dc2626);
+}
+.nldd-form-field__error {
+  margin-top: 0.25rem;
+}
+.nldd-form-field__error-text {
+  color: var(--semantics-feedback-negative-color, #dc2626);
+  font-size: 0.8125rem;
+}
+
+/* Native form inputs (NLDD forms use native inputs, not web components) */
+.nldd-input,
+.nldd-textarea,
+.nldd-select {
+  font: inherit;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--semantics-controls-border-color, #cbd5e1);
+  border-radius: 4px;
+  background: var(--semantics-surfaces-background-color, #fff);
+  color: inherit;
+  width: 100%;
+}
+.nldd-input:focus,
+.nldd-textarea:focus,
+.nldd-select:focus {
+  outline: 2px solid var(--semantics-controls-is-focused-border-color, #154273);
+  outline-offset: -1px;
+}
+.nldd-textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+.nldd-select-wrapper {
+  position: relative;
+}
+
+/* Checkbox and radio */
+.nldd-checkbox-group,
+.nldd-radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.nldd-checkbox-option,
+.nldd-radio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+/* Fieldset (assignment create) */
+.nldd-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.nldd-fieldset__legend {
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+.nldd-fieldset__hint {
+  font-weight: 400;
+  font-size: 0.875rem;
+  color: var(--semantics-content-secondary-color, #64748b);
+}
+
+/* Inline edit */
+.editable-field-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.editable-field-display__value {
+  flex: 1;
+  min-width: 0;
+}
+.edit-icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  color: var(--semantics-content-secondary-color, #64748b);
+  flex-shrink: 0;
+}
+.edit-icon-button:hover {
+  color: var(--semantics-content-accent-color, #154273);
+  background: var(--semantics-surfaces-tinted-background-color, #f4f6f9);
+}
+.field-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Flash messages */
+.flash-messages {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 400px;
+}
+.flash-messages--hiding {
+  animation: flash-fade-out 0.3s ease forwards;
+}
+@keyframes flash-fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
