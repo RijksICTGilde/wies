@@ -2102,16 +2102,7 @@ def assignment_delete(request, pk):
     if request.method == "POST":
         name = assignment.name
         # Snapshot related rows before they cascade away.
-        context = {
-            "name": name,
-            "placements": [
-                p.colleague.name
-                for p in Placement.objects.filter(service__assignment=assignment).select_related("colleague")
-            ],
-            "organizations": [
-                rel.organization.label or rel.organization.name for rel in assignment.organization_relations.all()
-            ],
-        }
+        context = _assignment_audit_snapshot(assignment)
         # Atomic so a failed audit insert rolls back the delete — losing
         # the opdracht without a trace would be the worst outcome.
         with transaction.atomic():
@@ -2129,6 +2120,19 @@ def assignment_delete(request, pk):
         response["HX-Redirect"] = reverse("assignment-list")
         return response
     return HttpResponse(status=405)
+
+
+def _assignment_audit_snapshot(assignment) -> dict:
+    return {
+        "name": assignment.name,
+        "placements": [
+            p.colleague.name
+            for p in Placement.objects.filter(service__assignment=assignment).select_related("colleague")
+        ],
+        "organizations": [
+            rel.organization.label or rel.organization.name for rel in assignment.organization_relations.all()
+        ],
+    }
 
 
 def user_profile(request):
@@ -2332,7 +2336,7 @@ def assignment_create(request):
             source="user",
             object_id=assignment.id,
             user=request.user,
-            context={"name": assignment.name},
+            context=_assignment_audit_snapshot(assignment),
         )
 
         link_url = f"{reverse('assignment-list')}?opdracht={assignment.id}"
