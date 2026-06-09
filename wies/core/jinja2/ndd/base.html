@@ -22,11 +22,10 @@
     <script>
       document.addEventListener("click", (e) => {
         const item = e.composedPath().find(
-          (el) => el instanceof Element && el.dataset && el.dataset.href
+          (el) => el instanceof Element && el.localName === "nldd-menu-item" && el.dataset && el.dataset.href
         );
         if (item) window.location.href = item.dataset.href;
       });
-
     </script>
   </head>
   <body class="ndd-app">
