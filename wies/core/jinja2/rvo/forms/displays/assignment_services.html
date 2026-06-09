@@ -42,6 +42,18 @@
             <div class="user-avatar user-avatar--vacant">?</div>
             <span>{{ row.skill_name }}</span>
             <span class="service-card__tag"><c-tag type="default">Aanvraag</c-tag></span>
+            {% set svc = row.service %}
+            {% if svc and (svc.start_date or svc.end_date) %}
+              <span class="service-card__period">
+                {% if svc.start_date and svc.end_date %}
+                  {{ svc.start_date|datum_nl("j M Y") }} – {{ svc.end_date|datum_nl("j M Y") }}
+                {% elif svc.start_date %}
+                  {{ svc.start_date|datum_nl("j M Y") }} – heden
+                {% elif svc.end_date %}
+                  t/m {{ svc.end_date|datum_nl("j M Y") }}
+                {% endif %}
+              </span>
+            {% endif %}
           </div>
         </div>
       {% endif %}

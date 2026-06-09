@@ -6,7 +6,7 @@ import logging
 
 from django.db.models import Count
 
-from wies.core.models import Assignment, AssignmentOrganizationUnit
+from wies.core.models import Assignment, AssignmentOrganizationUnit, Service
 
 logger = logging.getLogger(__name__)
 
@@ -197,7 +197,7 @@ def merge_group(assignments, *, dry_run=True):
         # Delete the empty duplicate.
         actions.append(f"  Delete empty assignment #{dupe.id}")
         if not dry_run:
-            remaining = dupe.services.count()
+            remaining = Service.objects.filter(assignment=dupe).count()
             if remaining > 0:
                 msg = (
                     f"Assignment #{dupe.id} still has {remaining} services after merge! Aborting to prevent data loss."

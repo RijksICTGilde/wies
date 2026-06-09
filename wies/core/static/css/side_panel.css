@@ -365,6 +365,11 @@ dialog#side_panel::backdrop {
   white-space: nowrap;
 }
 
+/* Tag already pushes right; period follows without gap */
+.service-card__tag + .service-card__period {
+  margin-left: -0.25rem;
+}
+
 .service-card__description {
   padding: 0.5rem 0.75rem 0.5rem calc(32px + 1.5rem);
   font-style: italic;

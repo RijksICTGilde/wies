@@ -112,15 +112,30 @@ def apply_services_to_assignment(assignment: Assignment, services_data: list[dic
             service.description = svc.get("description", "")
             service.skill = skill
             service.status = svc.get("status", service.status)
-            service.save(update_fields=["description", "skill", "status"])
+            update_fields = ["description", "skill", "status"]
+            if svc.get("has_custom_period"):
+                service.period_source = Service.SERVICE
+                service.specific_start_date = svc.get("placement_start_date")
+                service.specific_end_date = svc.get("placement_end_date")
+            else:
+                service.period_source = Service.ASSIGNMENT
+                service.specific_start_date = None
+                service.specific_end_date = None
+            update_fields.extend(["period_source", "specific_start_date", "specific_end_date"])
+            service.save(update_fields=update_fields)
         else:
-            service = Service.objects.create(
-                assignment=assignment,
-                description=svc.get("description", ""),
-                skill=skill,
-                status=svc.get("status", "OPEN"),
-                source="wies",
-            )
+            create_kwargs = {
+                "assignment": assignment,
+                "description": svc.get("description", ""),
+                "skill": skill,
+                "status": svc.get("status", "OPEN"),
+                "source": "wies",
+            }
+            if svc.get("has_custom_period"):
+                create_kwargs["period_source"] = Service.SERVICE
+                create_kwargs["specific_start_date"] = svc.get("placement_start_date")
+                create_kwargs["specific_end_date"] = svc.get("placement_end_date")
+            service = Service.objects.create(**create_kwargs)
 
         placement_id = svc.get("placement_id")
         colleague_id = svc.get("colleague_id")

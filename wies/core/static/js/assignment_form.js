@@ -64,6 +64,12 @@
         row = templateRow;
         row.style.display = "";
         delete row.dataset.hiddenTemplate;
+        // Re-init period toggle for this row (was initialized while hidden).
+        delete row.dataset.periodToggleInit;
+        var periodCheckbox = row.querySelector("[name$='-has_custom_period']");
+        if (periodCheckbox) periodCheckbox.checked = true;
+        var existingHint = row.querySelector(".service-period-hint");
+        if (existingHint) existingHint.remove();
       } else {
         var sourceRow = container.querySelector(".service-row");
         row = sourceRow.cloneNode(true);
@@ -97,6 +103,15 @@
 
         var newSkill = row.querySelector(".service-new-skill");
         if (newSkill) newSkill.style.display = "none";
+
+        // Reset period toggle init so initPeriodToggles picks up the new row.
+        delete row.dataset.periodToggleInit;
+        // Default: inherit assignment period.
+        var periodCheckbox = row.querySelector("[name$='-has_custom_period']");
+        if (periodCheckbox) periodCheckbox.checked = true;
+        // Remove cloned hint elements so initPeriodToggles creates fresh ones.
+        var clonedHint = row.querySelector(".service-period-hint");
+        if (clonedHint) clonedHint.remove();
 
         var existingBtn = row.querySelector(".service-row__remove");
         if (existingBtn) existingBtn.remove();
