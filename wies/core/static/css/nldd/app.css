@@ -22,6 +22,16 @@ nldd-app-view {
 
 nldd-navigation-split-view {
   flex: 1;
+  min-height: 0; /* allow flex child to shrink below content height */
+}
+
+/* The split-view panes need to fill available height */
+nldd-split-view-pane {
+  height: 100%;
+}
+
+nldd-split-view-pane nldd-page {
+  height: 100%;
 }
 
 a {
