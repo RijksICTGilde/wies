@@ -746,9 +746,8 @@ class PlacementListView(ListView):
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if "HX-Request" in self.request.headers:
-            if self.request.headers.get("HX-Target") == "side_panel-container":
-                return ["parts/side_panel.html"]
-            if self.request.headers.get("HX-Target") == "side_panel-content":
+            hx_target = self.request.headers.get("HX-Target", "")
+            if hx_target in ("ndd-side-panel-content", "side_panel-content", "side_panel-container"):
                 placement_id = self.request.GET.get("plaatsing")
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
@@ -1082,9 +1081,8 @@ class AssignmentListView(ListView):
 
     def get_template_names(self):
         if "HX-Request" in self.request.headers:
-            if self.request.headers.get("HX-Target") == "side_panel-container":
-                return ["parts/side_panel.html"]
-            if self.request.headers.get("HX-Target") == "side_panel-content":
+            hx_target = self.request.headers.get("HX-Target", "")
+            if hx_target in ("ndd-side-panel-content", "side_panel-content", "side_panel-container"):
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
                 if colleague_id and not assignment_id:
@@ -2388,9 +2386,7 @@ def user_profile(request):
     # HTMX partial responses for panel swaps
     if "HX-Request" in request.headers:
         hx_target = request.headers.get("HX-Target")
-        if hx_target == "side_panel-container" and panel_data:
-            return render(request, "parts/side_panel.html", {"panel_data": panel_data})
-        if hx_target == "side_panel-content" and panel_data:
+        if hx_target in ("ndd-side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
     # Build label data per category for the data list rows
