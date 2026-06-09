@@ -2399,7 +2399,7 @@ def user_profile(request):
 
     return render(
         request,
-        "user_profile.html",
+        "ndd/user_profile.html",
         {
             "colleague": colleague,
             "label_categories": label_categories,

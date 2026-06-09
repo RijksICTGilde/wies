@@ -432,10 +432,9 @@ class ProfilePageRenderTest(TestCase):
     def test_profile_page_renders(self):
         response = self.client.get("/profiel/")
         assert response.status_code == 200
-        # Editable name field is present.
-        self.assertContains(response, "inline-edit-user-")
-        # Edit pencil for own profile.
-        self.assertContains(response, "edit-icon-button")
+        # NDD profile page renders user data.
+        self.assertContains(response, self.user.first_name)
+        self.assertContains(response, self.user.email)
 
 
 class AssignmentEditablesFullTest(TestCase):

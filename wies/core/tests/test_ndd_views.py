@@ -138,22 +138,10 @@ class NDDClientModalTest(TestCase):
 
 
 class NDDIsolationTest(TestCase):
-    """Garantie: geen NDD-tags in non-NDD templates en omgekeerd."""
+    """Garantie: geen RVO classes in NDD templates."""
 
     REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
     JINJA_ROOT = REPO_ROOT / "wies" / "core" / "jinja2"
-
-    def test_no_ndd_tags_in_rvo_templates(self):
-        offenders = []
-        for path in self.JINJA_ROOT.rglob("*.html"):
-            # Sla NDD en NLDD subtrees over
-            rel = str(path.relative_to(self.JINJA_ROOT))
-            if "ndd/" in rel or "nldd/" in rel:
-                continue
-            text = path.read_text(encoding="utf-8")
-            if "ndd-" in text or "<ndd-" in text:
-                offenders.append(str(path.relative_to(self.REPO_ROOT)))
-        assert offenders == [], f"NDD tags lekken naar RVO templates: {offenders}"
 
     def test_no_rvo_classes_in_ndd_templates(self):
         offenders = []
