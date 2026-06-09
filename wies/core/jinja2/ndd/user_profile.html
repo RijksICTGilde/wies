@@ -6,10 +6,7 @@
   <link rel="stylesheet" href="{{ static('css/ndd/side_panel.css') }}">
   <script src="{{ static('js/ndd/side_panel.js') }}" defer></script>
 {% endblock extra_head %}
-{% block sidebar_title %}
-{% endblock sidebar_title %}
-{% block sidebar %}
-{% endblock sidebar %}
+{# No sidebar on profile page — base.html auto-hides empty sidebar #}
 {% block content %}
   <nldd-container>
   <nldd-simple-section>

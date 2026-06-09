@@ -125,6 +125,11 @@ ndd-top-navigation-bar {
   padding: var(--primitives-space-16, 16px);
 }
 
+/* Hide sidebar when no-sidebar class is set */
+#ndd-sidebar-pane.ndd-sidebar-pane--hidden {
+  display: none;
+}
+
 /* Desktop: toggle sidebar collapsed */
 #ndd-sidebar-pane.collapsed {
   width: 0;

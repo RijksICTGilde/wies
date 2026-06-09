@@ -65,12 +65,15 @@
       </div>
     </nav>
     <div id="ndd-main-split">
-      <aside id="ndd-sidebar-pane">
-        <div class="ndd-sidebar-pane__body">
-          {% block sidebar %}
-          {% endblock sidebar %}
-        </div>
-      </aside>
+      {% set _sidebar_content %}
+        {% block sidebar %}
+        {% endblock sidebar %}
+      {% endset %}
+      {% if _sidebar_content.strip() %}
+        <aside id="ndd-sidebar-pane">
+          <div class="ndd-sidebar-pane__body">{{ _sidebar_content }}</div>
+        </aside>
+      {% endif %}
       <div id="ndd-main-pane">
         <nldd-page sticky-header
         {% block page_attrs %}
