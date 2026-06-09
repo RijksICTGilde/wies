@@ -1,7 +1,7 @@
 {# NDD admin sidebar — navigatie voor beheerpagina's. #}
 <ndd-list>
-<ndd-list-item type="link" href="{{ url('ndd-admin-users') }}"
-{% if '/ndd/beheer/gebruikers/' in request.path %}current{% endif %}
+<ndd-list-item type="link" href="{{ url('admin-users') }}"
+{% if '/beheer/gebruikers/' in request.path %}current{% endif %}
 >
 <ndd-spacer-cell slot="start" size="12"></ndd-spacer-cell>
 <ndd-icon-cell slot="start" size="20">
@@ -24,8 +24,8 @@
   <ndd-spacer-cell slot="end" size="12"></ndd-spacer-cell>
   </ndd-list-item>
 {% endif %}
-<ndd-list-item type="link" href="{{ url('ndd-label-admin') }}"
-{% if '/ndd/beheer/labels/' in request.path %}current{% endif %}
+<ndd-list-item type="link" href="{{ url('label-admin') }}"
+{% if '/beheer/labels/' in request.path %}current{% endif %}
 >
 <ndd-spacer-cell slot="start" size="12"></ndd-spacer-cell>
 <ndd-icon-cell slot="start" size="20">

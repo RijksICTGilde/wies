@@ -30,30 +30,26 @@
     </script>
   </head>
   <body class="ndd-app">
-    <div class="ndd-app__banner" role="note">
-      PoC — NDD Design System (MinBZK).
-      <a href="{{ url('home') }}">→ vergelijk met de huidige (RVO) pagina</a>
-    </div>
     <ndd-top-navigation-bar></ndd-top-navigation-bar>
     <nav class="ndd-app__nav">
       <div class="ndd-app__nav-inner">
         <ndd-menu-bar accessible-label="Hoofdnavigatie" overflow-text="Meer opties">
-        <ndd-menu-bar-item text="Wie zit waar?" href="{{ url('ndd-home') }}"
-        {% if request.path == '/ndd/' %}current{% endif %}
+        <ndd-menu-bar-item text="Wie zit waar?" href="{{ url('home') }}"
+        {% if request.path == '/' %}current{% endif %}
         >
         </ndd-menu-bar-item>
-        <ndd-menu-bar-item text="Aanvragen" href="{{ url('ndd-assignments') }}"
-        {% if '/ndd/vacatures/' in request.path %}current{% endif %}
+        <ndd-menu-bar-item text="Aanvragen" href="{{ url('assignment-list') }}"
+        {% if '/opdrachten/' in request.path %}current{% endif %}
         >
         </ndd-menu-bar-item>
         </ndd-menu-bar>
         {% if request.user.is_authenticated %}
           <ndd-menu-bar accessible-label="Gebruikersmenu" overflow-text="Meer">
           <ndd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="person" expandable content-priority="text">
-          <ndd-menu-item text="Profiel" data-href="{{ url('ndd-profile') }}"></ndd-menu-item>
+          <ndd-menu-item text="Profiel" data-href="{{ url('user-profile') }}"></ndd-menu-item>
           {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
             <ndd-menu-divider></ndd-menu-divider>
-            <ndd-menu-item text="Beheer" data-href="{{ url('ndd-admin-users') }}"></ndd-menu-item>
+            <ndd-menu-item text="Beheer" data-href="{{ url('admin-users') }}"></ndd-menu-item>
           {% endif %}
           <ndd-menu-divider></ndd-menu-divider>
           <ndd-menu-item text="Uitloggen" data-href="{{ url('logout') }}"></ndd-menu-item>
