@@ -4,7 +4,7 @@
   {% if clients|length > 1 %}
     {% set client_label = client_label ~ " (+" ~ (clients|length - 1) ~ ")" %}
   {% endif %}
-  <ndd-list-item type="button" hx-get="{{ placement.colleague_url }}" hx-target="#ndd-side-panel-content" hx-swap="innerHTML">
+  <ndd-list-item type="button" hx-get="{{ placement.panel_url }}" hx-target="#ndd-side-panel-content" hx-swap="innerHTML">
   <ndd-spacer-cell slot="start" size="12"></ndd-spacer-cell>
   <ndd-icon-cell slot="start" size="40" vertical-alignment="top">
   <span class="ndd-avatar" aria-hidden="true">{{ placement.colleague.name|first|upper }}</span>

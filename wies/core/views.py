@@ -981,8 +981,11 @@ class PlacementListNDDView(PlacementListView):
     def get_template_names(self) -> list[str]:
         if "HX-Request" in self.request.headers:
             if self.request.headers.get("HX-Target") == "ndd-side-panel-content":
+                placement_id = self.request.GET.get("plaatsing")
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
+                if placement_id:
+                    return ["ndd/parts/placement_panel_content.html"]
                 if colleague_id and not assignment_id:
                     return ["ndd/parts/colleague_panel_content.html"]
                 if assignment_id:
@@ -995,14 +998,22 @@ class PlacementListNDDView(PlacementListView):
     def get_context_data(self, **kwargs: object) -> dict:
         context = super().get_context_data(**kwargs)
         context["filter_target_url"] = reverse("ndd-home")
-        # Map RVO panel content templates to NDD equivalents
-        if context.get("panel_data"):
-            template = context["panel_data"].get("panel_content_template", "")
-            if template == "parts/colleague_panel_content.html":
-                context["panel_data"]["panel_content_template"] = "ndd/parts/colleague_panel_content.html"
-            elif template == "parts/assignment_panel_content.html":
-                context["panel_data"]["panel_content_template"] = "ndd/parts/assignment_panel_content.html"
+        self._map_panel_templates(context)
         return context
+
+    @staticmethod
+    def _map_panel_templates(context: dict) -> None:
+        """Map RVO panel content templates to NDD equivalents."""
+        if not context.get("panel_data"):
+            return
+        template = context["panel_data"].get("panel_content_template", "")
+        ndd_map = {
+            "parts/colleague_panel_content.html": "ndd/parts/colleague_panel_content.html",
+            "parts/assignment_panel_content.html": "ndd/parts/assignment_panel_content.html",
+            "parts/placement_panel_content.html": "ndd/parts/placement_panel_content.html",
+        }
+        if template in ndd_map:
+            context["panel_data"]["panel_content_template"] = ndd_map[template]
 
 
 class AssignmentListView(ListView):
@@ -1281,12 +1292,7 @@ class AssignmentListNDDView(AssignmentListView):
     def get_context_data(self, **kwargs: object) -> dict:
         context = super().get_context_data(**kwargs)
         context["filter_target_url"] = reverse("ndd-assignments")
-        if context.get("panel_data"):
-            template = context["panel_data"].get("panel_content_template", "")
-            if template == "parts/colleague_panel_content.html":
-                context["panel_data"]["panel_content_template"] = "ndd/parts/colleague_panel_content.html"
-            elif template == "parts/assignment_panel_content.html":
-                context["panel_data"]["panel_content_template"] = "ndd/parts/assignment_panel_content.html"
+        PlacementListNDDView._map_panel_templates(context)
         return context
 
 
@@ -2216,12 +2222,7 @@ def user_profile_ndd(request):
             pass
 
     # Map RVO panel templates to NDD equivalents
-    if panel_data:
-        template = panel_data.get("panel_content_template", "")
-        if template == "parts/colleague_panel_content.html":
-            panel_data["panel_content_template"] = "ndd/parts/colleague_panel_content.html"
-        elif template == "parts/assignment_panel_content.html":
-            panel_data["panel_content_template"] = "ndd/parts/assignment_panel_content.html"
+    PlacementListNDDView._map_panel_templates({"panel_data": panel_data})
 
     # HTMX partial responses for panel swaps
     if "HX-Request" in request.headers:

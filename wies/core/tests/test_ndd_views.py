@@ -89,6 +89,19 @@ class NDDPanelTest(TestCase):
         # Géén volledige page render
         assert 'class="ndd-app"' not in body
 
+    def test_ndd_panel_partial_for_plaatsing(self):
+        placement = Placement.objects.first()
+        response = self.client.get(
+            reverse("ndd-home"),
+            {"plaatsing": str(placement.id)},
+            headers={"hx-request": "true", "hx-target": "ndd-side-panel-content"},
+        )
+        assert response.status_code == 200
+        body = response.content.decode()
+        assert self.colleague.name in body
+        assert "ndd-panel" in body
+        assert 'class="ndd-app"' not in body
+
     def test_ndd_panel_partial_for_opdracht(self):
         response = self.client.get(
             reverse("ndd-home"),

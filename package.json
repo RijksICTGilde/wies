@@ -6,7 +6,7 @@
     "build-ndd": "node scripts/build-ndd.mjs"
   },
   "dependencies": {
-    "@minbzk/storybook": "^0.8.29"
+    "@nldd/design-system": "^0.8.57"
   },
   "devDependencies": {
     "esbuild": "^0.28.0"
