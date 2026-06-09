@@ -2070,6 +2070,9 @@ def _attach_audit_render_data(event) -> None:
     event.formatted_old = event.context.get("old_value")
     event.formatted_new = event.context.get("new_value")
 
+    if event.action == "delete":
+        event.render_kind = "delete"
+        return
     if event.action != "update":
         return
     model_label = event.object_type.lower()
@@ -2118,6 +2121,17 @@ def assignment_delete(request, pk):
         )
     if request.method == "POST":
         name = assignment.name
+        # Snapshot related rows before they cascade away.
+        context = {
+            "name": name,
+            "placements": [
+                p.colleague.name
+                for p in Placement.objects.filter(service__assignment=assignment).select_related("colleague")
+            ],
+            "organizations": [
+                rel.organization.label or rel.organization.name for rel in assignment.organization_relations.all()
+            ],
+        }
         # Atomic so a failed audit insert rolls back the delete — losing
         # the opdracht without a trace would be the worst outcome.
         with transaction.atomic():
@@ -2128,7 +2142,7 @@ def assignment_delete(request, pk):
                 source="user",
                 object_id=pk,
                 user=request.user,
-                context={"name": name},
+                context=context,
             )
         messages.success(request, f"Opdracht '{name}' succesvol verwijderd")
         response = HttpResponse(status=200)

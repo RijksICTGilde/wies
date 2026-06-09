@@ -574,6 +574,33 @@ class AssignmentEditAttributeTest(TestCase):
         self.assertContains(response, "Toegevoegd: Java (open)")
         self.assertContains(response, "rvo-list")
 
+    def test_timeline_renders_delete_event(self):
+        """Delete events render 'verwijderde opdracht X' + the cascaded
+        placement and organization snapshots as a bullet list."""
+        self.client.force_login(self.user_with_permission)
+        Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            object_type="Assignment",
+            action="delete",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "name": "Verwijderde Opdracht",
+                "placements": ["Jan Jansen", "Anna Anders"],
+                "organizations": ["MinBZK"],
+            },
+        )
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, "verwijderde opdracht")
+        self.assertContains(response, "Verwijderde Opdracht")
+        self.assertContains(response, "Plaatsingen: Jan Jansen, Anna Anders")
+        self.assertContains(response, "Opdrachtgevers: MinBZK")
+        self.assertContains(response, "event-tag--delete")
+
     def test_timeline_renders_text_change_inline(self):
         """Text field changes render inline as 'van X naar Y'"""
         self.client.force_login(self.user_with_permission)
@@ -718,6 +745,9 @@ class AssignmentDeleteViewTests(TestCase):
         event = Event.objects.get(object_type="Assignment", action="delete", object_id=assignment_id)
         assert event.user == self.owner_user
         assert event.context["name"] == "Te verwijderen"
+        # Snapshot of cascaded rows so the audit still tells what was deleted.
+        assert event.context["placements"] == [self.placed_colleague.name]
+        assert event.context["organizations"] == []
 
     def test_get_renders_confirmation_modal(self):
         self.client.force_login(self.owner_user)

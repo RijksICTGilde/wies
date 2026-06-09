@@ -699,6 +699,11 @@ dialog#side_panel::backdrop {
   color: var(--rvo-color-hemelblauw-800, #154273);
 }
 
+.event-tag--delete {
+  background-color: var(--rvo-color-rood-200, #f9dfdd);
+  color: var(--rvo-color-rood-800, #8b0000);
+}
+
 .event-timeline__content {
   font-size: var(--rvo-font-size-sm);
   padding-top: 2px;
