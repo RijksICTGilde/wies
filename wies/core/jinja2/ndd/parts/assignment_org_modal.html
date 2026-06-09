@@ -1,0 +1,36 @@
+<ndd-window id="assignmentOrgPickerModal" accessible-label="Selecteer opdrachtgever(s)" width="900px" height="600px">
+<ndd-page sticky-header sticky-footer>
+<ndd-top-title-bar slot="header" text="Selecteer opdrachtgever(s)" dismiss-text="Sluiten"></ndd-top-title-bar>
+<ndd-container>
+<div class="ndd-client-modal__body">
+  <div class="ndd-client-modal__search">
+    <ndd-search-field id="assignment-org-search" placeholder="Zoek opdrachtgever..." aria-label="Zoek opdrachtgever"></ndd-search-field>
+  </div>
+  <div class="ndd-client-modal__layout">
+    <div class="ndd-client-modal__tree" id="assignment-org-tree-container"></div>
+    <div class="ndd-client-modal__selection">
+      <div class="ndd-client-modal__selection-header">
+        <strong>Geselecteerd</strong>
+        <span id="assignment-org-selection-count"
+              class="ndd-client-modal__selection-count"
+              style="display: none">0</span>
+      </div>
+      <ul id="assignment-org-selection-list"
+          class="ndd-client-modal__selection-list">
+        <li class="ndd-client-modal__empty-state" hidden></li>
+      </ul>
+    </div>
+  </div>
+</div>
+</ndd-container>
+<ndd-container slot="footer" padding="16">
+<ndd-button-group orientation="horizontal">
+<ndd-button variant="secondary" type="button" text="Annuleren" onclick="this.closest('ndd-window').hide()"></ndd-button>
+<ndd-button variant="neutral-transparent" type="button" id="assignment-org-clear-btn" text="Selectie wissen"></ndd-button>
+<ndd-button variant="primary" type="button" id="assignment-org-apply-btn" text="Toevoegen"></ndd-button>
+</ndd-button-group>
+</ndd-container>
+</ndd-page>
+{{ hierarchy|json_script("assignment-org-data") }}
+{{ current_selections|json_script("assignment-org-current-selections") }}
+</ndd-window>

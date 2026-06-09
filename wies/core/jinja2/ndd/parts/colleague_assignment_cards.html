@@ -1,0 +1,48 @@
+{# Shared assignment card list for colleague panel and profile page.
+   Expects: assignments (list), hx_target (string) #}
+{% if assignments %}
+  <div class="ndd-assignment-cards">
+    {% for assignment in assignments %}
+      <a class="ndd-assignment-card{% if assignment.historical %} ndd-assignment-card--historical{% endif %}"
+         href="{{ assignment.assignment_url }}"
+         hx-get="{{ assignment.assignment_url }}"
+         hx-target="{{ hx_target }}"
+         hx-swap="innerHTML">
+        <div class="ndd-assignment-card__top">
+          <strong>{{ assignment.name }}</strong>
+          {% if assignment.historical %}
+            <ndd-token>Afgelopen</ndd-token>
+          {% elif assignment.start_date or assignment.end_date %}
+            <span class="ndd-text-secondary">
+              {{ assignment.start_date|datum_nl("N y") if assignment.start_date else "?" }}
+              – {{ assignment.end_date|datum_nl("N y") if assignment.end_date else "?" }}
+            </span>
+          {% endif %}
+        </div>
+        {% if assignment.organization %}<span class="ndd-text-secondary">{{ assignment.organization }}</span>{% endif %}
+        {% if assignment.team_members %}
+          <div class="ndd-team-list" style="margin-top: 0.25rem;">
+            {% for member in assignment.team_members %}
+              <span class="ndd-avatar ndd-avatar--sm" title="{{ member }}">{{ member|first|upper }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+        {% if assignment.tags %}
+          <div style="margin-top: 0.25rem;">
+            {% for tag in assignment.tags %}<ndd-token>{{ tag.skill if tag is mapping else tag }}</ndd-token>{% endfor %}
+          </div>
+        {% endif %}
+        {% if assignment.privacy_warning_text %}
+          <div style="margin-top: 0.25rem;">
+            <ndd-icon name="lock" size="16"></ndd-icon>
+            <span class="ndd-text-secondary">{{ assignment.privacy_warning_text }}</span>
+          </div>
+        {% endif %}
+      </a>
+    {% endfor %}
+  </div>
+{% else %}
+  <p class="ndd-text-secondary">
+    <em>Geen opdrachten gevonden.</em>
+  </p>
+{% endif %}

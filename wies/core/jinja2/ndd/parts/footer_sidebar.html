@@ -1,0 +1,25 @@
+<div class="sidebar-footer">
+  <div class="sidebar-footer__column">
+    <span class="sidebar-footer__title">Over Wies</span>
+    <ul class="sidebar-footer__menu">
+      <li>
+        <a href="https://github.com/RijksICTGilde/wies" target="_blank">GitHub</a>
+      </li>
+      {% if APP_VERSION and '/beheer/' in request.path %}<li>Versie: {{ APP_VERSION }}</li>{% endif %}
+    </ul>
+  </div>
+  <div class="sidebar-footer__column">
+    <span class="sidebar-footer__title">Over deze site</span>
+    <ul class="sidebar-footer__menu">
+      <li>
+        <a href="{{ url('privacy') }}">Privacy</a>
+      </li>
+      <li>
+        <a href="{{ url('toegankelijkheid') }}">Toegankelijkheid</a>
+      </li>
+      <li>
+        <a href="{{ url('contact') }}">Contact</a>
+      </li>
+    </ul>
+  </div>
+</div>

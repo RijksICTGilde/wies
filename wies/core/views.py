@@ -2250,6 +2250,139 @@ def user_profile_ndd(request):
     )
 
 
+def contact_ndd(request):
+    return render(request, "ndd/contact.html")
+
+
+def privacy_ndd(request):
+    return render(request, "ndd/privacy.html")
+
+
+def toegankelijkheid_ndd(request):
+    return render(request, "ndd/toegankelijkheid.html")
+
+
+@staff_required
+def staff_dashboard_ndd(request):
+    return render(request, "ndd/staff_dashboard.html", {"usage": get_usage_stats()})
+
+
+@staff_required
+def staff_database_ndd(request):
+    context = {
+        "assignment_count": Assignment.objects.count(),
+        "colleague_count": Colleague.objects.count(),
+        "organization_count": OrganizationUnit.objects.count(),
+        "latest_tasks": get_latest_tasks(limit=3),
+        "destructive_actions_enabled": settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS,
+    }
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "clear_data":
+            if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
+                return HttpResponse(status=405)
+            Assignment.objects.all().delete()
+            Colleague.objects.all().delete()
+            Skill.objects.all().delete()
+            Placement.objects.all().delete()
+            Service.objects.all().delete()
+            LabelCategory.objects.all().delete()
+            Label.objects.all().delete()
+            OrganizationUnit.objects.update(parent=None)
+            OrganizationUnit.objects.all().delete()
+            OrganizationType.objects.all().delete()
+        elif action == "load_base_data":
+            if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
+                return HttpResponse(status=405)
+            management.call_command("loaddata", "base_dummy_data.json")
+            messages.success(request, "Data geladen uit base_dummy_data.json")
+        elif action == "sync_organizations":
+            if has_active_task("sync_organizations"):
+                messages.error(request, "Er is al een sync_organizations taak actief. Wacht tot deze is afgerond.")
+            else:
+                create_task(command="sync_organizations", created_by=request.user, timeout_minutes=5)
+                messages.success(request, "Organisatiesynchronisatie is gestart")
+            if request.headers.get("HX-Request"):
+                context["latest_tasks"] = get_latest_tasks(limit=3)
+                return render(request, "ndd/parts/task_list.html", context)
+        return redirect("ndd-staff-database")
+    return render(request, "ndd/staff_database.html", context)
+
+
+def organization_admin_ndd(request):
+    """NDD variant of organization admin. Same logic as organization_admin()."""
+    if not settings.DEBUG:
+        raise Http404
+    rows = OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations", "end_date")
+    today = timezone.now().date()
+    units_by_id: dict[int, dict] = {}
+    for row in rows:
+        row["is_inactive"] = row["end_date"] is not None and row["end_date"] <= today
+        row["tree_children"] = []
+        units_by_id[row["id"]] = row
+
+    roots: list[dict] = []
+    for unit in units_by_id.values():
+        parent_id = unit["parent_id"]
+        if parent_id and parent_id in units_by_id:
+            units_by_id[parent_id]["tree_children"].append(unit)
+        else:
+            roots.append(unit)
+
+    def sort_key(u):
+        return u["label"] or u["name"]
+
+    for unit in units_by_id.values():
+        unit["tree_children"].sort(key=sort_key)
+    roots.sort(key=sort_key)
+
+    root_ids = {u["id"] for u in roots}
+    type_links = (
+        OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
+        .select_related("organizationtype")
+        .values_list("organizationunit_id", "organizationtype__label")
+    )
+    root_types: dict[int, list[str]] = {}
+    for unit_id, type_label in type_links:
+        root_types.setdefault(unit_id, []).append(type_label)
+
+    grouped: dict[str, list[dict]] = {}
+    ungrouped: list[dict] = []
+    for unit in roots:
+        type_labels = root_types.get(unit["id"], [])
+        if type_labels:
+            for type_label in type_labels:
+                grouped.setdefault(type_label, []).append(unit)
+        else:
+            ungrouped.append(unit)
+
+    type_groups = [(ORG_TYPE_PLURAL.get(name, name), units) for name, units in sorted(grouped.items())]
+    if ungrouped:
+        type_groups.append(("Overig", ungrouped))
+
+    return render(request, "ndd/organization_admin.html", {"type_groups": type_groups})
+
+
+def user_import_csv_ndd(request):
+    """NDD variant of user CSV import. Same logic, NDD template."""
+    template = "ndd/user_import.html"
+    if request.method == "GET":
+        return render(request, template)
+    if request.method != "POST":
+        return HttpResponse(status=405)
+    if "csv_file" not in request.FILES:
+        return render(request, template, {"result": {"success": False, "errors": ["Geen bestand geüpload."]}})
+    csv_file = request.FILES["csv_file"]
+    if not csv_file.name.endswith(".csv"):
+        return render(request, template, {"result": {"success": False, "errors": ["Ongeldig bestandstype."]}})
+    try:
+        csv_content = csv_file.read().decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return render(request, template, {"result": {"success": False, "errors": ["Ongeldige bestandscodering."]}})
+    result = create_users_from_csv(request.user, csv_content)
+    return render(request, template, {"result": result})
+
+
 def user_profile(request):
     """User's own profile page with editable fields and full assignment history."""
     user = request.user
