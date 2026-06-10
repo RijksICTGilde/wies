@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ? : ...
+- 390: approximately half the memory footprint of org sync
 
 ## 2026-06-10
 
@@ -20,7 +20,6 @@ This files lists the changes during the lifetime of this project.
 - 331: restore the ability for placed consultants to edit the opdracht name
 - 331: show open rollen (aanvragen) first in the team list again
 - 331: fix team-edit silently wiping placement metadata (specific-dates, source_id) on every save by round-tripping Service/Placement PKs through the formset
-- 390: approximately half the memory footprint of org sync
 
 ## 2026-06-01
 
