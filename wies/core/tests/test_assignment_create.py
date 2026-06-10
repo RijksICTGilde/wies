@@ -190,7 +190,7 @@ class AssignmentCreateTest(TestCase):
         assignment = Assignment.objects.get(name="Audit Snapshot Opdracht")
         event = Event.objects.get(object_type="Assignment", action="create", object_id=assignment.id)
         assert event.context["name"] == "Audit Snapshot Opdracht"
-        assert event.context["placements"] == [self.colleague.name]
+        assert event.context["placements"] == [f"{self.colleague.name} ({self.skill.name})"]
         assert sorted(event.context["organizations"]) == sorted(
             [self.org.label or self.org.name, self.org2.label or self.org2.name]
         )
