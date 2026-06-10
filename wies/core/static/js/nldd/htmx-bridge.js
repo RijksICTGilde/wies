@@ -287,7 +287,7 @@
   }
 
   function init() {
-    const app = document.querySelector(".nldd-app");
+    const app = document.body;
     if (!app) return;
 
     scan(app);
