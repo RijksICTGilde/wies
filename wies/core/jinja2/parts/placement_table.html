@@ -1,5 +1,10 @@
-{# NDD placement list — simpele list met klikbare list-items. #}
-<div id="nldd-placement-table">
+{# Placement list with column headers #}
+<div id="nldd-placement-table" class="nldd-placement-table">
+  <div class="nldd-placement-table__header">
+    <div class="nldd-placement-table__col nldd-placement-table__col--who">Collega</div>
+    <div class="nldd-placement-table__col nldd-placement-table__col--what">Opdracht</div>
+    <div class="nldd-placement-table__col nldd-placement-table__col--when">Loopt tot</div>
+  </div>
   <nldd-list>
   {% include "parts/placement_table_rows.html" %}
   </nldd-list>

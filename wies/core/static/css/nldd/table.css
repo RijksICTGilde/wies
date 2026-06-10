@@ -1,25 +1,48 @@
-/* NDD placement list */
+/* Placement table */
 
-/* Kolom-verhoudingen: Wie | Wat & waar */
+/* Column header row */
+.nldd-placement-table__header {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem 0.5rem 4.5rem; /* left padding = avatar + spacers */
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--semantics-content-secondary-color, #64748b);
+  border-bottom: 2px solid var(--semantics-controls-border-color, #e2e8f0);
+}
+
+.nldd-placement-table__col--who {
+  flex: 2;
+  min-width: 0;
+}
+.nldd-placement-table__col--what {
+  flex: 3;
+  min-width: 0;
+}
+.nldd-placement-table__col--when {
+  flex: 0 0 120px;
+  text-align: right;
+}
+
+/* Row cell proportions — match header columns */
 .nldd-col-who {
-  flex: 0 0 35%;
+  flex: 2 !important;
   min-width: 0;
 }
 .nldd-col-what {
-  flex: 0 0 45%;
+  flex: 3 !important;
   min-width: 0;
 }
 
-/* Avatar in nldd-icon-cell */
+/* Avatar */
 .nldd-avatar {
   flex: 0 0 auto;
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 50%;
-  background: var(
-    --semantics-content-accent-color,
-    var(--primitives-color-accent-700, #2060d0)
-  );
+  background: var(--semantics-content-accent-color, #154273);
   color: #fff;
   display: flex;
   align-items: center;
@@ -37,7 +60,6 @@
   color: var(--semantics-content-secondary-color, #666);
 }
 
-/* Subtle tekst (secondary content color) */
 .nldd-text-secondary {
-  color: var(--semantics-content-secondary-color, #666);
+  color: var(--semantics-content-secondary-color, #64748b);
 }
