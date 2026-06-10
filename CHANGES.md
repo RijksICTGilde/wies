@@ -7,7 +7,7 @@ This files lists the changes during the lifetime of this project.
 - 368: placement periods can now be set independently from the assignment period via inline-edit on the placement panel; team cards are clickable and open the placement panel
 - 368: assignment team form redesigned — separate "Aanvraag toevoegen" and "Geplaatste consultant toevoegen" buttons with progressive field reveal
 - 368: lock icon on externally managed fields (e.g. OTYS)
-- 368: merge duplicate assignments tool in beheer — preview and confirm UI to combine assignments with the same name and owner
+- 368: merge duplicate assignments tool in beheer — preview and confirm UI to combine assignments with the same name, owner, and primary client
 - 368: BM can now edit service descriptions (role omschrijving) via inline-edit
 - 374: (migration)(remove env vars) remove super users and remove automatic generation during container start
 - 331: restore organization breadcrumbs in opdracht side panel; breadcrumb links stay on the page you came from (aanvragen or wie-zit-waar)
