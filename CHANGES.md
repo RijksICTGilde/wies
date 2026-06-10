@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ? : ...
+
+## 2026-06-10
+
 - 368: (migration) placement periods can now be set independently from the assignment period via inline-edit on the placement panel; team cards are clickable and open the placement panel
 - 368: assignment team form redesigned — separate "Aanvraag toevoegen" and "Geplaatste consultant toevoegen" buttons with progressive field reveal
 - 368: lock icon on externally managed fields (e.g. OTYS)
