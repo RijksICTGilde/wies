@@ -70,8 +70,10 @@
       {% endif %}
       <main class="wies-layout__main">
         {% include "parts/flash_messages.html" %}
+        <nldd-simple-section>
         {% block content %}
         {% endblock content %}
+        </nldd-simple-section>
       </main>
     </div>
     {% block panel %}
