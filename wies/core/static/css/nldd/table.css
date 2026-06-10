@@ -1,16 +1,17 @@
 /* Placement table */
 
-/* Column header row */
+/* Column header row — padding matches nldd-list-item internal layout:
+   start slot (icon-cell 40px + gap) ≈ 60px */
 .nldd-placement-table__header {
   display: flex;
   align-items: center;
-  padding: 0.5rem 1rem 0.5rem 4.5rem; /* left padding = avatar + spacers */
-  font-size: 0.75rem;
+  padding: 0.75rem 1rem 0.75rem 3.75rem;
+  font-size: 0.6875rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.06em;
   color: var(--semantics-content-secondary-color, #64748b);
-  border-bottom: 2px solid var(--semantics-controls-border-color, #e2e8f0);
+  border-bottom: 1px solid var(--semantics-controls-border-color, #e2e8f0);
 }
 
 .nldd-placement-table__col--who {
