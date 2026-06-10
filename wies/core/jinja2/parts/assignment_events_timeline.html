@@ -65,7 +65,7 @@
                 </li>
               {% endfor %}
             </ul>
-          {% elif event.render_kind == "delete" %}
+          {% elif event.action == "create" or event.render_kind == "delete" %}
             {% if event.context.placements or event.context.organizations %}
               <ul class="rvo-list rvo-margin-block-start--xs">
                 {% if event.context.placements %}<li>Plaatsingen: {{ event.context.placements|join(", ") }}</li>{% endif %}
