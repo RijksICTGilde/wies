@@ -4,7 +4,6 @@ from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
-
 from django.db.models import Count
 
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Placement, Service, Skill
