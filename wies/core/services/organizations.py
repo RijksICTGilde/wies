@@ -137,29 +137,6 @@ def parse_organization_element(
     }
 
 
-def parse_xml_hierarchical(xml_content: bytes) -> list[dict]:
-    """Parse organizations from XML export with hierarchy.
-
-    Args:
-        xml_content: Raw XML bytes
-
-    Returns:
-        List of organization dicts with nested children
-    """
-    root = ET.fromstring(xml_content)  # noqa: S314 (xml.etree vulnerable to XML attacks) — input is trusted government export from organisaties.overheid.nl
-    organizations = []
-
-    # Find top-level organizations (those with TOOI identifier at root level)
-    for org in root.findall("p:organisaties/p:organisatie", NS):
-        org_data = parse_organization_element(org)
-        if org_data is None:
-            continue
-
-        organizations.append(org_data)
-
-    return organizations
-
-
 _ROOT_ORG_TAG = f"{{{NS['p']}}}organisatie"
 _ORGS_WRAPPER_TAG = f"{{{NS['p']}}}organisaties"
 
