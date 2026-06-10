@@ -9,6 +9,7 @@ This files lists the changes during the lifetime of this project.
 - 368: lock icon on externally managed fields (e.g. OTYS)
 - 368: merge duplicate assignments tool in beheer — preview and confirm UI to combine assignments with the same name, owner, and primary client
 - 368: BM can now edit service descriptions (role omschrijving) via inline-edit
+- 368: fix that mutliple team members during assignment creation are correctly persisted (became requests before)
 - 374: (migration)(remove env vars) remove super users and remove automatic generation during container start
 - 331: restore organization breadcrumbs in opdracht side panel; breadcrumb links stay on the page you came from (aanvragen or wie-zit-waar)
 - 331: log audit events for changes to the looptijd (start/end date) and team (rollen + plaatsingen) on opdrachten
