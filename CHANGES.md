@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ? : ...
+- 390: reduce the memory footprint of org sync task to approximately half
 
 ## 2026-06-10
 

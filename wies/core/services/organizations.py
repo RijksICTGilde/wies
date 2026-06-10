@@ -4,13 +4,18 @@ Syncs organizations from organisaties.overheid.nl XML export.
 Supports hierarchical import of ministries with their DG's, directies and afdelingen.
 """
 
+import io
 import logging
 import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from datetime import datetime
+from typing import IO, TYPE_CHECKING
 
 import requests
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
 from django.db.models import Q
 from django.utils import timezone
 
@@ -132,27 +137,48 @@ def parse_organization_element(
     }
 
 
-def parse_xml_hierarchical(xml_content: bytes) -> list[dict]:
-    """Parse organizations from XML export with hierarchy.
+_ROOT_ORG_TAG = f"{{{NS['p']}}}organisatie"
+_ORGS_WRAPPER_TAG = f"{{{NS['p']}}}organisaties"
 
-    Args:
-        xml_content: Raw XML bytes
 
-    Returns:
-        List of organization dicts with nested children
+def iter_root_organizations(xml_source: IO[bytes] | str) -> Iterator[dict]:
+    """Stream top-level organizations from XML, clearing parsed elements as we go.
+
+    Yields one parsed dict per root <organisatie> and then drops the underlying
+    Element so the DOM never grows to hold the full document. Keeps peak memory
+    bounded to a single org subtree instead of the entire 30+ MB export.
     """
-    root = ET.fromstring(xml_content)  # noqa: S314
-    organizations = []
+    context = ET.iterparse(xml_source, events=("start", "end"))  # noqa: S314 (xml.etree vulnerable to XML attacks) — input is trusted government export from organisaties.overheid.nl
+    depth = 0
+    root_wrapper: ET.Element | None = None
 
-    # Find top-level organizations (those with TOOI identifier at root level)
-    for org in root.findall("p:organisaties/p:organisatie", NS):
-        org_data = parse_organization_element(org)
-        if org_data is None:
+    for event, elem in context:
+        if event == "start":
+            if elem.tag == _ORGS_WRAPPER_TAG and root_wrapper is None:
+                # The first <organisaties> we see is the document-level wrapper
+                # whose direct children are the top-level orgs.
+                root_wrapper = elem
+            if elem.tag == _ROOT_ORG_TAG:
+                depth += 1
             continue
 
-        organizations.append(org_data)
+        if elem.tag != _ROOT_ORG_TAG:
+            continue
 
-    return organizations
+        depth -= 1
+        if depth != 0:
+            # Nested <organisatie> — parent will process it as a child.
+            continue
+
+        org_data = parse_organization_element(elem)
+        if org_data is not None:
+            yield org_data
+
+        # Free the parsed subtree and detach it from the wrapper so processed
+        # siblings don't accumulate as the document grows.
+        elem.clear()
+        if root_wrapper is not None:
+            root_wrapper.remove(elem)
 
 
 def sync_organization_tree(
@@ -379,28 +405,36 @@ def sync_organizations(
         SyncResult with counts
     """
     result = SyncResult()
+    seen_ids: set[int] = set()
+    root_count = 0
 
-    # Fetch XML if not provided
-    if xml_content is None:
+    def _sync_stream(org_iter: Iterator[dict]) -> SyncResult:
+        nonlocal root_count
+        local_result = SyncResult()
+        for org_data in org_iter:
+            root_count += 1
+            org_result = sync_organization_tree(org_data, parent=None, dry_run=dry_run, seen_ids=seen_ids)
+            local_result = local_result + org_result
+        return local_result
+
+    if xml_content is not None:
+        # Test path: caller provided XML bytes. Stream from an in-memory buffer
+        # so we still avoid building the full Element tree.
+        result = result + _sync_stream(iter_root_organizations(io.BytesIO(xml_content)))
+    else:
         fetch_url = url or ORGANISATIES_OVERHEID_URL
         logger.info("Fetching organizations from %s", fetch_url)
 
-        response = requests.get(fetch_url, timeout=120)
-        if response.status_code == 200:  # noqa: PLR2004 (status code is not magic)
-            xml_content = response.content
-        else:
-            logger.error("Unable to get xml content")
-            return None
+        with requests.get(fetch_url, timeout=120, stream=True) as response:
+            if response.status_code != 200:  # noqa: PLR2004 (status code is not magic)
+                logger.error("Unable to get xml content")
+                return None
+            # Stream the response body straight into iterparse so the raw XML
+            # is never fully buffered in memory.
+            response.raw.decode_content = True
+            result = result + _sync_stream(iter_root_organizations(response.raw))
 
-    # Parse XML with hierarchy
-    organizations = parse_xml_hierarchical(xml_content)
-    logger.info("Parsed %d root organizations from XML", len(organizations))
-
-    # Sync each organization tree
-    seen_ids: set[int] = set()
-    for org_data in organizations:
-        org_result = sync_organization_tree(org_data, parent=None, dry_run=dry_run, seen_ids=seen_ids)
-        result = result + org_result
+    logger.info("Synced %d root organizations from XML (streamed)", root_count)
 
     # Deactivate external orgs not seen during a full sync
     today = timezone.now().date()
