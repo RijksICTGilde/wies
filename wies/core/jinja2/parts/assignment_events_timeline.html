@@ -16,6 +16,8 @@
           <strong>{{ author }}</strong>
           {% if event.action == "create" %}
             maakte deze opdracht aan
+          {% elif event.context.get("merge") %}
+            voegde {{ event.context.merged_ids|length }} dubbele opdracht(en) samen (#{{ event.context.merged_ids|join(", #") }})
           {% elif event.render_kind == "text" %}
             wijzigde <strong>{{ event.context.field_label }}</strong>
             {% if event.formatted_old %}van "{{ event.formatted_old }}"{% endif %}
@@ -25,7 +27,7 @@
           {% endif %}
           <div class="event-timeline__meta">
             <span class="rvo-text--subtle rvo-text--xs"
-                  title="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
+                  data-tooltip="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
             {% if event.action == "create" %}
               <span class="event-tag event-tag--create">
                 <c-icon icon="plus" size="xs" />

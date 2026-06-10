@@ -77,8 +77,16 @@ def _services_initial(assignment):
                 "skill": str(service.skill_id) if service.skill_id else "",
                 "skill_name": service.skill.name if service.skill else "",
                 "description": service.description,
-                "is_filled": placement is not None,
+                "is_filled": "ingevuld" if placement is not None else "aanvraag",
                 "colleague": placement.colleague if placement else None,
+                "has_custom_period": (
+                    placement.period_source != Placement.PLACEMENT
+                    if placement
+                    else service.period_source == service.ASSIGNMENT
+                ),
+                "placement_start_date": placement.start_date if placement else service.start_date,
+                "placement_end_date": placement.end_date if placement else service.end_date,
+                "placement": placement,
                 "service": service,
             }
         )
@@ -149,6 +157,13 @@ def _validate_period(cleaned):
     return cleaned
 
 
+def _save_period(assignment, cleaned):
+    """Save assignment period."""
+    assignment.start_date = cleaned.get("start_date")
+    assignment.end_date = cleaned.get("end_date")
+    assignment.save(update_fields=["start_date", "end_date"])
+
+
 class AssignmentEditables(EditableSet):
     class Meta:
         model = Assignment
@@ -159,7 +174,7 @@ class AssignmentEditables(EditableSet):
     )
 
     extra_info = Editable(
-        label="Beschrijving",
+        label="Opdrachtomschrijving",
         widget=forms.Textarea(attrs={"rows": 4}),
         display="rvo/forms/displays/textarea.html",
     )
@@ -179,9 +194,10 @@ class AssignmentEditables(EditableSet):
     )
 
     period = EditableGroup(
-        label="Looptijd",
+        label="Opdrachtperiode",
         fields=[start_date, end_date],
         clean=_validate_period,
+        save=_save_period,
         display="rvo/forms/displays/assignment_period.html",
     )
 

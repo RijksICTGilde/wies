@@ -1,5 +1,11 @@
-{# Single service row within the formset #}
-<div class="service-row" data-service-index="{{ row_index }}">
+{# Single service row within the formset.
+   .service-row__details is hidden until the user picks a status (Aanvraag/Geplaatste consultant).
+   For existing rows (with data) the details are shown immediately via data-has-choice.
+#}
+{% set _has_choice = svc_form.is_bound or (svc_form.initial and svc_form.initial.get('is_filled') is not none) %}
+<div class="service-row"
+     data-service-index="{{ row_index }}"
+     data-has-choice="{{ 'true' if _has_choice else 'false' }}">
   {# Round-trip PKs so apply_services_to_assignment can update in place. #}
   <input type="hidden"
          name="{{ svc_form.id.html_name }}"
@@ -7,24 +13,61 @@
   <input type="hidden"
          name="{{ svc_form.placement_id.html_name }}"
          value="{{ svc_form.placement_id.value() or '' }}">
-  {{ svc_form.skill.as_field_group() }}
-  <div class="service-new-skill" style="display: none">{{ svc_form.new_skill_name.as_field_group() }}</div>
-  {{ svc_form.description.as_field_group() }}
-  <div class="service-row__checkbox-line">
-    <label class="rvo-checkbox">{{ svc_form.is_filled }} Consultant bekend</label>
-  </div>
-  <div class="service-colleague-field" style="display: none">
-    <div class="utrecht-form-field">
-      <div class="rvo-form-field__label">
-        <label class="rvo-label" for="{{ svc_form.colleague.id_for_label }}">{{ svc_form.colleague.label }}</label>
+  <div class="service-row__status-toggle">{{ svc_form.is_filled.as_widget() }}</div>
+  <div class="service-row__details"
+       {% if not _has_choice %}style="display:none"{% endif %}>
+    {% set _is_aanvraag = svc_form.is_filled.value() == "aanvraag" %}
+    <div class="service-colleague-field"
+         {% if _is_aanvraag %}style="display:none"{% endif %}>
+      <div class="utrecht-form-field">
+        <div class="rvo-form-field__label">
+          <label class="rvo-label" for="{{ svc_form.colleague.id_for_label }}">{{ svc_form.colleague.label }}</label>
+        </div>
+        {{ svc_form.colleague }}
       </div>
-      {{ svc_form.colleague }}
     </div>
+    {{ svc_form.skill.as_field_group() }}
+    <div class="service-new-skill" style="display: none">{{ svc_form.new_skill_name.as_field_group() }}</div>
+    <div class="service-period-section">
+      <div class="rvo-form-field__label">
+        <span class="rvo-label">Periode</span>
+      </div>
+      <label class="service-period-toggle">
+        {{ svc_form.has_custom_period.as_widget() }}
+        <span>Neem opdrachtperiode over</span>
+      </label>
+      <div class="assignment-form-row">
+        <div class="utrecht-form-field">
+          <div class="rvo-form-field__label">
+            <label class="rvo-label"
+                   for="{{ svc_form.placement_start_date.id_for_label }}">Startdatum</label>
+          </div>
+          {{ svc_form.placement_start_date.as_widget() }}
+        </div>
+        <div class="utrecht-form-field">
+          <div class="rvo-form-field__label">
+            <label class="rvo-label"
+                   for="{{ svc_form.placement_end_date.id_for_label }}">Einddatum</label>
+          </div>
+          {{ svc_form.placement_end_date.as_widget() }}
+        </div>
+      </div>
+      {% if svc_form.placement_start_date.errors %}
+        <div class="rvo-form-field__error">
+          {% for error in svc_form.placement_start_date.errors %}<span class="rvo-text--error">{{ error }}</span>{% endfor %}
+        </div>
+      {% endif %}
+    </div>
+    {{ svc_form.description.as_field_group() }}
+    {% if svc_form.placement_end_date.errors %}
+      {% for error in svc_form.placement_end_date.errors %}<c-alert kind="error">{{ error }}</c-alert>{% endfor %}
+    {% endif %}
+    {% if svc_form.colleague.errors %}
+      {% for error in svc_form.colleague.errors %}<c-alert kind="error">{{ error }}</c-alert>{% endfor %}
+    {% endif %}
+    {% if svc_form.non_field_errors() %}
+      {% for error in svc_form.non_field_errors() %}<c-alert kind="error">{{ error }}</c-alert>{% endfor %}
+    {% endif %}
   </div>
-  {% if svc_form.colleague.errors %}
-    {% for error in svc_form.colleague.errors %}<c-alert kind="error">{{ error }}</c-alert>{% endfor %}
-  {% endif %}
-  {% if svc_form.non_field_errors() %}
-    {% for error in svc_form.non_field_errors() %}<c-alert kind="error">{{ error }}</c-alert>{% endfor %}
-  {% endif %}
+  <div class="service-row__actions"></div>
 </div>

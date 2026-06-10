@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import Count
 
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Placement, Service, Skill
 
@@ -33,6 +34,11 @@ def extract_services_data(service_formset) -> list[dict]:
         if not has_skill:
             continue
         skill_id = int(skill_val) if skill_val and skill_val != "__new__" else None
+        # "aanvraag" means this service is a vacancy: ignore any colleague the
+        # (hidden) select still carries, so apply_services_to_assignment drops
+        # the placement and the row turns into an open aanvraag.
+        is_aanvraag = cd.get("is_filled") == "aanvraag"
+        colleague = cd.get("colleague")
         services_data.append(
             {
                 "id": cd.get("id"),
@@ -41,7 +47,10 @@ def extract_services_data(service_formset) -> list[dict]:
                 "skill_id": skill_id,
                 "new_skill_name": new_skill if skill_val == "__new__" else None,
                 "status": "OPEN",
-                "colleague_id": cd["colleague"].id if cd.get("colleague") else None,
+                "colleague_id": colleague.id if colleague and not is_aanvraag else None,
+                "has_custom_period": cd.get("has_custom_period", False),
+                "placement_start_date": cd.get("placement_start_date"),
+                "placement_end_date": cd.get("placement_end_date"),
             }
         )
     return services_data
@@ -109,15 +118,30 @@ def apply_services_to_assignment(assignment: Assignment, services_data: list[dic
             service.description = svc.get("description", "")
             service.skill = skill
             service.status = svc.get("status", service.status)
-            service.save(update_fields=["description", "skill", "status"])
+            update_fields = ["description", "skill", "status"]
+            if svc.get("has_custom_period"):
+                service.period_source = Service.SERVICE
+                service.specific_start_date = svc.get("placement_start_date")
+                service.specific_end_date = svc.get("placement_end_date")
+            else:
+                service.period_source = Service.ASSIGNMENT
+                service.specific_start_date = None
+                service.specific_end_date = None
+            update_fields.extend(["period_source", "specific_start_date", "specific_end_date"])
+            service.save(update_fields=update_fields)
         else:
-            service = Service.objects.create(
-                assignment=assignment,
-                description=svc.get("description", ""),
-                skill=skill,
-                status=svc.get("status", "OPEN"),
-                source="wies",
-            )
+            create_kwargs = {
+                "assignment": assignment,
+                "description": svc.get("description", ""),
+                "skill": skill,
+                "status": svc.get("status", "OPEN"),
+                "source": "wies",
+            }
+            if svc.get("has_custom_period"):
+                create_kwargs["period_source"] = Service.SERVICE
+                create_kwargs["specific_start_date"] = svc.get("placement_start_date")
+                create_kwargs["specific_end_date"] = svc.get("placement_end_date")
+            service = Service.objects.create(**create_kwargs)
 
         placement_id = svc.get("placement_id")
         colleague_id = svc.get("colleague_id")
@@ -134,17 +158,45 @@ def apply_services_to_assignment(assignment: Assignment, services_data: list[dic
                 msg = "Een plaatsing verwijst naar een andere dienst. Herlaad de pagina en probeer opnieuw."
                 raise ValidationError(msg)
             if colleague_id:
+                update_fields = []
                 if placement.colleague_id != int(colleague_id):
                     placement.colleague_id = int(colleague_id)
-                    placement.save(update_fields=["colleague_id"])
+                    update_fields.append("colleague_id")
+
+                if svc.get("has_custom_period"):
+                    new_source = Placement.PLACEMENT
+                    new_start = svc.get("placement_start_date")
+                    new_end = svc.get("placement_end_date")
+                else:
+                    new_source = Placement.SERVICE
+                    new_start = None
+                    new_end = None
+
+                if placement.period_source != new_source:
+                    placement.period_source = new_source
+                    update_fields.append("period_source")
+                if placement.specific_start_date != new_start:
+                    placement.specific_start_date = new_start
+                    update_fields.append("specific_start_date")
+                if placement.specific_end_date != new_end:
+                    placement.specific_end_date = new_end
+                    update_fields.append("specific_end_date")
+
+                if update_fields:
+                    placement.save(update_fields=update_fields)
             else:
                 placement.delete()
         elif colleague_id:
-            Placement.objects.create(
-                colleague_id=int(colleague_id),
-                service=service,
-                source="wies",
-            )
+            create_kwargs = {
+                "colleague_id": int(colleague_id),
+                "service": service,
+                "source": "wies",
+            }
+            if svc.get("has_custom_period"):
+                create_kwargs["period_source"] = Placement.PLACEMENT
+                create_kwargs["specific_start_date"] = svc.get("placement_start_date")
+                create_kwargs["specific_end_date"] = svc.get("placement_end_date")
+            Placement.objects.create(**create_kwargs)
 
 
 @transaction.atomic
@@ -197,3 +249,91 @@ def create_assignment_from_form(
     apply_services_to_assignment(assignment, services_data)
 
     return assignment
+
+
+def find_duplicate_groups():
+    """Find assignments that share the same name, owner, and primary organization."""
+    qs = (
+        Assignment.objects.filter(
+            organization_relations__role="PRIMARY",
+        )
+        .values(
+            "name",
+            "owner",
+            "organization_relations__organization",
+        )
+        .annotate(
+            count=Count("id"),
+        )
+        .filter(
+            count__gt=1,
+        )
+        .order_by("name")
+    )
+
+    groups = []
+    for dupe in qs:
+        assignments = (
+            Assignment.objects.filter(
+                name=dupe["name"],
+                owner=dupe["owner"],
+                organization_relations__role="PRIMARY",
+                organization_relations__organization=dupe["organization_relations__organization"],
+            )
+            .select_related("owner")
+            .prefetch_related(
+                "services__placements__colleague",
+                "services__skill",
+                "organization_relations__organization",
+            )
+            .order_by("id")
+        )
+        group = list(assignments)
+        # Avoid adding the same group twice (can happen with multiple orgs).
+        if group and not any(g[0].id == group[0].id for g in groups):
+            groups.append(group)
+    return groups
+
+
+@transaction.atomic
+def merge_group(assignments):
+    """Merge a group of duplicate assignments into the first (oldest) one.
+
+    Strategy:
+    - Keep the assignment with the lowest ID as the target.
+    - Move all services (and their placements) to the target, pinning explicit dates.
+    - Pick the widest date range across all assignments.
+    - Delete the now-empty duplicate assignments.
+    """
+    target = assignments[0]
+    duplicates = assignments[1:]
+
+    # Widen the date range to cover all assignments.
+    all_starts = [a.start_date for a in assignments if a.start_date]
+    all_ends = [a.end_date for a in assignments if a.end_date]
+    new_start = min(all_starts) if all_starts else None
+    new_end = max(all_ends) if all_ends else None
+
+    if new_start != target.start_date or new_end != target.end_date:
+        target.start_date = new_start
+        target.end_date = new_end
+        target.save(update_fields=["start_date", "end_date"])
+
+    for dupe in duplicates:
+        for svc in dupe.services.all():
+            start, end = svc.start_date, svc.end_date
+            svc.period_source = "SERVICE"
+            svc.specific_start_date = start
+            svc.specific_end_date = end
+            svc.assignment = target
+            svc.save(
+                update_fields=[
+                    "assignment",
+                    "period_source",
+                    "specific_start_date",
+                    "specific_end_date",
+                ]
+            )
+
+        dupe.organization_relations.all().delete()
+        dupe.delete()

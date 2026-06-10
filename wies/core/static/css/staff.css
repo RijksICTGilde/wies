@@ -78,3 +78,31 @@
   color: var(--rvo-color-grijs-700, #535353);
   font-size: 0.9rem;
 }
+
+.merge-preview {
+  margin-top: 1rem;
+}
+
+.merge-group {
+  margin-bottom: 3rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--rvo-color-grijs-200, #dde2e7);
+}
+
+.merge-group:last-child {
+  border-bottom: none;
+}
+
+.merge-group h3 {
+  margin: 1rem 0 0.25rem;
+}
+
+.merge-group__meta {
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: var(--rvo-color-grijs-600, #636363);
+}
+
+.merge-preview .utrecht-table__row:hover {
+  background: inherit;
+}

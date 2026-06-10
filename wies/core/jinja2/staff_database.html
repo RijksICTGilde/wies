@@ -33,7 +33,7 @@
         <form method="post">
           {{ get_csrf_hidden_input(request) }}
           <input type="hidden" name="action" value="load_base_data">
-          <c-button kind="primary" type="submit">Dummy data laden</c-button>
+          <c-button kind="secondary" type="submit">Dummy data laden</c-button>
         </form>
       </div>
     {% endif %}
@@ -46,8 +46,84 @@
             hx-swap="innerHTML">
         {{ get_csrf_hidden_input(request) }}
         <input type="hidden" name="action" value="sync_organizations">
-        <c-button kind="primary" type="submit">Organisaties synchroniseren</c-button>
+        <c-button kind="secondary" type="submit">Organisaties synchroniseren</c-button>
       </form>
+    </div>
+    <div class="staff-action-card">
+      <h2>Dubbele opdrachten samenvoegen</h2>
+      <p>
+        Opdrachten met dezelfde naam en eigenaar worden samengevoegd: diensten en plaatsingen worden verplaatst naar de oudste opdracht, duplicaten worden verwijderd.
+      </p>
+      {% if merge_groups is defined and merge_groups %}
+        <div class="merge-preview" id="merge-preview">
+          <c-alert kind="warning">
+          {{ merge_groups|length }} groep(en) gevonden. Controleer het overzicht en bevestig.
+          </c-alert>
+          {% for group in merge_groups %}
+            <div class="merge-group">
+              <h3>{{ group.name }}</h3>
+              <p class="merge-group__meta">{{ group.count }} opdrachten · eigenaar: {{ group.owner }}</p>
+              <c-table>
+              <c-table-head>
+              <c-table-row>
+              <c-table-header>#</c-table-header>
+              <c-table-header>Consultant</c-table-header>
+              <c-table-header>Actie</c-table-header>
+              </c-table-row>
+              </c-table-head>
+              <c-table-body>
+              {% for svc in group.target.services.all() %}
+                <c-table-row>
+                {% if loop.first %}
+                  <c-table-cell rowspan="{{ group.target.services.count() }}">{{ group.target.id }}</c-table-cell>
+                {% endif %}
+                <c-table-cell>
+                {% for pl in svc.placements.all() %}
+                  {{ pl.colleague.name }}
+                {% else %}
+                  <em>(vacant)</em>
+                {% endfor %}
+                </c-table-cell>
+                {% if loop.first %}
+                  <c-table-cell rowspan="{{ group.target.services.count() }}"><c-tag type="success">Behouden</c-tag></c-table-cell>
+                {% endif %}
+                </c-table-row>
+              {% endfor %}
+              {% for dupe in group.duplicates %}
+                {% for svc in dupe.services.all() %}
+                  <c-table-row>
+                  {% if loop.first %}<c-table-cell rowspan="{{ dupe.services.count() }}">{{ dupe.id }}</c-table-cell>{% endif %}
+                  <c-table-cell>
+                  {% for pl in svc.placements.all() %}
+                    {{ pl.colleague.name }}
+                  {% else %}
+                    <em>(vacant)</em>
+                  {% endfor %}
+                  </c-table-cell>
+                  {% if loop.first %}
+                    <c-table-cell rowspan="{{ dupe.services.count() }}"><c-tag type="default">→ #{{ group.target.id }}</c-tag></c-table-cell>
+                  {% endif %}
+                  </c-table-row>
+                {% endfor %}
+              {% endfor %}
+              </c-table-body>
+              </c-table>
+            </div>
+          {% endfor %}
+          <form method="post"
+                onsubmit="return confirm('Weet je zeker dat je deze opdrachten wilt samenvoegen? Dit kan niet ongedaan worden gemaakt.');">
+            {{ get_csrf_hidden_input(request) }}
+            <input type="hidden" name="action" value="merge_duplicates_apply">
+            <c-button kind="primary" type="submit">Samenvoegen bevestigen</c-button>
+          </form>
+        </div>
+      {% else %}
+        <form method="post" action="{{ url('staff-database') }}#merge-preview">
+          {{ get_csrf_hidden_input(request) }}
+          <input type="hidden" name="action" value="merge_duplicates_preview">
+          <c-button kind="secondary" type="submit">Controleer op duplicaten</c-button>
+        </form>
+      {% endif %}
     </div>
     <div id="task-list">{% include "parts/task_list.html" %}</div>
   </div>
