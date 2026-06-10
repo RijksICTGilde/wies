@@ -85,7 +85,7 @@ def _services_initial(assignment):
                     else service.period_source == service.ASSIGNMENT
                 ),
                 "placement_start_date": placement.start_date,
-                "placement_end_date": (placement.specific_end_date if placement else service.specific_end_date),
+                "placement_end_date": placement.end_date,
                 "placement": placement,
                 "service": service,
             }
