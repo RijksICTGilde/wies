@@ -34,6 +34,11 @@ def extract_services_data(service_formset) -> list[dict]:
         if not has_skill:
             continue
         skill_id = int(skill_val) if skill_val and skill_val != "__new__" else None
+        # "aanvraag" means this service is a vacancy: ignore any colleague the
+        # (hidden) select still carries, so apply_services_to_assignment drops
+        # the placement and the row turns into an open aanvraag.
+        is_aanvraag = cd.get("is_filled") == "aanvraag"
+        colleague = cd.get("colleague")
         services_data.append(
             {
                 "id": cd.get("id"),
@@ -42,7 +47,7 @@ def extract_services_data(service_formset) -> list[dict]:
                 "skill_id": skill_id,
                 "new_skill_name": new_skill if skill_val == "__new__" else None,
                 "status": "OPEN",
-                "colleague_id": cd["colleague"].id if cd.get("colleague") else None,
+                "colleague_id": colleague.id if colleague and not is_aanvraag else None,
                 "has_custom_period": cd.get("has_custom_period", False),
                 "placement_start_date": cd.get("placement_start_date"),
                 "placement_end_date": cd.get("placement_end_date"),

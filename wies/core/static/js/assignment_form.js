@@ -160,8 +160,14 @@
       if (!colleagueField) return;
       radios.forEach(function (radio) {
         radio.addEventListener("change", function () {
-          colleagueField.style.display =
-            radio.value === "aanvraag" ? "none" : "";
+          var isAanvraag = radio.value === "aanvraag";
+          colleagueField.style.display = isAanvraag ? "none" : "";
+          // Clear the (now hidden) consultant so switching to "aanvraag"
+          // actually frees the placement on save.
+          if (isAanvraag) {
+            var select = colleagueField.querySelector("select");
+            if (select) select.value = "";
+          }
         });
       });
     }

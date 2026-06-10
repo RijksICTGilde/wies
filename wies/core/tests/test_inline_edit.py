@@ -838,6 +838,32 @@ class AssignmentServicesAuditTest(TestCase):
         assert resp.status_code == 200
         assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
 
+    def test_switch_filled_to_aanvraag_removes_placement(self):
+        """Flipping a filled service to "aanvraag" must free the placement,
+        even when the (hidden) consultant select still posts its value —
+        is_filled is authoritative, not the lingering colleague."""
+        data = {
+            "service-TOTAL_FORMS": "2",
+            **self.FORMSET_MGMT_KEYS,
+            # Filled row switched to aanvraag, but colleague + placement_id
+            # still posted (JS only hides the field; this is the bug case).
+            "service-0-id": str(self.filled_service.id),
+            "service-0-skill": str(self.skill_python.id),
+            "service-0-description": "Filled",
+            "service-0-is_filled": "aanvraag",
+            "service-0-has_custom_period": "on",
+            "service-0-colleague": str(self.colleague.id),
+            "service-0-placement_id": str(self.placement.id),
+            **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
+        }
+        resp = self.client.post(self.url, data)
+        assert resp.status_code == 200
+        # Placement gone, service kept as an open aanvraag.
+        assert not Placement.objects.filter(id=self.placement.id).exists()
+        self.filled_service.refresh_from_db()
+        assert self.filled_service.status == "OPEN"
+        assert not self.filled_service.placements.exists()
+
     def test_edit_formset_renders_pk_hidden_inputs(self):
         """The hidden ``service-N-id`` and ``service-N-placement_id``
         inputs must render so the formset round-trips PKs back to
