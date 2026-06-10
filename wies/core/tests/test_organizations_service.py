@@ -1,4 +1,5 @@
 import copy
+import io
 from datetime import date
 from pathlib import Path
 
@@ -15,6 +16,7 @@ from wies.core.models import (
 )
 from wies.core.services.organizations import (
     get_excluded_org_ids,
+    iter_root_organizations,
     parse_xml_hierarchical,
     sync_organization_tree,
     sync_organizations,
@@ -207,6 +209,17 @@ class ParseXmlHierarchicalTest(TestCase):
         assert len(children) == 1
         assert children[0]["name"] == "Afdeling onder voormalig directoraat"
         assert children[0]["end_date"] is not None
+
+    def test_iter_root_organizations_matches_dom_parser(self):
+        """Streaming iterator must produce output identical to the DOM parser.
+
+        This lifts every scenario covered by the fixture-based tests above onto
+        the iterparse code path as well — if the iterator diverges on any
+        nested-org / TOOI / inactive-parent edge case, this fails.
+        """
+        streamed = list(iter_root_organizations(io.BytesIO(self.xml_content)))
+        dom = parse_xml_hierarchical(self.xml_content)
+        assert streamed == dom
 
 
 class SyncOrganizationTreeTest(TestCase):
