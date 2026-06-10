@@ -114,9 +114,7 @@ update-vendor:
   @echo "Done! Vendor packages updated:"
   @echo "  - htmx.min.js ({{HTMX_VERSION}})"
 
-# Build NDD vendor assets from @minbzk/storybook (npm)
-# Vereist: GITHUB_TOKEN (PAT met read:packages scope) in shell env
-build-ndd:
-  @if [ -z "$GITHUB_TOKEN" ]; then echo "ERROR: GITHUB_TOKEN env var niet gezet (nodig voor GitHub Packages auth)"; exit 1; fi
+# Build NLDD vendor assets from @nldd/design-system (npm)
+build-nldd:
   npm install
-  npm run build-ndd
+  npm run build-nldd

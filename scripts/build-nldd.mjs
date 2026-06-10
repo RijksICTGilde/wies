@@ -22,7 +22,7 @@ import * as esbuild from "esbuild";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "..");
-const outDir = join(repoRoot, "wies/core/static/vendor/ndd");
+const outDir = join(repoRoot, "wies/core/static/vendor/nldd");
 const assetsDir = join(outDir, "assets");
 
 // 1. Locate package

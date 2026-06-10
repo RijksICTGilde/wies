@@ -42,8 +42,8 @@ class NDDViewRendersTest(TestCase):
         assert response.status_code == 200
         body = response.content.decode()
         # NLDD vendor assets aanwezig
-        assert "vendor/ndd/ndd.styles.css" in body
-        assert "vendor/ndd/ndd.bundle.js" in body
+        assert "vendor/nldd/ndd.styles.css" in body
+        assert "vendor/nldd/ndd.bundle.js" in body
         assert "nldd-top-navigation-bar" in body
         # Géén RVO assets
         assert "@nl-rvo/component-library-css" not in body

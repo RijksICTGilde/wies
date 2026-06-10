@@ -65,6 +65,14 @@ RUN rm -rf /app/docker && \
   rm -rf /app/uv.lock && \
   rm -rf /app/temp
 
+# Build NLDD design system vendor assets (JS bundle + CSS + fonts)
+RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
+  nodejs npm \
+  && cd /app && npm install && npm run build-nldd \
+  && rm -rf node_modules \
+  && apt-get purge -y --auto-remove nodejs npm \
+  && rm -rf /var/lib/apt/lists/*
+
 # Run collectstatic against production settings so the manifest is
 # baked into the image. Runtime env vars aren't set at build time, so
 # pass harmless placeholders; the running container supplies the real

@@ -15,12 +15,12 @@
           sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="{{ static('favicon.svg') }}">
     <link rel="shortcut icon" href="/favicon.ico">
-    <link rel="stylesheet" href="{{ static('vendor/ndd/ndd.styles.css') }}">
+    <link rel="stylesheet" href="{{ static('vendor/nldd/ndd.styles.css') }}">
     <link rel="stylesheet" href="{{ static('css/nldd/app.css') }}">
     {% block extra_head %}
     {% endblock extra_head %}
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
-    <script defer src="{{ static('vendor/ndd/ndd.bundle.js') }}"></script>
+    <script defer src="{{ static('vendor/nldd/ndd.bundle.js') }}"></script>
     <script>
       document.addEventListener("click", (e) => {
         const item = e.composedPath().find(
