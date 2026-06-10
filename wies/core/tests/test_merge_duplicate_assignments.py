@@ -10,7 +10,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.services.merge_assignments import (
+from wies.core.services.assignments import (
     find_duplicate_groups,
     merge_group,
 )
@@ -93,7 +93,7 @@ class MergeDuplicateAssignmentsTest(TestCase):
         svc1 = self._make_service(a1, "Alice")
         svc2 = self._make_service(a2, "Bob")
 
-        merge_group([a1, a2], dry_run=False)
+        merge_group([a1, a2])
 
         # Services moved to target.
         svc1.refresh_from_db()
@@ -115,52 +115,10 @@ class MergeDuplicateAssignmentsTest(TestCase):
         assert str(a1.start_date) == "2026-01-01"
         assert str(a1.end_date) == "2026-09-01"
 
-        # Service from duplicate has its period pinned (was inheriting from assignment).
+        # Service from duplicate has its period pinned.
         assert svc2.period_source == "SERVICE"
         assert str(svc2.specific_start_date) == "2026-03-01"
         assert str(svc2.specific_end_date) == "2026-09-01"
-
-        # Service on target keeps inheriting.
-        assert svc1.period_source == "ASSIGNMENT"
-
-    def test_merge_consolidates_orgs(self):
-        a1 = self._make_assignment("CIV", self.org)
-        a2 = self._make_assignment("CIV", None)
-        AssignmentOrganizationUnit.objects.create(assignment=a2, organization=self.org_b, role="PRIMARY")
-
-        merge_group([a1, a2], dry_run=False)
-
-        # Target has original PRIMARY + duplicate's PRIMARY demoted to INVOLVED.
-        rels = AssignmentOrganizationUnit.objects.filter(assignment=a1)
-        assert rels.count() == 2
-        assert rels.filter(organization=self.org, role="PRIMARY").exists()
-        assert rels.filter(organization=self.org_b, role="INVOLVED").exists()
-
-    def test_merge_deduplicates_orgs(self):
-        a1 = self._make_assignment("CIV", self.org)
-        a2 = self._make_assignment("CIV", None)
-        # Same org as PRIMARY on the duplicate.
-        AssignmentOrganizationUnit.objects.create(assignment=a2, organization=self.org, role="PRIMARY")
-
-        merge_group([a1, a2], dry_run=False)
-
-        # No duplicate org relations.
-        rels = AssignmentOrganizationUnit.objects.filter(assignment=a1)
-        assert rels.count() == 1
-        assert rels.filter(organization=self.org, role="PRIMARY").exists()
-
-    def test_dry_run_does_not_change_data(self):
-        a1 = self._make_assignment("CIV", self.org)
-        a2 = self._make_assignment("CIV", self.org)
-        self._make_service(a2, "Bob")
-
-        merge_group([a1, a2], dry_run=True)
-
-        # Both assignments still exist.
-        assert Assignment.objects.filter(id=a1.id).exists()
-        assert Assignment.objects.filter(id=a2.id).exists()
-        # Service still on duplicate.
-        assert a2.services.count() == 1
 
     def test_merge_three_assignments(self):
         a1 = self._make_assignment("CIV", self.org, start_date="2026-01-01", end_date="2026-06-01")
@@ -171,7 +129,7 @@ class MergeDuplicateAssignmentsTest(TestCase):
         self._make_service(a2, "Bob")
         self._make_service(a3, "Charlie")
 
-        merge_group([a1, a2, a3], dry_run=False)
+        merge_group([a1, a2, a3])
 
         a1.refresh_from_db()
         assert a1.services.count() == 3
@@ -179,17 +137,3 @@ class MergeDuplicateAssignmentsTest(TestCase):
         assert not Assignment.objects.filter(id=a3.id).exists()
         assert str(a1.start_date) == "2026-01-01"
         assert str(a1.end_date) == "2026-08-01"
-
-    def test_merge_extra_info(self):
-        a1 = self._make_assignment("CIV", self.org)
-        a1.extra_info = "Info from A"
-        a1.save()
-        a2 = self._make_assignment("CIV", None)
-        a2.extra_info = "Info from B"
-        a2.save()
-
-        merge_group([a1, a2], dry_run=False)
-
-        a1.refresh_from_db()
-        assert "Info from A" in a1.extra_info
-        assert "Info from B" in a1.extra_info

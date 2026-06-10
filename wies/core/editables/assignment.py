@@ -84,8 +84,8 @@ def _services_initial(assignment):
                     if placement
                     else service.period_source == service.ASSIGNMENT
                 ),
-                "placement_start_date": placement.start_date,
-                "placement_end_date": placement.end_date,
+                "placement_start_date": placement.start_date if placement else service.start_date,
+                "placement_end_date": placement.end_date if placement else service.end_date,
                 "placement": placement,
                 "service": service,
             }
@@ -158,28 +158,10 @@ def _validate_period(cleaned):
 
 
 def _save_period(assignment, cleaned):
-    """Save assignment period and extend placements with custom periods if needed."""
-    from wies.core.models import Placement  # noqa: PLC0415
-
-    old_end = assignment.end_date
-    new_start = cleaned.get("start_date")
-    new_end = cleaned.get("end_date")
-
-    assignment.start_date = new_start
-    assignment.end_date = new_end
+    """Save assignment period."""
+    assignment.start_date = cleaned.get("start_date")
+    assignment.end_date = cleaned.get("end_date")
     assignment.save(update_fields=["start_date", "end_date"])
-
-    # Extend placements that have their own period and whose end_date matched
-    # the old assignment end_date (i.e. they were "in sync" with the assignment).
-    if old_end and new_end and new_end != old_end:
-        placements = Placement.objects.filter(
-            service__assignment=assignment,
-            period_source=Placement.PLACEMENT,
-            specific_end_date=old_end,
-        )
-        updated = placements.update(specific_end_date=new_end)
-        if updated:
-            assignment.placements_extended = updated
 
 
 class AssignmentEditables(EditableSet):

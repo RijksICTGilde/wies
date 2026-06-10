@@ -5,6 +5,8 @@ from typing import TYPE_CHECKING
 from django.core.exceptions import ValidationError
 from django.db import transaction
 
+from django.db.models import Count
+
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Placement, Service, Skill
 
 if TYPE_CHECKING:
@@ -243,3 +245,91 @@ def create_assignment_from_form(
     apply_services_to_assignment(assignment, services_data)
 
     return assignment
+
+
+def find_duplicate_groups():
+    """Find assignments that share the same name, owner, and primary organization."""
+    qs = (
+        Assignment.objects.filter(
+            organization_relations__role="PRIMARY",
+        )
+        .values(
+            "name",
+            "owner",
+            "organization_relations__organization",
+        )
+        .annotate(
+            count=Count("id"),
+        )
+        .filter(
+            count__gt=1,
+        )
+        .order_by("name")
+    )
+
+    groups = []
+    for dupe in qs:
+        assignments = (
+            Assignment.objects.filter(
+                name=dupe["name"],
+                owner=dupe["owner"],
+                organization_relations__role="PRIMARY",
+                organization_relations__organization=dupe["organization_relations__organization"],
+            )
+            .select_related("owner")
+            .prefetch_related(
+                "services__placements__colleague",
+                "services__skill",
+                "organization_relations__organization",
+            )
+            .order_by("id")
+        )
+        group = list(assignments)
+        # Avoid adding the same group twice (can happen with multiple orgs).
+        if group and not any(g[0].id == group[0].id for g in groups):
+            groups.append(group)
+    return groups
+
+
+@transaction.atomic
+def merge_group(assignments):
+    """Merge a group of duplicate assignments into the first (oldest) one.
+
+    Strategy:
+    - Keep the assignment with the lowest ID as the target.
+    - Move all services (and their placements) to the target, pinning explicit dates.
+    - Pick the widest date range across all assignments.
+    - Delete the now-empty duplicate assignments.
+    """
+    target = assignments[0]
+    duplicates = assignments[1:]
+
+    # Widen the date range to cover all assignments.
+    all_starts = [a.start_date for a in assignments if a.start_date]
+    all_ends = [a.end_date for a in assignments if a.end_date]
+    new_start = min(all_starts) if all_starts else None
+    new_end = max(all_ends) if all_ends else None
+
+    if new_start != target.start_date or new_end != target.end_date:
+        target.start_date = new_start
+        target.end_date = new_end
+        target.save(update_fields=["start_date", "end_date"])
+
+    for dupe in duplicates:
+        for svc in dupe.services.all():
+            start, end = svc.start_date, svc.end_date
+            svc.period_source = "SERVICE"
+            svc.specific_start_date = start
+            svc.specific_end_date = end
+            svc.assignment = target
+            svc.save(
+                update_fields=[
+                    "assignment",
+                    "period_source",
+                    "specific_start_date",
+                    "specific_end_date",
+                ]
+            )
+
+        dupe.organization_relations.all().delete()
+        dupe.delete()

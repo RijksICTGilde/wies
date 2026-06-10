@@ -558,9 +558,9 @@ def staff_database(request):
                 return render(request, "parts/task_list.html", context)
 
         elif action == "merge_duplicates_preview":
-            from wies.core.services import merge_assignments  # noqa: PLC0415
+            from wies.core.services.assignments import find_duplicate_groups  # noqa: PLC0415
 
-            groups = merge_assignments.find_duplicate_groups()
+            groups = find_duplicate_groups()
             if not groups:
                 messages.info(request, "Geen dubbele opdrachten gevonden.")
             else:
@@ -577,7 +577,7 @@ def staff_database(request):
             return render(request, "staff_database.html", context)
 
         elif action == "merge_duplicates_apply":
-            from wies.core.services.merge_assignments import (  # noqa: PLC0415 — conditional import for rare admin action
+            from wies.core.services.assignments import (  # noqa: PLC0415 — conditional import for rare admin action
                 find_duplicate_groups,
                 merge_group,
             )
@@ -591,7 +591,7 @@ def staff_database(request):
                     for group in groups:
                         target = group[0]
                         deleted_ids = [a.id for a in group[1:]]
-                        merge_group(group, dry_run=False)
+                        merge_group(group)
                         create_event(
                             object_type="Assignment",
                             action="update",

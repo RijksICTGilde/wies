@@ -7,7 +7,9 @@
   <form hx-post="{{ edit_url }}"
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
         hx-target="#{{ target }}"
-        hx-swap="outerHTML">
+        hx-swap="outerHTML"
+        data-service-start="{{ obj.service.start_date.isoformat() if obj.service.start_date else '' }}"
+        data-service-end="{{ obj.service.end_date.isoformat() if obj.service.end_date else '' }}">
     <c-layout-flow gap="md">
     {{ form.period_source.as_widget(attrs={"style": "display:none", "data-period-source": ""}) }}
     <div class="rvo-form-field">
@@ -37,29 +39,4 @@
     </div>
   </form>
 </div>
-<script>
-(function () {
-  const form = document.getElementById({{ target|tojson }}).querySelector("form");
-  const checkbox = form.querySelector("#placement-inherit-period");
-  const hiddenSelect = form.querySelector("[data-period-source]");
-  const serviceStart = {{ obj.service.start_date.isoformat()|tojson if obj.service.start_date else "null" }};
-  const serviceEnd = {{ obj.service.end_date.isoformat()|tojson if obj.service.end_date else "null" }};
-
-  const startInput = form.querySelector("[data-specific-start]");
-  const endInput = form.querySelector("[data-specific-end]");
-
-  function update() {
-    const inherit = checkbox.checked;
-    hiddenSelect.value = inherit ? "SERVICE" : "PLACEMENT";
-    startInput.disabled = inherit;
-    endInput.disabled = inherit;
-    if (inherit) {
-      startInput.value = serviceStart ?? "";
-      endInput.value = serviceEnd ?? "";
-    }
-  }
-
-  checkbox.addEventListener("change", update);
-  update();
-})();
-</script>
+<script src="{{ static('js/placement_period_toggle.js') }}"></script>
