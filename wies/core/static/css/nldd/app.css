@@ -22,7 +22,10 @@ body {
 
 .wies-layout {
   display: flex;
-  min-height: calc(100dvh - 120px); /* subtract nav bar height */
+  min-height: calc(100dvh - 120px);
+  max-width: var(--semantics-page-sections-body-max-width, 1280px);
+  margin-inline: auto;
+  padding-inline: var(--semantics-page-sections-lg-margin-inline, 2rem);
 }
 
 .wies-layout__sidebar {
