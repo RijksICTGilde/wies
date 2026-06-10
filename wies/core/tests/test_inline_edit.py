@@ -263,7 +263,7 @@ class InlineEditGroupTest(TestCase):
                 start_date=Editable(),
                 end_date=Editable(),
                 period=EditableGroup(
-                    label="Looptijd",
+                    label="Opdrachtperiode",
                     fields=["start_date", "end_date"],
                     clean=_period_clean,
                 ),
@@ -685,15 +685,13 @@ class AssignmentServicesDisplayTest(TestCase):
         )
         self.url = reverse("inline-edit", args=["assignment", self.assignment.id, "services"])
 
-    def test_filled_row_is_anchor_to_colleague_panel(self):
+    def test_filled_row_is_clickable_to_placement_panel(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        expected_href = f"/opdrachten/?collega={self.colleague.id}"
-        self.assertContains(resp, f'href="{expected_href}"')
-        self.assertContains(resp, f'hx-get="{expected_href}"')
-        self.assertContains(resp, 'hx-target="#side_panel-content"')
+        self.assertContains(resp, 'hx-target="#side_panel-container"')
         self.assertContains(resp, self.colleague.name)
         self.assertContains(resp, "rvo-item-list__item--filled")
+        self.assertContains(resp, "clickable-row")
 
     def test_vacant_row_has_no_link(self):
         resp = self.client.get(self.url + "?cancel=true")
@@ -773,9 +771,10 @@ class AssignmentServicesAuditTest(TestCase):
             f"service-{idx}-id": str(service.id),
             f"service-{idx}-skill": str(skill.id),
             f"service-{idx}-description": description,
+            f"service-{idx}-is_filled": "ingevuld" if is_filled else "aanvraag",
+            f"service-{idx}-has_custom_period": "on",  # inherit assignment period
         }
         if is_filled and colleague is not None:
-            data[f"service-{idx}-is_filled"] = "on"
             data[f"service-{idx}-colleague"] = str(colleague.id)
             placement = Placement.objects.filter(service=service).first()
             if placement is not None:
@@ -838,6 +837,32 @@ class AssignmentServicesAuditTest(TestCase):
         resp = self.client.post(self.url, data)
         assert resp.status_code == 200
         assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
+
+    def test_switch_filled_to_aanvraag_removes_placement(self):
+        """Flipping a filled service to "aanvraag" must free the placement,
+        even when the (hidden) consultant select still posts its value —
+        is_filled is authoritative, not the lingering colleague."""
+        data = {
+            "service-TOTAL_FORMS": "2",
+            **self.FORMSET_MGMT_KEYS,
+            # Filled row switched to aanvraag, but colleague + placement_id
+            # still posted (JS only hides the field; this is the bug case).
+            "service-0-id": str(self.filled_service.id),
+            "service-0-skill": str(self.skill_python.id),
+            "service-0-description": "Filled",
+            "service-0-is_filled": "aanvraag",
+            "service-0-has_custom_period": "on",
+            "service-0-colleague": str(self.colleague.id),
+            "service-0-placement_id": str(self.placement.id),
+            **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
+        }
+        resp = self.client.post(self.url, data)
+        assert resp.status_code == 200
+        # Placement gone, service kept as an open aanvraag.
+        assert not Placement.objects.filter(id=self.placement.id).exists()
+        self.filled_service.refresh_from_db()
+        assert self.filled_service.status == "OPEN"
+        assert not self.filled_service.placements.exists()
 
     def test_edit_formset_renders_pk_hidden_inputs(self):
         """The hidden ``service-N-id`` and ``service-N-placement_id``
@@ -1021,15 +1046,14 @@ class ServiceDescriptionPermissionTest(TestCase):
         self.my_service.refresh_from_db()
         assert self.my_service.skill_id != new_skill.id
 
-    def test_owner_cannot_use_inline_pencil(self):
-        """BM edits descriptions via the team editor, not the per-row
-        pencil — so the inline description edit is denied for them."""
+    def test_owner_can_use_inline_pencil(self):
+        """BM can edit descriptions inline, consistent with skill and period."""
         self.client.force_login(self.owner_user)
-        resp = self.client.post(self._desc_url(self.my_service), {"description": "BM probeert"})
+        resp = self.client.post(self._desc_url(self.my_service), {"description": "BM past aan"})
         assert resp.status_code == 200
-        self.assertContains(resp, "geen rechten")
+        self.assertNotContains(resp, "geen rechten")
         self.my_service.refresh_from_db()
-        assert self.my_service.description == "Mijn rol"
+        assert self.my_service.description == "BM past aan"
 
 
 class OrgPickerWidgetTest(TestCase):

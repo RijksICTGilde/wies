@@ -15,11 +15,11 @@ class ServiceEditables(EditableSet):
         model = Service
 
     description = Editable(
-        label="Omschrijving",
+        label="Omschrijving rol",
         widget=forms.Textarea(attrs={"rows": 4}),
     )
     skill = Editable(label="Rol")
-    period_source = Editable(label="Periode gebaseerd op")
+    period_source = Editable(label="Periode")
     specific_start_date = Editable(label="Specifieke startdatum")
     specific_end_date = Editable(label="Specifieke einddatum")
     status = Editable(label="Status", display=lambda s: s.get_status_display())
