@@ -58,6 +58,7 @@
       {% endif %}
       </nldd-top-navigation-bar>
     {% endblock header %}
+    <nldd-simple-section>
     <div class="wies-layout">
       {% set _sidebar_content %}
         {% block sidebar %}
@@ -70,12 +71,11 @@
       {% endif %}
       <main class="wies-layout__main">
         {% include "parts/flash_messages.html" %}
-        <nldd-simple-section>
         {% block content %}
         {% endblock content %}
-        </nldd-simple-section>
       </main>
     </div>
+    </nldd-simple-section>
     {% block panel %}
     {% endblock panel %}
   </body>
