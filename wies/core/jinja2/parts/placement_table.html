@@ -1,11 +1,17 @@
-{# Placement list with column headers #}
-<div id="nldd-placement-table" class="nldd-placement-table">
-  <div class="nldd-placement-table__header">
-    <div class="nldd-placement-table__col nldd-placement-table__col--who">Collega</div>
-    <div class="nldd-placement-table__col nldd-placement-table__col--what">Opdracht</div>
-    <div class="nldd-placement-table__col nldd-placement-table__col--when">Loopt tot</div>
-  </div>
-  <nldd-list>
-  {% include "parts/placement_table_rows.html" %}
-  </nldd-list>
+{# Placement table #}
+<div id="nldd-placement-table">
+  <table class="nldd-table">
+    <thead>
+      <tr>
+        <th class="nldd-table__th" style="width: 40px;"></th>
+        <th class="nldd-table__th">Collega</th>
+        <th class="nldd-table__th">Opdracht</th>
+        <th class="nldd-table__th nldd-table__th--right">Loopt tot</th>
+        <th class="nldd-table__th" style="width: 32px;"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% include "parts/placement_table_rows.html" %}
+    </tbody>
+  </table>
 </div>

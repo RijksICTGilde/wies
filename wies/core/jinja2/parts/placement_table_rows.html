@@ -4,27 +4,38 @@
   {% if clients|length > 1 %}
     {% set client_label = client_label ~ " (+" ~ (clients|length - 1) ~ ")" %}
   {% endif %}
-  <nldd-list-item type="button" size="lg" hx-get="{{ placement.panel_url }}" hx-target="#nldd-side-panel-content" hx-swap="innerHTML">
-  <nldd-icon-cell slot="start" size="40">
-  <span class="nldd-avatar" aria-hidden="true">{{ placement.colleague.name|first|upper }}</span>
-  </nldd-icon-cell>
-  <nldd-title-cell class="nldd-col-who" text="{{ placement.colleague.name }}" supporting-text="{{ placement.service.skill.name if placement.service.skill else '' }}">
-  </nldd-title-cell>
-  <nldd-text-cell class="nldd-col-what" text="{{ placement.service.assignment.name }}" supporting-text="{{ client_label }}">
-  </nldd-text-cell>
-  <nldd-text-cell color="secondary" width="fit-content" text="{{ placement.service.assignment.end_date|datum_nl('j M Y') if placement.service.assignment.end_date else '' }}">
-  </nldd-text-cell>
-  <nldd-icon-cell slot="end" color="secondary" size="20">
-  <nldd-icon name="chevron-right"></nldd-icon>
-  </nldd-icon-cell>
-  </nldd-list-item>
+  <tr class="nldd-table__row"
+      hx-get="{{ placement.panel_url }}"
+      hx-target="#nldd-side-panel-content"
+      hx-swap="innerHTML"
+      tabindex="0">
+    <td class="nldd-table__td nldd-table__td--avatar">
+      <span class="nldd-avatar" aria-hidden="true">{{ placement.colleague.name|first|upper }}</span>
+    </td>
+    <td class="nldd-table__td">
+      <strong>{{ placement.colleague.name }}</strong>
+      <span class="nldd-table__sub">{{ placement.service.skill.name if placement.service.skill else '' }}</span>
+    </td>
+    <td class="nldd-table__td">
+      <span>{{ placement.service.assignment.name }}</span>
+      <span class="nldd-table__sub">{{ client_label }}</span>
+    </td>
+    <td class="nldd-table__td nldd-table__td--right nldd-table__td--secondary">
+      {{ placement.service.assignment.end_date|datum_nl("j M Y") if placement.service.assignment.end_date else '' }}
+    </td>
+    <td class="nldd-table__td nldd-table__td--icon">
+      <nldd-icon name="chevron-right" size="16"></nldd-icon>
+    </td>
+  </tr>
 {% else %}
-  <nldd-list-item>
-  <nldd-text-cell text="Geen inzetten gevonden."></nldd-text-cell>
-  </nldd-list-item>
+  <tr>
+    <td colspan="5" class="nldd-table__td nldd-table__td--empty">Geen inzetten gevonden.</td>
+  </tr>
 {% endfor %}
 {% if next_page_url %}
-  <nldd-list-item hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
-  <nldd-text-cell text="Meer laden…"></nldd-text-cell>
-  </nldd-list-item>
+  <tr hx-get="{{ next_page_url }}"
+      hx-trigger="revealed"
+      hx-swap="outerHTML">
+    <td colspan="5" class="nldd-table__td nldd-table__td--loading">Meer laden…</td>
+  </tr>
 {% endif %}
