@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: ...
+- 397: fix team-edit "Neem opdrachtperiode over" checkbox rendering as checked for rows whose effective period differs from the assignment
 
 ## 2026-06-11
 
