@@ -183,7 +183,8 @@ class AssignmentCreateTest(TestCase):
                 **FORMSET_MGMT_1,
                 "service-0-description": "Dienst",
                 "service-0-skill": self.skill.id,
-                "service-0-is_filled": "on",
+                "service-0-is_filled": "ingevuld",
+                "service-0-has_custom_period": "on",
                 "service-0-colleague": self.colleague.id,
             },
         )
