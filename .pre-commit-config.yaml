@@ -34,14 +34,14 @@ repos:
         args: [--target-version, "6.0"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.15.16
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/Riverside-Healthcare/djLint
-    rev: v1.36.4
+    rev: v1.39.0
     hooks:
       - id: djlint-reformat-jinja
         types_or: [html]
