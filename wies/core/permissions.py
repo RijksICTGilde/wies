@@ -66,8 +66,12 @@ def _can_edit_assignment_text_field(user, assignment) -> bool:
     return has_permission(UPDATE, assignment, user) or _is_placed_on_assignment(user, assignment)
 
 
-def can_view_staff_page(user):
-    """Whether the given user is allowed to access /beheer/statistieken/ and /beheer/database/ (STAFF_EMAILS list)."""
+def is_staff_member(user):
+    """Whether the given user is a member of the support staff cohort (``STAFF_EMAILS``).
+
+    Used both as a page-access gate (``/beheer/statistieken/``, ``/beheer/database/``)
+    and as a per-row edit-permission predicate (e.g. in ``update_assignment``).
+    """
     return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
 
 
@@ -76,14 +80,15 @@ def can_view_staff_page(user):
 
 @rule(UPDATE, Assignment)
 def update_assignment(user, a):
-    """Full edit: BM owner of a wies-sourced assignment, or holder of core.change_assignment.
+    """Full edit: BM owner of a wies-sourced assignment, holder of
+    core.change_assignment, or a support-staff member (``STAFF_EMAILS``).
 
     Placed colleagues do NOT pass — they get narrower access via the
     field-level rules for description/extra_info below.
     """
     if not _is_wies_sourced(a):
         return False
-    return _has_change_perm(user, a) or _is_assignment_owner(user, a)
+    return _has_change_perm(user, a) or _is_assignment_owner(user, a) or is_staff_member(user)
 
 
 @rule(UPDATE, Service)

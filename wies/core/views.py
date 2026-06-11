@@ -56,7 +56,7 @@ from .models import (
     Service,
     Skill,
 )
-from .permissions import can_view_staff_page
+from .permissions import is_staff_member
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .services.assignments import create_assignment_from_form, extract_services_data
 from .services.events import create_event
@@ -501,7 +501,7 @@ def no_access(request):
 
 
 def staff_required(view_func):
-    return user_passes_test(can_view_staff_page, login_url="/geen-toegang/")(view_func)
+    return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
 
 
 @staff_required
