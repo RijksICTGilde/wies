@@ -15,7 +15,7 @@ from django.db import transaction
 from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
-from django.http import Http404, HttpResponse, QueryDict
+from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -2070,6 +2070,9 @@ def _attach_audit_render_data(event) -> None:
     event.formatted_old = event.context.get("old_value")
     event.formatted_new = event.context.get("new_value")
 
+    if event.action == "delete":
+        event.render_kind = "delete"
+        return
     if event.action != "update":
         return
     model_label = event.object_type.lower()
@@ -2095,6 +2098,62 @@ def _attach_audit_render_data(event) -> None:
     formatter = getattr(spec, "render_change", None) or (lambda v: str(v or ""))
     event.formatted_old = formatter(event.context.get("old_value"))
     event.formatted_new = formatter(event.context.get("new_value"))
+
+
+def assignment_delete(request, pk):
+    assignment = get_object_or_404(Assignment, pk=pk)
+    if not has_permission(Verb.DELETE, assignment, request.user):
+        return HttpResponseForbidden()
+
+    if request.method == "GET":
+        return render(
+            request,
+            "parts/generic_form_modal.html",
+            {
+                "modal_title": f"Verwijder opdracht: {assignment.name}",
+                "warning_modal": True,
+                "modal_element_id": "assignmentDeleteModal",
+                "target_element_id": "assignmentDeleteModal",
+                "delete_warning": f"Weet je zeker dat je opdracht '{assignment.name}' wilt verwijderen?",
+                "form_post_url": reverse("assignment-delete", kwargs={"pk": pk}),
+                "form_button_label": "Verwijderen",
+            },
+        )
+    if request.method == "POST":
+        name = assignment.name
+        # Snapshot related rows before they cascade away.
+        context = _assignment_audit_snapshot(assignment)
+        # Atomic so a failed audit insert rolls back the delete — losing
+        # the opdracht without a trace would be the worst outcome.
+        with transaction.atomic():
+            assignment.delete()
+            create_event(
+                object_type="Assignment",
+                action="delete",
+                source="user",
+                object_id=pk,
+                user=request.user,
+                context=context,
+            )
+        messages.success(request, f"Opdracht '{name}' succesvol verwijderd")
+        response = HttpResponse(status=200)
+        response["HX-Redirect"] = reverse("assignment-list")
+        return response
+    return HttpResponse(status=405)
+
+
+def _assignment_audit_snapshot(assignment) -> dict:
+    placements = []
+    for p in Placement.objects.filter(service__assignment=assignment).select_related("colleague", "service__skill"):
+        skill = p.service.skill.name if p.service.skill_id else None
+        placements.append(f"{p.colleague.name} ({skill})" if skill else p.colleague.name)
+    return {
+        "name": assignment.name,
+        "placements": placements,
+        "organizations": [
+            rel.organization.label or rel.organization.name for rel in assignment.organization_relations.all()
+        ],
+    }
 
 
 def user_profile(request):
@@ -2298,7 +2357,7 @@ def assignment_create(request):
             source="user",
             object_id=assignment.id,
             user=request.user,
-            context={"name": assignment.name},
+            context=_assignment_audit_snapshot(assignment),
         )
 
         link_url = f"{reverse('assignment-list')}?opdracht={assignment.id}"

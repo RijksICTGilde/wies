@@ -18,6 +18,8 @@
             maakte deze opdracht aan
           {% elif event.context.get("merge") %}
             voegde {{ event.context.merged_ids|length }} dubbele opdracht(en) samen (#{{ event.context.merged_ids|join(", #") }})
+          {% elif event.render_kind == "delete" %}
+            verwijderde opdracht <strong>{{ event.context.name }}</strong>
           {% elif event.render_kind == "text" %}
             wijzigde <strong>{{ event.context.field_label }}</strong>
             {% if event.formatted_old %}van "{{ event.formatted_old }}"{% endif %}
@@ -32,6 +34,11 @@
               <span class="event-tag event-tag--create">
                 <c-icon icon="plus" size="xs" />
                 Aangemaakt
+              </span>
+            {% elif event.render_kind == "delete" %}
+              <span class="event-tag event-tag--delete">
+                <c-icon icon="verwijderen" size="xs" />
+                Verwijderd
               </span>
             {% else %}
               <span class="event-tag event-tag--update">
@@ -58,6 +65,13 @@
                 </li>
               {% endfor %}
             </ul>
+          {% elif event.action == "create" or event.render_kind == "delete" %}
+            {% if event.context.placements or event.context.organizations %}
+              <ul class="rvo-list rvo-margin-block-start--xs">
+                {% if event.context.placements %}<li>Plaatsingen: {{ event.context.placements|join(", ") }}</li>{% endif %}
+                {% if event.context.organizations %}<li>Opdrachtgevers: {{ event.context.organizations|join(", ") }}</li>{% endif %}
+              </ul>
+            {% endif %}
           {% elif event.render_kind == "textarea" %}
             {% if event.formatted_old %}
               {% with label="Van", value=event.formatted_old %}

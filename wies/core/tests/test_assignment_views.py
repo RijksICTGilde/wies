@@ -574,6 +574,33 @@ class AssignmentEditAttributeTest(TestCase):
         self.assertContains(response, "Toegevoegd: Java (open)")
         self.assertContains(response, "rvo-list")
 
+    def test_timeline_renders_delete_event(self):
+        """Delete events render 'verwijderde opdracht X' + the cascaded
+        placement and organization snapshots as a bullet list."""
+        self.client.force_login(self.user_with_permission)
+        Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            object_type="Assignment",
+            action="delete",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "name": "Verwijderde Opdracht",
+                "placements": ["Jan Jansen", "Anna Anders"],
+                "organizations": ["MinBZK"],
+            },
+        )
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, "verwijderde opdracht")
+        self.assertContains(response, "Verwijderde Opdracht")
+        self.assertContains(response, "Plaatsingen: Jan Jansen, Anna Anders")
+        self.assertContains(response, "Opdrachtgevers: MinBZK")
+        self.assertContains(response, "event-tag--delete")
+
     def test_timeline_renders_text_change_inline(self):
         """Text field changes render inline as 'van X naar Y'"""
         self.client.force_login(self.user_with_permission)
@@ -656,3 +683,128 @@ class AssignmentEditAttributeTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, 'id="tab-updates"')
         self.assertContains(response, 'id="tab-panel-updates"')
+
+
+class AssignmentDeleteViewTests(TestCase):
+    """Issue #313: BM-owner can delete a wies-sourced opdracht; nobody else can."""
+
+    def setUp(self):
+        self.client = Client()
+
+        self.owner_user = User.objects.create_user(
+            email="owner-del@rijksoverheid.nl", first_name="Owner", last_name="BM"
+        )
+        self.owner_colleague = Colleague.objects.create(
+            user=self.owner_user, name="Owner BM", email="owner-del@rijksoverheid.nl", source="wies"
+        )
+
+        # Beheerder-like: holds core.change_assignment but is NOT the owner.
+        # Locks in the literal reading of #313 (owner-only DELETE).
+        self.admin_user = User.objects.create_user(
+            email="admin-del@rijksoverheid.nl", first_name="Admin", last_name="User"
+        )
+        self.admin_user.user_permissions.add(Permission.objects.get(codename="change_assignment"))
+
+        self.placed_user = User.objects.create_user(
+            email="placed-del@rijksoverheid.nl", first_name="Placed", last_name="User"
+        )
+        self.placed_colleague = Colleague.objects.create(
+            user=self.placed_user, name="Placed User", email="placed-del@rijksoverheid.nl", source="wies"
+        )
+
+        self.unrelated_user = User.objects.create_user(
+            email="unrelated-del@rijksoverheid.nl", first_name="U", last_name="User"
+        )
+
+        self.assignment = Assignment.objects.create(name="Te verwijderen", owner=self.owner_colleague, source="wies")
+        self.service = Service.objects.create(description="Dienst X", assignment=self.assignment, source="wies")
+        self.placement = Placement.objects.create(colleague=self.placed_colleague, service=self.service)
+
+        self.external_assignment = Assignment.objects.create(
+            name="Otys opdracht", owner=self.owner_colleague, source="otys_iir"
+        )
+
+        self.url = reverse("assignment-delete", args=[self.assignment.id])
+        self.external_url = reverse("assignment-delete", args=[self.external_assignment.id])
+
+    def test_owner_can_delete_wies_assignment(self):
+        self.client.force_login(self.owner_user)
+        assignment_id = self.assignment.id
+        service_id = self.service.id
+        placement_id = self.placement.id
+
+        response = self.client.post(self.url)
+
+        assert response.status_code == 200
+        assert response["HX-Redirect"] == reverse("assignment-list")
+        assert not Assignment.objects.filter(id=assignment_id).exists()
+        # Cascades from Assignment → Service → Placement.
+        assert not Service.objects.filter(id=service_id).exists()
+        assert not Placement.objects.filter(id=placement_id).exists()
+
+        event = Event.objects.get(object_type="Assignment", action="delete", object_id=assignment_id)
+        assert event.user == self.owner_user
+        assert event.context["name"] == "Te verwijderen"
+        # Snapshot of cascaded rows so the audit still tells what was deleted.
+        assert event.context["placements"] == [self.placed_colleague.name]
+        assert event.context["organizations"] == []
+
+    def test_get_renders_confirmation_modal(self):
+        self.client.force_login(self.owner_user)
+        response = self.client.get(self.url)
+        assert response.status_code == 200
+        self.assertContains(response, "Weet je zeker dat je opdracht &#39;Te verwijderen&#39; wilt verwijderen?")
+        self.assertContains(response, f'action="{self.url}"')
+        self.assertContains(response, "Verwijderen")
+
+    def test_owner_cannot_delete_otys_iir_assignment(self):
+        self.client.force_login(self.owner_user)
+        response = self.client.post(self.external_url)
+        assert response.status_code == 403
+        assert Assignment.objects.filter(id=self.external_assignment.id).exists()
+
+    def test_beheerder_cannot_delete(self):
+        self.client.force_login(self.admin_user)
+        response = self.client.post(self.url)
+        assert response.status_code == 403
+        assert Assignment.objects.filter(id=self.assignment.id).exists()
+
+    def test_placed_consultant_cannot_delete(self):
+        self.client.force_login(self.placed_user)
+        response = self.client.post(self.url)
+        assert response.status_code == 403
+        assert Assignment.objects.filter(id=self.assignment.id).exists()
+
+    def test_unrelated_user_cannot_delete(self):
+        self.client.force_login(self.unrelated_user)
+        response = self.client.post(self.url)
+        assert response.status_code == 403
+        assert Assignment.objects.filter(id=self.assignment.id).exists()
+
+    @override_settings(STAFF_EMAILS=["staff-del@rijksoverheid.nl"])
+    def test_staff_member_can_delete_wies_assignment(self):
+        """A user in STAFF_EMAILS can delete a wies-sourced assignment
+        they don't own (parallel to the staff edit permission, #392)."""
+        staff_user = User.objects.create_user(
+            email="staff-del@rijksoverheid.nl", first_name="Staff", last_name="Member"
+        )
+        self.client.force_login(staff_user)
+        assignment_id = self.assignment.id
+
+        response = self.client.post(self.url)
+
+        assert response.status_code == 200
+        assert response["HX-Redirect"] == reverse("assignment-list")
+        assert not Assignment.objects.filter(id=assignment_id).exists()
+
+    @override_settings(STAFF_EMAILS=["staff-del@rijksoverheid.nl"])
+    def test_staff_member_cannot_delete_otys_iir_assignment(self):
+        """Staff still can't delete non-wies-sourced assignments — the
+        ``_is_wies_sourced`` gate runs before the staff branch."""
+        staff_user = User.objects.create_user(
+            email="staff-del@rijksoverheid.nl", first_name="Staff", last_name="Member"
+        )
+        self.client.force_login(staff_user)
+        response = self.client.post(self.external_url)
+        assert response.status_code == 403
+        assert Assignment.objects.filter(id=self.external_assignment.id).exists()
