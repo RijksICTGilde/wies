@@ -113,6 +113,13 @@ class StaffMemberCanEditAssignmentTest(_Setup):
     def test_staff_can_update_assignment(self):
         assert has_permission(Verb.UPDATE, self.assignment, self.staff_user) is True
 
+    def test_staff_can_delete_assignment(self):
+        assert has_permission(Verb.DELETE, self.assignment, self.staff_user) is True
+
+    def test_staff_cannot_delete_external_assignment(self):
+        ext = Assignment.objects.create(name="X", owner=self.owner, source="otys_iir")
+        assert has_permission(Verb.DELETE, ext, self.staff_user) is False
+
     def test_staff_can_update_service(self):
         assert has_permission(Verb.UPDATE, self.service, self.staff_user) is True
 

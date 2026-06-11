@@ -121,13 +121,14 @@ def update_user(user, target):
 
 @rule(DELETE, Assignment)
 def delete_assignment(user, a):
-    """Only the BM-owner of a wies-sourced opdracht (issue #313).
+    """The BM-owner of a wies-sourced opdracht, or a support-staff
+    member (``STAFF_EMAILS``) (issue #313).
 
     Beheerder (``core.change_assignment``) is intentionally NOT
     included here — deletion stays with the owner who has end-to-end
-    accountability for the opdracht.
+    accountability for the opdracht, plus staff for support cases.
     """
-    return _is_wies_sourced(a) and _is_assignment_owner(user, a)
+    return _is_wies_sourced(a) and (_is_assignment_owner(user, a) or is_staff_member(user))
 
 
 # --- Field-level UPDATE rules -----------------------------------------------
