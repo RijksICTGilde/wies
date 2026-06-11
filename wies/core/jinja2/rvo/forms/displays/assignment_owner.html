@@ -9,11 +9,9 @@
 #}
 {% if value %}
   <span class="inline-edit-owner">
+    {# Plain href like the organization links; an own hx-get broke history (#395). #}
     {% if owner_url %}
-      <a href="{{ owner_url }}"
-         hx-get="{{ owner_url }}"
-         hx-target="#side_panel-content"
-         class="rvo-link">{{ value.name }}</a>
+      <a href="{{ owner_url }}" class="rvo-link">{{ value.name }}</a>
     {% else %}
       {{ value.name }}
     {% endif %}

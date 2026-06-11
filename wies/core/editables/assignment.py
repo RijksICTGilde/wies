@@ -110,6 +110,11 @@ def _save_services(assignment, formset):
     apply_services_to_assignment(assignment, services_data)
 
 
+def _fmt_date(value) -> str | None:
+    """ISO string for JSON-serialisable audit state (dates aren't JSON-native)."""
+    return value.isoformat() if value else None
+
+
 def _services_audit_state(assignment) -> list[dict]:
     return [
         {
@@ -117,6 +122,10 @@ def _services_audit_state(assignment) -> list[dict]:
             "skill_name": row["skill_name"],
             "colleague_name": row["colleague"].name if row["colleague"] else None,
             "description": row["description"] or "",
+            # Period included so a period-only edit registers as a change (#393).
+            "has_custom_period": row["has_custom_period"],
+            "start_date": _fmt_date(row["placement_start_date"]),
+            "end_date": _fmt_date(row["placement_end_date"]),
         }
         for row in _services_initial(assignment)
     ]
@@ -126,6 +135,23 @@ def _service_row_label(row: dict) -> str:
     skill = row.get("skill_name") or "?"
     name = row.get("colleague_name")
     return f"{skill} ({name if name else 'open'})"
+
+
+def _period_label(row: dict) -> str:
+    # `has_custom_period` is inverted: truthy means inherited, not custom.
+    if row.get("has_custom_period"):
+        return "volgt opdracht"
+    start = _date_nl(row.get("start_date"))
+    end = _date_nl(row.get("end_date"))
+    return f"{start or '?'} t/m {end or '?'}"
+
+
+def _date_nl(iso: str | None) -> str | None:
+    """ISO yyyy-mm-dd → Dutch dd-mm-yyyy for timeline display."""
+    if not iso:
+        return None
+    y, m, d = iso.split("-")
+    return f"{d}-{m}-{y}"
 
 
 def _services_render_change(change: dict) -> dict:
@@ -138,6 +164,10 @@ def _services_render_change(change: dict) -> dict:
     new_label = _service_row_label(new)
     if old_label != new_label:
         return {"text": f"Gewijzigd: van {old_label} naar {new_label}"}
+    old_period = _period_label(old)
+    new_period = _period_label(new)
+    if old_period != new_period:
+        return {"text": f"Periode gewijzigd op {new_label}", "old": old_period, "new": new_period}
     old_desc = old.get("description") or ""
     new_desc = new.get("description") or ""
     if not old_desc:
