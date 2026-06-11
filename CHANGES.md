@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 392: support staff (users in `STAFF_EMAILS`) can now edit assignments, even when not owner
 - 390: reduce the memory footprint of org sync task to approximately half
 
 ## 2026-06-10
