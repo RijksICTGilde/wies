@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 398: bug fixes — Business Manager link no longer breaks the page (#395), team period changes now show in updates (#393), no more HiddenInput widget warnings (#389)
 - ?: ...
 
 ## 2026-06-11

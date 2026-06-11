@@ -838,6 +838,32 @@ class AssignmentServicesAuditTest(TestCase):
         assert resp.status_code == 200
         assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
 
+    def test_services_post_emits_event_on_period_change(self):
+        """A period-only edit still emits a team audit event (#393)."""
+        data = {
+            "service-TOTAL_FORMS": "2",
+            **self.FORMSET_MGMT_KEYS,
+            # Filled row: drop the inherit checkbox and give a custom period.
+            "service-0-id": str(self.filled_service.id),
+            "service-0-skill": str(self.skill_python.id),
+            "service-0-description": "Filled",
+            "service-0-is_filled": "ingevuld",
+            "service-0-colleague": str(self.colleague.id),
+            "service-0-placement_id": str(self.placement.id),
+            "service-0-placement_start_date": "2026-01-01",
+            "service-0-placement_end_date": "2026-06-30",
+            **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
+        }
+        resp = self.client.post(self.url, data)
+        assert resp.status_code == 200
+        self.placement.refresh_from_db()
+        assert self.placement.specific_start_date is not None
+        events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
+        assert len(events) == 1
+        changes = events[0].context["changes"]
+        assert len(changes) == 1
+        assert changes[0]["old"]["id"] == self.filled_service.id
+
     def test_switch_filled_to_aanvraag_removes_placement(self):
         """Flipping a filled service to "aanvraag" must free the placement,
         even when the (hidden) consultant select still posts its value —
@@ -929,8 +955,14 @@ class ServicesRenderChangeUnitTests(TestCase):
     branch (added / removed / skill changed / colleague filled /
     description add/remove/change)."""
 
-    def _row(self, sid, skill_name, colleague_name=None, description=""):
-        return {"id": sid, "skill_name": skill_name, "colleague_name": colleague_name, "description": description}
+    def _row(self, sid, skill_name, colleague_name=None, description="", **period):
+        return {
+            "id": sid,
+            "skill_name": skill_name,
+            "colleague_name": colleague_name,
+            "description": description,
+            **period,
+        }
 
     def test_added(self):
         change = {"old": None, "new": self._row(2, "Java", None)}
@@ -979,6 +1011,36 @@ class ServicesRenderChangeUnitTests(TestCase):
         assert _services_render_change(change) == {
             "text": "Toelichting verwijderd op Python (Jan)",
             "old": "oud",
+        }
+
+    def test_period_custom_set(self):
+        # Switching from "follows assignment" to a custom period (#393).
+        # `has_custom_period` is inverted: True == inherits, False == own.
+        change = {
+            "old": self._row(1, "Python", "Jan", has_custom_period=True),
+            "new": self._row(
+                1, "Python", "Jan", has_custom_period=False, start_date="2026-01-01", end_date="2026-06-30"
+            ),
+        }
+        assert _services_render_change(change) == {
+            "text": "Periode gewijzigd op Python (Jan)",
+            "old": "volgt opdracht",
+            "new": "01-01-2026 t/m 30-06-2026",
+        }
+
+    def test_period_dates_changed(self):
+        change = {
+            "old": self._row(
+                1, "Python", "Jan", has_custom_period=False, start_date="2026-01-01", end_date="2026-06-30"
+            ),
+            "new": self._row(
+                1, "Python", "Jan", has_custom_period=False, start_date="2026-02-01", end_date="2026-06-30"
+            ),
+        }
+        assert _services_render_change(change) == {
+            "text": "Periode gewijzigd op Python (Jan)",
+            "old": "01-01-2026 t/m 30-06-2026",
+            "new": "01-02-2026 t/m 30-06-2026",
         }
 
 
