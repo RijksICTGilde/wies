@@ -780,3 +780,31 @@ class AssignmentDeleteViewTests(TestCase):
         response = self.client.post(self.url)
         assert response.status_code == 403
         assert Assignment.objects.filter(id=self.assignment.id).exists()
+
+    @override_settings(STAFF_EMAILS=["staff-del@rijksoverheid.nl"])
+    def test_staff_member_can_delete_wies_assignment(self):
+        """A user in STAFF_EMAILS can delete a wies-sourced assignment
+        they don't own (parallel to the staff edit permission, #392)."""
+        staff_user = User.objects.create_user(
+            email="staff-del@rijksoverheid.nl", first_name="Staff", last_name="Member"
+        )
+        self.client.force_login(staff_user)
+        assignment_id = self.assignment.id
+
+        response = self.client.post(self.url)
+
+        assert response.status_code == 200
+        assert response["HX-Redirect"] == reverse("assignment-list")
+        assert not Assignment.objects.filter(id=assignment_id).exists()
+
+    @override_settings(STAFF_EMAILS=["staff-del@rijksoverheid.nl"])
+    def test_staff_member_cannot_delete_otys_iir_assignment(self):
+        """Staff still can't delete non-wies-sourced assignments — the
+        ``_is_wies_sourced`` gate runs before the staff branch."""
+        staff_user = User.objects.create_user(
+            email="staff-del@rijksoverheid.nl", first_name="Staff", last_name="Member"
+        )
+        self.client.force_login(staff_user)
+        response = self.client.post(self.external_url)
+        assert response.status_code == 403
+        assert Assignment.objects.filter(id=self.external_assignment.id).exists()
