@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: ...
+- 313: the BM-owner (and support staff in `STAFF_EMAILS`) can delete wies-sourced opdrachten, with a confirmation modal and an audit-trail event that snapshots the cascaded placements and organizations
 
 ## 2026-06-11
 

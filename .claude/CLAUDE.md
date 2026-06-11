@@ -56,6 +56,12 @@ Full-page forms reference the same declarations via
 `AssignmentEditables.<name>.form_field()`. Workflow and patterns:
 `features/inline-editing.md`.
 
+### Changelog
+
+Every user-facing change must be recorded in `CHANGES.md` under the
+`## unreleased` heading, as a `- <issue#>: <description>` bullet. Add the
+entry as part of the same change/PR — do not leave it for later.
+
 ### Testing
 
 - Run `just test` before completing changes
