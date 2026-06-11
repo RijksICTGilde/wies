@@ -924,6 +924,202 @@ class AssignmentServicesAuditTest(TestCase):
         assert changes[0]["new"]["description"] == "New description"
 
 
+class AssignmentServicesEditFormPeriodTest(TestCase):
+    """Regression: opening the team editor must reflect each row's
+    *effective* period — when a row's dates differ from the assignment
+    period (the placement has custom dates, OR the placement inherits
+    from a service that has custom dates), the "Neem opdrachtperiode
+    over" checkbox must render UNCHECKED with the row's actual dates
+    pre-filled. In production we see every row come up with the
+    checkbox checked, hiding any custom dates.
+
+    The form initial only looks at ``placement.period_source`` and
+    treats anything ``!= PLACEMENT`` as "inherit assignment period" —
+    but a placement that inherits from a service with custom dates
+    still effectively has a custom period relative to the assignment.
+    """
+
+    def setUp(self):
+        import datetime  # noqa: PLC0415 (import not at top level) — scoped to setUp to keep the regression test self-contained
+
+        self.client = Client()
+        self.user = User.objects.create_user(
+            email="svc-period@rijksoverheid.nl",
+            first_name="Svc",
+            last_name="Period",
+            is_superuser=True,
+            is_staff=True,
+        )
+        self.client.force_login(self.user)
+        self.colleague = Colleague.objects.get(user=self.user)
+        # Assignment runs the full multi-year window seen in the screenshot.
+        self.assignment_start = datetime.date(2025, 1, 1)
+        self.assignment_end = datetime.date(2028, 12, 31)
+        self.assignment = Assignment.objects.create(
+            name="A",
+            owner=self.colleague,
+            source="wies",
+            start_date=self.assignment_start,
+            end_date=self.assignment_end,
+        )
+        self.skill = Skill.objects.create(name="Software Engineer")
+        self.custom_start = datetime.date(2026, 3, 1)
+        self.custom_end = datetime.date(2027, 2, 28)
+
+        # Row A: service + placement both inherit from assignment.
+        self.service_inherit = Service.objects.create(
+            description="Inherits",
+            assignment=self.assignment,
+            skill=self.skill,
+            source="wies",
+            period_source=Service.ASSIGNMENT,
+        )
+        self.placement_inherit = Placement.objects.create(
+            colleague=self.colleague,
+            service=self.service_inherit,
+            source="wies",
+            period_source=Placement.SERVICE,
+        )
+
+        # Row B: service inherits, placement has its own custom dates.
+        # ``placement.period_source = PLACEMENT``.
+        self.service_for_custom_placement = Service.objects.create(
+            description="Service inherits, placement custom",
+            assignment=self.assignment,
+            skill=self.skill,
+            source="wies",
+            period_source=Service.ASSIGNMENT,
+        )
+        self.colleague_custom_placement = Colleague.objects.create(name="Erik van Raalte", email="erik@example.test")
+        self.placement_custom = Placement.objects.create(
+            colleague=self.colleague_custom_placement,
+            service=self.service_for_custom_placement,
+            source="wies",
+            period_source=Placement.PLACEMENT,
+            specific_start_date=self.custom_start,
+            specific_end_date=self.custom_end,
+        )
+
+        # Row C: service has custom dates, placement inherits from the
+        # service. The placement's effective period therefore differs
+        # from the assignment, even though ``placement.period_source =
+        # SERVICE``. This is the case where the screenshot shows custom
+        # dates but the checkbox renders as "inherit assignment".
+        self.service_custom = Service.objects.create(
+            description="Service custom, placement inherits",
+            assignment=self.assignment,
+            skill=self.skill,
+            source="wies",
+            period_source=Service.SERVICE,
+            specific_start_date=self.custom_start,
+            specific_end_date=self.custom_end,
+        )
+        self.colleague_via_service = Colleague.objects.create(name="Marcel Wansinck", email="marcel@example.test")
+        self.placement_via_service = Placement.objects.create(
+            colleague=self.colleague_via_service,
+            service=self.service_custom,
+            source="wies",
+            period_source=Placement.SERVICE,
+        )
+
+        self.url = reverse("inline-edit", args=["assignment", self.assignment.id, "services"])
+
+    def test_initial_data_reflects_effective_period_per_row(self):
+        """Direct check on ``_services_initial``: every row whose effective
+        dates differ from the assignment must carry
+        ``has_custom_period = False`` so the checkbox renders unchecked."""
+        from wies.core.editables.assignment import (  # noqa: PLC0415 (import not at top level) — private helper imported here to keep its use scoped to this regression test
+            _services_initial,
+        )
+
+        rows = _services_initial(self.assignment)
+        by_placement = {r["placement_id"]: r for r in rows}
+
+        inherit_row = by_placement[self.placement_inherit.id]
+        custom_placement_row = by_placement[self.placement_custom.id]
+        via_service_row = by_placement[self.placement_via_service.id]
+
+        # Sanity: the effective dates returned to the template match the
+        # screenshot (assignment range vs custom range).
+        assert inherit_row["placement_start_date"] == self.assignment_start
+        assert inherit_row["placement_end_date"] == self.assignment_end
+        assert custom_placement_row["placement_start_date"] == self.custom_start
+        assert custom_placement_row["placement_end_date"] == self.custom_end
+        assert via_service_row["placement_start_date"] == self.custom_start
+        assert via_service_row["placement_end_date"] == self.custom_end
+
+        # Inheriting row → checkbox checked.
+        assert inherit_row["has_custom_period"] is True, (
+            f"inheriting placement should render with checkbox checked, "
+            f"got has_custom_period={inherit_row['has_custom_period']!r}"
+        )
+        # Custom placement → checkbox unchecked.
+        assert custom_placement_row["has_custom_period"] is False, (
+            f"placement with period_source=PLACEMENT should render with "
+            f"checkbox unchecked, got "
+            f"has_custom_period={custom_placement_row['has_custom_period']!r}"
+        )
+        # Placement inheriting a custom *service* period → checkbox must
+        # be UNCHECKED, because the row's effective dates differ from
+        # the assignment. This is the production bug: ``has_custom_period``
+        # is True here (only the placement's own period_source is checked,
+        # not the service chain).
+        assert via_service_row["has_custom_period"] is False, (
+            "placement with period_source=SERVICE on a service that has "
+            "its own custom dates rendered as inheriting the assignment "
+            "period — but its effective period differs from the assignment. "
+            f"Got has_custom_period={via_service_row['has_custom_period']!r}, "
+            f"effective dates "
+            f"{via_service_row['placement_start_date']} to "
+            f"{via_service_row['placement_end_date']} "
+            f"vs assignment {self.assignment_start} to {self.assignment_end}."
+        )
+
+    def test_edit_get_renders_checkbox_state_matching_effective_period(self):
+        """End-to-end: GET ?edit on the team must render each row's
+        checkbox state matching its effective period."""
+        resp = self.client.get(self.url + "?edit=true")
+        assert resp.status_code == 200
+        content = resp.content.decode()
+
+        def checkbox_html_for_placement(placement_id: int) -> str:
+            m = re.search(
+                rf'name="service-(\d+)-placement_id"\s+value="{placement_id}"',
+                content,
+            )
+            assert m, f"no row found for placement_id={placement_id}"
+            idx = m.group(1)
+            cb = re.search(
+                rf'<input[^>]*name="service-{idx}-has_custom_period"[^>]*>',
+                content,
+            )
+            assert cb, f"no has_custom_period checkbox found for row {idx}"
+            return cb.group(0)
+
+        inherit_html = checkbox_html_for_placement(self.placement_inherit.id)
+        custom_html = checkbox_html_for_placement(self.placement_custom.id)
+        via_service_html = checkbox_html_for_placement(self.placement_via_service.id)
+
+        # Inheriting placement → checked (correct today).
+        assert "checked" in inherit_html, f"inheriting row missing checked attr: {inherit_html}"
+        # Placement with its own custom period → unchecked.
+        assert "checked" not in custom_html, (
+            "placement with period_source=PLACEMENT rendered with the "
+            '"Neem opdrachtperiode over" checkbox checked — its custom '
+            f"period is being hidden as inherited. checkbox: {custom_html}"
+        )
+        # Placement inheriting a custom service period → unchecked.
+        # This row appears with custom dates in the side panel, but in
+        # the team-edit form its checkbox comes up checked, contradicting
+        # the dates rendered below it.
+        assert "checked" not in via_service_html, (
+            "placement that inherits from a service with custom dates "
+            'rendered with the "Neem opdrachtperiode over" checkbox '
+            "checked — but its effective dates differ from the "
+            f"assignment period. checkbox: {via_service_html}"
+        )
+
+
 class ServicesRenderChangeUnitTests(TestCase):
     """Pure-function checks for `_services_render_change` covering each
     branch (added / removed / skill changed / colleague filled /
