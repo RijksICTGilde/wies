@@ -57,6 +57,8 @@
       Label toevoegen
       </c-button>
     </form>
-    {% if errors and errors.name %}<div class="form-error">{{ errors.name }}</div>{% endif %}
+    {% if errors and errors.name %}
+      <div class="form-error">{{ errors.name }}</div>
+    {% endif %}
   </div>
 {% endif %}
