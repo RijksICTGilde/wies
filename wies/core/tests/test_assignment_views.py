@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from wies.core.models import Assignment, Colleague, Event, Placement, Service
@@ -235,6 +235,60 @@ class AssignmentEditAttributeTest(TestCase):
         self.external_assignment.refresh_from_db()
         assert self.external_assignment.name == "External Assignment"
 
+    @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
+    def test_staff_member_can_edit_assignment_owner(self):
+        """A user in STAFF_EMAILS can edit whole-object fields on an
+        assignment they don't own (issue #392)."""
+        staff_user = User.objects.create_user(
+            email="staff@rijksoverheid.nl",
+            first_name="Staff",
+            last_name="Member",
+        )
+        new_bdm_user = User.objects.create_user(
+            email="bdm2@rijksoverheid.nl",
+            first_name="New",
+            last_name="BDM",
+        )
+        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
+        new_bdm_user.groups.add(bdm_group)
+        new_bdm = Colleague.objects.create(
+            user=new_bdm_user,
+            name="New BDM",
+            email="bdm2@rijksoverheid.nl",
+            source="wies",
+        )
+        self.client.force_login(staff_user)
+
+        response = self.client.post(
+            reverse("inline-edit", args=["assignment", self.assignment.id, "owner"]),
+            {"owner": new_bdm.id},
+        )
+
+        assert response.status_code == 200
+        self.assignment.refresh_from_db()
+        assert self.assignment.owner_id == new_bdm.id
+
+    @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
+    def test_staff_member_cannot_edit_external_source_assignment(self):
+        """Staff still can't edit non-wies-sourced assignments — the
+        ``_is_wies_sourced`` gate runs before the staff branch."""
+        staff_user = User.objects.create_user(
+            email="staff@rijksoverheid.nl",
+            first_name="Staff",
+            last_name="Member",
+        )
+        self.client.force_login(staff_user)
+
+        response = self.client.post(
+            reverse("inline-edit", args=["assignment", self.external_assignment.id, "name"]),
+            {"name": "Attempted Update"},
+        )
+
+        assert response.status_code == 200
+        self.assertContains(response, "geen rechten")
+        self.external_assignment.refresh_from_db()
+        assert self.external_assignment.name == "External Assignment"
+
     # ========== Name Field Validation Tests ==========
 
     def test_assignment_name_edit_success(self):
@@ -448,7 +502,7 @@ class AssignmentEditAttributeTest(TestCase):
             object_id=self.assignment.id,
             context={
                 "field_name": "extra_info",
-                "field_label": "Beschrijving",
+                "field_label": "Opdrachtomschrijving",
                 "old_value": long_old,
                 "new_value": long_new,
             },
@@ -457,7 +511,7 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
 
         assert response.status_code == 200
-        self.assertContains(response, "Beschrijving")
+        self.assertContains(response, "Opdrachtomschrijving")
         self.assertContains(response, "truncated-text")
         self.assertContains(response, "show-more-toggle")
         self.assertContains(response, "Toon meer")
@@ -476,7 +530,7 @@ class AssignmentEditAttributeTest(TestCase):
             object_id=self.assignment.id,
             context={
                 "field_name": "extra_info",
-                "field_label": "Beschrijving",
+                "field_label": "Opdrachtomschrijving",
                 "old_value": "short old",
                 "new_value": "short new",
             },

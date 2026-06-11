@@ -56,7 +56,7 @@ from .models import (
     Service,
     Skill,
 )
-from .permissions import can_view_staff_page
+from .permissions import is_staff_member
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .services.assignments import create_assignment_from_form, extract_services_data
 from .services.events import create_event
@@ -261,13 +261,14 @@ def _merge_date_range(existing: dict, start, end):
         existing["end_date"] = end
 
 
-def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, **extra):
+def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, placement_id=None, **extra):
     """Build a standard assignment dict for panel display."""
+    url = _build_panel_url(request, plaatsing=placement_id) if placement_id else _build_panel_url(request, opdracht=aid)
     return {
         "name": name,
         "id": aid,
         "tags": {},
-        "assignment_url": _build_panel_url(request, opdracht=aid),
+        "assignment_url": url,
         "start_date": start_date,
         "end_date": end_date,
         "historical": False,
@@ -315,6 +316,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     request,
                     start_date=placement.get("actual_start_date"),
                     end_date=placement.get("actual_end_date"),
+                    placement_id=placement["id"],
                 )
             else:
                 _merge_date_range(
@@ -334,6 +336,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     end_date=placement.get("actual_end_date"),
                     historical=True,
                     privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
+                    placement_id=placement["id"],
                 )
             else:
                 _merge_date_range(
@@ -356,6 +359,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     end_date=placement.get("actual_end_date"),
                     historical=True,
                     privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
+                    placement_id=placement["id"],
                 )
             else:
                 _merge_date_range(
@@ -497,7 +501,7 @@ def no_access(request):
 
 
 def staff_required(view_func):
-    return user_passes_test(can_view_staff_page, login_url="/geen-toegang/")(view_func)
+    return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
 
 
 @staff_required
@@ -552,6 +556,58 @@ def staff_database(request):
             if request.headers.get("HX-Request"):
                 context["latest_tasks"] = get_latest_tasks(limit=3)
                 return render(request, "parts/task_list.html", context)
+
+        elif action == "merge_duplicates_preview":
+            from wies.core.services.assignments import find_duplicate_groups  # noqa: PLC0415
+
+            groups = find_duplicate_groups()
+            if not groups:
+                messages.info(request, "Geen dubbele opdrachten gevonden.")
+            else:
+                context["merge_groups"] = [
+                    {
+                        "name": group[0].name,
+                        "owner": str(group[0].owner),
+                        "count": len(group),
+                        "target": group[0],
+                        "duplicates": group[1:],
+                    }
+                    for group in groups
+                ]
+            return render(request, "staff_database.html", context)
+
+        elif action == "merge_duplicates_apply":
+            from wies.core.services.assignments import (  # noqa: PLC0415 — conditional import for rare admin action
+                find_duplicate_groups,
+                merge_group,
+            )
+
+            groups = find_duplicate_groups()
+            if not groups:
+                messages.info(request, "Geen dubbele opdrachten gevonden.")
+            else:
+                with transaction.atomic():
+                    total = sum(len(g) - 1 for g in groups)
+                    for group in groups:
+                        target = group[0]
+                        deleted_ids = [a.id for a in group[1:]]
+                        merge_group(group)
+                        create_event(
+                            object_type="Assignment",
+                            action="update",
+                            source="user",
+                            object_id=target.id,
+                            user=request.user,
+                            context={
+                                "merge": True,
+                                "merged_ids": deleted_ids,
+                                "name": target.name,
+                            },
+                        )
+                    messages.success(
+                        request,
+                        f"{total} dubbele opdracht(en) samengevoegd in {len(groups)} groep(en).",
+                    )
 
         return redirect("staff-database")
 
@@ -1033,6 +1089,9 @@ class AssignmentListView(ListView):
             if self.request.headers.get("HX-Target") == "side_panel-content":
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
+                placement_id = self.request.GET.get("plaatsing")
+                if placement_id:
+                    return ["parts/placement_panel_content.html"]
                 if colleague_id and not assignment_id:
                     return ["parts/colleague_panel_content.html"]
                 return ["parts/assignment_panel_content.html"]
@@ -1181,10 +1240,19 @@ class AssignmentListView(ListView):
             }
 
         # Side panel
+        placement_id = self.request.GET.get("plaatsing")
         colleague_id = self.request.GET.get("collega")
         assignment_id = self.request.GET.get("opdracht")
 
-        if colleague_id and not assignment_id:
+        if placement_id:
+            try:
+                placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
+                    id=placement_id
+                )
+                context["panel_data"] = _build_placement_panel_data(placement, self.request)
+            except Placement.DoesNotExist:
+                pass
+        elif colleague_id and not assignment_id:
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
@@ -2037,9 +2105,20 @@ def user_profile(request):
     # Side panel handling
     colleague_id = request.GET.get("collega")
     assignment_id = request.GET.get("opdracht")
+    placement_id = request.GET.get("plaatsing")
     panel_data = None
 
-    if assignment_id:
+    if placement_id:
+        try:
+            placement = Placement.objects.select_related(
+                "colleague",
+                "service__assignment",
+                "service__skill",
+            ).get(id=placement_id)
+            panel_data = _build_placement_panel_data(placement, request)
+        except Placement.DoesNotExist:
+            pass
+    elif assignment_id:
         try:
             assignment = Assignment.objects.get(id=assignment_id)
             panel_data = _build_assignment_panel_data(assignment, request)
@@ -2538,8 +2617,13 @@ def _render_inline_edit_display(
 
 def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) -> HttpResponse:
     # Edit-mode partial: form + save/cancel. On validation failure, `form` carries inline errors.
-    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "form": form}
-    return render(request, "parts/inline_edit/form.html", ctx)
+    from wies.core.inline_edit.base import EditableGroup  # noqa: PLC0415
+
+    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "form": form, "editable": spec}
+    template = (
+        spec.form_template if isinstance(spec, EditableGroup) and spec.form_template else "parts/inline_edit/form.html"
+    )
+    return render(request, template, ctx)
 
 
 def _render_inline_edit_collection_form(request, editable_set, spec, obj, formset) -> HttpResponse:

@@ -1,7 +1,6 @@
 /**
- * Services formset behaviours: dynamic row add/remove, "Rol ingevuld"
- * colleague reveal, inline skill creation, and create-form-specific
- * cancel + error-scroll helpers.
+ * Services formset behaviours: dynamic row add/remove, status-reveals-details,
+ * inline skill creation, and create-form-specific cancel + error-scroll helpers.
  *
  * Runs on DOMContentLoaded AND on htmx:afterSwap so the side-panel
  * inline-edit form (which injects the same services-container into
@@ -12,22 +11,30 @@
   function initServicesForm() {
     var container = document.querySelector("#services-container");
     if (!container) return;
-    // HTMX swaps replace the node wholesale, so this flag is fresh on
-    // each swap. The guard protects against repeat DOMContentLoaded /
-    // afterSwap firings against the same node.
     if (container.dataset.servicesFormInitialized === "1") return;
-    var addBtn = document.querySelector("#add-service-btn");
     var totalFormsInput = document.querySelector("#id_service-TOTAL_FORMS");
-    if (!addBtn || !totalFormsInput) return;
+    if (!totalFormsInput) return;
     container.dataset.servicesFormInitialized = "1";
 
+    // Hide the single empty template row on page load.
+    var initialRows = container.querySelectorAll(".service-row");
+    if (
+      initialRows.length === 1 &&
+      initialRows[0].dataset.hasChoice === "false"
+    ) {
+      initialRows[0].style.display = "none";
+      initialRows[0].dataset.hiddenTemplate = "1";
+    }
+
     function updateRemoveButtons() {
-      var rows = container.querySelectorAll(".service-row");
-      rows.forEach(function (row) {
-        var checkboxLine = row.querySelector(".service-row__checkbox-line");
-        if (!checkboxLine) return;
-        var existing = checkboxLine.querySelector(".service-row__remove");
-        if (rows.length > 1) {
+      var visibleRows = container.querySelectorAll(
+        ".service-row:not([data-hidden-template='1'])",
+      );
+      visibleRows.forEach(function (row) {
+        var actionsDiv = row.querySelector(".service-row__actions");
+        if (!actionsDiv) return;
+        var existing = actionsDiv.querySelector(".service-row__remove");
+        if (visibleRows.length > 1) {
           if (!existing) {
             var btn = document.createElement("button");
             btn.type = "button";
@@ -39,7 +46,7 @@
               row.remove();
               updateRemoveButtons();
             });
-            checkboxLine.appendChild(btn);
+            actionsDiv.appendChild(btn);
           }
         } else {
           if (existing) existing.remove();
@@ -47,63 +54,130 @@
       });
     }
 
-    function addServiceRow() {
+    function addServiceRow(status) {
       var index = parseInt(totalFormsInput.value, 10);
-      var firstRow = container.querySelector(".service-row");
-      var row = firstRow.cloneNode(true);
-      row.dataset.serviceIndex = index;
 
-      row.querySelectorAll("input, select, textarea").forEach(function (field) {
-        if (field.name)
-          field.name = field.name.replace(/-0-/, "-" + index + "-");
-        if (field.id) field.id = field.id.replace(/-0-/, "-" + index + "-");
-        if (field.tagName === "SELECT") {
-          field.selectedIndex = 0;
-        } else {
-          field.value = "";
-        }
-      });
-      row.querySelectorAll("label").forEach(function (label) {
-        var forAttr = label.getAttribute("for");
-        if (forAttr)
-          label.setAttribute("for", forAttr.replace(/-0-/, "-" + index + "-"));
-      });
+      // Use the hidden template row for the first add, clone for subsequent.
+      var templateRow = container.querySelector("[data-hidden-template='1']");
+      var row;
+      if (templateRow) {
+        row = templateRow;
+        row.style.display = "";
+        delete row.dataset.hiddenTemplate;
+        // Re-init period toggle for this row (was initialized while hidden).
+        delete row.dataset.periodToggleInit;
+        var periodCheckbox = row.querySelector("[name$='-has_custom_period']");
+        if (periodCheckbox) periodCheckbox.checked = true;
+        var existingHint = row.querySelector(".service-period-hint");
+        if (existingHint) existingHint.remove();
+      } else {
+        var sourceRow = container.querySelector(".service-row");
+        row = sourceRow.cloneNode(true);
+        row.dataset.serviceIndex = index;
 
-      row
-        .querySelectorAll(".service-new-skill, .service-colleague-field")
-        .forEach(function (el) {
-          el.style.display = "none";
+        row
+          .querySelectorAll("input, select, textarea")
+          .forEach(function (field) {
+            if (field.name)
+              field.name = field.name.replace(/-\d+-/, "-" + index + "-");
+            if (field.id)
+              field.id = field.id.replace(/-\d+-/, "-" + index + "-");
+            if (field.tagName === "SELECT") {
+              field.selectedIndex = 0;
+            } else if (field.type === "radio") {
+              field.checked = false;
+            } else if (field.type === "checkbox") {
+              field.checked = false;
+            } else {
+              field.value = "";
+            }
+          });
+        row.querySelectorAll("label").forEach(function (label) {
+          var forAttr = label.getAttribute("for");
+          if (forAttr)
+            label.setAttribute(
+              "for",
+              forAttr.replace(/-\d+-/, "-" + index + "-"),
+            );
         });
 
-      var existingBtn = row.querySelector(".service-row__remove");
-      if (existingBtn) existingBtn.remove();
+        var newSkill = row.querySelector(".service-new-skill");
+        if (newSkill) newSkill.style.display = "none";
 
-      row.querySelectorAll(".rvo-form-field__error").forEach(function (el) {
-        el.remove();
-      });
+        // Reset period toggle init so initPeriodToggles picks up the new row.
+        delete row.dataset.periodToggleInit;
+        // Default: inherit assignment period.
+        var periodCheckbox = row.querySelector("[name$='-has_custom_period']");
+        if (periodCheckbox) periodCheckbox.checked = true;
+        // Remove cloned hint elements so initPeriodToggles creates fresh ones.
+        var clonedHint = row.querySelector(".service-period-hint");
+        if (clonedHint) clonedHint.remove();
 
-      container.appendChild(row);
-      totalFormsInput.value = index + 1;
+        var existingBtn = row.querySelector(".service-row__remove");
+        if (existingBtn) existingBtn.remove();
 
-      updateRemoveButtons();
-      initStatusToggle(row);
-      initInlineCreate(row);
-    }
+        row.querySelectorAll(".rvo-form-field__error").forEach(function (el) {
+          el.remove();
+        });
 
-    addBtn.addEventListener("click", addServiceRow);
-
-    function initStatusToggle(row) {
-      var checkbox = row.querySelector("[name$='-is_filled']");
-      var colleagueField = row.querySelector(".service-colleague-field");
-      if (!checkbox || !colleagueField) return;
-
-      function update() {
-        colleagueField.style.display = checkbox.checked ? "" : "none";
+        container.appendChild(row);
+        totalFormsInput.value = index + 1;
       }
 
-      checkbox.addEventListener("change", update);
-      update();
+      // Pre-select the chosen status radio.
+      var radio = row.querySelector(
+        "input[type='radio'][value='" + status + "']",
+      );
+      if (radio) {
+        radio.checked = true;
+        row.dataset.hasChoice = "true";
+      }
+
+      // Show details immediately (status already chosen).
+      var details = row.querySelector(".service-row__details");
+      if (details) details.style.display = "";
+
+      // For "aanvraag", hide consultant field as it's not relevant.
+      if (status === "aanvraag") {
+        var colleagueField = row.querySelector(".service-colleague-field");
+        if (colleagueField) colleagueField.style.display = "none";
+      } else {
+        var colleagueField = row.querySelector(".service-colleague-field");
+        if (colleagueField) colleagueField.style.display = "";
+      }
+
+      updateRemoveButtons();
+      initInlineCreate(row);
+      initColleagueToggle(row);
+      initPeriodToggles();
     }
+
+    function initColleagueToggle(row) {
+      var radios = row.querySelectorAll(
+        ".service-row__status-toggle input[type='radio']",
+      );
+      var colleagueField = row.querySelector(".service-colleague-field");
+      if (!colleagueField) return;
+      radios.forEach(function (radio) {
+        radio.addEventListener("change", function () {
+          var isAanvraag = radio.value === "aanvraag";
+          colleagueField.style.display = isAanvraag ? "none" : "";
+          // Clear the (now hidden) consultant so switching to "aanvraag"
+          // actually frees the placement on save.
+          if (isAanvraag) {
+            var select = colleagueField.querySelector("select");
+            if (select) select.value = "";
+          }
+        });
+      });
+    }
+
+    // Bind the two add buttons.
+    document.querySelectorAll("[data-add-service]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        addServiceRow(btn.dataset.addService);
+      });
+    });
 
     function initInlineCreate(row) {
       var skillSelect = row.querySelector("[name$='-skill']");
@@ -117,10 +191,81 @@
     }
 
     container.querySelectorAll(".service-row").forEach(function (row) {
-      initStatusToggle(row);
       initInlineCreate(row);
+      initPeriodToggles();
+      initColleagueToggle(row);
     });
     updateRemoveButtons();
+  }
+
+  function initPeriodToggles() {
+    // Assignment dates: from the create form inputs, or from data attributes
+    // on the services container (set by the inline-edit template).
+    var assignmentStartEl = document.querySelector("#id_start_date");
+    var assignmentEndEl = document.querySelector("#id_end_date");
+    var container = document.querySelector("#services-container");
+    var assignmentStartAttr = container && container.dataset.assignmentStart;
+    var assignmentEndAttr = container && container.dataset.assignmentEnd;
+
+    document.querySelectorAll(".service-row").forEach(function (row) {
+      if (row.dataset.periodToggleInit === "1") return;
+      var checkbox = row.querySelector("[name$='-has_custom_period']");
+      if (!checkbox) return;
+      var startInput = row.querySelector("[name$='-placement_start_date']");
+      var endInput = row.querySelector("[name$='-placement_end_date']");
+      if (!startInput || !endInput) return;
+      row.dataset.periodToggleInit = "1";
+
+      // Hint element shown when checkbox is checked but assignment has no dates.
+      var hint = row.querySelector(".service-period-hint");
+      if (!hint) {
+        hint = document.createElement("p");
+        hint.className = "service-period-hint rvo-text--sm rvo-text--subtle";
+        hint.style.display = "none";
+        hint.textContent = "Vul eerst de opdrachtperiode in hierboven.";
+        checkbox.closest(".service-period-section").appendChild(hint);
+      }
+
+      function getAssignmentStart() {
+        return (
+          (assignmentStartEl && assignmentStartEl.value) ||
+          assignmentStartAttr ||
+          ""
+        );
+      }
+      function getAssignmentEnd() {
+        return (
+          (assignmentEndEl && assignmentEndEl.value) || assignmentEndAttr || ""
+        );
+      }
+
+      function updateDateFields() {
+        startInput.disabled = checkbox.checked;
+        endInput.disabled = checkbox.checked;
+        if (checkbox.checked) {
+          var aStart = getAssignmentStart();
+          var aEnd = getAssignmentEnd();
+          if (aStart) startInput.value = aStart;
+          if (aEnd) endInput.value = aEnd;
+          hint.style.display = !aStart && !aEnd ? "" : "none";
+        } else {
+          hint.style.display = "none";
+        }
+      }
+
+      checkbox.addEventListener("change", updateDateFields);
+      updateDateFields();
+
+      // Also update when assignment dates change.
+      if (assignmentStartEl)
+        assignmentStartEl.addEventListener("change", function () {
+          if (checkbox.checked) startInput.value = assignmentStartEl.value;
+        });
+      if (assignmentEndEl)
+        assignmentEndEl.addEventListener("change", function () {
+          if (checkbox.checked) endInput.value = assignmentEndEl.value;
+        });
+    });
   }
 
   function initCancelButton() {
@@ -139,6 +284,7 @@
 
   function initAll() {
     initServicesForm();
+    initPeriodToggles();
     initCancelButton();
     scrollToDienstenError();
   }
