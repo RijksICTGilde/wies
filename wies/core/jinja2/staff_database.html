@@ -92,7 +92,9 @@
               {% for dupe in group.duplicates %}
                 {% for svc in dupe.services.all() %}
                   <c-table-row>
-                  {% if loop.first %}<c-table-cell rowspan="{{ dupe.services.count() }}">{{ dupe.id }}</c-table-cell>{% endif %}
+                  {% if loop.first %}
+                    <c-table-cell rowspan="{{ dupe.services.count() }}">{{ dupe.id }}</c-table-cell>
+                  {% endif %}
                   <c-table-cell>
                   {% for pl in svc.placements.all() %}
                     {{ pl.colleague.name }}
