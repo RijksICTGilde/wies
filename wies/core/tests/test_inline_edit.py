@@ -140,6 +140,21 @@ class InlineEditInfrastructureTest(TestCase):
         self.assertContains(resp, "editable-field-display")
         self.assertContains(resp, "rvo-icon-bewerken")
 
+    def test_only_pencil_enters_edit_mode(self):
+        """The value itself is not clickable — only the pencil button opens
+        edit mode — so interactive content inside it (links, "Toon meer")
+        doesn't bubble into edit mode (#395)."""
+        resp = self.client.get(self.url)
+        content = resp.content.decode()
+        value_div = content.split('class="editable-field-display__value"')[1].split(">")[0]
+        assert "hx-get" not in value_div
+        assert 'role="button"' not in value_div
+        # The pencil button still carries the edit trigger.
+        assert "edit=true" in content
+        assert "edit-icon-button" in content
+        # And a tooltip aiding discoverability now the value isn't clickable.
+        assert 'data-tooltip="Bewerk ' in content
+
     def test_get_edit_returns_form(self):
         resp = self.client.get(self.url + "?edit=true")
         assert resp.status_code == 200
@@ -548,6 +563,25 @@ class AssignmentEditablesFullTest(TestCase):
         # Email link is rendered by the custom display partial.
         self.assertContains(resp, f"mailto:{self.colleague.email}")
 
+    def test_owner_link_present_on_display(self):
+        # The navigation link to the owner's profile is supplied by the
+        # editable's display_context, not a panel-only extra (#395).
+        resp = self.client.get(self._url("owner"))
+        self.assertContains(resp, f"collega={self.colleague.id}")
+
+    def test_owner_link_survives_cancel(self):
+        # Edit + cancel must re-render the link, not drop it to plain text (#395).
+        resp = self.client.get(self._url("owner") + "?cancel=true")
+        assert resp.status_code == 200
+        self.assertContains(resp, f"collega={self.colleague.id}")
+        self.assertContains(resp, f"mailto:{self.colleague.email}")
+
+    def test_owner_link_survives_save(self):
+        # A successful save re-renders the display; the link must persist (#395).
+        resp = self.client.post(self._url("owner"), {"owner": self.colleague.id})
+        assert resp.status_code == 200
+        self.assertContains(resp, f"collega={self.colleague.id}")
+
 
 class AssignmentCreateFormIntegrationTest(TestCase):
     """Verify that AssignmentCreateForm composes its fields from the
@@ -708,7 +742,12 @@ class AssignmentServicesDisplayTest(TestCase):
     def test_filled_row_is_clickable_to_placement_panel(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        self.assertContains(resp, 'hx-target="#side_panel-container"')
+        # Renders inside an open panel, so it must swap the inner content;
+        # targeting #side_panel-container rebuilds the dialog and htmx falls
+        # back to a full page load.
+        self.assertContains(resp, 'hx-target="#side_panel-content"')
+        self.assertNotContains(resp, 'hx-target="#side_panel-container"')
+        self.assertContains(resp, "plaatsing=")
         self.assertContains(resp, self.colleague.name)
         self.assertContains(resp, "rvo-item-list__item--filled")
         self.assertContains(resp, "clickable-row")

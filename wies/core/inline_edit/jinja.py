@@ -84,6 +84,9 @@ def inline_edit(ctx, obj, name, **extras):
         "hide_edit_button": getattr(spec, "hide_edit_button", False),
         "alert": None,
         "saved": False,
+        # display_context fires here and in _render_inline_edit_display, so the
+        # partial renders the same on first load and after an edit/cancel (#395).
+        **(spec.display_context(obj, request) if getattr(spec, "display_context", None) else {}),
         **extras,
     }
     # Trusted template; any user-supplied values go through Jinja's auto-escape.

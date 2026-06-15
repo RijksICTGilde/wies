@@ -3,8 +3,11 @@
 Permissions live in ``wies/core/permission_rules.py``.
 """
 
+import urllib.parse
+
 from django import forms
 from django.db import transaction
+from django.urls import reverse
 
 from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
@@ -15,6 +18,35 @@ from wies.core.services.assignments import apply_services_to_assignment, extract
 def _bdm_queryset():
     # Wrapped in a callable so `choices` evaluates lazily per request.
     return Colleague.objects.filter(user__groups__name="Business Development Manager").order_by("name")
+
+
+def _owner_display_context(assignment, request) -> dict:
+    """Link + mailto for the owner display partial. Derived only from
+    ``assignment``/``request`` (not the current page's GET params) so they
+    survive an inline-edit/cancel re-render on the ``/inline-edit/`` path (#395)."""
+    if not assignment.owner:
+        return {"owner_url": "", "owner_mailto": ""}
+
+    owner_url = reverse("assignment-list") + f"?collega={assignment.owner.id}"
+
+    owner_mailto = ""
+    if assignment.owner.email:
+        opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.id}")
+        subject = urllib.parse.quote(f"Informatieverzoek over opdracht {assignment.name}")
+        body_lines = [
+            f"Beste {assignment.owner.name},",
+            "",
+            f"Ik zag deze opdracht {opdracht_url} op WIES."
+            + (f" De beschrijving is: {assignment.extra_info}" if assignment.extra_info else ""),
+            "",
+            "Kun je me hier meer informatie over geven?",
+        ]
+        consultant_name = getattr(getattr(request.user, "colleague", None), "name", "")
+        body_lines += ["", "Met vriendelijke groet,", "", consultant_name]
+        body = urllib.parse.quote("\n".join(body_lines))
+        owner_mailto = f"mailto:{assignment.owner.email}?subject={subject}&body={body}"
+
+    return {"owner_url": owner_url, "owner_mailto": owner_mailto}
 
 
 def _organizations_initial(assignment):
@@ -248,6 +280,7 @@ class AssignmentEditables(EditableSet):
         error_messages={"required": "Selecteer een business manager."},
         audit_state=lambda c: c.name if c else None,
         display="rvo/forms/displays/assignment_owner.html",
+        display_context=_owner_display_context,
     )
 
     period = EditableGroup(

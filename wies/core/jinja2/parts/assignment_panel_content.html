@@ -74,9 +74,7 @@
           {% endif %}
           <dt>Business Manager</dt>
           <dd>
-            {{ inline_edit(panel_data.assignment, "owner",
-                        owner_url=panel_data.owner_url,
-                        owner_mailto=panel_data.owner_mailto_href) }}
+            {{ inline_edit(panel_data.assignment, "owner") }}
           </dd>
           </c-data-list>
         </section>

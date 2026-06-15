@@ -41,6 +41,13 @@ class Editable:
     display: str | Callable[[Model], Any] | None = None
     save: Callable[[Model, Any], None] | None = None
 
+    # Extra context merged into the display partial on EVERY render path
+    # (initial panel render, inline-edit save, inline-edit cancel).
+    # Signature ``(obj, request) -> dict``. Use for values the partial needs
+    # but that aren't derivable from ``value`` alone — e.g. a navigation URL
+    # that must survive an edit/cancel round-trip (#395).
+    display_context: Callable[[Model, Any], dict] | None = None
+
     # For unbound editables (no 1:1 model field). `form_field_factory`
     # takes priority over field inference; `initial` reads the current value.
     form_field_factory: forms.Field | Callable[[], forms.Field] | None = None
