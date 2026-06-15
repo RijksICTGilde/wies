@@ -2736,6 +2736,29 @@ def _diff_collection_state(old_state: list[dict], new_state: list[dict]) -> list
     return changes
 
 
+def _emit_placement_change_on_assignment(placement, before_row: dict, user) -> None:
+    """Record a placement edit as a "Team" event on its parent assignment,
+    so it renders identically to the Team-bewerken flow (#393)."""
+    from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids circular import
+
+    assignment = placement.service.assignment
+    after_row = placement_audit_row(placement)
+    if before_row == after_row:
+        return
+    create_event(
+        object_type="Assignment",
+        action="update",
+        source="user",
+        object_id=assignment.id,
+        user=user,
+        context={
+            "field_name": "services",
+            "field_label": "Team",
+            "changes": [{"old": before_row, "new": after_row}],
+        },
+    )
+
+
 def inline_edit_view(request, model_label, pk, name):
     """Generic HTMX endpoint. See ``features/inline-editing.md`` for the full contract."""
     editable_set = REGISTRY.get(model_label)
@@ -2783,6 +2806,14 @@ def inline_edit_view(request, model_label, pk, name):
                 before = {e.name: _current_value(obj, e) for e in editables}
             else:
                 before = _current_value(obj, spec)
+            # A placement edit (e.g. period via the profile) has no audit
+            # type of its own; mirror it onto the parent assignment's
+            # timeline like the "Team bewerken" flow (#393).
+            placement_before = None
+            if type(obj).__name__ == "Placement":
+                from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids circular import
+
+                placement_before = placement_audit_row(obj)
             with transaction.atomic():
                 save_spec(spec, editables, form.cleaned_data, obj)
                 if isinstance(spec, EditableGroup):
@@ -2797,6 +2828,9 @@ def inline_edit_view(request, model_label, pk, name):
                     request.user,
                     child_editables=editables if isinstance(spec, EditableGroup) else None,
                 )
+                if placement_before is not None:
+                    obj.refresh_from_db()
+                    _emit_placement_change_on_assignment(obj, placement_before, request.user)
             return _render_inline_edit_display(
                 request,
                 editable_set,

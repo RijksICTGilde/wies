@@ -9,15 +9,25 @@
 #}
 {% if value %}
   <span class="inline-edit-owner">
-    {# Plain href like the organization links; an own hx-get broke history (#395). #}
+    {# This link sits inside the editable value wrapper, which sets
+      hx-swap="outerHTML" for its edit toggle. htmx inherits that, so without
+      an explicit innerHTML the swap would replace #side_panel-content itself
+      and break the panel. onclick stop prevents the wrapper's edit-mode
+      handler from also firing (#395). #}
     {% if owner_url %}
-      <a href="{{ owner_url }}" class="rvo-link">{{ value.name }}</a>
+      <a href="{{ owner_url }}"
+         hx-get="{{ owner_url }}"
+         hx-target="#side_panel-content"
+         hx-swap="innerHTML"
+         onclick="event.stopPropagation()"
+         class="rvo-link">{{ value.name }}</a>
     {% else %}
       {{ value.name }}
     {% endif %}
     {% if value.email %}
       <br>
       <a href="{{ owner_mailto or ('mailto:' ~ value.email) }}"
+         onclick="event.stopPropagation()"
          class="rvo-link">{{ value.email }}</a>
     {% endif %}
   </span>

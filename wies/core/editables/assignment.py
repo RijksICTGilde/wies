@@ -115,20 +115,42 @@ def _fmt_date(value) -> str | None:
     return value.isoformat() if value else None
 
 
+def _service_audit_row(row: dict) -> dict:
+    return {
+        "id": row["id"],
+        "skill_name": row["skill_name"],
+        "colleague_name": row["colleague"].name if row["colleague"] else None,
+        "description": row["description"] or "",
+        # Period included so a period-only edit registers as a change (#393).
+        "has_custom_period": row["has_custom_period"],
+        "start_date": _fmt_date(row["placement_start_date"]),
+        "end_date": _fmt_date(row["placement_end_date"]),
+    }
+
+
 def _services_audit_state(assignment) -> list[dict]:
-    return [
+    return [_service_audit_row(row) for row in _services_initial(assignment)]
+
+
+def placement_audit_row(placement) -> dict:
+    """Audit row for a single placement, shaped like a services-collection
+    row so the same timeline renderer applies. Lets a period edit made
+    directly on a placement (via the profile) show on the opdracht
+    timeline, not only via "Team bewerken" (#393)."""
+    from wies.core.models import Placement  # noqa: PLC0415 — avoids circular import
+
+    service = placement.service
+    return _service_audit_row(
         {
-            "id": row["id"],
-            "skill_name": row["skill_name"],
-            "colleague_name": row["colleague"].name if row["colleague"] else None,
-            "description": row["description"] or "",
-            # Period included so a period-only edit registers as a change (#393).
-            "has_custom_period": row["has_custom_period"],
-            "start_date": _fmt_date(row["placement_start_date"]),
-            "end_date": _fmt_date(row["placement_end_date"]),
+            "id": service.id,
+            "skill_name": service.skill.name if service.skill else "",
+            "colleague": placement.colleague,
+            "description": service.description,
+            "has_custom_period": placement.period_source != Placement.PLACEMENT,
+            "placement_start_date": placement.start_date,
+            "placement_end_date": placement.end_date,
         }
-        for row in _services_initial(assignment)
-    ]
+    )
 
 
 def _service_row_label(row: dict) -> str:
@@ -138,12 +160,14 @@ def _service_row_label(row: dict) -> str:
 
 
 def _period_label(row: dict) -> str:
-    # `has_custom_period` is inverted: truthy means inherited, not custom.
-    if row.get("has_custom_period"):
-        return "volgt opdracht"
     start = _date_nl(row.get("start_date"))
     end = _date_nl(row.get("end_date"))
-    return f"{start or '?'} t/m {end or '?'}"
+    period = f"{start or '?'} t/m {end or '?'}"
+    # `has_custom_period` is inverted: truthy means inherited, not custom.
+    # Show the dates either way so the old period stays visible (#393).
+    if row.get("has_custom_period"):
+        return f"{period} (volgt opdracht)"
+    return period
 
 
 def _date_nl(iso: str | None) -> str | None:
@@ -167,14 +191,14 @@ def _services_render_change(change: dict) -> dict:
     old_period = _period_label(old)
     new_period = _period_label(new)
     if old_period != new_period:
-        return {"text": f"Periode gewijzigd op {new_label}", "old": old_period, "new": new_period}
+        return {"text": f"Periode gewijzigd van {new_label}", "old": old_period, "new": new_period}
     old_desc = old.get("description") or ""
     new_desc = new.get("description") or ""
     if not old_desc:
-        return {"text": f"Toelichting toegevoegd op {new_label}", "new": new_desc}
+        return {"text": f"Toelichting toegevoegd voor {new_label}", "new": new_desc}
     if not new_desc:
-        return {"text": f"Toelichting verwijderd op {new_label}", "old": old_desc}
-    return {"text": f"Toelichting gewijzigd op {new_label}", "old": old_desc, "new": new_desc}
+        return {"text": f"Toelichting verwijderd voor {new_label}", "old": old_desc}
+    return {"text": f"Toelichting gewijzigd voor {new_label}", "old": old_desc, "new": new_desc}
 
 
 def _validate_period(cleaned):

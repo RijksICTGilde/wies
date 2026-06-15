@@ -643,6 +643,26 @@ class PlacementServiceEditablesTest(TestCase):
         self.service.refresh_from_db()
         assert self.service.description == "Dienst X"
 
+    def test_placement_period_edit_logs_event_on_assignment(self):
+        """A period edit on a placement (the profile path) is mirrored as a
+        Team event on the parent assignment timeline (#393)."""
+        url = reverse("inline-edit", args=["placement", self.placement.id, "period"])
+        resp = self.client.post(
+            url,
+            {
+                "period_source": Placement.PLACEMENT,
+                "specific_start_date": "2026-06-19",
+                "specific_end_date": "2026-12-31",
+            },
+        )
+        assert resp.status_code == 200
+        assignment = self.service.assignment
+        events = list(Event.objects.filter(object_type="Assignment", object_id=assignment.id, action="update"))
+        assert len(events) == 1
+        change = events[0].context["changes"][0]
+        assert change["new"]["end_date"] == "2026-12-31"
+        assert change["new"]["has_custom_period"] is False
+
 
 class AssignmentServicesDisplayTest(TestCase):
     """Regression tests for the services collection display partial —
@@ -988,7 +1008,7 @@ class ServicesRenderChangeUnitTests(TestCase):
             "new": self._row(1, "Python", "Jan", description="nieuw"),
         }
         assert _services_render_change(change) == {
-            "text": "Toelichting gewijzigd op Python (Jan)",
+            "text": "Toelichting gewijzigd voor Python (Jan)",
             "old": "oud",
             "new": "nieuw",
         }
@@ -999,7 +1019,7 @@ class ServicesRenderChangeUnitTests(TestCase):
             "new": self._row(1, "Python", "Jan", description="nieuw"),
         }
         assert _services_render_change(change) == {
-            "text": "Toelichting toegevoegd op Python (Jan)",
+            "text": "Toelichting toegevoegd voor Python (Jan)",
             "new": "nieuw",
         }
 
@@ -1009,22 +1029,25 @@ class ServicesRenderChangeUnitTests(TestCase):
             "new": self._row(1, "Python", "Jan", description=""),
         }
         assert _services_render_change(change) == {
-            "text": "Toelichting verwijderd op Python (Jan)",
+            "text": "Toelichting verwijderd voor Python (Jan)",
             "old": "oud",
         }
 
     def test_period_custom_set(self):
-        # Switching from "follows assignment" to a custom period (#393).
+        # Switching from inherited to a custom period (#393).
         # `has_custom_period` is inverted: True == inherits, False == own.
+        # Inherited still shows the dates so the old period stays visible.
         change = {
-            "old": self._row(1, "Python", "Jan", has_custom_period=True),
+            "old": self._row(
+                1, "Python", "Jan", has_custom_period=True, start_date="2026-01-01", end_date="2026-06-30"
+            ),
             "new": self._row(
                 1, "Python", "Jan", has_custom_period=False, start_date="2026-01-01", end_date="2026-06-30"
             ),
         }
         assert _services_render_change(change) == {
-            "text": "Periode gewijzigd op Python (Jan)",
-            "old": "volgt opdracht",
+            "text": "Periode gewijzigd van Python (Jan)",
+            "old": "01-01-2026 t/m 30-06-2026 (volgt opdracht)",
             "new": "01-01-2026 t/m 30-06-2026",
         }
 
@@ -1038,7 +1061,7 @@ class ServicesRenderChangeUnitTests(TestCase):
             ),
         }
         assert _services_render_change(change) == {
-            "text": "Periode gewijzigd op Python (Jan)",
+            "text": "Periode gewijzigd van Python (Jan)",
             "old": "01-01-2026 t/m 30-06-2026",
             "new": "01-02-2026 t/m 30-06-2026",
         }
