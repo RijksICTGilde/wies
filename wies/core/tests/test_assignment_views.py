@@ -743,6 +743,19 @@ class AssignmentDeleteViewTests(TestCase):
         assert event.context["placements"] == [f"{self.placed_colleague.name} (Java)"]
         assert event.context["organizations"] == ["Ministerie van BZK"]
 
+    def test_delete_audit_event_omits_empty_lists(self):
+        """An opdracht with no placements (e.g. only an open aanvraag) and no
+        opdrachtgevers logs just the name — no empty lists in the context."""
+        self.client.force_login(self.owner_user)
+        empty = Assignment.objects.create(name="Lege opdracht", owner=self.owner_colleague, source="wies")
+        Service.objects.create(description="Open rol", assignment=empty, source="wies")  # aanvraag, no placement
+        empty_id = empty.id
+
+        self.client.post(reverse("assignment-delete", args=[empty_id]))
+
+        event = Event.objects.get(object_type="Assignment", action="delete", object_id=empty_id)
+        assert event.context == {"name": "Lege opdracht"}
+
     def test_delete_redirects_to_page_behind_panel(self):
         """HX-Redirect returns to the page the side panel was opened over,
         with the opdracht panel param stripped (other params preserved)."""

@@ -2147,13 +2147,15 @@ def _assignment_audit_snapshot(assignment) -> dict:
     for p in Placement.objects.filter(service__assignment=assignment).select_related("colleague", "service__skill"):
         skill = p.service.skill.name if p.service.skill_id else None
         placements.append(f"{p.colleague.name} ({skill})" if skill else p.colleague.name)
-    return {
-        "name": assignment.name,
-        "placements": placements,
-        "organizations": [
-            rel.organization.label or rel.organization.name for rel in assignment.organization_relations.all()
-        ],
-    }
+    organizations = [rel.organization.label or rel.organization.name for rel in assignment.organization_relations.all()]
+    # Only record what's actually there — an opdracht with no placements (e.g.
+    # only open aanvragen) shouldn't log an empty list.
+    snapshot = {"name": assignment.name}
+    if placements:
+        snapshot["placements"] = placements
+    if organizations:
+        snapshot["organizations"] = organizations
+    return snapshot
 
 
 def user_profile(request):
