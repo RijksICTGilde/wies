@@ -2050,9 +2050,8 @@ def _attach_audit_render_data(event) -> None:
     event.formatted_old = event.context.get("old_value")
     event.formatted_new = event.context.get("new_value")
 
-    if event.action == "delete":
-        event.render_kind = "delete"
-        return
+    # Delete events are kept for the audit trail (visible in /beheer/database/)
+    # but never rendered here — a deleted opdracht has no panel to open.
     if event.action != "update":
         return
     model_label = event.object_type.lower()
@@ -2094,7 +2093,10 @@ def assignment_delete(request, pk):
                 "warning_modal": True,
                 "modal_element_id": "assignmentDeleteModal",
                 "target_element_id": "assignmentDeleteModal",
-                "delete_warning": f"Weet je zeker dat je opdracht '{assignment.name}' wilt verwijderen?",
+                "delete_warning": (
+                    f"Weet je zeker dat je opdracht '{assignment.name}' wilt verwijderen? "
+                    "Verwijderen is permanent en niet terug te draaien."
+                ),
                 "form_post_url": reverse("assignment-delete", kwargs={"pk": pk}),
                 "form_button_label": "Verwijderen",
             },
@@ -2117,9 +2119,27 @@ def assignment_delete(request, pk):
             )
         messages.success(request, f"Opdracht '{name}' succesvol verwijderd")
         response = HttpResponse(status=200)
-        response["HX-Redirect"] = reverse("assignment-list")
+        response["HX-Redirect"] = _page_url_behind_panel(request)
         return response
     return HttpResponse(status=405)
+
+
+def _page_url_behind_panel(request) -> str:
+    """The page the side panel was opened over, with the panel params dropped.
+
+    The opdracht side panel is an overlay (``?opdracht=`` / ``?plaatsing=``)
+    on a real page, so after deleting we return there instead of jumping to
+    the opdrachten-lijst. Falls back to the list when the header is absent.
+    """
+    current = request.headers.get("HX-Current-URL")
+    if not current:
+        return reverse("assignment-list")
+    parsed = urllib.parse.urlparse(current)
+    params = QueryDict(parsed.query, mutable=True)
+    params.pop("opdracht", None)
+    params.pop("plaatsing", None)
+    query = params.urlencode()
+    return f"{parsed.path}?{query}" if query else parsed.path
 
 
 def _assignment_audit_snapshot(assignment) -> dict:

@@ -59,8 +59,10 @@ Full-page forms reference the same declarations via
 ### Changelog
 
 Every user-facing change must be recorded in `CHANGES.md` under the
-`## unreleased` heading, as a `- <issue#>: <description>` bullet. Add the
-entry as part of the same change/PR — do not leave it for later.
+`## unreleased` heading, as a `- <PR#>: <description>` bullet — the PR
+number, so a reader can jump straight to the code/discussion. Add the
+entry as part of the same PR; since the PR number isn't known until the
+PR is opened, fill it in (or correct a placeholder) once the PR exists.
 
 ### Testing
 

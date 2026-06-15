@@ -3,7 +3,16 @@ from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
-from wies.core.models import Assignment, Colleague, Event, Placement, Service
+from wies.core.models import (
+    Assignment,
+    AssignmentOrganizationUnit,
+    Colleague,
+    Event,
+    OrganizationUnit,
+    Placement,
+    Service,
+    Skill,
+)
 
 User = get_user_model()
 
@@ -574,33 +583,6 @@ class AssignmentEditAttributeTest(TestCase):
         self.assertContains(response, "Toegevoegd: Java (open)")
         self.assertContains(response, "rvo-list")
 
-    def test_timeline_renders_delete_event(self):
-        """Delete events render 'verwijderde opdracht X' + the cascaded
-        placement and organization snapshots as a bullet list."""
-        self.client.force_login(self.user_with_permission)
-        Event.objects.create(
-            user=self.user_with_permission,
-            user_email=self.user_with_permission.email,
-            object_type="Assignment",
-            action="delete",
-            source="user",
-            object_id=self.assignment.id,
-            context={
-                "name": "Verwijderde Opdracht",
-                "placements": ["Jan Jansen", "Anna Anders"],
-                "organizations": ["MinBZK"],
-            },
-        )
-
-        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
-
-        assert response.status_code == 200
-        self.assertContains(response, "verwijderde opdracht")
-        self.assertContains(response, "Verwijderde Opdracht")
-        self.assertContains(response, "Plaatsingen: Jan Jansen, Anna Anders")
-        self.assertContains(response, "Opdrachtgevers: MinBZK")
-        self.assertContains(response, "event-tag--delete")
-
     def test_timeline_renders_text_change_inline(self):
         """Text field changes render inline as 'van X naar Y'"""
         self.client.force_login(self.user_with_permission)
@@ -736,24 +718,55 @@ class AssignmentDeleteViewTests(TestCase):
         response = self.client.post(self.url)
 
         assert response.status_code == 200
-        assert response["HX-Redirect"] == reverse("assignment-list")
         assert not Assignment.objects.filter(id=assignment_id).exists()
         # Cascades from Assignment → Service → Placement.
         assert not Service.objects.filter(id=service_id).exists()
         assert not Placement.objects.filter(id=placement_id).exists()
 
+    def test_delete_records_audit_event_snapshot_format(self):
+        """The delete is never shown in the UI, but the Event we persist for
+        the audit trail must capture the cascaded rows in the agreed format:
+        the opdracht name, "colleague (skill)" per placement, and the org
+        label per relation."""
+        self.client.force_login(self.owner_user)
+        self.service.skill = Skill.objects.create(name="Java")
+        self.service.save()
+        org = OrganizationUnit.objects.create(name="minbzk", label="Ministerie van BZK")
+        AssignmentOrganizationUnit.objects.create(assignment=self.assignment, organization=org)
+        assignment_id = self.assignment.id
+
+        self.client.post(self.url)
+
         event = Event.objects.get(object_type="Assignment", action="delete", object_id=assignment_id)
         assert event.user == self.owner_user
         assert event.context["name"] == "Te verwijderen"
-        # Snapshot of cascaded rows so the audit still tells what was deleted.
-        assert event.context["placements"] == [self.placed_colleague.name]
-        assert event.context["organizations"] == []
+        assert event.context["placements"] == [f"{self.placed_colleague.name} (Java)"]
+        assert event.context["organizations"] == ["Ministerie van BZK"]
+
+    def test_delete_redirects_to_page_behind_panel(self):
+        """HX-Redirect returns to the page the side panel was opened over,
+        with the opdracht panel param stripped (other params preserved)."""
+        self.client.force_login(self.owner_user)
+        response = self.client.post(
+            self.url,
+            headers={"HX-Current-URL": "https://testserver/medewerkers/?collega=5&opdracht=99"},
+        )
+        assert response.status_code == 200
+        assert response["HX-Redirect"] == "/medewerkers/?collega=5"
+
+    def test_delete_redirect_falls_back_to_list_without_header(self):
+        """Without HX-Current-URL the redirect falls back to the opdrachten-lijst."""
+        self.client.force_login(self.owner_user)
+        response = self.client.post(self.url)
+        assert response.status_code == 200
+        assert response["HX-Redirect"] == reverse("assignment-list")
 
     def test_get_renders_confirmation_modal(self):
         self.client.force_login(self.owner_user)
         response = self.client.get(self.url)
         assert response.status_code == 200
         self.assertContains(response, "Weet je zeker dat je opdracht &#39;Te verwijderen&#39; wilt verwijderen?")
+        self.assertContains(response, "Verwijderen is permanent en niet terug te draaien.")
         self.assertContains(response, f'action="{self.url}"')
         self.assertContains(response, "Verwijderen")
 
