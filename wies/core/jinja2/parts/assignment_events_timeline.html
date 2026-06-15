@@ -58,13 +58,6 @@
                 </li>
               {% endfor %}
             </ul>
-          {% elif event.action == "create" %}
-            {% if event.context.placements or event.context.organizations %}
-              <ul class="rvo-list rvo-margin-block-start--xs">
-                {% if event.context.placements %}<li>Plaatsingen: {{ event.context.placements|join(", ") }}</li>{% endif %}
-                {% if event.context.organizations %}<li>Opdrachtgevers: {{ event.context.organizations|join(", ") }}</li>{% endif %}
-              </ul>
-            {% endif %}
           {% elif event.render_kind == "textarea" %}
             {% if event.formatted_old %}
               {% with label="Van", value=event.formatted_old %}

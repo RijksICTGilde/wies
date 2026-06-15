@@ -2357,7 +2357,7 @@ def assignment_create(request):
             source="user",
             object_id=assignment.id,
             user=request.user,
-            context=_assignment_audit_snapshot(assignment),
+            context={"name": assignment.name},
         )
 
         link_url = f"{reverse('assignment-list')}?opdracht={assignment.id}"
