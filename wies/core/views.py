@@ -109,28 +109,30 @@ def get_delete_context(delete_url_name, object_pk, object_name):
     }
 
 
-def _build_panel_url(request, **overrides):
-    """Build a URL on the current path, preserving filters but replacing panel params."""
-    params = QueryDict(mutable=True)
-    params.update(request.GET)
-    params.pop("pagina", None)
-    params.pop("collega", None)
-    params.pop("opdracht", None)
-    params.pop("plaatsing", None)
+# Query params that drive the side panel; stripped when (re)building a page URL.
+PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing")
+
+
+def _url_drop_params(path, query, names, **overrides):
+    """Rebuild ``path`` from ``query`` (a QueryDict) with ``names`` dropped and
+    ``overrides`` applied. Returns ``path`` alone when no params remain."""
+    params = query.copy()
+    for name in names:
+        params.pop(name, None)
     for key, value in overrides.items():
         params[key] = value
-    return f"{request.path}?{params.urlencode()}"
+    encoded = params.urlencode()
+    return f"{path}?{encoded}" if encoded else path
+
+
+def _build_panel_url(request, **overrides):
+    """Build a URL on the current path, preserving filters but replacing panel params."""
+    return _url_drop_params(request.path, request.GET, PANEL_PARAMS, **overrides)
 
 
 def _build_close_url(request):
     """Build close URL preserving current filters."""
-    params = QueryDict(mutable=True)
-    params.update(request.GET)
-    params.pop("pagina", None)
-    params.pop("collega", None)
-    params.pop("opdracht", None)
-    params.pop("plaatsing", None)
-    return f"{request.path}?{params.urlencode()}" if params else request.path
+    return _url_drop_params(request.path, request.GET, PANEL_PARAMS)
 
 
 def _make_team_member_entry(
@@ -2135,11 +2137,8 @@ def _page_url_behind_panel(request) -> str:
     if not current:
         return reverse("assignment-list")
     parsed = urllib.parse.urlparse(current)
-    params = QueryDict(parsed.query, mutable=True)
-    params.pop("opdracht", None)
-    params.pop("plaatsing", None)
-    query = params.urlencode()
-    return f"{parsed.path}?{query}" if query else parsed.path
+    # Keep collega/pagina/filters — only the opdracht panel is closing.
+    return _url_drop_params(parsed.path, QueryDict(parsed.query), ("opdracht", "plaatsing"))
 
 
 def _assignment_audit_snapshot(assignment) -> dict:
