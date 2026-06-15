@@ -70,6 +70,13 @@ def _services_initial(assignment):
     rows = []
     for service in assignment.services.select_related("skill").order_by("id"):
         placement = Placement.objects.filter(service=service).select_related("colleague").order_by("-id").first()
+        effective_start = placement.start_date if placement else service.start_date
+        effective_end = placement.end_date if placement else service.end_date
+        # Checkbox renders checked ("Neem opdrachtperiode over") only when
+        # the row's effective period equals the assignment period — this
+        # also covers placements that inherit from a service which itself
+        # has pinned dates (where placement.period_source alone would lie).
+        inherits_assignment_period = effective_start == assignment.start_date and effective_end == assignment.end_date
         rows.append(
             {
                 "id": service.id,
@@ -79,13 +86,9 @@ def _services_initial(assignment):
                 "description": service.description,
                 "is_filled": "ingevuld" if placement is not None else "aanvraag",
                 "colleague": placement.colleague if placement else None,
-                "has_custom_period": (
-                    placement.period_source != Placement.PLACEMENT
-                    if placement
-                    else service.period_source == service.ASSIGNMENT
-                ),
-                "placement_start_date": placement.start_date if placement else service.start_date,
-                "placement_end_date": placement.end_date if placement else service.end_date,
+                "has_custom_period": inherits_assignment_period,
+                "placement_start_date": effective_start,
+                "placement_end_date": effective_end,
                 "placement": placement,
                 "service": service,
             }
