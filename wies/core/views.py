@@ -1,7 +1,10 @@
 import logging
+import secrets
 from collections import Counter
 from datetime import date, timedelta
+from urllib.parse import urlencode
 
+import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -14,10 +17,11 @@ from django.db import transaction
 from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
-from django.http import Http404, HttpResponse, QueryDict
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
 from wies.core.editables import REGISTRY
@@ -69,6 +73,7 @@ from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
 )
+from .services.rijksprofielservice import fetch_profile
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
@@ -2127,6 +2132,15 @@ def user_profile(request):
 
     assignment_list = _get_colleague_assignments(request, colleague, viewer=colleague) if colleague else []
 
+    rijksprofielservice_linked = bool(user.rijksprofielservice_sub)
+    rijksprofielservice_profile = None
+    if rijksprofielservice_linked:
+        try:
+            rijksprofielservice_profile = fetch_profile(str(user.rijksprofielservice_sub))
+        except requests.RequestException:
+            logger.exception("Failed to fetch Rijksprofielservice profile")
+            messages.warning(request, "Rijksprofielservice is niet bereikbaar.")
+
     return render(
         request,
         "user_profile.html",
@@ -2135,8 +2149,52 @@ def user_profile(request):
             "label_categories": label_categories,
             "assignment_list": assignment_list,
             "panel_data": panel_data,
+            "rijksprofielservice_linked": rijksprofielservice_linked,
+            "rijksprofielservice_profile": rijksprofielservice_profile,
         },
     )
+
+
+def rijksprofielservice_authorize(request):
+    """Start the Rijksprofielservice consent flow."""
+    state = secrets.token_urlsafe(16)
+    request.session["rijksprofielservice_state"] = state
+    redirect_uri = request.build_absolute_uri(reverse("rijksprofielservice-callback"))
+    params = {
+        "client_id": settings.RIJKSPROFIELSERVICE_CLIENT_ID,
+        "redirect_uri": redirect_uri,
+        "state": state,
+    }
+    return redirect(f"{settings.RIJKSPROFIELSERVICE_BROWSER_URL}/oauth/authorize?{urlencode(params)}")
+
+
+def rijksprofielservice_callback(request):
+    """Handle the Rijksprofielservice consent redirect back to Wies."""
+    expected_state = request.session.pop("rijksprofielservice_state", None)
+    if not expected_state or expected_state != request.GET.get("state", ""):
+        return HttpResponseBadRequest("State-mismatch")
+
+    if request.GET.get("consent") != "granted":
+        messages.warning(request, "Geen toestemming gegeven voor de Rijksprofielservice.")
+        return redirect("user-profile")
+
+    subject_id = request.GET.get("subject_id", "")
+    if not subject_id:
+        return HttpResponseBadRequest("subject_id ontbreekt")
+
+    request.user.rijksprofielservice_sub = subject_id
+    request.user.save(update_fields=["rijksprofielservice_sub"])
+    messages.success(request, "Rijksprofielservice gekoppeld.")
+    return redirect("user-profile")
+
+
+@require_POST
+def rijksprofielservice_disconnect(request):
+    """Remove the Rijksprofielservice link from the user."""
+    request.user.rijksprofielservice_sub = None
+    request.user.save(update_fields=["rijksprofielservice_sub"])
+    messages.success(request, "Rijksprofielservice ontkoppeld.")
+    return redirect("user-profile")
 
 
 @login_not_required

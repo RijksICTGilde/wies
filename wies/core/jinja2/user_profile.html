@@ -47,6 +47,62 @@
       {% endfor %}
       </c-data-list>
     </section>
+    {# Rijksprofielservice section #}
+    <section class="rvo-layout-column rvo-layout-gap--md">
+      <c-h2>Rijksprofielservice</c-h2>
+      {% if not rijksprofielservice_linked %}
+        <c-paragraph>Koppel je profiel om gegevens uit de Rijksprofielservice te tonen.</c-paragraph>
+        <div>
+          <a href="{{ url('rijksprofielservice-authorize') }}"
+             class="rvo-button rvo-button--primary rvo-button--size-md">Koppel Rijksprofielservice</a>
+        </div>
+      {% elif rijksprofielservice_profile %}
+        <c-data-list class="profile-data-list">
+        {% if rijksprofielservice_profile.naam %}
+          <dt>Naam</dt>
+          <dd>
+            {{ rijksprofielservice_profile.naam }}
+          </dd>
+        {% endif %}
+        {% if rijksprofielservice_profile.email %}
+          <dt>E-mail</dt>
+          <dd>
+            {{ rijksprofielservice_profile.email }}
+          </dd>
+        {% endif %}
+        {% if rijksprofielservice_profile.telefoon %}
+          <dt>Telefoon</dt>
+          <dd>
+            {{ rijksprofielservice_profile.telefoon }}
+          </dd>
+        {% endif %}
+        {% if rijksprofielservice_profile.functie %}
+          <dt>Functie</dt>
+          <dd>
+            {{ rijksprofielservice_profile.functie }}
+          </dd>
+        {% endif %}
+        {% if rijksprofielservice_profile.avatar_url %}
+          <dt>Avatar</dt>
+          <dd>
+            <img alt="Avatar uit Rijksprofielservice"
+                 src="{{ rijksprofielservice_profile.avatar_url }}"
+                 class="profile-avatar" />
+          </dd>
+        {% endif %}
+        </c-data-list>
+        <form method="post" action="{{ url('rijksprofielservice-disconnect') }}">
+          {{ get_csrf_hidden_input(request) }}
+          <c-button kind="tertiary" type="submit">Ontkoppel Rijksprofielservice</c-button>
+        </form>
+      {% else %}
+        <c-paragraph>Profiel kon niet worden opgehaald (geen consent of service onbereikbaar).</c-paragraph>
+        <form method="post" action="{{ url('rijksprofielservice-disconnect') }}">
+          {{ get_csrf_hidden_input(request) }}
+          <c-button kind="tertiary" type="submit">Ontkoppel Rijksprofielservice</c-button>
+        </form>
+      {% endif %}
+    </section>
     {# Assignments section #}
     <section>
       <c-h2>Opdrachten</c-h2>

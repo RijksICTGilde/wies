@@ -1,0 +1,66 @@
+"""Client for the Rijksprofielservice PoC.
+
+Handles Keycloak M2M client-credentials token retrieval (with a tiny in-process
+cache that respects the token's `expires_in`) and the batch profile fetch.
+"""
+
+import logging
+import time
+
+import requests
+from django.conf import settings
+
+logger = logging.getLogger(__name__)
+
+_token_cache: dict = {"token": None, "expires_at": 0.0}
+
+
+def get_m2m_token() -> str:
+    """Fetch a client-credentials token from Keycloak, cached until ~30s before expiry."""
+    if _token_cache["token"] and _token_cache["expires_at"] > time.time() + 30:
+        return _token_cache["token"]
+
+    response = requests.post(
+        settings.RIJKSPROFIELSERVICE_TOKEN_URL,
+        data={
+            "grant_type": "client_credentials",
+            "client_id": settings.RIJKSPROFIELSERVICE_CLIENT_ID,
+            "client_secret": settings.RIJKSPROFIELSERVICE_CLIENT_SECRET,
+        },
+        timeout=5,
+    )
+    response.raise_for_status()
+    data = response.json()
+    _token_cache["token"] = data["access_token"]
+    _token_cache["expires_at"] = time.time() + data["expires_in"]
+    return data["access_token"]
+
+
+def fetch_profiles(subject_ids: list[str]) -> dict[str, dict | None]:
+    """Fetch multiple profiles in one call.
+
+    Returns a mapping `{subject_id: profile_dict | None}`. `None` means
+    the user has not consented for this app, or the subject is unknown.
+    """
+    headers = {"Authorization": f"Bearer {get_m2m_token()}"}
+    # Local-dev hack: when the API is reached via host.docker.internal, the
+    # profile service's ALLOWED_HOSTS only accepts "localhost", so override the
+    # Host header to keep its DEBUG-page 400 response from biting us.
+    if settings.RIJKSPROFIELSERVICE_API_HOST_HEADER:
+        headers["Host"] = settings.RIJKSPROFIELSERVICE_API_HOST_HEADER
+
+    response = requests.post(
+        f"{settings.RIJKSPROFIELSERVICE_API_URL}/api/v1/profiles/batch",
+        json={"subject_ids": subject_ids},
+        headers=headers,
+        timeout=5,
+    )
+    if not response.ok:
+        logger.error("Rijksprofielservice batch returned %s: %s", response.status_code, response.text[:500])
+    response.raise_for_status()
+    return response.json()["profiles"]
+
+
+def fetch_profile(subject_id: str) -> dict | None:
+    """Convenience wrapper for a single subject_id."""
+    return fetch_profiles([subject_id]).get(subject_id)

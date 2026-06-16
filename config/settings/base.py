@@ -128,6 +128,8 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
 SESSION_COOKIE_AGE = 8 * 60 * 60  # 8 hours (workday)
+SESSION_COOKIE_NAME = "wies_sessionid"  # avoid clashing with other Django apps on localhost
+CSRF_COOKIE_NAME = "wies_csrftoken"
 
 LOGIN_URL = "login"
 
@@ -161,3 +163,21 @@ ENABLE_DESTRUCTIVE_STAFF_ACTIONS = os.environ.get("ENABLE_DESTRUCTIVE_STAFF_ACTI
 # OTYS API settings
 OTYS_API_KEY = os.environ.get("OTYS_API_KEY", "")
 OTYS_URL = os.environ.get("OTYS_URL", "")
+
+# Rijksprofielservice (PoC) settings.
+# Two URLs because Wies talks to the service in two ways:
+# - BROWSER_URL: where Django redirects the user's browser (must be reachable from
+#   the user's machine, e.g. localhost:8000).
+# - API_URL / TOKEN_URL: where Wies' server makes back-channel HTTP calls (must be
+#   reachable from inside the Django container; on macOS host.docker.internal works).
+RIJKSPROFIELSERVICE_BROWSER_URL = os.environ.get("RIJKSPROFIELSERVICE_BROWSER_URL", "http://localhost:8000")
+RIJKSPROFIELSERVICE_API_URL = os.environ.get("RIJKSPROFIELSERVICE_API_URL", "http://localhost:8000")
+# When the API is reached via host.docker.internal from a container, the
+# profile service may reject the Host header. Override it explicitly via env.
+RIJKSPROFIELSERVICE_API_HOST_HEADER = os.environ.get("RIJKSPROFIELSERVICE_API_HOST_HEADER", "")
+RIJKSPROFIELSERVICE_CLIENT_ID = os.environ.get("RIJKSPROFIELSERVICE_CLIENT_ID", "wies")
+RIJKSPROFIELSERVICE_CLIENT_SECRET = os.environ.get("RIJKSPROFIELSERVICE_CLIENT_SECRET", "")
+RIJKSPROFIELSERVICE_TOKEN_URL = os.environ.get(
+    "RIJKSPROFIELSERVICE_TOKEN_URL",
+    "http://localhost:8081/realms/profielservice/protocol/openid-connect/token",
+)
