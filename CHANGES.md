@@ -10,7 +10,7 @@ This files lists the changes during the lifetime of this project.
 
 - 398: bug fixes — Business Manager link no longer breaks the page and now survives editing/cancelling (#395), only the pencil icon opens inline edit (links and "Toon meer" no longer trigger edit mode), clicking a team member opens the panel via htmx again instead of a full page reload, team period changes now show in updates (#393), no more HiddenInput widget warnings (#389)
 - 397: fix team-edit "Neem opdrachtperiode over" checkbox rendering as checked for rows whose effective period differs from the assignment
-- 372: the BM-owner (and support staff in `STAFF_EMAILS`) can delete wies-sourced opdrachten, with a confirmation modal and an audit-trail event that snapshots the cascaded placements and organizations
+- 372: the BM-owner (and support staff in `STAFF_EMAILS`) can delete wies-sourced opdrachten, with a confirmation modal and an audit-trail event; both create and delete now snapshot the rollen (with who filled them) and the opdrachtgevers
 
 ## 2026-06-11
 

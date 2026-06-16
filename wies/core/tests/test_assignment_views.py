@@ -726,11 +726,15 @@ class AssignmentDeleteViewTests(TestCase):
     def test_delete_records_audit_event_snapshot_format(self):
         """The delete is never shown in the UI, but the Event we persist for
         the audit trail must capture the cascaded rows in the agreed format:
-        the opdracht name, "colleague (skill)" per placement, and the org
-        label per relation."""
+        the opdracht name, one "rol (occupant or open)" entry per service, and
+        the org label per relation."""
         self.client.force_login(self.owner_user)
         self.service.skill = Skill.objects.create(name="Java")
-        self.service.save()
+        self.service.save()  # filled by self.placed_colleague
+        # A second rol that is still open (aanvraag, no placement).
+        Service.objects.create(
+            description="Open", assignment=self.assignment, skill=Skill.objects.create(name="Python"), source="wies"
+        )
         org = OrganizationUnit.objects.create(name="minbzk", label="Ministerie van BZK")
         AssignmentOrganizationUnit.objects.create(assignment=self.assignment, organization=org)
         assignment_id = self.assignment.id
@@ -740,15 +744,15 @@ class AssignmentDeleteViewTests(TestCase):
         event = Event.objects.get(object_type="Assignment", action="delete", object_id=assignment_id)
         assert event.user == self.owner_user
         assert event.context["name"] == "Te verwijderen"
-        assert event.context["placements"] == [f"{self.placed_colleague.name} (Java)"]
+        assert event.context["services"] == [f"Java ({self.placed_colleague.name})", "Python (open)"]
         assert event.context["organizations"] == ["Ministerie van BZK"]
+        assert "placements" not in event.context
 
     def test_delete_audit_event_omits_empty_lists(self):
-        """An opdracht with no placements (e.g. only an open aanvraag) and no
-        opdrachtgevers logs just the name — no empty lists in the context."""
+        """An opdracht with no rollen and no opdrachtgevers logs just the
+        name — no empty lists in the context."""
         self.client.force_login(self.owner_user)
         empty = Assignment.objects.create(name="Lege opdracht", owner=self.owner_colleague, source="wies")
-        Service.objects.create(description="Open rol", assignment=empty, source="wies")  # aanvraag, no placement
         empty_id = empty.id
 
         self.client.post(reverse("assignment-delete", args=[empty_id]))

@@ -2142,16 +2142,19 @@ def _page_url_behind_panel(request) -> str:
 
 
 def _assignment_audit_snapshot(assignment) -> dict:
-    placements = []
-    for p in Placement.objects.filter(service__assignment=assignment).select_related("colleague", "service__skill"):
-        skill = p.service.skill.name if p.service.skill_id else None
-        placements.append(f"{p.colleague.name} ({skill})" if skill else p.colleague.name)
+    """Snapshot for the create/delete audit event: every rol with who fills it
+    (``"Java (Robbert)"``) or ``"open"`` when unfilled, plus the opdrachtgevers
+    and the name. One entry per rol, so placements aren't duplicated. Empty
+    lists are left out of the audit."""
+    services = []
+    for s in assignment.services.select_related("skill").prefetch_related("placements__colleague"):
+        rol = s.skill.name if s.skill_id else s.description
+        names = [p.colleague.name for p in s.placements.all()]
+        services.append(f"{rol} ({', '.join(names) if names else 'open'})")
     organizations = [rel.organization.label or rel.organization.name for rel in assignment.organization_relations.all()]
-    # Only record what's actually there — an opdracht with no placements (e.g.
-    # only open aanvragen) shouldn't log an empty list.
     snapshot = {"name": assignment.name}
-    if placements:
-        snapshot["placements"] = placements
+    if services:
+        snapshot["services"] = services
     if organizations:
         snapshot["organizations"] = organizations
     return snapshot
@@ -2358,7 +2361,7 @@ def assignment_create(request):
             source="user",
             object_id=assignment.id,
             user=request.user,
-            context={"name": assignment.name},
+            context=_assignment_audit_snapshot(assignment),
         )
 
         link_url = f"{reverse('assignment-list')}?opdracht={assignment.id}"
