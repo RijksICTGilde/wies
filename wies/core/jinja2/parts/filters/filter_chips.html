@@ -16,20 +16,7 @@
       </button>
     </div>
   {% endfor %}
-  {# Search filter chip #}
-  {% if search_filter %}
-    <div class="filter-chip filter-chip--default"
-         data-filter-name="zoek"
-         data-filter-type="zoek">
-      <span>{{ search_filter }}</span>
-      <button type="button"
-              class="filter-chip-remove"
-              aria-label="Verwijder filter"
-              data-filter-name="zoek">
-        <c-icon icon="kruis" color="grijs-700" size="sm" />
-      </button>
-    </div>
-  {% endif %}
+  {# Search term stays in the search field itself — no chip. #}
   {# Regular filters #}
   {% for filter_group in filter_groups %}
     {% if filter_group.type == 'select' %}

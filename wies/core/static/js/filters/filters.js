@@ -23,25 +23,6 @@ document.addEventListener("click", function (e) {
 // Shared utilities
 // ============================================================================
 
-function updateOrgFilterButtonText() {
-  const button = document.getElementById("org-filter-button");
-  if (!button) return;
-  const inputs = document.querySelectorAll(
-    '#org-filter-inputs input[type="hidden"]',
-  );
-  const textSpan = button.querySelector(".org-filter-trigger__text");
-  if (textSpan) {
-    if (inputs.length === 0) {
-      textSpan.innerHTML =
-        '<span class="org-filter-trigger__placeholder">Selecteer</span>';
-    } else if (inputs.length === 1) {
-      textSpan.textContent = inputs[0].dataset.label || "1 geselecteerd";
-    } else {
-      textSpan.textContent = inputs.length + " geselecteerd";
-    }
-  }
-}
-
 function removeFilter(formSelector, filterName, filterType, filterValue) {
   const form = document.querySelector(formSelector);
   if (!form) return;
@@ -49,8 +30,6 @@ function removeFilter(formSelector, filterName, filterType, filterValue) {
   if (filterType === "zoek") {
     const searchInput = document.querySelector("#search");
     if (searchInput) searchInput.value = "";
-    const hiddenSearch = document.getElementById("search-filter-value");
-    if (hiddenSearch) hiddenSearch.value = "";
   } else if (filterType === "select") {
     const selectElement = form.querySelector(`[name="${filterName}"]`);
     if (selectElement) {
@@ -102,7 +81,6 @@ function clearAllFilters(formSelector) {
 
   const orgInputsContainer = document.getElementById("org-filter-inputs");
   if (orgInputsContainer) orgInputsContainer.innerHTML = "";
-  updateOrgFilterButtonText();
 
   form.querySelectorAll("[data-filter-input]").forEach((input) => {
     if (input.tagName === "SELECT") {
@@ -242,7 +220,6 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.addEventListener("htmx:afterSwap", function (event) {
       if (event.detail.target.id === "filter-and-table-container") {
         setupDateRangeListeners(sidebarFormSelector);
-        updateOrgFilterButtonText();
       }
     });
   }
@@ -351,6 +328,10 @@ document.addEventListener("DOMContentLoaded", function () {
     var input = wrapper.querySelector(".utrecht-textbox");
     var clearBtn = wrapper.querySelector(".search-clear");
     if (!input || !clearBtn) return;
+    // The #search field uses hx-preserve, so the same node survives swaps and
+    // would otherwise collect duplicate listeners on each re-init.
+    if (input.dataset.searchClearBound) return;
+    input.dataset.searchClearBound = "1";
 
     function updateVisibility() {
       wrapper.classList.toggle("has-value", input.value.length > 0);
@@ -361,14 +342,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
     clearBtn.addEventListener("click", function () {
       input.value = "";
+      // Update has-value styling (the form is re-triggered explicitly below for
+      // #search; per-group searches handle their own clearing).
       input.dispatchEvent(new Event("input", { bubbles: true }));
       input.focus();
+      // The side effects below only apply to the global search field; per-group
+      // checkbox-filter searches handle their own clearing in checkbox_filter.js.
+      if (input.id !== "search") return;
       // Clear suggestions dropdown
       var suggestionsContainer = wrapper.querySelector(
         "#search-suggestions-container",
       );
       if (suggestionsContainer) suggestionsContainer.innerHTML = "";
-      // Clear hidden search filter and refresh results
+      // Clear the submitted search term and refresh results
       var hiddenSearch = document.getElementById("search-filter-value");
       if (hiddenSearch) hiddenSearch.value = "";
       var sidebarForm = document.querySelector(".filter-sidebar-form");
@@ -386,33 +372,35 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // --------------------------------------------------------------------------
-  // Search submit on Enter: move value to hidden input, clear visible input
+  // Search submits on Enter (or by clicking the "Zoeken op …" suggestion) — not
+  // while typing, so the heavy query runs only on a deliberate search. The term
+  // stays in the field, no chip. Live org suggestions keep loading via the
+  // input's own hx-get; the dropdown's first row is the search action + hint.
   // --------------------------------------------------------------------------
-  document.body.addEventListener("keydown", function (e) {
-    if (e.key !== "Enter") return;
-    var input = e.target.closest("#search");
+  function commitSearch() {
+    var input = document.getElementById("search");
     if (!input) return;
-    e.preventDefault();
-
-    var value = input.value.trim();
-    if (!value) return;
-
-    // Move value to hidden filter input and clear visible input
     var hiddenSearch = document.getElementById("search-filter-value");
-    if (hiddenSearch) hiddenSearch.value = value;
-    input.value = "";
-    var wrapper = input.closest(".search-field-wrapper");
-    if (wrapper) wrapper.classList.remove("has-value");
-
-    // Clear suggestions
+    if (hiddenSearch) hiddenSearch.value = input.value.trim();
     var suggestionsContainer = document.getElementById(
       "search-suggestions-container",
     );
     if (suggestionsContainer) suggestionsContainer.innerHTML = "";
-
-    // Trigger sidebar form to fire HTMX request with the search value
     var form = document.querySelector(".filter-sidebar-form");
     if (form) htmx.trigger(form, "change");
+  }
+
+  document.body.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    if (!e.target.closest("#search")) return;
+    e.preventDefault();
+    commitSearch();
+  });
+
+  // Click the "Zoeken op …" row → run the search (same as Enter)
+  document.body.addEventListener("click", function (e) {
+    if (!e.target.closest(".search-suggestion--search")) return;
+    commitSearch();
   });
 
   // --------------------------------------------------------------------------
@@ -451,13 +439,27 @@ document.addEventListener("DOMContentLoaded", function () {
   document.body.addEventListener("click", function (e) {
     var btn = e.target.closest(".search-suggestion");
     if (!btn) return;
+    // The "Zoeken op …" row is handled by commitSearch above, not as an org pick.
+    if (btn.classList.contains("search-suggestion--search")) return;
 
     var orgId = btn.dataset.orgId;
     var orgLabel = btn.dataset.orgLabel;
 
-    // Clear search input
+    // Clear search input and close the suggestions dropdown (it is hx-preserved,
+    // so it no longer clears via the filter swap — clear it explicitly).
     var searchInput = document.querySelector("#search");
-    if (searchInput) searchInput.value = "";
+    if (searchInput) {
+      searchInput.value = "";
+      var wrapper = searchInput.closest(".search-field-wrapper");
+      if (wrapper) wrapper.classList.remove("has-value");
+    }
+    var suggestionsContainer = document.getElementById(
+      "search-suggestions-container",
+    );
+    if (suggestionsContainer) suggestionsContainer.innerHTML = "";
+    // Picking an org suggestion replaces the text search — clear the term.
+    var hiddenSearch = document.getElementById("search-filter-value");
+    if (hiddenSearch) hiddenSearch.value = "";
 
     // Add org filter hidden input
     var container = document.getElementById("org-filter-inputs");
@@ -475,4 +477,76 @@ document.addEventListener("DOMContentLoaded", function () {
     var form = document.querySelector(".filter-sidebar-form");
     if (form) htmx.trigger(form, "change");
   });
+
+  // --------------------------------------------------------------------------
+  // Opdrachtgever quick options: top-N orgs shown as checkboxes under the
+  // search field. They share the "org" filter param with the modal — checking
+  // one adds/removes an org hidden input in #org-filter-inputs (single source
+  // of truth), so selection stays in sync with the modal.
+  // --------------------------------------------------------------------------
+  function getSelectedOrgIds() {
+    var container = document.getElementById("org-filter-inputs");
+    if (!container) return new Set();
+    var ids = new Set();
+    container.querySelectorAll('input[name="org"]').forEach(function (input) {
+      ids.add(input.value);
+    });
+    return ids;
+  }
+
+  // Reflect current org selection onto the quick-option checkboxes.
+  function syncOrgQuickOptions() {
+    var selected = getSelectedOrgIds();
+    document
+      .querySelectorAll(".org-filter-quick__checkbox")
+      .forEach(function (cb) {
+        cb.checked = selected.has(cb.value);
+      });
+  }
+
+  // Capture phase + stopPropagation: update #org-filter-inputs BEFORE the
+  // checkbox's change event bubbles to the form's hx-trigger="change", so HTMX
+  // submits with the correct (post-toggle) org inputs — otherwise unchecking
+  // would submit with the org still present.
+  document.addEventListener(
+    "change",
+    function (e) {
+      if (!e.target.matches(".org-filter-quick__checkbox")) return;
+      e.stopPropagation();
+      var cb = e.target;
+      var container = document.getElementById("org-filter-inputs");
+      if (!container) return;
+
+      if (cb.checked) {
+        // Add hidden input only if not already present
+        var existing = container.querySelector(
+          'input[name="org"][value="' + cb.value + '"]',
+        );
+        if (!existing) {
+          var input = document.createElement("input");
+          input.type = "hidden";
+          input.name = "org";
+          input.value = cb.value;
+          input.setAttribute("data-filter-input", "");
+          input.setAttribute("data-label", cb.dataset.orgLabel || "");
+          container.appendChild(input);
+        }
+      } else {
+        container
+          .querySelectorAll('input[name="org"][value="' + cb.value + '"]')
+          .forEach(function (input) {
+            input.remove();
+          });
+      }
+
+      var form = document.querySelector(".filter-sidebar-form");
+      if (form) htmx.trigger(form, "change");
+    },
+    true,
+  ); // capture phase
+
+  // After the sidebar re-renders (OOB swap) or the modal applies a selection,
+  // re-sync the top-3 quick-option checkboxes with the true org state.
+  document.body.addEventListener("htmx:afterSettle", syncOrgQuickOptions);
+  syncOrgQuickOptions();
 });

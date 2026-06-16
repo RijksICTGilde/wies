@@ -756,6 +756,8 @@ class PlacementListView(ListView):
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if "HX-Request" in self.request.headers:
+            if self.request.GET.get("filter_modal"):
+                return ["parts/filters/filter_options_modal.html"]
             if self.request.headers.get("HX-Target") == "side_panel-container":
                 return ["parts/side_panel.html"]
             if self.request.headers.get("HX-Target") == "side_panel-content":
@@ -811,19 +813,15 @@ class PlacementListView(ListView):
             active_filters["labels"] = label_filter
 
         # Organization filter (multi-select via modal)
-        active_org_filter_count = 0
         org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
         org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
         org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
         if org_filter:
             active_filters["org"] = org_filter
-            active_org_filter_count += len(org_filter)
         if org_self_filter:
             active_filters["org_self"] = org_self_filter
-            active_org_filter_count += len(org_self_filter)
         if org_type_filter:
             active_filters["org_type"] = org_type_filter
-            active_org_filter_count += len(org_type_filter)
 
         # Build chip display data for org filters
         org_chip_data: list[dict] = []
@@ -914,8 +912,6 @@ class PlacementListView(ListView):
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
-        context["active_org_filter_count"] = active_org_filter_count
-        context["active_org_filter_label"] = org_chip_data[0]["label"] if len(org_chip_data) == 1 else ""
         context["org_chip_data"] = org_chip_data
         context["client_modal_count_mode"] = "placements"
 
@@ -926,6 +922,7 @@ class PlacementListView(ListView):
                 "type": "modal",
                 "name": "organisatie",
                 "label": "Opdrachtgever",
+                "top_options": _get_top_org_options("placements", get_excluded_org_ids(), set(org_filter)),
             },
             {
                 "type": "select-multi",
@@ -943,6 +940,8 @@ class PlacementListView(ListView):
                 "selected_values": list(loopt_af_values),
             },
         ]
+        _finalize_filter_groups(context["filter_groups"])
+        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
@@ -1064,6 +1063,8 @@ class AssignmentListView(ListView):
 
     def get_template_names(self):
         if "HX-Request" in self.request.headers:
+            if self.request.GET.get("filter_modal"):
+                return ["parts/filters/filter_options_modal.html"]
             if self.request.headers.get("HX-Target") == "side_panel-container":
                 return ["parts/side_panel.html"]
             if self.request.headers.get("HX-Target") == "side_panel-content":
@@ -1127,19 +1128,15 @@ class AssignmentListView(ListView):
             skill_options.append(option)
 
         # Organization filter (multi-select via modal)
-        active_org_filter_count = 0
         org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
         org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
         org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
         if org_filter:
             active_filters["org"] = org_filter
-            active_org_filter_count += len(org_filter)
         if org_self_filter:
             active_filters["org_self"] = org_self_filter
-            active_org_filter_count += len(org_self_filter)
         if org_type_filter:
             active_filters["org_type"] = org_type_filter
-            active_org_filter_count += len(org_type_filter)
 
         # Build chip display data for org filters
         org_chip_data: list[dict] = []
@@ -1179,8 +1176,6 @@ class AssignmentListView(ListView):
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
-        context["active_org_filter_count"] = active_org_filter_count
-        context["active_org_filter_label"] = org_chip_data[0]["label"] if len(org_chip_data) == 1 else ""
         context["org_chip_data"] = org_chip_data
         context["client_modal_count_mode"] = "open_assignments"
 
@@ -1189,6 +1184,7 @@ class AssignmentListView(ListView):
                 "type": "modal",
                 "name": "organisatie",
                 "label": "Opdrachtgever",
+                "top_options": _get_top_org_options("open_assignments", get_excluded_org_ids(), set(org_filter)),
             },
             {
                 "type": "select-multi",
@@ -1203,6 +1199,8 @@ class AssignmentListView(ListView):
                 "label": "Beschikbaar vanaf",
             },
         ]
+        _finalize_filter_groups(context["filter_groups"])
+        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
@@ -2295,7 +2293,7 @@ def search_suggestions(request):
     """Return org abbreviation suggestions for the search input (HTMX partial)."""
     term = request.GET.get("zoek", "")
     orgs = find_orgs_by_abbreviation(term)
-    return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs})
+    return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs, "search_term": term.strip()})
 
 
 def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int]:
@@ -2322,6 +2320,66 @@ def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int
             active_placements = active_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
         org_id_list = active_placements.values_list("service__assignment__organizations__id", flat=True)
     return Counter(org_id for org_id in org_id_list if org_id is not None)
+
+
+def _get_top_org_options(
+    count_mode: str, excluded_org_ids: list[int], selected_org_ids: set[str], *, limit: int = 3
+) -> list[dict]:
+    """Return the top-N opdrachtgevers (by direct count) as quick checkbox options.
+
+    Shares the ``org`` filter param with the modal — selecting one here is
+    equivalent to selecting it in the client modal.
+    """
+    org_self_counts = _get_org_counts(count_mode, excluded_org_ids)
+    top = org_self_counts.most_common(limit)
+    if not top:
+        return []
+    labels = dict(OrganizationUnit.objects.filter(id__in=[oid for oid, _ in top]).values_list("id", "label"))
+    return [
+        {
+            "value": str(org_id),
+            "label": labels.get(org_id) or f"Organisatie {org_id}",
+            "count": count,
+            "selected": str(org_id) in selected_org_ids,
+        }
+        for org_id, count in top
+    ]
+
+
+def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> list[dict]:
+    """Post-process select-multi groups for the top-N + "Meer" modal pattern.
+
+    For each ``select-multi`` group:
+      - assigns a unique ``group_id`` (the modal opens by this key),
+      - computes ``top_options``: the ``top_n`` options by count (selected ones
+        kept visible), shown inline in the sidebar,
+      - sets ``has_more`` when there are more options than fit inline.
+    The full ``options`` list (alphabetical) is kept for the modal.
+    """
+    label_seq = 0
+    for group in filter_groups:
+        if group.get("type") != "select-multi":
+            continue
+        # Unique key — "labels" repeats per category, so disambiguate.
+        if group["name"] == "labels":
+            group["group_id"] = f"labels-{label_seq}"
+            label_seq += 1
+        else:
+            group["group_id"] = group["name"]
+
+        real_options = [o for o in group["options"] if o.get("value")]
+        selected = set(group.get("selected_values", []))
+        # Top-N by count, then ensure any selected options remain visible inline.
+        by_count = sorted(real_options, key=lambda o: o.get("count", 0), reverse=True)
+        top = by_count[:top_n]
+        top_values = {o["value"] for o in top}
+        for opt in real_options:
+            if opt["value"] in selected and opt["value"] not in top_values:
+                top.append(opt)
+                top_values.add(opt["value"])
+        group["top_options"] = top
+        group["has_more"] = len(real_options) > len(top)
+    return filter_groups
 
 
 def _build_org_hierarchy(

@@ -1,0 +1,49 @@
+{# Generic filter-options modal: full alphabetical checkbox list for one
+   select-multi group, with a search field. Opened from the sidebar "Meer"
+   button. Checking an option syncs to the sidebar group's hidden inputs and
+   filters immediately; "Bekijk resultaten" closes the modal.
+
+   Context:
+     - filter_groups: all groups (we pick the one matching filter_modal_group_id)
+     - filter_modal_group_id: which group_id to render
+#}
+{% set group = (filter_groups | selectattr('group_id', 'equalto', filter_modal_group_id) | list | first) %}
+<dialog id="filterOptionsModal"
+        class="modal-dialog"
+        closedby="none"
+        data-group-name="{{ group.name if group else '' }}"
+        data-group-id="{{ group.group_id if group else '' }}">
+  <div class="modal-content">
+    <div class="modal-header">
+      <c-h2>{{ group.label if group else 'Filter' }}</c-h2>
+      <button type="button" class="close modal-close-button">×</button>
+    </div>
+    <div class="modal-body filter-options-modal__body">
+      <div class="filter-options-modal__search">
+        <div class="search-field-wrapper">
+          <c-icon icon="zoek" color="lintblauw" size="md" class="search-icon" />
+          <c-input id="filter-options-search" placeholder="" aria-label="Zoeken op {{ group.label if group else '' }}" size />
+          <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
+        </div>
+      </div>
+      <div class="filter-options-modal__list" id="filter-options-list">
+        {% if group %}
+          {% for option in group.options if option.value %}
+            <label class="rvo-checkbox filter-options-modal__option"
+                   data-option-label="{{ option.label | lower }}">
+              <input type="checkbox"
+                     class="rvo-checkbox__input filter-options-modal__checkbox"
+                     value="{{ option.value }}"
+                     {% if option.value in group.selected_values %}checked{% endif %} />
+              <span class="filter-options-modal__option-text">{{ option.label }}</span>
+              {% if option.count is defined %}<span class="checkbox-filter__count">{{ option.count }}</span>{% endif %}
+            </label>
+          {% endfor %}
+        {% endif %}
+      </div>
+    </div>
+    <div class="modal-footer">
+      <c-button kind="primary" type="button" class="close">Bekijk resultaten</c-button>
+    </div>
+  </div>
+</dialog>

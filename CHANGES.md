@@ -4,6 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 402: redesigned each filter group (Rol, Expertise, Labels, Opdrachtgever) to show the top-3 options by result count plus a "Meer" button; "Meer" opens a modal listing all options alphabetically with a search field — Opdrachtgever's "Meer" opens the existing organisation tree modal. Checking an option filters immediately
+- 402: the main search field now keeps its text instead of turning into a chip; the search runs on Enter (or by clicking the "Zoeken op …" row in the suggestions dropdown) so the query no longer fires on every keystroke. Organisation suggestions still load live while typing
+- 402: fix the "Toon meer"/"Toon minder" toggle label not updating when a checkbox group was expanded
 - 398: bug fixes — Business Manager link no longer breaks the page and now survives editing/cancelling (#395), only the pencil icon opens inline edit (links and "Toon meer" no longer trigger edit mode), clicking a team member opens the panel via htmx again instead of a full page reload, team period changes now show in updates (#393), no more HiddenInput widget warnings (#389)
 - 397: fix team-edit "Neem opdrachtperiode over" checkbox rendering as checked for rows whose effective period differs from the assignment
 - ?: ...

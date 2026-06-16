@@ -1,18 +1,14 @@
-// Checkbox filter component — inline checkboxes with toggle and counters
+// Checkbox filter component — top-N inline checkboxes + a "Meer" modal.
 // Uses event delegation so listeners survive OOB swaps.
 (function () {
-  // Track which filter groups are manually expanded (survives OOB swaps)
-  var expandedGroups = new Set();
   // Track which filter groups are manually collapsed (survives OOB swaps)
   var collapsedGroups = new Set();
 
   function getGroupKey(container) {
-    var legend = container.querySelector(".checkbox-filter__label");
-    return (
-      container.dataset.name + ":" + (legend ? legend.textContent.trim() : "")
-    );
+    return container.dataset.groupId || container.dataset.name;
   }
 
+  // Rebuild a sidebar group's hidden inputs from its checked inline checkboxes.
   function syncHiddenInputs(container) {
     var name = container.dataset.name;
     var hiddenContainer = container.querySelector(
@@ -34,37 +30,55 @@
     });
   }
 
-  // Restore expanded/collapsed state after OOB swap
+  // Find the sidebar group fieldset for a given group_id.
+  function findSidebarGroup(groupId) {
+    return document.querySelector(
+      '[data-checkbox-filter][data-group-id="' + groupId + '"]',
+    );
+  }
+
+  // Set a single value's hidden input + inline checkbox state for a group,
+  // without disturbing the group's other selections. Used by the modal, whose
+  // option may not exist among the inline top-N checkboxes.
+  function setGroupValue(container, value, checked) {
+    var name = container.dataset.name;
+    var hiddenContainer = container.querySelector(
+      ".checkbox-filter__hidden-inputs",
+    );
+    if (!hiddenContainer) return;
+
+    // Reflect onto the inline checkbox if it's shown.
+    var inline = container.querySelector(
+      '.checkbox-filter__checkbox[value="' + value + '"]',
+    );
+    if (inline) inline.checked = checked;
+
+    var existing = hiddenContainer.querySelector(
+      'input[value="' + value + '"]',
+    );
+    if (checked && !existing) {
+      var input = document.createElement("input");
+      input.type = "hidden";
+      input.name = name;
+      input.value = value;
+      input.setAttribute("data-filter-input", "");
+      hiddenContainer.appendChild(input);
+    } else if (!checked && existing) {
+      existing.remove();
+    }
+  }
+
+  function triggerSidebarForm() {
+    var form = document.querySelector(".filter-sidebar-form");
+    if (form && typeof htmx !== "undefined") htmx.trigger(form, "change");
+  }
+
+  // Restore collapsed state after OOB swap
   function restoreState() {
     document
       .querySelectorAll("[data-checkbox-filter]")
       .forEach(function (container) {
-        var key = getGroupKey(container);
-
-        // Restore "Toon meer" expanded state
-        if (expandedGroups.has(key)) {
-          var extra = container.querySelector(
-            ".checkbox-filter__options--extra",
-          );
-          var toggle = container.querySelector(".checkbox-filter__toggle");
-          if (extra && extra.hidden) {
-            extra.hidden = false;
-            if (toggle) {
-              toggle.classList.add("checkbox-filter__toggle--expanded");
-              var textEl = toggle.querySelector(
-                ".checkbox-filter__toggle-text",
-              );
-              if (textEl) textEl.textContent = "Toon minder";
-              var iconEl = toggle.querySelector(
-                ".checkbox-filter__toggle-icon",
-              );
-              if (iconEl) iconEl.textContent = "\u2212";
-            }
-          }
-        }
-
-        // Restore collapsed state
-        if (collapsedGroups.has(key)) {
+        if (collapsedGroups.has(getGroupKey(container))) {
           var body = container.querySelector(".checkbox-filter__body");
           var header = container.querySelector(".checkbox-filter__header");
           if (body) body.hidden = true;
@@ -74,7 +88,10 @@
       });
   }
 
-  // Checkbox change — capture phase to stopPropagation before form's hx-trigger fires
+  // --------------------------------------------------------------------------
+  // Inline checkbox change — capture phase to stopPropagation before the
+  // form's hx-trigger fires, then submit once with the synced inputs.
+  // --------------------------------------------------------------------------
   document.addEventListener(
     "change",
     function (e) {
@@ -83,71 +100,83 @@
       var container = e.target.closest("[data-checkbox-filter]");
       if (!container) return;
       syncHiddenInputs(container);
-      var form = container.closest("form");
-      if (form && typeof htmx !== "undefined") {
-        htmx.trigger(form, "change");
-      }
+      triggerSidebarForm();
     },
     true,
   ); // capture phase
 
-  // Toggle section collapse via header chevron
+  // --------------------------------------------------------------------------
+  // Modal checkbox change — update the matching sidebar group and submit.
+  // --------------------------------------------------------------------------
+  document.addEventListener(
+    "change",
+    function (e) {
+      if (!e.target.matches(".filter-options-modal__checkbox")) return;
+      e.stopPropagation();
+      var modal = e.target.closest("#filterOptionsModal");
+      if (!modal) return;
+      var container = findSidebarGroup(modal.dataset.groupId);
+      if (!container) return;
+      setGroupValue(container, e.target.value, e.target.checked);
+      triggerSidebarForm();
+    },
+    true,
+  ); // capture phase
+
+  // Section collapse via header chevron
   document.addEventListener("click", function (e) {
     var headerBtn = e.target.closest(".checkbox-filter__header");
-    if (headerBtn) {
-      e.preventDefault();
-      var container = headerBtn.closest("[data-checkbox-filter]");
-      if (!container) return;
-      var body = container.querySelector(".checkbox-filter__body");
-      if (!body) return;
-      var isCollapsed = body.hidden;
-      body.hidden = !isCollapsed;
-      headerBtn.classList.toggle(
-        "checkbox-filter__header--collapsed",
-        !isCollapsed,
-      );
-
-      // Track collapsed state
-      var key = getGroupKey(container);
-      if (isCollapsed) {
-        collapsedGroups.delete(key);
-      } else {
-        collapsedGroups.add(key);
-      }
-      return;
-    }
-
-    // Toggle "Toon meer"/"Toon minder" via event delegation
-    var toggleBtn = e.target.closest(".checkbox-filter__toggle");
-    if (!toggleBtn) return;
+    if (!headerBtn) return;
     e.preventDefault();
-    var container = toggleBtn.closest("[data-checkbox-filter]");
+    var container = headerBtn.closest("[data-checkbox-filter]");
     if (!container) return;
-    var extraOptions = container.querySelector(
-      ".checkbox-filter__options--extra",
+    var body = container.querySelector(".checkbox-filter__body");
+    if (!body) return;
+    var isCollapsed = body.hidden;
+    body.hidden = !isCollapsed;
+    headerBtn.classList.toggle(
+      "checkbox-filter__header--collapsed",
+      !isCollapsed,
     );
-    if (!extraOptions) return;
-    var isExpanded = !extraOptions.hidden;
-    extraOptions.hidden = isExpanded;
-    var textEl = toggleBtn.querySelector(".checkbox-filter__toggle-text");
-    if (textEl) {
-      textEl.textContent = isExpanded ? "Toon meer" : "Toon minder";
-    }
-    var iconEl = toggleBtn.querySelector(".checkbox-filter__toggle-icon");
-    if (iconEl) {
-      iconEl.textContent = isExpanded ? "+" : "\u2212";
-    }
-    toggleBtn.classList.toggle(
-      "checkbox-filter__toggle--expanded",
-      !isExpanded,
-    );
-
-    // Track expanded state
     var key = getGroupKey(container);
-    if (isExpanded) {
-      expandedGroups.delete(key);
-    } else {
-      expandedGroups.add(key);
+    if (isCollapsed) collapsedGroups.delete(key);
+    else collapsedGroups.add(key);
+  });
+
+  // --------------------------------------------------------------------------
+  // Modal search: filter the alphabetical option list by typed text.
+  // --------------------------------------------------------------------------
+  function filterModalOptions(modal, query) {
+    var q = query.trim().toLowerCase();
+    modal
+      .querySelectorAll(".filter-options-modal__option")
+      .forEach(function (opt) {
+        var label = opt.dataset.optionLabel || "";
+        opt.hidden = q !== "" && label.indexOf(q) === -1;
+      });
+  }
+
+  document.addEventListener("input", function (e) {
+    if (e.target.id !== "filter-options-search") return;
+    var modal = e.target.closest("#filterOptionsModal");
+    if (modal) filterModalOptions(modal, e.target.value);
+  });
+
+  // Clear modal search via its × button
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest("#filterOptionsModal .search-clear")) return;
+    var modal = e.target.closest("#filterOptionsModal");
+    if (modal) filterModalOptions(modal, "");
+  });
+
+  // Focus the search field when the modal opens
+  document.addEventListener("htmx:afterSettle", function (e) {
+    if (
+      e.detail.target &&
+      e.detail.target.id === "filterOptionsModalContainer"
+    ) {
+      var search = document.getElementById("filter-options-search");
+      if (search) search.focus();
     }
   });
 
@@ -157,13 +186,7 @@
     document
       .querySelectorAll('[data-checkbox-filter][data-name="' + name + '"]')
       .forEach(function (container) {
-        var cb = container.querySelector(
-          '.checkbox-filter__checkbox[value="' + value + '"]',
-        );
-        if (cb) {
-          cb.checked = false;
-          syncHiddenInputs(container);
-        }
+        setGroupValue(container, value, false);
       });
   };
 
@@ -177,10 +200,11 @@
           .forEach(function (cb) {
             cb.checked = false;
           });
-        syncHiddenInputs(container);
+        var hidden = container.querySelector(".checkbox-filter__hidden-inputs");
+        if (hidden) hidden.innerHTML = "";
       });
   };
 
-  // Restore state after OOB swap
+  // Restore collapsed state after OOB swap
   document.addEventListener("htmx:afterSettle", restoreState);
 })();
