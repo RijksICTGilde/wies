@@ -1,5 +1,4 @@
 import logging
-import urllib.parse
 from collections import Counter
 from datetime import date, timedelta
 
@@ -222,23 +221,6 @@ def _build_assignment_panel_data(assignment, request):
 
     team_members = vacancy_list + list(current_grouped.values()) + list(historical_grouped.values())
 
-    owner_mailto_href = ""
-    if assignment.owner and assignment.owner.email:
-        opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.id}")
-        subject = urllib.parse.quote(f"Informatieverzoek over opdracht {assignment.name}")
-        body_lines = [
-            f"Beste {assignment.owner.name},",
-            "",
-            f"Ik zag deze opdracht {opdracht_url} op WIES."
-            + (f" De beschrijving is: {assignment.extra_info}" if assignment.extra_info else ""),
-            "",
-            "Kun je me hier meer informatie over geven?",
-        ]
-        consultant_name = getattr(getattr(request.user, "colleague", None), "name", "")
-        body_lines += ["", "Met vriendelijke groet,", "", consultant_name]
-        body = urllib.parse.quote("\n".join(body_lines))
-        owner_mailto_href = f"mailto:{assignment.owner.email}?subject={subject}&body={body}"
-
     return {
         "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
@@ -247,8 +229,6 @@ def _build_assignment_panel_data(assignment, request):
         "team_members": team_members,
         "user_can_edit": has_permission(Verb.UPDATE, assignment, request.user),
         "show_updates_tab": assignment.source != "otys_iir",
-        "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
-        "owner_mailto_href": owner_mailto_href,
         "organization_count": assignment.organization_relations.count(),
     }
 
@@ -2599,6 +2579,10 @@ def _render_inline_edit_display(
             value = _current_value(obj, spec)
         else:
             value = {e.field or e.name: _current_value(obj, e) for e in editables}
+    extra = {}
+    display_context = getattr(spec, "display_context", None)
+    if alert is None and display_context is not None:
+        extra = display_context(obj, request)
     ctx = {
         **_inline_edit_base_ctx(editable_set, spec, obj),
         "value": value,
@@ -2608,6 +2592,7 @@ def _render_inline_edit_display(
         ),
         "hide_edit_button": getattr(spec, "hide_edit_button", False),
         "alert": alert,
+        **extra,
     }
     response = render(request, "parts/inline_edit/display.html", ctx)
     if saved:
@@ -2736,6 +2721,29 @@ def _diff_collection_state(old_state: list[dict], new_state: list[dict]) -> list
     return changes
 
 
+def _emit_placement_change_on_assignment(placement, before_row: dict, user) -> None:
+    """Record a placement edit as a "Team" event on its parent assignment,
+    so it renders identically to the Team-bewerken flow (#393)."""
+    from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids circular import
+
+    assignment = placement.service.assignment
+    after_row = placement_audit_row(placement)
+    if before_row == after_row:
+        return
+    create_event(
+        object_type="Assignment",
+        action="update",
+        source="user",
+        object_id=assignment.id,
+        user=user,
+        context={
+            "field_name": "services",
+            "field_label": "Team",
+            "changes": [{"old": before_row, "new": after_row}],
+        },
+    )
+
+
 def inline_edit_view(request, model_label, pk, name):
     """Generic HTMX endpoint. See ``features/inline-editing.md`` for the full contract."""
     editable_set = REGISTRY.get(model_label)
@@ -2783,6 +2791,14 @@ def inline_edit_view(request, model_label, pk, name):
                 before = {e.name: _current_value(obj, e) for e in editables}
             else:
                 before = _current_value(obj, spec)
+            # A placement edit (e.g. period via the profile) has no audit
+            # type of its own; mirror it onto the parent assignment's
+            # timeline like the "Team bewerken" flow (#393).
+            placement_before = None
+            if type(obj).__name__ == "Placement":
+                from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids circular import
+
+                placement_before = placement_audit_row(obj)
             with transaction.atomic():
                 save_spec(spec, editables, form.cleaned_data, obj)
                 if isinstance(spec, EditableGroup):
@@ -2797,6 +2813,9 @@ def inline_edit_view(request, model_label, pk, name):
                     request.user,
                     child_editables=editables if isinstance(spec, EditableGroup) else None,
                 )
+                if placement_before is not None:
+                    obj.refresh_from_db()
+                    _emit_placement_change_on_assignment(obj, placement_before, request.user)
             return _render_inline_edit_display(
                 request,
                 editable_set,

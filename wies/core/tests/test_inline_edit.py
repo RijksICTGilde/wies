@@ -140,6 +140,21 @@ class InlineEditInfrastructureTest(TestCase):
         self.assertContains(resp, "editable-field-display")
         self.assertContains(resp, "rvo-icon-bewerken")
 
+    def test_only_pencil_enters_edit_mode(self):
+        """The value itself is not clickable — only the pencil button opens
+        edit mode — so interactive content inside it (links, "Toon meer")
+        doesn't bubble into edit mode (#395)."""
+        resp = self.client.get(self.url)
+        content = resp.content.decode()
+        value_div = content.split('class="editable-field-display__value"')[1].split(">")[0]
+        assert "hx-get" not in value_div
+        assert 'role="button"' not in value_div
+        # The pencil button still carries the edit trigger.
+        assert "edit=true" in content
+        assert "edit-icon-button" in content
+        # And a tooltip aiding discoverability now the value isn't clickable.
+        assert 'data-tooltip="Bewerk ' in content
+
     def test_get_edit_returns_form(self):
         resp = self.client.get(self.url + "?edit=true")
         assert resp.status_code == 200
@@ -548,6 +563,25 @@ class AssignmentEditablesFullTest(TestCase):
         # Email link is rendered by the custom display partial.
         self.assertContains(resp, f"mailto:{self.colleague.email}")
 
+    def test_owner_link_present_on_display(self):
+        # The navigation link to the owner's profile is supplied by the
+        # editable's display_context, not a panel-only extra (#395).
+        resp = self.client.get(self._url("owner"))
+        self.assertContains(resp, f"collega={self.colleague.id}")
+
+    def test_owner_link_survives_cancel(self):
+        # Edit + cancel must re-render the link, not drop it to plain text (#395).
+        resp = self.client.get(self._url("owner") + "?cancel=true")
+        assert resp.status_code == 200
+        self.assertContains(resp, f"collega={self.colleague.id}")
+        self.assertContains(resp, f"mailto:{self.colleague.email}")
+
+    def test_owner_link_survives_save(self):
+        # A successful save re-renders the display; the link must persist (#395).
+        resp = self.client.post(self._url("owner"), {"owner": self.colleague.id})
+        assert resp.status_code == 200
+        self.assertContains(resp, f"collega={self.colleague.id}")
+
 
 class AssignmentCreateFormIntegrationTest(TestCase):
     """Verify that AssignmentCreateForm composes its fields from the
@@ -643,6 +677,26 @@ class PlacementServiceEditablesTest(TestCase):
         self.service.refresh_from_db()
         assert self.service.description == "Dienst X"
 
+    def test_placement_period_edit_logs_event_on_assignment(self):
+        """A period edit on a placement (the profile path) is mirrored as a
+        Team event on the parent assignment timeline (#393)."""
+        url = reverse("inline-edit", args=["placement", self.placement.id, "period"])
+        resp = self.client.post(
+            url,
+            {
+                "period_source": Placement.PLACEMENT,
+                "specific_start_date": "2026-06-19",
+                "specific_end_date": "2026-12-31",
+            },
+        )
+        assert resp.status_code == 200
+        assignment = self.service.assignment
+        events = list(Event.objects.filter(object_type="Assignment", object_id=assignment.id, action="update"))
+        assert len(events) == 1
+        change = events[0].context["changes"][0]
+        assert change["new"]["end_date"] == "2026-12-31"
+        assert change["new"]["has_custom_period"] is False
+
 
 class AssignmentServicesDisplayTest(TestCase):
     """Regression tests for the services collection display partial —
@@ -688,7 +742,12 @@ class AssignmentServicesDisplayTest(TestCase):
     def test_filled_row_is_clickable_to_placement_panel(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        self.assertContains(resp, 'hx-target="#side_panel-container"')
+        # Renders inside an open panel, so it must swap the inner content;
+        # targeting #side_panel-container rebuilds the dialog and htmx falls
+        # back to a full page load.
+        self.assertContains(resp, 'hx-target="#side_panel-content"')
+        self.assertNotContains(resp, 'hx-target="#side_panel-container"')
+        self.assertContains(resp, "plaatsing=")
         self.assertContains(resp, self.colleague.name)
         self.assertContains(resp, "rvo-item-list__item--filled")
         self.assertContains(resp, "clickable-row")
@@ -837,6 +896,32 @@ class AssignmentServicesAuditTest(TestCase):
         resp = self.client.post(self.url, data)
         assert resp.status_code == 200
         assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
+
+    def test_services_post_emits_event_on_period_change(self):
+        """A period-only edit still emits a team audit event (#393)."""
+        data = {
+            "service-TOTAL_FORMS": "2",
+            **self.FORMSET_MGMT_KEYS,
+            # Filled row: drop the inherit checkbox and give a custom period.
+            "service-0-id": str(self.filled_service.id),
+            "service-0-skill": str(self.skill_python.id),
+            "service-0-description": "Filled",
+            "service-0-is_filled": "ingevuld",
+            "service-0-colleague": str(self.colleague.id),
+            "service-0-placement_id": str(self.placement.id),
+            "service-0-placement_start_date": "2026-01-01",
+            "service-0-placement_end_date": "2026-06-30",
+            **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
+        }
+        resp = self.client.post(self.url, data)
+        assert resp.status_code == 200
+        self.placement.refresh_from_db()
+        assert self.placement.specific_start_date is not None
+        events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
+        assert len(events) == 1
+        changes = events[0].context["changes"]
+        assert len(changes) == 1
+        assert changes[0]["old"]["id"] == self.filled_service.id
 
     def test_switch_filled_to_aanvraag_removes_placement(self):
         """Flipping a filled service to "aanvraag" must free the placement,
@@ -1125,8 +1210,14 @@ class ServicesRenderChangeUnitTests(TestCase):
     branch (added / removed / skill changed / colleague filled /
     description add/remove/change)."""
 
-    def _row(self, sid, skill_name, colleague_name=None, description=""):
-        return {"id": sid, "skill_name": skill_name, "colleague_name": colleague_name, "description": description}
+    def _row(self, sid, skill_name, colleague_name=None, description="", **period):
+        return {
+            "id": sid,
+            "skill_name": skill_name,
+            "colleague_name": colleague_name,
+            "description": description,
+            **period,
+        }
 
     def test_added(self):
         change = {"old": None, "new": self._row(2, "Java", None)}
@@ -1152,7 +1243,7 @@ class ServicesRenderChangeUnitTests(TestCase):
             "new": self._row(1, "Python", "Jan", description="nieuw"),
         }
         assert _services_render_change(change) == {
-            "text": "Toelichting gewijzigd op Python (Jan)",
+            "text": "Toelichting gewijzigd voor Python (Jan)",
             "old": "oud",
             "new": "nieuw",
         }
@@ -1163,7 +1254,7 @@ class ServicesRenderChangeUnitTests(TestCase):
             "new": self._row(1, "Python", "Jan", description="nieuw"),
         }
         assert _services_render_change(change) == {
-            "text": "Toelichting toegevoegd op Python (Jan)",
+            "text": "Toelichting toegevoegd voor Python (Jan)",
             "new": "nieuw",
         }
 
@@ -1173,8 +1264,41 @@ class ServicesRenderChangeUnitTests(TestCase):
             "new": self._row(1, "Python", "Jan", description=""),
         }
         assert _services_render_change(change) == {
-            "text": "Toelichting verwijderd op Python (Jan)",
+            "text": "Toelichting verwijderd voor Python (Jan)",
             "old": "oud",
+        }
+
+    def test_period_custom_set(self):
+        # Switching from inherited to a custom period (#393).
+        # `has_custom_period` is inverted: True == inherits, False == own.
+        # Inherited still shows the dates so the old period stays visible.
+        change = {
+            "old": self._row(
+                1, "Python", "Jan", has_custom_period=True, start_date="2026-01-01", end_date="2026-06-30"
+            ),
+            "new": self._row(
+                1, "Python", "Jan", has_custom_period=False, start_date="2026-01-01", end_date="2026-06-30"
+            ),
+        }
+        assert _services_render_change(change) == {
+            "text": "Periode gewijzigd van Python (Jan)",
+            "old": "01-01-2026 t/m 30-06-2026 (volgt opdracht)",
+            "new": "01-01-2026 t/m 30-06-2026",
+        }
+
+    def test_period_dates_changed(self):
+        change = {
+            "old": self._row(
+                1, "Python", "Jan", has_custom_period=False, start_date="2026-01-01", end_date="2026-06-30"
+            ),
+            "new": self._row(
+                1, "Python", "Jan", has_custom_period=False, start_date="2026-02-01", end_date="2026-06-30"
+            ),
+        }
+        assert _services_render_change(change) == {
+            "text": "Periode gewijzigd van Python (Jan)",
+            "old": "01-01-2026 t/m 30-06-2026",
+            "new": "01-02-2026 t/m 30-06-2026",
         }
 
 

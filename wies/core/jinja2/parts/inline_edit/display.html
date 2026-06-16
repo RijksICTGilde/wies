@@ -1,6 +1,5 @@
 {# Wrapper stays classless so HTMX swaps between display/form/collection
-  modes don't toggle layout classes on the target. The display layout
-  (clickable value row + optional pencil, flex row) lives on the inner block. #}
+  modes don't toggle layout classes on the target. #}
 <div id="{{ target }}">
   <div class="editable-field-display">
     {% if alert %}
@@ -9,8 +8,7 @@
         <p>{{ alert.message }}</p>
       </div>
     {% endif %}
-    <div class="editable-field-display__value"
-         {% if user_can_edit and not hide_edit_button %} hx-get="{{ edit_url }}?edit=true" hx-target="#{{ target }}" hx-swap="outerHTML" role="button" tabindex="0" style="cursor: pointer" {% endif %}>
+    <div class="editable-field-display__value">
       {% if display and display.template %}
         {% include display.template %}
       {% else %}
@@ -23,10 +21,10 @@
               hx-get="{{ edit_url }}?edit=true"
               hx-target="#{{ target }}"
               hx-swap="outerHTML"
+              data-tooltip="Bewerk {{ label|lower }}"
               aria-label="Bewerk {{ label }}">
         <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--md edit-icon-button__pencil"
-              role="img"
-              aria-label="Bewerk"></span>
+              aria-hidden="true"></span>
       </button>
     {% elif not user_can_edit and external_source %}
       <span class="source-lock"
