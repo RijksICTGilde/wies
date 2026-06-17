@@ -15,6 +15,18 @@ html {
   background: transparent;
 }
 
+/* Live character counter (see prose_editor_init.js). */
+.prose-editor-counter {
+  margin-top: var(--rvo-space-2xs, 0.25rem);
+  font-size: var(--rvo-font-size-sm, 0.875rem);
+  color: var(--rvo-color-grijs-700, #4f5358);
+  text-align: right;
+}
+.prose-editor-counter--over {
+  color: var(--rvo-color-rood, #d52b1e);
+  font-weight: 700;
+}
+
 /* Prose editor display: collapsed state for long content */
 .prose-editor-display--collapsed {
   max-height: 10em;
