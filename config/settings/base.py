@@ -27,7 +27,6 @@ WSGI_APPLICATION = "config.wsgi.application"
 
 # Application definition
 INSTALLED_APPS = [
-    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -56,19 +55,6 @@ TEMPLATES = [
         "APP_DIRS": True,
         "OPTIONS": {
             "environment": "config.jinja2.environment",
-            "context_processors": [
-                "django.template.context_processors.request",
-                "django.contrib.auth.context_processors.auth",
-                "django.contrib.messages.context_processors.messages",
-            ],
-        },
-    },
-    # probably still necessary for admin pages
-    {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
-        "APP_DIRS": True,
-        "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
@@ -152,13 +138,25 @@ AUTHENTICATION_BACKENDS = [
 
 AUTH_USER_MODEL = "rijksauth.User"
 
+# User.email uniqueness is enforced by a case-insensitive UniqueConstraint
+# (Lower("email")), not by field-level unique=True, so Django's W004 doesn't
+# apply.
+SILENCED_SYSTEM_CHECKS = ["auth.W004"]
+
 AUTH_NO_ACCESS_URL = "/geen-toegang/"
+
+OIDC_ID_TOKEN_SESSION_KEY = "oidc_id_token"  # noqa: S105 (hardcoded-password) — session key name, not a secret
+OIDC_POST_LOGOUT_COOKIE_NAME = "wies_post_logout"
 
 # Allowed email domains for ODI users
 ALLOWED_EMAIL_DOMAINS = ["@rijksoverheid.nl", "@minbzk.nl"]
 
-# Comma-separated emails that can access /staff/ (db admin)
+# Comma-separated emails that can access the staff dashboard / database pages.
 STAFF_EMAILS = [email.strip().lower() for email in os.environ.get("STAFF_EMAILS", "").split(",") if email.strip()]
+
+# Toggle for destructive staff database actions (clear data, load dummy data).
+# Default off (production-safe). Set to "true" in local/staging environments.
+ENABLE_DESTRUCTIVE_STAFF_ACTIONS = os.environ.get("ENABLE_DESTRUCTIVE_STAFF_ACTIONS", "").lower() == "true"
 
 # OTYS API settings
 OTYS_API_KEY = os.environ.get("OTYS_API_KEY", "")

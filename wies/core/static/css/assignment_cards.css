@@ -1,7 +1,8 @@
 .assignment-card-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: auto; /* rows sized by subgrid children */
+  gap: 0 1rem;
 }
 
 .assignment-card-grid__empty {
@@ -10,15 +11,14 @@
   padding: 2rem;
 }
 
-.assignment-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
+.assignment-card-grid .assignment-card {
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 2;
+  margin-bottom: 1rem;
 }
 
 .assignment-card--clickable {
-  text-decoration: none;
-  color: inherit;
   cursor: pointer;
   transition: box-shadow 0.15s ease;
 }
@@ -27,26 +27,8 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
-.assignment-card__header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-}
-
-.assignment-card__title {
-  font-size: 1.05rem;
-}
-
-.assignment-card__meta-item {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
 .assignment-card__tags {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin-bottom: 0.25rem;
 }

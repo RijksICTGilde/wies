@@ -16,70 +16,62 @@
           <strong>{{ author }}</strong>
           {% if event.action == "create" %}
             maakte deze opdracht aan
-          {% else %}
+          {% elif event.context.get("merge") %}
+            voegde {{ event.context.merged_ids|length }} dubbele opdracht(en) samen (#{{ event.context.merged_ids|join(", #") }})
+          {% elif event.render_kind == "text" %}
             wijzigde <strong>{{ event.context.field_label }}</strong>
-            {% if event.context.field_type != "textarea" %}
-              {% if event.context.old_value %}van "{{ event.context.old_value }}"{% endif %}
-              naar "{{ event.context.new_value }}"
-            {% endif %}
+            {% if event.formatted_old %}van "{{ event.formatted_old }}"{% endif %}
+            naar "{{ event.formatted_new }}"
+          {% elif event.render_kind in ("textarea", "collection") %}
+            wijzigde <strong>{{ event.context.field_label }}</strong>
           {% endif %}
           <div class="event-timeline__meta">
             <span class="rvo-text--subtle rvo-text--xs"
-                  title="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
+                  data-tooltip="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
             {% if event.action == "create" %}
               <span class="event-tag event-tag--create">
-                <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--xs"
-                      role="img"
-                      aria-hidden="true"></span>
+                <c-icon icon="plus" size="xs" />
                 Aangemaakt
               </span>
             {% else %}
               <span class="event-tag event-tag--update">
-                <span class="utrecht-icon rvo-icon rvo-icon-bewerken rvo-icon--xs"
-                      role="img"
-                      aria-hidden="true"></span>
+                <c-icon icon="bewerken" size="xs" />
                 Gewijzigd
               </span>
             {% endif %}
           </div>
-          {% if event.context.field_type == "textarea" %}
-            {% if event.context.old_value %}
-              <div class="rvo-margin-block-start--xs">
-                <span class="rvo-text--subtle rvo-text--xs">Van:</span>
-                {% if event.context.old_value|length > 300 %}
-                  <span>
-                    <span class="truncated-text" style="display: block;">{{ event.context.old_value[:300] }}...</span>
-                    <span class="full-text" style="display: none;">{{ event.context.old_value }}</span>
-                    <button type="button" class="show-more-toggle" onclick="toggleShowMore(this)">
-                      <span class="show-more-toggle__icon">+</span>
-                      <span class="show-more-toggle__text">Toon meer</span>
-                    </button>
-                  </span>
-                {% else %}
-                  <span class="pre-wrap">{{ event.context.old_value }}</span>
-                {% endif %}
-              </div>
+          {% if event.render_kind == "collection" and event.diff_entries %}
+            <ul class="rvo-list rvo-margin-block-start--xs">
+              {% for entry in event.diff_entries %}
+                <li>
+                  {{ entry.text }}
+                  {% if entry.old %}
+                    {% with label="Van", value=entry.old %}
+                      {% include "parts/event_value_block.html" %}
+                    {% endwith %}
+                  {% endif %}
+                  {% if entry.new %}
+                    {% with label="Naar", value=entry.new %}
+                      {% include "parts/event_value_block.html" %}
+                    {% endwith %}
+                  {% endif %}
+                </li>
+              {% endfor %}
+            </ul>
+          {% elif event.render_kind == "textarea" %}
+            {% if event.formatted_old %}
+              {% with label="Van", value=event.formatted_old %}
+                {% include "parts/event_value_block.html" %}
+              {% endwith %}
             {% endif %}
-            <div class="rvo-margin-block-start--xs">
-              <span class="rvo-text--subtle rvo-text--xs">Naar:</span>
-              {% if event.context.new_value|length > 300 %}
-                <span>
-                  <span class="truncated-text" style="display: block;">{{ event.context.new_value[:300] }}...</span>
-                  <span class="full-text" style="display: none;">{{ event.context.new_value }}</span>
-                  <button type="button" class="show-more-toggle" onclick="toggleShowMore(this)">
-                    <span class="show-more-toggle__icon">+</span>
-                    <span class="show-more-toggle__text">Toon meer</span>
-                  </button>
-                </span>
-              {% else %}
-                <span class="pre-wrap">{{ event.context.new_value }}</span>
-              {% endif %}
-            </div>
+            {% with label="Naar", value=event.formatted_new %}
+              {% include "parts/event_value_block.html" %}
+            {% endwith %}
           {% endif %}
         </div>
       </div>
     {% endfor %}
   </div>
 {% else %}
-  <p class="rvo-text--italic rvo-text--subtle">Geen updates</p>
+  <c-paragraph class="rvo-text--italic rvo-text--subtle">Geen updates</c-paragraph>
 {% endif %}

@@ -14,12 +14,10 @@ Usage:
   {# Compact filter bar #}
   <div class="filter-bar-bar">
     {# Search Field #}
-    {# TODO jrc: could we standardize on a search bar? #}
     <div role="group"
          aria-labelledby="search-field-label"
          class="search-field-wrapper">
       <c-icon icon="zoek" color="lintblauw" size="md" class="search-icon" />
-      {# TODO jrc: size attribute without value necessary to leave out sizing css #}
       <c-input id="search" name="{{ search_field|default('search') }}" placeholder="{{ search_placeholder|default('Zoeken...') }}" value="{{ search_filter or '' }}" aria-label="{{ search_placeholder|default('Zoeken') }}" size />
       <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
     </div>
@@ -29,9 +27,7 @@ Usage:
       {% if filter_groups %}
         <button type="button"
                 class="filter-button rvo-button rvo-button--secondary{% if active_filter_count > 0 %} filter-button--active{% endif %} rvo-button--size-md rvo-button--icon-before">
-          <span class="utrecht-icon rvo-icon rvo-icon-trechter rvo-icon--md rvo-link__icon--before"
-                role="img"
-                aria-label="Trechter"></span>
+          <c-icon icon="trechter" size="md" class="rvo-link__icon--before" />
           <span class="filter-text">Filters
             {% if active_filter_count > 0 %}({{ active_filter_count }}){% endif %}
           </span>
@@ -40,14 +36,13 @@ Usage:
     </div>
     <div>
       {% if primary_button %}
-        <button type="button"
-                class="rvo-button rvo-button--primary rvo-button--size-md rvo-button--icon-before"
-                {% for attr_label, attr_value in primary_button.attrs.items() %}{{ attr_label }}="{{ attr_value }}"{% endfor %}>
-          <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before"
-                role="img"
-                aria-label="Plus"></span>
+        <a href="{{ primary_button.attrs.get('href', '#') }}"
+           class="rvo-button rvo-button--primary rvo-button--size-md rvo-button--icon-before"
+           {% for attr_label, attr_value in primary_button.attrs.items() %}{% if attr_label != 'href' %}{{ attr_label }}="{{ attr_value }}"{% endif %}
+           {% endfor %}>
+          <c-icon icon="plus" size="md" class="rvo-link__icon--before" />
           {{ primary_button.button_text }}
-        </button>
+        </a>
       {% endif %}
     </div>
   </div>
@@ -58,9 +53,7 @@ Usage:
       <div class="modal-header">
         <c-h2 noMargins>Filters</c-h2>
         <button type="button" class="modal-close">
-          <span class="utrecht-icon rvo-icon rvo-icon-kruis rvo-icon--md"
-                role="img"
-                aria-label="Sluiten"></span>
+          <c-icon icon="kruis" size="md" />
         </button>
       </div>
       <div class="modal-body">
@@ -72,10 +65,7 @@ Usage:
               {% set selected_count = filter_group.selected_values|length %}
               <div class="utrecht-form-field rvo-form-field">
                 <div class="rvo-form-field__label">
-                  <label class="rvo-label utrecht-form-label"
-                         id="multiselect-label-{{ filter_group.label|replace(' ', '-') |lower }}">
-                    {{ filter_group.label }}
-                  </label>
+                  <c-label id="multiselect-label-{{ filter_group.label|replace(' ', '-') |lower }}">{{ filter_group.label }}</c-label>
                 </div>
                 <div class="multiselect"
                      data-multiselect
@@ -123,11 +113,7 @@ Usage:
                 </div>
               </div>
             {% elif filter_group.type == 'date_range' %}
-              {# TODO jrc: c-date-range-field would be very nice #}
               <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
-                {# TODO jrc: label "for" only specified when id is given in. maybe better generate random id that id is also given? #}
-                {# TODO jrc: helpertext should be empty by default? #}
-                {# TODO JRC: setting size without attribute necessary to leave out sizing css #}
                 <c-date-input-field id="filter-{{ filter_group.name }}-from" label="{{ filter_group.from_label }}" helperText="" data-require-both="{{ filter_group.require_both|lower }}" data-combined-name="{{ filter_group.name }}" data-pair-id="filter-{{ filter_group.name }}-to" size value="{{ active_filters.get(filter_group.name, {}).get('from', '') }}" />
                 <c-date-input-field id="filter-{{ filter_group.name }}-to" label="{{ filter_group.to_label }}" helperText="" data-require-both="{{ filter_group.require_both|lower }}" data-combined-name="{{ filter_group.name }}" data-pair-id="filter-{{ filter_group.name }}-from" size value="{{ active_filters.get(filter_group.name, {}).get('to', '') }}" />
               </div>

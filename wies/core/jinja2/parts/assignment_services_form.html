@@ -9,7 +9,7 @@
        surfaces alongside formset-level errors.
 #}
 <p class="rvo-text--sm">
-  Vul je een consultant in? Dan is de dienst direct bezet. Laat je het veld leeg, dan wordt de dienst als vacature geplaatst.
+  Voeg een aanvraag toe voor een openstaande plek, of een plaatsing als de consultant al bekend is.
 </p>
 {{ formset.management_form }}
 {% set _extra_errors = extra_errors if extra_errors is defined else [] %}
@@ -22,18 +22,30 @@
   {% endfor %}
   </c-alert>
 {% endif %}
-<div id="services-container">
+<div id="services-container"
+     {% if obj is defined and obj.start_date %}data-assignment-start="{{ obj.start_date.isoformat() }}"{% endif %}
+     {% if obj is defined and obj.end_date %}data-assignment-end="{{ obj.end_date.isoformat() }}"{% endif %}>
   {% for svc_form in formset %}
     {% with row_index=loop.index0, is_first=loop.first %}
       {% include "parts/service_row.html" %}
     {% endwith %}
   {% endfor %}
 </div>
-<button type="button"
-        id="add-service-btn"
-        class="rvo-button rvo-button--tertiary rvo-button--size-sm rvo-button--icon-before">
-  <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before"
-        role="img"
-        aria-label="Dienst toevoegen"></span>
-  Dienst toevoegen
-</button>
+<div class="service-add-buttons">
+  <button type="button"
+          class="rvo-button rvo-button--secondary rvo-button--icon-before"
+          data-add-service="aanvraag">
+    <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before"
+          role="img"
+          aria-label="Aanvraag toevoegen"></span>
+    Aanvraag toevoegen
+  </button>
+  <button type="button"
+          class="rvo-button rvo-button--secondary rvo-button--icon-before"
+          data-add-service="ingevuld">
+    <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before"
+          role="img"
+          aria-label="Geplaatste consultant toevoegen"></span>
+    Geplaatste consultant toevoegen
+  </button>
+</div>

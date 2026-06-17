@@ -1,4 +1,5 @@
 import copy
+import io
 from datetime import date
 from pathlib import Path
 
@@ -15,14 +16,18 @@ from wies.core.models import (
 )
 from wies.core.services.organizations import (
     get_excluded_org_ids,
-    parse_xml_hierarchical,
+    iter_root_organizations,
     sync_organization_tree,
     sync_organizations,
 )
 
 
+def _parse_xml(xml_content: bytes) -> list[dict]:
+    return list(iter_root_organizations(io.BytesIO(xml_content)))
+
+
 class ParseXmlHierarchicalTest(TestCase):
-    """Tests for parse_xml_hierarchical function"""
+    """Tests for the XML parser exposed via iter_root_organizations."""
 
     @classmethod
     def setUpClass(cls):
@@ -34,14 +39,14 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_parse_returns_list(self):
         """Test that parsing returns a list"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
         assert isinstance(result, list)
         # 5 original + 1 future eindDatum + 2 same name different types + 2 inactive (6001, 8001) + 1 AIVD = 11 root orgs
         assert len(result) == 11
 
     def test_ministry_label_generation(self):
         """Test that ministry without 'Ministerie' prefix gets it added"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         # Find "Asiel en Migratie" ministry
         ministry = next(org for org in result if org["name"] == "Asiel en Migratie")
@@ -51,7 +56,7 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_ministry_label_not_duplicated(self):
         """Test that ministry already starting with 'Ministerie' doesn't get prefix duplicated"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         # Find "Ministerie van Buitenlandse Zaken"
         ministry = next(org for org in result if org["name"] == "Ministerie van Buitenlandse Zaken")
@@ -61,7 +66,7 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_non_ministry_keeps_original_label(self):
         """Test that non-ministry organizations keep their original name as label"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         # Find agentschap
         agentschap = next(org for org in result if org["name"] == "Rijksdienst voor Identiteitsgegevens")
@@ -71,7 +76,7 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_hierarchical_parsing(self):
         """Test that nested organizational units are parsed correctly"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         # Find ministry with hierarchy
         ministry = next(org for org in result if org["name"] == "Asiel en Migratie")
@@ -95,7 +100,7 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_related_ministry_tooi(self):
         """Test that related ministry TOOI is extracted correctly"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         # Find agentschap
         agentschap = next(org for org in result if org["name"] == "Rijksdienst voor Identiteitsgegevens")
@@ -104,7 +109,7 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_nested_org_related_ministry_tooi(self):
         """Test that nested organizations have related ministry TOOI"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         ministry = next(org for org in result if org["name"] == "Asiel en Migratie")
         dg = ministry["children"][0]
@@ -113,7 +118,7 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_abbreviations_parsing(self):
         """Test that multiple abbreviations are parsed correctly"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         ministry = next(org for org in result if org["name"] == "Asiel en Migratie")
 
@@ -121,7 +126,7 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_missing_tooi_identifier(self):
         """Test that organizations without TOOI identifier don't crash"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         # Find adviescollege without TOOI
         adviescollege = next(org for org in result if org["name"] == "Testadviesraad")
@@ -131,7 +136,7 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_missing_abbreviations(self):
         """Test that organizations without abbreviations have empty list"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         org = next(org for org in result if org["name"] == "Testorganisatie Zonder Extras")
 
@@ -139,7 +144,7 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_missing_related_ministry(self):
         """Test that organizations without ministry relation have None"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         org = next(org for org in result if org["name"] == "Testorganisatie Zonder Extras")
 
@@ -147,7 +152,7 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_organization_types_extraction(self):
         """Test that organization types are correctly extracted"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         # Check different types
         ministry = next(org for org in result if org["name"] == "Asiel en Migratie")
@@ -161,14 +166,14 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_system_id_extraction(self):
         """Test that system IDs are correctly extracted"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         ministry = next(org for org in result if org["name"] == "Asiel en Migratie")
         assert ministry["system_id"] == "1001"
 
     def test_inactive_org_has_end_date_set(self):
         """Test that organizations with eindDatum in the past are returned with end_date set"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         # "Voormalige Testorganisatie" has eindDatum=2020-12-31
         voormalige = [org for org in result if org["name"] == "Voormalige Testorganisatie"]
@@ -177,7 +182,7 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_keeps_organizations_with_einddatum_in_future(self):
         """Test that organizations with eindDatum in the future have end_date set to that date"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         # "Toekomstige Testorganisatie" has eindDatum=2099-12-31, should still store the date
         toekomstig = [org for org in result if org["name"] == "Toekomstige Testorganisatie"]
@@ -186,7 +191,7 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_keeps_organizations_without_einddatum(self):
         """Test that organizations without eindDatum have end_date=None"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         # "Asiel en Migratie" has no eindDatum
         ministry = [org for org in result if org["name"] == "Asiel en Migratie"]
@@ -195,7 +200,7 @@ class ParseXmlHierarchicalTest(TestCase):
 
     def test_inactive_parent_propagates_end_date_to_children(self):
         """Test that inactive parent organizations propagate end_date to children"""
-        result = parse_xml_hierarchical(self.xml_content)
+        result = _parse_xml(self.xml_content)
 
         # "Voormalig Directoraat" has eindDatum in past
         voormalig_dir = [org for org in result if org["name"] == "Voormalig Directoraat"]
@@ -219,7 +224,7 @@ class SyncOrganizationTreeTest(TestCase):
         fixture_path = Path(__file__).parent.parent / "fixtures" / "organizations_test_fixture.xml"
         with fixture_path.open("rb") as f:
             cls.xml_content = f.read()
-        cls.parsed_orgs = parse_xml_hierarchical(cls.xml_content)
+        cls.parsed_orgs = _parse_xml(cls.xml_content)
 
     def setUp(self):
         """Clear database before each test"""
@@ -730,7 +735,7 @@ class SyncOrganizationTreeTest(TestCase):
             tooi_identifier="https://identifier.overheid.nl/tooi/id/oorg/oorg6001",
         )
 
-        parsed = parse_xml_hierarchical(self.xml_content)
+        parsed = _parse_xml(self.xml_content)
         voormalige = next(o for o in parsed if o["name"] == "Voormalige Testorganisatie")
         sync_organization_tree(copy.deepcopy(voormalige), parent=None, dry_run=False, seen_ids=set())
 
@@ -739,7 +744,7 @@ class SyncOrganizationTreeTest(TestCase):
 
     def test_does_not_create_new_inactive_org(self):
         """Test that new org with end_date in the past is NOT created"""
-        parsed = parse_xml_hierarchical(self.xml_content)
+        parsed = _parse_xml(self.xml_content)
         voormalige = next(o for o in parsed if o["name"] == "Voormalige Testorganisatie")
 
         result = sync_organization_tree(copy.deepcopy(voormalige), parent=None, dry_run=False, seen_ids=set())
@@ -759,7 +764,7 @@ class SyncOrganizationTreeTest(TestCase):
 
     def test_seen_ids_not_populated_for_skipped_inactive(self):
         """Test that skipped inactive orgs don't add to seen_ids"""
-        parsed = parse_xml_hierarchical(self.xml_content)
+        parsed = _parse_xml(self.xml_content)
         voormalige = next(o for o in parsed if o["name"] == "Voormalige Testorganisatie")
         seen_ids: set[int] = set()
 
@@ -841,7 +846,7 @@ class SyncEventLoggingTest(TestCase):
 
     def test_create_event_logged(self):
         """Test that creating a new org logs an OrgSync.create event"""
-        parsed = parse_xml_hierarchical(self.xml_content)
+        parsed = _parse_xml(self.xml_content)
         ministry = next(o for o in parsed if o["name"] == "Asiel en Migratie")
 
         sync_organization_tree(copy.deepcopy(ministry), parent=None, dry_run=False, seen_ids=set())
@@ -861,7 +866,7 @@ class SyncEventLoggingTest(TestCase):
             tooi_identifier="https://identifier.overheid.nl/tooi/id/ministerie/mnre1001",
         )
 
-        parsed = parse_xml_hierarchical(self.xml_content)
+        parsed = _parse_xml(self.xml_content)
         ministry = next(o for o in parsed if o["name"] == "Asiel en Migratie")
 
         sync_organization_tree(copy.deepcopy(ministry), parent=None, dry_run=False, seen_ids=set())
@@ -904,7 +909,7 @@ class SyncEventLoggingTest(TestCase):
 
     def test_no_event_when_unchanged(self):
         """Test that no update event is logged when org data hasn't changed"""
-        parsed = parse_xml_hierarchical(self.xml_content)
+        parsed = _parse_xml(self.xml_content)
         ministry = next(o for o in parsed if o["name"] == "Asiel en Migratie")
 
         # First sync creates the org

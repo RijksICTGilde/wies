@@ -26,11 +26,11 @@ class LabelDeleteViewTest(TestCase):
 
     def test_label_delete_get_returns_confirmation(self):
         """GET on label delete should return a confirmation modal, not crash"""
-        response = self.client.get(f"/instellingen/labels/{self.label.pk}/verwijderen/")
+        response = self.client.get(f"/beheer/labels/{self.label.pk}/verwijderen/")
         assert response.status_code == 200
 
     def test_label_delete_post_deletes_label(self):
         """POST on label delete should delete the label"""
-        response = self.client.post(f"/instellingen/labels/{self.label.pk}/verwijderen/")
+        response = self.client.post(f"/beheer/labels/{self.label.pk}/verwijderen/")
         assert response.status_code == 200
         assert not Label.objects.filter(pk=self.label.pk).exists()

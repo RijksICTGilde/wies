@@ -85,16 +85,7 @@ body {
   transition: grid-template-columns 0.2s ease;
 }
 
-.menubar::after {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 100vw;
-  height: 1px;
-  background: var(--rvo-color-grijs-300, #c4c4c4);
-}
+/* Border is handled by c-menubar horizontalRule */
 
 .layout--collapsed .menubar {
   grid-template-columns: var(--sidebar-width-collapsed) 1fr;
@@ -120,7 +111,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--rvo-space-sm) 1.5rem;
+  padding: var(--rvo-space-sm) 1.5rem 0;
 }
 
 .menubar__nav-wrapper {
@@ -128,6 +119,15 @@ body {
   align-items: center;
   justify-content: space-between;
   flex: 1;
+}
+
+.menubar__nav-wrapper [data-roos-component="menubar"] {
+  flex: 1;
+}
+
+.menubar__nav-wrapper .rvo-menubar__ul,
+.menubar__nav-wrapper .rvo-menubar__list {
+  margin: 0;
 }
 
 .menubar__nav-left,
@@ -161,7 +161,7 @@ body {
   min-width: 0;
   position: sticky;
   top: 0;
-  max-height: 100vh;
+  max-height: calc(100vh - var(--sidebar-offset, 0px));
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: var(--rvo-color-grijs-400, #b4b4b4) transparent;
@@ -451,6 +451,9 @@ body {
   .sidebar {
     /* Mobile: hidden by default, becomes full-screen overlay when opened */
     display: none;
+    position: static;
+    max-height: none;
+    overflow: visible;
   }
 
   /* Show sidebar as full-screen overlay when filters are open on mobile */
@@ -466,6 +469,7 @@ body {
     flex-direction: column;
     transform: translateX(0);
     transition: transform var(--animation-duration) cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
   }
 
   .layout--mobile-filters-open .sidebar__content {
@@ -474,6 +478,12 @@ body {
     position: static;
     visibility: visible;
     padding: 0;
+  }
+
+  .layout--mobile-filters-open .sidebar > form {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
   }
 
   .layout--mobile-filters-open .sidebar__content > * {
@@ -657,9 +667,10 @@ body {
 }
 
 .sidebar-footer__title {
+  display: block;
   color: var(--rvo-color-lintblauw, #154273);
   font-size: var(--rvo-font-size-md, 1rem);
-  font-weight: 700;
+  font-weight: 600;
   margin: 0 0 var(--rvo-space-xs) 0;
 }
 
@@ -703,4 +714,36 @@ body {
 
 .layout--collapsed .sidebar-footer {
   display: none;
+}
+
+/* ============================================================================
+   Instant tooltip — add data-tooltip="..." to any element
+   ============================================================================ */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 0.25rem;
+  background: var(--rvo-color-grijs-800, #1e293b);
+  color: #fff;
+  font-size: 0.8rem;
+  font-weight: 400;
+  padding: 0.375rem 0.625rem;
+  border-radius: 4px;
+  white-space: normal;
+  width: max-content;
+  max-width: 240px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.1s;
+  z-index: 10;
+}
+
+[data-tooltip]:hover::after {
+  opacity: 1;
 }

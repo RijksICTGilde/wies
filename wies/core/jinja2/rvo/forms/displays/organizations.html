@@ -1,16 +1,16 @@
-{# Display for Assignment.organizations.
-    obj   — Assignment
-    value — [{"organization": OrganizationUnit, "role": "PRIMARY"|"INVOLVED"}, ...]
-
-    Each org renders as a link to the assignment-list filtered by that
-    org id (the same shape `get_org_breadcrumb` produces for the
-    non-`org_self` case). When multiple orgs are present, the primary
-    one is tagged. #}
+{# Renders breadcrumbs with ancestors + label and the primary organization tagged. #}
 {% if value %}
+  {% set base_url = breadcrumb_base_url(request) %}
   {% for row in value %}
+    {% set org_breadcrumb = get_org_breadcrumb(row.organization, base_url) %}
     <div class="org-breadcrumb">
-      <a href="{{ url("assignment-list") }}?org={{ row.organization.id }}"
-         class="rvo-link">{{ row.organization.name }}</a>
+      {% if org_breadcrumb.ancestors %}
+        {% for ancestor in org_breadcrumb.ancestors %}
+          <a href="{{ ancestor.url }}" class="org-breadcrumb__ancestor">{{ ancestor.label }}</a>
+          <span class="org-breadcrumb__separator">›</span>
+        {% endfor %}
+      {% endif %}
+      <a href="{{ org_breadcrumb.url }}" class="rvo-link">{{ org_breadcrumb.label }}</a>
       {% if row.role == "PRIMARY" and value|length > 1 %}
         <span class="rvo-text--subtle rvo-text--sm">(primair)</span>
       {% endif %}

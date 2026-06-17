@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
+from django.db.models.functions import Lower
 
 
 class UserManager(BaseUserManager):
@@ -13,15 +14,10 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault("is_staff", True)
-        extra_fields.setdefault("is_superuser", True)
-        return self.create_user(email, password, **extra_fields)
-
 
 class User(AbstractUser):
     username = None
-    email = models.EmailField(unique=True)
+    email = models.EmailField()
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
@@ -30,6 +26,9 @@ class User(AbstractUser):
 
     class Meta:
         db_table = "auth_user"
+        constraints = [
+            models.UniqueConstraint(Lower("email"), name="unique_user_email_ci"),
+        ]
 
 
 class AuthEvent(models.Model):

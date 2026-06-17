@@ -38,7 +38,8 @@ just load-full-data
 Then update `.env`:
 
 - Fill in OIDC credentials
-- Set DEV firstname, lastname and email (yourself)
+- Set `INITIAL_USER_FIRSTNAME`, `INITIAL_USER_LASTNAME`, `INITIAL_USER_EMAIL` (yourself)
+- Set `STAFF_EMAILS`
 
 ### Start
 
@@ -136,7 +137,6 @@ just manage test wies.core.tests.test_roles
 
 Not linked in the UI:
 
-- `/djadmin/` - Django admin
 - `/staff/` - Staff actions (clear data, load fixtures, sync)
 - `/plaatsingen/import/` - Import placements from CSV
 
@@ -185,7 +185,7 @@ Start a Claude Code session in the project root for AI-assisted development with
 
 ## Production
 
-The production version of this app runs on `wies.rijksapp.nl`. It is deployed using the [ZAD platform](zad.rijksapp.nl):
+The production version of this app runs on `wies.rijksorganisatieodi.nl`. It is deployed using the [ZAD platform](zad.rijksapp.nl):
 
 - Hosted on ODC Noord
 - Guarded by SSO-rijk through keycloak + ODI whitelist

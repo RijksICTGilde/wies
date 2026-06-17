@@ -65,13 +65,11 @@ def has_permission(
     - ``obj`` is a model **instance** for row-level checks.
     - ``field`` is an Editable for field-level narrowing (optional).
     - Multiple verbs (list/tuple) are OR-composed: True if any verb's rule passes.
-    - Returns True for any superuser. Returns False for anonymous users.
+    - Returns False for anonymous users.
     - Lookup order: ``(verb, model, field.name)`` → ``(verb, model, None)``.
     """
     if not getattr(user, "is_authenticated", False):
         return False
-    if getattr(user, "is_superuser", False):
-        return True
 
     if field is not None:
         if field.model is None:

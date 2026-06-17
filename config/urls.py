@@ -16,7 +16,6 @@ Including another URLconf
 """
 
 from django.conf import settings
-from django.contrib import admin
 from django.urls import path
 from django.views.generic import RedirectView
 
@@ -46,7 +45,8 @@ from wies.core.views import (
     privacy,
     robots_txt,
     search_suggestions,
-    staff,
+    staff_dashboard,
+    staff_database,
     toegankelijkheid,
     user_create,
     user_delete,
@@ -65,9 +65,6 @@ urlpatterns = [
         RedirectView.as_view(url="https://www.ncsc.nl/.well-known/security.txt", permanent=False),
         name="security-txt",
     ),
-    # Admin
-    path("staff/", staff, name="staff"),
-    path("djadmin/", admin.site.urls),
     # Wies
     path("", PlacementListView.as_view(), name="home"),
     path("inloggen/", login, name="login"),
@@ -78,20 +75,22 @@ urlpatterns = [
     path("opdrachten/aanmaken/", assignment_create, name="assignment-create"),
     path("opdrachten/importeren/", assignment_import_csv, name="assignment-import-csv"),
     path("opdrachten/<int:pk>/events/", assignment_events_partial, name="assignment-events-partial"),
-    path("instellingen/", RedirectView.as_view(pattern_name="admin-users", permanent=False), name="admin"),
-    path("instellingen/gebruikers/", UserListView.as_view(), name="admin-users"),
-    path("instellingen/gebruikers/aanmaken/", user_create, name="user-create"),
-    path("instellingen/gebruikers/<int:pk>/bewerken/", user_edit, name="user-edit"),
-    path("instellingen/gebruikers/<int:pk>/verwijderen/", user_delete, name="user-delete"),
-    path("instellingen/gebruikers/importeren/", user_import_csv, name="user-import-csv"),
-    path("instellingen/organisaties/", organization_admin, name="organization-admin"),
-    path("instellingen/labels/", label_admin, name="label-admin"),
-    path("instellingen/labels/categorie/aanmaken/", label_category_create, name="label-category-create"),
-    path("instellingen/labels/categorie/<int:pk>/bewerken/", label_category_edit, name="label-category-edit"),
-    path("instellingen/labels/categorie/<int:pk>/verwijderen/", label_category_delete, name="label-category-delete"),
-    path("instellingen/labels/categorie/<int:pk>/labels/aanmaken/", label_create),
-    path("instellingen/labels/<int:pk>/bewerken/", label_edit, name="label-edit"),
-    path("instellingen/labels/<int:pk>/verwijderen/", label_delete, name="label-delete"),
+    path("beheer/", RedirectView.as_view(pattern_name="admin-users", permanent=False), name="admin"),
+    path("beheer/gebruikers/", UserListView.as_view(), name="admin-users"),
+    path("beheer/gebruikers/aanmaken/", user_create, name="user-create"),
+    path("beheer/gebruikers/<int:pk>/bewerken/", user_edit, name="user-edit"),
+    path("beheer/gebruikers/<int:pk>/verwijderen/", user_delete, name="user-delete"),
+    path("beheer/gebruikers/importeren/", user_import_csv, name="user-import-csv"),
+    path("beheer/organisaties/", organization_admin, name="organization-admin"),
+    path("beheer/labels/", label_admin, name="label-admin"),
+    path("beheer/labels/categorie/aanmaken/", label_category_create, name="label-category-create"),
+    path("beheer/labels/categorie/<int:pk>/bewerken/", label_category_edit, name="label-category-edit"),
+    path("beheer/labels/categorie/<int:pk>/verwijderen/", label_category_delete, name="label-category-delete"),
+    path("beheer/labels/categorie/<int:pk>/labels/aanmaken/", label_create),
+    path("beheer/labels/<int:pk>/bewerken/", label_edit, name="label-edit"),
+    path("beheer/labels/<int:pk>/verwijderen/", label_delete, name="label-delete"),
+    path("beheer/statistieken/", staff_dashboard, name="staff-dashboard"),
+    path("beheer/database/", staff_database, name="staff-database"),
     path("profiel/", user_profile, name="user-profile"),
     path("contact/", contact, name="contact"),
     path("privacy/", privacy, name="privacy"),

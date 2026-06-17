@@ -9,6 +9,8 @@ at startup.
 
 from __future__ import annotations
 
+from django.conf import settings
+
 from wies.core.editables import (
     AssignmentEditables,
     ServiceEditables,
@@ -56,19 +58,37 @@ def _is_placed_on_service(user, service) -> bool:
     return Placement.objects.filter(service=service, colleague=colleague).exists()
 
 
+def _can_edit_assignment_text_field(user, assignment) -> bool:
+    """BM-owner, Beheerder (``change_assignment``) or a placed
+    consultant — but only on wies-sourced opdrachten."""
+    if not _is_wies_sourced(assignment):
+        return False
+    return has_permission(UPDATE, assignment, user) or _is_placed_on_assignment(user, assignment)
+
+
+def is_staff_member(user):
+    """Whether the given user is a member of the support staff cohort (``STAFF_EMAILS``).
+
+    Used both as a page-access gate (``/beheer/statistieken/``, ``/beheer/database/``)
+    and as a per-row edit-permission predicate (e.g. in ``update_assignment``).
+    """
+    return user.is_authenticated and user.email.lower() in settings.STAFF_EMAILS
+
+
 # --- Whole-object UPDATE rules ----------------------------------------------
 
 
 @rule(UPDATE, Assignment)
 def update_assignment(user, a):
-    """Full edit: BM owner of a wies-sourced assignment, or holder of core.change_assignment.
+    """Full edit: BM owner of a wies-sourced assignment, holder of
+    core.change_assignment, or a support-staff member (``STAFF_EMAILS``).
 
     Placed colleagues do NOT pass — they get narrower access via the
     field-level rules for description/extra_info below.
     """
     if not _is_wies_sourced(a):
         return False
-    return _has_change_perm(user, a) or _is_assignment_owner(user, a)
+    return _has_change_perm(user, a) or _is_assignment_owner(user, a) or is_staff_member(user)
 
 
 @rule(UPDATE, Service)
@@ -100,22 +120,20 @@ def update_user(user, target):
 
 @rule(UPDATE, AssignmentEditables.extra_info)
 def update_assignment_extra_info(user, a):
-    """Admin/owner OR any consultant placed on the assignment.
+    return _can_edit_assignment_text_field(user, a)
 
-    Wies-sourced only — externally-managed assignments (e.g. IIR) are
-    never editable, regardless of who's placed on them.
 
-    The Assignment model field is ``extra_info`` (the description text).
-    """
-    if not _is_wies_sourced(a):
-        return False
-    return has_permission(UPDATE, a, user) or _is_placed_on_assignment(user, a)
+@rule(UPDATE, AssignmentEditables.name)
+def update_assignment_name(user, a):
+    return _can_edit_assignment_text_field(user, a)
 
 
 @rule(UPDATE, ServiceEditables.description)
 def update_service_description(user, s):
-    """Only the consultant placed on this specific service. The BM uses the team editor."""
-    return _is_wies_sourced(s.assignment) and _is_placed_on_service(user, s)
+    """Assignment owner (BM) or the consultant placed on this specific service."""
+    return _is_wies_sourced(s.assignment) and (
+        has_permission(UPDATE, s.assignment, user) or _is_placed_on_service(user, s)
+    )
 
 
 @rule(UPDATE, UserEditables.email)

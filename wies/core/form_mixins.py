@@ -58,6 +58,12 @@ class RvoFormMixin:
         "OrgPickerWidget": "rvo/widgets/org_picker.html",
     }
 
+    # Invisible widgets need no RVO template; skip the warning for them (#389).
+    widgets_without_rvo_template = {
+        "HiddenInput",
+        "MultipleHiddenInput",
+    }
+
     # Per-widget extra configuration applied whenever the widget class is
     # mapped to an RVO template. Each entry is merged onto the widget
     # instance. `DateInput` rendering — HTML5 <input type="date"> demands
@@ -87,6 +93,8 @@ class RvoFormMixin:
             field.widget.template_name = self.widget_templates[widget_class_name]
             for attr, value in self.widget_config.get(widget_class_name, {}).items():
                 setattr(field.widget, attr, value)
+        elif widget_class_name in self.widgets_without_rvo_template:
+            pass
         else:
             logger.warning(
                 "Widget '%s' for field '%s' not in RVO widget_templates mapping. Using default Django template.",

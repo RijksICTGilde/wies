@@ -24,7 +24,7 @@ class Command(BaseCommand):
             logger.info("Initial user not created: INITIAL_USER_EMAIL not set")
             return
 
-        if User.objects.filter(email=email).exists():
+        if User.objects.filter(email__iexact=email).exists():
             logger.info("Initial user already exists (%s), skipping", email)
             return
 

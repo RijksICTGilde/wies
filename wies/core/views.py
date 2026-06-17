@@ -1,9 +1,6 @@
 import logging
-import tempfile
-import urllib.parse
 from collections import Counter
 from datetime import date, timedelta
-from pathlib import Path
 
 from django.conf import settings
 from django.contrib import messages
@@ -13,7 +10,8 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
 from django.core.exceptions import ValidationError
-from django.db.models import Case, Exists, OuterRef, Prefetch, Q, Value, When
+from django.db import transaction
+from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
 from django.http import Http404, HttpResponse, QueryDict
@@ -35,6 +33,7 @@ from wies.core.inline_edit.forms import (
     resolve_editables,
 )
 from wies.core.permission_engine import Verb, has_permission
+from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
     AssignmentCreateForm,
@@ -56,6 +55,7 @@ from .models import (
     Service,
     Skill,
 )
+from .permissions import is_staff_member
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .services.assignments import create_assignment_from_form, extract_services_data
 from .services.events import create_event
@@ -69,7 +69,6 @@ from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
 )
-from .services.sync import sync_all_otys_iir_records
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
@@ -117,6 +116,7 @@ def _build_panel_url(request, **overrides):
     params.pop("pagina", None)
     params.pop("collega", None)
     params.pop("opdracht", None)
+    params.pop("plaatsing", None)
     for key, value in overrides.items():
         params[key] = value
     return f"{request.path}?{params.urlencode()}"
@@ -129,6 +129,7 @@ def _build_close_url(request):
     params.pop("pagina", None)
     params.pop("collega", None)
     params.pop("opdracht", None)
+    params.pop("plaatsing", None)
     return f"{request.path}?{params.urlencode()}" if params else request.path
 
 
@@ -146,7 +147,7 @@ def _make_team_member_entry(
     }
 
 
-def _build_assignment_panel_data(assignment, request, breadcrumb_base):
+def _build_assignment_panel_data(assignment, request):
     """Shared helper to build assignment panel context data for both views."""
     today = timezone.now().date()
     viewer = getattr(request.user, "colleague", None)
@@ -220,33 +221,6 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
 
     team_members = vacancy_list + list(current_grouped.values()) + list(historical_grouped.values())
 
-    primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
-        "organization__parent__parent__parent__parent"
-    )
-    involved = assignment.organization_relations.filter(role="INVOLVED").select_related(
-        "organization__parent__parent__parent__parent"
-    )
-    org_breadcrumbs = [
-        {**get_org_breadcrumb(rel.organization, breadcrumb_base), "role": rel.role} for rel in [*primary, *involved]
-    ]
-
-    owner_mailto_href = ""
-    if assignment.owner and assignment.owner.email:
-        opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.id}")
-        subject = urllib.parse.quote(f"Informatieverzoek over opdracht {assignment.name}")
-        body_lines = [
-            f"Beste {assignment.owner.name},",
-            "",
-            f"Ik zag deze opdracht {opdracht_url} op WIES."
-            + (f" De beschrijving is: {assignment.extra_info}" if assignment.extra_info else ""),
-            "",
-            "Kun je me hier meer informatie over geven?",
-        ]
-        consultant_name = getattr(getattr(request.user, "colleague", None), "name", "")
-        body_lines += ["", "Met vriendelijke groet,", "", consultant_name]
-        body = urllib.parse.quote("\n".join(body_lines))
-        owner_mailto_href = f"mailto:{assignment.owner.email}?subject={subject}&body={body}"
-
     return {
         "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
@@ -255,9 +229,7 @@ def _build_assignment_panel_data(assignment, request, breadcrumb_base):
         "team_members": team_members,
         "user_can_edit": has_permission(Verb.UPDATE, assignment, request.user),
         "show_updates_tab": assignment.source != "otys_iir",
-        "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
-        "owner_mailto_href": owner_mailto_href,
-        "org_breadcrumbs": org_breadcrumbs,
+        "organization_count": assignment.organization_relations.count(),
     }
 
 
@@ -269,13 +241,14 @@ def _merge_date_range(existing: dict, start, end):
         existing["end_date"] = end
 
 
-def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, **extra):
+def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, placement_id=None, **extra):
     """Build a standard assignment dict for panel display."""
+    url = _build_panel_url(request, plaatsing=placement_id) if placement_id else _build_panel_url(request, opdracht=aid)
     return {
         "name": name,
         "id": aid,
         "tags": {},
-        "assignment_url": _build_panel_url(request, opdracht=aid),
+        "assignment_url": url,
         "start_date": start_date,
         "end_date": end_date,
         "historical": False,
@@ -323,6 +296,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     request,
                     start_date=placement.get("actual_start_date"),
                     end_date=placement.get("actual_end_date"),
+                    placement_id=placement["id"],
                 )
             else:
                 _merge_date_range(
@@ -342,6 +316,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     end_date=placement.get("actual_end_date"),
                     historical=True,
                     privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
+                    placement_id=placement["id"],
                 )
             else:
                 _merge_date_range(
@@ -364,6 +339,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     end_date=placement.get("actual_end_date"),
                     historical=True,
                     privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
+                    placement_id=placement["id"],
                 )
             else:
                 _merge_date_range(
@@ -449,6 +425,54 @@ def _build_colleague_panel_data(colleague, request):
     }
 
 
+def _build_placement_panel_data(placement, request):
+    """Build panel context for a single placement (colleague-on-assignment view)."""
+    assignment = placement.service.assignment
+    colleague = placement.colleague
+    service = placement.service
+
+    # Build assignment card in the same format as colleague_assignment_cards.html expects
+    primary_org = (
+        AssignmentOrganizationUnit.objects.filter(assignment=assignment, role="PRIMARY")
+        .values_list("organization__name", flat=True)
+        .first()
+    )
+
+    # Active team members on this assignment
+    team_members = list(
+        Placement.objects.filter(
+            service__assignment=assignment,
+        )
+        .select_related("colleague")
+        .values_list("colleague__name", flat=True)
+        .distinct()
+    )
+
+    assignment_card = {
+        "name": assignment.name,
+        "id": assignment.id,
+        "assignment_url": _build_panel_url(request, opdracht=assignment.id),
+        "start_date": None,
+        "end_date": None,
+        "organization": primary_org,
+        "tags": [],
+        "historical": False,
+        "privacy_warning_text": None,
+        "team_members": team_members,
+        "show_read_more": True,
+    }
+
+    return {
+        "panel_content_template": "parts/placement_panel_content.html",
+        "panel_title": f"{colleague.name} - {assignment.name}",
+        "close_url": _build_close_url(request),
+        "placement": placement,
+        "colleague": colleague,
+        "service": service,
+        "assignment_card": assignment_card,
+    }
+
+
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
 def no_access(request):
     email = request.session.pop("failed_login_email", None)
@@ -456,17 +480,29 @@ def no_access(request):
     return render(request, "no_access.html", {"email": email, "is_allowed_domain": is_allowed_domain})
 
 
-@user_passes_test(lambda u: u.is_authenticated and u.email.lower() in settings.STAFF_EMAILS, login_url="/geen-toegang/")
-def staff(request):
+def staff_required(view_func):
+    return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
+
+
+@staff_required
+def staff_dashboard(request):
+    return render(request, "staff_dashboard.html", {"usage": get_usage_stats()})
+
+
+@staff_required
+def staff_database(request):
     context = {
         "assignment_count": Assignment.objects.count(),
         "colleague_count": Colleague.objects.count(),
         "organization_count": OrganizationUnit.objects.count(),
         "latest_tasks": get_latest_tasks(limit=3),
+        "destructive_actions_enabled": settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS,
     }
     if request.method == "POST":
         action = request.POST.get("action")
         if action == "clear_data":
+            if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
+                return HttpResponse(status=405)
             # not using flush, since that would clear users
             Assignment.objects.all().delete()
             Colleague.objects.all().delete()
@@ -478,75 +514,11 @@ def staff(request):
             OrganizationUnit.objects.update(parent=None)
             OrganizationUnit.objects.all().delete()
             OrganizationType.objects.all().delete()
-
         elif action == "load_base_data":
+            if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
+                return HttpResponse(status=405)
             management.call_command("loaddata", "base_dummy_data.json")
             messages.success(request, "Data geladen uit base_dummy_data.json")
-        elif action == "export_data":
-            # Use dumpdata's native --output argument with temp file
-            with tempfile.NamedTemporaryFile(mode="r", suffix=".json", delete=False) as tmp:
-                tmp_path = tmp.name
-
-            try:
-                # dumpdata writes directly to file using --output argument
-                management.call_command("dumpdata", "--natural-foreign", "--natural-primary", output=tmp_path)
-
-                # Read the JSON file
-                json_data = Path(tmp_path).read_text()
-
-                response = HttpResponse(json_data, content_type="application/json")
-                response["Content-Disposition"] = 'attachment; filename="wies_datadump.json"'
-                return response
-            finally:
-                # Clean up temp file
-                Path(tmp_path).unlink(missing_ok=True)
-        elif action == "import_data":
-            # Handle database import from uploaded JSON file
-            if "json_file" not in request.FILES:
-                messages.error(request, "Geen bestand geüpload. Upload een JSON-bestand.")
-                return redirect("staff")
-
-            json_file = request.FILES["json_file"]
-
-            # Validate file extension
-            if not json_file.name.endswith(".json"):
-                messages.error(request, "Ongeldig bestandstype. Upload een JSON-bestand.")
-                return redirect("staff")
-
-            # Save uploaded file to temp location
-            with tempfile.NamedTemporaryFile(mode="wb", suffix=".json", delete=False) as tmp:
-                tmp_path = tmp.name
-                for chunk in json_file.chunks():
-                    tmp.write(chunk)
-
-            try:
-                # Clear existing data before import to avoid PK conflicts
-                # Same clearing logic as "clear_data" action
-                Assignment.objects.all().delete()
-                Colleague.objects.all().delete()
-                Skill.objects.all().delete()
-                Placement.objects.all().delete()
-                Service.objects.all().delete()
-                LabelCategory.objects.all().delete()
-                Label.objects.all().delete()
-                OrganizationUnit.objects.update(parent=None)
-                OrganizationUnit.objects.all().delete()
-                OrganizationType.objects.all().delete()
-
-                # Load data using Django's loaddata command
-                management.call_command("loaddata", tmp_path)
-                messages.success(request, "Database succesvol geïmporteerd")
-            except Exception as e:  # noqa: BLE001
-                # Catch all exceptions to show user-friendly error message
-                messages.error(request, f"Import mislukt: {e!s}")
-            finally:
-                # Clean up temp file
-                Path(tmp_path).unlink(missing_ok=True)
-
-            return redirect("staff")
-        elif action == "sync_all_otys_records":
-            sync_all_otys_iir_records()
-            messages.success(request, "All records synced successfully from OTYS IIR")
         elif action == "sync_organizations":
             # Check if there's already an active task
             if has_active_task("sync_organizations"):
@@ -565,10 +537,61 @@ def staff(request):
                 context["latest_tasks"] = get_latest_tasks(limit=3)
                 return render(request, "parts/task_list.html", context)
 
-            return redirect("staff")
-        return redirect("staff")
+        elif action == "merge_duplicates_preview":
+            from wies.core.services.assignments import find_duplicate_groups  # noqa: PLC0415
 
-    return render(request, "admin_db.html", context)
+            groups = find_duplicate_groups()
+            if not groups:
+                messages.info(request, "Geen dubbele opdrachten gevonden.")
+            else:
+                context["merge_groups"] = [
+                    {
+                        "name": group[0].name,
+                        "owner": str(group[0].owner),
+                        "count": len(group),
+                        "target": group[0],
+                        "duplicates": group[1:],
+                    }
+                    for group in groups
+                ]
+            return render(request, "staff_database.html", context)
+
+        elif action == "merge_duplicates_apply":
+            from wies.core.services.assignments import (  # noqa: PLC0415 — conditional import for rare admin action
+                find_duplicate_groups,
+                merge_group,
+            )
+
+            groups = find_duplicate_groups()
+            if not groups:
+                messages.info(request, "Geen dubbele opdrachten gevonden.")
+            else:
+                with transaction.atomic():
+                    total = sum(len(g) - 1 for g in groups)
+                    for group in groups:
+                        target = group[0]
+                        deleted_ids = [a.id for a in group[1:]]
+                        merge_group(group)
+                        create_event(
+                            object_type="Assignment",
+                            action="update",
+                            source="user",
+                            object_id=target.id,
+                            user=request.user,
+                            context={
+                                "merge": True,
+                                "merged_ids": deleted_ids,
+                                "name": target.name,
+                            },
+                        )
+                    messages.success(
+                        request,
+                        f"{total} dubbele opdracht(en) samengevoegd in {len(groups)} groep(en).",
+                    )
+
+        return redirect("staff-database")
+
+    return render(request, "staff_database.html", context)
 
 
 class PlacementListView(ListView):
@@ -617,13 +640,16 @@ class PlacementListView(ListView):
             "name": "colleague__name",
             "assignment": "service__assignment__name",
             "skill": "service__skill__name",
+            "end_date": "service__assignment__end_date",
         }
 
         order_param = self.request.GET.get("order")
         if order_param:
-            order_by = order_mapping.get(order_param)
+            descending = order_param.startswith("-")
+            field_name = order_param.lstrip("-")
+            order_by = order_mapping.get(field_name)
             if order_by:
-                qs = qs.order_by(order_by)
+                qs = qs.order_by(f"-{order_by}" if descending else order_by)
 
         # filter out historical placements
         qs = annotate_placement_dates(qs)
@@ -733,9 +759,12 @@ class PlacementListView(ListView):
             if self.request.headers.get("HX-Target") == "side_panel-container":
                 return ["parts/side_panel.html"]
             if self.request.headers.get("HX-Target") == "side_panel-content":
+                placement_id = self.request.GET.get("plaatsing")
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
 
+                if placement_id:
+                    return ["parts/placement_panel_content.html"]
                 if colleague_id and not assignment_id:
                     return ["parts/colleague_panel_content.html"]
                 if assignment_id:
@@ -750,9 +779,9 @@ class PlacementListView(ListView):
         context = super().get_context_data(**kwargs)
         context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
 
-        # Add colleague URLs to placement objects
+        # Add panel URLs to placement objects
         for placement in context["object_list"]:
-            placement.colleague_url = _build_panel_url(self.request, collega=placement.colleague.id)
+            placement.panel_url = _build_panel_url(self.request, plaatsing=placement.id)
 
         context["filter_target_url"] = reverse("home")
         context["search_field"] = "zoek"
@@ -923,10 +952,21 @@ class PlacementListView(ListView):
         else:
             context["next_page_url"] = None
 
+        placement_id = self.request.GET.get("plaatsing")
         colleague_id = self.request.GET.get("collega")
         assignment_id = self.request.GET.get("opdracht")
 
-        if colleague_id and not assignment_id:
+        if placement_id:
+            try:
+                placement = Placement.objects.select_related(
+                    "colleague",
+                    "service__assignment",
+                    "service__skill",
+                ).get(id=placement_id)
+                context["panel_data"] = _build_placement_panel_data(placement, self.request)
+            except Placement.DoesNotExist:
+                pass
+        elif colleague_id and not assignment_id:
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
@@ -935,7 +975,7 @@ class PlacementListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
             except Assignment.DoesNotExist:
                 pass
         return context
@@ -957,7 +997,7 @@ class AssignmentListView(ListView):
                 placements__isnull=True,
             )
         )
-        qs = Assignment.objects.filter(has_unfilled_open_service).order_by("-created_at")
+        qs = Assignment.objects.filter(has_unfilled_open_service).order_by(F("created_at").desc(nulls_last=True))
         search_filter = self.request.GET.get("zoek")
         if search_filter:
             qs = qs.filter(
@@ -1029,6 +1069,9 @@ class AssignmentListView(ListView):
             if self.request.headers.get("HX-Target") == "side_panel-content":
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
+                placement_id = self.request.GET.get("plaatsing")
+                if placement_id:
+                    return ["parts/placement_panel_content.html"]
                 if colleague_id and not assignment_id:
                     return ["parts/colleague_panel_content.html"]
                 return ["parts/assignment_panel_content.html"]
@@ -1177,10 +1220,19 @@ class AssignmentListView(ListView):
             }
 
         # Side panel
+        placement_id = self.request.GET.get("plaatsing")
         colleague_id = self.request.GET.get("collega")
         assignment_id = self.request.GET.get("opdracht")
 
-        if colleague_id and not assignment_id:
+        if placement_id:
+            try:
+                placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
+                    id=placement_id
+                )
+                context["panel_data"] = _build_placement_panel_data(placement, self.request)
+            except Placement.DoesNotExist:
+                pass
+        elif colleague_id and not assignment_id:
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
@@ -1189,7 +1241,7 @@ class AssignmentListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
             except Assignment.DoesNotExist:
                 pass
 
@@ -1572,7 +1624,7 @@ def user_import_csv(request):
             )
 
         try:
-            csv_content = csv_file.read().decode("utf-8")
+            csv_content = csv_file.read().decode("utf-8-sig")
         except UnicodeDecodeError:
             return render(
                 request,
@@ -1626,7 +1678,7 @@ def assignment_import_csv(request):
             )
 
         try:
-            csv_content = csv_file.read().decode("utf-8")
+            csv_content = csv_file.read().decode("utf-8-sig")
         except UnicodeDecodeError:
             return render(
                 request,
@@ -1979,7 +2031,7 @@ def label_delete(request, pk):
 
 def assignment_events_partial(request, pk):
     assignment = get_object_or_404(Assignment, pk=pk)
-    events = (
+    events = list(
         Event.objects.filter(
             object_type="Assignment",
             object_id=assignment.id,
@@ -1987,7 +2039,42 @@ def assignment_events_partial(request, pk):
         .select_related("user__colleague")
         .order_by("-timestamp")[:20]
     )
+    for event in events:
+        _attach_audit_render_data(event)
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
+
+
+def _attach_audit_render_data(event) -> None:
+    event.render_kind = "text"
+    event.diff_entries = None
+    event.formatted_old = event.context.get("old_value")
+    event.formatted_new = event.context.get("new_value")
+
+    if event.action != "update":
+        return
+    model_label = event.object_type.lower()
+    editable_set = REGISTRY.get(model_label)
+    if editable_set is None:
+        return
+    spec = editable_set._editables.get(event.context.get("field_name", ""))
+    if spec is None:
+        return
+
+    if isinstance(spec, EditableCollection):
+        event.render_kind = "collection"
+        if spec.render_change is not None:
+            event.diff_entries = [spec.render_change(c) for c in event.context.get("changes", [])]
+        return
+
+    from django import forms  # noqa: PLC0415
+
+    widget = getattr(spec, "widget", None)
+    if isinstance(widget, forms.Textarea) or (isinstance(widget, type) and issubclass(widget, forms.Textarea)):
+        event.render_kind = "textarea"
+
+    formatter = getattr(spec, "render_change", None) or (lambda v: str(v or ""))
+    event.formatted_old = formatter(event.context.get("old_value"))
+    event.formatted_new = formatter(event.context.get("new_value"))
 
 
 def user_profile(request):
@@ -1998,12 +2085,23 @@ def user_profile(request):
     # Side panel handling
     colleague_id = request.GET.get("collega")
     assignment_id = request.GET.get("opdracht")
+    placement_id = request.GET.get("plaatsing")
     panel_data = None
 
-    if assignment_id:
+    if placement_id:
+        try:
+            placement = Placement.objects.select_related(
+                "colleague",
+                "service__assignment",
+                "service__skill",
+            ).get(id=placement_id)
+            panel_data = _build_placement_panel_data(placement, request)
+        except Placement.DoesNotExist:
+            pass
+    elif assignment_id:
         try:
             assignment = Assignment.objects.get(id=assignment_id)
-            panel_data = _build_assignment_panel_data(assignment, request, reverse("home"))
+            panel_data = _build_assignment_panel_data(assignment, request)
         except Assignment.DoesNotExist:
             pass
     elif colleague_id:
@@ -2148,7 +2246,7 @@ def assignment_create(request):
         # Check if at least one service has a skill selected (works even when formset is invalid)
         total_forms = min(int(request.POST.get("service-TOTAL_FORMS", 0)), 100)
         has_any_service = any(request.POST.get(f"service-{i}-skill") for i in range(total_forms))
-        services_error = "" if has_any_service else "Voeg minimaal één dienst toe."
+        services_error = "" if has_any_service else "Voeg minimaal één rol toe."
 
         form_valid = form.is_valid()
         formset_valid = service_formset.is_valid()
@@ -2466,7 +2564,7 @@ def _render_inline_edit_display(
     user_can_edit: bool | None = None,
     saved: bool = False,
 ) -> HttpResponse:
-    # `saved=True` triggers the pencil→check flash; `alert` carries a denial warning.
+    # `saved=True` triggers the toast via HX-Trigger-After-Swap; `alert` carries a denial warning.
     # On denial, skip the value/display resolution — it can be heavy (e.g. the
     # services collection does a per-row Placement query) and the partial
     # gracefully handles an empty value with the alert banner.
@@ -2481,6 +2579,10 @@ def _render_inline_edit_display(
             value = _current_value(obj, spec)
         else:
             value = {e.field or e.name: _current_value(obj, e) for e in editables}
+    extra = {}
+    display_context = getattr(spec, "display_context", None)
+    if alert is None and display_context is not None:
+        extra = display_context(obj, request)
     ctx = {
         **_inline_edit_base_ctx(editable_set, spec, obj),
         "value": value,
@@ -2488,16 +2590,25 @@ def _render_inline_edit_display(
         "user_can_edit": (
             user_can_edit if user_can_edit is not None else has_permission(Verb.UPDATE, obj, request.user, spec)
         ),
+        "hide_edit_button": getattr(spec, "hide_edit_button", False),
         "alert": alert,
-        "saved": saved,
+        **extra,
     }
-    return render(request, "parts/inline_edit/display.html", ctx)
+    response = render(request, "parts/inline_edit/display.html", ctx)
+    if saved:
+        response["HX-Trigger-After-Swap"] = "inline-edit-saved"
+    return response
 
 
 def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) -> HttpResponse:
     # Edit-mode partial: form + save/cancel. On validation failure, `form` carries inline errors.
-    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "form": form}
-    return render(request, "parts/inline_edit/form.html", ctx)
+    from wies.core.inline_edit.base import EditableGroup  # noqa: PLC0415
+
+    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "form": form, "editable": spec}
+    template = (
+        spec.form_template if isinstance(spec, EditableGroup) and spec.form_template else "parts/inline_edit/form.html"
+    )
+    return render(request, template, ctx)
 
 
 def _render_inline_edit_collection_form(request, editable_set, spec, obj, formset) -> HttpResponse:
@@ -2518,8 +2629,12 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
     if request.method == "POST":
         formset = spec.formset_factory(data=request.POST)
         if formset.is_valid():
+            before = spec.audit_state(obj) if spec.audit_state else None
             try:
-                spec.save(obj, formset)
+                with transaction.atomic():
+                    spec.save(obj, formset)
+                    after = spec.audit_state(obj) if spec.audit_state else None
+                    _emit_inline_edit_audit_event(spec, obj, before, after, request.user)
             except ValidationError as exc:
                 for message in exc.messages:
                     _attach_formset_error(formset, message)
@@ -2538,26 +2653,12 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
 _AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "OrganizationUnit": "OrganizationUnit"}
 
 
-def _emit_inline_edit_audit_event(spec, obj, old_value, new_value, user) -> None:
-    """Record an audit event for a single-Editable change on a tracked model.
-
-    Only fires for `Editable` (not Group/Collection) on models in
-    `_AUDIT_OBJECT_TYPES`. No-op when old == new so editing without a
-    real change doesn't create noise.
-    """
-    if not isinstance(spec, Editable):
+def _record_editable_change(editable, obj, object_type, old_value, new_value, user) -> None:
+    to_state = editable.audit_state or (lambda v: v)
+    old_state = to_state(old_value)
+    new_state = to_state(new_value)
+    if old_state == new_state:
         return
-    object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
-    if object_type is None:
-        return
-    if str(old_value or "") == str(new_value or ""):
-        return
-    from django import forms  # noqa: PLC0415
-
-    widget = spec.widget
-    is_textarea = isinstance(widget, forms.Textarea) or (
-        isinstance(widget, type) and issubclass(widget, forms.Textarea)
-    )
     create_event(
         object_type=object_type,
         action="update",
@@ -2565,11 +2666,80 @@ def _emit_inline_edit_audit_event(spec, obj, old_value, new_value, user) -> None
         object_id=obj.id,
         user=user,
         context={
-            "field_type": "textarea" if is_textarea else "text",
-            "field_name": spec.field or spec.name or "",
-            "field_label": spec.label or spec.name or "",
-            "old_value": str(old_value or ""),
-            "new_value": str(new_value or ""),
+            "field_name": editable.field or editable.name or "",
+            "field_label": editable.label or editable.name or "",
+            "old_value": old_state,
+            "new_value": new_state,
+        },
+    )
+
+
+def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_editables=None) -> None:
+    object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
+    if object_type is None:
+        return
+
+    if isinstance(spec, Editable):
+        _record_editable_change(spec, obj, object_type, before, after, user)
+        return
+
+    if isinstance(spec, EditableGroup):
+        for child in child_editables or []:
+            _record_editable_change(child, obj, object_type, before.get(child.name), after.get(child.name), user)
+        return
+
+    if isinstance(spec, EditableCollection):
+        if spec.audit_state is None:
+            return
+        changes = _diff_collection_state(before, after)
+        if not changes:
+            return
+        create_event(
+            object_type=object_type,
+            action="update",
+            source="user",
+            object_id=obj.id,
+            user=user,
+            context={
+                "field_name": spec.name or "",
+                "field_label": spec.label or spec.name or "",
+                "changes": changes,
+            },
+        )
+
+
+def _diff_collection_state(old_state: list[dict], new_state: list[dict]) -> list[dict]:
+    old_by_id = {r["id"]: r for r in old_state}
+    new_by_id = {r["id"]: r for r in new_state}
+    changes: list[dict] = [{"old": None, "new": r} for r in new_state if r["id"] not in old_by_id]
+    changes.extend({"old": r, "new": None} for r in old_state if r["id"] not in new_by_id)
+    changes.extend(
+        {"old": old_by_id[sid], "new": new_by_id[sid]}
+        for sid in old_by_id.keys() & new_by_id.keys()
+        if old_by_id[sid] != new_by_id[sid]
+    )
+    return changes
+
+
+def _emit_placement_change_on_assignment(placement, before_row: dict, user) -> None:
+    """Record a placement edit as a "Team" event on its parent assignment,
+    so it renders identically to the Team-bewerken flow (#393)."""
+    from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids circular import
+
+    assignment = placement.service.assignment
+    after_row = placement_audit_row(placement)
+    if before_row == after_row:
+        return
+    create_event(
+        object_type="Assignment",
+        action="update",
+        source="user",
+        object_id=assignment.id,
+        user=user,
+        context={
+            "field_name": "services",
+            "field_label": "Team",
+            "changes": [{"old": before_row, "new": after_row}],
         },
     )
 
@@ -2617,10 +2787,35 @@ def inline_edit_view(request, model_label, pk, name):
         )
         form = form_cls(request.POST)
         if form.is_valid():
-            old_value = _current_value(obj, spec) if isinstance(spec, Editable) else None
-            save_spec(spec, editables, form.cleaned_data, obj)
-            new_value = _current_value(obj, spec) if isinstance(spec, Editable) else None
-            _emit_inline_edit_audit_event(spec, obj, old_value, new_value, request.user)
+            if isinstance(spec, EditableGroup):
+                before = {e.name: _current_value(obj, e) for e in editables}
+            else:
+                before = _current_value(obj, spec)
+            # A placement edit (e.g. period via the profile) has no audit
+            # type of its own; mirror it onto the parent assignment's
+            # timeline like the "Team bewerken" flow (#393).
+            placement_before = None
+            if type(obj).__name__ == "Placement":
+                from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids circular import
+
+                placement_before = placement_audit_row(obj)
+            with transaction.atomic():
+                save_spec(spec, editables, form.cleaned_data, obj)
+                if isinstance(spec, EditableGroup):
+                    after = {e.name: _current_value(obj, e) for e in editables}
+                else:
+                    after = _current_value(obj, spec)
+                _emit_inline_edit_audit_event(
+                    spec,
+                    obj,
+                    before,
+                    after,
+                    request.user,
+                    child_editables=editables if isinstance(spec, EditableGroup) else None,
+                )
+                if placement_before is not None:
+                    obj.refresh_from_db()
+                    _emit_placement_change_on_assignment(obj, placement_before, request.user)
             return _render_inline_edit_display(
                 request,
                 editable_set,

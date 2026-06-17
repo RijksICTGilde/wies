@@ -4,7 +4,62 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ...
+- ?: ...
+
+## 2026-01-16
+
+- 398: bug fixes — Business Manager link no longer breaks the page and now survives editing/cancelling (#395), only the pencil icon opens inline edit (links and "Toon meer" no longer trigger edit mode), clicking a team member opens the panel via htmx again instead of a full page reload, team period changes now show in updates (#393), no more HiddenInput widget warnings (#389)
+- 397: fix team-edit "Neem opdrachtperiode over" checkbox rendering as checked for rows whose effective period differs from the assignment
+
+## 2026-06-11
+
+- 392: support staff (users in `STAFF_EMAILS`) can now edit assignments, even when not owner
+- 390: reduce the memory footprint of org sync task to approximately half
+
+## 2026-06-10
+
+- 368: (migration) placement periods can now be set independently from the assignment period via inline-edit on the placement panel; team cards are clickable and open the placement panel
+- 368: assignment team form redesigned — separate "Aanvraag toevoegen" and "Geplaatste consultant toevoegen" buttons with progressive field reveal
+- 368: lock icon on externally managed fields (e.g. OTYS)
+- 368: merge duplicate assignments tool in beheer — preview and confirm UI to combine assignments with the same name, owner, and primary client
+- 368: BM can now edit service descriptions (role omschrijving) via inline-edit
+- 368: fix that mutliple team members during assignment creation are correctly persisted (became requests before)
+- 374: (migration)(remove env vars) remove super users and remove automatic generation during container start
+- 331: restore organization breadcrumbs in opdracht side panel; breadcrumb links stay on the page you came from (aanvragen or wie-zit-waar)
+- 331: log audit events for changes to the looptijd (start/end date) and team (rollen + plaatsingen) on opdrachten
+- 331: restore the ability for placed consultants to edit the opdracht name
+- 331: show open rollen (aanvragen) first in the team list again
+- 331: fix team-edit silently wiping placement metadata (specific-dates, source_id) on every save by round-tripping Service/Placement PKs through the formset
+
+## 2026-06-01
+
+- 343: remove explicit container name to improve worktrees experience
+- 343: remove django admin
+- 342: fix "Nieuwe gebruiker" form silently failing on duplicate e-mail — error is now shown inline next to the e-mailveld (regressie van #322)
+- 341: Add placement panel: clicking a row in "Wie zit waar?" now shows placement-specific info (role, description, period) instead of the generic colleague profile
+- 341: UX improvements for assignment detail panel: text buttons, compact team cards, floating toast on save
+- 341: Rename "Vacatures" to "Aanvragen" throughout the UI
+- 341: UX improvements for the assignment create form: rename "Diensten" to "Rollen", clarify labels and help text
+- 341: Prevent side panel and modals from closing on backdrop click while editing
+- 341: Make entire inline-edit row clickable (not just the pencil icon)
+- 341: Fix sidebar filter scroll: dynamically adjust max-height for header offset
+- 324: replace raw HTML with JRC components across templates and include roos.css
+- 324: add sortable Tot column to placement table
+- 336: fix user CSV import to accept `;` delimiter and files with UTF-8 BOM
+- 336: fix assignment CSV import to accept files with UTF-8 BOM
+- 332: fix CSV import collapsing multiple placements onto one Service (e.g. two `Architect` rows on JusticeLink hid one team member); each placed row now gets its own Service, re-uploads stay idempotent
+- 332: (migration) split existing CSV-sourced Services that have >1 Placement so each Placement gets its own Service (OTYS-sourced services untouched)
+- 320: move /staff content to instellingen
+- 320: rename instellingen to beheer
+- 320: remove database dump download/upload and 'Sync OTYS' actions
+- 320: guard destructive /staff/ actions (clear data, load dummy data) behind the `ENABLE_DESTRUCTIVE_STAFF_ACTIONS` env var
+- 320: add usage dashboard for staff members
+
+## 2026-05-11_2
+
+- 322: (migration) deduplicate Colleague and User records and make Colleague and User unique constraint case-insensitive
+- 322: fix duplicate Colleague creation on user create/update by reusing an existing unlinked Colleague with the same email (case-insensitive)
+- 322: treat email as case-insensitive in user create/update uniqueness checks
 
 ## 2026-05-11
 
@@ -21,6 +76,9 @@ This files lists the changes during the lifetime of this project.
 - 309: add sidebar footer with links to privacy, toegankelijkheid, contact and GitHub
 - 309: add privacy, toegankelijkheid and contact pages
 - 309: make sidebar sticky so footer stays visible during scroll
+- 58: add logout button to profile and no-access pages
+- 58: on logout, clear Django session and redirect to Keycloak's OIDC end_session endpoint
+- 58: force credential re-prompt after logout via a session-scoped post_logout cookie + prompt=login, preventing silent re-auth until the browser is closed
 
 ## 2026-04-23
 

@@ -1,13 +1,12 @@
 """Tests for the permission engine and the rules registered against it.
 
-Covers the engine surface (verb composition, superuser short-circuit,
-field vs whole-object lookup) and the production rules in
-``permissions.py``.
+Covers the engine surface (verb composition, field vs whole-object
+lookup) and the production rules in ``permissions.py``.
 """
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from wies.core.editables import (
@@ -51,8 +50,10 @@ class HasPermissionEngineTest(_Setup):
 
         assert has_permission(Verb.UPDATE, self.assignment, AnonymousUser()) is False
 
-    def test_superuser_short_circuits_every_check(self):
-        # Even rules that would deny return True for superusers.
+    def test_superuser_gets_all_perms_via_django_model_backend(self):
+        # The engine no longer short-circuits superusers; they pass because
+        # rules consult user.has_perm(...) and Django's ModelBackend grants
+        # superusers every permission.
         assert has_permission(Verb.UPDATE, self.assignment, self.superuser) is True
         assert has_permission(Verb.UPDATE, self.placement, self.superuser) is True
         assert has_permission(Verb.UPDATE, self.assignment, self.superuser, AssignmentEditables.extra_info) is True
@@ -99,6 +100,34 @@ class AssignmentPermissionRulesTest(_Setup):
         assert has_permission(Verb.UPDATE, self.assignment, u) is True
 
 
+@override_settings(STAFF_EMAILS=["staff@x.nl"])
+class StaffMemberCanEditAssignmentTest(_Setup):
+    """Users in ``STAFF_EMAILS`` can edit wies-sourced assignments and their
+    chained Service/Placement records (issue #392). External-source
+    assignments stay read-only."""
+
+    def setUp(self):
+        super().setUp()
+        self.staff_user = User.objects.create_user(email="staff@x.nl", first_name="S", last_name="T")
+
+    def test_staff_can_update_assignment(self):
+        assert has_permission(Verb.UPDATE, self.assignment, self.staff_user) is True
+
+    def test_staff_can_update_service(self):
+        assert has_permission(Verb.UPDATE, self.service, self.staff_user) is True
+
+    def test_staff_can_update_placement(self):
+        assert has_permission(Verb.UPDATE, self.placement, self.staff_user) is True
+
+    def test_staff_cannot_update_external_assignment(self):
+        ext = Assignment.objects.create(name="X", owner=self.owner, source="otys_iir")
+        assert has_permission(Verb.UPDATE, ext, self.staff_user) is False
+
+    def test_non_staff_unrelated_user_still_denied(self):
+        # Sanity check that the override doesn't accidentally grant everyone.
+        assert has_permission(Verb.UPDATE, self.assignment, self.unrelated_user) is False
+
+
 class PlacementPermissionTest(_Setup):
     """A colleague placed on an assignment must not be able to update
     Placement records on the same assignment — only the assignment
@@ -130,10 +159,8 @@ class ServiceDescriptionRuleTest(_Setup):
     def test_placed_on_service_can_update_description(self):
         assert has_permission(Verb.UPDATE, self.service, self.placed_user, ServiceEditables.description) is True
 
-    def test_owner_cannot_update_service_description_inline(self):
-        # BM uses the team editor for service descriptions — the
-        # field-level rule excludes them on purpose.
-        assert has_permission(Verb.UPDATE, self.service, self.owner_user, ServiceEditables.description) is False
+    def test_owner_can_update_service_description(self):
+        assert has_permission(Verb.UPDATE, self.service, self.owner_user, ServiceEditables.description) is True
 
 
 class UserEmailFieldRuleTest(TestCase):

@@ -20,6 +20,9 @@ OIDC_CLIENT_ID = None
 OIDC_CLIENT_SECRET = None
 OIDC_DISCOVERY_URL = None
 
+# Tests rely on clear_data / load_base_data; keep them enabled by default.
+ENABLE_DESTRUCTIVE_STAFF_ACTIONS = True
+
 # PASSWORDS
 # ----------------------------------------------------------------------------------------------------------------------
 # Use fast password hasher for tests
