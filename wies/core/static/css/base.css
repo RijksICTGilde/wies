@@ -6,13 +6,19 @@ html {
 .prose-editor .ProseMirror {
   min-height: 4.5em;
 }
+/* The menubar is position:sticky (top:0); a transparent background let the
+   editor text show through the toolbar when it overlapped on scroll, making
+   both unreadable. Give it an opaque white background. */
 .prose-editor .prose-menubar:not(:empty) {
-  background: transparent;
+  background: #fff;
   box-shadow: none;
   border-bottom: 1px solid #ccc;
 }
 .prose-editor .prose-menubar button {
-  background: transparent;
+  background: #fff;
+}
+.prose-editor .prose-menubar button:hover {
+  background: var(--rvo-color-grijs-200, #dce3ea);
 }
 
 /* Live character counter (see prose_editor_init.js). */
