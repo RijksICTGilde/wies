@@ -165,19 +165,31 @@ OTYS_API_KEY = os.environ.get("OTYS_API_KEY", "")
 OTYS_URL = os.environ.get("OTYS_URL", "")
 
 # Rijksprofielservice (PoC) settings.
-# Two URLs because Wies talks to the service in two ways:
-# - BROWSER_URL: where Django redirects the user's browser (must be reachable from
-#   the user's machine, e.g. localhost:8000).
-# - API_URL / TOKEN_URL: where Wies' server makes back-channel HTTP calls (must be
-#   reachable from inside the Django container; on macOS host.docker.internal works).
+# Sinds PoC2 is de profielservice zelf de OAuth Authorization Server
+# (django-oauth-toolkit). Twee clients zijn per app geregistreerd:
+# - `RIJKSPROFIELSERVICE_CLIENT_ID` (auth-code + PKCE) — voor de consent-flow
+#   waarmee Wies de SSO-subject van de gebruiker vaststelt.
+# - `RIJKSPROFIELSERVICE_M2M_CLIENT_ID` (client-credentials) — voor de batch-API
+#   waarmee Wies (collega-)profielen ophaalt.
+#
+# Twee URLs omdat Wies in twee richtingen praat:
+# - BROWSER_URL: waar Django de browser van de gebruiker naartoe stuurt (moet bereikbaar
+#   zijn vanaf de machine van de gebruiker, bv. localhost:8000).
+# - API_URL / TOKEN_URL: waar Wies' server back-channel HTTP-calls doet (moet vanuit
+#   de Django-container bereikbaar zijn; op macOS werkt host.docker.internal).
 RIJKSPROFIELSERVICE_BROWSER_URL = os.environ.get("RIJKSPROFIELSERVICE_BROWSER_URL", "http://localhost:8000")
 RIJKSPROFIELSERVICE_API_URL = os.environ.get("RIJKSPROFIELSERVICE_API_URL", "http://localhost:8000")
-# When the API is reached via host.docker.internal from a container, the
-# profile service may reject the Host header. Override it explicitly via env.
+# Bij toegang via host.docker.internal vanuit een container kan de profielservice
+# de Host-header afkeuren. Override via env als dat nodig is.
 RIJKSPROFIELSERVICE_API_HOST_HEADER = os.environ.get("RIJKSPROFIELSERVICE_API_HOST_HEADER", "")
 RIJKSPROFIELSERVICE_CLIENT_ID = os.environ.get("RIJKSPROFIELSERVICE_CLIENT_ID", "wies")
+RIJKSPROFIELSERVICE_M2M_CLIENT_ID = os.environ.get("RIJKSPROFIELSERVICE_M2M_CLIENT_ID", "wies-m2m")
 RIJKSPROFIELSERVICE_CLIENT_SECRET = os.environ.get("RIJKSPROFIELSERVICE_CLIENT_SECRET", "")
 RIJKSPROFIELSERVICE_TOKEN_URL = os.environ.get(
     "RIJKSPROFIELSERVICE_TOKEN_URL",
-    "http://localhost:8081/realms/profielservice/protocol/openid-connect/token",
+    "http://localhost:8000/o/token/",
+)
+RIJKSPROFIELSERVICE_AUTHORIZE_URL = os.environ.get(
+    "RIJKSPROFIELSERVICE_AUTHORIZE_URL",
+    "http://localhost:8000/o/authorize/",
 )

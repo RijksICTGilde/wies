@@ -1,7 +1,9 @@
 """Client for the Rijksprofielservice PoC.
 
-Handles Keycloak M2M client-credentials token retrieval (with a tiny in-process
-cache that respects the token's `expires_in`) and the batch profile fetch.
+Handles client-credentials token retrieval (with a tiny in-process cache that
+respects the token's `expires_in`) and the batch profile fetch. The token
+endpoint is the Rijksprofielservice's own OAuth Authorization Server
+(django-oauth-toolkit) — see `RIJKSPROFIELSERVICE_TOKEN_URL`.
 """
 
 import logging
@@ -16,17 +18,25 @@ _token_cache: dict = {"token": None, "expires_at": 0.0}
 
 
 def get_m2m_token() -> str:
-    """Fetch a client-credentials token from Keycloak, cached until ~30s before expiry."""
+    """Fetch a client-credentials token, cached until ~30s before expiry."""
     if _token_cache["token"] and _token_cache["expires_at"] > time.time() + 30:
         return _token_cache["token"]
+
+    headers = {}
+    # Local-dev: host.docker.internal als netwerk-route, maar de profielservice'
+    # ALLOWED_HOSTS accepteert alleen "localhost" — Host-header overschrijven.
+    if settings.RIJKSPROFIELSERVICE_API_HOST_HEADER:
+        headers["Host"] = settings.RIJKSPROFIELSERVICE_API_HOST_HEADER
 
     response = requests.post(
         settings.RIJKSPROFIELSERVICE_TOKEN_URL,
         data={
             "grant_type": "client_credentials",
-            "client_id": settings.RIJKSPROFIELSERVICE_CLIENT_ID,
+            "scope": "read_profile",
+            "client_id": settings.RIJKSPROFIELSERVICE_M2M_CLIENT_ID,
             "client_secret": settings.RIJKSPROFIELSERVICE_CLIENT_SECRET,
         },
+        headers=headers,
         timeout=5,
     )
     response.raise_for_status()
