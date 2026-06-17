@@ -35,7 +35,7 @@
           <dd>
             {{ inline_edit(panel_data.assignment, "name") }}
           </dd>
-          <dt>Beschrijving</dt>
+          <dt>Opdrachtomschrijving</dt>
           <dd>
             {{ inline_edit(panel_data.assignment, "extra_info") }}
           </dd>
@@ -53,7 +53,7 @@
             </dd>
           {% endif %}
           <dt>
-            {% if panel_data.org_breadcrumbs and panel_data.org_breadcrumbs|length > 1 %}
+            {% if panel_data.organization_count > 1 %}
               Opdrachtgevers
             {% else %}
               Opdrachtgever
@@ -74,9 +74,7 @@
           {% endif %}
           <dt>Business Manager</dt>
           <dd>
-            {{ inline_edit(panel_data.assignment, "owner",
-                        owner_url=panel_data.owner_url,
-                        owner_mailto=panel_data.owner_mailto_href) }}
+            {{ inline_edit(panel_data.assignment, "owner") }}
           </dd>
           </c-data-list>
         </section>
@@ -91,7 +89,7 @@
               </c-button>
             {% endif %}
           </div>
-          {{ inline_edit(a, "services", hide_edit_button=true) }}
+          {{ inline_edit(a, "services") }}
         </section>
       </div>
     </div>

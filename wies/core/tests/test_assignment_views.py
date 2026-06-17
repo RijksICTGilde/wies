@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
-from django.test import Client, TestCase
+from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
 from wies.core.models import Assignment, Colleague, Event, Placement, Service
@@ -117,11 +117,8 @@ class AssignmentEditAttributeTest(TestCase):
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Owner Updated Name"
 
-    def test_assigned_colleague_cannot_edit_name(self):
-        """A colleague placed on the assignment must not be able to edit
-        a management field like ``name`` — only the description-style
-        fields (``extra_info``) carry a placed-consultant override.
-        """
+    def test_assigned_colleague_can_edit_name(self):
+        """A consultant placed on the assignment can edit ``name``."""
         self.client.force_login(self.assigned_user)
 
         response = self.client.post(
@@ -130,9 +127,8 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-        self.assertContains(response, "geen rechten")
         self.assignment.refresh_from_db()
-        assert self.assignment.name == "Test Assignment"
+        assert self.assignment.name == "Colleague Updated Name"
 
     def test_assigned_colleague_can_edit_extra_info(self):
         """Placed consultants do gain narrow access to ``extra_info`` (description)."""
@@ -228,6 +224,60 @@ class AssignmentEditAttributeTest(TestCase):
         """External-source (otys_iir) assignments are read-only — display
         partial + denial alert, DB unchanged."""
         self.client.force_login(self.user_with_permission)
+
+        response = self.client.post(
+            reverse("inline-edit", args=["assignment", self.external_assignment.id, "name"]),
+            {"name": "Attempted Update"},
+        )
+
+        assert response.status_code == 200
+        self.assertContains(response, "geen rechten")
+        self.external_assignment.refresh_from_db()
+        assert self.external_assignment.name == "External Assignment"
+
+    @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
+    def test_staff_member_can_edit_assignment_owner(self):
+        """A user in STAFF_EMAILS can edit whole-object fields on an
+        assignment they don't own (issue #392)."""
+        staff_user = User.objects.create_user(
+            email="staff@rijksoverheid.nl",
+            first_name="Staff",
+            last_name="Member",
+        )
+        new_bdm_user = User.objects.create_user(
+            email="bdm2@rijksoverheid.nl",
+            first_name="New",
+            last_name="BDM",
+        )
+        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
+        new_bdm_user.groups.add(bdm_group)
+        new_bdm = Colleague.objects.create(
+            user=new_bdm_user,
+            name="New BDM",
+            email="bdm2@rijksoverheid.nl",
+            source="wies",
+        )
+        self.client.force_login(staff_user)
+
+        response = self.client.post(
+            reverse("inline-edit", args=["assignment", self.assignment.id, "owner"]),
+            {"owner": new_bdm.id},
+        )
+
+        assert response.status_code == 200
+        self.assignment.refresh_from_db()
+        assert self.assignment.owner_id == new_bdm.id
+
+    @override_settings(STAFF_EMAILS=["staff@rijksoverheid.nl"])
+    def test_staff_member_cannot_edit_external_source_assignment(self):
+        """Staff still can't edit non-wies-sourced assignments — the
+        ``_is_wies_sourced`` gate runs before the staff branch."""
+        staff_user = User.objects.create_user(
+            email="staff@rijksoverheid.nl",
+            first_name="Staff",
+            last_name="Member",
+        )
+        self.client.force_login(staff_user)
 
         response = self.client.post(
             reverse("inline-edit", args=["assignment", self.external_assignment.id, "name"]),
@@ -407,7 +457,6 @@ class AssignmentEditAttributeTest(TestCase):
         assert event.object_id == self.assignment.id
         assert event.user == self.user_with_permission
         assert event.user_email == "perm@rijksoverheid.nl"
-        assert event.context["field_type"] == "text"
         assert event.context["field_name"] == "name"
         assert event.context["field_label"] == "Opdracht naam"
         assert event.context["old_value"] == "Test Assignment"
@@ -452,9 +501,8 @@ class AssignmentEditAttributeTest(TestCase):
             source="user",
             object_id=self.assignment.id,
             context={
-                "field_type": "textarea",
                 "field_name": "extra_info",
-                "field_label": "Beschrijving",
+                "field_label": "Opdrachtomschrijving",
                 "old_value": long_old,
                 "new_value": long_new,
             },
@@ -463,7 +511,7 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
 
         assert response.status_code == 200
-        self.assertContains(response, "Beschrijving")
+        self.assertContains(response, "Opdrachtomschrijving")
         self.assertContains(response, "truncated-text")
         self.assertContains(response, "show-more-toggle")
         self.assertContains(response, "Toon meer")
@@ -481,9 +529,8 @@ class AssignmentEditAttributeTest(TestCase):
             source="user",
             object_id=self.assignment.id,
             context={
-                "field_type": "textarea",
                 "field_name": "extra_info",
-                "field_label": "Beschrijving",
+                "field_label": "Opdrachtomschrijving",
                 "old_value": "short old",
                 "new_value": "short new",
             },
@@ -496,6 +543,37 @@ class AssignmentEditAttributeTest(TestCase):
         self.assertContains(response, "short new")
         self.assertNotContains(response, "show-more-toggle")
 
+    def test_timeline_renders_collection_event_as_bullets(self):
+        """A services-collection event stores per-change deltas; the
+        timeline view formats each change at render time via the spec's
+        `render_change` callable and shows them as bullets."""
+        self.client.force_login(self.user_with_permission)
+        Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_name": "services",
+                "field_label": "Team",
+                "changes": [
+                    {
+                        "old": None,
+                        "new": {"id": 2, "skill_name": "Java", "colleague_name": None, "description": ""},
+                    },
+                ],
+            },
+        )
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, "Team")
+        self.assertContains(response, "Toegevoegd: Java (open)")
+        self.assertContains(response, "rvo-list")
+
     def test_timeline_renders_text_change_inline(self):
         """Text field changes render inline as 'van X naar Y'"""
         self.client.force_login(self.user_with_permission)
@@ -507,7 +585,6 @@ class AssignmentEditAttributeTest(TestCase):
             source="user",
             object_id=self.assignment.id,
             context={
-                "field_type": "text",
                 "field_name": "name",
                 "field_label": "Opdracht naam",
                 "old_value": "Old Name",

@@ -1,4 +1,5 @@
 from datetime import date
+from urllib.parse import urlparse
 
 from django.conf import settings
 from django.contrib.messages import get_messages
@@ -20,7 +21,8 @@ from wies.core.editables import (
 )
 from wies.core.inline_edit.jinja import inline_edit
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.permissions import can_view_staff_page
+from wies.core.permissions import is_staff_member
+from wies.core.services.organizations import get_org_breadcrumb
 from wies.core.services.version import get_app_version
 
 
@@ -127,6 +129,15 @@ def get_sort_state(request, field):
     return None
 
 
+def breadcrumb_base_url(request):
+    hx_url = request.headers.get("HX-Current-URL", "")
+    if hx_url:
+        path = urlparse(hx_url).path
+        if path:
+            return path
+    return request.path
+
+
 def environment(**options):
     env = Environment(**options)  # noqa: S701 - autoescape handled by Django
     setup_components(env)
@@ -139,10 +150,12 @@ def environment(**options):
             "get_toggle_sort_url": get_toggle_sort_url,
             "get_sort_state": get_sort_state,
             "get_messages": get_messages,
-            "can_view_staff_page": can_view_staff_page,
+            "is_staff_member": is_staff_member,
             "DEBUG": settings.DEBUG,
             "APP_VERSION": get_app_version(),
             "inline_edit": inline_edit,
+            "get_org_breadcrumb": get_org_breadcrumb,
+            "breadcrumb_base_url": breadcrumb_base_url,
             "has_permission": has_permission,
             "Verb": Verb,
             "AssignmentEditables": AssignmentEditables,

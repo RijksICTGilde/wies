@@ -1,12 +1,5 @@
-{# Display for Assignment.owner. Context:
-  obj              — Assignment
-  value            — Colleague | None
-  owner_url        — optional: side-panel URL for navigating to the
-                     owner's profile. When absent, the name renders
-                     plain (post-save re-renders lose this extra).
-  owner_mailto     — optional: prefilled mailto URL. Falls back to
-                     a plain mailto:<email> when absent.
-#}
+{# owner_url / owner_mailto come from the owner editable's display_context,
+  so they survive an inline edit/cancel re-render (#395). #}
 {% if value %}
   <span class="inline-edit-owner">
     {% if owner_url %}

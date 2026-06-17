@@ -6,6 +6,31 @@ This files lists the changes during the lifetime of this project.
 
 - 373: rich text editing voor omschrijvingen (Service.description, Assignment.extra_info) via django-prose-editor (#379)
 
+## 2026-01-16
+
+- 398: bug fixes — Business Manager link no longer breaks the page and now survives editing/cancelling (#395), only the pencil icon opens inline edit (links and "Toon meer" no longer trigger edit mode), clicking a team member opens the panel via htmx again instead of a full page reload, team period changes now show in updates (#393), no more HiddenInput widget warnings (#389)
+- 397: fix team-edit "Neem opdrachtperiode over" checkbox rendering as checked for rows whose effective period differs from the assignment
+
+## 2026-06-11
+
+- 392: support staff (users in `STAFF_EMAILS`) can now edit assignments, even when not owner
+- 390: reduce the memory footprint of org sync task to approximately half
+
+## 2026-06-10
+
+- 368: (migration) placement periods can now be set independently from the assignment period via inline-edit on the placement panel; team cards are clickable and open the placement panel
+- 368: assignment team form redesigned — separate "Aanvraag toevoegen" and "Geplaatste consultant toevoegen" buttons with progressive field reveal
+- 368: lock icon on externally managed fields (e.g. OTYS)
+- 368: merge duplicate assignments tool in beheer — preview and confirm UI to combine assignments with the same name, owner, and primary client
+- 368: BM can now edit service descriptions (role omschrijving) via inline-edit
+- 368: fix that mutliple team members during assignment creation are correctly persisted (became requests before)
+- 374: (migration)(remove env vars) remove super users and remove automatic generation during container start
+- 331: restore organization breadcrumbs in opdracht side panel; breadcrumb links stay on the page you came from (aanvragen or wie-zit-waar)
+- 331: log audit events for changes to the looptijd (start/end date) and team (rollen + plaatsingen) on opdrachten
+- 331: restore the ability for placed consultants to edit the opdracht name
+- 331: show open rollen (aanvragen) first in the team list again
+- 331: fix team-edit silently wiping placement metadata (specific-dates, source_id) on every save by round-tripping Service/Placement PKs through the formset
+
 ## 2026-06-01
 
 - 343: remove explicit container name to improve worktrees experience
@@ -349,3 +374,5 @@ This files lists the changes during the lifetime of this project.
 - add syncing between exact and wies colleagues
 
 ## demo-2025-08-04
+
+...

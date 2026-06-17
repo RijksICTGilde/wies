@@ -43,17 +43,12 @@
     </dd>
     <dt>Periode</dt>
     <dd>
-      {% if placement.start_date or placement.end_date %}
-        <span class="icon-text-inline">
-          <c-icon icon="kalender" size="md" color="grijs-700" />
-          {{ placement.start_date|datum_nl("j F Y") if placement.start_date else "–" }}
-          t/m
-          {{ placement.end_date|datum_nl("j F Y") if placement.end_date else "heden" }}
-        </span>
-      {% else %}
-        <span class="rvo-text--italic">Geen periode ingesteld</span>
-      {% endif %}
+      {{ inline_edit(placement, "period") }}
     </dd>
     </c-data-list>
+  </section>
+  <section>
+    {% set colleague_url = '/opdrachten/?collega=' ~ colleague.id %}
+    <c-link href="{{ colleague_url }}" hx-get="{{ colleague_url }}" hx-target="#side_panel-content">Bekijk alle opdrachten van {{ colleague.name.split()[0] }} ›</c-link>
   </section>
 </div>

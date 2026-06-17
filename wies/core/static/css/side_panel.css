@@ -132,7 +132,11 @@ dialog#side_panel::backdrop {
 
 /* Sidepanel data list styling */
 .rvo-dialog .rvo-data-list {
-  grid-template-columns: 160px 1fr !important;
+  grid-template-columns: 190px 1fr !important;
+}
+
+.rvo-dialog .rvo-data-list dd {
+  min-width: 0;
 }
 
 /* Organisation breadcrumb in detail panel */
@@ -168,7 +172,6 @@ dialog#side_panel::backdrop {
 
 .rvo-item-list__item--vacant {
   border-style: dashed;
-  background: var(--rvo-color-grijs-50, #f9fafb);
 }
 
 .rvo-item-list__content {
@@ -346,7 +349,25 @@ dialog#side_panel::backdrop {
   align-items: center;
   gap: 0.75rem;
   padding: 0.5rem 0.75rem;
-  background: var(--rvo-color-grijs-100, #f3f4f6);
+}
+
+.service-card__tag {
+  margin-left: auto;
+}
+
+.service-card__period {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--rvo-color-grijs-600, #475569);
+  white-space: nowrap;
+}
+
+/* Tag already pushes right; period follows without gap */
+.service-card__tag + .service-card__period {
+  margin-left: -0.25rem;
 }
 
 .service-card__description {
@@ -354,8 +375,29 @@ dialog#side_panel::backdrop {
   font-style: italic;
 }
 
-/* Remove misleading hover on team cards (only the name link is clickable) */
-.rvo-item-list__item--filled:hover {
+/* External source lock indicator — mirrors .edit-icon-button position */
+.source-lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  color: var(--rvo-color-grijs-500, #64748b);
+  cursor: default;
+  flex-shrink: 0;
+}
+
+/* Clickable team cards — match assignment-card hover style (header only) */
+.rvo-item-list__item--filled.clickable-row:hover {
+  border-color: var(--rvo-color-hemelblauw, #007bc7);
+  background-color: white !important;
+}
+
+.rvo-item-list__item--filled.clickable-row:hover .service-card__name {
+  background: var(--rvo-color-hemelblauw-150, #f0f6fc);
+}
+
+/* Non-clickable filled cards keep neutral hover */
+.rvo-item-list__item--filled:not(.clickable-row):hover {
   border-color: var(--rvo-color-grijs-300, #c5ced6);
   background: inherit;
 }
