@@ -16,6 +16,19 @@
     <c-icon icon="kruis" size="md" class="sidebar-toggle__icon sidebar-toggle__icon--close" />
   </button>
 </div>
+{# Wis alle filters — alleen zichtbaar als er actieve filters zijn. De
+   zichtbaarheid wordt na elke filterwijziging door filters.js bijgewerkt
+   (de sidebar-kop zelf wordt niet ge-OOB-swapt). #}
+<div class="sidebar__clear-row{% if not active_filter_count %} sidebar__clear-row--hidden{% endif %}"
+     data-sidebar-clear-row>
+  <button type="button"
+          class="sidebar__clear-button"
+          data-clear-all-filters
+          aria-label="Wis alle filters">
+    <c-icon icon="kruis" size="sm" class="sidebar__clear-icon" />
+    <span class="sidebar__clear-text">Wis alle filters</span>
+  </button>
+</div>
 <form class="rvo-form filter-sidebar-form"
       hx-get="{{ filter_target_url }}"
       hx-target="#filter-and-table-container"

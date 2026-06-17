@@ -2325,25 +2325,42 @@ def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int
 def _get_top_org_options(
     count_mode: str, excluded_org_ids: list[int], selected_org_ids: set[str], *, limit: int = 3
 ) -> list[dict]:
-    """Return the top-N opdrachtgevers (by direct count) as quick checkbox options.
+    """Return opdrachtgever quick checkbox options: selected first, then top-N by count.
 
     Shares the ``org`` filter param with the modal — selecting one here is
-    equivalent to selecting it in the client modal.
+    equivalent to selecting it in the client modal. Mirrors the select-multi
+    groups (see ``_finalize_filter_groups``): a selected org is ALWAYS shown
+    inline as a checked checkbox, even when it isn't among the top-N by count
+    (e.g. picked via the search suggestion or the modal). Selected options are
+    listed first so the active selection reads clearly; once anything is
+    selected the empty top-N options are dropped to keep the list calm.
     """
     org_self_counts = _get_org_counts(count_mode, excluded_org_ids)
-    top = org_self_counts.most_common(limit)
-    if not top:
+    selected_ids = {int(x) for x in selected_org_ids if str(x).isdigit()}
+
+    # Always show every selected org, then pad with the highest-count unselected
+    # orgs up to ``limit`` total (so with <limit selected the user still sees a
+    # few quick choices; with >=limit selected the empty options drop away).
+    fill = max(0, limit - len(selected_ids))
+    top_unselected = [oid for oid, _ in org_self_counts.most_common() if oid not in selected_ids][:fill]
+    wanted_ids = selected_ids | set(top_unselected)
+
+    if not wanted_ids:
         return []
-    labels = dict(OrganizationUnit.objects.filter(id__in=[oid for oid, _ in top]).values_list("id", "label"))
-    return [
+
+    labels = dict(OrganizationUnit.objects.filter(id__in=wanted_ids).values_list("id", "label"))
+    options = [
         {
             "value": str(org_id),
             "label": labels.get(org_id) or f"Organisatie {org_id}",
-            "count": count,
-            "selected": str(org_id) in selected_org_ids,
+            "count": org_self_counts.get(org_id, 0),
+            "selected": org_id in selected_ids,
         }
-        for org_id, count in top
+        for org_id in wanted_ids
     ]
+    # Selected first, then by descending count, then by label for a stable order.
+    options.sort(key=lambda o: (not o["selected"], -o["count"], o["label"]))
+    return options
 
 
 def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> list[dict]:
@@ -2369,14 +2386,18 @@ def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> lis
 
         real_options = [o for o in group["options"] if o.get("value")]
         selected = set(group.get("selected_values", []))
-        # Top-N by count, then ensure any selected options remain visible inline.
         by_count = sorted(real_options, key=lambda o: o.get("count", 0), reverse=True)
-        top = by_count[:top_n]
-        top_values = {o["value"] for o in top}
-        for opt in real_options:
-            if opt["value"] in selected and opt["value"] not in top_values:
-                top.append(opt)
-                top_values.add(opt["value"])
+        # Selected options first (so the active selection reads clearly), then
+        # fill up to top_n with the highest-count unselected options. Once
+        # anything is selected the empty top-N options drop away, keeping the
+        # list calm; the full alphabetical list stays in the "Meer" modal.
+        selected_opts = [o for o in by_count if o["value"] in selected]
+        unselected_opts = [o for o in by_count if o["value"] not in selected]
+        # Show all selected; pad with the highest-count unselected up to top_n.
+        # So with <top_n selected the user still sees some choices, and with
+        # >=top_n selected the empty options drop away (calmer, clearer).
+        fill = max(0, top_n - len(selected_opts))
+        top = selected_opts + unselected_opts[:fill]
         group["top_options"] = top
         group["has_more"] = len(real_options) > len(top)
     return filter_groups

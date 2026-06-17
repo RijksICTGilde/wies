@@ -202,6 +202,45 @@ body {
   margin: 0;
 }
 
+/* "Wis alle filters" row — sits under the title, above the filter fields. */
+.sidebar__clear-row {
+  padding: 0 var(--rvo-space-md) var(--rvo-space-sm);
+}
+
+.sidebar__clear-row--hidden {
+  display: none;
+}
+
+/* Matches the "Meer" button styling (.checkbox-filter__more) for consistency:
+   icon + underlined link-coloured text. */
+.sidebar__clear-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  color: var(--rvo-link-color, #007bc7);
+  font-size: var(--rvo-font-size-md);
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
+.sidebar__clear-text {
+  text-decoration: underline;
+}
+
+.sidebar__clear-button:focus,
+.sidebar__clear-button:active,
+.sidebar__clear-button:hover {
+  outline: none;
+  color: var(--rvo-color-lintblauw, #154273);
+}
+
+/* Hide the clear row alongside the content when the sidebar is collapsed. */
+.layout--collapsed .sidebar__clear-row {
+  display: none;
+}
+
 .layout--collapsed .sidebar__toggle-row {
   flex-direction: column-reverse;
   padding: var(--rvo-space-sm);

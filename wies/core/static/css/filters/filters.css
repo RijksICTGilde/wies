@@ -19,6 +19,29 @@
   pointer-events: none;
 }
 
+/* Clickable magnifier (acts as a search button, same as pressing Enter). */
+.search-field-wrapper button.search-submit {
+  left: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  background: none;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.search-field-wrapper button.search-submit:hover {
+  background: var(--rvo-color-grijs-200, #dce3ea);
+}
+
+/* The icon button sits where the icon was; nudge the input padding to match. */
+.search-field-wrapper:has(button.search-submit) .utrecht-textbox {
+  padding-left: 2.75rem;
+}
+
 .search-field-wrapper .utrecht-textbox {
   height: 3rem;
   padding-left: 2.5rem;

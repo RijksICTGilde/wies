@@ -203,6 +203,28 @@ document.addEventListener("DOMContentLoaded", function () {
 
     setupDateRangeListeners(sidebarFormSelector);
 
+    // "Wis alle filters" button in the sidebar header.
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest("[data-clear-all-filters]")) return;
+      e.preventDefault();
+      clearAllFilters(sidebarFormSelector);
+    });
+
+    // Show the clear-all row only when at least one filter chip is active. The
+    // chips live in #filter-and-table-container (re-rendered on every filter
+    // change), so we read them after each swap; the sidebar header itself is
+    // not swapped, so its visibility must be toggled here.
+    function updateSidebarClearRow() {
+      var row = document.querySelector("[data-sidebar-clear-row]");
+      if (!row) return;
+      var hasChips = !!document.querySelector(
+        ".filter-chips-container .filter-chip",
+      );
+      row.classList.toggle("sidebar__clear-row--hidden", !hasChips);
+    }
+    document.body.addEventListener("htmx:afterSettle", updateSidebarClearRow);
+    updateSidebarClearRow();
+
     // Date input change — trigger form via htmx (like checkbox_filter.js does)
     document.addEventListener(
       "change",
@@ -400,6 +422,16 @@ document.addEventListener("DOMContentLoaded", function () {
   // Click the "Zoeken op …" row → run the search (same as Enter)
   document.body.addEventListener("click", function (e) {
     if (!e.target.closest(".search-suggestion--search")) return;
+    commitSearch();
+  });
+
+  // Click the magnifier icon → run the search (same as Enter). Only acts on the
+  // global #search field's wrapper; per-group searches handle their own input.
+  document.body.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-search-submit]");
+    if (!btn) return;
+    var wrapper = btn.closest(".search-field-wrapper");
+    if (!wrapper || !wrapper.querySelector("#search")) return;
     commitSearch();
   });
 
