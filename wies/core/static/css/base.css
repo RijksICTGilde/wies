@@ -58,6 +58,26 @@ html {
   list-style: decimal;
   padding-left: 1.5em;
 }
+.prose-editor blockquote,
+.prose-editor-display blockquote {
+  border-left: 3px solid var(--rvo-color-grijs-300, #b1b9c0);
+  padding-left: 1em;
+  margin: 0 0 0.5em;
+  color: var(--rvo-color-grijs-700, #4f5358);
+  font-style: italic;
+}
+.prose-editor h2,
+.prose-editor-display h2 {
+  font-size: 1.3em;
+  font-weight: 700;
+  margin: 0.4em 0 0.3em;
+}
+.prose-editor h3,
+.prose-editor-display h3 {
+  font-size: 1.15em;
+  font-weight: 700;
+  margin: 0.4em 0 0.3em;
+}
 
 /* Prose editor display: restore paragraph spacing for rich text content */
 .prose-editor-display p {
