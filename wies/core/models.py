@@ -4,6 +4,7 @@ from django.core.validators import RegexValidator
 from django.db import models
 from django.db.models.functions import Lower
 from django.utils import timezone
+from django_prose_editor.fields import ProseEditorField
 
 SERVICE_STATUS = {
     "CONCEPT": "Concept",
@@ -134,7 +135,18 @@ class Assignment(models.Model):
         verbose_name="Organisatie-eenheden",
     )
     owner = models.ForeignKey("Colleague", models.SET_NULL, null=True, blank=False, related_name="owned_assignments")
-    extra_info = models.TextField(blank=True, max_length=5000)
+    extra_info = ProseEditorField(
+        blank=True,
+        extensions={
+            "Bold": True,
+            "Italic": True,
+            "BulletList": True,
+            "OrderedList": True,
+            "ListItem": True,
+            "Link": True,
+        },
+        sanitize=True,
+    )
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(blank=True)
@@ -202,7 +214,17 @@ class Service(models.Model):
     PERIOD_SOURCE_CHOICES = {ASSIGNMENT: "Zelfde als opdracht", SERVICE: "Afwijkend van opdracht"}
 
     assignment = models.ForeignKey("Assignment", models.CASCADE, related_name="services")
-    description = models.CharField(max_length=500)
+    description = ProseEditorField(
+        extensions={
+            "Bold": True,
+            "Italic": True,
+            "BulletList": True,
+            "OrderedList": True,
+            "ListItem": True,
+            "Link": True,
+        },
+        sanitize=True,
+    )
     skill = models.ForeignKey("Skill", models.SET_NULL, related_name="services", null=True, blank=True)
     period_source = models.CharField(max_length=10, choices=PERIOD_SOURCE_CHOICES, default=ASSIGNMENT)
     specific_start_date = models.DateField(null=True, blank=True)  # do not use directly, see property below

@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "wies.rijksauth",
     "wies.core",
+    "django_prose_editor",
 ]
 
 MIDDLEWARE = [
