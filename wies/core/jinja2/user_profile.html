@@ -16,9 +16,23 @@
     <section class="rvo-layout-column rvo-layout-gap--md">
       <c-grid division="1fr auto" gap="md">
       <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--center">
-        <img alt="Profielfoto van {{ user.get_full_name() }}"
-             src="{{ static('img/placeholder-avatar.svg') }}"
-             class="profile-avatar" />
+        <div class="profile-avatar-wrapper">
+          {% if rijksprofielservice_profile and rijksprofielservice_profile.avatar_url %}
+            <img alt="Profielfoto van {{ user.get_full_name() }}"
+                 src="{{ rijksprofielservice_profile.avatar_url }}"
+                 class="profile-avatar" />
+            <span class="profile-avatar-badge"
+                  data-tooltip="Wordt beheerd in Rijksprofielservice">
+              <span class="utrecht-icon rvo-icon rvo-icon-persoon-met-vinkje rvo-icon--sm"
+                    role="img"
+                    aria-label="Beheerd in Rijksprofielservice"></span>
+            </span>
+          {% else %}
+            <img alt="Profielfoto van {{ user.get_full_name() }}"
+                 src="{{ static('img/placeholder-avatar.svg') }}"
+                 class="profile-avatar" />
+          {% endif %}
+        </div>
         <c-h1 noMargins>Mijn profiel</c-h1>
       </div>
       <form method="post" action="{{ url('logout') }}">
@@ -26,19 +40,90 @@
         <c-button kind="primary" type="submit">Uitloggen</c-button>
       </form>
       </c-grid>
+    </section>
+    {# Profiel-sectie: persoonsgegevens (profielservice of Wies-fallback) + Wies-gegevens samen #}
+    <section class="rvo-layout-column rvo-layout-gap--md">
+      {% if not rijksprofielservice_linked %}
+        <c-alert kind="info">
+        Koppel je Rijksprofielservice om je persoonsgegevens centraal te beheren.
+        </c-alert>
+        <div>
+          <a href="{{ url('rijksprofielservice-authorize') }}"
+             class="rvo-button rvo-button--primary rvo-button--size-md">Koppel Rijksprofielservice</a>
+        </div>
+      {% endif %}
       <c-data-list class="profile-data-list">
-      <dt>Voornaam</dt>
-      <dd>
-        {{ inline_edit(user, "first_name") }}
-      </dd>
-      <dt>Achternaam</dt>
-      <dd>
-        {{ inline_edit(user, "last_name") }}
-      </dd>
-      <dt>E-mail</dt>
-      <dd>
-        <c-link href="mailto:{{ user.email }}">{{ user.email }}</c-link>
-      </dd>
+      {% if rijksprofielservice_linked and rijksprofielservice_profile %}
+        {% if rijksprofielservice_profile.naam %}
+          <dt>Naam</dt>
+          <dd>
+            <div class="editable-field-display">
+              <div class="editable-field-display__value"><span>{{ rijksprofielservice_profile.naam }}</span></div>
+              <span class="source-lock"
+                    data-tooltip="Wordt beheerd in Rijksprofielservice">
+                <span class="utrecht-icon rvo-icon rvo-icon-persoon-met-vinkje rvo-icon--md"
+                      role="img"
+                      aria-label="Beheerd in Rijksprofielservice"></span>
+              </span>
+            </div>
+          </dd>
+        {% endif %}
+        {% if rijksprofielservice_profile.email %}
+          <dt>E-mail</dt>
+          <dd>
+            <div class="editable-field-display">
+              <div class="editable-field-display__value"><span>{{ rijksprofielservice_profile.email }}</span></div>
+              <span class="source-lock"
+                    data-tooltip="Wordt beheerd in Rijksprofielservice">
+                <span class="utrecht-icon rvo-icon rvo-icon-persoon-met-vinkje rvo-icon--md"
+                      role="img"
+                      aria-label="Beheerd in Rijksprofielservice"></span>
+              </span>
+            </div>
+          </dd>
+        {% endif %}
+        {% if rijksprofielservice_profile.telefoon %}
+          <dt>Telefoon</dt>
+          <dd>
+            <div class="editable-field-display">
+              <div class="editable-field-display__value"><span>{{ rijksprofielservice_profile.telefoon }}</span></div>
+              <span class="source-lock"
+                    data-tooltip="Wordt beheerd in Rijksprofielservice">
+                <span class="utrecht-icon rvo-icon rvo-icon-persoon-met-vinkje rvo-icon--md"
+                      role="img"
+                      aria-label="Beheerd in Rijksprofielservice"></span>
+              </span>
+            </div>
+          </dd>
+        {% endif %}
+        {% if rijksprofielservice_profile.functie %}
+          <dt>Functie</dt>
+          <dd>
+            <div class="editable-field-display">
+              <div class="editable-field-display__value"><span>{{ rijksprofielservice_profile.functie }}</span></div>
+              <span class="source-lock"
+                    data-tooltip="Wordt beheerd in Rijksprofielservice">
+                <span class="utrecht-icon rvo-icon rvo-icon-persoon-met-vinkje rvo-icon--md"
+                      role="img"
+                      aria-label="Beheerd in Rijksprofielservice"></span>
+              </span>
+            </div>
+          </dd>
+        {% endif %}
+      {% elif not rijksprofielservice_linked %}
+        <dt>Voornaam</dt>
+        <dd>
+          {{ inline_edit(user, "first_name") }}
+        </dd>
+        <dt>Achternaam</dt>
+        <dd>
+          {{ inline_edit(user, "last_name") }}
+        </dd>
+        <dt>E-mail</dt>
+        <dd>
+          <c-link href="mailto:{{ user.email }}">{{ user.email }}</c-link>
+        </dd>
+      {% endif %}
       {% for item in label_categories %}
         <dt>{{ item.category.name }}</dt>
         <dd>
@@ -46,6 +131,21 @@
         </dd>
       {% endfor %}
       </c-data-list>
+      {% if rijksprofielservice_linked and not rijksprofielservice_profile %}
+        <c-paragraph>Profiel kon niet worden opgehaald (geen consent of service onbereikbaar).</c-paragraph>
+      {% endif %}
+      {% if rijksprofielservice_linked %}
+        <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--center">
+          <c-link href="{{ rijksprofielservice_browser_url }}" target="_blank">
+          Beheer in Rijksprofielservice
+          <c-icon icon="externe-link" size="sm" />
+          </c-link>
+          <form method="post" action="{{ url('rijksprofielservice-disconnect') }}">
+            {{ get_csrf_hidden_input(request) }}
+            <c-button kind="tertiary" type="submit">Ontkoppel Rijksprofielservice</c-button>
+          </form>
+        </div>
+      {% endif %}
     </section>
     {# Assignments section #}
     <section>

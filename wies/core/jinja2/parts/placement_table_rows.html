@@ -2,7 +2,15 @@
   <c-table-row class="clickable-row" hx-get="{{ placement.panel_url }}" hx-target="#side_panel-container">
   <c-table-cell>
   <div class="user-table-cell">
-    <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>
+    {% if placement.colleague_avatar_url %}
+      <div class="user-avatar user-avatar--image">
+        <img src="{{ placement.colleague_avatar_url }}"
+             alt="Avatar van {{ placement.colleague.name }}"
+             loading="lazy" />
+      </div>
+    {% else %}
+      <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>
+    {% endif %}
     <div class="user-info">
       <strong>{{ placement.colleague.name }}</strong>
       {% if placement.service.skill %}<span>{{ placement.service.skill.name }}</span>{% endif %}

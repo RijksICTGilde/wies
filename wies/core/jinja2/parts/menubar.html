@@ -4,8 +4,9 @@
   {"label": "Aanvragen", "link": url('assignment-list'), "active": '/opdrachten/' in request.path},
 ] %}
 {% if user.is_authenticated %}
+  {% set profile_label = rijksprofielservice_profile.naam if rijksprofielservice_profile and rijksprofielservice_profile.naam else user.get_full_name() %}
   {% set menu_items = menu_items + [
-      {"label": user.get_full_name(), "link": url('user-profile'), "icon": "user", "active": '/profiel/' in request.path, "align": "right"},
+      {"label": profile_label, "link": url('user-profile'), "icon": "user", "active": '/profiel/' in request.path, "align": "right"},
     ] %}
 {% endif %}
 {% if user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}

@@ -1,7 +1,12 @@
+import base64
+import hashlib
 import logging
+import secrets
 from collections import Counter
 from datetime import date, timedelta
+from urllib.parse import urlencode
 
+import requests
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
@@ -14,10 +19,11 @@ from django.db import transaction
 from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
-from django.http import Http404, HttpResponse, QueryDict
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
 from wies.core.editables import REGISTRY
@@ -69,6 +75,7 @@ from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
 )
+from .services.rijksprofielservice import fetch_profile, fetch_profiles, refresh_session_profile
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
@@ -410,6 +417,19 @@ def _get_colleague_assignments(request, colleague, viewer):
     return active_list + historical_list
 
 
+def _fetch_colleague_avatar_url(colleague) -> str | None:
+    user = getattr(colleague, "user", None)
+    sub = user.rijksprofielservice_sub if user else None
+    if not sub:
+        return None
+    try:
+        profile = fetch_profile(str(sub))
+    except requests.RequestException:
+        logger.exception("Failed to fetch Rijksprofielservice profile for colleague %s", colleague.id)
+        return None
+    return (profile or {}).get("avatar_url")
+
+
 def _build_colleague_panel_data(colleague, request):
     """Shared helper to build colleague panel context data for both views."""
     viewer = getattr(request.user, "colleague", None)
@@ -421,6 +441,7 @@ def _build_colleague_panel_data(colleague, request):
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
+        "colleague_avatar_url": _fetch_colleague_avatar_url(colleague),
         "assignments": assignments,
     }
 
@@ -468,6 +489,7 @@ def _build_placement_panel_data(placement, request):
         "close_url": _build_close_url(request),
         "placement": placement,
         "colleague": colleague,
+        "colleague_avatar_url": _fetch_colleague_avatar_url(colleague),
         "service": service,
         "assignment_card": assignment_card,
     }
@@ -606,7 +628,7 @@ class PlacementListView(ListView):
         """Base queryset with search, ordering, and date filters applied."""
         excluded_org_ids = get_excluded_org_ids()
         qs = (
-            Placement.objects.select_related("colleague", "service", "service__skill")
+            Placement.objects.select_related("colleague", "colleague__user", "service", "service__skill")
             .prefetch_related(
                 "colleague__labels",
                 Prefetch(
@@ -779,9 +801,27 @@ class PlacementListView(ListView):
         context = super().get_context_data(**kwargs)
         context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
 
-        # Add panel URLs to placement objects
+        # Add panel URLs and Rijksprofielservice avatar URLs to placement objects
+        subs_by_placement: dict[int, str] = {}
         for placement in context["object_list"]:
             placement.panel_url = _build_panel_url(self.request, plaatsing=placement.id)
+            placement.colleague_avatar_url = None
+            user = getattr(placement.colleague, "user", None)
+            sub = user.rijksprofielservice_sub if user else None
+            if sub:
+                subs_by_placement[placement.id] = str(sub)
+
+        profiles: dict[str, dict | None] = {}
+        if subs_by_placement:
+            try:
+                profiles = fetch_profiles(list(set(subs_by_placement.values())))
+            except requests.RequestException:
+                logger.exception("Failed to fetch Rijksprofielservice profiles for placement list")
+
+        for placement in context["object_list"]:
+            sub = subs_by_placement.get(placement.id)
+            if sub:
+                placement.colleague_avatar_url = (profiles.get(sub) or {}).get("avatar_url")
 
         context["filter_target_url"] = reverse("home")
         context["search_field"] = "zoek"
@@ -2127,6 +2167,11 @@ def user_profile(request):
 
     assignment_list = _get_colleague_assignments(request, colleague, viewer=colleague) if colleague else []
 
+    rijksprofielservice_linked = bool(user.rijksprofielservice_sub)
+    rijksprofielservice_profile = refresh_session_profile(request) if rijksprofielservice_linked else None
+    if rijksprofielservice_linked and rijksprofielservice_profile is None:
+        messages.warning(request, "Rijksprofielservice is niet bereikbaar.")
+
     return render(
         request,
         "user_profile.html",
@@ -2135,8 +2180,122 @@ def user_profile(request):
             "label_categories": label_categories,
             "assignment_list": assignment_list,
             "panel_data": panel_data,
+            "rijksprofielservice_linked": rijksprofielservice_linked,
+            "rijksprofielservice_profile": rijksprofielservice_profile,
+            "rijksprofielservice_browser_url": settings.RIJKSPROFIELSERVICE_BROWSER_URL,
         },
     )
+
+
+def _pkce_pair() -> tuple[str, str]:
+    """Generate a PKCE verifier + S256 challenge."""
+    verifier = secrets.token_urlsafe(64)[:128]
+    digest = hashlib.sha256(verifier.encode("ascii")).digest()
+    challenge = base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+    return verifier, challenge
+
+
+def rijksprofielservice_authorize(request):
+    """Start the Rijksprofielservice consent flow (OAuth 2.0 Authorization Code + PKCE)."""
+    state = secrets.token_urlsafe(16)
+    code_verifier, code_challenge = _pkce_pair()
+    request.session["rijksprofielservice_state"] = state
+    request.session["rijksprofielservice_pkce_verifier"] = code_verifier
+    redirect_uri = request.build_absolute_uri(reverse("rijksprofielservice-callback"))
+    params = {
+        "response_type": "code",
+        "client_id": settings.RIJKSPROFIELSERVICE_CLIENT_ID,
+        "redirect_uri": redirect_uri,
+        "scope": "read_profile",
+        "state": state,
+        "code_challenge": code_challenge,
+        "code_challenge_method": "S256",
+    }
+    return redirect(f"{settings.RIJKSPROFIELSERVICE_AUTHORIZE_URL}?{urlencode(params)}")
+
+
+def rijksprofielservice_callback(request):
+    """Handle the Rijksprofielservice consent redirect back to Wies.
+
+    Flow: exchange the authorization `code` for an access token at the profielservice,
+    then call `/api/v1/profiles/me` with that token to discover the user's SSO subject.
+    Wies only needs the subject — the access token is discarded; subsequent profile
+    fetches use the M2M client-credentials path in `services/rijksprofielservice.py`.
+    """
+    expected_state = request.session.pop("rijksprofielservice_state", None)
+    code_verifier = request.session.pop("rijksprofielservice_pkce_verifier", None)
+    if not expected_state or expected_state != request.GET.get("state", ""):
+        return HttpResponseBadRequest("State-mismatch")
+
+    if request.GET.get("error"):
+        messages.warning(request, "Geen toestemming gegeven voor de Rijksprofielservice.")
+        return redirect("user-profile")
+
+    code = request.GET.get("code")
+    if not code or not code_verifier:
+        return HttpResponseBadRequest("code ontbreekt of sessie verlopen")
+
+    redirect_uri = request.build_absolute_uri(reverse("rijksprofielservice-callback"))
+    extra_headers = {}
+    if settings.RIJKSPROFIELSERVICE_API_HOST_HEADER:
+        extra_headers["Host"] = settings.RIJKSPROFIELSERVICE_API_HOST_HEADER
+    try:
+        token_resp = requests.post(
+            settings.RIJKSPROFIELSERVICE_TOKEN_URL,
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": redirect_uri,
+                "client_id": settings.RIJKSPROFIELSERVICE_CLIENT_ID,
+                "client_secret": settings.RIJKSPROFIELSERVICE_CLIENT_SECRET,
+                "code_verifier": code_verifier,
+            },
+            headers=extra_headers,
+            timeout=5,
+        )
+    except requests.RequestException:
+        logger.exception("Rijksprofielservice token-exchange faalde")
+        return HttpResponseBadRequest("Token-exchange faalde")
+    if not token_resp.ok:
+        logger.error("Rijksprofielservice token-exchange %s: %s", token_resp.status_code, token_resp.text[:500])
+        return HttpResponseBadRequest("Token-exchange afgewezen")
+    access_token = token_resp.json().get("access_token")
+    if not access_token:
+        return HttpResponseBadRequest("Geen access_token in response")
+
+    me_headers = {"Authorization": f"Bearer {access_token}", **extra_headers}
+    try:
+        me_resp = requests.get(
+            f"{settings.RIJKSPROFIELSERVICE_API_URL}/api/v1/profiles/me",
+            headers=me_headers,
+            timeout=5,
+        )
+    except requests.RequestException:
+        logger.exception("Rijksprofielservice /me call faalde")
+        return HttpResponseBadRequest("/me call faalde")
+    if not me_resp.ok:
+        logger.error("Rijksprofielservice /me %s: %s", me_resp.status_code, me_resp.text[:500])
+        return HttpResponseBadRequest("/me call afgewezen")
+    subject_id = me_resp.json().get("subject_id")
+    if not subject_id:
+        logger.error("Rijksprofielservice /me bevat geen subject_id; keys=%s", list(me_resp.json().keys()))
+        return HttpResponseBadRequest("subject_id niet gevonden in /me response")
+
+    request.user.rijksprofielservice_sub = subject_id
+    request.user.save(update_fields=["rijksprofielservice_sub"])
+    refresh_session_profile(request)
+    messages.success(request, "Rijksprofielservice gekoppeld.")
+    return redirect("user-profile")
+
+
+@require_POST
+def rijksprofielservice_disconnect(request):
+    """Remove the Rijksprofielservice link from the user."""
+    request.user.rijksprofielservice_sub = None
+    request.user.save(update_fields=["rijksprofielservice_sub"])
+    refresh_session_profile(request)
+    messages.success(request, "Rijksprofielservice ontkoppeld.")
+    return redirect("user-profile")
 
 
 @login_not_required

@@ -591,6 +591,19 @@ body {
   color: var(--rvo-color-grijs-600);
 }
 
+.user-avatar--image {
+  background-color: transparent;
+  overflow: hidden;
+}
+
+.user-avatar--image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+}
+
 .user-info {
   display: flex;
   flex-direction: column;

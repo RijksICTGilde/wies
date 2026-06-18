@@ -1,3 +1,8 @@
+from urllib.parse import urlsplit
+
+from django.conf import settings
+
+
 class SecurityHeadersMiddleware:
     """
     Middleware to add security headers not covered by Django's SecurityMiddleware.
@@ -5,6 +10,8 @@ class SecurityHeadersMiddleware:
 
     def __init__(self, get_response):
         self.get_response = get_response
+        rps = urlsplit(settings.RIJKSPROFIELSERVICE_BROWSER_URL)
+        self._rps_origin = f"{rps.scheme}://{rps.netloc}" if rps.scheme and rps.netloc else ""
 
     def __call__(self, request):
         response = self.get_response(request)
@@ -25,11 +32,14 @@ class SecurityHeadersMiddleware:
         # - Generating unique nonce per request in this middleware
         #
         # See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
+        img_src = "img-src 'self' data:"
+        if self._rps_origin:
+            img_src += f" {self._rps_origin}"
         response["Content-Security-Policy"] = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline'; "
             "style-src 'self' 'unsafe-inline'; "
-            "img-src 'self' data:; "
+            f"{img_src}; "
             "font-src 'self'; "
             "connect-src 'self'; "
             "frame-ancestors 'none';"
