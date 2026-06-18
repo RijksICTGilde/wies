@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 from django.conf import settings
 from django.contrib.messages import get_messages
@@ -129,6 +129,71 @@ def get_sort_state(request, field):
     return None
 
 
+def _placement_group_key(placement, field):
+    """Return (has_value, label) where has_value=0 for real values and 1 for missing — sorts missing last."""
+    if field == "person":
+        name = placement.colleague.name
+        return (0, name) if name else (1, "Geen naam")
+    if field == "role":
+        skill = placement.service.skill
+        return (0, skill.name) if skill else (1, "Geen rol")
+    if field == "assignment":
+        name = placement.service.assignment.name
+        return (0, name) if name else (1, "Geen opdracht")
+    if field == "organization":
+        clients = getattr(placement.service.assignment, "sorted_clients", None) or []
+        if clients:
+            org = clients[0].organization
+            return (0, org.label or org.name)
+        return (1, "Geen opdrachtgever")
+    if field == "end_date":
+        end = getattr(placement, "actual_end_date", None)
+        if end is None:
+            return (1, "Geen einddatum")
+        today = timezone.now().date()
+        if end <= today + timedelta(days=91):
+            return (0, "Binnen 3 maanden")
+        if end <= today + timedelta(days=182):
+            return (0, "Binnen 6 maanden")
+        return (0, "Langer dan 6 maanden")
+    return (0, "")
+
+
+# Manual ordering for end_date buckets (string sort would be wrong).
+_END_DATE_BUCKET_ORDER = {
+    "Binnen 3 maanden": 0,
+    "Binnen 6 maanden": 1,
+    "Langer dan 6 maanden": 2,
+    "Geen einddatum": 3,
+}
+
+
+def groupby_placements(placements, field):
+    """Group an iterable of placements by `field`.
+
+    Returns a list of (label, [placements]) tuples ordered by the group's natural key
+    (alphabetical for text fields; chronological buckets for end_date).
+    """
+    if not field:
+        return [(None, list(placements))]
+
+    groups: dict = {}
+    for placement in placements:
+        key = _placement_group_key(placement, field)
+        label = key[1]
+        if label not in groups:
+            groups[label] = (key, [])
+        groups[label][1].append(placement)
+
+    if field == "end_date":
+        ordered = sorted(groups.items(), key=lambda kv: _END_DATE_BUCKET_ORDER.get(kv[0], 99))
+    else:
+        # kv[1][0] is the (missing-flag, label) tuple — sorts missing-value groups last.
+        ordered = sorted(groups.items(), key=lambda kv: kv[1][0])
+
+    return [(label, items) for label, (_, items) in ordered]
+
+
 def environment(**options):
     env = Environment(**options)  # noqa: S701 - autoescape handled by Django
     setup_components(env)
@@ -140,6 +205,7 @@ def environment(**options):
             "get_csrf_hidden_input": get_csrf_hidden_input,
             "get_toggle_sort_url": get_toggle_sort_url,
             "get_sort_state": get_sort_state,
+            "groupby_placements": groupby_placements,
             "get_messages": get_messages,
             "is_staff_member": is_staff_member,
             "DEBUG": settings.DEBUG,

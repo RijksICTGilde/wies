@@ -1,5 +1,5 @@
-{% for placement in object_list %}
-  <c-table-row class="clickable-row" hx-get="{{ placement.panel_url }}" hx-target="#side_panel-container">
+{% macro placement_row(placement) %}
+  <c-table-row class="clickable-row" data-group-member="true" hx-get="{{ placement.panel_url }}" hx-target="#side_panel-container">
   <c-table-cell>
   <div class="user-table-cell">
     <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>
@@ -29,13 +29,30 @@
   {% endif %}
   </c-table-cell>
   </c-table-row>
+{% endmacro %}
+{% if object_list %}
+  {% if groupby_field %}
+    {% for group_label, group_rows in groupby_placements(object_list, groupby_field) %}
+      <c-table-row class="placement-group-header" data-group-header="true" tabindex="0" role="button" aria-expanded="true">
+      <c-table-cell colspan="3">
+      <span class="placement-group-header__chevron" aria-hidden="true">
+        <c-icon icon="delta-omlaag" size="sm" />
+      </span>
+      <strong>{{ group_label }}</strong> ({{ group_rows|length }})
+      </c-table-cell>
+      </c-table-row>
+      {% for placement in group_rows %}{{ placement_row(placement) }}{% endfor %}
+    {% endfor %}
+  {% else %}
+    {% for placement in object_list %}{{ placement_row(placement) }}{% endfor %}
+  {% endif %}
 {% else %}
   <c-table-row>
   <c-table-cell colspan="3">
   <span class="rvo-text--italic">Geen inzetten gevonden.</span>
   </c-table-cell>
   </c-table-row>
-{% endfor %}
+{% endif %}
 {% if next_page_url %}
   <c-table-row hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
   <c-table-cell colspan="3" class="rvo-text--center">
