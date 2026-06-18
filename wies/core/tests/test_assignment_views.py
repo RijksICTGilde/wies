@@ -623,6 +623,45 @@ class AssignmentEditAttributeTest(TestCase):
         self.assertContains(response, 'van "Legacy Old"')
         self.assertContains(response, 'naar "Legacy New"')
 
+    def test_timeline_renders_legacy_organizations_string_event(self):
+        """Regression: `organizations` events created in the PR #341 release
+        window (2026-05-20 → 2026-06-08) stored ``old_value`` / ``new_value``
+        as ``str(list_of_dicts)`` — a Python repr — because the pre-#369
+        inline-edit code did ``str(old_value or "")`` on every field. The
+        current renderer (``_organizations_render_change``) was deployed in
+        the 2026-06-10 release and assumes a list of dicts; on a legacy
+        event it iterates the string character by character and crashes
+        with ``TypeError: string indices must be integers, not 'str'``."""
+        self.client.force_login(self.user_with_permission)
+        # Exact shape produced by the pre-#369 code path:
+        #     "old_value": str(old_value or "")
+        # where old_value was _current_value(obj, organizations_spec), i.e.
+        # the list returned by _organizations_initial.
+        legacy_old = "[{'organization': <OrganizationUnit: Ministerie van Financien>, 'role': 'PRIMARY'}]"
+        legacy_new = (
+            "[{'organization': <OrganizationUnit: Ministerie van Financien>, 'role': 'PRIMARY'}, "
+            "{'organization': <OrganizationUnit: Ministerie van Buitenlandse Zaken>, 'role': 'INVOLVED'}]"
+        )
+        Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_name": "organizations",
+                "field_label": "Opdrachtgever(s)",
+                "old_value": legacy_old,
+                "new_value": legacy_new,
+            },
+        )
+
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, "Opdrachtgever(s)")
+
     def test_events_partial_accessible_to_unrelated_user(self):
         """Any authenticated user can open the updates tab, not just BDM/placed colleagues."""
         self.client.force_login(self.unrelated_user)
