@@ -3,8 +3,13 @@
   <section>
     <div class="card card--horizontal">
       <div class="card__image">
-        <img alt="Profielfoto van {{ colleague.name }}"
-             src="{{ static('img/placeholder-avatar.svg') }}" />
+        {% if panel_data.colleague_avatar_url %}
+          <img alt="Profielfoto van {{ colleague.name }}"
+               src="{{ panel_data.colleague_avatar_url }}" />
+        {% else %}
+          <img alt="Profielfoto van {{ colleague.name }}"
+               src="{{ static('img/placeholder-avatar.svg') }}" />
+        {% endif %}
       </div>
       <div class="card__content">
         <c-h3 noMargins>{{ colleague.name }}</c-h3>

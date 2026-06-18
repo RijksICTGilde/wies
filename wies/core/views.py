@@ -75,7 +75,7 @@ from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
 )
-from .services.rijksprofielservice import fetch_profile, fetch_profiles
+from .services.rijksprofielservice import fetch_profile, fetch_profiles, refresh_session_profile
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
@@ -417,6 +417,19 @@ def _get_colleague_assignments(request, colleague, viewer):
     return active_list + historical_list
 
 
+def _fetch_colleague_avatar_url(colleague) -> str | None:
+    user = getattr(colleague, "user", None)
+    sub = user.rijksprofielservice_sub if user else None
+    if not sub:
+        return None
+    try:
+        profile = fetch_profile(str(sub))
+    except requests.RequestException:
+        logger.exception("Failed to fetch Rijksprofielservice profile for colleague %s", colleague.id)
+        return None
+    return (profile or {}).get("avatar_url")
+
+
 def _build_colleague_panel_data(colleague, request):
     """Shared helper to build colleague panel context data for both views."""
     viewer = getattr(request.user, "colleague", None)
@@ -428,6 +441,7 @@ def _build_colleague_panel_data(colleague, request):
         "panel_title": colleague.name,
         "close_url": _build_close_url(request),
         "colleague": colleague,
+        "colleague_avatar_url": _fetch_colleague_avatar_url(colleague),
         "assignments": assignments,
     }
 
@@ -475,6 +489,7 @@ def _build_placement_panel_data(placement, request):
         "close_url": _build_close_url(request),
         "placement": placement,
         "colleague": colleague,
+        "colleague_avatar_url": _fetch_colleague_avatar_url(colleague),
         "service": service,
         "assignment_card": assignment_card,
     }
@@ -2153,13 +2168,9 @@ def user_profile(request):
     assignment_list = _get_colleague_assignments(request, colleague, viewer=colleague) if colleague else []
 
     rijksprofielservice_linked = bool(user.rijksprofielservice_sub)
-    rijksprofielservice_profile = None
-    if rijksprofielservice_linked:
-        try:
-            rijksprofielservice_profile = fetch_profile(str(user.rijksprofielservice_sub))
-        except requests.RequestException:
-            logger.exception("Failed to fetch Rijksprofielservice profile")
-            messages.warning(request, "Rijksprofielservice is niet bereikbaar.")
+    rijksprofielservice_profile = refresh_session_profile(request) if rijksprofielservice_linked else None
+    if rijksprofielservice_linked and rijksprofielservice_profile is None:
+        messages.warning(request, "Rijksprofielservice is niet bereikbaar.")
 
     return render(
         request,
@@ -2171,6 +2182,7 @@ def user_profile(request):
             "panel_data": panel_data,
             "rijksprofielservice_linked": rijksprofielservice_linked,
             "rijksprofielservice_profile": rijksprofielservice_profile,
+            "rijksprofielservice_browser_url": settings.RIJKSPROFIELSERVICE_BROWSER_URL,
         },
     )
 
@@ -2271,6 +2283,7 @@ def rijksprofielservice_callback(request):
 
     request.user.rijksprofielservice_sub = subject_id
     request.user.save(update_fields=["rijksprofielservice_sub"])
+    refresh_session_profile(request)
     messages.success(request, "Rijksprofielservice gekoppeld.")
     return redirect("user-profile")
 
@@ -2280,6 +2293,7 @@ def rijksprofielservice_disconnect(request):
     """Remove the Rijksprofielservice link from the user."""
     request.user.rijksprofielservice_sub = None
     request.user.save(update_fields=["rijksprofielservice_sub"])
+    refresh_session_profile(request)
     messages.success(request, "Rijksprofielservice ontkoppeld.")
     return redirect("user-profile")
 

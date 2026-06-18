@@ -16,6 +16,8 @@ logger = logging.getLogger(__name__)
 
 _token_cache: dict = {"token": None, "expires_at": 0.0}
 
+SESSION_KEY = "rijksprofielservice_profile"
+
 
 def get_m2m_token() -> str:
     """Fetch a client-credentials token, cached until ~30s before expiry."""
@@ -74,3 +76,28 @@ def fetch_profiles(subject_ids: list[str]) -> dict[str, dict | None]:
 def fetch_profile(subject_id: str) -> dict | None:
     """Convenience wrapper for a single subject_id."""
     return fetch_profiles([subject_id]).get(subject_id)
+
+
+def get_cached_profile(request) -> dict | None:
+    """Return the cached profielservice-profiel from the session, or None."""
+    return request.session.get(SESSION_KEY)
+
+
+def refresh_session_profile(request) -> dict | None:
+    """Fetch the profile fresh from the service and cache it in the session.
+
+    Returns the existing cached value on transient service errors so the
+    menubar doesn't flap when the service is briefly down.
+    """
+    user = request.user
+    sub = getattr(user, "rijksprofielservice_sub", None)
+    if not sub:
+        request.session.pop(SESSION_KEY, None)
+        return None
+    try:
+        profile = fetch_profile(str(sub))
+    except requests.RequestException:
+        logger.exception("Failed to refresh Rijksprofielservice profile in session")
+        return request.session.get(SESSION_KEY)
+    request.session[SESSION_KEY] = profile
+    return profile
