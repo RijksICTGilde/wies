@@ -71,3 +71,29 @@
   text-overflow: ellipsis;
   display: inline-block;
 }
+
+/* Foldable group header rows */
+.placement-table .placement-group-header {
+  cursor: pointer;
+  user-select: none;
+}
+
+.placement-table .placement-group-header:hover {
+  background-color: var(--rvo-color-grijs-100);
+}
+
+.placement-group-header__chevron {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 0.25rem;
+  transition: transform 0.15s ease-in-out;
+}
+
+.placement-group-header[aria-expanded="false"]
+  .placement-group-header__chevron {
+  transform: rotate(-90deg);
+}
+
+.placement-table tr[data-group-member][hidden] {
+  display: none;
+}

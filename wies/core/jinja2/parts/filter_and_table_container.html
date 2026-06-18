@@ -19,11 +19,20 @@
         </div>
       </div>
     </div>
-    <!-- Row 2: Result count + Active Filter Chips -->
+    <!-- Row 2: Result count + Group by + Active Filter Chips -->
     <div class="header-row">
       <c-paragraph class="results-count">
       <b>{{ page_obj.paginator.count }}</b> resultaten
       </c-paragraph>
+      <div class="groupby-field"
+           hx-get="{{ filter_target_url }}"
+           hx-target="#filter-and-table-container"
+           hx-swap="innerHTML settle:0"
+           hx-replace-url="true"
+           hx-trigger="change"
+           hx-include="[data-filter-input]">
+        <c-select-field label="Groepeer op" name="groep" id="groupby-select" data-filter-input :options="groupby_options" value="{{ groupby_field }}" />
+      </div>
       <!-- Active Filter Chips -->
       {% include "parts/filters/filter_chips.html" %}
     </div>

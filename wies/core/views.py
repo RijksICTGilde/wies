@@ -602,6 +602,24 @@ class PlacementListView(ListView):
     paginate_by = 50
     page_kwarg = "pagina"
 
+    # Maps ?groep= values to the DB field used to make rows in the same group contiguous.
+    GROUPBY_ORDERING = {
+        "person": "colleague__name",
+        "role": "service__skill__name",
+        "assignment": "service__assignment__name",
+        "organization": "service__assignment__organizations__label",
+        "end_date": "service__assignment__end_date",
+    }
+
+    GROUPBY_OPTIONS = [
+        {"value": "", "label": "Geen groepering"},
+        {"value": "person", "label": "Persoon"},
+        {"value": "role", "label": "Rol"},
+        {"value": "assignment", "label": "Opdracht"},
+        {"value": "organization", "label": "Opdrachtgever"},
+        {"value": "end_date", "label": "Einddatum"},
+    ]
+
     def _get_base_queryset(self):
         """Base queryset with search, ordering, and date filters applied."""
         excluded_org_ids = get_excluded_org_ids()
@@ -644,12 +662,25 @@ class PlacementListView(ListView):
         }
 
         order_param = self.request.GET.get("order")
+        sort_field = None
         if order_param:
             descending = order_param.startswith("-")
             field_name = order_param.lstrip("-")
             order_by = order_mapping.get(field_name)
             if order_by:
-                qs = qs.order_by(f"-{order_by}" if descending else order_by)
+                sort_field = f"-{order_by}" if descending else order_by
+
+        # Group-by ordering: keep grouped rows contiguous in the DB result so the
+        # template's groupby pass produces one section per group per page.
+        group_param = self.request.GET.get("groep")
+        group_field = self.GROUPBY_ORDERING.get(group_param) if group_param else None
+
+        if group_field and sort_field:
+            qs = qs.order_by(group_field, sort_field)
+        elif group_field:
+            qs = qs.order_by(group_field)
+        elif sort_field:
+            qs = qs.order_by(sort_field)
 
         # filter out historical placements
         qs = annotate_placement_dates(qs)
@@ -787,6 +818,10 @@ class PlacementListView(ListView):
         context["search_field"] = "zoek"
         context["search_placeholder"] = "Zoek op collega, opdracht of opdrachtgever..."
         context["search_filter"] = self.request.GET.get("zoek")
+
+        group_param = self.request.GET.get("groep") or ""
+        context["groupby_field"] = group_param if group_param in self.GROUPBY_ORDERING else ""
+        context["groupby_options"] = self.GROUPBY_OPTIONS
 
         active_filters: dict = {}
 
