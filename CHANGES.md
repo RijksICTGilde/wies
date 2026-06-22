@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 334: Add privacy declaration and beheer document. The in-product privacy page is regenerated via `manage.py generate_privacy_html`
+- 410: fix privacy leak (#383) where the opdracht side-panel team list showed ended plaatsingen to everyone; ended plaatsingen are now only visible to the placed colleague and the opdracht's Business Manager (each with a privacy note), matching the rule already used in the profiel-overzicht
 
 ## 2026-06-24
 

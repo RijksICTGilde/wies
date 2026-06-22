@@ -121,6 +121,12 @@ class EditableCollection:
     # formset as ``formset``.
     form_template: str | None = None
     display: str | Callable[[Model], Any] | None = None
+    # Extra context merged into the display partial on EVERY render path,
+    # same contract as ``Editable.display_context`` — signature
+    # ``(obj, request) -> dict``. May override ``value`` to apply
+    # viewer-aware filtering for display only (the formset/audit keep using
+    # the unfiltered ``initial``).
+    display_context: Callable[[Model, Any], dict] | None = None
     # Snapshot of the collection state — rows keyed by ``id``, each
     # encodable by ``DjangoJSONEncoder``. Required to opt this
     # collection into audit events.

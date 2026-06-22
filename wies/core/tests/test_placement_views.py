@@ -7,6 +7,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
 
+from wies.core.editables.assignment import _services_display_context
 from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -892,6 +893,129 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
         current = [m for m in panel_data["team_members"] if not m["historical"] and not m["is_vacancy"]]
         assert len(current) == 1
         assert current[0]["privacy_warning_text"] is None
+
+
+class AssignmentServicesDisplayVisibilityTest(TestCase):
+    """Historical-placement visibility on the editables team-display path (#383).
+
+    The side-panel team list and its inline-edit re-render are now driven by
+    ``_services_display_context`` instead of ``_build_assignment_panel_data``.
+    Same privacy rule: ended placements are visible only to the placed
+    colleague and the assignment's BM-owner, each with a privacy note.
+    """
+
+    def setUp(self):
+        self.list_url = reverse("home")
+        self.skill = Skill.objects.create(name="Python Developer")
+
+        self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
+        self.colleague_alice = Colleague.objects.create(
+            name="Alice", email="alice@rijksoverheid.nl", source="wies", user=self.user_alice
+        )
+        self.user_bob = User.objects.create_user(email="bob@rijksoverheid.nl")
+        self.colleague_bob = Colleague.objects.create(
+            name="Bob", email="bob@rijksoverheid.nl", source="wies", user=self.user_bob
+        )
+        self.user_unrelated = User.objects.create_user(email="unrelated@rijksoverheid.nl")
+        self.colleague_unrelated = Colleague.objects.create(
+            name="Unrelated", email="unrelated@rijksoverheid.nl", source="wies", user=self.user_unrelated
+        )
+
+    def _request(self, user):
+        request = RequestFactory().get(self.list_url)
+        request.user = user
+        return request
+
+    def _ended_placement_assignment(self, owner=None):
+        assignment = Assignment.objects.create(name="Test Assignment", source="wies", owner=owner)
+        service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
+        Placement.objects.create(
+            colleague=self.colleague_alice,
+            service=service,
+            period_source="PLACEMENT",
+            specific_start_date=date(2024, 1, 1),
+            specific_end_date=date(2024, 6, 14),
+            source="wies",
+        )
+        return assignment
+
+    @patch("wies.core.editables.assignment.timezone")
+    def test_ended_placement_hidden_from_unrelated_viewer(self, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        assignment = self._ended_placement_assignment(owner=self.colleague_bob)
+
+        rows = _services_display_context(assignment, self._request(self.user_unrelated))["value"]
+
+        assert [r for r in rows if r["colleague"]] == [], "Unrelated viewer must not see the ended placement"
+
+    @patch("wies.core.editables.assignment.timezone")
+    def test_ended_placement_visible_to_placed_colleague(self, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        assignment = self._ended_placement_assignment(owner=self.colleague_bob)
+
+        rows = _services_display_context(assignment, self._request(self.user_alice))["value"]
+
+        visible = [r for r in rows if r["colleague"]]
+        assert len(visible) == 1
+        assert visible[0]["colleague"].id == self.colleague_alice.id
+        assert visible[0]["historical"] is True
+        assert visible[0]["privacy_warning_text"] == "Alleen zichtbaar voor jou en de Business Manager"
+
+    @patch("wies.core.editables.assignment.timezone")
+    def test_ended_placement_visible_to_bm_owner(self, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        assignment = self._ended_placement_assignment(owner=self.colleague_bob)
+
+        rows = _services_display_context(assignment, self._request(self.user_bob))["value"]
+
+        visible = [r for r in rows if r["colleague"]]
+        assert len(visible) == 1
+        assert visible[0]["colleague"].id == self.colleague_alice.id
+        assert visible[0]["historical"] is True
+        assert visible[0]["privacy_warning_text"] == "Alleen zichtbaar voor jou en de consultant"
+
+    @patch("wies.core.editables.assignment.timezone")
+    def test_active_placement_visible_to_unrelated_viewer(self, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        assignment = Assignment.objects.create(name="Active Assignment", source="wies", owner=self.colleague_bob)
+        service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
+        Placement.objects.create(
+            colleague=self.colleague_alice,
+            service=service,
+            period_source="PLACEMENT",
+            specific_start_date=date(2024, 1, 1),
+            specific_end_date=date(2024, 6, 16),
+            source="wies",
+        )
+
+        rows = _services_display_context(assignment, self._request(self.user_unrelated))["value"]
+
+        visible = [r for r in rows if r["colleague"]]
+        assert len(visible) == 1
+        assert visible[0]["colleague"].id == self.colleague_alice.id
+        assert not visible[0].get("historical")
+        assert not visible[0].get("privacy_warning_text")
+
+    @patch("wies.core.editables.assignment.timezone")
+    def test_vacancy_always_visible(self, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        assignment = Assignment.objects.create(name="Vacancy Assignment", source="wies", owner=self.colleague_bob)
+        Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies", status="OPEN")
+
+        rows = _services_display_context(assignment, self._request(self.user_unrelated))["value"]
+
+        assert len(rows) == 1
+        assert rows[0]["colleague"] is None
+
+    @patch("wies.core.editables.assignment.timezone")
+    def test_no_crash_for_user_without_colleague(self, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        user_no_colleague = User.objects.create_user(email="admin@rijksoverheid.nl")
+        assignment = self._ended_placement_assignment(owner=self.colleague_bob)
+
+        rows = _services_display_context(assignment, self._request(user_no_colleague))["value"]
+
+        assert [r for r in rows if r["colleague"]] == []
 
 
 class ColleagueAssignmentsHistoricalFilterTest(TestCase):
