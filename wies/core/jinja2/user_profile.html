@@ -54,62 +54,22 @@
       {% endif %}
       <c-data-list class="profile-data-list">
       {% if rijksprofielservice_linked and rijksprofielservice_profile %}
-        {% if rijksprofielservice_profile.naam %}
-          <dt>Naam</dt>
-          <dd>
-            <div class="editable-field-display">
-              <div class="editable-field-display__value"><span>{{ rijksprofielservice_profile.naam }}</span></div>
-              <span class="source-lock"
-                    data-tooltip="Wordt beheerd in Rijksprofielservice">
-                <span class="utrecht-icon rvo-icon rvo-icon-persoon-met-vinkje rvo-icon--md"
-                      role="img"
-                      aria-label="Beheerd in Rijksprofielservice"></span>
-              </span>
-            </div>
-          </dd>
-        {% endif %}
-        {% if rijksprofielservice_profile.email %}
-          <dt>E-mail</dt>
-          <dd>
-            <div class="editable-field-display">
-              <div class="editable-field-display__value"><span>{{ rijksprofielservice_profile.email }}</span></div>
-              <span class="source-lock"
-                    data-tooltip="Wordt beheerd in Rijksprofielservice">
-                <span class="utrecht-icon rvo-icon rvo-icon-persoon-met-vinkje rvo-icon--md"
-                      role="img"
-                      aria-label="Beheerd in Rijksprofielservice"></span>
-              </span>
-            </div>
-          </dd>
-        {% endif %}
-        {% if rijksprofielservice_profile.telefoon %}
-          <dt>Telefoon</dt>
-          <dd>
-            <div class="editable-field-display">
-              <div class="editable-field-display__value"><span>{{ rijksprofielservice_profile.telefoon }}</span></div>
-              <span class="source-lock"
-                    data-tooltip="Wordt beheerd in Rijksprofielservice">
-                <span class="utrecht-icon rvo-icon rvo-icon-persoon-met-vinkje rvo-icon--md"
-                      role="img"
-                      aria-label="Beheerd in Rijksprofielservice"></span>
-              </span>
-            </div>
-          </dd>
-        {% endif %}
-        {% if rijksprofielservice_profile.functie %}
-          <dt>Functie</dt>
-          <dd>
-            <div class="editable-field-display">
-              <div class="editable-field-display__value"><span>{{ rijksprofielservice_profile.functie }}</span></div>
-              <span class="source-lock"
-                    data-tooltip="Wordt beheerd in Rijksprofielservice">
-                <span class="utrecht-icon rvo-icon rvo-icon-persoon-met-vinkje rvo-icon--md"
-                      role="img"
-                      aria-label="Beheerd in Rijksprofielservice"></span>
-              </span>
-            </div>
-          </dd>
-        {% endif %}
+        {% for key, label in [("naam", "Naam"), ("telefoon", "Telefoonnummer"), ("functie", "Functie")] %}
+          {% if key in rijksprofielservice_profile %}
+            <dt>{{ label }}</dt>
+            <dd>
+              <div class="editable-field-display">
+                <div class="editable-field-display__value"><span>{{ rijksprofielservice_profile[key] }}</span></div>
+                <span class="source-lock"
+                      data-tooltip="Wordt beheerd in Rijksprofielservice">
+                  <span class="utrecht-icon rvo-icon rvo-icon-persoon-met-vinkje rvo-icon--md"
+                        role="img"
+                        aria-label="Beheerd in Rijksprofielservice"></span>
+                </span>
+              </div>
+            </dd>
+          {% endif %}
+        {% endfor %}
       {% elif not rijksprofielservice_linked %}
         <dt>Voornaam</dt>
         <dd>
@@ -119,11 +79,11 @@
         <dd>
           {{ inline_edit(user, "last_name") }}
         </dd>
-        <dt>E-mail</dt>
-        <dd>
-          <c-link href="mailto:{{ user.email }}">{{ user.email }}</c-link>
-        </dd>
       {% endif %}
+      <dt>E-mail</dt>
+      <dd>
+        <c-link href="mailto:{{ user.email }}">{{ user.email }}</c-link>
+      </dd>
       {% for item in label_categories %}
         <dt>{{ item.category.name }}</dt>
         <dd>

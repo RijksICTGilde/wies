@@ -75,7 +75,7 @@ from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
 )
-from .services.rijksprofielservice import fetch_profile, fetch_profiles, refresh_session_profile
+from .services.rijksprofielservice import REVOKED, fetch_profile, fetch_profiles, refresh_session_profile
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
 
@@ -2169,7 +2169,13 @@ def user_profile(request):
 
     rijksprofielservice_linked = bool(user.rijksprofielservice_sub)
     rijksprofielservice_profile = refresh_session_profile(request) if rijksprofielservice_linked else None
-    if rijksprofielservice_linked and rijksprofielservice_profile is None:
+    if rijksprofielservice_profile is REVOKED:
+        user.rijksprofielservice_sub = None
+        user.save(update_fields=["rijksprofielservice_sub"])
+        rijksprofielservice_linked = False
+        rijksprofielservice_profile = None
+        messages.info(request, "Koppeling met Rijksprofielservice is verbroken.")
+    elif rijksprofielservice_linked and rijksprofielservice_profile is None:
         messages.warning(request, "Rijksprofielservice is niet bereikbaar.")
 
     return render(

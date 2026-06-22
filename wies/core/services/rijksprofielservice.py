@@ -18,6 +18,8 @@ _token_cache: dict = {"token": None, "expires_at": 0.0}
 
 SESSION_KEY = "rijksprofielservice_profile"
 
+REVOKED = object()
+
 
 def get_m2m_token() -> str:
     """Fetch a client-credentials token, cached until ~30s before expiry."""
@@ -36,7 +38,7 @@ def get_m2m_token() -> str:
             "grant_type": "client_credentials",
             "scope": "read_profile",
             "client_id": settings.RIJKSPROFIELSERVICE_M2M_CLIENT_ID,
-            "client_secret": settings.RIJKSPROFIELSERVICE_CLIENT_SECRET,
+            "client_secret": settings.RIJKSPROFIELSERVICE_M2M_CLIENT_SECRET,
         },
         headers=headers,
         timeout=5,
@@ -83,11 +85,13 @@ def get_cached_profile(request) -> dict | None:
     return request.session.get(SESSION_KEY)
 
 
-def refresh_session_profile(request) -> dict | None:
+def refresh_session_profile(request):
     """Fetch the profile fresh from the service and cache it in the session.
 
-    Returns the existing cached value on transient service errors so the
-    menubar doesn't flap when the service is briefly down.
+    Returns:
+        - dict: profile data on success
+        - REVOKED sentinel: service responded 200 with null — consent revoked or subject unknown
+        - None: transport error (service unreachable) or no link yet — falls back to cached value
     """
     user = request.user
     sub = getattr(user, "rijksprofielservice_sub", None)
@@ -99,5 +103,8 @@ def refresh_session_profile(request) -> dict | None:
     except requests.RequestException:
         logger.exception("Failed to refresh Rijksprofielservice profile in session")
         return request.session.get(SESSION_KEY)
+    if profile is None:
+        request.session.pop(SESSION_KEY, None)
+        return REVOKED
     request.session[SESSION_KEY] = profile
     return profile
