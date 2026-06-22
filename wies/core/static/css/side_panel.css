@@ -325,6 +325,12 @@ dialog#side_panel::backdrop {
   gap: 0.25rem;
 }
 
+/* When shown as a second line inside a team item (ended placement, #383),
+   align it with the horizontal padding of the name row above it. */
+.rvo-item-list__item .assignment-card__privacy {
+  padding: 0 0.75rem 0.5rem;
+}
+
 .assignment-card__role {
   display: flex;
   align-items: center;
