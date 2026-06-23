@@ -2063,7 +2063,16 @@ def _attach_audit_render_data(event) -> None:
     if isinstance(spec, EditableCollection):
         event.render_kind = "collection"
         if spec.render_change is not None:
-            event.diff_entries = [spec.render_change(c) for c in event.context.get("changes", [])]
+            try:
+                event.diff_entries = [spec.render_change(c) for c in event.context.get("changes", [])]
+            except TypeError:
+                logger.warning(
+                    "Audit render_change failed for collection Event id=%s field=%s; falling back to raw context",
+                    event.id,
+                    event.context.get("field_name"),
+                    exc_info=True,
+                )
+                event.diff_entries = None
         return
 
     from django import forms  # noqa: PLC0415
@@ -2073,8 +2082,19 @@ def _attach_audit_render_data(event) -> None:
         event.render_kind = "textarea"
 
     formatter = getattr(spec, "render_change", None) or (lambda v: str(v or ""))
-    event.formatted_old = formatter(event.context.get("old_value"))
-    event.formatted_new = formatter(event.context.get("new_value"))
+    try:
+        event.formatted_old = formatter(event.context.get("old_value"))
+        event.formatted_new = formatter(event.context.get("new_value"))
+    except TypeError:
+        # Legacy events can have a stored shape the current render_change no
+        # longer accepts. Fall through to the raw context values set at the
+        # top of this function so the timeline row still renders.
+        logger.warning(
+            "Audit render_change failed for Event id=%s field=%s; falling back to raw context",
+            event.id,
+            event.context.get("field_name"),
+            exc_info=True,
+        )
 
 
 def user_profile(request):
