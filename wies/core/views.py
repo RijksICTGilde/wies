@@ -1,4 +1,5 @@
 import logging
+import urllib.parse
 from collections import Counter
 from datetime import date, timedelta
 
@@ -14,7 +15,7 @@ from django.db import transaction
 from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
-from django.http import Http404, HttpResponse, QueryDict
+from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -109,28 +110,30 @@ def get_delete_context(delete_url_name, object_pk, object_name):
     }
 
 
-def _build_panel_url(request, **overrides):
-    """Build a URL on the current path, preserving filters but replacing panel params."""
-    params = QueryDict(mutable=True)
-    params.update(request.GET)
-    params.pop("pagina", None)
-    params.pop("collega", None)
-    params.pop("opdracht", None)
-    params.pop("plaatsing", None)
+# Query params that drive the side panel; stripped when (re)building a page URL.
+PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing")
+
+
+def _url_drop_params(path, query, names, **overrides):
+    """Rebuild ``path`` from ``query`` (a QueryDict) with ``names`` dropped and
+    ``overrides`` applied. Returns ``path`` alone when no params remain."""
+    params = query.copy()
+    for name in names:
+        params.pop(name, None)
     for key, value in overrides.items():
         params[key] = value
-    return f"{request.path}?{params.urlencode()}"
+    encoded = params.urlencode()
+    return f"{path}?{encoded}" if encoded else path
+
+
+def _build_panel_url(request, **overrides):
+    """Build a URL on the current path, preserving filters but replacing panel params."""
+    return _url_drop_params(request.path, request.GET, PANEL_PARAMS, **overrides)
 
 
 def _build_close_url(request):
     """Build close URL preserving current filters."""
-    params = QueryDict(mutable=True)
-    params.update(request.GET)
-    params.pop("pagina", None)
-    params.pop("collega", None)
-    params.pop("opdracht", None)
-    params.pop("plaatsing", None)
-    return f"{request.path}?{params.urlencode()}" if params else request.path
+    return _url_drop_params(request.path, request.GET, PANEL_PARAMS)
 
 
 def _make_team_member_entry(
@@ -2050,6 +2053,8 @@ def _attach_audit_render_data(event) -> None:
     event.formatted_old = event.context.get("old_value")
     event.formatted_new = event.context.get("new_value")
 
+    # Delete events are kept for the audit trail (visible in /beheer/database/)
+    # but never rendered here — a deleted opdracht has no panel to open.
     if event.action != "update":
         return
     model_label = event.object_type.lower()
@@ -2095,6 +2100,85 @@ def _attach_audit_render_data(event) -> None:
             event.context.get("field_name"),
             exc_info=True,
         )
+
+
+def assignment_delete(request, pk):
+    assignment = get_object_or_404(Assignment, pk=pk)
+    if not has_permission(Verb.DELETE, assignment, request.user):
+        return HttpResponseForbidden()
+
+    if request.method == "GET":
+        return render(
+            request,
+            "parts/generic_form_modal.html",
+            {
+                "modal_title": f"Verwijder opdracht: {assignment.name}",
+                "warning_modal": True,
+                "modal_element_id": "assignmentDeleteModal",
+                "target_element_id": "assignmentDeleteModal",
+                "delete_warning": (
+                    f"Weet je zeker dat je opdracht '{assignment.name}' wilt verwijderen? "
+                    "Verwijderen is permanent en niet terug te draaien."
+                ),
+                "form_post_url": reverse("assignment-delete", kwargs={"pk": pk}),
+                "form_button_label": "Verwijderen",
+            },
+        )
+    if request.method == "POST":
+        name = assignment.name
+        # Snapshot related rows before they cascade away.
+        context = _assignment_audit_snapshot(assignment)
+        # Atomic so a failed audit insert rolls back the delete — losing
+        # the opdracht without a trace would be the worst outcome.
+        with transaction.atomic():
+            assignment.delete()
+            create_event(
+                object_type="Assignment",
+                action="delete",
+                source="user",
+                object_id=pk,
+                user=request.user,
+                context=context,
+            )
+        messages.success(request, f"Opdracht '{name}' succesvol verwijderd")
+        response = HttpResponse(status=200)
+        response["HX-Redirect"] = _page_url_behind_panel(request)
+        return response
+    return HttpResponse(status=405)
+
+
+def _page_url_behind_panel(request) -> str:
+    """The page the side panel was opened over, with the panel params dropped.
+
+    The opdracht side panel is an overlay (``?opdracht=`` / ``?plaatsing=``)
+    on a real page, so after deleting we return there instead of jumping to
+    the opdrachten-lijst. Falls back to the list when the header is absent.
+    """
+    current = request.headers.get("HX-Current-URL")
+    if not current:
+        return reverse("assignment-list")
+    parsed = urllib.parse.urlparse(current)
+    # Keep collega/pagina/filters — only the opdracht panel is closing.
+    return _url_drop_params(parsed.path, QueryDict(parsed.query), ("opdracht", "plaatsing"))
+
+
+def _assignment_audit_snapshot(assignment) -> dict:
+    """Snapshot for the create/delete audit event: every rol with who fills it
+    (``"Java (Robbert)"``) or ``"open"`` when unfilled, plus the opdrachtgevers
+    and the name. One entry per rol, so placements aren't duplicated. Empty
+    lists are left out of the audit."""
+    services = []
+    for s in assignment.services.select_related("skill").prefetch_related("placements__colleague"):
+        rol = s.skill.name if s.skill_id else s.description
+        names = [p.colleague.name for p in s.placements.all()]
+        services.append(f"{rol} ({', '.join(names) if names else 'open'})")
+    organizations = [rel.organization.label or rel.organization.name for rel in assignment.organization_relations.all()]
+    snapshot = {"name": assignment.name}
+    if services:
+        snapshot["services"] = services
+    if organizations:
+        snapshot["organizations"] = organizations
+    return snapshot
 
 
 def user_profile(request):
@@ -2298,7 +2382,7 @@ def assignment_create(request):
             source="user",
             object_id=assignment.id,
             user=request.user,
-            context={"name": assignment.name},
+            context=_assignment_audit_snapshot(assignment),
         )
 
         link_url = f"{reverse('assignment-list')}?opdracht={assignment.id}"

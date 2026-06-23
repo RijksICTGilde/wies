@@ -91,6 +91,14 @@
           </div>
           {{ inline_edit(a, "services") }}
         </section>
+        {% if has_permission(Verb.DELETE, panel_data.assignment, request.user) %}
+          <section>
+            <c-button kind="warning-subtle" icon="verwijderen" iconPlacement="before" hx-get="{{ url('assignment-delete', args=[panel_data.assignment.id]) }}" hx-target="#assignmentDeleteModal" hx-swap="innerHTML">
+            Verwijder opdracht
+            </c-button>
+          </section>
+          <div id="assignmentDeleteModal"></div>
+        {% endif %}
       </div>
     </div>
     {% if panel_data.show_updates_tab %}
