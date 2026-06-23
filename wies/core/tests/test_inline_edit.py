@@ -1008,6 +1008,38 @@ class AssignmentServicesAuditTest(TestCase):
         assert changes[0]["old"]["description"] == "Filled"
         assert changes[0]["new"]["description"] == "New description"
 
+    def test_remove_row_via_team_bewerken_deletes_service(self):
+        """Bug: in "Team bewerken", clicking "Verwijderen" on a row and
+        then "Opslaan" must delete that row's service. The JS removes
+        the row from the DOM without renumbering or decrementing
+        ``TOTAL_FORMS``, so the server sees a gap in the form indexes.
+        Django's formset interprets the gap as an empty form, and
+        ``ServiceForm.clean()`` rejects it with "Vul een periode in...".
+        The save fails, the deleted row re-renders as a blank
+        errored form, and the user can never delete a team member."""
+        original_vacant_id = self.vacant_service.id
+        # Only submit row 0 (the filled service), simulating the user
+        # having clicked "Verwijderen" on row 1 (the vacant one).
+        # TOTAL_FORMS is unchanged — this is the production behaviour.
+        data = {
+            "service-TOTAL_FORMS": "2",
+            **self.FORMSET_MGMT_KEYS,
+            **self._row(
+                0,
+                service=self.filled_service,
+                skill=self.skill_python,
+                description="Filled",
+                is_filled=True,
+                colleague=self.colleague,
+            ),
+        }
+        resp = self.client.post(self.url, data)
+        assert resp.status_code == 200
+        # The removed service must actually be gone from the DB.
+        assert not Service.objects.filter(id=original_vacant_id).exists()
+        # And the surviving service is unchanged.
+        assert Service.objects.filter(id=self.filled_service.id).exists()
+
 
 class AssignmentServicesEditFormPeriodTest(TestCase):
     """Regression: opening the team editor must reflect each row's
