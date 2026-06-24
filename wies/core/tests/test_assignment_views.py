@@ -1,3 +1,6 @@
+import importlib
+
+from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase, override_settings
@@ -631,6 +634,116 @@ class AssignmentEditAttributeTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, 'van "Legacy Old"')
         self.assertContains(response, 'naar "Legacy New"')
+
+    def test_timeline_renders_legacy_organizations_string_event(self):
+        """Regression: `organizations` events created in the PR #341 release
+        window (2026-05-20 → 2026-06-08) stored ``old_value`` / ``new_value``
+        as ``str(list_of_dicts)`` — a Python repr — because the pre-#369
+        inline-edit code did ``str(old_value or "")`` on every field. The
+        current renderer (``_organizations_render_change``) was deployed in
+        the 2026-06-10 release and assumes a list of dicts; on a legacy
+        event it iterates the string character by character and crashes
+        with ``TypeError: string indices must be integers, not 'str'``.
+
+        Post-fix: the runtime guard in ``_attach_audit_render_data`` catches
+        the ``TypeError``, logs a warning carrying the event id and field
+        name, and falls back to the raw context so the timeline still
+        renders."""
+        self.client.force_login(self.user_with_permission)
+        # Exact shape produced by the pre-#369 code path:
+        #     "old_value": str(old_value or "")
+        # where old_value was _current_value(obj, organizations_spec), i.e.
+        # the list returned by _organizations_initial.
+        legacy_old = "[{'organization': <OrganizationUnit: Ministerie van Financien>, 'role': 'PRIMARY'}]"
+        legacy_new = (
+            "[{'organization': <OrganizationUnit: Ministerie van Financien>, 'role': 'PRIMARY'}, "
+            "{'organization': <OrganizationUnit: Ministerie van Buitenlandse Zaken>, 'role': 'INVOLVED'}]"
+        )
+        event = Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_name": "organizations",
+                "field_label": "Opdrachtgever(s)",
+                "old_value": legacy_old,
+                "new_value": legacy_new,
+            },
+        )
+
+        with self.assertLogs("wies.core.views", level="WARNING") as log_ctx:
+            response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+        assert response.status_code == 200
+        self.assertContains(response, "Opdrachtgever(s)")
+        # Operator can audit production logs for the event id + field name.
+        assert any(f"id={event.id}" in m and "field=organizations" in m for m in log_ctx.output), log_ctx.output
+
+    def test_migration_scrubs_legacy_organizations_event_in_place(self):
+        """The 0008 data migration replaces ``old_value``/``new_value`` with
+        ``[]`` on legacy ``organizations`` events whose values are strings,
+        and leaves valid rows + unrelated events alone."""
+
+        scrub_module = importlib.import_module("wies.core.migrations.0008_scrub_legacy_organizations_events")
+
+        legacy = Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_name": "organizations",
+                "field_label": "Opdrachtgever(s)",
+                "old_value": "[{'organization': <OrganizationUnit: X>, 'role': 'PRIMARY'}]",
+                "new_value": "[{'organization': <OrganizationUnit: Y>, 'role': 'PRIMARY'}]",
+            },
+        )
+        valid = Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_name": "organizations",
+                "field_label": "Opdrachtgever(s)",
+                "old_value": [{"name": "X", "role": "PRIMARY"}],
+                "new_value": [{"name": "Y", "role": "PRIMARY"}],
+            },
+        )
+        unrelated = Event.objects.create(
+            user=self.user_with_permission,
+            user_email=self.user_with_permission.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_name": "name",
+                "field_label": "Opdracht naam",
+                "old_value": "Oud",
+                "new_value": "Nieuw",
+            },
+        )
+
+        scrub_module.scrub_legacy_organizations_events(apps, schema_editor=None)
+
+        legacy.refresh_from_db()
+        valid.refresh_from_db()
+        unrelated.refresh_from_db()
+
+        assert legacy.context["old_value"] == []
+        assert legacy.context["new_value"] == []
+        assert valid.context["old_value"] == [{"name": "X", "role": "PRIMARY"}]
+        assert valid.context["new_value"] == [{"name": "Y", "role": "PRIMARY"}]
+        assert unrelated.context["old_value"] == "Oud"
+        assert unrelated.context["new_value"] == "Nieuw"
 
     def test_events_partial_accessible_to_unrelated_user(self):
         """Any authenticated user can open the updates tab, not just BDM/placed colleagues."""
