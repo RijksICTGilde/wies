@@ -108,7 +108,7 @@ known-first-party = ["wies", "config"]
 "wies/core/views.py" = ["C901", "SLF001", "TRY003", "EM101"]
 "wies/core/services/*" = ["C901"]  # complexity (fix later)
 "wies/core/inline_edit/*" = ["SLF001", "TRY003", "EM101", "EM102"]
-"scripts/*" = ["INP001"]  # standalone scripts, not a package
+"scripts/*" = ["INP001", "T201", "ERA001"]  # standalone scripts, not a package; print to stdout
 
 
 [tool.pytest.ini_options]
