@@ -238,6 +238,19 @@ class ServiceForm(RvoFormMixin, forms.Form):
         cleaned_data = super().clean()
         skill_val = cleaned_data.get("skill", "")
         new_skill_name = cleaned_data.get("new_skill_name", "").strip()
+        # A row the user removed in the UI ("Verwijderen") leaves a gap
+        # in the formset indexes that Django re-materialises as a blank
+        # form. Treat any row with no identifying content as deleted and
+        # skip validation — extract_services_data drops it before save.
+        is_empty_row = (
+            not cleaned_data.get("id")
+            and not skill_val
+            and not new_skill_name
+            and not cleaned_data.get("description")
+            and not cleaned_data.get("colleague")
+        )
+        if is_empty_row:
+            return cleaned_data
         if skill_val == "__new__" and not new_skill_name:
             self.add_error("new_skill_name", "Voer een naam in voor de nieuwe rol.")
         has_skill = (skill_val and skill_val != "__new__") or new_skill_name
