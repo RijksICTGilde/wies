@@ -1,3 +1,9 @@
+<!--
+  Source of truth for the privacy declaration.
+  After editing this file, regenerate the in-product page:
+      uv run python manage.py generate_privacy_html
+-->
+
 # Privacyverklaring
 
 Wij hechten veel waarde aan jouw privacy. In deze privacyverklaring leggen wij uit welke
@@ -5,9 +11,10 @@ persoonsgegevens wij verzamelen, waarom wij dat doen en wat jouw rechten zijn.
 
 ## Wie zijn wij?
 
-Wies is een intern hulpmiddel van het Organisatieonderdeel Digitale Innovatie (ODI) binnen de
-Rijksoverheid, bedoeld voor het beheren van plaatsingen en opdrachten. De verwerkingsverantwoordelijke
-voor de persoonsgegevens die via Wies worden verwerkt is ODI.
+Wies is een intern hulpmiddel van de Rijksorganisatie voor Ontwikkeling, Digitalisering en
+Innovatie (ODI) binnen de Rijksoverheid, bedoeld voor het beheren van plaatsingen en opdrachten
+van onze medewerkers. De verwerkingsverantwoordelijke voor de persoonsgegevens die via Wies
+worden verwerkt is ODI.
 
 Heb je vragen over deze privacyverklaring of over de verwerking van jouw persoonsgegevens?
 Neem dan contact met ons op via [wies-odi@rijksoverheid.nl](mailto:wies-odi@rijksoverheid.nl).
@@ -17,10 +24,10 @@ Neem dan contact met ons op via [wies-odi@rijksoverheid.nl](mailto:wies-odi@rijk
 Wies verwerkt alleen de persoonsgegevens die nodig zijn voor het beheren van plaatsingen en
 opdrachten. Het gaat om de volgende gegevens:
 
-- Naam
-- E-mailadres
+- Voornaam en achternaam
+- Zakelijk e-mailadres
 - Functie en rol binnen ODI
-- Gegevens over plaatsingen en opdrachten (zoals opdrachtgever, looptijd en status)
+- Gegevens over plaatsingen en opdrachten van de huidige opdracht (zoals opdrachtgever, looptijd en status)
 
 ## Waarvoor gebruiken wij jouw gegevens?
 
@@ -86,6 +93,11 @@ klacht indienen bij de Autoriteit Persoonsgegevens. Meer informatie vind je op
 ## Geautomatiseerde besluitvorming
 
 Wies maakt geen gebruik van geautomatiseerde besluitvorming of profilering.
+
+## Datalekken
+
+Een datalek is het onbedoeld vrijkomen, wijzigen, vernietigen of toegankelijk worden van persoonsgegevens.
+Heb je een datalek ontdekt of heb je een vermoeden? Meldt het dan direct: meld een datalek via het formulier of stuur een mail naar de postbus BZK.
 
 ## Wijzigingen
 
