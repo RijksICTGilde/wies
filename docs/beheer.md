@@ -23,10 +23,12 @@ Wies is een interne webapplicatie voor medewerkers bij ODI om inzicht te krijgen
 
 ## 3\. Hosting & infrastructuur
 
+- Productie-URL: [wies.rijksorganisatieodi.nl](https://wies.rijksorganisatieodi.nl)
 - Locatie: ODC-Noord, overheidsdatacenter.
 - Platform: tenant in bestaand ODCN Kubernetes omgeving, beheerd door ODCN
+- Deployment: via het [ZAD-platform](https://zad.rijksapp.nl)
 - Omgevingen: aparte test- en productieomgevingen, volledig geïsoleerd van elkaar
-- Back-ups: van specifieke data opgeslagen in Wies wordt dagelijks een back-up gemaakt.
+- Back-ups: van specifieke data opgeslagen in Wies wordt dagelijks een back-up gemaakt; er worden maximaal 7 back-ups bewaard.
 - Monitoring & logging: logging reeds aanwezig; monitoring wordt geïntroduceerd.
 - Beschikbaarheid: tijdens kantooruren is niet beschikbaar zijn toegestaan voor de maximale duur van 5 werkdagen per incident; buiten kantooruren is beschikbaarheid niet gegarandeerd.
 
