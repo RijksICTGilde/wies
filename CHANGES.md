@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ?: ...
+
+## 2026-06-24
+
 - 411: (migration) fix assignment updates tab error when there is old unmigrated data
 - 413: fix that teammembers on assignment can be removed
 - 372: the BM-owner (and support staff in `STAFF_EMAILS`) can delete wies-sourced opdrachten, with a confirmation modal and an audit-trail event; both create and delete now snapshot the rollen (with who filled them) and the opdrachtgevers
