@@ -102,6 +102,7 @@ def _services_initial(assignment):
 
     rows = []
     for service in assignment.services.select_related("skill").order_by("id"):
+        # TODO: this runs a Placement query per service (N+1); fetch them in one prefetch instead.
         placement = Placement.objects.filter(service=service).select_related("colleague").order_by("-id").first()
         effective_start = placement.start_date if placement else service.start_date
         effective_end = placement.end_date if placement else service.end_date
