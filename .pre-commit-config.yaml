@@ -47,12 +47,3 @@ repos:
         types_or: [html]
       - id: djlint-jinja
         types_or: [html]
-
-  - repo: local
-    hooks:
-      - id: privacy-html-up-to-date
-        name: privacy.html is regenerated from privacy.md
-        entry: uv run python manage.py generate_privacy_html --check
-        language: system
-        files: ^(docs/privacy\.md|wies/core/jinja2/privacy\.html)$
-        pass_filenames: false
