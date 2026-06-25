@@ -1,7 +1,16 @@
 {# Display partial for the Assignment services EditableCollection.
-   Rows come from _services_initial, viewer-filtered by _services_display_context:
-   ended placements are hidden from unrelated viewers; the placed colleague and
-   BM-owner see them flagged `historical` with a `privacy_warning_text`.
+
+   Renders the team list from `value` (the row dicts produced by
+   _services_initial). Matches the visual of the previous team block
+   in parts/assignment_panel_content.html, but driven off the editable's
+   initial data so the whole block toggles with edit mode — on edit the
+   inline-edit wrapper is swapped for the formset; on save/cancel it
+   swaps back to this display.
+
+   Historical placements and privacy notes are viewer-filtered by
+   _services_display_context: ended placements are hidden from unrelated
+   viewers; the placed colleague and BM-owner see them flagged `historical`
+   with a `privacy_warning_text`.
 #}
 {% if value %}
   <div class="rvo-item-list">
