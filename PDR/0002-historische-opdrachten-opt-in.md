@@ -1,6 +1,6 @@
-# 0001 - Historische opdrachten via opt-in
+# 0002 - Historische opdrachten via opt-in
 
-**Status:** Voorgesteld
+**Status:** Idee
 **Datum:** 2026-03-11
 
 ## Context
