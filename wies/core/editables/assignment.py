@@ -135,14 +135,10 @@ _PRIVACY_BM = "Alleen zichtbaar voor jou en de consultant"
 
 
 def _services_display_context(assignment, request) -> dict:
-    """Viewer-aware override of the team rows, for display only.
-
-    ``_services_initial`` returns every placement (it drives the formset and
-    the audit state). For the side-panel team list we must hide *ended*
-    placements from unrelated viewers: only the placed colleague and the
-    assignment's BM-owner may see them, each with a privacy note. Mirrors the
-    rule in ``views._build_assignment_panel_data`` so the team list and its
-    inline-edit re-render apply the same filtering (#383)."""
+    """Viewer-aware team rows for display only. ``_services_initial`` (used by
+    the formset and audit state) returns every placement; here ended placements
+    are hidden from unrelated viewers — only the placed colleague and the
+    BM-owner see them, each with a privacy note."""
     today = timezone.now().date()
     viewer = getattr(getattr(request, "user", None), "colleague", None)
     viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
@@ -151,11 +147,10 @@ def _services_display_context(assignment, request) -> dict:
     for row in _services_initial(assignment):
         placement = row["placement"]
         end = row["placement_end_date"]
-        # Vacancies and active placements stay visible to everyone.
+        # Vacancy, open-ended, or still-active → visible to everyone.
         if placement is None or end is None or today <= end:
             visible.append(row)
             continue
-        # Ended placement: only the placed colleague or the BM-owner may see it.
         if viewer is not None and placement.colleague_id == viewer.id:
             visible.append({**row, "historical": True, "privacy_warning_text": _PRIVACY_OWN})
         elif viewer_is_bm:

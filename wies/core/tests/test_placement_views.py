@@ -896,13 +896,8 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
 
 
 class AssignmentServicesDisplayVisibilityTest(TestCase):
-    """Historical-placement visibility on the editables team-display path (#383).
-
-    The side-panel team list and its inline-edit re-render are now driven by
-    ``_services_display_context`` instead of ``_build_assignment_panel_data``.
-    Same privacy rule: ended placements are visible only to the placed
-    colleague and the assignment's BM-owner, each with a privacy note.
-    """
+    """Ended placements in the side-panel team list are visible only to the
+    placed colleague and the BM-owner (via ``_services_display_context``)."""
 
     def setUp(self):
         self.list_url = reverse("home")
