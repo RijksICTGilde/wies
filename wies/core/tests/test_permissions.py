@@ -52,8 +52,8 @@ class HasPermissionEngineTest(_Setup):
 
     def test_superuser_gets_all_perms_via_django_model_backend(self):
         # The engine no longer short-circuits superusers; they pass because
-        # rules consult user.has_perm(...) and Django's ModelBackend grants
-        # superusers every permission.
+        # rules consult user.has_perm(...) and AuthBackend (inheriting from
+        # ModelBackend) grants superusers every permission.
         assert has_permission(Verb.UPDATE, self.assignment, self.superuser) is True
         assert has_permission(Verb.UPDATE, self.placement, self.superuser) is True
         assert has_permission(Verb.UPDATE, self.assignment, self.superuser, AssignmentEditables.extra_info) is True

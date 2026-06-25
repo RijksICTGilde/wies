@@ -1,7 +1,7 @@
 import logging
 
 from django.contrib.auth import get_user_model
-from django.contrib.auth.backends import BaseBackend
+from django.contrib.auth.backends import ModelBackend
 
 from .services.events import create_auth_event
 
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 
-class AuthBackend(BaseBackend):
+class AuthBackend(ModelBackend):
     def authenticate(self, request, username=None, email=None, **kwargs):
         if not username:
             msg = "username is required"
