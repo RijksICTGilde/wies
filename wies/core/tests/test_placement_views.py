@@ -4,10 +4,12 @@ from unittest.mock import Mock, patch
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import connection
 from django.test import Client, RequestFactory, TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
-from wies.core.editables.assignment import _services_display_context
+from wies.core.editables.assignment import _services_display_context, _services_initial
 from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -1266,6 +1268,32 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         )
 
         assert assignments == []
+
+
+class ServicesInitialQueryCountTest(TestCase):
+    """_services_initial must not run a query per service (N+1)."""
+
+    def setUp(self):
+        self._colleague = Colleague.objects.create(name="C", email="c@rijksoverheid.nl", source="wies")
+
+    def _assignment_with_services(self, count):
+        skill = Skill.objects.create(name=f"Skill-{count}")
+        assignment = Assignment.objects.create(name=f"A-{count}", source="wies")
+        for _ in range(count):
+            service = Service.objects.create(assignment=assignment, description="s", skill=skill, source="wies")
+            Placement.objects.create(colleague=self._colleague, service=service, period_source="SERVICE", source="wies")
+        return assignment
+
+    def test_query_count_is_constant(self):
+        small = self._assignment_with_services(2)
+        large = self._assignment_with_services(6)
+
+        with CaptureQueriesContext(connection) as q_small:
+            _services_initial(small)
+        with CaptureQueriesContext(connection) as q_large:
+            _services_initial(large)
+
+        assert len(q_large) == len(q_small), f"N+1: {len(q_small)} vs {len(q_large)} queries for 2 vs 6 services"
 
 
 class ColleagueAssignmentsHistoricalFilterTest(TestCase):

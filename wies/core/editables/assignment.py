@@ -7,6 +7,7 @@ import urllib.parse
 
 from django import forms
 from django.db import transaction
+from django.db.models import Prefetch
 from django.urls import reverse
 from django.utils import timezone
 
@@ -101,10 +102,24 @@ def _services_initial(assignment):
     """One row per service, vacancies first."""
     from wies.core.models import Placement  # noqa: PLC0415 — avoids circular import
 
+    # Latest placement per service, fetched in one prefetch instead of a query per service.
+    services = (
+        assignment.services.select_related("skill")
+        .prefetch_related(
+            Prefetch(
+                "placements",
+                # service__assignment so placement.start_date/end_date (which resolve
+                # through service → assignment) don't each trigger their own query.
+                queryset=Placement.objects.select_related("colleague", "service__assignment").order_by("-id"),
+                to_attr="ordered_placements",
+            )
+        )
+        .order_by("id")
+    )
+
     rows = []
-    for service in assignment.services.select_related("skill").order_by("id"):
-        # TODO: this runs a Placement query per service (N+1); fetch them in one prefetch instead.
-        placement = Placement.objects.filter(service=service).select_related("colleague").order_by("-id").first()
+    for service in services:
+        placement = service.ordered_placements[0] if service.ordered_placements else None
         effective_start = placement.start_date if placement else service.start_date
         effective_end = placement.end_date if placement else service.end_date
         # Checkbox renders checked ("Neem opdrachtperiode over") only when
