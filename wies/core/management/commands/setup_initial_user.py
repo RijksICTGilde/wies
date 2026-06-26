@@ -115,6 +115,12 @@ def _create_dev_placements(colleague):
         logger.info("Set colleague as BM on finished assignment: %s", finished_assignment.name)
 
 
+DEMO_RIJKSPROFIELSERVICE_SUBS = {
+    "kevin.popov@rijksoverheid.nl": "demo-sub-kevin",
+    "diana.bos@rijksoverheid.nl": "demo-sub-diana",
+}
+
+
 def _link_users_to_colleagues():
     """Create User accounts for fixture colleagues that don't have one, so events can reference them."""
     linked = 0
@@ -132,6 +138,11 @@ def _link_users_to_colleagues():
             linked += 1
     if linked:
         logger.info("Created %d users for fixture colleagues", linked)
+
+    for email, sub in DEMO_RIJKSPROFIELSERVICE_SUBS.items():
+        User.objects.filter(email__iexact=email, rijksprofielservice_sub__isnull=True).update(
+            rijksprofielservice_sub=sub
+        )
 
 
 def _link_events_to_users():
