@@ -22,7 +22,9 @@
           <div class="service-card__name">
             <div class="user-avatar">{{ row.colleague.name|first|upper }}</div>
             <span><strong>{{ row.colleague.name }}</strong> · {{ row.skill_name }}</span>
-            {% if row.historical %}<c-tag type="default" class="assignment-tag--completed">Afgelopen</c-tag>{% endif %}
+            {% if row.period_label %}
+              <span class="service-card__tag"><c-tag type="default">{{ row.period_label }}</c-tag></span>
+            {% endif %}
             {% if pl and (pl.start_date or pl.end_date) %}
               <span class="service-card__period">
                 <span class="rvo-icon rvo-icon-kalender rvo-icon--sm" aria-hidden="true"></span>

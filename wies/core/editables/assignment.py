@@ -13,6 +13,7 @@ from django.utils import timezone
 from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
+from wies.core.placement_visibility import LABELS, evaluate
 from wies.core.services.assignments import apply_services_to_assignment, extract_services_data
 
 
@@ -131,15 +132,12 @@ def _services_initial(assignment):
     return rows
 
 
-_PRIVACY_OWN = "Alleen zichtbaar voor jou en de Business Manager"
-_PRIVACY_BM = "Alleen zichtbaar voor jou en de consultant"
-
-
-def _services_display_context(assignment, request) -> dict:
-    """Viewer-aware team rows for display only. ``_services_initial`` (used by
-    the formset and audit state) returns every placement; here ended placements
-    are hidden from unrelated viewers — only the placed colleague and the
-    BM-owner see them, each with a privacy note."""
+def visible_service_rows(assignment, request) -> list[dict]:
+    """Viewer-filtered team rows for display. ``_services_initial`` (used by the
+    formset and audit state) returns every placement; here a placement that is
+    not currently active (ended or not yet started) is hidden from unrelated
+    viewers — only the placed colleague and the BM-owner see it, flagged
+    ``historical`` with a chip label and a privacy note."""
     today = timezone.now().date()
     viewer = getattr(getattr(request, "user", None), "colleague", None)
     viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
@@ -147,16 +145,30 @@ def _services_display_context(assignment, request) -> dict:
     visible = []
     for row in _services_initial(assignment):
         placement = row["placement"]
-        end = row["placement_end_date"]
-        # Vacancy, open-ended, or still-active → visible to everyone.
-        if placement is None or end is None or today <= end:
+        if placement is None:  # vacancy → visible to everyone
             visible.append(row)
             continue
-        if viewer is not None and placement.colleague_id == viewer.id:
-            visible.append({**row, "historical": True, "privacy_warning_text": _PRIVACY_OWN})
-        elif viewer_is_bm:
-            visible.append({**row, "historical": True, "privacy_warning_text": _PRIVACY_BM})
-    return {"value": visible}
+        result = evaluate(
+            row["placement_start_date"], row["placement_end_date"], placement.colleague_id, viewer, viewer_is_bm, today
+        )
+        if not result.visible:
+            continue
+        if result.timing == "active":
+            visible.append(row)
+        else:
+            visible.append(
+                {
+                    **row,
+                    "historical": True,
+                    "period_label": LABELS[result.timing],
+                    "privacy_warning_text": result.privacy_note,
+                }
+            )
+    return visible
+
+
+def _services_display_context(assignment, request) -> dict:
+    return {"value": visible_service_rows(assignment, request)}
 
 
 def _services_formset_factory(data=None, initial=None):
