@@ -5,7 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 334: Add privacy declaration and beheer document. The in-product privacy page is regenerated via `manage.py generate_privacy_html`
-- 410: fix privacy leak (#383) where non-active plaatsingen were shown to everyone; ended **and** future (not-yet-started) plaatsingen are now only visible to the placed colleague and the opdracht's Business Manager — each with a privacy note and an "Afgelopen"/"Gepland" chip — consistently across the opdracht team list, the team count, the standalone plaatsing-pagina (`?plaatsing=N`, which was reachable by guessing the URL) and the profiel-overzicht
+- 410: fix privacy leak (#383) where non-active plaatsingen were shown to everyone; ended **and** future (not-yet-started) plaatsingen are now only visible to the placed colleague and the opdracht's Business Manager — each with a privacy note and an "Afgelopen"/"Gepland" chip — consistently across the opdracht team list, the team count, the standalone plaatsing-pagina (`?plaatsing=N`, which was reachable by guessing the URL), the "Wie zit waar?"-overzicht and the profiel-overzicht
 
 ## 2026-06-24
 

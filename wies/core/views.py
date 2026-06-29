@@ -70,6 +70,7 @@ from .services.organizations import (
 from .services.placements import (
     create_assignments_from_csv,
     filter_placements_by_min_end_date,
+    hide_future_placements_from_others,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
@@ -648,9 +649,13 @@ class PlacementListView(ListView):
             if order_by:
                 qs = qs.order_by(f"-{order_by}" if descending else order_by)
 
-        # filter out historical placements
+        # Hide ended placements from everyone; hide not-yet-started ones from
+        # all but the placed colleague and the assignment's BM-owner.
+        today = timezone.now().date()
         qs = annotate_placement_dates(qs)
-        return filter_placements_by_min_end_date(qs, timezone.now().date())
+        qs = filter_placements_by_min_end_date(qs, today)
+        viewer = getattr(self.request.user, "colleague", None)
+        return hide_future_placements_from_others(qs, today, viewer)
 
     def _get_labels_by_category(self):
         """Parse selected label IDs grouped by category."""

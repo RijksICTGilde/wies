@@ -1270,6 +1270,82 @@ class ColleagueProfileFutureVisibilityTest(TestCase):
         assert assignments == []
 
 
+class PlacementListFutureVisibilityTest(TestCase):
+    """Not-yet-started placements appear on the 'Wie zit waar?' list only for the
+    placed colleague and the assignment's BM-owner, not for others."""
+
+    def setUp(self):
+        self.list_url = reverse("home")
+        self.skill = Skill.objects.create(name="Python Developer")
+        self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
+        self.colleague_alice = Colleague.objects.create(
+            name="Alice", email="alice@rijksoverheid.nl", source="wies", user=self.user_alice
+        )
+        self.user_bob = User.objects.create_user(email="bob@rijksoverheid.nl")
+        self.colleague_bob = Colleague.objects.create(
+            name="Bob", email="bob@rijksoverheid.nl", source="wies", user=self.user_bob
+        )
+        self.user_unrelated = User.objects.create_user(email="unrelated@rijksoverheid.nl")
+        self.colleague_unrelated = Colleague.objects.create(
+            name="Unrelated", email="unrelated@rijksoverheid.nl", source="wies", user=self.user_unrelated
+        )
+
+    def _future_placement(self, owner):
+        assignment = Assignment.objects.create(name="Future", source="wies", owner=owner)
+        service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
+        return Placement.objects.create(
+            colleague=self.colleague_alice,
+            service=service,
+            period_source="PLACEMENT",
+            specific_start_date=date(2026, 8, 1),  # not yet started
+            specific_end_date=date(2026, 12, 1),
+            source="wies",
+        )
+
+    def _queryset_as(self, user, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        request = RequestFactory().get(self.list_url)
+        request.user = user
+        view = PlacementListView()
+        view.request = request
+        return view.get_queryset()
+
+    @patch("wies.core.views.timezone")
+    def test_future_placement_hidden_from_unrelated(self, mock_tz):
+        pl = self._future_placement(owner=self.colleague_bob)
+        assert pl not in self._queryset_as(self.user_unrelated, mock_tz)
+
+    @patch("wies.core.views.timezone")
+    def test_future_placement_hidden_from_user_without_colleague(self, mock_tz):
+        pl = self._future_placement(owner=self.colleague_bob)
+        user = User.objects.create_user(email="admin@rijksoverheid.nl")
+        assert pl not in self._queryset_as(user, mock_tz)
+
+    @patch("wies.core.views.timezone")
+    def test_future_placement_visible_to_placed_colleague(self, mock_tz):
+        pl = self._future_placement(owner=self.colleague_bob)
+        assert pl in self._queryset_as(self.user_alice, mock_tz)
+
+    @patch("wies.core.views.timezone")
+    def test_future_placement_visible_to_bm(self, mock_tz):
+        pl = self._future_placement(owner=self.colleague_bob)
+        assert pl in self._queryset_as(self.user_bob, mock_tz)
+
+    @patch("wies.core.views.timezone")
+    def test_active_placement_visible_to_unrelated(self, mock_tz):
+        assignment = Assignment.objects.create(name="Active", source="wies", owner=self.colleague_bob)
+        service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
+        pl = Placement.objects.create(
+            colleague=self.colleague_alice,
+            service=service,
+            period_source="PLACEMENT",
+            specific_start_date=date(2026, 1, 1),
+            specific_end_date=date(2026, 12, 1),
+            source="wies",
+        )
+        assert pl in self._queryset_as(self.user_unrelated, mock_tz)
+
+
 class ServicesInitialQueryCountTest(TestCase):
     """_services_initial must not run a query per service (N+1)."""
 
