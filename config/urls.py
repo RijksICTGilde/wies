@@ -16,6 +16,7 @@ Including another URLconf
 """
 
 from django.conf import settings
+from django.contrib.auth.decorators import login_not_required
 from django.urls import path
 from django.views.generic import RedirectView
 
@@ -63,7 +64,9 @@ urlpatterns = [
     path("robots.txt", robots_txt, name="robots-txt"),
     path(
         ".well-known/security.txt",
-        RedirectView.as_view(url="https://www.ncsc.nl/.well-known/security.txt", permanent=False),
+        # login_not_required so the LoginRequiredMiddleware does not bounce anonymous
+        # scanners to SSO before the redirect to the NCSC central file can run.
+        login_not_required(RedirectView.as_view(url="https://www.ncsc.nl/.well-known/security.txt", permanent=False)),
         name="security-txt",
     ),
     # Wies
