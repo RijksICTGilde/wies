@@ -8,6 +8,14 @@ This files lists the changes during the lifetime of this project.
 - 402: the main search field now keeps its text instead of turning into a chip; the search runs on Enter (or by clicking the "Zoeken op …" row in the suggestions dropdown) so the query no longer fires on every keystroke. Organisation suggestions still load live while typing
 - 402: fix the "Toon meer"/"Toon minder" toggle label not updating when a checkbox group was expanded
 - 402: selected filter options now sort to the top of each sidebar group; a selected Opdrachtgever always shows as a checked quick-option even when not in the top-3 (fixes orgs picked via the search suggestion or modal not appearing in the sidebar); added a "Wis alle filters" button to the sidebar; the search magnifier is now a clickable button that runs the search
+- 417: remove `ModelBackend` from `AUTHENTICATION_BACKENDS`; `AuthBackend` now inherits from `ModelBackend` so group permissions keep resolving via a single backend, but there is no second password-login path)
+- 334: Add privacy declaration and beheer document. The in-product privacy page is regenerated via `manage.py generate_privacy_html`
+
+## 2026-06-24
+
+- 411: (migration) fix assignment updates tab error when there is old unmigrated data
+- 413: fix that teammembers on assignment can be removed
+- 372: the BM-owner (and support staff in `STAFF_EMAILS`) can delete wies-sourced opdrachten, with a confirmation modal and an audit-trail event; both create and delete now snapshot the rollen (with who filled them) and the opdrachtgevers
 
 ## 2026-01-16
 

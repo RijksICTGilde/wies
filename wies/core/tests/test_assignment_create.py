@@ -7,6 +7,7 @@ from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    Event,
     OrganizationUnit,
     Skill,
 )
@@ -168,6 +169,38 @@ class AssignmentCreateTest(TestCase):
         assert primary.organization == self.org
         involved = AssignmentOrganizationUnit.objects.get(assignment=assignment, role="INVOLVED")
         assert involved.organization == self.org2
+
+    def test_post_emits_create_event_with_snapshot(self):
+        """The create event audits the same snapshot as delete: one
+        "rol (occupant or open)" entry per service, plus the opdrachtgevers."""
+        self.client.force_login(self.bdm_user)
+        self.client.post(
+            reverse("assignment-create"),
+            {
+                "name": "Audit Snapshot Opdracht",
+                "owner": self.bdm_colleague.id,
+                **org_formset_data([(self.org, "PRIMARY"), (self.org2, "INVOLVED")]),
+                **FORMSET_MGMT_2,
+                "service-0-description": "Gevulde rol",
+                "service-0-skill": self.skill.id,
+                "service-0-is_filled": "ingevuld",
+                "service-0-has_custom_period": "on",
+                "service-0-colleague": self.colleague.id,
+                "service-1-description": "Open rol",
+                "service-1-skill": self.skill.id,
+                "service-1-has_custom_period": "on",
+            },
+        )
+        assignment = Assignment.objects.get(name="Audit Snapshot Opdracht")
+        event = Event.objects.get(object_type="Assignment", action="create", object_id=assignment.id)
+        assert event.context["name"] == "Audit Snapshot Opdracht"
+        assert event.context["services"] == [
+            f"{self.skill.name} ({self.colleague.name})",
+            f"{self.skill.name} (open)",
+        ]
+        assert sorted(event.context["organizations"]) == sorted(
+            [self.org.label or self.org.name, self.org2.label or self.org2.name]
+        )
 
     def test_post_multiple_services(self):
         self.client.force_login(self.bdm_user)
