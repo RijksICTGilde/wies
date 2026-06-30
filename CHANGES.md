@@ -4,12 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 402: redesigned each filter group (Rol, Expertise, Labels, Opdrachtgever) to show the top-3 options by result count plus a "Meer" button; "Meer" opens a modal listing all options alphabetically with a search field — Opdrachtgever's "Meer" opens the existing organisation tree modal. Checking an option filters immediately
-- 402: the main search field now keeps its text instead of turning into a chip; the search runs on Enter (or by clicking the "Zoeken op …" row in the suggestions dropdown) so the query no longer fires on every keystroke. Organisation suggestions still load live while typing
-- 402: fix the "Toon meer"/"Toon minder" toggle label not updating when a checkbox group was expanded
-- 402: selected filter options now sort to the top of each sidebar group; a selected Opdrachtgever always shows as a checked quick-option even when not in the top-3 (fixes orgs picked via the search suggestion or modal not appearing in the sidebar); added a "Wis alle filters" button to the sidebar; the search magnifier is now a clickable button that runs the search — on both the Aanvragen and Wie-zit-waar pages
-- 402: fix "Wis alle filters" leaving the typed search term visible in the box while the results were already reset
-- 402: fix the clear (×) button disappearing from the search field after a filter change (it now stays visible whenever the field has text)
+- 402: each filter group now shows its top-3 options plus a "Meer" button that opens a modal with all options (searchable, alphabetical); selected options sort to the top and stay visible even outside the top-3
+- 402: search now runs on Enter or the magnifier (not on every keystroke) and keeps its text instead of becoming a chip; org suggestions still load live while typing
+- 402: added a "Wis alle filters" button to the sidebar
+- 402: fixes — "Toon meer/minder" label now updates; clearing the search no longer leaves a stale term or a missing × button
 - 417: remove `ModelBackend` from `AUTHENTICATION_BACKENDS`; `AuthBackend` now inherits from `ModelBackend` so group permissions keep resolving via a single backend, but there is no second password-login path)
 - 334: Add privacy declaration and beheer document. The in-product privacy page is regenerated via `manage.py generate_privacy_html`
 
