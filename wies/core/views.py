@@ -2467,15 +2467,16 @@ def _get_top_org_options(
     return options
 
 
-def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> list[dict]:
-    """Post-process select-multi groups for the top-N + "Meer" modal pattern.
+def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> None:
+    """Post-process select-multi groups in place for the top-N + "Meer" modal.
 
     For each ``select-multi`` group:
       - assigns a unique ``group_id`` (the modal opens by this key),
       - computes ``top_options``: the ``top_n`` options by count (selected ones
         kept visible), shown inline in the sidebar,
       - sets ``has_more`` when there are more options than fit inline.
-    The full ``options`` list (alphabetical) is kept for the modal.
+    The full ``options`` list (alphabetical) is kept for the modal. Mutates the
+    given groups in place; returns nothing.
     """
     label_seq = 0
     for group in filter_groups:
@@ -2504,7 +2505,6 @@ def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> lis
         top = selected_opts + unselected_opts[:fill]
         group["top_options"] = top
         group["has_more"] = len(real_options) > len(top)
-    return filter_groups
 
 
 def _build_org_hierarchy(

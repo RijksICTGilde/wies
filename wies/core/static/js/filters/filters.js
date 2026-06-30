@@ -27,10 +27,7 @@ function removeFilter(formSelector, filterName, filterType, filterValue) {
   const form = document.querySelector(formSelector);
   if (!form) return;
 
-  if (filterType === "zoek") {
-    const searchInput = document.querySelector("#search");
-    if (searchInput) searchInput.value = "";
-  } else if (filterType === "select") {
+  if (filterType === "select") {
     const selectElement = form.querySelector(`[name="${filterName}"]`);
     if (selectElement) {
       selectElement.selectedIndex = 0;
@@ -104,10 +101,19 @@ function clearAllFilters(formSelector) {
     input.value = "";
   });
 
-  const searchInput = form.querySelector("#search");
+  // #search lives in #filter-and-table-container, OUTSIDE the sidebar form, and
+  // is hx-preserved (so a swap won't clear it) — clear it explicitly via the
+  // document, plus its has-value styling and the suggestions dropdown.
+  const searchInput = document.getElementById("search");
   if (searchInput) {
     searchInput.value = "";
+    const wrapper = searchInput.closest(".search-field-wrapper");
+    if (wrapper) wrapper.classList.remove("has-value");
   }
+  const suggestionsContainer = document.getElementById(
+    "search-suggestions-container",
+  );
+  if (suggestionsContainer) suggestionsContainer.innerHTML = "";
 
   document.querySelectorAll(".date-range-validation-message").forEach((msg) => {
     msg.style.display = "none";

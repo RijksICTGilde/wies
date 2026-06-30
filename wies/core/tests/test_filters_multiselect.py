@@ -1,7 +1,8 @@
 from datetime import date
 
 from django.contrib.auth import get_user_model
-from django.test import RequestFactory, TestCase
+from django.test import Client, RequestFactory, TestCase
+from django.urls import reverse
 
 from wies.core.models import (
     Assignment,
@@ -14,7 +15,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.views import PlacementListView
+from wies.core.views import PlacementListView, _finalize_filter_groups
 
 User = get_user_model()
 
@@ -255,3 +256,110 @@ class AllFiltersCombinedTest(FilterCombiningTestBase):
         ids = self._get_placement_ids({"labels": "99999"})
 
         assert len(ids) == 0, "Non-existent label should return no results"
+
+
+class FinalizeFilterGroupsTest(TestCase):
+    """Unit tests for the top-N + "Meer" post-processing (#402)."""
+
+    @staticmethod
+    def _opt(value, count, *, label=None):
+        return {"value": value, "label": label or f"Option {value}", "count": count}
+
+    def _select_multi(self, name, options, selected=None):
+        return {
+            "type": "select-multi",
+            "name": name,
+            "label": name.title(),
+            "options": options,
+            "selected_values": selected or [],
+        }
+
+    def test_assigns_group_id_and_top_options(self):
+        group = self._select_multi(
+            "rol",
+            [self._opt("1", 5), self._opt("2", 9), self._opt("3", 1), self._opt("4", 7)],
+        )
+        groups = [group]
+        _finalize_filter_groups(groups, top_n=3)
+
+        assert group["group_id"] == "rol"
+        # top-3 by descending count: 9, 7, 5
+        assert [o["value"] for o in group["top_options"]] == ["2", "4", "1"]
+        assert group["has_more"] is True, "4 options, only 3 shown inline"
+
+    def test_returns_none_and_mutates_in_place(self):
+        group = self._select_multi("rol", [self._opt("1", 1)])
+        result = _finalize_filter_groups([group])
+        assert result is None
+        assert "group_id" in group, "mutated in place"
+
+    def test_selected_option_sorts_first_even_when_low_count(self):
+        """A selected low-count option must stay visible and lead the list (#402)."""
+        group = self._select_multi(
+            "rol",
+            [self._opt("1", 50), self._opt("2", 40), self._opt("3", 30), self._opt("low", 1)],
+            selected=["low"],
+        )
+        _finalize_filter_groups([group], top_n=3)
+        values = [o["value"] for o in group["top_options"]]
+        assert values[0] == "low", "selected option leads"
+        assert "low" in values, "selected option always shown, even outside top-N by count"
+        # one selected + fill (top_n - 1 = 2) highest-count unselected
+        assert len(group["top_options"]) == 3
+        assert set(values) == {"low", "1", "2"}
+
+    def test_has_more_false_when_all_fit(self):
+        group = self._select_multi("rol", [self._opt("1", 5), self._opt("2", 3)])
+        _finalize_filter_groups([group], top_n=3)
+        assert group["has_more"] is False
+
+    def test_labels_groups_get_unique_ids(self):
+        g1 = self._select_multi("labels", [self._opt("1", 1)])
+        g2 = self._select_multi("labels", [self._opt("2", 1)])
+        _finalize_filter_groups([g1, g2])
+        assert g1["group_id"] == "labels-0"
+        assert g2["group_id"] == "labels-1"
+        assert g1["group_id"] != g2["group_id"]
+
+    def test_non_select_multi_groups_untouched(self):
+        modal_group = {"type": "modal", "name": "organisatie", "label": "Opdrachtgever"}
+        _finalize_filter_groups([modal_group])
+        assert "group_id" not in modal_group
+        assert "top_options" not in modal_group
+
+
+class FilterModalViewTest(TestCase):
+    """The ?filter_modal=<group_id> HTMX branch renders the options modal (#402).
+
+    The list views render via Jinja2 (not the Django template backend), so we
+    assert on the rendered HTML rather than ``response.context``/``templates``
+    — matching the convention in the rest of the filter test suite.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(email="modaltest@rijksoverheid.nl")
+        self.client.force_login(self.user)
+        # >top_n (3) skills so the "rol" group has overflow and renders "Meer".
+        for name in ("Python Developer", "Java Developer", "Go Developer", "Rust Developer"):
+            Skill.objects.create(name=name)
+
+    def test_filter_modal_param_renders_modal_dialog(self):
+        response = self.client.get(
+            reverse("home"),
+            {"filter_modal": "rol"},
+            headers={"hx-request": "true"},
+        )
+        self.assertContains(response, 'id="filterOptionsModal"')
+        self.assertContains(response, 'data-group-id="rol"')
+
+    def test_normal_request_does_not_render_modal_dialog(self):
+        response = self.client.get(reverse("home"))
+        self.assertNotContains(response, 'id="filterOptionsModal"')
+
+    def test_sidebar_renders_group_ids_and_meer_links(self):
+        """The finalized select-multi groups render with their modal entry point."""
+        response = self.client.get(reverse("home"))
+        # group_id wiring is present so the "Meer" button can open the modal.
+        self.assertContains(response, 'data-group-id="rol"')
+        self.assertContains(response, "filter_modal=rol")
