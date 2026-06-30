@@ -86,9 +86,11 @@ op de rechtmatigheid van de verwerking vóór de intrekking.
 
 ## Klacht indienen
 
-Ben je het niet eens met de manier waarop wij met jouw persoonsgegevens omgaan? Dan kun je een
-klacht indienen bij de Autoriteit Persoonsgegevens. Meer informatie vind je op
-[autoriteitpersoonsgegevens.nl](https://www.autoriteitpersoonsgegevens.nl).
+Ben je het niet eens met de manier waarop wij met jouw persoonsgegevens omgaan? Dan kun je
+contact opnemen met onze CISO en privacy officer via
+[OBF.CISO@rijksoverheid.nl](mailto:OBF.CISO@rijksoverheid.nl). Ben je niet goed geholpen en
+wil je een klacht indienen, dan kan dat bij de Autoriteit Persoonsgegevens. Meer informatie
+vind je op [autoriteitpersoonsgegevens.nl](https://www.autoriteitpersoonsgegevens.nl).
 
 ## Geautomatiseerde besluitvorming
 
