@@ -42,48 +42,29 @@
         We helpen je in een paar stappen op weg.
         </c-paragraph>
       </section>
-      {# Step 2 — Complete profile (labels + Rijksprofiel) #}
+      {# Step 2 — Tour: Wie zit waar? #}
       <section class="onboarding-panel" data-step="2" hidden>
         <div class="onboarding-illustration">
-          <c-icon icon="persoon-met-vinkje" size="xl" color="hemelblauw" />
+          <c-icon icon="groep-3-personen" size="xl" color="hemelblauw" />
         </div>
-        <c-h3>Vul je profiel aan</c-h3>
+        <c-h3>Wie zit waar?</c-h3>
         <c-paragraph>
-        Met een aangevuld profiel vinden collega's je makkelijker terug.
-        Kies de labels die bij je passen — je kunt dit later altijd
-        aanpassen op je profiel.
+        Het overzicht van collega's en hun huidige plaatsingen, zodat je
+        snel ziet wie waar zit.
         </c-paragraph>
-        {% if onboarding_colleague %}
-          <c-data-list class="onboarding-labels">
-          {% for category in onboarding_label_categories %}
-            <dt>{{ category.name }}</dt>
-            <dd>
-              {{ inline_edit(onboarding_colleague, "labels_" ~ category.id) }}
-            </dd>
+        {# Stylized mock: rows of "avatar + name + placement". #}
+        <div class="onboarding-preview onboarding-mock onboarding-mock--wiezitwaar"
+             aria-hidden="true">
+          {% for _ in range(4) %}
+            <div class="onboarding-mock__person">
+              <span class="onboarding-mock__avatar"></span>
+              <span class="onboarding-mock__bar onboarding-mock__bar--name"></span>
+              <span class="onboarding-mock__bar onboarding-mock__bar--place"></span>
+            </div>
           {% endfor %}
-          </c-data-list>
-        {% else %}
-          <c-paragraph>Je profiel wordt klaargezet — je kunt labels straks invullen via <c-link href="{{ url('user-profile') }}">Mijn profiel</c-link>.</c-paragraph>
-        {% endif %}
-        {# Rijksprofielservice — koppeling volgt in een latere PR #}
-        <div class="onboarding-rijksprofiel">
-          <div class="onboarding-rijksprofiel__text">
-            <span class="onboarding-rijksprofiel__title">
-              <c-icon icon="paspoort" size="md" /> Rijksprofiel koppelen
-            </span>
-            <span class="onboarding-rijksprofiel__hint">Haal je gegevens automatisch op uit de Rijksprofielservice.</span>
-          </div>
-          <button type="button"
-                  class="rvo-button rvo-button--secondary rvo-button--size-sm onboarding-rijksprofiel__button"
-                  disabled
-                  aria-disabled="true"
-                  data-tooltip="Binnenkort beschikbaar">
-            <c-icon icon="externe-link" size="sm" />
-            Koppelen
-          </button>
         </div>
       </section>
-      {# Steps 3–5 — Tour, one place per step #}
+      {# Step 3 — Tour: Ontdek nieuwe opdrachten #}
       <section class="onboarding-panel" data-step="3" hidden>
         <div class="onboarding-illustration">
           <c-icon icon="document-met-lijnen" size="xl" color="hemelblauw" />
@@ -115,35 +96,16 @@
           </div>
         </div>
       </section>
+      {# Step 4 — Profile introduction (explains the profile before filling it) #}
       <section class="onboarding-panel" data-step="4" hidden>
-        <div class="onboarding-illustration">
-          <c-icon icon="groep-3-personen" size="xl" color="hemelblauw" />
-        </div>
-        <c-h3>Wie zit waar?</c-h3>
-        <c-paragraph>
-        Het overzicht van collega's en hun huidige plaatsingen, zodat je
-        snel ziet wie waar zit.
-        </c-paragraph>
-        {# Stylized mock: rows of "avatar + name + placement". #}
-        <div class="onboarding-preview onboarding-mock onboarding-mock--wiezitwaar"
-             aria-hidden="true">
-          {% for _ in range(4) %}
-            <div class="onboarding-mock__person">
-              <span class="onboarding-mock__avatar"></span>
-              <span class="onboarding-mock__bar onboarding-mock__bar--name"></span>
-              <span class="onboarding-mock__bar onboarding-mock__bar--place"></span>
-            </div>
-          {% endfor %}
-        </div>
-      </section>
-      <section class="onboarding-panel" data-step="5" hidden>
         <div class="onboarding-illustration">
           <c-icon icon="user" size="xl" color="hemelblauw" />
         </div>
         <c-h3>Bouw je profiel</c-h3>
         <c-paragraph>
         Beschrijf wie je bent en welke skills je hebt, zodat collega's
-        weten waarvoor ze bij je moeten aankloppen.
+        weten waarvoor ze bij je moeten aankloppen. In de volgende stap
+        vul je vast je labels in.
         </c-paragraph>
         {# Stylized mock: avatar + name, a short bio (two text lines), and a
            row of skill chips — the "describe yourself + skills" essence. #}
@@ -161,6 +123,48 @@
             <span class="onboarding-mock__chip"></span>
           </div>
         </div>
+      </section>
+      {# Step 5 — Fill in profile (labels + Rijksprofiel), the actual input step #}
+      <section class="onboarding-panel" data-step="5" hidden>
+        <div class="onboarding-illustration">
+          <c-icon icon="persoon-met-vinkje" size="xl" color="hemelblauw" />
+        </div>
+        <c-h3>Vul je profiel aan</c-h3>
+        <c-paragraph>
+        Kies de labels die bij je passen — zo vinden collega's je
+        makkelijker terug. Je kunt dit later altijd aanpassen op je profiel.
+        </c-paragraph>
+        {% if onboarding_colleague %}
+          <c-data-list class="onboarding-labels">
+          {% for category in onboarding_label_categories %}
+            <dt>{{ category.name }}</dt>
+            <dd>
+              {{ inline_edit(onboarding_colleague, "labels_" ~ category.id) }}
+            </dd>
+          {% endfor %}
+          </c-data-list>
+        {% else %}
+          <c-paragraph>Je profiel wordt klaargezet — je kunt labels straks invullen via <c-link href="{{ url('user-profile') }}">Mijn profiel</c-link>.</c-paragraph>
+        {% endif %}
+        {# Rijksprofielservice — backend-koppeling volgt; knop toont voorlopig
+           een "binnenkort" melding (afgehandeld in onboarding.js). #}
+        <div class="onboarding-rijksprofiel">
+          <div class="onboarding-rijksprofiel__text">
+            <span class="onboarding-rijksprofiel__title">
+              <c-icon icon="paspoort" size="md" /> Rijksprofiel koppelen
+            </span>
+            <span class="onboarding-rijksprofiel__hint">Haal je gegevens automatisch op uit de Rijksprofielservice.</span>
+          </div>
+          <button type="button"
+                  class="rvo-button rvo-button--secondary rvo-button--size-sm onboarding-rijksprofiel__button"
+                  data-rijksprofiel-koppelen>
+            <c-icon icon="externe-link" size="sm" />
+            Koppelen
+          </button>
+        </div>
+        <p class="onboarding-rijksprofiel__notice"
+           data-rijksprofiel-notice
+           hidden>De koppeling met de Rijksprofielservice komt binnenkort beschikbaar.</p>
       </section>
     </div>
     <div class="modal-footer onboarding-footer">

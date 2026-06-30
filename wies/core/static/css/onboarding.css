@@ -95,9 +95,14 @@
   font-size: 0.875rem;
 }
 
-.onboarding-rijksprofiel__button[disabled] {
-  cursor: not-allowed;
-  opacity: 0.6;
+.onboarding-rijksprofiel__notice {
+  margin: 0.5rem 0 0;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: #e5f1f8;
+  color: #31536c;
+  font-size: 0.875rem;
+  text-align: left;
 }
 
 /* Tour preview — a framed box holding a stylized mini-mockup of the page */
