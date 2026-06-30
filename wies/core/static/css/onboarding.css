@@ -4,7 +4,13 @@
    ============================================================================ */
 
 .onboarding-wizard {
-  max-width: 560px;
+  max-width: 760px;
+}
+
+/* Keep the body a steady height across steps so the modal doesn't jump
+   as panels with different content swap in. */
+.onboarding-body {
+  min-height: 24rem;
 }
 
 /* Progress dots */
@@ -50,23 +56,63 @@
   margin-inline: auto;
 }
 
-/* Label pickers + tour list read left-aligned even inside a centered panel */
-.onboarding-labels,
-.onboarding-tour {
+/* Label pickers read left-aligned even inside a centered panel */
+.onboarding-labels {
   text-align: left;
   margin-top: 1.25rem;
 }
 
-.onboarding-tour dt {
+/* Rijksprofiel koppel-rij (placeholder, koppeling volgt later) */
+.onboarding-rijksprofiel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  text-align: left;
+  margin-top: 1.25rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  background: #f7f8f9;
+}
+
+.onboarding-rijksprofiel__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.onboarding-rijksprofiel__title {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-weight: 600;
 }
 
-.onboarding-tour dd {
-  margin: 0 0 0.75rem;
+.onboarding-rijksprofiel__hint {
   color: #4f5b66;
+  font-size: 0.875rem;
+}
+
+.onboarding-rijksprofiel__button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Tour preview placeholder — sized to leave room for a future screenshot */
+.onboarding-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1.25rem auto 0;
+  max-width: 32rem;
+  min-height: 10rem;
+  border: 1px dashed #c2c9d1;
+  border-radius: 8px;
+  background: #f7f8f9;
+  color: #8a949e;
+  font-size: 0.875rem;
 }
 
 /* Footer: Back on the left, Next/finish on the right */

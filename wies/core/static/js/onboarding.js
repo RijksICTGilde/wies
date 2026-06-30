@@ -8,7 +8,7 @@
   var dialog = document.querySelector("dialog[data-onboarding]");
   if (!dialog) return;
 
-  var TOTAL_STEPS = 3;
+  var TOTAL_STEPS = 5;
   var current = 1;
 
   var panels = dialog.querySelectorAll(".onboarding-panel");

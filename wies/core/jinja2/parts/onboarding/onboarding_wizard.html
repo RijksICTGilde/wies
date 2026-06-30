@@ -1,10 +1,11 @@
 {# First-login onboarding wizard. Rendered from base.html when show_onboarding
    is True (see wies.core.context_processors.onboarding). A self-opening
-   <dialog> with three client-side steps; navigation handled by onboarding.js.
+   <dialog> with five client-side steps; navigation handled by onboarding.js.
    "Overslaan" and "Aan de slag" both POST to onboarding-complete, which marks
-   the wizard done so it never reappears. #}
+   the wizard done so it never reappears. Keep TOTAL_STEPS in onboarding.js in
+   sync with the number of .onboarding-panel sections here. #}
 <dialog id="onboardingWizard"
-        class="modal-dialog onboarding-wizard"
+        class="modal-dialog modal-dialog--wide onboarding-wizard"
         closedby="none"
         data-onboarding>
   <div class="modal-content">
@@ -21,11 +22,13 @@
       </form>
     </div>
     <div class="modal-body onboarding-body">
-      {# Progress dots #}
+      {# Progress dots — one per step #}
       <ol class="onboarding-steps" aria-hidden="true">
         <li class="onboarding-step-dot is-active" data-dot="1"></li>
         <li class="onboarding-step-dot" data-dot="2"></li>
         <li class="onboarding-step-dot" data-dot="3"></li>
+        <li class="onboarding-step-dot" data-dot="4"></li>
+        <li class="onboarding-step-dot" data-dot="5"></li>
       </ol>
       {# Step 1 — Welcome #}
       <section class="onboarding-panel is-active" data-step="1">
@@ -39,7 +42,7 @@
         We helpen je in een paar stappen op weg.
         </c-paragraph>
       </section>
-      {# Step 2 — Complete profile (labels) #}
+      {# Step 2 — Complete profile (labels + Rijksprofiel) #}
       <section class="onboarding-panel" data-step="2" hidden>
         <div class="onboarding-illustration">
           <c-icon icon="persoon-met-vinkje" size="xl" color="hemelblauw" />
@@ -62,34 +65,57 @@
         {% else %}
           <c-paragraph>Je profiel wordt klaargezet — je kunt labels straks invullen via <c-link href="{{ url('user-profile') }}">Mijn profiel</c-link>.</c-paragraph>
         {% endif %}
+        {# Rijksprofielservice — koppeling volgt in een latere PR #}
+        <div class="onboarding-rijksprofiel">
+          <div class="onboarding-rijksprofiel__text">
+            <span class="onboarding-rijksprofiel__title">
+              <c-icon icon="paspoort" size="md" /> Rijksprofiel koppelen
+            </span>
+            <span class="onboarding-rijksprofiel__hint">Haal je gegevens automatisch op uit de Rijksprofielservice.</span>
+          </div>
+          <button type="button"
+                  class="rvo-button rvo-button--secondary rvo-button--size-sm onboarding-rijksprofiel__button"
+                  disabled
+                  aria-disabled="true"
+                  data-tooltip="Binnenkort beschikbaar">
+            <c-icon icon="externe-link" size="sm" />
+            Koppelen
+          </button>
+        </div>
       </section>
-      {# Step 3 — Tour + finish #}
+      {# Steps 3–5 — Tour, one place per step #}
       <section class="onboarding-panel" data-step="3" hidden>
         <div class="onboarding-illustration">
-          <c-icon icon="richtingwijzer" size="xl" color="hemelblauw" />
+          <c-icon icon="document-met-lijnen" size="xl" color="hemelblauw" />
         </div>
-        <c-h3>Zo vind je je weg</c-h3>
-        <c-paragraph>De belangrijkste plekken in Wies:</c-paragraph>
-        <c-data-list class="onboarding-tour">
-        <dt>
-          <c-icon icon="document-met-lijnen" size="md" /> Aanvragen
-        </dt>
-        <dd>
-          Alle opdrachten en aanvragen, met filters om snel te zoeken.
-        </dd>
-        <dt>
-          <c-icon icon="groep-3-personen" size="md" /> Wie zit waar?
-        </dt>
-        <dd>
-          Het overzicht van collega's en hun huidige plaatsingen.
-        </dd>
-        <dt>
-          <c-icon icon="user" size="md" /> Mijn profiel
-        </dt>
-        <dd>
-          Je eigen gegevens en labels — altijd aan te passen.
-        </dd>
-        </c-data-list>
+        <c-h3>Aanvragen</c-h3>
+        <c-paragraph>
+        Alle opdrachten en aanvragen op één plek. Gebruik de filters en
+        zoekbalk om snel te vinden wat je zoekt.
+        </c-paragraph>
+        <div class="onboarding-preview" aria-hidden="true">Voorbeeld volgt</div>
+      </section>
+      <section class="onboarding-panel" data-step="4" hidden>
+        <div class="onboarding-illustration">
+          <c-icon icon="groep-3-personen" size="xl" color="hemelblauw" />
+        </div>
+        <c-h3>Wie zit waar?</c-h3>
+        <c-paragraph>
+        Het overzicht van collega's en hun huidige plaatsingen, zodat je
+        snel ziet wie waar zit.
+        </c-paragraph>
+        <div class="onboarding-preview" aria-hidden="true">Voorbeeld volgt</div>
+      </section>
+      <section class="onboarding-panel" data-step="5" hidden>
+        <div class="onboarding-illustration">
+          <c-icon icon="user" size="xl" color="hemelblauw" />
+        </div>
+        <c-h3>Mijn profiel</c-h3>
+        <c-paragraph>
+        Je eigen gegevens en labels — altijd terug te vinden en aan te
+        passen via Mijn profiel rechtsboven.
+        </c-paragraph>
+        <div class="onboarding-preview" aria-hidden="true">Voorbeeld volgt</div>
       </section>
     </div>
     <div class="modal-footer onboarding-footer">

@@ -57,6 +57,10 @@ class OnboardingWizardRenderTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, 'id="onboardingWizard"')
         self.assertContains(response, "Welkom bij Wies")
+        # Five steps: welcome, profile, and three tour places.
+        self.assertContains(response, 'data-step="5"')
+        # Rijksprofiel link placeholder is present.
+        self.assertContains(response, "Rijksprofiel koppelen")
 
     def test_wizard_not_shown_after_completion(self):
         self.user.onboarding_completed_at = timezone.now()
