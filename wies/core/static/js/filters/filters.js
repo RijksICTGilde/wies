@@ -350,53 +350,60 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // --------------------------------------------------------------------------
-  // Search clear buttons
+  // Search clear (×) buttons — event-delegated so they survive HTMX swaps.
+  //
+  // The clear button's visibility is driven by the wrapper's `has-value` class.
+  // We use delegation (not per-element binding) because the #search wrapper is
+  // re-rendered on every filter swap while its input is hx-preserved: a guarded
+  // per-element init would skip the fresh wrapper (the guard sits on the kept
+  // input), leaving a non-empty field with no visible × — which is the bug this
+  // replaces.
   // --------------------------------------------------------------------------
-  function initSearchClear(wrapper) {
-    var input = wrapper.querySelector(".utrecht-textbox");
-    var clearBtn = wrapper.querySelector(".search-clear");
-    if (!input || !clearBtn) return;
-    // The #search field uses hx-preserve, so the same node survives swaps and
-    // would otherwise collect duplicate listeners on each re-init.
-    if (input.dataset.searchClearBound) return;
-    input.dataset.searchClearBound = "1";
-
-    function updateVisibility() {
-      wrapper.classList.toggle("has-value", input.value.length > 0);
-    }
-
-    input.addEventListener("input", updateVisibility);
-    updateVisibility();
-
-    clearBtn.addEventListener("click", function () {
-      input.value = "";
-      // Update has-value styling (the form is re-triggered explicitly below for
-      // #search; per-group searches handle their own clearing).
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.focus();
-      // The side effects below only apply to the global search field; per-group
-      // checkbox-filter searches handle their own clearing in checkbox_filter.js.
-      if (input.id !== "search") return;
-      // Clear suggestions dropdown
-      var suggestionsContainer = wrapper.querySelector(
-        "#search-suggestions-container",
-      );
-      if (suggestionsContainer) suggestionsContainer.innerHTML = "";
-      // Clear the submitted search term and refresh results
-      var hiddenSearch = document.getElementById("search-filter-value");
-      if (hiddenSearch) hiddenSearch.value = "";
-      var sidebarForm = document.querySelector(".filter-sidebar-form");
-      if (sidebarForm) htmx.trigger(sidebarForm, "change");
-    });
+  function setHasValue(input) {
+    var wrapper = input.closest(".search-field-wrapper");
+    if (wrapper) wrapper.classList.toggle("has-value", input.value.length > 0);
   }
 
-  document.querySelectorAll(".search-field-wrapper").forEach(initSearchClear);
+  // Keep the × in sync with what's typed.
+  document.body.addEventListener("input", function (e) {
+    var input = e.target.closest(".search-field-wrapper .utrecht-textbox");
+    if (input) setHasValue(input);
+  });
 
-  // Re-init after HTMX swaps
-  document.body.addEventListener("htmx:afterSettle", function (event) {
-    event.detail.target
-      .querySelectorAll(".search-field-wrapper")
-      .forEach(initSearchClear);
+  // Re-derive `has-value` after a swap: the hx-preserved #search keeps its text
+  // but its freshly rendered wrapper starts without the class.
+  function syncSearchHasValue() {
+    document
+      .querySelectorAll(".search-field-wrapper .utrecht-textbox")
+      .forEach(setHasValue);
+  }
+  document.body.addEventListener("htmx:afterSettle", syncSearchHasValue);
+  syncSearchHasValue();
+
+  document.body.addEventListener("click", function (e) {
+    var clearBtn = e.target.closest(".search-clear");
+    if (!clearBtn) return;
+    var wrapper = clearBtn.closest(".search-field-wrapper");
+    if (!wrapper) return;
+    var input = wrapper.querySelector(".utrecht-textbox");
+    if (!input) return;
+
+    input.value = "";
+    setHasValue(input);
+    input.focus();
+
+    // The side effects below only apply to the global search field; per-group
+    // checkbox-filter searches handle their own clearing in checkbox_filter.js.
+    if (input.id !== "search") return;
+    var suggestionsContainer = document.getElementById(
+      "search-suggestions-container",
+    );
+    if (suggestionsContainer) suggestionsContainer.innerHTML = "";
+    // Clear the submitted search term and refresh results.
+    var hiddenSearch = document.getElementById("search-filter-value");
+    if (hiddenSearch) hiddenSearch.value = "";
+    var sidebarForm = document.querySelector(".filter-sidebar-form");
+    if (sidebarForm) htmx.trigger(sidebarForm, "change");
   });
 
   // --------------------------------------------------------------------------
