@@ -69,8 +69,7 @@ from .services.organizations import (
 )
 from .services.placements import (
     create_assignments_from_csv,
-    filter_placements_by_min_end_date,
-    hide_future_placements_from_others,
+    filter_visible_placements,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
@@ -138,104 +137,17 @@ def _build_close_url(request):
     return _url_drop_params(request.path, request.GET, PANEL_PARAMS)
 
 
-def _make_team_member_entry(
-    colleague, colleague_url=None, *, historical=False, privacy_warning_text=None, is_vacancy=False, skills=None
-):
-    """Build a standard team member dict for assignment panel display."""
-    return {
-        "colleague": colleague,
-        "colleague_url": colleague_url,
-        "skills": skills or [],
-        "historical": historical,
-        "privacy_warning_text": privacy_warning_text,
-        "is_vacancy": is_vacancy,
-    }
-
-
 def _build_assignment_panel_data(assignment, request):
     """Shared helper to build assignment panel context data for both views."""
-    today = timezone.now().date()
-    viewer = getattr(request.user, "colleague", None)
-    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
-
-    # Single query: all services with all annotated placements
-    services = list(
-        assignment.services.select_related("skill").prefetch_related(
-            Prefetch(
-                "placements",
-                queryset=annotate_placement_dates(Placement.objects.select_related("colleague")),
-                to_attr="all_placements",
-            )
-        )
-    )
-
-    vacancy_list: list[dict] = []
-    # Group by (colleague_id, historical) to merge skills per colleague
-    current_grouped: dict[int, dict] = {}
-    historical_grouped: dict[int, dict] = {}
-
-    for service in services:
-        skill = {"name": service.skill.name, "description": service.description} if service.skill else None
-
-        # Vacancy: OPEN service that never had any placement
-        if not service.all_placements and service.status == "OPEN":
-            vacancy_list.append(_make_team_member_entry(None, is_vacancy=True, skills=[skill] if skill else []))
-            continue
-
-        for placement in service.all_placements:
-            cid = placement.colleague.id
-            placement_is_active = placement.actual_end_date is None or today <= placement.actual_end_date
-
-            if placement_is_active:
-                # Active placements are visible to everyone
-                if cid not in current_grouped:
-                    current_grouped[cid] = _make_team_member_entry(
-                        placement.colleague,
-                        colleague_url=_build_panel_url(request, collega=cid),
-                    )
-                if skill:
-                    current_grouped[cid]["skills"].append(skill)
-
-            elif viewer is not None and cid == viewer.id:
-                # Consultants can see their own ended placements
-                if cid not in historical_grouped:
-                    historical_grouped[cid] = _make_team_member_entry(
-                        placement.colleague,
-                        colleague_url=_build_panel_url(request, collega=cid),
-                        historical=True,
-                        privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
-                    )
-                if skill:
-                    historical_grouped[cid]["skills"].append(skill)
-
-            elif viewer_is_bm:
-                # BM can see all ended placements on their assignment
-                if cid not in historical_grouped:
-                    historical_grouped[cid] = _make_team_member_entry(
-                        placement.colleague,
-                        colleague_url=_build_panel_url(request, collega=cid),
-                        historical=True,
-                        privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
-                    )
-                if skill:
-                    historical_grouped[cid]["skills"].append(skill)
-
-            else:
-                # Others must not see ended placements
-                continue
-
-    team_members = vacancy_list + list(current_grouped.values()) + list(historical_grouped.values())
-
-    # Count from the same viewer-filtered rows the team list renders, so the
-    # header total can't betray a hidden placement.
     from wies.core.editables.assignment import visible_service_rows  # noqa: PLC0415 — avoids import cycle
 
+    # team_count comes from the same viewer-filtered rows the team list renders,
+    # so the header total can't betray a hidden placement.
     return {
         "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
         "close_url": _build_close_url(request),
         "assignment": assignment,
-        "team_members": team_members,
         "team_count": len(visible_service_rows(assignment, request)),
         "user_can_edit": has_permission(Verb.UPDATE, assignment, request.user),
         "show_updates_tab": assignment.source != "otys_iir",
@@ -649,13 +561,11 @@ class PlacementListView(ListView):
             if order_by:
                 qs = qs.order_by(f"-{order_by}" if descending else order_by)
 
-        # Hide ended placements from everyone; hide not-yet-started ones from
-        # all but the placed colleague and the assignment's BM-owner.
-        today = timezone.now().date()
+        # Active placements are public; ended ones are hidden from everyone;
+        # not-yet-started ones only for the placed colleague and the BM-owner.
         qs = annotate_placement_dates(qs)
-        qs = filter_placements_by_min_end_date(qs, today)
         viewer = getattr(self.request.user, "colleague", None)
-        return hide_future_placements_from_others(qs, today, viewer)
+        return filter_visible_placements(qs, timezone.now().date(), viewer)
 
     def _get_labels_by_category(self):
         """Parse selected label IDs grouped by category."""
