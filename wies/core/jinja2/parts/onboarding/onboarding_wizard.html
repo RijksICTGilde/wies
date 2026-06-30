@@ -93,7 +93,22 @@
         Alle opdrachten en aanvragen op één plek. Gebruik de filters en
         zoekbalk om snel te vinden wat je zoekt.
         </c-paragraph>
-        <div class="onboarding-preview" aria-hidden="true">Voorbeeld volgt</div>
+        {# Stylized mock: a filter rail beside a search bar and result rows. #}
+        <div class="onboarding-preview onboarding-mock onboarding-mock--aanvragen"
+             aria-hidden="true">
+          <div class="onboarding-mock__rail">
+            <span class="onboarding-mock__bar onboarding-mock__bar--label"></span>
+            <span class="onboarding-mock__check"></span>
+            <span class="onboarding-mock__check"></span>
+            <span class="onboarding-mock__check"></span>
+          </div>
+          <div class="onboarding-mock__main">
+            <div class="onboarding-mock__search"></div>
+            <div class="onboarding-mock__row"></div>
+            <div class="onboarding-mock__row"></div>
+            <div class="onboarding-mock__row"></div>
+          </div>
+        </div>
       </section>
       <section class="onboarding-panel" data-step="4" hidden>
         <div class="onboarding-illustration">
@@ -104,7 +119,17 @@
         Het overzicht van collega's en hun huidige plaatsingen, zodat je
         snel ziet wie waar zit.
         </c-paragraph>
-        <div class="onboarding-preview" aria-hidden="true">Voorbeeld volgt</div>
+        {# Stylized mock: rows of "avatar + name + placement". #}
+        <div class="onboarding-preview onboarding-mock onboarding-mock--wiezitwaar"
+             aria-hidden="true">
+          {% for _ in range(4) %}
+            <div class="onboarding-mock__person">
+              <span class="onboarding-mock__avatar"></span>
+              <span class="onboarding-mock__bar onboarding-mock__bar--name"></span>
+              <span class="onboarding-mock__bar onboarding-mock__bar--place"></span>
+            </div>
+          {% endfor %}
+        </div>
       </section>
       <section class="onboarding-panel" data-step="5" hidden>
         <div class="onboarding-illustration">
@@ -115,7 +140,17 @@
         Je eigen gegevens en labels — altijd terug te vinden en aan te
         passen via Mijn profiel rechtsboven.
         </c-paragraph>
-        <div class="onboarding-preview" aria-hidden="true">Voorbeeld volgt</div>
+        {# Stylized mock: profile avatar + name above a row of label chips. #}
+        <div class="onboarding-preview onboarding-mock onboarding-mock--profiel"
+             aria-hidden="true">
+          <span class="onboarding-mock__avatar onboarding-mock__avatar--lg"></span>
+          <span class="onboarding-mock__bar onboarding-mock__bar--name"></span>
+          <div class="onboarding-mock__chips">
+            <span class="onboarding-mock__chip"></span>
+            <span class="onboarding-mock__chip"></span>
+            <span class="onboarding-mock__chip"></span>
+          </div>
+        </div>
       </section>
     </div>
     <div class="modal-footer onboarding-footer">
