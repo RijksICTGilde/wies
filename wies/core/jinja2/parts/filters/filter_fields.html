@@ -21,10 +21,13 @@
                 <input type="checkbox"
                        class="rvo-checkbox__input org-filter-quick__checkbox"
                        value="{{ option.value }}"
+                       data-org-param="{{ option.param }}"
                        data-org-label="{{ option.label }}"
                        {% if option.selected %}checked{% endif %} />
                 <span class="checkbox-filter__option-text">{{ option.label }}</span>
-                <span class="checkbox-filter__count">{{ option.count }}</span>
+                {% if option.param == "org" %}
+                  <span class="checkbox-filter__count">{{ option.count }}</span>
+                {% endif %}
               </label>
             {% endfor %}
           </div>

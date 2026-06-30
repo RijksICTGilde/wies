@@ -15,7 +15,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
-from wies.core.views import PlacementListView, _finalize_filter_groups
+from wies.core.views import PlacementListView, _finalize_filter_groups, _get_top_org_options
 
 User = get_user_model()
 
@@ -71,6 +71,19 @@ class FilterCombiningTestBase(TestCase):
         view = PlacementListView()
         view.request = request
         return list(view.get_queryset().values_list("id", flat=True))
+
+    def _get_org_quick_options(self, params: dict) -> list[dict]:
+        """Return the opdrachtgever quick options from the rendered context."""
+        factory = RequestFactory()
+        request = factory.get("/", params)
+        request.user = self.auth_user
+        view = PlacementListView()
+        view.request = request
+        view.kwargs = {}
+        view.object_list = view.get_queryset()
+        context = view.get_context_data()
+        org_group = next(g for g in context["filter_groups"] if g.get("name") == "organisatie")
+        return org_group["top_options"]
 
 
 class LabelORWithinCategoryTest(FilterCombiningTestBase):
@@ -202,6 +215,56 @@ class OrgFilterCombiningTest(FilterCombiningTestBase):
         assert p_org_a_rig.id in ids, "Org A + RIG should match"
         assert p_org_a_no_label.id not in ids, "Org A without label should not match"
         assert p_org_b_rig.id not in ids, "Org B + RIG should not match (wrong org)"
+
+
+class TopOrgOptionsTest(FilterCombiningTestBase):
+    """`_get_top_org_options` always surfaces selected orgs — including a
+    "direct onder…" self-node (org_self) and an org-type group (org_type) —
+    as checked quick options, each carrying its own param. Regression for the
+    self/type selections that previously got no checkmark in the sidebar list.
+    """
+
+    def test_org_selection_is_checked_with_org_param(self):
+        opts = _get_top_org_options("placements", [], {str(self.org_a.id)})
+        match = [o for o in opts if o["value"] == str(self.org_a.id)]
+        assert match, "selected org must appear as a quick option"
+        assert match[0]["param"] == "org"
+        assert match[0]["selected"] is True
+
+    def test_self_selection_is_checked_with_org_self_param(self):
+        opts = _get_top_org_options("placements", [], set(), selected_self_ids={str(self.org_a.id)})
+        match = [o for o in opts if o["param"] == "org_self" and o["value"] == str(self.org_a.id)]
+        assert match, "selected self-node must appear as a quick option"
+        assert match[0]["selected"] is True
+        assert "(direct)" in match[0]["label"]
+
+    def test_type_selection_is_checked_with_org_type_param(self):
+        opts = _get_top_org_options("placements", [], set(), selected_type_labels={"Ministerie"})
+        match = [o for o in opts if o["param"] == "org_type" and o["value"] == "Ministerie"]
+        assert match, "selected org-type must appear as a quick option"
+        assert match[0]["selected"] is True
+
+    def test_selected_options_sort_before_unselected(self):
+        opts = _get_top_org_options("placements", [], set(), selected_self_ids={str(self.org_a.id)})
+        assert opts[0]["selected"] is True
+
+
+class OrgQuickCountsTest(FilterCombiningTestBase):
+    """Opdrachtgever quick-option counts reflect the OTHER active filters
+    (like rol/labels), not a global baseline. Regression for stale counts.
+    """
+
+    def test_org_count_reflects_active_rol_filter(self):
+        # Org A: one Python placement + one Java placement (count 2 unfiltered).
+        self._create_placement("Alice", self.skill_python, org=self.org_a)
+        self._create_placement("Bob", self.skill_java, org=self.org_a)
+
+        baseline = {o["value"]: o["count"] for o in self._get_org_quick_options({})}
+        assert baseline.get(str(self.org_a.id)) == 2, "unfiltered count should be 2"
+
+        # With rol=Python active, Org A's count must drop to 1.
+        with_rol = {o["value"]: o["count"] for o in self._get_org_quick_options({"rol": str(self.skill_python.id)})}
+        assert with_rol.get(str(self.org_a.id)) == 1, "count must reflect the active rol filter"
 
 
 class AllFiltersCombinedTest(FilterCombiningTestBase):

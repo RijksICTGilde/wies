@@ -529,23 +529,33 @@ document.addEventListener("DOMContentLoaded", function () {
   // one adds/removes an org hidden input in #org-filter-inputs (single source
   // of truth), so selection stays in sync with the modal.
   // --------------------------------------------------------------------------
-  function getSelectedOrgIds() {
+  // Quick options share three params with the modal: "org" (incl. children),
+  // "org_self" (direct only) and "org_type" (an org-type group). Each hidden
+  // input is keyed by (param, value), so the sync must match on both.
+  var ORG_PARAMS = ["org", "org_self", "org_type"];
+
+  function getSelectedOrgKeys() {
     var container = document.getElementById("org-filter-inputs");
-    if (!container) return new Set();
-    var ids = new Set();
-    container.querySelectorAll('input[name="org"]').forEach(function (input) {
-      ids.add(input.value);
+    var keys = new Set();
+    if (!container) return keys;
+    ORG_PARAMS.forEach(function (param) {
+      container
+        .querySelectorAll('input[name="' + param + '"]')
+        .forEach(function (input) {
+          keys.add(param + ":" + input.value);
+        });
     });
-    return ids;
+    return keys;
   }
 
   // Reflect current org selection onto the quick-option checkboxes.
   function syncOrgQuickOptions() {
-    var selected = getSelectedOrgIds();
+    var selected = getSelectedOrgKeys();
     document
       .querySelectorAll(".org-filter-quick__checkbox")
       .forEach(function (cb) {
-        cb.checked = selected.has(cb.value);
+        var param = cb.dataset.orgParam || "org";
+        cb.checked = selected.has(param + ":" + cb.value);
       });
   }
 
@@ -562,26 +572,26 @@ document.addEventListener("DOMContentLoaded", function () {
       var container = document.getElementById("org-filter-inputs");
       if (!container) return;
 
+      // Use the option's own param (org / org_self / org_type) so toggling a
+      // "direct onder…" or type quick option keeps its semantics.
+      var param = cb.dataset.orgParam || "org";
+      var selector = 'input[name="' + param + '"][value="' + cb.value + '"]';
+
       if (cb.checked) {
         // Add hidden input only if not already present
-        var existing = container.querySelector(
-          'input[name="org"][value="' + cb.value + '"]',
-        );
-        if (!existing) {
+        if (!container.querySelector(selector)) {
           var input = document.createElement("input");
           input.type = "hidden";
-          input.name = "org";
+          input.name = param;
           input.value = cb.value;
           input.setAttribute("data-filter-input", "");
           input.setAttribute("data-label", cb.dataset.orgLabel || "");
           container.appendChild(input);
         }
       } else {
-        container
-          .querySelectorAll('input[name="org"][value="' + cb.value + '"]')
-          .forEach(function (input) {
-            input.remove();
-          });
+        container.querySelectorAll(selector).forEach(function (input) {
+          input.remove();
+        });
       }
 
       var form = document.querySelector(".filter-sidebar-form");

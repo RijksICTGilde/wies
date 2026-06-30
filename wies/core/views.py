@@ -904,6 +904,13 @@ class PlacementListView(ListView):
         skill_ids = skill_placement_qs.values_list("service__skill__id", flat=True)
         skill_counts = Counter(sid for sid in skill_ids if sid is not None)
 
+        # Org counts: exclude the org filter (like rol/labels) so the numbers
+        # reflect the other active filters instead of a global baseline.
+        org_filtered_qs = self._apply_filters(base_qs, exclude_filter="org").distinct()
+        org_placement_qs = Placement.objects.filter(id__in=org_filtered_qs.values_list("id", flat=True))
+        org_id_values = org_placement_qs.values_list("service__assignment__organizations__id", flat=True)
+        org_counts = Counter(oid for oid in org_id_values if oid is not None)
+
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
         for skill in Skill.objects.order_by("name"):
@@ -925,7 +932,14 @@ class PlacementListView(ListView):
                 "type": "modal",
                 "name": "organisatie",
                 "label": "Opdrachtgever",
-                "top_options": _get_top_org_options("placements", get_excluded_org_ids(), set(org_filter)),
+                "top_options": _get_top_org_options(
+                    "placements",
+                    get_excluded_org_ids(),
+                    set(org_filter),
+                    selected_self_ids=set(org_self_filter),
+                    selected_type_labels=set(org_type_filter),
+                    org_counts=org_counts,
+                ),
             },
             {
                 "type": "select-multi",
@@ -1121,6 +1135,13 @@ class AssignmentListView(ListView):
         skill_ids = skill_filtered_qs.values_list("services__skill__id", flat=True)
         skill_counts = Counter(sid for sid in skill_ids if sid is not None)
 
+        # Org counts: exclude the org filter (like rol) so the numbers reflect
+        # the other active filters. base_qs is already limited to assignments
+        # with an unfilled open service, matching the open_assignments mode.
+        org_filtered_qs = self._apply_filters(base_qs, exclude_filter="org").distinct()
+        org_id_values = org_filtered_qs.values_list("organizations__id", flat=True)
+        org_counts = Counter(oid for oid in org_id_values if oid is not None)
+
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
         for skill in Skill.objects.order_by("name"):
@@ -1187,7 +1208,14 @@ class AssignmentListView(ListView):
                 "type": "modal",
                 "name": "organisatie",
                 "label": "Opdrachtgever",
-                "top_options": _get_top_org_options("open_assignments", get_excluded_org_ids(), set(org_filter)),
+                "top_options": _get_top_org_options(
+                    "open_assignments",
+                    get_excluded_org_ids(),
+                    set(org_filter),
+                    selected_self_ids=set(org_self_filter),
+                    selected_type_labels=set(org_type_filter),
+                    org_counts=org_counts,
+                ),
             },
             {
                 "type": "select-multi",
@@ -2427,41 +2455,91 @@ def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int
 
 
 def _get_top_org_options(
-    count_mode: str, excluded_org_ids: list[int], selected_org_ids: set[str], *, limit: int = 3
+    count_mode: str,
+    excluded_org_ids: list[int],
+    selected_org_ids: set[str],
+    *,
+    selected_self_ids: set[str] | None = None,
+    selected_type_labels: set[str] | None = None,
+    org_counts: Counter[int] | None = None,
+    limit: int = 3,
 ) -> list[dict]:
     """Return opdrachtgever quick checkbox options: selected first, then top-N by count.
 
-    Shares the ``org`` filter param with the modal — selecting one here is
-    equivalent to selecting it in the client modal. Mirrors the select-multi
-    groups (see ``_finalize_filter_groups``): a selected org is ALWAYS shown
-    inline as a checked checkbox, even when it isn't among the top-N by count
-    (e.g. picked via the search suggestion or the modal). Selected options are
-    listed first so the active selection reads clearly; once anything is
-    selected the empty top-N options are dropped to keep the list calm.
+    Each option carries its own ``param`` (``org``, ``org_self`` or
+    ``org_type``) so the sidebar quick row stays in sync with whatever was
+    picked in the modal — including a "direct onder…" self-node (``org_self``)
+    or an org-type group (``org_type``). The ``org`` group also pads up to
+    ``limit`` with the highest-count unselected orgs; self/type only appear
+    when actually selected (they have no top-N baseline).
+
+    ``org_counts`` lets the caller pass filter-aware per-org counts (computed
+    like rol/labels, excluding the org filter) so the numbers reflect the other
+    active filters. When omitted, falls back to the global ``_get_org_counts``
+    baseline (used by the modal, which has no other filter context).
+
+    Mirrors the select-multi groups (see ``_finalize_filter_groups``): a
+    selected option is ALWAYS shown inline as a checked checkbox, even when it
+    isn't among the top-N by count (e.g. picked via the modal). Selected
+    options are listed first so the active selection reads clearly; once
+    anything is selected the empty top-N options are dropped to keep the list
+    calm.
     """
-    org_self_counts = _get_org_counts(count_mode, excluded_org_ids)
+    selected_self_ids = selected_self_ids or set()
+    selected_type_labels = selected_type_labels or set()
+
+    if org_counts is None:
+        org_counts = _get_org_counts(count_mode, excluded_org_ids)
     selected_ids = {int(x) for x in selected_org_ids if str(x).isdigit()}
+    self_ids = {int(x) for x in selected_self_ids if str(x).isdigit()}
 
-    # Always show every selected org, then pad with the highest-count unselected
-    # orgs up to ``limit`` total (so with <limit selected the user still sees a
-    # few quick choices; with >=limit selected the empty options drop away).
-    fill = max(0, limit - len(selected_ids))
-    top_unselected = [oid for oid, _ in org_self_counts.most_common() if oid not in selected_ids][:fill]
-    wanted_ids = selected_ids | set(top_unselected)
+    total_selected = len(selected_ids) + len(self_ids) + len(selected_type_labels)
+    # Pad the ``org`` group with the highest-count unselected orgs up to ``limit``
+    # total (counting self/type selections towards the total so the list stays
+    # calm once anything is picked).
+    fill = max(0, limit - total_selected)
+    top_unselected = [oid for oid, _ in org_counts.most_common() if oid not in selected_ids][:fill]
+    org_wanted = selected_ids | set(top_unselected)
 
-    if not wanted_ids:
-        return []
+    options: list[dict] = []
 
-    labels = dict(OrganizationUnit.objects.filter(id__in=wanted_ids).values_list("id", "label"))
-    options = [
+    if org_wanted:
+        labels = dict(OrganizationUnit.objects.filter(id__in=org_wanted).values_list("id", "label"))
+        options.extend(
+            {
+                "param": "org",
+                "value": str(org_id),
+                "label": labels.get(org_id) or f"Organisatie {org_id}",
+                "count": org_counts.get(org_id, 0),
+                "selected": org_id in selected_ids,
+            }
+            for org_id in org_wanted
+        )
+
+    if self_ids:
+        self_labels = dict(OrganizationUnit.objects.filter(id__in=self_ids).values_list("id", "label"))
+        options.extend(
+            {
+                "param": "org_self",
+                "value": str(org_id),
+                "label": f"{self_labels.get(org_id) or f'Organisatie {org_id}'} (direct)",
+                "count": org_counts.get(org_id, 0),
+                "selected": True,
+            }
+            for org_id in self_ids
+        )
+
+    options.extend(
         {
-            "value": str(org_id),
-            "label": labels.get(org_id) or f"Organisatie {org_id}",
-            "count": org_self_counts.get(org_id, 0),
-            "selected": org_id in selected_ids,
+            "param": "org_type",
+            "value": type_label,
+            "label": ORG_TYPE_PLURAL.get(type_label, type_label),
+            "count": 0,
+            "selected": True,
         }
-        for org_id in wanted_ids
-    ]
+        for type_label in selected_type_labels
+    )
+
     # Selected first, then by descending count, then by label for a stable order.
     options.sort(key=lambda o: (not o["selected"], -o["count"], o["label"]))
     return options
