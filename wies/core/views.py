@@ -19,6 +19,7 @@ from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
 from wies.core.editables import REGISTRY
@@ -2241,6 +2242,26 @@ def user_profile(request):
             "panel_data": panel_data,
         },
     )
+
+
+@require_POST
+def onboarding_complete(request):
+    """Mark the first-login onboarding wizard as done (completed or skipped).
+
+    Sets ``onboarding_completed_at`` so the wizard no longer appears. For an
+    HTMX request, returns a 204 with a ``closeOnboarding`` trigger so the
+    dialog closes in place; otherwise redirects home.
+    """
+    user = request.user
+    if user.onboarding_completed_at is None:
+        user.onboarding_completed_at = timezone.now()
+        user.save(update_fields=["onboarding_completed_at"])
+
+    if "HX-Request" in request.headers:
+        response = HttpResponse(status=204)
+        response["HX-Trigger"] = "closeOnboarding"
+        return response
+    return redirect("home")
 
 
 @login_not_required

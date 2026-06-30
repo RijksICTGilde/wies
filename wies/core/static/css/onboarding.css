@@ -1,0 +1,96 @@
+/* ============================================================================
+   First-login onboarding wizard
+   Builds on .modal-dialog / .modal-content from modals.css.
+   ============================================================================ */
+
+.onboarding-wizard {
+  max-width: 560px;
+}
+
+/* Progress dots */
+.onboarding-steps {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.onboarding-step-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: #cfd4d9;
+  transition: background-color 0.2s ease;
+}
+
+.onboarding-step-dot.is-active {
+  background: var(--rvo-color-hemelblauw, #007bc7);
+}
+
+.onboarding-step-dot.is-done {
+  background: var(--rvo-color-hemelblauw, #007bc7);
+  opacity: 0.5;
+}
+
+/* Step panels */
+.onboarding-panel {
+  text-align: center;
+}
+
+.onboarding-panel .onboarding-illustration {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.onboarding-panel p {
+  max-width: 42ch;
+  margin-inline: auto;
+}
+
+/* Label pickers + tour list read left-aligned even inside a centered panel */
+.onboarding-labels,
+.onboarding-tour {
+  text-align: left;
+  margin-top: 1.25rem;
+}
+
+.onboarding-tour dt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.onboarding-tour dd {
+  margin: 0 0 0.75rem;
+  color: #4f5b66;
+}
+
+/* Footer: Back on the left, Next/finish on the right */
+.onboarding-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.onboarding-footer-spacer {
+  flex: 1;
+}
+
+/* "Overslaan" link in the header reads as a quiet text button */
+.onboarding-skip {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #4f5b66;
+  font-size: 0.875rem;
+  text-decoration: underline;
+  padding: 0.25rem 0.5rem;
+}
+
+.onboarding-skip:hover {
+  color: var(--rvo-color-hemelblauw, #007bc7);
+}

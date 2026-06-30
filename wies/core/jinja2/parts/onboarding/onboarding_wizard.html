@@ -1,0 +1,114 @@
+{# First-login onboarding wizard. Rendered from base.html when show_onboarding
+   is True (see wies.core.context_processors.onboarding). A self-opening
+   <dialog> with three client-side steps; navigation handled by onboarding.js.
+   "Overslaan" and "Aan de slag" both POST to onboarding-complete, which marks
+   the wizard done so it never reappears. #}
+<dialog id="onboardingWizard"
+        class="modal-dialog onboarding-wizard"
+        closedby="none"
+        data-onboarding>
+  <div class="modal-content">
+    <div class="modal-header">
+      <c-h2>Welkom bij Wies</c-h2>
+      <form method="post"
+            action="{{ url('onboarding-complete') }}"
+            hx-post="{{ url('onboarding-complete') }}"
+            hx-swap="none">
+        {{ get_csrf_hidden_input(request) }}
+        <button type="submit"
+                class="close onboarding-skip"
+                aria-label="Onboarding overslaan">Overslaan</button>
+      </form>
+    </div>
+    <div class="modal-body onboarding-body">
+      {# Progress dots #}
+      <ol class="onboarding-steps" aria-hidden="true">
+        <li class="onboarding-step-dot is-active" data-dot="1"></li>
+        <li class="onboarding-step-dot" data-dot="2"></li>
+        <li class="onboarding-step-dot" data-dot="3"></li>
+      </ol>
+      {# Step 1 — Welcome #}
+      <section class="onboarding-panel is-active" data-step="1">
+        <div class="onboarding-illustration">
+          <c-icon icon="groep-3-personen" size="xl" color="hemelblauw" />
+        </div>
+        <c-h3>Welkom bij Wies, {{ (user.first_name or '').strip() or 'collega' }}!</c-h3>
+        <c-paragraph>
+        Wies helpt je om collega's, opdrachten en plaatsingen te beheren.
+        Je ziet in één oogopslag wie waar zit en welke aanvragen er lopen.
+        We helpen je in een paar stappen op weg.
+        </c-paragraph>
+      </section>
+      {# Step 2 — Complete profile (labels) #}
+      <section class="onboarding-panel" data-step="2" hidden>
+        <div class="onboarding-illustration">
+          <c-icon icon="persoon-met-vinkje" size="xl" color="hemelblauw" />
+        </div>
+        <c-h3>Vul je profiel aan</c-h3>
+        <c-paragraph>
+        Met een aangevuld profiel vinden collega's je makkelijker terug.
+        Kies de labels die bij je passen — je kunt dit later altijd
+        aanpassen op je profiel.
+        </c-paragraph>
+        {% if onboarding_colleague %}
+          <c-data-list class="onboarding-labels">
+          {% for category in onboarding_label_categories %}
+            <dt>{{ category.name }}</dt>
+            <dd>
+              {{ inline_edit(onboarding_colleague, "labels_" ~ category.id) }}
+            </dd>
+          {% endfor %}
+          </c-data-list>
+        {% else %}
+          <c-paragraph>Je profiel wordt klaargezet — je kunt labels straks invullen via <c-link href="{{ url('user-profile') }}">Mijn profiel</c-link>.</c-paragraph>
+        {% endif %}
+      </section>
+      {# Step 3 — Tour + finish #}
+      <section class="onboarding-panel" data-step="3" hidden>
+        <div class="onboarding-illustration">
+          <c-icon icon="richtingwijzer" size="xl" color="hemelblauw" />
+        </div>
+        <c-h3>Zo vind je je weg</c-h3>
+        <c-paragraph>De belangrijkste plekken in Wies:</c-paragraph>
+        <c-data-list class="onboarding-tour">
+        <dt>
+          <c-icon icon="document-met-lijnen" size="md" /> Aanvragen
+        </dt>
+        <dd>
+          Alle opdrachten en aanvragen, met filters om snel te zoeken.
+        </dd>
+        <dt>
+          <c-icon icon="groep-3-personen" size="md" /> Wie zit waar?
+        </dt>
+        <dd>
+          Het overzicht van collega's en hun huidige plaatsingen.
+        </dd>
+        <dt>
+          <c-icon icon="user" size="md" /> Mijn profiel
+        </dt>
+        <dd>
+          Je eigen gegevens en labels — altijd aan te passen.
+        </dd>
+        </c-data-list>
+      </section>
+    </div>
+    <div class="modal-footer onboarding-footer">
+      <c-button kind="subtle" type="button" class="onboarding-back" data-onboarding-back hidden>
+      Vorige
+      </c-button>
+      <div class="onboarding-footer-spacer"></div>
+      <c-button kind="primary" type="button" class="onboarding-next" data-onboarding-next>
+      Volgende
+      </c-button>
+      <form method="post"
+            action="{{ url('onboarding-complete') }}"
+            hx-post="{{ url('onboarding-complete') }}"
+            hx-swap="none"
+            class="onboarding-finish-form"
+            hidden>
+        {{ get_csrf_hidden_input(request) }}
+        <c-button kind="primary" type="submit">Aan de slag</c-button>
+      </form>
+    </div>
+  </div>
+</dialog>
