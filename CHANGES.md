@@ -9,6 +9,7 @@ This files lists the changes during the lifetime of this project.
 - 402: fix the "Toon meer"/"Toon minder" toggle label not updating when a checkbox group was expanded
 - 402: selected filter options now sort to the top of each sidebar group; a selected Opdrachtgever always shows as a checked quick-option even when not in the top-3 (fixes orgs picked via the search suggestion or modal not appearing in the sidebar); added a "Wis alle filters" button to the sidebar; the search magnifier is now a clickable button that runs the search — on both the Aanvragen and Wie-zit-waar pages
 - 402: fix "Wis alle filters" leaving the typed search term visible in the box while the results were already reset
+- 402: fix the clear (×) button disappearing from the search field after a filter change (it now stays visible whenever the field has text)
 - 417: remove `ModelBackend` from `AUTHENTICATION_BACKENDS`; `AuthBackend` now inherits from `ModelBackend` so group permissions keep resolving via a single backend, but there is no second password-login path)
 - 334: Add privacy declaration and beheer document. The in-product privacy page is regenerated via `manage.py generate_privacy_html`
 
