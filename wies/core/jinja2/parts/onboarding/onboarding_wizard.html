@@ -88,25 +88,30 @@
         <div class="onboarding-illustration">
           <c-icon icon="document-met-lijnen" size="xl" color="hemelblauw" />
         </div>
-        <c-h3>Aanvragen</c-h3>
+        <c-h3>Ontdek nieuwe opdrachten</c-h3>
         <c-paragraph>
-        Alle opdrachten en aanvragen op één plek. Gebruik de filters en
-        zoekbalk om snel te vinden wat je zoekt.
+        Bij Aanvragen vind je alle opdrachten die spelen. Spot snel de
+        nieuwe en kijk waar jij van waarde kunt zijn.
         </c-paragraph>
-        {# Stylized mock: a filter rail beside a search bar and result rows. #}
+        {# Stylized mock: a few opdracht cards (title + client + period bar),
+           the first carrying a "Nieuw" badge to signal fresh opdrachten. #}
         <div class="onboarding-preview onboarding-mock onboarding-mock--aanvragen"
              aria-hidden="true">
-          <div class="onboarding-mock__rail">
-            <span class="onboarding-mock__bar onboarding-mock__bar--label"></span>
-            <span class="onboarding-mock__check"></span>
-            <span class="onboarding-mock__check"></span>
-            <span class="onboarding-mock__check"></span>
+          <div class="onboarding-mock__card onboarding-mock__card--new">
+            <span class="onboarding-mock__badge">Nieuw</span>
+            <span class="onboarding-mock__bar onboarding-mock__bar--title"></span>
+            <span class="onboarding-mock__bar onboarding-mock__bar--client"></span>
+            <span class="onboarding-mock__bar onboarding-mock__bar--period"></span>
           </div>
-          <div class="onboarding-mock__main">
-            <div class="onboarding-mock__search"></div>
-            <div class="onboarding-mock__row"></div>
-            <div class="onboarding-mock__row"></div>
-            <div class="onboarding-mock__row"></div>
+          <div class="onboarding-mock__card">
+            <span class="onboarding-mock__bar onboarding-mock__bar--title"></span>
+            <span class="onboarding-mock__bar onboarding-mock__bar--client"></span>
+            <span class="onboarding-mock__bar onboarding-mock__bar--period"></span>
+          </div>
+          <div class="onboarding-mock__card">
+            <span class="onboarding-mock__bar onboarding-mock__bar--title"></span>
+            <span class="onboarding-mock__bar onboarding-mock__bar--client"></span>
+            <span class="onboarding-mock__bar onboarding-mock__bar--period"></span>
           </div>
         </div>
       </section>
@@ -135,16 +140,21 @@
         <div class="onboarding-illustration">
           <c-icon icon="user" size="xl" color="hemelblauw" />
         </div>
-        <c-h3>Mijn profiel</c-h3>
+        <c-h3>Bouw je profiel</c-h3>
         <c-paragraph>
-        Je eigen gegevens en labels — altijd terug te vinden en aan te
-        passen via Mijn profiel rechtsboven.
+        Beschrijf wie je bent en welke skills je hebt, zodat collega's
+        weten waarvoor ze bij je moeten aankloppen.
         </c-paragraph>
-        {# Stylized mock: profile avatar + name above a row of label chips. #}
+        {# Stylized mock: avatar + name, a short bio (two text lines), and a
+           row of skill chips — the "describe yourself + skills" essence. #}
         <div class="onboarding-preview onboarding-mock onboarding-mock--profiel"
              aria-hidden="true">
-          <span class="onboarding-mock__avatar onboarding-mock__avatar--lg"></span>
-          <span class="onboarding-mock__bar onboarding-mock__bar--name"></span>
+          <div class="onboarding-mock__profile-head">
+            <span class="onboarding-mock__avatar onboarding-mock__avatar--lg"></span>
+            <span class="onboarding-mock__bar onboarding-mock__bar--name"></span>
+          </div>
+          <span class="onboarding-mock__bar onboarding-mock__bar--bio"></span>
+          <span class="onboarding-mock__bar onboarding-mock__bar--bio onboarding-mock__bar--bio-short"></span>
           <div class="onboarding-mock__chips">
             <span class="onboarding-mock__chip"></span>
             <span class="onboarding-mock__chip"></span>
