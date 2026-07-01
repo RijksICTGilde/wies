@@ -6,7 +6,7 @@ This files lists the changes during the lifetime of this project.
 
 - 402: each filter group now shows its top-3 options plus a "Meer" button that opens a modal with all options (searchable, alphabetical); selected options sort to the top and stay visible even outside the top-3
 - 402: search now runs on Enter or the magnifier (not on every keystroke) and keeps its text instead of becoming a chip; org suggestions still load live while typing
-- 402: added a "Wis alle filters" button to the sidebar
+- 402: added a "Wis alle filters" button next to the active filter chips, so the chips and the clear-all action read together above the results
 - 402: fixes — "Toon meer/minder" label now updates; clearing the search no longer leaves a stale term or a missing × button
 - 402: fixes — a "direct onder…" (org_self) or org-type selection now shows as a checked opdrachtgever quick option; opdrachtgever counts now reflect the other active filters instead of a global total
 - 417: remove `ModelBackend` from `AUTHENTICATION_BACKENDS`; `AuthBackend` now inherits from `ModelBackend` so group permissions keep resolving via a single backend, but there is no second password-login path)

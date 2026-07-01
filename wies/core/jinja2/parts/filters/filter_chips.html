@@ -89,4 +89,15 @@
       </div>
     {% endif %}
   {% endfor %}
+  {# Variant A: clear-all sits with the chips so the two read together. Lives
+     in the OOB-swapped content, so no JS visibility toggle is needed. #}
+  {% if active_filter_count %}
+    <button type="button"
+            class="filter-chips__clear"
+            data-clear-all-filters
+            aria-label="Wis alle filters">
+      <c-icon icon="kruis" size="sm" />
+      <span>Wis alle filters</span>
+    </button>
+  {% endif %}
 </div>
