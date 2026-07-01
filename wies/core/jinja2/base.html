@@ -58,22 +58,22 @@
       {% endif %}
       </nldd-top-navigation-bar>
     {% endblock header %}
-    <div class="wies-layout">
-      {% set _sidebar_content %}
-        {% block sidebar %}
-        {% endblock sidebar %}
-      {% endset %}
+    {% set _sidebar_content %}
+      {% block sidebar %}
+      {% endblock sidebar %}
+    {% endset %}
+    <nldd-sidebar-section class="wies-layout" width="1920px" sidebar-label="Zijbalk">
       {% if _sidebar_content.strip() %}
-        <aside class="wies-layout__sidebar">
+        <div slot="sidebar">
           {{ _sidebar_content }}
-        </aside>
+        </div>
       {% endif %}
       <main class="wies-layout__main">
         {% include "parts/flash_messages.html" %}
         {% block content %}
         {% endblock content %}
       </main>
-    </div>
+    </nldd-sidebar-section>
     {% block panel %}
     {% endblock panel %}
   </body>

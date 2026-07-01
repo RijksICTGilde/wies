@@ -238,42 +238,19 @@
   }
 
   // --- Sidebar collapse toggle --------------------------------------
+  // The "Filters" button drives the <nldd-sidebar-section>'s own sheet.
+  // The section renders the sidebar as a sticky aside on lg and collapses
+  // it to a left sheet when narrower; toggle() opens/closes that sheet.
   function setupSidebarToggle() {
-    const sheet = document.getElementById("nldd-filter-sheet");
-    const pane = document.getElementById("nldd-sidebar-pane");
-    const isMobile = () => window.matchMedia("(max-width: 1007px)").matches;
-
     document.addEventListener("click", (e) => {
       const path = e.composedPath();
       const btn = path.find(
         (el) => el instanceof Element && el.id === "nldd-sidebar-toggle",
       );
       if (!btn) return;
-
-      if (isMobile() && sheet) {
-        // Mobile: verplaats sidebar content naar sheet en open
-        const sheetContent = document.getElementById(
-          "nldd-filter-sheet-content",
-        );
-        const sidebarBody = pane?.querySelector(".nldd-sidebar-pane__body");
-        if (sheetContent && sidebarBody) {
-          while (sidebarBody.firstChild) {
-            sheetContent.appendChild(sidebarBody.firstChild);
-          }
-          sheet.show();
-          sheet.addEventListener(
-            "close",
-            () => {
-              while (sheetContent.children.length > 1) {
-                sidebarBody.appendChild(sheetContent.lastChild);
-              }
-            },
-            { once: true },
-          );
-        }
-      } else if (pane) {
-        // Desktop: toggle sidebar
-        pane.classList.toggle("collapsed");
+      const section = document.querySelector("nldd-sidebar-section");
+      if (section && typeof section.toggle === "function") {
+        section.toggle();
       }
     });
   }

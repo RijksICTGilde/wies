@@ -1,4 +1,7 @@
 {% extends "base.html" %}
+{% block sidebar %}
+  {% include "parts/general_sidebar.html" %}
+{% endblock sidebar %}
 {% block extra_head %}
   <link rel="stylesheet" href="{{ static('css/assignment_form.css') }}">
   <script src="{{ static('js/dialog.js') }}"></script>

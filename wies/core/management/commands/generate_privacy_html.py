@@ -16,6 +16,9 @@ PREAMBLE = """\
 {% block title %}
   Privacy - Wies
 {% endblock title %}
+{% block sidebar %}
+  {% include "parts/general_sidebar.html" %}
+{% endblock sidebar %}
 {% block content %}
   <nldd-container padding="24">
   <nldd-rich-text>

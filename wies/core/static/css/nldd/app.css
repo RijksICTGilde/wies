@@ -20,36 +20,30 @@ body {
   background: var(--semantics-surfaces-background-color, #fff);
 }
 
+/* Layout is handled by <nldd-sidebar-section>: a sticky aside on lg that
+   collapses to a left sheet when the section is narrower than 1008px.
+   Do NOT set `display` on the host — the component's :host rule owns it. */
 .wies-layout {
-  display: flex;
   min-height: calc(100dvh - 120px);
-  max-width: 1920px;
-  margin-inline: auto;
-  padding-inline: var(--semantics-page-sections-lg-margin-inline, 2rem);
-}
-
-.wies-layout__sidebar {
-  width: 320px;
-  flex-shrink: 0;
-  border-right: 1px solid var(--semantics-controls-border-color, #e2e8f0);
-  background: var(--semantics-surfaces-tinted-background-color, #f8fafc);
-  overflow-y: auto;
-  padding: 1rem;
-  position: sticky;
-  top: 0;
-  max-height: calc(100dvh - 120px);
 }
 
 .wies-layout__main {
-  flex: 1;
   min-width: 0;
-  overflow-y: auto;
 }
 
-@media (max-width: 768px) {
-  .wies-layout__sidebar {
-    display: none;
-  }
+/* The sidebar box/sheet add no padding of their own — pad the slotted content. */
+.wies-layout [slot="sidebar"] {
+  display: block;
+  padding: 1rem;
+}
+
+/* The "Filters" button only makes sense while the sidebar is a sheet.
+   On lg the sidebar is an always-visible aside, so hide the trigger. */
+#nldd-sidebar-toggle {
+  display: none;
+}
+nldd-sidebar-section[collapsed] #nldd-sidebar-toggle {
+  display: inline-flex;
 }
 
 a {

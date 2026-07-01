@@ -1,0 +1,38 @@
+{# General contextual sidebar for pages without their own (profiel, content,
+   formulieren). Primary navigation + "Over deze site" links. #}
+<nldd-list>
+  <nldd-list-item type="link" href="{{ url('home') }}"
+    {% if request.path == url('home') %}current{% endif %}>
+    <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
+    <nldd-icon-cell slot="start" size="20"><nldd-icon name="list"></nldd-icon></nldd-icon-cell>
+    <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
+    <nldd-title-cell text="Wie zit waar?"></nldd-title-cell>
+    <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+  </nldd-list-item>
+  <nldd-list-item type="link" href="{{ url('assignment-list') }}"
+    {% if '/aanvragen' in request.path or '/opdrachten' in request.path %}current{% endif %}>
+    <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
+    <nldd-icon-cell slot="start" size="20"><nldd-icon name="clipboard"></nldd-icon></nldd-icon-cell>
+    <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
+    <nldd-title-cell text="Aanvragen"></nldd-title-cell>
+    <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+  </nldd-list-item>
+  <nldd-list-item type="link" href="{{ url('user-profile') }}"
+    {% if '/profiel' in request.path %}current{% endif %}>
+    <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
+    <nldd-icon-cell slot="start" size="20"><nldd-icon name="person"></nldd-icon></nldd-icon-cell>
+    <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
+    <nldd-title-cell text="Profiel"></nldd-title-cell>
+    <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+  </nldd-list-item>
+</nldd-list>
+<div class="sidebar-footer">
+  <div class="sidebar-footer__column">
+    <span class="sidebar-footer__title">Over deze site</span>
+    <ul class="sidebar-footer__menu">
+      <li><a href="{{ url('privacy') }}">Privacy</a></li>
+      <li><a href="{{ url('toegankelijkheid') }}">Toegankelijkheid</a></li>
+      <li><a href="{{ url('contact') }}">Contact</a></li>
+    </ul>
+  </div>
+</div>
