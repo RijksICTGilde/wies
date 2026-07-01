@@ -33,17 +33,16 @@
         </nldd-button>
       </div>
     {% elif filter_group.type == 'select-multi' %}
-      {% set real_options = filter_group.options|selectattr('value')|list %}
-      {% set visible = real_options[:3] %}
-      {% set extra = real_options[3:] %}
-      {% if real_options %}
+      {% set top_options = filter_group.top_options if filter_group.top_options is defined else filter_group.options|selectattr('value')|list %}
+      {% if top_options %}
         <fieldset class="nldd-filter-group nldd-checkbox-filter"
                   data-nldd-fieldset
-                  data-name="{{ filter_group.name }}">
+                  data-name="{{ filter_group.name }}"
+                  data-group-id="{{ filter_group.group_id }}">
           <legend class="nldd-checkbox-filter__label">{{ filter_group.label }}</legend>
           <div class="nldd-checkbox-filter__body">
             <div class="nldd-checkbox-filter__options">
-              {% for option in visible %}
+              {% for option in top_options %}
                 <label class="nldd-filter-option">
                   <input type="checkbox"
                          class="nldd-filter-option__checkbox"
@@ -55,33 +54,16 @@
                 </label>
               {% endfor %}
             </div>
-            {% if extra %}
-              {% set has_selected_extra = extra|selectattr('value', 'in', filter_group.selected_values)|list|length > 0 %}
-              <div class="nldd-checkbox-filter__options nldd-checkbox-filter__options--extra"
-                   {% if not has_selected_extra %}hidden{% endif %}>
-                {% for option in extra %}
-                  <label class="nldd-filter-option">
-                    <input type="checkbox"
-                           class="nldd-filter-option__checkbox"
-                           data-nldd-input
-                           value="{{ option.value }}"
-                           {% if option.value in filter_group.selected_values %}checked{% endif %}>
-                    <span class="nldd-filter-option__label">{{ option.label }}</span>
-                    {% if option.count is defined %}<span class="nldd-filter-option__count">{{ option.count }}</span>{% endif %}
-                  </label>
-                {% endfor %}
-              </div>
+            {% if filter_group.has_more %}
               <button type="button"
-                      class="nldd-checkbox-filter__toggle{% if has_selected_extra %} nldd-checkbox-filter__toggle--expanded{% endif %}">
-                {% set toggle_icon = "minus" if has_selected_extra else "plus" %}
-                <nldd-icon name="{{ toggle_icon }}" class="nldd-checkbox-filter__toggle-icon"></nldd-icon>
-                <span class="nldd-checkbox-filter__toggle-text">
-                  {% if has_selected_extra %}
-                    Toon minder
-                  {% else %}
-                    Toon meer
-                  {% endif %}
-                </span>
+                      class="nldd-checkbox-filter__more"
+                      hx-get="{{ filter_target_url }}?filter_modal={{ filter_group.group_id }}"
+                      hx-target="#nldd-filter-options-modal-container"
+                      hx-swap="innerHTML"
+                      hx-push-url="false"
+                      hx-include="[data-filter-input]">
+                <nldd-icon name="plus" class="nldd-checkbox-filter__more-icon"></nldd-icon>
+                <span class="nldd-checkbox-filter__more-text">Meer</span>
               </button>
             {% endif %}
           </div>

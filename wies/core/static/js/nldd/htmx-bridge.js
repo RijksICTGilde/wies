@@ -237,6 +237,112 @@
     });
   }
 
+  // --- Filter options "Meer" modal ----------------------------------
+  // A sidebar group's "Meer" button opens filter_options_modal.html into
+  // #nldd-filter-options-modal-container. Ticking there is deferred: only
+  // "Filter toepassen" writes the selection back to the sidebar group and
+  // re-runs the filter. Closing (× / Escape / Annuleren) discards.
+  function setupFilterOptionsModal() {
+    const container = document.getElementById(
+      "nldd-filter-options-modal-container",
+    );
+
+    function currentModal() {
+      return document.getElementById("nldd-filter-options-modal");
+    }
+    function closeModal() {
+      const modal = currentModal();
+      if (modal && modal.hide) modal.hide();
+      if (container) container.innerHTML = "";
+    }
+
+    // Open + focus once the modal is swapped in.
+    document.body.addEventListener("htmx:afterSwap", (e) => {
+      if (e.target && e.target.id === "nldd-filter-options-modal-container") {
+        const modal = currentModal();
+        if (modal && modal.show) modal.show();
+      }
+    });
+
+    document.addEventListener("click", (e) => {
+      const path = e.composedPath();
+
+      // Cancel / close
+      if (
+        path.some(
+          (el) =>
+            el instanceof Element &&
+            el.getAttribute &&
+            el.getAttribute("data-nldd-action") === "filter-options-close",
+        )
+      ) {
+        closeModal();
+        return;
+      }
+
+      // Apply
+      const applyBtn = path.find(
+        (el) => el instanceof Element && el.id === "filter-options-apply-btn",
+      );
+      if (!applyBtn) return;
+
+      const modal = currentModal();
+      if (!modal) return;
+      const groupId = modal.getAttribute("data-group-id");
+      const values = [...modal.querySelectorAll(".nldd-filter-options-modal__checkbox")]
+        .filter((cb) => cb.checked)
+        .map((cb) => cb.value);
+
+      const fieldset = document.querySelector(
+        `[data-nldd-fieldset][data-group-id="${CSS.escape(groupId)}"]`,
+      );
+      const form = document.getElementById("nldd-filter-form");
+      if (fieldset) {
+        // Reflect the modal selection onto the sidebar's inline checkboxes...
+        fieldset
+          .querySelectorAll(".nldd-filter-option__checkbox")
+          .forEach((cb) => {
+            cb.checked = values.includes(cb.value);
+          });
+        // ...and write the full selection (incl. options not shown inline)
+        // straight into the hidden-inputs slot so hx-include picks them up.
+        const slot = fieldset.querySelector("[data-hidden-inputs]");
+        const name = fieldset.dataset.name;
+        if (slot && name) {
+          slot.innerHTML = "";
+          for (const v of values) {
+            const input = document.createElement("input");
+            input.type = "hidden";
+            input.name = name;
+            input.value = v;
+            input.setAttribute("data-filter-input", "");
+            slot.appendChild(input);
+          }
+        }
+      }
+      closeModal();
+      if (form) dispatchFormChange(form);
+    });
+
+    // Live search within the modal.
+    document.addEventListener("input", (e) => {
+      const path = e.composedPath();
+      const search = path.find(
+        (el) => el instanceof Element && el.id === "filter-options-search",
+      );
+      if (!search) return;
+      const term = (search.value || "").toLowerCase().trim();
+      const modal = currentModal();
+      if (!modal) return;
+      modal
+        .querySelectorAll(".nldd-filter-options-modal__option")
+        .forEach((opt) => {
+          const label = opt.getAttribute("data-option-label") || "";
+          opt.hidden = term && !label.includes(term);
+        });
+    });
+  }
+
   // --- Sidebar collapse toggle --------------------------------------
   // The "Filters" button drives the <nldd-sidebar-section>'s own sheet.
   // The section renders the sidebar as a sticky aside on lg and collapses
@@ -285,6 +391,7 @@
     setupTokenDismiss();
     setupFilterCollapseAndToggle();
     setupSidebarToggle();
+    setupFilterOptionsModal();
   }
 
   // --- Filter groep in/uitklappen + "Toon meer/minder" ----------------

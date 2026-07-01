@@ -504,6 +504,41 @@ def staff_database(request):
     return render(request, "staff_database.html", context)
 
 
+def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> None:
+    """Post-process select-multi groups in place for the top-N + "Meer" modal.
+
+    For each ``select-multi`` group:
+      - assigns a unique ``group_id`` (the modal opens by this key),
+      - computes ``top_options``: the ``top_n`` options by count (selected ones
+        kept visible), shown inline in the sidebar,
+      - sets ``has_more`` when there are more options than fit inline.
+    The full ``options`` list is kept for the modal. Mutates in place.
+    """
+    label_seq = 0
+    for group in filter_groups:
+        if group.get("type") != "select-multi":
+            continue
+        # "labels" repeats per category, so disambiguate the key.
+        if group["name"] == "labels":
+            group["group_id"] = f"labels-{label_seq}"
+            label_seq += 1
+        else:
+            group["group_id"] = group["name"]
+
+        real_options = [o for o in group["options"] if o.get("value")]
+        selected = set(group.get("selected_values", []))
+        by_count = sorted(real_options, key=lambda o: o.get("count", 0), reverse=True)
+        # Show all selected first, then pad with the highest-count unselected up
+        # to top_n. Once >= top_n are selected the empty options drop away; the
+        # full list stays in the "Meer" modal.
+        selected_opts = [o for o in by_count if o["value"] in selected]
+        unselected_opts = [o for o in by_count if o["value"] not in selected]
+        fill = max(0, top_n - len(selected_opts))
+        top = selected_opts + unselected_opts[:fill]
+        group["top_options"] = top
+        group["has_more"] = len(real_options) > len(top)
+
+
 class PlacementListView(ListView):
     """View for placements table view with infinite scroll pagination"""
 
@@ -668,6 +703,8 @@ class PlacementListView(ListView):
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if "HX-Request" in self.request.headers:
+            if self.request.GET.get("filter_modal"):
+                return ["parts/filter_options_modal.html"]
             hx_target = self.request.headers.get("HX-Target", "")
             if hx_target in ("nldd-side-panel-content", "side_panel-content", "side_panel-container"):
                 placement_id = self.request.GET.get("plaatsing")
@@ -854,6 +891,8 @@ class PlacementListView(ListView):
                 "selected_values": list(loopt_af_values),
             },
         ]
+        _finalize_filter_groups(context["filter_groups"])
+        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
@@ -893,6 +932,8 @@ class PlacementListNDDView(PlacementListView):
 
     def get_template_names(self) -> list[str]:
         if "HX-Request" in self.request.headers:
+            if self.request.GET.get("filter_modal"):
+                return ["parts/filter_options_modal.html"]
             if self.request.headers.get("HX-Target") == "nldd-side-panel-content":
                 placement_id = self.request.GET.get("plaatsing")
                 colleague_id = self.request.GET.get("collega")
@@ -997,6 +1038,8 @@ class AssignmentListView(ListView):
 
     def get_template_names(self):
         if "HX-Request" in self.request.headers:
+            if self.request.GET.get("filter_modal"):
+                return ["parts/filter_options_modal.html"]
             hx_target = self.request.headers.get("HX-Target", "")
             if hx_target in ("nldd-side-panel-content", "side_panel-content", "side_panel-container"):
                 colleague_id = self.request.GET.get("collega")
@@ -1135,6 +1178,8 @@ class AssignmentListView(ListView):
                 "label": "Beschikbaar vanaf",
             },
         ]
+        _finalize_filter_groups(context["filter_groups"])
+        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
@@ -1183,6 +1228,8 @@ class AssignmentListNDDView(AssignmentListView):
 
     def get_template_names(self) -> list[str]:
         if "HX-Request" in self.request.headers:
+            if self.request.GET.get("filter_modal"):
+                return ["parts/filter_options_modal.html"]
             if self.request.headers.get("HX-Target") == "nldd-side-panel-content":
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")

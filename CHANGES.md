@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- NLDD: adopt the `nldd-sidebar-section` layout on every page (upgrade @nldd/design-system to 0.8.64) — a sticky sidebar on wide screens that collapses to a sheet on narrow ones; contextual sidebars everywhere (filters, beheer-nav, general nav)
+- NLDD: port the filter "Meer"-modal UX (#402) — each filter group shows its top-3 options plus a "Meer" button that opens the full alphabetical list in a modal with search; the selection applies only on "Filter toepassen"
 - NLDD: merge `main` into the NLDD design-system branch — adopt the opdracht/plaatsing side-panel features (Gegevens/Updates tabs, inline-edit of all fields, opdracht verwijderen, placement periods), the "Dubbele opdrachten samenvoegen" beheertool and the full privacyverklaring, all rebuilt in the NLDD design system; migrate the privacy-html generator to NLDD output
 - 417: remove `ModelBackend` from `AUTHENTICATION_BACKENDS`; `AuthBackend` now inherits from `ModelBackend` so group permissions keep resolving via a single backend, but there is no second password-login path)
 - 334: Add privacy declaration and beheer document. The in-product privacy page is regenerated via `manage.py generate_privacy_html`
