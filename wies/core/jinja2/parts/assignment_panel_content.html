@@ -80,7 +80,7 @@
         </section>
         <section>
           <div class="section-header">
-            <c-h2>Team ({{ panel_data.assignment.services.count() }})</c-h2>
+            <c-h2>Team ({{ panel_data.team_count }})</c-h2>
             {% set a = panel_data.assignment %}
             {% set ie_target = "inline-edit-assignment-" ~ a.pk ~ "-services" %}
             {% if has_permission(Verb.UPDATE, a, request.user, AssignmentEditables.services) %}

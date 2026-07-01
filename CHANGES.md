@@ -6,6 +6,7 @@ This files lists the changes during the lifetime of this project.
 
 - 417: remove `ModelBackend` from `AUTHENTICATION_BACKENDS`; `AuthBackend` now inherits from `ModelBackend` so group permissions keep resolving via a single backend, but there is no second password-login path)
 - 334: Add privacy declaration and beheer document. The in-product privacy page is regenerated via `manage.py generate_privacy_html`
+- 410: fix privacy leak (#383) where non-active plaatsingen were shown to everyone; ended and future (not-yet-started) plaatsingen are now only visible to the placed colleague and the opdracht's Business Manager, each with a privacy note and an "Afgelopen"/"Gepland" chip, consistently across the opdracht team list, the team count, the standalone plaatsing-pagina (`?plaatsing=N`, which was reachable by guessing the URL), the "Wie zit waar?"-overzicht and the profiel-overzicht. The security.txt is now accessible, it was hidden behind the SSO wall.
 
 ## 2026-06-24
 
