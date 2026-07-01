@@ -549,6 +549,10 @@
   border: none;
   padding: 0;
   margin: 0 0 0.5rem 0;
+  /* <fieldset> defaults to min-inline-size: min-content, which stops its
+     children from shrinking — breaking the label ellipsis. Reset it. */
+  min-inline-size: 0;
+  min-width: 0;
 }
 
 .checkbox-filter__legend-sr-only {
@@ -609,6 +613,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  min-width: 0;
 }
 
 .checkbox-filter__options[hidden] {
@@ -621,6 +626,10 @@
   gap: 0.5rem;
   cursor: pointer;
   padding: 0.2rem 0;
+  /* Bound the row so its text child can shrink and ellipsize instead of
+     pushing the count out of view. */
+  min-width: 0;
+  max-width: 100%;
 }
 
 .checkbox-filter__option:hover {
