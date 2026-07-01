@@ -493,6 +493,27 @@ def staff_dashboard(request):
 
 
 @staff_required
+def debug_request_meta(request):
+    xff_raw = request.headers.get("x-forwarded-for", "")
+    xff_entries = [p.strip() for p in xff_raw.split(",")] if xff_raw else []
+    return render(
+        request,
+        "debug_request_meta.html",
+        {
+            "remote_addr": request.META.get("REMOTE_ADDR", ""),
+            "xff_raw": xff_raw,
+            "xff_entries": xff_entries,
+            "xff_from_right": list(enumerate(reversed(xff_entries))),
+            "xfp": request.headers.get("x-forwarded-proto", ""),
+            "xfh": request.headers.get("x-forwarded-host", ""),
+            "x_real_ip": request.headers.get("x-real-ip", ""),
+            "user_agent": request.headers.get("user-agent", ""),
+            "server_time": timezone.now(),
+        },
+    )
+
+
+@staff_required
 def staff_database(request):
     context = {
         "assignment_count": Assignment.objects.count(),
