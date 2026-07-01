@@ -423,6 +423,9 @@ document.addEventListener("DOMContentLoaded", function () {
       "search-suggestions-container",
     );
     if (suggestionsContainer) suggestionsContainer.innerHTML = "";
+    // Drop focus so the field's active/focus state clears — same end state
+    // whether the search ran via Enter, the magnifier, or a suggestion.
+    input.blur();
     var form = document.querySelector(".filter-sidebar-form");
     if (form) htmx.trigger(form, "change");
   }
