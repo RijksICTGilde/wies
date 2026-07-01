@@ -1,3 +1,6 @@
+{% if not panel_data %}
+  <div class="nldd-panel"><p class="nldd-text-secondary"><em>Niet gevonden.</em></p></div>
+{% else %}
 {% set colleague = panel_data.colleague %}
 <div class="nldd-panel">
   <header class="nldd-panel__bar">
@@ -53,3 +56,4 @@
   {% endif %}
   </nldd-rich-text>
 </div>
+{% endif %}

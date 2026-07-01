@@ -1,3 +1,6 @@
+{% if not panel_data %}
+  <div class="nldd-panel"><p class="nldd-text-secondary"><em>Niet gevonden.</em></p></div>
+{% else %}
 {% set colleague = panel_data.colleague %}
 {% set service = panel_data.service %}
 {% set placement = panel_data.placement %}
@@ -48,3 +51,4 @@
        hx-swap="innerHTML">Bekijk alle opdrachten van {{ colleague.name.split()[0] }} ›</a>
   </section>
 </div>
+{% endif %}

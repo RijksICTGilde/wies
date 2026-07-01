@@ -223,6 +223,27 @@ a {
   flex: 1;
   min-width: 0;
 }
+/* nldd-icon renders its SVG at the element's box size; without an explicit
+   size it fills its container. Give every inline icon a sane default and let
+   the size="N" attribute override it. */
+nldd-icon {
+  display: inline-flex;
+  width: 1em;
+  height: 1em;
+  flex-shrink: 0;
+}
+nldd-icon[size="16"] {
+  width: 16px;
+  height: 16px;
+}
+nldd-icon[size="20"] {
+  width: 20px;
+  height: 20px;
+}
+nldd-icon[size="24"] {
+  width: 24px;
+  height: 24px;
+}
 .edit-icon-button {
   background: none;
   border: none;
@@ -231,10 +252,16 @@ a {
   border-radius: 4px;
   color: var(--semantics-content-secondary-color, #64748b);
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
 }
 .edit-icon-button:hover {
   color: var(--semantics-content-accent-color, #154273);
   background: var(--semantics-surfaces-tinted-background-color, #f4f6f9);
+}
+.edit-icon-button__pencil {
+  width: 18px;
+  height: 18px;
 }
 .field-actions {
   display: flex;

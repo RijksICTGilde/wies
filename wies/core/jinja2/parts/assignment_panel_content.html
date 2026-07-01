@@ -1,3 +1,6 @@
+{% if not panel_data %}
+  <div class="nldd-panel"><p class="nldd-text-secondary"><em>Niet gevonden.</em></p></div>
+{% else %}
 <div class="nldd-panel">
   {% if panel_data.show_updates_tab %}
     <div class="nldd-tabs">
@@ -117,3 +120,4 @@
     </div>
   {% endif %}
 </div>
+{% endif %}
