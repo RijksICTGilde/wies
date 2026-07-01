@@ -202,15 +202,24 @@ class ServiceForm(NlddFormMixin, forms.Form):
         required=False,
         empty_label=" ",
     )
-    description = forms.CharField(label="Toelichting", max_length=500, required=False)
+    description = forms.CharField(label="Omschrijving rol", max_length=500, required=False)
     new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)
-    is_filled = forms.BooleanField(label="Consultant bekend", required=False)
+    is_filled = forms.ChoiceField(
+        label="Status",
+        choices=[("aanvraag", "Aanvraag"), ("ingevuld", "Geplaatste consultant")],
+        widget=forms.RadioSelect,
+        initial="aanvraag",
+        required=False,
+    )
     colleague = forms.ModelChoiceField(
         label="Consultant",
         queryset=Colleague.objects.order_by("name"),
         required=False,
         empty_label=" ",
     )
+    has_custom_period = forms.BooleanField(label="Neem opdrachtperiode over", required=False, initial=True)
+    placement_start_date = forms.DateField(label="Startdatum", required=False)
+    placement_end_date = forms.DateField(label="Einddatum", required=False)
 
     def __init__(self, *args, skill_choices=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -229,24 +238,40 @@ class ServiceForm(NlddFormMixin, forms.Form):
         cleaned_data = super().clean()
         skill_val = cleaned_data.get("skill", "")
         new_skill_name = cleaned_data.get("new_skill_name", "").strip()
+        # A row the user removed in the UI ("Verwijderen") leaves a gap
+        # in the formset indexes that Django re-materialises as a blank
+        # form. Treat any row with no identifying content as deleted and
+        # skip validation — extract_services_data drops it before save.
+        is_empty_row = (
+            not cleaned_data.get("id")
+            and not skill_val
+            and not new_skill_name
+            and not cleaned_data.get("description")
+            and not cleaned_data.get("colleague")
+        )
+        if is_empty_row:
+            return cleaned_data
         if skill_val == "__new__" and not new_skill_name:
             self.add_error("new_skill_name", "Voer een naam in voor de nieuwe rol.")
         has_skill = (skill_val and skill_val != "__new__") or new_skill_name
-        has_other_data = (
-            cleaned_data.get("description") or cleaned_data.get("is_filled") or cleaned_data.get("colleague")
-        )
+        has_other_data = cleaned_data.get("description") or cleaned_data.get("colleague")
         if not has_skill and has_other_data:
             self.add_error("skill", "Selecteer een rol.")
-        is_filled = cleaned_data.get("is_filled")
-        colleague = cleaned_data.get("colleague")
-        if is_filled and not colleague:
-            self.add_error("colleague", "Selecteer een consultant.")
-        # "Rol ingevuld" is the authoritative on/off for the placement.
-        # The UI hides (not clears) the colleague select when the
-        # checkbox is off, so the posted colleague id would otherwise
-        # leak through — treat an unchecked row as "no placement".
-        if not is_filled:
-            cleaned_data["colleague"] = None
+        # has_custom_period checkbox means "Neem opdrachtperiode over" (inverted).
+        # Checked = take from assignment = no custom period.
+        inherit_from_assignment = cleaned_data.get("has_custom_period", False)
+        if inherit_from_assignment:
+            cleaned_data["has_custom_period"] = False
+            cleaned_data["placement_start_date"] = None
+            cleaned_data["placement_end_date"] = None
+        else:
+            p_start = cleaned_data.get("placement_start_date")
+            p_end = cleaned_data.get("placement_end_date")
+            cleaned_data["has_custom_period"] = bool(p_start or p_end)
+            if not p_start and not p_end:
+                self.add_error("placement_start_date", "Vul een periode in of neem de opdrachtperiode over.")
+            elif p_start and p_end and p_end < p_start:
+                self.add_error("placement_end_date", "Einddatum moet na startdatum liggen.")
         return cleaned_data
 
 

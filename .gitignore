@@ -228,3 +228,6 @@ wies/core/fixtures/dummy_data.json
 .python_history
 /.idea/
 wies/core/management/commands/debug.py
+
+# Internal review working doc, must not be committed
+REVIEW_CHECKLIST.md

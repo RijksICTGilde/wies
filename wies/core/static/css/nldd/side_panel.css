@@ -225,3 +225,71 @@
   font-size: 0.85rem;
   color: var(--semantics-content-secondary-color, #666);
 }
+.nldd-team-member--filled.clickable-row {
+  cursor: pointer;
+}
+.nldd-team-member__privacy {
+  display: flex;
+  gap: var(--primitives-space-4, 4px);
+  align-items: center;
+  margin-top: var(--primitives-space-4, 4px);
+}
+
+/* Service card rows (team list) */
+.service-card__name {
+  display: flex;
+  gap: var(--primitives-space-8, 8px);
+  align-items: center;
+  flex-wrap: wrap;
+  min-width: 0;
+  flex: 1;
+}
+.service-card__period {
+  display: inline-flex;
+  gap: var(--primitives-space-4, 4px);
+  align-items: center;
+  font-size: 0.85rem;
+}
+.service-card__description {
+  margin-top: var(--primitives-space-4, 4px);
+}
+
+/* Vertical spacing utility */
+.nldd-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-24, 24px);
+}
+
+/* Side-panel tabs (Gegevens / Updates) */
+.nldd-tabs__tablist {
+  display: flex;
+  gap: var(--primitives-space-8, 8px);
+  border-bottom: 1px solid var(--semantics-borders-default-color, #e0e0e0);
+  margin-bottom: var(--primitives-space-16, 16px);
+}
+.nldd-tabs__tab {
+  appearance: none;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: var(--primitives-space-8, 8px) var(--primitives-space-12, 12px);
+  cursor: pointer;
+  color: var(--semantics-content-secondary-color, #666);
+  font: inherit;
+}
+.nldd-tabs__tab:hover {
+  color: var(--semantics-content-default-color, #1a1a1a);
+}
+.nldd-tabs__tab--active {
+  color: var(--semantics-content-default-color, #1a1a1a);
+  border-bottom-color: var(--semantics-borders-interactive-color, #154273);
+  font-weight: 600;
+}
+.nldd-tabs__tab:focus-visible {
+  outline: 2px solid var(--semantics-borders-interactive-color, #154273);
+  outline-offset: 2px;
+}
+.nldd-tabs__panel[hidden] {
+  display: none;
+}

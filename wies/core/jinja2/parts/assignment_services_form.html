@@ -1,30 +1,47 @@
-{# NDD Diensten editor body. Reused by assignment_create and the side-panel
+{# Diensten editor body. Reused by assignment_create.html and the side-panel
    services editor (via EditableCollection).
 
    Params:
      formset       (required): a ServiceFormSet instance.
-     extra_errors  (optional, default []): additional error messages.
+     extra_errors  (optional, default []): additional error messages merged
+       into the services alert. The create form passes
+       form.non_field_errors() so its "voeg minimaal één dienst toe" message
+       surfaces alongside formset-level errors.
 #}
 <p>
-  Voeg één of meer rollen toe. Is de consultant al bekend? Vink dan "Consultant bekend" aan om deze direct te koppelen.
+  Voeg een aanvraag toe voor een openstaande plek, of een plaatsing als de consultant al bekend is.
 </p>
 {{ formset.management_form }}
 {% set _extra_errors = extra_errors if extra_errors is defined else [] %}
 {% if formset.non_form_errors() or _extra_errors %}
   <div class="nldd-alert nldd-alert--error" id="diensten-error">
-    {% for error in formset.non_form_errors() %}{{ error }}{% endfor %}
-    {% for error in _extra_errors %}
-      {{ error }}
-      <br>
-    {% endfor %}
+  {% for error in formset.non_form_errors() %}{{ error }}{% endfor %}
+  {% for error in _extra_errors %}
+    {{ error }}
+    <br>
+  {% endfor %}
   </div>
 {% endif %}
-<div id="services-container">
+<div id="services-container"
+     {% if obj is defined and obj.start_date %}data-assignment-start="{{ obj.start_date.isoformat() }}"{% endif %}
+     {% if obj is defined and obj.end_date %}data-assignment-end="{{ obj.end_date.isoformat() }}"{% endif %}>
   {% for svc_form in formset %}
     {% with row_index=loop.index0, is_first=loop.first %}
       {% include "parts/service_row.html" %}
     {% endwith %}
   {% endfor %}
 </div>
-<nldd-button type="button" id="add-service-btn" variant="neutral-transparent" size="sm" start-icon="plus" text="Rol toevoegen">
-</nldd-button>
+<div class="service-add-buttons">
+  <nldd-button type="button"
+               variant="secondary"
+               text="Aanvraag toevoegen"
+               start-icon="plus"
+               size="sm"
+               data-add-service="aanvraag"></nldd-button>
+  <nldd-button type="button"
+               variant="secondary"
+               text="Geplaatste consultant toevoegen"
+               start-icon="plus"
+               size="sm"
+               data-add-service="ingevuld"></nldd-button>
+</div>

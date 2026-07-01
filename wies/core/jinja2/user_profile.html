@@ -22,11 +22,11 @@
   <dl class="nldd-data-list">
     <dt>Voornaam</dt>
     <dd>
-      {{ user.first_name or "—" }}
+      {{ inline_edit(user, "first_name") }}
     </dd>
     <dt>Achternaam</dt>
     <dd>
-      {{ user.last_name or "—" }}
+      {{ inline_edit(user, "last_name") }}
     </dd>
     <dt>E-mail</dt>
     <dd>

@@ -1,0 +1,22 @@
+{# Renders an audit value with a label ("Van:" / "Naar:") and a
+   Toon meer toggle when the value exceeds 300 characters.
+
+   Params:
+     label  (required): "Van" or "Naar".
+     value  (required): the string to display.
+#}
+<div style="margin-top: 0.25rem;">
+  <span class="nldd-text-secondary nldd-text-xs">{{ label }}:</span>
+  {% if value|length > 300 %}
+    <span>
+      <span class="truncated-text" style="display: block;">{{ value[:300] }}...</span>
+      <span class="full-text" style="display: none;">{{ value }}</span>
+      <button type="button" class="show-more-toggle" onclick="toggleShowMore(this)">
+        <span class="show-more-toggle__icon">+</span>
+        <span class="show-more-toggle__text">Toon meer</span>
+      </button>
+    </span>
+  {% else %}
+    <span class="pre-wrap">{{ value }}</span>
+  {% endif %}
+</div>

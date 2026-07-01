@@ -52,6 +52,18 @@ def filter_placements_by_min_end_date(queryset, min_end_date):
     return queryset.filter(Q(actual_end_date__gte=min_end_date) | Q(actual_end_date__isnull=True))
 
 
+def filter_visible_placements(queryset, today, viewer):
+    """Placement visibility for the overview list: active placements are public,
+    ended ones are hidden from everyone, and not-yet-started ones are kept only
+    for the placed colleague and the assignment's BM-owner. Assumes
+    ``annotate_placement_dates`` was applied."""
+    queryset = filter_placements_by_min_end_date(queryset, today)
+    started = Q(actual_start_date__isnull=True) | Q(actual_start_date__lte=today)
+    if viewer is None:
+        return queryset.filter(started)
+    return queryset.filter(started | Q(colleague_id=viewer.id) | Q(service__assignment__owner_id=viewer.id))
+
+
 def create_assignments_from_csv(creator, csv_content: str):
     """
     Create colleagues, assignments, services and placements from csv.

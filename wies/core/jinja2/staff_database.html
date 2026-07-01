@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
   <link rel="stylesheet" href="{{ static('css/staff.css') }}">
 {% endblock extra_head %}
 {% block sidebar %}
@@ -23,7 +24,7 @@
             onsubmit="return confirm('Weet je zeker dat je alle data wilt verwijderen?');">
         {{ get_csrf_hidden_input(request) }}
         <input type="hidden" name="action" value="clear_data">
-        <nldd-button variant="warning" type="submit" text="Database leegmaken"></nldd-button>
+        <nldd-button variant="warning-subtle" type="submit" text="Database leegmaken"></nldd-button>
       </form>
     </div>
     <div class="staff-action-card">
@@ -34,7 +35,7 @@
       <form method="post">
         {{ get_csrf_hidden_input(request) }}
         <input type="hidden" name="action" value="load_base_data">
-        <nldd-button variant="primary" type="submit" text="Dummy data laden"></nldd-button>
+        <nldd-button variant="secondary" type="submit" text="Dummy data laden"></nldd-button>
       </form>
     </div>
   {% endif %}
@@ -47,8 +48,86 @@
           hx-swap="innerHTML">
       {{ get_csrf_hidden_input(request) }}
       <input type="hidden" name="action" value="sync_organizations">
-      <nldd-button variant="primary" type="submit" text="Organisaties synchroniseren"></nldd-button>
+      <nldd-button variant="secondary" type="submit" text="Organisaties synchroniseren"></nldd-button>
     </form>
+  </div>
+  <div class="staff-action-card">
+    <h2>Dubbele opdrachten samenvoegen</h2>
+    <p>
+      Opdrachten met dezelfde naam en eigenaar worden samengevoegd: diensten en plaatsingen worden verplaatst naar de oudste opdracht, duplicaten worden verwijderd.
+    </p>
+    {% if merge_groups is defined and merge_groups %}
+      <div class="merge-preview" id="merge-preview">
+        <div class="nldd-alert nldd-alert--warning">
+          {{ merge_groups|length }} groep(en) gevonden. Controleer het overzicht en bevestig.
+        </div>
+        {% for group in merge_groups %}
+          <div class="merge-group">
+            <h3>{{ group.name }}</h3>
+            <p class="merge-group__meta">{{ group.count }} opdrachten · eigenaar: {{ group.owner }}</p>
+            <table class="nldd-table">
+              <thead>
+                <tr>
+                  <th class="nldd-table__th">#</th>
+                  <th class="nldd-table__th">Consultant</th>
+                  <th class="nldd-table__th">Actie</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for svc in group.target.services.all() %}
+                  <tr class="nldd-table__row">
+                    {% if loop.first %}
+                      <td class="nldd-table__td" rowspan="{{ group.target.services.count() }}">{{ group.target.id }}</td>
+                    {% endif %}
+                    <td class="nldd-table__td">
+                      {% for pl in svc.placements.all() %}
+                        {{ pl.colleague.name }}
+                      {% else %}
+                        <em>(vacant)</em>
+                      {% endfor %}
+                    </td>
+                    {% if loop.first %}
+                      <td class="nldd-table__td" rowspan="{{ group.target.services.count() }}"><nldd-token>Behouden</nldd-token></td>
+                    {% endif %}
+                  </tr>
+                {% endfor %}
+                {% for dupe in group.duplicates %}
+                  {% for svc in dupe.services.all() %}
+                    <tr class="nldd-table__row">
+                      {% if loop.first %}
+                        <td class="nldd-table__td" rowspan="{{ dupe.services.count() }}">{{ dupe.id }}</td>
+                      {% endif %}
+                      <td class="nldd-table__td">
+                        {% for pl in svc.placements.all() %}
+                          {{ pl.colleague.name }}
+                        {% else %}
+                          <em>(vacant)</em>
+                        {% endfor %}
+                      </td>
+                      {% if loop.first %}
+                        <td class="nldd-table__td" rowspan="{{ dupe.services.count() }}"><nldd-token>→ #{{ group.target.id }}</nldd-token></td>
+                      {% endif %}
+                    </tr>
+                  {% endfor %}
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% endfor %}
+        <form method="post"
+              onsubmit="return confirm('Weet je zeker dat je deze opdrachten wilt samenvoegen? Dit kan niet ongedaan worden gemaakt.');">
+          {{ get_csrf_hidden_input(request) }}
+          <input type="hidden" name="action" value="merge_duplicates_apply">
+          <nldd-button variant="primary" type="submit" text="Samenvoegen bevestigen"></nldd-button>
+        </form>
+      </div>
+    {% else %}
+      <form method="post" action="{{ url('staff-database') }}#merge-preview">
+        {{ get_csrf_hidden_input(request) }}
+        <input type="hidden" name="action" value="merge_duplicates_preview">
+        <nldd-button variant="secondary" type="submit" text="Controleer op duplicaten"></nldd-button>
+      </form>
+    {% endif %}
   </div>
   <div id="task-list">{% include "parts/task_list.html" %}</div>
   </nldd-container>

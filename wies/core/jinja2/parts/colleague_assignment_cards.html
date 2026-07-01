@@ -11,7 +11,9 @@
         <div class="nldd-assignment-card__top">
           <strong>{{ assignment.name }}</strong>
           {% if assignment.historical %}
-            <nldd-token>Afgelopen</nldd-token>
+            <nldd-token>{{ assignment.period_label or "Afgelopen" }}</nldd-token>
+          {% elif assignment.show_read_more %}
+            <span class="nldd-assignment-card__read-more">Lees meer ›</span>
           {% elif assignment.start_date or assignment.end_date %}
             <span class="nldd-text-secondary">
               {{ assignment.start_date|datum_nl("N y") if assignment.start_date else "?" }}
@@ -22,6 +24,7 @@
         {% if assignment.organization %}<span class="nldd-text-secondary">{{ assignment.organization }}</span>{% endif %}
         {% if assignment.team_members %}
           <div class="nldd-team-list" style="margin-top: 0.25rem;">
+            <span class="nldd-text-secondary">Collega's op deze opdracht:</span>
             {% for member in assignment.team_members %}
               <span class="nldd-avatar nldd-avatar--sm" title="{{ member }}">{{ member|first|upper }}</span>
             {% endfor %}

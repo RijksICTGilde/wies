@@ -51,24 +51,11 @@ just up
 
 ### Project Structure
 
-```
-wies/
-├── core/
-│   ├── models.py      # All models
-│   ├── views.py       # View functions
-│   ├── forms.py       # Django forms with RVOMixin
-│   ├── urls.py        # URL routing
-│   ├── roles.py       # Roles and permissions
-│   ├── querysets.py   # Custom querysets
-│   └── jinja2/        # Jinja2 templates
-│       └── parts/     # Reusable template partials
-├── config/
-│   └── settings/      # Django settings per environment
-├── scripts/
-│   └── load_full_data.py       # Generates dummy data fixtures
-└── wies/core/fixtures/
-    └── base_dummy_data.json    # Small dev dataset (committed)
-```
+- `wies/core/` — main Django app (models, views, forms, templates, tests)
+- `wies/rijksauth/` — OIDC auth integration
+- `config/settings/` — Django settings per environment
+- `docs/` — beheerplan, privacy declaration and other docs
+- `features/` — feature-specific design docs (e.g. inline editing)
 
 ### Commands
 
@@ -81,6 +68,9 @@ just test           # Run all tests (Django + JS)
 just test django    # Run Django tests only
 just test js        # Run JavaScript tests only
 just manage [...]   # Django manage.py commands
+just lint           # Run ruff check + format check
+just format         # Auto-fix lint issues and format code
+just pre-commit     # Run all pre-commit hooks
 just update-vendor  # Update vendor assets (htmx)
 ```
 
@@ -96,11 +86,7 @@ This project vendors external JavaScript instead of using a CDN. This ensures th
 
 To update vendor dependencies:
 
-1. Edit the version numbers in `justfile`:
-
-   ```
-   HTMX_VERSION := "2.0.6"
-   ```
+1. Edit the version numbers at the top of `justfile` (e.g. `HTMX_VERSION`).
 
 2. Run the update command:
 
@@ -133,13 +119,6 @@ Run specific Django tests:
 just manage test wies.core.tests.test_roles
 ```
 
-### Special URLs
-
-Not linked in the UI:
-
-- `/staff/` - Staff actions (clear data, load fixtures, sync)
-- `/plaatsingen/import/` - Import placements from CSV
-
 ## Architecture
 
 ### User Roles
@@ -167,26 +146,8 @@ Not linked in the UI:
 3. Commit and push
 4. Tag with date: `git tag -a 2026-01-19 -m "2026-01-19"`
 5. Push tag: `git push --tags`
-6. CI produces image
+6. CI produces image and deploys
 
 ## Claude Code
 
-This project has configuration for [Claude Code](https://claude.ai/code) in `.claude/`:
-
-```
-.claude/
-├── CLAUDE.md    # Project instructions and context
-├── rules/       # Code style, testing, security guidelines
-├── skills/      # Domain knowledge, Django patterns, UI components
-└── agents/      # Specialized agents for UI development
-```
-
-Start a Claude Code session in the project root for AI-assisted development with project context.
-
-## Production
-
-The production version of this app runs on `wies.rijksorganisatieodi.nl`. It is deployed using the [ZAD platform](zad.rijksapp.nl):
-
-- Hosted on ODC Noord
-- Guarded by SSO-rijk through keycloak + ODI whitelist
-- Daily backups with max of 7 backups
+This project has configuration for [Claude Code](https://claude.ai/code) in `.claude/` (project instructions, rules, skills, and agents). Start a Claude Code session in the project root for AI-assisted development with project context.

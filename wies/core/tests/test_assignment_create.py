@@ -7,6 +7,7 @@ from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    Event,
     OrganizationUnit,
     Skill,
 )
@@ -114,6 +115,7 @@ class AssignmentCreateTest(TestCase):
                 **FORMSET_MGMT_1,
                 "service-0-description": "Backend ontwikkeling",
                 "service-0-skill": self.skill.id,
+                "service-0-has_custom_period": "on",
             },
         )
         assert response.status_code == 302
@@ -136,7 +138,8 @@ class AssignmentCreateTest(TestCase):
                 **FORMSET_MGMT_1,
                 "service-0-description": "Backend ontwikkeling",
                 "service-0-skill": self.skill.id,
-                "service-0-is_filled": "on",
+                "service-0-is_filled": "ingevuld",
+                "service-0-has_custom_period": "on",
                 "service-0-colleague": self.colleague.id,
             },
         )
@@ -157,6 +160,7 @@ class AssignmentCreateTest(TestCase):
                 **FORMSET_MGMT_1,
                 "service-0-description": "Dienst",
                 "service-0-skill": self.skill.id,
+                "service-0-has_custom_period": "on",
             },
         )
         assert response.status_code == 302
@@ -165,6 +169,38 @@ class AssignmentCreateTest(TestCase):
         assert primary.organization == self.org
         involved = AssignmentOrganizationUnit.objects.get(assignment=assignment, role="INVOLVED")
         assert involved.organization == self.org2
+
+    def test_post_emits_create_event_with_snapshot(self):
+        """The create event audits the same snapshot as delete: one
+        "rol (occupant or open)" entry per service, plus the opdrachtgevers."""
+        self.client.force_login(self.bdm_user)
+        self.client.post(
+            reverse("assignment-create"),
+            {
+                "name": "Audit Snapshot Opdracht",
+                "owner": self.bdm_colleague.id,
+                **org_formset_data([(self.org, "PRIMARY"), (self.org2, "INVOLVED")]),
+                **FORMSET_MGMT_2,
+                "service-0-description": "Gevulde rol",
+                "service-0-skill": self.skill.id,
+                "service-0-is_filled": "ingevuld",
+                "service-0-has_custom_period": "on",
+                "service-0-colleague": self.colleague.id,
+                "service-1-description": "Open rol",
+                "service-1-skill": self.skill.id,
+                "service-1-has_custom_period": "on",
+            },
+        )
+        assignment = Assignment.objects.get(name="Audit Snapshot Opdracht")
+        event = Event.objects.get(object_type="Assignment", action="create", object_id=assignment.id)
+        assert event.context["name"] == "Audit Snapshot Opdracht"
+        assert event.context["services"] == [
+            f"{self.skill.name} ({self.colleague.name})",
+            f"{self.skill.name} (open)",
+        ]
+        assert sorted(event.context["organizations"]) == sorted(
+            [self.org.label or self.org.name, self.org2.label or self.org2.name]
+        )
 
     def test_post_multiple_services(self):
         self.client.force_login(self.bdm_user)
@@ -177,8 +213,10 @@ class AssignmentCreateTest(TestCase):
                 **FORMSET_MGMT_2,
                 "service-0-description": "Frontend",
                 "service-0-skill": self.skill.id,
+                "service-0-has_custom_period": "on",
                 "service-1-description": "Backend",
                 "service-1-skill": self.skill.id,
+                "service-1-has_custom_period": "on",
             },
         )
         assert response.status_code == 302
@@ -249,6 +287,7 @@ class AssignmentCreateTest(TestCase):
                 "service-0-description": "Nieuwe dienst",
                 "service-0-skill": "__new__",
                 "service-0-new_skill_name": "Blockchain Developer",
+                "service-0-has_custom_period": "on",
             },
         )
         assert response.status_code == 302
@@ -331,24 +370,6 @@ class AssignmentCreateTest(TestCase):
         assert Assignment.objects.count() == 0
         assert Skill.objects.filter(name="").count() == 0
 
-    def test_is_filled_without_consultant_rejected(self):
-        """Checking 'role filled' without selecting a consultant should fail validation."""
-        self.client.force_login(self.bdm_user)
-        response = self.client.post(
-            reverse("assignment-create"),
-            {
-                "name": "Test Opdracht",
-                "owner": self.bdm_colleague.id,
-                **org_formset_data([(self.org, "PRIMARY")]),
-                **FORMSET_MGMT_1,
-                "service-0-skill": self.skill.id,
-                "service-0-is_filled": "on",
-                # no service-0-colleague
-            },
-        )
-        assert response.status_code == 200
-        assert Assignment.objects.count() == 0
-
     def test_source_wies_on_service_and_placement(self):
         """source='wies' is set on Service and Placement, not just Assignment."""
         self.client.force_login(self.bdm_user)
@@ -361,7 +382,8 @@ class AssignmentCreateTest(TestCase):
                 **FORMSET_MGMT_1,
                 "service-0-skill": self.skill.id,
                 "service-0-description": "Dienst",
-                "service-0-is_filled": "on",
+                "service-0-is_filled": "ingevuld",
+                "service-0-has_custom_period": "on",
                 "service-0-colleague": self.colleague.id,
             },
         )

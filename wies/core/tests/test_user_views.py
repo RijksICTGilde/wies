@@ -31,11 +31,13 @@ class UserViewsTest(TestCase):
         self.auth_user.user_permissions.add(view_permission, add_permission, change_permission, delete_permission)
 
         # Create a superuser (should be excluded from list)
-        self.superuser = User.objects.create_superuser(
+        self.superuser = User.objects.create_user(
             email="admin@rijksoverheid.nl",
             password="admin123",
             first_name="Admin",
             last_name="User",
+            is_staff=True,
+            is_superuser=True,
         )
 
         # Create test labels

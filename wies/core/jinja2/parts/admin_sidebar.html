@@ -35,7 +35,7 @@
 <nldd-title-cell text="Labels"></nldd-title-cell>
 <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
 </nldd-list-item>
-{% if can_view_staff_page(user) %}
+{% if is_staff_member(user) %}
   <nldd-list-item type="link" href="{{ url('staff-dashboard') }}"
   {% if '/statistieken/' in request.path %}current{% endif %}
   >

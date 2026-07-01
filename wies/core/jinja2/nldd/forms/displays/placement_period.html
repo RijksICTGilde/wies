@@ -1,0 +1,13 @@
+{# Display partial for Placement period EditableGroup.
+   value dict contains: period_source, specific_start_date, specific_end_date.
+   obj is the Placement instance — use .start_date/.end_date properties for effective dates. #}
+{% if obj.start_date or obj.end_date %}
+  <span class="icon-text-inline">
+    <nldd-icon name="calendar-event" size="16"></nldd-icon>
+    {{ obj.start_date|datum_nl("j F Y") if obj.start_date else "–" }}
+    t/m
+    {{ obj.end_date|datum_nl("j F Y") if obj.end_date else "heden" }}
+  </span>
+{% else %}
+  <span class="nldd-text-secondary"><em>Geen periode ingesteld</em></span>
+{% endif %}

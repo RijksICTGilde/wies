@@ -4,6 +4,32 @@
 (function () {
   "use strict";
 
+  // --- Tab switching (Gegevens / Updates in the opdracht panel) ---
+  // Event delegation so it keeps working after HTMX swaps the panel content.
+  document.addEventListener("click", (e) => {
+    const tab = e.target.closest(".nldd-tabs__tab");
+    if (!tab) return;
+    const tabsContainer = tab.closest(".nldd-tabs");
+    if (!tabsContainer) return;
+    const allTabs = [...tabsContainer.querySelectorAll(".nldd-tabs__tab")];
+    const index = allTabs.indexOf(tab);
+    allTabs.forEach((t, i) => {
+      t.classList.toggle("nldd-tabs__tab--active", i === index);
+      t.setAttribute("aria-selected", i === index);
+      t.setAttribute("tabindex", i === index ? "0" : "-1");
+    });
+    const panels = tabsContainer.querySelectorAll(".nldd-tabs__panel");
+    panels.forEach((p, i) => {
+      if (i === index) {
+        p.removeAttribute("hidden");
+        p.setAttribute("tabindex", "0");
+      } else {
+        p.setAttribute("hidden", "");
+        p.setAttribute("tabindex", "-1");
+      }
+    });
+  });
+
   const SHEET_ID = "nldd-side-panel";
   const CONTENT_ID = "nldd-side-panel-content";
 

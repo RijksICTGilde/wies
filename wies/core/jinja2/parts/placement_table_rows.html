@@ -21,7 +21,7 @@
       <span class="nldd-table__sub">{{ client_label }}</span>
     </td>
     <td class="nldd-table__td nldd-table__td--right nldd-table__td--secondary">
-      {{ placement.service.assignment.end_date|datum_nl("j M Y") if placement.service.assignment.end_date else '' }}
+      {{ placement.end_date|datum_nl("j M Y") if placement.end_date else '' }}
     </td>
     <td class="nldd-table__td nldd-table__td--icon">
       <nldd-icon name="chevron-right" size="16"></nldd-icon>

@@ -4,7 +4,41 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-\_ ...
+- NLDD: merge `main` into the NLDD design-system branch — adopt the opdracht/plaatsing side-panel features (Gegevens/Updates tabs, inline-edit of all fields, opdracht verwijderen, placement periods), the "Dubbele opdrachten samenvoegen" beheertool and the full privacyverklaring, all rebuilt in the NLDD design system; migrate the privacy-html generator to NLDD output
+- 417: remove `ModelBackend` from `AUTHENTICATION_BACKENDS`; `AuthBackend` now inherits from `ModelBackend` so group permissions keep resolving via a single backend, but there is no second password-login path)
+- 334: Add privacy declaration and beheer document. The in-product privacy page is regenerated via `manage.py generate_privacy_html`
+- 410: fix privacy leak (#383) where non-active plaatsingen were shown to everyone; ended and future (not-yet-started) plaatsingen are now only visible to the placed colleague and the opdracht's Business Manager, each with a privacy note and an "Afgelopen"/"Gepland" chip, consistently across the opdracht team list, the team count, the standalone plaatsing-pagina (`?plaatsing=N`, which was reachable by guessing the URL), the "Wie zit waar?"-overzicht and the profiel-overzicht. The security.txt is now accessible, it was hidden behind the SSO wall.
+
+## 2026-06-24
+
+- 411: (migration) fix assignment updates tab error when there is old unmigrated data
+- 413: fix that teammembers on assignment can be removed
+- 372: the BM-owner (and support staff in `STAFF_EMAILS`) can delete wies-sourced opdrachten, with a confirmation modal and an audit-trail event; both create and delete now snapshot the rollen (with who filled them) and the opdrachtgevers
+
+## 2026-01-16
+
+- 398: bug fixes — Business Manager link no longer breaks the page and now survives editing/cancelling (#395), only the pencil icon opens inline edit (links and "Toon meer" no longer trigger edit mode), clicking a team member opens the panel via htmx again instead of a full page reload, team period changes now show in updates (#393), no more HiddenInput widget warnings (#389)
+- 397: fix team-edit "Neem opdrachtperiode over" checkbox rendering as checked for rows whose effective period differs from the assignment
+
+## 2026-06-11
+
+- 392: support staff (users in `STAFF_EMAILS`) can now edit assignments, even when not owner
+- 390: reduce the memory footprint of org sync task to approximately half
+
+## 2026-06-10
+
+- 368: (migration) placement periods can now be set independently from the assignment period via inline-edit on the placement panel; team cards are clickable and open the placement panel
+- 368: assignment team form redesigned — separate "Aanvraag toevoegen" and "Geplaatste consultant toevoegen" buttons with progressive field reveal
+- 368: lock icon on externally managed fields (e.g. OTYS)
+- 368: merge duplicate assignments tool in beheer — preview and confirm UI to combine assignments with the same name, owner, and primary client
+- 368: BM can now edit service descriptions (role omschrijving) via inline-edit
+- 368: fix that mutliple team members during assignment creation are correctly persisted (became requests before)
+- 374: (migration)(remove env vars) remove super users and remove automatic generation during container start
+- 331: restore organization breadcrumbs in opdracht side panel; breadcrumb links stay on the page you came from (aanvragen or wie-zit-waar)
+- 331: log audit events for changes to the looptijd (start/end date) and team (rollen + plaatsingen) on opdrachten
+- 331: restore the ability for placed consultants to edit the opdracht name
+- 331: show open rollen (aanvragen) first in the team list again
+- 331: fix team-edit silently wiping placement metadata (specific-dates, source_id) on every save by round-tripping Service/Placement PKs through the formset
 
 ## 2026-06-01
 
@@ -349,3 +383,5 @@ This files lists the changes during the lifetime of this project.
 - add syncing between exact and wies colleagues
 
 ## demo-2025-08-04
+
+...

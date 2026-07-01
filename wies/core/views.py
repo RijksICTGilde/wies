@@ -11,10 +11,11 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
-from django.http import Http404, HttpResponse, QueryDict
+from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -33,6 +34,7 @@ from wies.core.inline_edit.forms import (
     resolve_editables,
 )
 from wies.core.permission_engine import Verb, has_permission
+from wies.core.placement_visibility import LABELS, evaluate
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
@@ -55,7 +57,7 @@ from .models import (
     Service,
     Skill,
 )
-from .permissions import can_view_staff_page
+from .permissions import is_staff_member
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .services.assignments import create_assignment_from_form, extract_services_data
 from .services.events import create_event
@@ -67,7 +69,7 @@ from .services.organizations import (
 )
 from .services.placements import (
     create_assignments_from_csv,
-    filter_placements_by_min_end_date,
+    filter_visible_placements,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
@@ -109,156 +111,47 @@ def get_delete_context(delete_url_name, object_pk, object_name):
     }
 
 
-def _build_panel_url(request, **overrides):
-    """Build a URL on the current path, preserving filters but replacing panel params."""
-    params = QueryDict(mutable=True)
-    params.update(request.GET)
-    params.pop("pagina", None)
-    params.pop("collega", None)
-    params.pop("opdracht", None)
-    params.pop("plaatsing", None)
+# Query params that drive the side panel; stripped when (re)building a page URL.
+PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing")
+
+
+def _url_drop_params(path, query, names, **overrides):
+    """Rebuild ``path`` from ``query`` (a QueryDict) with ``names`` dropped and
+    ``overrides`` applied. Returns ``path`` alone when no params remain."""
+    params = query.copy()
+    for name in names:
+        params.pop(name, None)
     for key, value in overrides.items():
         params[key] = value
-    return f"{request.path}?{params.urlencode()}"
+    encoded = params.urlencode()
+    return f"{path}?{encoded}" if encoded else path
+
+
+def _build_panel_url(request, **overrides):
+    """Build a URL on the current path, preserving filters but replacing panel params."""
+    return _url_drop_params(request.path, request.GET, PANEL_PARAMS, **overrides)
 
 
 def _build_close_url(request):
     """Build close URL preserving current filters."""
-    params = QueryDict(mutable=True)
-    params.update(request.GET)
-    params.pop("pagina", None)
-    params.pop("collega", None)
-    params.pop("opdracht", None)
-    params.pop("plaatsing", None)
-    return f"{request.path}?{params.urlencode()}" if params else request.path
+    return _url_drop_params(request.path, request.GET, PANEL_PARAMS)
 
 
-def _make_team_member_entry(
-    colleague, colleague_url=None, *, historical=False, privacy_warning_text=None, is_vacancy=False, skills=None
-):
-    """Build a standard team member dict for assignment panel display."""
-    return {
-        "colleague": colleague,
-        "colleague_url": colleague_url,
-        "skills": skills or [],
-        "historical": historical,
-        "privacy_warning_text": privacy_warning_text,
-        "is_vacancy": is_vacancy,
-    }
-
-
-def _build_assignment_panel_data(assignment, request, breadcrumb_base):
+def _build_assignment_panel_data(assignment, request):
     """Shared helper to build assignment panel context data for both views."""
-    today = timezone.now().date()
-    viewer = getattr(request.user, "colleague", None)
-    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
+    from wies.core.editables.assignment import visible_service_rows  # noqa: PLC0415 — avoids import cycle
 
-    # Single query: all services with all annotated placements
-    services = list(
-        assignment.services.select_related("skill").prefetch_related(
-            Prefetch(
-                "placements",
-                queryset=annotate_placement_dates(Placement.objects.select_related("colleague")),
-                to_attr="all_placements",
-            )
-        )
-    )
-
-    vacancy_list: list[dict] = []
-    # Group by (colleague_id, historical) to merge skills per colleague
-    current_grouped: dict[int, dict] = {}
-    historical_grouped: dict[int, dict] = {}
-
-    for service in services:
-        skill = {"name": service.skill.name, "description": service.description} if service.skill else None
-
-        # Vacancy: OPEN service that never had any placement
-        if not service.all_placements and service.status == "OPEN":
-            vacancy_list.append(_make_team_member_entry(None, is_vacancy=True, skills=[skill] if skill else []))
-            continue
-
-        for placement in service.all_placements:
-            cid = placement.colleague.id
-            placement_is_active = placement.actual_end_date is None or today <= placement.actual_end_date
-
-            if placement_is_active:
-                # Active placements are visible to everyone
-                if cid not in current_grouped:
-                    current_grouped[cid] = _make_team_member_entry(
-                        placement.colleague,
-                        colleague_url=_build_panel_url(request, collega=cid),
-                    )
-                if skill:
-                    current_grouped[cid]["skills"].append(skill)
-
-            elif viewer is not None and cid == viewer.id:
-                # Consultants can see their own ended placements
-                if cid not in historical_grouped:
-                    historical_grouped[cid] = _make_team_member_entry(
-                        placement.colleague,
-                        colleague_url=_build_panel_url(request, collega=cid),
-                        historical=True,
-                        privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
-                    )
-                if skill:
-                    historical_grouped[cid]["skills"].append(skill)
-
-            elif viewer_is_bm:
-                # BM can see all ended placements on their assignment
-                if cid not in historical_grouped:
-                    historical_grouped[cid] = _make_team_member_entry(
-                        placement.colleague,
-                        colleague_url=_build_panel_url(request, collega=cid),
-                        historical=True,
-                        privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
-                    )
-                if skill:
-                    historical_grouped[cid]["skills"].append(skill)
-
-            else:
-                # Others must not see ended placements
-                continue
-
-    team_members = vacancy_list + list(current_grouped.values()) + list(historical_grouped.values())
-
-    primary = assignment.organization_relations.filter(role="PRIMARY").select_related(
-        "organization__parent__parent__parent__parent"
-    )
-    involved = assignment.organization_relations.filter(role="INVOLVED").select_related(
-        "organization__parent__parent__parent__parent"
-    )
-    org_breadcrumbs = [
-        {**get_org_breadcrumb(rel.organization, breadcrumb_base), "role": rel.role} for rel in [*primary, *involved]
-    ]
-
-    owner_mailto_href = ""
-    if assignment.owner and assignment.owner.email:
-        opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.id}")
-        subject = urllib.parse.quote(f"Informatieverzoek over opdracht {assignment.name}")
-        body_lines = [
-            f"Beste {assignment.owner.name},",
-            "",
-            f"Ik zag deze opdracht {opdracht_url} op WIES."
-            + (f" De beschrijving is: {assignment.extra_info}" if assignment.extra_info else ""),
-            "",
-            "Kun je me hier meer informatie over geven?",
-        ]
-        consultant_name = getattr(getattr(request.user, "colleague", None), "name", "")
-        body_lines += ["", "Met vriendelijke groet,", "", consultant_name]
-        body = urllib.parse.quote("\n".join(body_lines))
-        owner_mailto_href = f"mailto:{assignment.owner.email}?subject={subject}&body={body}"
-
+    # team_count comes from the same viewer-filtered rows the team list renders,
+    # so the header total can't betray a hidden placement.
     return {
         "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
         "close_url": _build_close_url(request),
         "assignment": assignment,
-        "team_members": team_members,
+        "team_count": len(visible_service_rows(assignment, request)),
         "user_can_edit": has_permission(Verb.UPDATE, assignment, request.user),
         "show_updates_tab": assignment.source != "otys_iir",
-        "owner_url": _build_panel_url(request, collega=assignment.owner.id) if assignment.owner else "",
-        "owner_mailto_href": owner_mailto_href,
-        "org_breadcrumbs": org_breadcrumbs,
+        "organization_count": assignment.organization_relations.count(),
     }
 
 
@@ -270,13 +163,14 @@ def _merge_date_range(existing: dict, start, end):
         existing["end_date"] = end
 
 
-def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, **extra):
+def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, placement_id=None, **extra):
     """Build a standard assignment dict for panel display."""
+    url = _build_panel_url(request, plaatsing=placement_id) if placement_id else _build_panel_url(request, opdracht=aid)
     return {
         "name": name,
         "id": aid,
         "tags": {},
-        "assignment_url": _build_panel_url(request, opdracht=aid),
+        "assignment_url": url,
         "start_date": start_date,
         "end_date": end_date,
         "historical": False,
@@ -312,72 +206,34 @@ def _get_colleague_assignments(request, colleague, viewer):
     placement_qs = annotate_placement_dates(placement_qs)
     for placement in placement_qs:
         assignment_id = placement["service__assignment__id"]
-        placement_is_active = placement.get("actual_end_date") is None or today <= placement["actual_end_date"]
         owner_id = placement["service__assignment__owner_id"]
         viewer_is_assignment_bd = viewer is not None and owner_id is not None and owner_id == viewer.id
-
-        if placement_is_active:
-            if assignment_id not in active_by_id:
-                active_by_id[assignment_id] = _make_assignment_entry(
-                    placement["service__assignment__name"],
-                    assignment_id,
-                    request,
-                    start_date=placement.get("actual_start_date"),
-                    end_date=placement.get("actual_end_date"),
-                )
-            else:
-                _merge_date_range(
-                    active_by_id[assignment_id], placement.get("actual_start_date"), placement.get("actual_end_date")
-                )
-            skill_name = placement["service__skill__name"]
-            if skill_name:
-                active_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
-        elif viewer_is_colleague:
-            # users can see their own ended placements
-            if assignment_id not in historical_by_id:
-                historical_by_id[assignment_id] = _make_assignment_entry(
-                    placement["service__assignment__name"],
-                    assignment_id,
-                    request,
-                    start_date=placement.get("actual_start_date"),
-                    end_date=placement.get("actual_end_date"),
-                    historical=True,
-                    privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
-                )
-            else:
-                _merge_date_range(
-                    historical_by_id[assignment_id],
-                    placement.get("actual_start_date"),
-                    placement.get("actual_end_date"),
-                )
-            skill_name = placement["service__skill__name"]
-            if skill_name:
-                historical_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
-        elif viewer_is_assignment_bd:
-            # business developers can see their the assignments they own
-            # users can see their own ended placements
-            if assignment_id not in historical_by_id:
-                historical_by_id[assignment_id] = _make_assignment_entry(
-                    placement["service__assignment__name"],
-                    assignment_id,
-                    request,
-                    start_date=placement.get("actual_start_date"),
-                    end_date=placement.get("actual_end_date"),
-                    historical=True,
-                    privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
-                )
-            else:
-                _merge_date_range(
-                    historical_by_id[assignment_id],
-                    placement.get("actual_start_date"),
-                    placement.get("actual_end_date"),
-                )
-            skill_name = placement["service__skill__name"]
-            if skill_name:
-                historical_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
-        else:
-            # others should not see these placements
+        start = placement.get("actual_start_date")
+        end = placement.get("actual_end_date")
+        # Active placements are public; ended or not-yet-started ones are only
+        # visible to the placed colleague and the assignment's BM-owner.
+        result = evaluate(start, end, colleague.id, viewer, viewer_is_assignment_bd, today)
+        if not result.visible:
             continue
+
+        bucket = active_by_id if result.timing == "active" else historical_by_id
+        if assignment_id not in bucket:
+            bucket[assignment_id] = _make_assignment_entry(
+                placement["service__assignment__name"],
+                assignment_id,
+                request,
+                start_date=start,
+                end_date=end,
+                historical=result.timing != "active",
+                privacy_warning_text=result.privacy_note,
+                period_label=LABELS.get(result.timing),
+                placement_id=placement["id"],
+            )
+        else:
+            _merge_date_range(bucket[assignment_id], start, end)
+        skill_name = placement["service__skill__name"]
+        if skill_name:
+            bucket[assignment_id]["tags"][skill_name] = placement["service__description"]
 
     # BM roles (active and ended)
     bm_assignments = Assignment.objects.filter(owner=colleague).values_list("id", "name", "start_date", "end_date")
@@ -450,11 +306,16 @@ def _build_colleague_panel_data(colleague, request):
     }
 
 
-def _build_placement_panel_data(placement, request):
-    """Build panel context for a single placement (colleague-on-assignment view)."""
+def _build_placement_panel_data(placement, request, *, visibility=None):
+    """Build panel context for a single placement (colleague-on-assignment view).
+
+    ``visibility`` (a PlacementVisibility) flags a non-active placement so the
+    card shows the timing chip + privacy note. Access control is the caller's
+    job — see ``_resolve_placement_panel``."""
     assignment = placement.service.assignment
     colleague = placement.colleague
     service = placement.service
+    today = timezone.now().date()
 
     # Build assignment card in the same format as colleague_assignment_cards.html expects
     primary_org = (
@@ -463,11 +324,12 @@ def _build_placement_panel_data(placement, request):
         .first()
     )
 
-    # Active team members on this assignment
+    # Only currently-active colleagues, so the avatar list can't leak ended or
+    # not-yet-started placements of others.
     team_members = list(
-        Placement.objects.filter(
-            service__assignment=assignment,
-        )
+        annotate_placement_dates(Placement.objects.filter(service__assignment=assignment))
+        .filter(Q(actual_start_date__isnull=True) | Q(actual_start_date__lte=today))
+        .filter(Q(actual_end_date__isnull=True) | Q(actual_end_date__gte=today))
         .select_related("colleague")
         .values_list("colleague__name", flat=True)
         .distinct()
@@ -481,8 +343,9 @@ def _build_placement_panel_data(placement, request):
         "end_date": None,
         "organization": primary_org,
         "tags": [],
-        "historical": False,
-        "privacy_warning_text": None,
+        "historical": visibility is not None and visibility.timing != "active",
+        "privacy_warning_text": visibility.privacy_note if visibility else None,
+        "period_label": LABELS.get(visibility.timing) if visibility else None,
         "team_members": team_members,
         "show_read_more": True,
     }
@@ -498,6 +361,28 @@ def _build_placement_panel_data(placement, request):
     }
 
 
+def _resolve_placement_panel(request, placement_id):
+    """Fetch a placement for the side panel, enforcing the same rule as the team
+    list: ended or not-yet-started placements are only shown to the placed
+    colleague and the assignment's BM-owner. Returns panel data, or None when
+    the placement does not exist or the viewer may not see it."""
+    try:
+        placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
+            id=placement_id
+        )
+    except Placement.DoesNotExist:
+        return None
+    assignment = placement.service.assignment
+    viewer = getattr(request.user, "colleague", None)
+    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
+    result = evaluate(
+        placement.start_date, placement.end_date, placement.colleague_id, viewer, viewer_is_bm, timezone.now().date()
+    )
+    if not result.visible:
+        return None
+    return _build_placement_panel_data(placement, request, visibility=result)
+
+
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
 def no_access(request):
     email = request.session.pop("failed_login_email", None)
@@ -506,7 +391,7 @@ def no_access(request):
 
 
 def staff_required(view_func):
-    return user_passes_test(can_view_staff_page, login_url="/geen-toegang/")(view_func)
+    return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
 
 
 @staff_required
@@ -561,6 +446,58 @@ def staff_database(request):
             if request.headers.get("HX-Request"):
                 context["latest_tasks"] = get_latest_tasks(limit=3)
                 return render(request, "parts/task_list.html", context)
+
+        elif action == "merge_duplicates_preview":
+            from wies.core.services.assignments import find_duplicate_groups  # noqa: PLC0415
+
+            groups = find_duplicate_groups()
+            if not groups:
+                messages.info(request, "Geen dubbele opdrachten gevonden.")
+            else:
+                context["merge_groups"] = [
+                    {
+                        "name": group[0].name,
+                        "owner": str(group[0].owner),
+                        "count": len(group),
+                        "target": group[0],
+                        "duplicates": group[1:],
+                    }
+                    for group in groups
+                ]
+            return render(request, "staff_database.html", context)
+
+        elif action == "merge_duplicates_apply":
+            from wies.core.services.assignments import (  # noqa: PLC0415 — conditional import for rare admin action
+                find_duplicate_groups,
+                merge_group,
+            )
+
+            groups = find_duplicate_groups()
+            if not groups:
+                messages.info(request, "Geen dubbele opdrachten gevonden.")
+            else:
+                with transaction.atomic():
+                    total = sum(len(g) - 1 for g in groups)
+                    for group in groups:
+                        target = group[0]
+                        deleted_ids = [a.id for a in group[1:]]
+                        merge_group(group)
+                        create_event(
+                            object_type="Assignment",
+                            action="update",
+                            source="user",
+                            object_id=target.id,
+                            user=request.user,
+                            context={
+                                "merge": True,
+                                "merged_ids": deleted_ids,
+                                "name": target.name,
+                            },
+                        )
+                    messages.success(
+                        request,
+                        f"{total} dubbele opdracht(en) samengevoegd in {len(groups)} groep(en).",
+                    )
 
         return redirect("staff-database")
 
@@ -624,9 +561,11 @@ class PlacementListView(ListView):
             if order_by:
                 qs = qs.order_by(f"-{order_by}" if descending else order_by)
 
-        # filter out historical placements
+        # Active placements are public; ended ones are hidden from everyone;
+        # not-yet-started ones only for the placed colleague and the BM-owner.
         qs = annotate_placement_dates(qs)
-        return filter_placements_by_min_end_date(qs, timezone.now().date())
+        viewer = getattr(self.request.user, "colleague", None)
+        return filter_visible_placements(qs, timezone.now().date(), viewer)
 
     def _get_labels_by_category(self):
         """Parse selected label IDs grouped by category."""
@@ -929,15 +868,9 @@ class PlacementListView(ListView):
         assignment_id = self.request.GET.get("opdracht")
 
         if placement_id:
-            try:
-                placement = Placement.objects.select_related(
-                    "colleague",
-                    "service__assignment",
-                    "service__skill",
-                ).get(id=placement_id)
-                context["panel_data"] = _build_placement_panel_data(placement, self.request)
-            except Placement.DoesNotExist:
-                pass
+            panel_data = _resolve_placement_panel(self.request, placement_id)
+            if panel_data is not None:
+                context["panel_data"] = panel_data
         elif colleague_id and not assignment_id:
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
@@ -947,7 +880,7 @@ class PlacementListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
             except Assignment.DoesNotExist:
                 pass
         return context
@@ -1068,6 +1001,9 @@ class AssignmentListView(ListView):
             if hx_target in ("nldd-side-panel-content", "side_panel-content", "side_panel-container"):
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
+                placement_id = self.request.GET.get("plaatsing")
+                if placement_id:
+                    return ["parts/placement_panel_content.html"]
                 if colleague_id and not assignment_id:
                     return ["parts/colleague_panel_content.html"]
                 return ["parts/assignment_panel_content.html"]
@@ -1216,10 +1152,15 @@ class AssignmentListView(ListView):
             }
 
         # Side panel
+        placement_id = self.request.GET.get("plaatsing")
         colleague_id = self.request.GET.get("collega")
         assignment_id = self.request.GET.get("opdracht")
 
-        if colleague_id and not assignment_id:
+        if placement_id:
+            panel_data = _resolve_placement_panel(self.request, placement_id)
+            if panel_data is not None:
+                context["panel_data"] = panel_data
+        elif colleague_id and not assignment_id:
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
@@ -1228,7 +1169,7 @@ class AssignmentListView(ListView):
         elif assignment_id:
             try:
                 assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request, self.request.path)
+                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
             except Assignment.DoesNotExist:
                 pass
 
@@ -2150,7 +2091,7 @@ def label_delete(request, pk):
 
 def assignment_events_partial(request, pk):
     assignment = get_object_or_404(Assignment, pk=pk)
-    events = (
+    events = list(
         Event.objects.filter(
             object_type="Assignment",
             object_id=assignment.id,
@@ -2158,6 +2099,8 @@ def assignment_events_partial(request, pk):
         .select_related("user__colleague")
         .order_by("-timestamp")[:20]
     )
+    for event in events:
+        _attach_audit_render_data(event)
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
 
 
@@ -2343,6 +2286,140 @@ def user_import_csv_ndd(request):
     return render(request, template, {"result": result})
 
 
+def _attach_audit_render_data(event) -> None:
+    event.render_kind = "text"
+    event.diff_entries = None
+    event.formatted_old = event.context.get("old_value")
+    event.formatted_new = event.context.get("new_value")
+
+    # Delete events are kept for the audit trail (visible in /beheer/database/)
+    # but never rendered here — a deleted opdracht has no panel to open.
+    if event.action != "update":
+        return
+    model_label = event.object_type.lower()
+    editable_set = REGISTRY.get(model_label)
+    if editable_set is None:
+        return
+    spec = editable_set._editables.get(event.context.get("field_name", ""))
+    if spec is None:
+        return
+
+    if isinstance(spec, EditableCollection):
+        event.render_kind = "collection"
+        if spec.render_change is not None:
+            try:
+                event.diff_entries = [spec.render_change(c) for c in event.context.get("changes", [])]
+            except TypeError:
+                logger.warning(
+                    "Audit render_change failed for collection Event id=%s field=%s; falling back to raw context",
+                    event.id,
+                    event.context.get("field_name"),
+                    exc_info=True,
+                )
+                event.diff_entries = None
+        return
+
+    from django import forms  # noqa: PLC0415
+
+    widget = getattr(spec, "widget", None)
+    if isinstance(widget, forms.Textarea) or (isinstance(widget, type) and issubclass(widget, forms.Textarea)):
+        event.render_kind = "textarea"
+
+    formatter = getattr(spec, "render_change", None) or (lambda v: str(v or ""))
+    try:
+        event.formatted_old = formatter(event.context.get("old_value"))
+        event.formatted_new = formatter(event.context.get("new_value"))
+    except TypeError:
+        # Legacy events can have a stored shape the current render_change no
+        # longer accepts. Fall through to the raw context values set at the
+        # top of this function so the timeline row still renders.
+        logger.warning(
+            "Audit render_change failed for Event id=%s field=%s; falling back to raw context",
+            event.id,
+            event.context.get("field_name"),
+            exc_info=True,
+        )
+
+
+def assignment_delete(request, pk):
+    assignment = get_object_or_404(Assignment, pk=pk)
+    if not has_permission(Verb.DELETE, assignment, request.user):
+        return HttpResponseForbidden()
+
+    if request.method == "GET":
+        return render(
+            request,
+            "parts/generic_form_modal.html",
+            {
+                "modal_title": f"Verwijder opdracht: {assignment.name}",
+                "warning_modal": True,
+                "modal_element_id": "assignmentDeleteModal",
+                "target_element_id": "assignmentDeleteModal",
+                "delete_warning": (
+                    f"Weet je zeker dat je opdracht '{assignment.name}' wilt verwijderen? "
+                    "Verwijderen is permanent en niet terug te draaien."
+                ),
+                "form_post_url": reverse("assignment-delete", kwargs={"pk": pk}),
+                "form_button_label": "Verwijderen",
+            },
+        )
+    if request.method == "POST":
+        name = assignment.name
+        # Snapshot related rows before they cascade away.
+        context = _assignment_audit_snapshot(assignment)
+        # Atomic so a failed audit insert rolls back the delete — losing
+        # the opdracht without a trace would be the worst outcome.
+        with transaction.atomic():
+            assignment.delete()
+            create_event(
+                object_type="Assignment",
+                action="delete",
+                source="user",
+                object_id=pk,
+                user=request.user,
+                context=context,
+            )
+        messages.success(request, f"Opdracht '{name}' succesvol verwijderd")
+        response = HttpResponse(status=200)
+        response["HX-Redirect"] = _page_url_behind_panel(request)
+        return response
+    return HttpResponse(status=405)
+
+
+def _page_url_behind_panel(request) -> str:
+    """The page the side panel was opened over, with the panel params dropped.
+
+    The opdracht side panel is an overlay (``?opdracht=`` / ``?plaatsing=``)
+    on a real page, so after deleting we return there instead of jumping to
+    the opdrachten-lijst. Falls back to the list when the header is absent.
+    """
+    current = request.headers.get("HX-Current-URL")
+    if not current:
+        return reverse("assignment-list")
+    parsed = urllib.parse.urlparse(current)
+    # Keep collega/pagina/filters — only the opdracht panel is closing.
+    return _url_drop_params(parsed.path, QueryDict(parsed.query), ("opdracht", "plaatsing"))
+
+
+def _assignment_audit_snapshot(assignment) -> dict:
+    """Snapshot for the create/delete audit event: every rol with who fills it
+    (``"Java (Robbert)"``) or ``"open"`` when unfilled, plus the opdrachtgevers
+    and the name. One entry per rol, so placements aren't duplicated. Empty
+    lists are left out of the audit."""
+    services = []
+    for s in assignment.services.select_related("skill").prefetch_related("placements__colleague"):
+        rol = s.skill.name if s.skill_id else s.description
+        names = [p.colleague.name for p in s.placements.all()]
+        services.append(f"{rol} ({', '.join(names) if names else 'open'})")
+    organizations = [rel.organization.label or rel.organization.name for rel in assignment.organization_relations.all()]
+    snapshot = {"name": assignment.name}
+    if services:
+        snapshot["services"] = services
+    if organizations:
+        snapshot["organizations"] = organizations
+    return snapshot
+
+
 def user_profile(request):
     """User's own profile page with editable fields and full assignment history."""
     user = request.user
@@ -2351,12 +2428,15 @@ def user_profile(request):
     # Side panel handling
     colleague_id = request.GET.get("collega")
     assignment_id = request.GET.get("opdracht")
+    placement_id = request.GET.get("plaatsing")
     panel_data = None
 
-    if assignment_id:
+    if placement_id:
+        panel_data = _resolve_placement_panel(request, placement_id)
+    elif assignment_id:
         try:
             assignment = Assignment.objects.get(id=assignment_id)
-            panel_data = _build_assignment_panel_data(assignment, request, reverse("home"))
+            panel_data = _build_assignment_panel_data(assignment, request)
         except Assignment.DoesNotExist:
             pass
     elif colleague_id:
@@ -2531,7 +2611,7 @@ def assignment_create(request):
             source="user",
             object_id=assignment.id,
             user=request.user,
-            context={"name": assignment.name},
+            context=_assignment_audit_snapshot(assignment),
         )
 
         link_url = f"{reverse('assignment-list')}?opdracht={assignment.id}"
@@ -2832,6 +2912,10 @@ def _render_inline_edit_display(
             value = _current_value(obj, spec)
         else:
             value = {e.field or e.name: _current_value(obj, e) for e in editables}
+    extra = {}
+    display_context = getattr(spec, "display_context", None)
+    if alert is None and display_context is not None:
+        extra = display_context(obj, request)
     ctx = {
         **_inline_edit_base_ctx(editable_set, spec, obj),
         "value": value,
@@ -2839,7 +2923,9 @@ def _render_inline_edit_display(
         "user_can_edit": (
             user_can_edit if user_can_edit is not None else has_permission(Verb.UPDATE, obj, request.user, spec)
         ),
+        "hide_edit_button": getattr(spec, "hide_edit_button", False),
         "alert": alert,
+        **extra,
     }
     response = render(request, "nldd/parts/inline_edit/display.html", ctx)
     if saved:
@@ -2849,8 +2935,15 @@ def _render_inline_edit_display(
 
 def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) -> HttpResponse:
     # Edit-mode partial: form + save/cancel. On validation failure, `form` carries inline errors.
-    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "form": form}
-    return render(request, "nldd/parts/inline_edit/form.html", ctx)
+    from wies.core.inline_edit.base import EditableGroup  # noqa: PLC0415
+
+    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "form": form, "editable": spec}
+    template = (
+        spec.form_template
+        if isinstance(spec, EditableGroup) and spec.form_template
+        else "nldd/parts/inline_edit/form.html"
+    )
+    return render(request, template, ctx)
 
 
 def _render_inline_edit_collection_form(request, editable_set, spec, obj, formset) -> HttpResponse:
@@ -2871,8 +2964,12 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
     if request.method == "POST":
         formset = spec.formset_factory(data=request.POST)
         if formset.is_valid():
+            before = spec.audit_state(obj) if spec.audit_state else None
             try:
-                spec.save(obj, formset)
+                with transaction.atomic():
+                    spec.save(obj, formset)
+                    after = spec.audit_state(obj) if spec.audit_state else None
+                    _emit_inline_edit_audit_event(spec, obj, before, after, request.user)
             except ValidationError as exc:
                 for message in exc.messages:
                     _attach_formset_error(formset, message)
@@ -2891,26 +2988,12 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
 _AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "OrganizationUnit": "OrganizationUnit"}
 
 
-def _emit_inline_edit_audit_event(spec, obj, old_value, new_value, user) -> None:
-    """Record an audit event for a single-Editable change on a tracked model.
-
-    Only fires for `Editable` (not Group/Collection) on models in
-    `_AUDIT_OBJECT_TYPES`. No-op when old == new so editing without a
-    real change doesn't create noise.
-    """
-    if not isinstance(spec, Editable):
+def _record_editable_change(editable, obj, object_type, old_value, new_value, user) -> None:
+    to_state = editable.audit_state or (lambda v: v)
+    old_state = to_state(old_value)
+    new_state = to_state(new_value)
+    if old_state == new_state:
         return
-    object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
-    if object_type is None:
-        return
-    if str(old_value or "") == str(new_value or ""):
-        return
-    from django import forms  # noqa: PLC0415
-
-    widget = spec.widget
-    is_textarea = isinstance(widget, forms.Textarea) or (
-        isinstance(widget, type) and issubclass(widget, forms.Textarea)
-    )
     create_event(
         object_type=object_type,
         action="update",
@@ -2918,11 +3001,80 @@ def _emit_inline_edit_audit_event(spec, obj, old_value, new_value, user) -> None
         object_id=obj.id,
         user=user,
         context={
-            "field_type": "textarea" if is_textarea else "text",
-            "field_name": spec.field or spec.name or "",
-            "field_label": spec.label or spec.name or "",
-            "old_value": str(old_value or ""),
-            "new_value": str(new_value or ""),
+            "field_name": editable.field or editable.name or "",
+            "field_label": editable.label or editable.name or "",
+            "old_value": old_state,
+            "new_value": new_state,
+        },
+    )
+
+
+def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_editables=None) -> None:
+    object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
+    if object_type is None:
+        return
+
+    if isinstance(spec, Editable):
+        _record_editable_change(spec, obj, object_type, before, after, user)
+        return
+
+    if isinstance(spec, EditableGroup):
+        for child in child_editables or []:
+            _record_editable_change(child, obj, object_type, before.get(child.name), after.get(child.name), user)
+        return
+
+    if isinstance(spec, EditableCollection):
+        if spec.audit_state is None:
+            return
+        changes = _diff_collection_state(before, after)
+        if not changes:
+            return
+        create_event(
+            object_type=object_type,
+            action="update",
+            source="user",
+            object_id=obj.id,
+            user=user,
+            context={
+                "field_name": spec.name or "",
+                "field_label": spec.label or spec.name or "",
+                "changes": changes,
+            },
+        )
+
+
+def _diff_collection_state(old_state: list[dict], new_state: list[dict]) -> list[dict]:
+    old_by_id = {r["id"]: r for r in old_state}
+    new_by_id = {r["id"]: r for r in new_state}
+    changes: list[dict] = [{"old": None, "new": r} for r in new_state if r["id"] not in old_by_id]
+    changes.extend({"old": r, "new": None} for r in old_state if r["id"] not in new_by_id)
+    changes.extend(
+        {"old": old_by_id[sid], "new": new_by_id[sid]}
+        for sid in old_by_id.keys() & new_by_id.keys()
+        if old_by_id[sid] != new_by_id[sid]
+    )
+    return changes
+
+
+def _emit_placement_change_on_assignment(placement, before_row: dict, user) -> None:
+    """Record a placement edit as a "Team" event on its parent assignment,
+    so it renders identically to the Team-bewerken flow (#393)."""
+    from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids circular import
+
+    assignment = placement.service.assignment
+    after_row = placement_audit_row(placement)
+    if before_row == after_row:
+        return
+    create_event(
+        object_type="Assignment",
+        action="update",
+        source="user",
+        object_id=assignment.id,
+        user=user,
+        context={
+            "field_name": "services",
+            "field_label": "Team",
+            "changes": [{"old": before_row, "new": after_row}],
         },
     )
 
@@ -2970,10 +3122,35 @@ def inline_edit_view(request, model_label, pk, name):
         )
         form = form_cls(request.POST)
         if form.is_valid():
-            old_value = _current_value(obj, spec) if isinstance(spec, Editable) else None
-            save_spec(spec, editables, form.cleaned_data, obj)
-            new_value = _current_value(obj, spec) if isinstance(spec, Editable) else None
-            _emit_inline_edit_audit_event(spec, obj, old_value, new_value, request.user)
+            if isinstance(spec, EditableGroup):
+                before = {e.name: _current_value(obj, e) for e in editables}
+            else:
+                before = _current_value(obj, spec)
+            # A placement edit (e.g. period via the profile) has no audit
+            # type of its own; mirror it onto the parent assignment's
+            # timeline like the "Team bewerken" flow (#393).
+            placement_before = None
+            if type(obj).__name__ == "Placement":
+                from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids circular import
+
+                placement_before = placement_audit_row(obj)
+            with transaction.atomic():
+                save_spec(spec, editables, form.cleaned_data, obj)
+                if isinstance(spec, EditableGroup):
+                    after = {e.name: _current_value(obj, e) for e in editables}
+                else:
+                    after = _current_value(obj, spec)
+                _emit_inline_edit_audit_event(
+                    spec,
+                    obj,
+                    before,
+                    after,
+                    request.user,
+                    child_editables=editables if isinstance(spec, EditableGroup) else None,
+                )
+                if placement_before is not None:
+                    obj.refresh_from_db()
+                    _emit_placement_change_on_assignment(obj, placement_before, request.user)
             return _render_inline_edit_display(
                 request,
                 editable_set,

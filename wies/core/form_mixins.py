@@ -53,6 +53,12 @@ class _BaseFormMixin:
 
     widget_templates: dict[str, str] = {}
 
+    # Invisible widgets need no RVO template; skip the warning for them (#389).
+    widgets_without_rvo_template = {
+        "HiddenInput",
+        "MultipleHiddenInput",
+    }
+
     # Per-widget extra configuration applied whenever the widget class is
     # mapped to a template. `DateInput` rendering — HTML5 <input type="date">
     # demands ISO yyyy-mm-dd in its value attribute or the browser silently
@@ -89,6 +95,8 @@ class _BaseFormMixin:
             field.widget.template_name = self.widget_templates[widget_class_name]
             for attr, value in self.widget_config.get(widget_class_name, {}).items():
                 setattr(field.widget, attr, value)
+        elif widget_class_name in self.widgets_without_rvo_template:
+            pass
         else:
             logger.warning(
                 "Widget '%s' for field '%s' not in widget_templates mapping. Using default Django template.",

@@ -31,7 +31,9 @@
       <input type="text" name="name" class="nldd-input" placeholder="Nieuw label">
       <nldd-button variant="secondary" start-icon="plus" type="submit" text="Label toevoegen"></nldd-button>
     </form>
-    {% if errors and errors.name %}<div class="form-error">{{ errors.name }}</div>{% endif %}
+    {% if errors and errors.name %}
+      <div class="form-error">{{ errors.name }}</div>
+    {% endif %}
   </div>
 {% else %}
   <p class="nldd-text-secondary">Geen labels in deze categorie</p>
@@ -43,6 +45,8 @@
       <input type="text" name="name" class="nldd-input" placeholder="Nieuw label">
       <nldd-button variant="secondary" start-icon="plus" type="submit" text="Label toevoegen"></nldd-button>
     </form>
-    {% if errors and errors.name %}<div class="form-error">{{ errors.name }}</div>{% endif %}
+    {% if errors and errors.name %}
+      <div class="form-error">{{ errors.name }}</div>
+    {% endif %}
   </div>
 {% endif %}

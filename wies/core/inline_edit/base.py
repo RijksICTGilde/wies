@@ -41,10 +41,25 @@ class Editable:
     display: str | Callable[[Model], Any] | None = None
     save: Callable[[Model, Any], None] | None = None
 
+    # Extra context merged into the display partial on EVERY render path
+    # (initial panel render, inline-edit save, inline-edit cancel).
+    # Signature ``(obj, request) -> dict``. Use for values the partial needs
+    # but that aren't derivable from ``value`` alone — e.g. a navigation URL
+    # that must survive an edit/cancel round-trip (#395).
+    display_context: Callable[[Model, Any], dict] | None = None
+
     # For unbound editables (no 1:1 model field). `form_field_factory`
     # takes priority over field inference; `initial` reads the current value.
     form_field_factory: forms.Field | Callable[[], forms.Field] | None = None
     initial: Callable[[Model], Any] | None = None
+
+    # Convert the field's raw value to a snapshot stored as the event's
+    # ``old_value`` / ``new_value``. Required when the raw value isn't
+    # encodable by ``DjangoJSONEncoder`` (e.g. a model instance).
+    audit_state: Callable[[Any], Any] | None = None
+    # Build the display string shown in the audit log UI for this
+    # field's audit value. Default: ``str(value or "")``.
+    render_change: Callable[[Any], str] | None = None
 
     # Set by EditableSet.__init_subclass__ — the attribute name on the set.
     # Identifier used in URLs / registry keys / DOM target ids.
@@ -76,6 +91,10 @@ class EditableGroup:
     # Group-level save; takes the whole cleaned_data dict. Use when
     # several fields must persist atomically.
     save: Callable[[Model, dict], None] | None = None
+    # Custom form body template (path relative to jinja2 roots). When set,
+    # the view renders this template instead of the generic form.html.
+    # Template receives the same context as form.html plus ``editable`` (the group).
+    form_template: str | None = None
     name: str | None = None
     # Set by EditableSet.__init_subclass__ — the model owning this group.
     # Required so the group can be used as a permission-rule key.
@@ -102,6 +121,21 @@ class EditableCollection:
     # formset as ``formset``.
     form_template: str | None = None
     display: str | Callable[[Model], Any] | None = None
+    # Same contract as ``Editable.display_context``; may override ``value`` so
+    # the display can filter what ``initial`` returns (e.g. per viewer).
+    display_context: Callable[[Model, Any], dict] | None = None
+    # Snapshot of the collection state — rows keyed by ``id``, each
+    # encodable by ``DjangoJSONEncoder``. Required to opt this
+    # collection into audit events.
+    audit_state: Callable[[Model], list[dict]] | None = None
+    # Render one ``{"old": row|None, "new": row|None}`` change as a
+    # bullet line in the audit log UI, optionally with an inline
+    # Van/Naar block under the bullet for long values.
+    render_change: Callable[[dict], dict] | None = None
+    # Suppress the auto-rendered pencil + clickable-value wrapper on the
+    # display partial. Use when the parent template provides its own
+    # edit trigger (e.g. the "Team bewerken" button).
+    hide_edit_button: bool = False
     name: str | None = None
     # Set by EditableSet.__init_subclass__ — the model owning this collection.
     model: type[Model] | None = None
