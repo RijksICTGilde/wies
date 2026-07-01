@@ -414,6 +414,11 @@ document.addEventListener("DOMContentLoaded", function () {
   // stays in the field, no chip. Live org suggestions keep loading via the
   // input's own hx-get; the dropdown's first row is the search action + hint.
   // --------------------------------------------------------------------------
+  // After a search is committed, suppress the suggestions dropdown until the
+  // user types again — otherwise an in-flight (delayed) suggestions request can
+  // repopulate and re-open it right after we cleared it.
+  var suppressSuggestions = false;
+
   function commitSearch() {
     var input = document.getElementById("search");
     if (!input) return;
@@ -422,13 +427,22 @@ document.addEventListener("DOMContentLoaded", function () {
     var suggestionsContainer = document.getElementById(
       "search-suggestions-container",
     );
-    if (suggestionsContainer) suggestionsContainer.innerHTML = "";
+    if (suggestionsContainer) {
+      suggestionsContainer.innerHTML = "";
+      suggestionsContainer.hidden = true;
+    }
+    suppressSuggestions = true;
     // Drop focus so the field's active/focus state clears — same end state
     // whether the search ran via Enter, the magnifier, or a suggestion.
     input.blur();
     var form = document.querySelector(".filter-sidebar-form");
     if (form) htmx.trigger(form, "change");
   }
+
+  // Typing again re-enables suggestions.
+  document.body.addEventListener("input", function (e) {
+    if (e.target.closest("#search")) suppressSuggestions = false;
+  });
 
   document.body.addEventListener("keydown", function (e) {
     if (e.key !== "Enter") return;
@@ -476,10 +490,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // When HTMX swaps in new suggestions, ensure the container is visible
+  // When HTMX swaps in new suggestions, ensure the container is visible —
+  // unless a search was just committed (then keep the dropdown closed).
   document.body.addEventListener("htmx:afterSwap", function (e) {
     if (e.detail.target.id === "search-suggestions-container") {
-      e.detail.target.hidden = false;
+      if (suppressSuggestions) {
+        e.detail.target.innerHTML = "";
+        e.detail.target.hidden = true;
+      } else {
+        e.detail.target.hidden = false;
+      }
     }
   });
 
