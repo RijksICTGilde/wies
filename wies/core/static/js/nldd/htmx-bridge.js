@@ -256,11 +256,35 @@
       if (container) container.innerHTML = "";
     }
 
-    // Open + focus once the modal is swapped in.
+    // Open the modal once htmx swaps it in. The <nldd-window> is a Lit
+    // component: right after the swap its shadow <dialog> may not exist yet,
+    // so show() would no-op. Wait for the element to upgrade + finish its
+    // first render (updateComplete) before opening; fall back to a rAF.
+    function openWhenReady(modal, attempt) {
+      if (!modal) return;
+      const tryShow = () => {
+        if (typeof modal.show === "function" && modal.shadowRoot?.querySelector("dialog")) {
+          modal.show();
+        } else if ((attempt || 0) < 20) {
+          requestAnimationFrame(() => openWhenReady(modal, (attempt || 0) + 1));
+        }
+      };
+      if (modal.updateComplete && typeof modal.updateComplete.then === "function") {
+        modal.updateComplete.then(tryShow);
+      } else {
+        tryShow();
+      }
+    }
+
     document.body.addEventListener("htmx:afterSwap", (e) => {
-      if (e.target && e.target.id === "nldd-filter-options-modal-container") {
-        const modal = currentModal();
-        if (modal && modal.show) modal.show();
+      const t = e.target;
+      if (
+        t &&
+        (t.id === "nldd-filter-options-modal-container" ||
+          (t.closest &&
+            t.closest("#nldd-filter-options-modal-container")))
+      ) {
+        openWhenReady(currentModal(), 0);
       }
     });
 
