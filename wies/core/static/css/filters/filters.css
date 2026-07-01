@@ -508,25 +508,6 @@
   flex: 1;
 }
 
-/* Variant A: "Wis alle filters" rendered alongside the chips. */
-.filter-chips__clear {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.25rem 0.5rem;
-  color: var(--rvo-color-hemelblauw, #007bc7);
-  font-size: 0.875rem;
-  text-decoration: underline;
-  white-space: nowrap;
-}
-
-.filter-chips__clear:hover {
-  color: var(--rvo-color-donkerblauw, #01689b);
-}
-
 /* Search Form */
 .filter-search-form {
   flex: 0 0 auto;
@@ -653,6 +634,13 @@
 .checkbox-filter__option-text {
   flex: 1;
   font-size: var(--rvo-font-size-md);
+  /* Truncate long labels to one line; full text shows on hover via title.
+     min-width: 0 lets the flex item shrink below its content width so
+     text-overflow can kick in. */
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .checkbox-filter__count {

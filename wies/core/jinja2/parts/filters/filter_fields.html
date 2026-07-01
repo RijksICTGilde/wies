@@ -24,7 +24,7 @@
                        data-org-param="{{ option.param }}"
                        data-org-label="{{ option.label }}"
                        {% if option.selected %}checked{% endif %} />
-                <span class="checkbox-filter__option-text">{{ option.label }}</span>
+                <span class="checkbox-filter__option-text" title="{{ option.label }}">{{ option.label }}</span>
                 {% if option.param == "org" %}
                   <span class="checkbox-filter__count">{{ option.count }}</span>
                 {% endif %}
