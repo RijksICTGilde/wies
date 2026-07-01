@@ -25,12 +25,13 @@
   <div class="checkbox-filter__body">
     <div class="checkbox-filter__options">
       {% for option in top_options %}
-        <label class="rvo-checkbox checkbox-filter__option">
+        <label class="rvo-checkbox checkbox-filter__option"
+               data-tooltip="{{ option.label }}">
           <input type="checkbox"
                  class="rvo-checkbox__input checkbox-filter__checkbox"
                  value="{{ option.value }}"
                  {% if option.value in selected_values %}checked{% endif %} />
-          <span class="checkbox-filter__option-text" title="{{ option.label }}">{{ option.label }}</span>
+          <span class="checkbox-filter__option-text">{{ option.label }}</span>
           {% if option.count is defined %}<span class="checkbox-filter__count">{{ option.count }}</span>{% endif %}
         </label>
       {% endfor %}

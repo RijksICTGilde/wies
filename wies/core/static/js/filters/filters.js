@@ -366,6 +366,22 @@ document.addEventListener("DOMContentLoaded", function () {
   document.body.addEventListener("htmx:afterSettle", syncSearchHasValue);
   syncSearchHasValue();
 
+  // Filter labels carry data-tooltip (the full name) for the instant tooltip.
+  // Only keep it where the label is actually truncated, so short labels don't
+  // show a redundant tooltip repeating their visible text.
+  function pruneUntruncatedTooltips() {
+    document
+      .querySelectorAll(".checkbox-filter__option[data-tooltip]")
+      .forEach(function (row) {
+        var text = row.querySelector(".checkbox-filter__option-text");
+        if (!text) return;
+        var truncated = text.scrollWidth > text.clientWidth;
+        if (!truncated) row.removeAttribute("data-tooltip");
+      });
+  }
+  document.body.addEventListener("htmx:afterSettle", pruneUntruncatedTooltips);
+  pruneUntruncatedTooltips();
+
   document.body.addEventListener("click", function (e) {
     var clearBtn = e.target.closest(".search-clear");
     if (!clearBtn) return;
