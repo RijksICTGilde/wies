@@ -1,7 +1,8 @@
 {# Generic filter-options modal: full alphabetical checkbox list for one
    select-multi group, with a search field. Opened from the sidebar "Meer"
-   button. Checking an option syncs to the sidebar group's hidden inputs and
-   filters immediately; "Bekijk resultaten" closes the modal.
+   button. Ticking options here does NOT filter immediately — the selection is
+   applied only on "Filter toepassen" (mirrors the opdrachtgever tree modal).
+   Closing without applying (× / Escape / outside) discards the changes.
 
    Context:
      - filter_groups: all groups (we pick the one matching filter_modal_group_id)
@@ -43,7 +44,10 @@
       </div>
     </div>
     <div class="modal-footer">
-      <c-button kind="primary" type="button" class="close">Bekijk resultaten</c-button>
+      <div class="close">
+        <c-button kind="secondary" type="button">Annuleren</c-button>
+      </div>
+      <c-button kind="primary" type="button" data-apply-filter-options>Filter toepassen</c-button>
     </div>
   </div>
 </dialog>

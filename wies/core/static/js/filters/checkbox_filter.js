@@ -106,22 +106,53 @@
   ); // capture phase
 
   // --------------------------------------------------------------------------
-  // Modal checkbox change — update the matching sidebar group and submit.
+  // Modal selection is deferred: ticking options here does nothing until
+  // "Filter toepassen" is clicked. Just stop the change from bubbling to the
+  // sidebar form so it doesn't submit mid-selection. Closing without applying
+  // discards the changes (the modal DOM is thrown away on close).
   // --------------------------------------------------------------------------
   document.addEventListener(
     "change",
     function (e) {
       if (!e.target.matches(".filter-options-modal__checkbox")) return;
       e.stopPropagation();
-      var modal = e.target.closest("#filterOptionsModal");
-      if (!modal) return;
-      var container = findSidebarGroup(modal.dataset.groupId);
-      if (!container) return;
-      setGroupValue(container, e.target.value, e.target.checked);
-      triggerSidebarForm();
     },
     true,
   ); // capture phase
+
+  // "Filter toepassen": push the modal's checked set onto the sidebar group
+  // (replacing its current selection), submit once, and close the modal.
+  document.addEventListener("click", function (e) {
+    var applyBtn = e.target.closest("[data-apply-filter-options]");
+    if (!applyBtn) return;
+    var modal = applyBtn.closest("#filterOptionsModal");
+    if (!modal) return;
+    var container = findSidebarGroup(modal.dataset.groupId);
+    if (!container) return;
+
+    // Replace the group's selection with exactly what's checked in the modal.
+    var checkedValues = new Set(
+      [].map.call(
+        modal.querySelectorAll(".filter-options-modal__checkbox:checked"),
+        function (cb) {
+          return cb.value;
+        },
+      ),
+    );
+    var allValues = [].map.call(
+      modal.querySelectorAll(".filter-options-modal__checkbox"),
+      function (cb) {
+        return cb.value;
+      },
+    );
+    allValues.forEach(function (value) {
+      setGroupValue(container, value, checkedValues.has(value));
+    });
+
+    triggerSidebarForm();
+    modal.close();
+    document.documentElement.style.overflow = "";
+  });
 
   // Section collapse via header chevron
   document.addEventListener("click", function (e) {

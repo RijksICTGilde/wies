@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 402: each filter group now shows its top-3 options plus a "Meer" button that opens a modal with all options (searchable, alphabetical); selected options sort to the top and stay visible even outside the top-3
+- 402: each filter group now shows its top-3 options plus a "Meer" button that opens a modal with all options (searchable, alphabetical); selected options sort to the top and stay visible even outside the top-3. The modal applies its selection only on "Filter toepassen" (closing without applying discards it), consistent with the opdrachtgever picker
 - 402: search now runs on Enter or the magnifier (not on every keystroke) and keeps its text instead of becoming a chip; org suggestions still load live while typing
 - 402: added a "Wis alle filters" button next to the active filter chips, so the chips and the clear-all action read together above the results
 - 402: fixes — "Toon meer/minder" label now updates; clearing the search no longer leaves a stale term or a missing × button
