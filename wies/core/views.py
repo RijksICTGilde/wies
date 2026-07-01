@@ -34,6 +34,7 @@ from wies.core.inline_edit.forms import (
     resolve_editables,
 )
 from wies.core.permission_engine import Verb, has_permission
+from wies.core.placement_visibility import LABELS, evaluate
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
@@ -68,7 +69,7 @@ from .services.organizations import (
 )
 from .services.placements import (
     create_assignments_from_csv,
-    filter_placements_by_min_end_date,
+    filter_visible_placements,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
@@ -136,100 +137,18 @@ def _build_close_url(request):
     return _url_drop_params(request.path, request.GET, PANEL_PARAMS)
 
 
-def _make_team_member_entry(
-    colleague, colleague_url=None, *, historical=False, privacy_warning_text=None, is_vacancy=False, skills=None
-):
-    """Build a standard team member dict for assignment panel display."""
-    return {
-        "colleague": colleague,
-        "colleague_url": colleague_url,
-        "skills": skills or [],
-        "historical": historical,
-        "privacy_warning_text": privacy_warning_text,
-        "is_vacancy": is_vacancy,
-    }
-
-
 def _build_assignment_panel_data(assignment, request):
     """Shared helper to build assignment panel context data for both views."""
-    today = timezone.now().date()
-    viewer = getattr(request.user, "colleague", None)
-    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
+    from wies.core.editables.assignment import visible_service_rows  # noqa: PLC0415 — avoids import cycle
 
-    # Single query: all services with all annotated placements
-    services = list(
-        assignment.services.select_related("skill").prefetch_related(
-            Prefetch(
-                "placements",
-                queryset=annotate_placement_dates(Placement.objects.select_related("colleague")),
-                to_attr="all_placements",
-            )
-        )
-    )
-
-    vacancy_list: list[dict] = []
-    # Group by (colleague_id, historical) to merge skills per colleague
-    current_grouped: dict[int, dict] = {}
-    historical_grouped: dict[int, dict] = {}
-
-    for service in services:
-        skill = {"name": service.skill.name, "description": service.description} if service.skill else None
-
-        # Vacancy: OPEN service that never had any placement
-        if not service.all_placements and service.status == "OPEN":
-            vacancy_list.append(_make_team_member_entry(None, is_vacancy=True, skills=[skill] if skill else []))
-            continue
-
-        for placement in service.all_placements:
-            cid = placement.colleague.id
-            placement_is_active = placement.actual_end_date is None or today <= placement.actual_end_date
-
-            if placement_is_active:
-                # Active placements are visible to everyone
-                if cid not in current_grouped:
-                    current_grouped[cid] = _make_team_member_entry(
-                        placement.colleague,
-                        colleague_url=_build_panel_url(request, collega=cid),
-                    )
-                if skill:
-                    current_grouped[cid]["skills"].append(skill)
-
-            elif viewer is not None and cid == viewer.id:
-                # Consultants can see their own ended placements
-                if cid not in historical_grouped:
-                    historical_grouped[cid] = _make_team_member_entry(
-                        placement.colleague,
-                        colleague_url=_build_panel_url(request, collega=cid),
-                        historical=True,
-                        privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
-                    )
-                if skill:
-                    historical_grouped[cid]["skills"].append(skill)
-
-            elif viewer_is_bm:
-                # BM can see all ended placements on their assignment
-                if cid not in historical_grouped:
-                    historical_grouped[cid] = _make_team_member_entry(
-                        placement.colleague,
-                        colleague_url=_build_panel_url(request, collega=cid),
-                        historical=True,
-                        privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
-                    )
-                if skill:
-                    historical_grouped[cid]["skills"].append(skill)
-
-            else:
-                # Others must not see ended placements
-                continue
-
-    team_members = vacancy_list + list(current_grouped.values()) + list(historical_grouped.values())
-
+    # team_count comes from the same viewer-filtered rows the team list renders,
+    # so the header total can't betray a hidden placement.
     return {
         "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
         "close_url": _build_close_url(request),
         "assignment": assignment,
-        "team_members": team_members,
+        "team_count": len(visible_service_rows(assignment, request)),
         "user_can_edit": has_permission(Verb.UPDATE, assignment, request.user),
         "show_updates_tab": assignment.source != "otys_iir",
         "organization_count": assignment.organization_relations.count(),
@@ -287,75 +206,34 @@ def _get_colleague_assignments(request, colleague, viewer):
     placement_qs = annotate_placement_dates(placement_qs)
     for placement in placement_qs:
         assignment_id = placement["service__assignment__id"]
-        placement_is_active = placement.get("actual_end_date") is None or today <= placement["actual_end_date"]
         owner_id = placement["service__assignment__owner_id"]
         viewer_is_assignment_bd = viewer is not None and owner_id is not None and owner_id == viewer.id
-
-        if placement_is_active:
-            if assignment_id not in active_by_id:
-                active_by_id[assignment_id] = _make_assignment_entry(
-                    placement["service__assignment__name"],
-                    assignment_id,
-                    request,
-                    start_date=placement.get("actual_start_date"),
-                    end_date=placement.get("actual_end_date"),
-                    placement_id=placement["id"],
-                )
-            else:
-                _merge_date_range(
-                    active_by_id[assignment_id], placement.get("actual_start_date"), placement.get("actual_end_date")
-                )
-            skill_name = placement["service__skill__name"]
-            if skill_name:
-                active_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
-        elif viewer_is_colleague:
-            # users can see their own ended placements
-            if assignment_id not in historical_by_id:
-                historical_by_id[assignment_id] = _make_assignment_entry(
-                    placement["service__assignment__name"],
-                    assignment_id,
-                    request,
-                    start_date=placement.get("actual_start_date"),
-                    end_date=placement.get("actual_end_date"),
-                    historical=True,
-                    privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
-                    placement_id=placement["id"],
-                )
-            else:
-                _merge_date_range(
-                    historical_by_id[assignment_id],
-                    placement.get("actual_start_date"),
-                    placement.get("actual_end_date"),
-                )
-            skill_name = placement["service__skill__name"]
-            if skill_name:
-                historical_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
-        elif viewer_is_assignment_bd:
-            # business developers can see their the assignments they own
-            # users can see their own ended placements
-            if assignment_id not in historical_by_id:
-                historical_by_id[assignment_id] = _make_assignment_entry(
-                    placement["service__assignment__name"],
-                    assignment_id,
-                    request,
-                    start_date=placement.get("actual_start_date"),
-                    end_date=placement.get("actual_end_date"),
-                    historical=True,
-                    privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
-                    placement_id=placement["id"],
-                )
-            else:
-                _merge_date_range(
-                    historical_by_id[assignment_id],
-                    placement.get("actual_start_date"),
-                    placement.get("actual_end_date"),
-                )
-            skill_name = placement["service__skill__name"]
-            if skill_name:
-                historical_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
-        else:
-            # others should not see these placements
+        start = placement.get("actual_start_date")
+        end = placement.get("actual_end_date")
+        # Active placements are public; ended or not-yet-started ones are only
+        # visible to the placed colleague and the assignment's BM-owner.
+        result = evaluate(start, end, colleague.id, viewer, viewer_is_assignment_bd, today)
+        if not result.visible:
             continue
+
+        bucket = active_by_id if result.timing == "active" else historical_by_id
+        if assignment_id not in bucket:
+            bucket[assignment_id] = _make_assignment_entry(
+                placement["service__assignment__name"],
+                assignment_id,
+                request,
+                start_date=start,
+                end_date=end,
+                historical=result.timing != "active",
+                privacy_warning_text=result.privacy_note,
+                period_label=LABELS.get(result.timing),
+                placement_id=placement["id"],
+            )
+        else:
+            _merge_date_range(bucket[assignment_id], start, end)
+        skill_name = placement["service__skill__name"]
+        if skill_name:
+            bucket[assignment_id]["tags"][skill_name] = placement["service__description"]
 
     # BM roles (active and ended)
     bm_assignments = Assignment.objects.filter(owner=colleague).values_list("id", "name", "start_date", "end_date")
@@ -428,11 +306,16 @@ def _build_colleague_panel_data(colleague, request):
     }
 
 
-def _build_placement_panel_data(placement, request):
-    """Build panel context for a single placement (colleague-on-assignment view)."""
+def _build_placement_panel_data(placement, request, *, visibility=None):
+    """Build panel context for a single placement (colleague-on-assignment view).
+
+    ``visibility`` (a PlacementVisibility) flags a non-active placement so the
+    card shows the timing chip + privacy note. Access control is the caller's
+    job — see ``_resolve_placement_panel``."""
     assignment = placement.service.assignment
     colleague = placement.colleague
     service = placement.service
+    today = timezone.now().date()
 
     # Build assignment card in the same format as colleague_assignment_cards.html expects
     primary_org = (
@@ -441,11 +324,12 @@ def _build_placement_panel_data(placement, request):
         .first()
     )
 
-    # Active team members on this assignment
+    # Only currently-active colleagues, so the avatar list can't leak ended or
+    # not-yet-started placements of others.
     team_members = list(
-        Placement.objects.filter(
-            service__assignment=assignment,
-        )
+        annotate_placement_dates(Placement.objects.filter(service__assignment=assignment))
+        .filter(Q(actual_start_date__isnull=True) | Q(actual_start_date__lte=today))
+        .filter(Q(actual_end_date__isnull=True) | Q(actual_end_date__gte=today))
         .select_related("colleague")
         .values_list("colleague__name", flat=True)
         .distinct()
@@ -459,8 +343,9 @@ def _build_placement_panel_data(placement, request):
         "end_date": None,
         "organization": primary_org,
         "tags": [],
-        "historical": False,
-        "privacy_warning_text": None,
+        "historical": visibility is not None and visibility.timing != "active",
+        "privacy_warning_text": visibility.privacy_note if visibility else None,
+        "period_label": LABELS.get(visibility.timing) if visibility else None,
         "team_members": team_members,
         "show_read_more": True,
     }
@@ -474,6 +359,28 @@ def _build_placement_panel_data(placement, request):
         "service": service,
         "assignment_card": assignment_card,
     }
+
+
+def _resolve_placement_panel(request, placement_id):
+    """Fetch a placement for the side panel, enforcing the same rule as the team
+    list: ended or not-yet-started placements are only shown to the placed
+    colleague and the assignment's BM-owner. Returns panel data, or None when
+    the placement does not exist or the viewer may not see it."""
+    try:
+        placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
+            id=placement_id
+        )
+    except Placement.DoesNotExist:
+        return None
+    assignment = placement.service.assignment
+    viewer = getattr(request.user, "colleague", None)
+    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
+    result = evaluate(
+        placement.start_date, placement.end_date, placement.colleague_id, viewer, viewer_is_bm, timezone.now().date()
+    )
+    if not result.visible:
+        return None
+    return _build_placement_panel_data(placement, request, visibility=result)
 
 
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
@@ -654,9 +561,11 @@ class PlacementListView(ListView):
             if order_by:
                 qs = qs.order_by(f"-{order_by}" if descending else order_by)
 
-        # filter out historical placements
+        # Active placements are public; ended ones are hidden from everyone;
+        # not-yet-started ones only for the placed colleague and the BM-owner.
         qs = annotate_placement_dates(qs)
-        return filter_placements_by_min_end_date(qs, timezone.now().date())
+        viewer = getattr(self.request.user, "colleague", None)
+        return filter_visible_placements(qs, timezone.now().date(), viewer)
 
     def _get_labels_by_category(self):
         """Parse selected label IDs grouped by category."""
@@ -973,15 +882,9 @@ class PlacementListView(ListView):
         assignment_id = self.request.GET.get("opdracht")
 
         if placement_id:
-            try:
-                placement = Placement.objects.select_related(
-                    "colleague",
-                    "service__assignment",
-                    "service__skill",
-                ).get(id=placement_id)
-                context["panel_data"] = _build_placement_panel_data(placement, self.request)
-            except Placement.DoesNotExist:
-                pass
+            panel_data = _resolve_placement_panel(self.request, placement_id)
+            if panel_data is not None:
+                context["panel_data"] = panel_data
         elif colleague_id and not assignment_id:
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
@@ -1254,13 +1157,9 @@ class AssignmentListView(ListView):
         assignment_id = self.request.GET.get("opdracht")
 
         if placement_id:
-            try:
-                placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
-                    id=placement_id
-                )
-                context["panel_data"] = _build_placement_panel_data(placement, self.request)
-            except Placement.DoesNotExist:
-                pass
+            panel_data = _resolve_placement_panel(self.request, placement_id)
+            if panel_data is not None:
+                context["panel_data"] = panel_data
         elif colleague_id and not assignment_id:
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
@@ -2219,15 +2118,7 @@ def user_profile(request):
     panel_data = None
 
     if placement_id:
-        try:
-            placement = Placement.objects.select_related(
-                "colleague",
-                "service__assignment",
-                "service__skill",
-            ).get(id=placement_id)
-            panel_data = _build_placement_panel_data(placement, request)
-        except Placement.DoesNotExist:
-            pass
+        panel_data = _resolve_placement_panel(request, placement_id)
     elif assignment_id:
         try:
             assignment = Assignment.objects.get(id=assignment_id)

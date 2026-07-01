@@ -35,6 +35,13 @@ class AccessControlTest(TestCase):
                 response = self.client.get(path, follow=False)
                 assert response.status_code == 200, f"{path} returned unexpected status {response.status_code}"
 
+    def test_security_txt_redirects_to_ncsc_without_login(self):
+        """security.txt must reach the NCSC redirect for anonymous scanners, not bounce to SSO login"""
+        response = self.client.get("/.well-known/security.txt", follow=False)
+
+        assert response.status_code == 302
+        assert response.url == "https://www.ncsc.nl/.well-known/security.txt"
+
     def test_unauthenticated_access_to_placements_redirects_to_login(self):
         """Specific test for placements view (main landing page)"""
         response = self.client.get("/", follow=False)
