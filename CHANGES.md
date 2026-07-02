@@ -5,8 +5,16 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 430: onboarding voor nieuwe gebruikers — bij de eerste login verschijnt een welkomstwizard over de homepage. Stap 1 verwelkomt, legt de tabbladen (Wie zit waar? / Aanvragen) uit en toont een waarschuwing dat Wies op dit moment alleen RIG-opdrachten bevat. Stap 2 laat je je profiel aanvullen met labels (Rijksprofiel-koppeling volgt later). Consultants die op een opdracht zijn geplaatst krijgen een derde stap om hun eigen opdracht te controleren: naam, omschrijving en hun rolomschrijving kunnen ze direct corrigeren; overige velden (rol, opdrachtgever, periode) zijn read-only en de wizard verwijst voor die wijzigingen naar de Business Manager (naam + mailto). Overslaan of afronden onthoudt dat de wizard niet opnieuw getoond wordt
+
+## 2026-07-02
+
+- 402: each filter group now shows its top-3 options plus a "Meer" button that opens a modal with all options (searchable, alphabetical); selected options sort to the top and stay visible even outside the top-3. The modal applies its selection only on "Filter toepassen" (closing without applying discards it), consistent with the opdrachtgever picker
+- 402: search now runs on Enter or the magnifier (not on every keystroke) and keeps its text instead of becoming a chip; org suggestions still load live while typing
+- 402: added a "Wis alle filters" button next to the active filter chips, so the chips and the clear-all action read together above the results
+- 402: fixes — "Toon meer/minder" label now updates; clearing the search no longer leaves a stale term or a missing × button
 - 417: remove `ModelBackend` from `AUTHENTICATION_BACKENDS`; `AuthBackend` now inherits from `ModelBackend` so group permissions keep resolving via a single backend, but there is no second password-login path)
 - 334: Add privacy declaration and beheer document. The in-product privacy page is regenerated via `manage.py generate_privacy_html`
+- 410: fix privacy leak (#383) where non-active plaatsingen were shown to everyone; ended and future (not-yet-started) plaatsingen are now only visible to the placed colleague and the opdracht's Business Manager, each with a privacy note and an "Afgelopen"/"Gepland" chip, consistently across the opdracht team list, the team count, the standalone plaatsing-pagina (`?plaatsing=N`, which was reachable by guessing the URL), the "Wie zit waar?"-overzicht and the profiel-overzicht. The security.txt is now accessible, it was hidden behind the SSO wall.
 
 ## 2026-06-24
 

@@ -4,9 +4,12 @@ from unittest.mock import Mock, patch
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import connection
 from django.test import Client, RequestFactory, TestCase
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
+from wies.core.editables.assignment import _services_display_context, _services_initial
 from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
@@ -17,7 +20,12 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.services.organizations import get_org_descendant_ids
-from wies.core.views import PlacementListView, _build_assignment_panel_data, _get_colleague_assignments
+from wies.core.views import (
+    PlacementListView,
+    _build_assignment_panel_data,
+    _get_colleague_assignments,
+    _resolve_placement_panel,
+)
 
 User = get_user_model()
 
@@ -420,183 +428,34 @@ class PlacementListHistoricalFilterTest(TestCase):
         assert placement not in qs, "Placement with assignment ending yesterday should be excluded"
 
 
-class AssignmentSidePanelHistoricalFilterTest(TestCase):
-    """Tests for historical placement filtering in assignment sidepanel"""
-
-    def setUp(self):
-        """Create test data"""
-        self.list_url = reverse("home")
-
-        # Create authenticated user
-        self.auth_user = User.objects.create_user(
-            email="test@rijksoverheid.nl",
-            first_name="Test",
-            last_name="User",
-        )
-
-        # Create test ministry
-
-        # Create test colleagues
-        self.colleague1 = Colleague.objects.create(
-            name="Test Colleague 1",
-            email="colleague1@rijksoverheid.nl",
-            source="wies",
-        )
-        self.colleague2 = Colleague.objects.create(
-            name="Test Colleague 2",
-            email="colleague2@rijksoverheid.nl",
-            source="wies",
-        )
-
-        # Create test skill
-        self.skill = Skill.objects.create(name="Python Developer")
-
-    @patch("wies.core.views.timezone")
-    def test_assignment_panel_excludes_historical_placements(self, mock_timezone):
-        """Test that assignment panel filters out placements ending before today"""
-        # Mock today as 2024-06-15
-        mock_now = Mock()
-        mock_now.date.return_value = date(2024, 6, 15)
-        mock_timezone.now.return_value = mock_now
-
-        # Create assignment
-        assignment = Assignment.objects.create(
-            name="Test Assignment with Mixed Placements",
-            source="wies",
-        )
-        service = Service.objects.create(
-            assignment=assignment,
-            description="Test Service",
-            skill=self.skill,
-            source="wies",
-        )
-
-        # Create historical placement (ended yesterday)
-        Placement.objects.create(
-            colleague=self.colleague1,
-            service=service,
-            period_source="PLACEMENT",
-            specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 14),  # Yesterday
-            source="wies",
-        )
-
-        # Create current placement (ending tomorrow)
-        Placement.objects.create(
-            colleague=self.colleague2,
-            service=service,
-            period_source="PLACEMENT",
-            specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 16),  # Tomorrow
-            source="wies",
-        )
-
-        # Get panel data using view method
-        factory = RequestFactory()
-        request = factory.get(self.list_url)
-        request.user = self.auth_user
-
-        panel_data = _build_assignment_panel_data(assignment, request)
-
-        # Verify only current placement's colleague is in current members
-        current = [m for m in panel_data["team_members"] if not m["historical"] and not m["is_vacancy"]]
-        colleague_ids = [m["colleague"].id for m in current]
-        assert len(colleague_ids) == 1, "Panel should contain only 1 (current) team member"
-        assert self.colleague2.id in colleague_ids, "Current placement's colleague should be in panel"
-        assert self.colleague1.id not in colleague_ids, "Historical placement's colleague should be excluded"
-
-    @patch("wies.core.views.timezone")
-    def test_assignment_panel_includes_current_placements(self, mock_timezone):
-        """Test that assignment panel includes placements ending today (boundary test)"""
-        # Mock today as 2024-06-15
-        mock_now = Mock()
-        mock_now.date.return_value = date(2024, 6, 15)
-        mock_timezone.now.return_value = mock_now
-
-        # Create assignment
-        assignment = Assignment.objects.create(
-            name="Test Assignment with Current Placement",
-            source="wies",
-        )
-        service = Service.objects.create(
-            assignment=assignment,
-            description="Test Service",
-            skill=self.skill,
-            source="wies",
-        )
-
-        # Create placement ending today
-        Placement.objects.create(
-            colleague=self.colleague1,
-            service=service,
-            period_source="PLACEMENT",
-            specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 15),  # Today
-            source="wies",
-        )
-
-        # Get panel data using view method
-        factory = RequestFactory()
-        request = factory.get(self.list_url)
-        request.user = self.auth_user
-
-        panel_data = _build_assignment_panel_data(assignment, request)
-
-        # Verify placement ending today is included in current members
-        current = [m for m in panel_data["team_members"] if not m["historical"] and not m["is_vacancy"]]
-        colleague_ids = [m["colleague"].id for m in current]
-        assert len(colleague_ids) == 1, "Panel should contain the team member ending today"
-        assert self.colleague1.id in colleague_ids, "Colleague with placement ending today should be included"
-
-
-class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
-    """Tests for historical placement visibility rules in assignment sidepanel.
-
-    Privacy-critical: historical placements must only be visible to the
-    consultant themselves or the assignment's Business Manager.
-    """
+class AssignmentServicesDisplayVisibilityTest(TestCase):
+    """Ended placements in the side-panel team list are visible only to the
+    placed colleague and the BM-owner (via ``_services_display_context``)."""
 
     def setUp(self):
         self.list_url = reverse("home")
         self.skill = Skill.objects.create(name="Python Developer")
 
-        # Users and their linked colleagues
         self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
         self.colleague_alice = Colleague.objects.create(
-            name="Alice",
-            email="alice@rijksoverheid.nl",
-            source="wies",
-            user=self.user_alice,
+            name="Alice", email="alice@rijksoverheid.nl", source="wies", user=self.user_alice
         )
         self.user_bob = User.objects.create_user(email="bob@rijksoverheid.nl")
         self.colleague_bob = Colleague.objects.create(
-            name="Bob",
-            email="bob@rijksoverheid.nl",
-            source="wies",
-            user=self.user_bob,
+            name="Bob", email="bob@rijksoverheid.nl", source="wies", user=self.user_bob
         )
         self.user_unrelated = User.objects.create_user(email="unrelated@rijksoverheid.nl")
         self.colleague_unrelated = Colleague.objects.create(
-            name="Unrelated",
-            email="unrelated@rijksoverheid.nl",
-            source="wies",
-            user=self.user_unrelated,
+            name="Unrelated", email="unrelated@rijksoverheid.nl", source="wies", user=self.user_unrelated
         )
 
-    def _make_request(self, user):
-        factory = RequestFactory()
-        request = factory.get(self.list_url)
+    def _request(self, user):
+        request = RequestFactory().get(self.list_url)
         request.user = user
         return request
 
-    @patch("wies.core.views.timezone")
-    def test_historical_placements_visible_to_own_user(self, mock_timezone):
-        """User sees their own historical placements in the panel."""
-        mock_now = Mock()
-        mock_now.date.return_value = date(2024, 6, 15)
-        mock_timezone.now.return_value = mock_now
-
-        assignment = Assignment.objects.create(name="Test Assignment", source="wies")
+    def _ended_placement_assignment(self, owner=None):
+        assignment = Assignment.objects.create(name="Test Assignment", source="wies", owner=owner)
         service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
         Placement.objects.create(
             colleague=self.colleague_alice,
@@ -606,292 +465,461 @@ class AssignmentSidePanelHistoricalVisibilityTest(TestCase):
             specific_end_date=date(2024, 6, 14),
             source="wies",
         )
+        return assignment
 
-        request = self._make_request(self.user_alice)
-        panel_data = _build_assignment_panel_data(assignment, request)
+    @patch("wies.core.editables.assignment.timezone")
+    def test_ended_placement_hidden_from_unrelated_viewer(self, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        assignment = self._ended_placement_assignment(owner=self.colleague_bob)
 
-        historical = [m for m in panel_data["team_members"] if m["historical"]]
-        ids = [m["colleague"].id for m in historical]
-        assert self.colleague_alice.id in ids
+        rows = _services_display_context(assignment, self._request(self.user_unrelated))["value"]
 
-    @patch("wies.core.views.timezone")
-    def test_historical_placements_visible_to_bm(self, mock_timezone):
-        """BM sees all historical placements on their assignment."""
-        mock_now = Mock()
-        mock_now.date.return_value = date(2024, 6, 15)
-        mock_timezone.now.return_value = mock_now
+        assert [r for r in rows if r["colleague"]] == [], "Unrelated viewer must not see the ended placement"
 
-        assignment = Assignment.objects.create(
-            name="Test Assignment",
-            source="wies",
-            owner=self.colleague_bob,
-        )
+    @patch("wies.core.editables.assignment.timezone")
+    def test_ended_placement_visible_to_placed_colleague(self, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        assignment = self._ended_placement_assignment(owner=self.colleague_bob)
+
+        rows = _services_display_context(assignment, self._request(self.user_alice))["value"]
+
+        visible = [r for r in rows if r["colleague"]]
+        assert len(visible) == 1
+        assert visible[0]["colleague"].id == self.colleague_alice.id
+        assert visible[0]["historical"] is True
+        assert visible[0]["privacy_warning_text"] == "Alleen zichtbaar voor jou en de Business Manager"
+
+    @patch("wies.core.editables.assignment.timezone")
+    def test_ended_placement_visible_to_bm_owner(self, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        assignment = self._ended_placement_assignment(owner=self.colleague_bob)
+
+        rows = _services_display_context(assignment, self._request(self.user_bob))["value"]
+
+        visible = [r for r in rows if r["colleague"]]
+        assert len(visible) == 1
+        assert visible[0]["colleague"].id == self.colleague_alice.id
+        assert visible[0]["historical"] is True
+        assert visible[0]["privacy_warning_text"] == "Alleen zichtbaar voor jou en de consultant"
+
+    @patch("wies.core.editables.assignment.timezone")
+    def test_active_placement_visible_to_unrelated_viewer(self, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        assignment = Assignment.objects.create(name="Active Assignment", source="wies", owner=self.colleague_bob)
         service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
         Placement.objects.create(
             colleague=self.colleague_alice,
             service=service,
             period_source="PLACEMENT",
             specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 14),
+            specific_end_date=date(2024, 6, 16),
             source="wies",
         )
 
-        request = self._make_request(self.user_bob)
-        panel_data = _build_assignment_panel_data(assignment, request)
+        rows = _services_display_context(assignment, self._request(self.user_unrelated))["value"]
 
-        historical = [m for m in panel_data["team_members"] if m["historical"]]
-        ids = [m["colleague"].id for m in historical]
-        assert self.colleague_alice.id in ids
+        visible = [r for r in rows if r["colleague"]]
+        assert len(visible) == 1
+        assert visible[0]["colleague"].id == self.colleague_alice.id
+        assert not visible[0].get("historical")
+        assert not visible[0].get("privacy_warning_text")
 
-    @patch("wies.core.views.timezone")
-    def test_historical_placements_hidden_from_unrelated_user(self, mock_timezone):
-        """Unrelated user must NOT see historical placements."""
-        mock_now = Mock()
-        mock_now.date.return_value = date(2024, 6, 15)
-        mock_timezone.now.return_value = mock_now
-
-        assignment = Assignment.objects.create(
-            name="Test Assignment",
-            source="wies",
-            owner=self.colleague_bob,
-        )
+    @patch("wies.core.editables.assignment.timezone")
+    def test_placement_ending_today_is_active(self, mock_timezone):
+        # Boundary: a placement ending today still counts as active (visible to all).
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        assignment = Assignment.objects.create(name="Boundary", source="wies", owner=self.colleague_bob)
         service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
         Placement.objects.create(
             colleague=self.colleague_alice,
             service=service,
             period_source="PLACEMENT",
             specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 14),
+            specific_end_date=date(2024, 6, 15),  # ends today
             source="wies",
         )
 
-        request = self._make_request(self.user_unrelated)
-        panel_data = _build_assignment_panel_data(assignment, request)
+        visible = [
+            r
+            for r in _services_display_context(assignment, self._request(self.user_unrelated))["value"]
+            if r["colleague"]
+        ]
 
-        historical = [m for m in panel_data["team_members"] if m["historical"]]
-        assert historical == []
+        assert len(visible) == 1
+        assert not visible[0].get("historical")
 
-    @patch("wies.core.views.timezone")
-    def test_historical_and_current_placements_separated(self, mock_timezone):
-        """Current placements are not historical, historical ones are flagged."""
-        mock_now = Mock()
-        mock_now.date.return_value = date(2024, 6, 15)
-        mock_timezone.now.return_value = mock_now
+    @patch("wies.core.editables.assignment.timezone")
+    def test_vacancy_always_visible(self, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        assignment = Assignment.objects.create(name="Vacancy Assignment", source="wies", owner=self.colleague_bob)
+        Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies", status="OPEN")
 
-        assignment = Assignment.objects.create(name="Test Assignment", source="wies")
+        rows = _services_display_context(assignment, self._request(self.user_unrelated))["value"]
+
+        assert len(rows) == 1
+        assert rows[0]["colleague"] is None
+
+    @patch("wies.core.editables.assignment.timezone")
+    def test_no_crash_for_user_without_colleague(self, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2024, 6, 15)))
+        user_no_colleague = User.objects.create_user(email="admin@rijksoverheid.nl")
+        assignment = self._ended_placement_assignment(owner=self.colleague_bob)
+
+        rows = _services_display_context(assignment, self._request(user_no_colleague))["value"]
+
+        assert [r for r in rows if r["colleague"]] == []
+
+
+class AssignmentServicesFutureAndCountTest(TestCase):
+    """Future placements are filtered like ended ones, and the team header count
+    reflects only the rows the viewer can actually see."""
+
+    def setUp(self):
+        self.skill = Skill.objects.create(name="Python Developer")
+        self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
+        self.colleague_alice = Colleague.objects.create(
+            name="Alice", email="alice@rijksoverheid.nl", source="wies", user=self.user_alice
+        )
+        self.user_bob = User.objects.create_user(email="bob@rijksoverheid.nl")
+        self.colleague_bob = Colleague.objects.create(
+            name="Bob", email="bob@rijksoverheid.nl", source="wies", user=self.user_bob
+        )
+        self.user_unrelated = User.objects.create_user(email="unrelated@rijksoverheid.nl")
+        self.colleague_unrelated = Colleague.objects.create(
+            name="Unrelated", email="unrelated@rijksoverheid.nl", source="wies", user=self.user_unrelated
+        )
+
+    def _request(self, user):
+        request = RequestFactory().get(reverse("home"))
+        request.user = user
+        return request
+
+    def _assignment_with_future_placement(self, owner):
+        assignment = Assignment.objects.create(name="Future Assignment", source="wies", owner=owner)
         service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
-
         Placement.objects.create(
             colleague=self.colleague_alice,
             service=service,
             period_source="PLACEMENT",
-            specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 14),
-            source="wies",  # historical (ended yesterday)
+            specific_start_date=date(2026, 8, 1),  # starts in the future
+            specific_end_date=date(2026, 12, 1),
+            source="wies",
+        )
+        return assignment
+
+    @patch("wies.core.editables.assignment.timezone")
+    def test_future_placement_hidden_from_unrelated(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        assignment = self._assignment_with_future_placement(owner=self.colleague_bob)
+
+        rows = _services_display_context(assignment, self._request(self.user_unrelated))["value"]
+
+        assert [r for r in rows if r["colleague"]] == []
+
+    @patch("wies.core.editables.assignment.timezone")
+    def test_future_placement_visible_to_colleague_with_gepland_label(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        assignment = self._assignment_with_future_placement(owner=self.colleague_bob)
+
+        rows = [
+            r for r in _services_display_context(assignment, self._request(self.user_alice))["value"] if r["colleague"]
+        ]
+
+        assert len(rows) == 1
+        assert rows[0]["period_label"] == "Gepland"
+        assert rows[0]["privacy_warning_text"] == "Alleen zichtbaar voor jou en de Business Manager"
+
+    @patch("wies.core.editables.assignment.timezone")
+    def test_future_placement_visible_to_bm(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        assignment = self._assignment_with_future_placement(owner=self.colleague_bob)
+
+        rows = [
+            r for r in _services_display_context(assignment, self._request(self.user_bob))["value"] if r["colleague"]
+        ]
+
+        assert len(rows) == 1
+        assert rows[0]["period_label"] == "Gepland"
+        assert rows[0]["privacy_warning_text"] == "Alleen zichtbaar voor jou en de consultant"
+
+    @patch("wies.core.views.timezone")
+    @patch("wies.core.editables.assignment.timezone")
+    def test_team_count_excludes_hidden_placement(self, mock_ed_tz, mock_views_tz):
+        for m in (mock_ed_tz, mock_views_tz):
+            m.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        assignment = Assignment.objects.create(name="Mixed", source="wies", owner=self.colleague_bob)
+        active = Service.objects.create(assignment=assignment, description="a", skill=self.skill, source="wies")
+        ended = Service.objects.create(
+            assignment=assignment, description="b", skill=Skill.objects.create(name="Ended skill"), source="wies"
         )
         Placement.objects.create(
             colleague=self.colleague_bob,
+            service=active,
+            period_source="PLACEMENT",
+            specific_start_date=date(2026, 1, 1),
+            specific_end_date=date(2026, 12, 1),
+            source="wies",
+        )
+        Placement.objects.create(
+            colleague=self.colleague_alice,
+            service=ended,
+            period_source="PLACEMENT",
+            specific_start_date=date(2024, 1, 1),
+            specific_end_date=date(2026, 6, 14),
+            source="wies",
+        )
+
+        unrelated = _build_assignment_panel_data(assignment, self._request(self.user_unrelated))
+        bm = _build_assignment_panel_data(assignment, self._request(self.user_bob))
+
+        assert unrelated["team_count"] == 1, "hidden ended placement must not be counted"
+        assert bm["team_count"] == 2, "BM sees both"
+
+
+class PlacementPanelVisibilityTest(TestCase):
+    """_resolve_placement_panel enforces the same rule as the team list for the
+    standalone ?plaatsing=N side panel (previously reachable by guessing the URL)."""
+
+    def setUp(self):
+        self.skill = Skill.objects.create(name="Python Developer")
+        self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
+        self.colleague_alice = Colleague.objects.create(
+            name="Alice", email="alice@rijksoverheid.nl", source="wies", user=self.user_alice
+        )
+        self.user_bob = User.objects.create_user(email="bob@rijksoverheid.nl")
+        self.colleague_bob = Colleague.objects.create(
+            name="Bob", email="bob@rijksoverheid.nl", source="wies", user=self.user_bob
+        )
+        self.user_unrelated = User.objects.create_user(email="unrelated@rijksoverheid.nl")
+        self.colleague_unrelated = Colleague.objects.create(
+            name="Unrelated", email="unrelated@rijksoverheid.nl", source="wies", user=self.user_unrelated
+        )
+
+    def _request(self, user):
+        request = RequestFactory().get(reverse("home"))
+        request.user = user
+        return request
+
+    def _placement(self, *, start, end, owner):
+        assignment = Assignment.objects.create(name="Test", source="wies", owner=owner)
+        service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
+        return Placement.objects.create(
+            colleague=self.colleague_alice,
             service=service,
             period_source="PLACEMENT",
-            specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 16),
+            specific_start_date=start,
+            specific_end_date=end,
             source="wies",
         )
-
-        request = self._make_request(self.user_alice)
-        panel_data = _build_assignment_panel_data(assignment, request)
-
-        current_ids = [
-            m["colleague"].id for m in panel_data["team_members"] if not m["historical"] and not m["is_vacancy"]
-        ]
-        historical_ids = [m["colleague"].id for m in panel_data["team_members"] if m["historical"]]
-
-        assert self.colleague_bob.id in current_ids
-        assert self.colleague_alice.id not in current_ids
-        assert self.colleague_alice.id in historical_ids
-        assert self.colleague_bob.id not in historical_ids
 
     @patch("wies.core.views.timezone")
-    def test_same_colleague_appears_in_both_current_and_historical(self, mock_timezone):
-        """Colleague with one active and one ended service appears in both tiles."""
-        mock_now = Mock()
-        mock_now.date.return_value = date(2024, 6, 15)
-        mock_timezone.now.return_value = mock_now
+    def test_ended_placement_denied_to_unrelated(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        pl = self._placement(start=date(2024, 1, 1), end=date(2026, 6, 14), owner=self.colleague_bob)
 
-        skill_active = Skill.objects.create(name="Active Skill")
-        skill_ended = Skill.objects.create(name="Ended Skill")
-
-        assignment = Assignment.objects.create(name="Mixed Services", source="wies")
-        service_active = Service.objects.create(
-            assignment=assignment,
-            description="s",
-            skill=skill_active,
-            source="wies",
-        )
-        service_ended = Service.objects.create(
-            assignment=assignment,
-            description="s",
-            skill=skill_ended,
-            source="wies",
-        )
-
-        Placement.objects.create(
-            colleague=self.colleague_alice,
-            service=service_active,
-            period_source="PLACEMENT",
-            specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 16),
-            source="wies",
-        )
-        Placement.objects.create(
-            colleague=self.colleague_alice,
-            service=service_ended,
-            period_source="PLACEMENT",
-            specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 14),
-            source="wies",
-        )
-
-        request = self._make_request(self.user_alice)
-        panel_data = _build_assignment_panel_data(assignment, request)
-
-        current = {
-            m["colleague"].id: m["skills"]
-            for m in panel_data["team_members"]
-            if not m["historical"] and not m["is_vacancy"]
-        }
-        historical = {m["colleague"].id: m["skills"] for m in panel_data["team_members"] if m["historical"]}
-
-        assert self.colleague_alice.id in current, "Should appear in current team"
-        assert [s["name"] for s in current[self.colleague_alice.id]] == ["Active Skill"]
-        assert self.colleague_alice.id in historical, "Should also appear in historical team"
-        assert [s["name"] for s in historical[self.colleague_alice.id]] == ["Ended Skill"]
+        assert _resolve_placement_panel(self._request(self.user_unrelated), pl.id) is None
 
     @patch("wies.core.views.timezone")
-    def test_no_crash_for_user_without_colleague(self, mock_timezone):
-        """User without a linked Colleague must not crash and must not see historical data."""
-        mock_now = Mock()
-        mock_now.date.return_value = date(2024, 6, 15)
-        mock_timezone.now.return_value = mock_now
+    def test_future_placement_denied_to_unrelated(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        pl = self._placement(start=date(2026, 8, 1), end=date(2026, 12, 1), owner=self.colleague_bob)
 
-        user_no_colleague = User.objects.create_user(email="admin@rijksoverheid.nl")
+        assert _resolve_placement_panel(self._request(self.user_unrelated), pl.id) is None
 
-        assignment = Assignment.objects.create(name="Ended Assignment", source="wies")
+    @patch("wies.core.views.timezone")
+    def test_ended_placement_shown_to_colleague_with_note(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        pl = self._placement(start=date(2024, 1, 1), end=date(2026, 6, 14), owner=self.colleague_bob)
+
+        data = _resolve_placement_panel(self._request(self.user_alice), pl.id)
+
+        assert data is not None
+        card = data["assignment_card"]
+        assert card["historical"] is True
+        assert card["period_label"] == "Afgelopen"
+        assert card["privacy_warning_text"] == "Alleen zichtbaar voor jou en de Business Manager"
+
+    @patch("wies.core.views.timezone")
+    def test_future_placement_shown_to_bm_with_gepland(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        pl = self._placement(start=date(2026, 8, 1), end=date(2026, 12, 1), owner=self.colleague_bob)
+
+        data = _resolve_placement_panel(self._request(self.user_bob), pl.id)
+
+        assert data is not None
+        card = data["assignment_card"]
+        assert card["period_label"] == "Gepland"
+        assert card["privacy_warning_text"] == "Alleen zichtbaar voor jou en de consultant"
+
+    @patch("wies.core.views.timezone")
+    def test_active_placement_visible_to_unrelated(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        pl = self._placement(start=date(2026, 1, 1), end=date(2026, 12, 1), owner=self.colleague_bob)
+
+        data = _resolve_placement_panel(self._request(self.user_unrelated), pl.id)
+
+        assert data is not None
+        assert data["assignment_card"]["privacy_warning_text"] is None
+
+
+class ColleagueProfileFutureVisibilityTest(TestCase):
+    """Own-profile / colleague-panel assignment cards filter future placements
+    the same way (visible to the colleague themselves and the BM, not others)."""
+
+    def setUp(self):
+        self.skill = Skill.objects.create(name="Python Developer")
+        self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
+        self.colleague_alice = Colleague.objects.create(
+            name="Alice", email="alice@rijksoverheid.nl", source="wies", user=self.user_alice
+        )
+        self.user_unrelated = User.objects.create_user(email="unrelated@rijksoverheid.nl")
+        self.colleague_unrelated = Colleague.objects.create(
+            name="Unrelated", email="unrelated@rijksoverheid.nl", source="wies", user=self.user_unrelated
+        )
+
+    def _request(self, user):
+        request = RequestFactory().get(reverse("home"))
+        request.user = user
+        return request
+
+    def _future_placement_for_alice(self):
+        assignment = Assignment.objects.create(name="Future Assignment", source="wies")
         service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
         Placement.objects.create(
             colleague=self.colleague_alice,
             service=service,
             period_source="PLACEMENT",
-            specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 14),
+            specific_start_date=date(2026, 8, 1),
+            specific_end_date=date(2026, 12, 1),
             source="wies",
         )
-
-        request = self._make_request(user_no_colleague)
-        panel_data = _build_assignment_panel_data(assignment, request)
-
-        historical = [m for m in panel_data["team_members"] if m["historical"]]
-        assert historical == [], "User without colleague should not see historical placements"
 
     @patch("wies.core.views.timezone")
-    def test_active_placements_visible_to_unrelated_user(self, mock_timezone):
-        """Unrelated user can see active placements (no over-filtering)."""
-        mock_now = Mock()
-        mock_now.date.return_value = date(2024, 6, 15)
-        mock_timezone.now.return_value = mock_now
+    def test_future_placement_visible_on_own_profile(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        self._future_placement_for_alice()
 
-        assignment = Assignment.objects.create(name="Active Assignment", source="wies")
-        service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
-        Placement.objects.create(
-            colleague=self.colleague_alice,
-            service=service,
-            period_source="PLACEMENT",
-            specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 16),
-            source="wies",
+        assignments = _get_colleague_assignments(
+            self._request(self.user_alice), self.colleague_alice, self.colleague_alice
         )
 
-        request = self._make_request(self.user_unrelated)
-        panel_data = _build_assignment_panel_data(assignment, request)
-
-        current = [m for m in panel_data["team_members"] if not m["historical"] and not m["is_vacancy"]]
-        ids = [m["colleague"].id for m in current]
-        assert self.colleague_alice.id in ids, "Unrelated user should see active placements"
-
-    @patch("wies.core.views.timezone")
-    def test_privacy_warning_text_for_consultant_viewer(self, mock_timezone):
-        """Consultant viewing own historical placement sees BM privacy text."""
-        mock_now = Mock()
-        mock_now.date.return_value = date(2024, 6, 15)
-        mock_timezone.now.return_value = mock_now
-
-        assignment = Assignment.objects.create(name="Test Assignment", source="wies", owner=self.colleague_bob)
-        service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
-        Placement.objects.create(
-            colleague=self.colleague_alice,
-            service=service,
-            period_source="PLACEMENT",
-            specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 14),
-            source="wies",
-        )
-
-        request = self._make_request(self.user_alice)
-        panel_data = _build_assignment_panel_data(assignment, request)
-
-        historical = [m for m in panel_data["team_members"] if m["historical"]]
+        historical = [a for a in assignments if a["historical"]]
         assert len(historical) == 1
+        assert historical[0]["period_label"] == "Gepland"
         assert historical[0]["privacy_warning_text"] == "Alleen zichtbaar voor jou en de Business Manager"
 
     @patch("wies.core.views.timezone")
-    def test_privacy_warning_text_for_bm_viewer(self, mock_timezone):
-        """BM viewing historical placement sees consultant privacy text."""
-        mock_now = Mock()
-        mock_now.date.return_value = date(2024, 6, 15)
-        mock_timezone.now.return_value = mock_now
+    def test_future_placement_hidden_from_unrelated_profile_viewer(self, mock_tz):
+        mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        self._future_placement_for_alice()
 
-        assignment = Assignment.objects.create(name="Test Assignment", source="wies", owner=self.colleague_bob)
+        assignments = _get_colleague_assignments(
+            self._request(self.user_unrelated), self.colleague_alice, self.colleague_unrelated
+        )
+
+        assert assignments == []
+
+
+class PlacementListFutureVisibilityTest(TestCase):
+    """Not-yet-started placements appear on the 'Wie zit waar?' list only for the
+    placed colleague and the assignment's BM-owner, not for others."""
+
+    def setUp(self):
+        self.list_url = reverse("home")
+        self.skill = Skill.objects.create(name="Python Developer")
+        self.user_alice = User.objects.create_user(email="alice@rijksoverheid.nl")
+        self.colleague_alice = Colleague.objects.create(
+            name="Alice", email="alice@rijksoverheid.nl", source="wies", user=self.user_alice
+        )
+        self.user_bob = User.objects.create_user(email="bob@rijksoverheid.nl")
+        self.colleague_bob = Colleague.objects.create(
+            name="Bob", email="bob@rijksoverheid.nl", source="wies", user=self.user_bob
+        )
+        self.user_unrelated = User.objects.create_user(email="unrelated@rijksoverheid.nl")
+        self.colleague_unrelated = Colleague.objects.create(
+            name="Unrelated", email="unrelated@rijksoverheid.nl", source="wies", user=self.user_unrelated
+        )
+
+    def _future_placement(self, owner):
+        assignment = Assignment.objects.create(name="Future", source="wies", owner=owner)
         service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
-        Placement.objects.create(
+        return Placement.objects.create(
             colleague=self.colleague_alice,
             service=service,
             period_source="PLACEMENT",
-            specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 14),
+            specific_start_date=date(2026, 8, 1),  # not yet started
+            specific_end_date=date(2026, 12, 1),
             source="wies",
         )
 
-        request = self._make_request(self.user_bob)
-        panel_data = _build_assignment_panel_data(assignment, request)
-
-        historical = [m for m in panel_data["team_members"] if m["historical"]]
-        assert len(historical) == 1
-        assert historical[0]["privacy_warning_text"] == "Alleen zichtbaar voor jou en de consultant"
+    def _queryset_as(self, user, mock_timezone):
+        mock_timezone.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
+        request = RequestFactory().get(self.list_url)
+        request.user = user
+        view = PlacementListView()
+        view.request = request
+        return view.get_queryset()
 
     @patch("wies.core.views.timezone")
-    def test_privacy_warning_text_absent_on_current_members(self, mock_timezone):
-        """Current team members must not have privacy warning text."""
-        mock_now = Mock()
-        mock_now.date.return_value = date(2024, 6, 15)
-        mock_timezone.now.return_value = mock_now
+    def test_future_placement_hidden_from_unrelated(self, mock_tz):
+        pl = self._future_placement(owner=self.colleague_bob)
+        assert pl not in self._queryset_as(self.user_unrelated, mock_tz)
 
-        assignment = Assignment.objects.create(name="Test Assignment", source="wies")
+    @patch("wies.core.views.timezone")
+    def test_future_placement_hidden_from_user_without_colleague(self, mock_tz):
+        pl = self._future_placement(owner=self.colleague_bob)
+        user = User.objects.create_user(email="admin@rijksoverheid.nl")
+        assert pl not in self._queryset_as(user, mock_tz)
+
+    @patch("wies.core.views.timezone")
+    def test_future_placement_visible_to_placed_colleague(self, mock_tz):
+        pl = self._future_placement(owner=self.colleague_bob)
+        assert pl in self._queryset_as(self.user_alice, mock_tz)
+
+    @patch("wies.core.views.timezone")
+    def test_future_placement_visible_to_bm(self, mock_tz):
+        pl = self._future_placement(owner=self.colleague_bob)
+        assert pl in self._queryset_as(self.user_bob, mock_tz)
+
+    @patch("wies.core.views.timezone")
+    def test_active_placement_visible_to_unrelated(self, mock_tz):
+        assignment = Assignment.objects.create(name="Active", source="wies", owner=self.colleague_bob)
         service = Service.objects.create(assignment=assignment, description="s", skill=self.skill, source="wies")
-        Placement.objects.create(
+        pl = Placement.objects.create(
             colleague=self.colleague_alice,
             service=service,
             period_source="PLACEMENT",
-            specific_start_date=date(2024, 1, 1),
-            specific_end_date=date(2024, 6, 16),
+            specific_start_date=date(2026, 1, 1),
+            specific_end_date=date(2026, 12, 1),
             source="wies",
         )
+        assert pl in self._queryset_as(self.user_unrelated, mock_tz)
 
-        request = self._make_request(self.user_alice)
-        panel_data = _build_assignment_panel_data(assignment, request)
 
-        current = [m for m in panel_data["team_members"] if not m["historical"] and not m["is_vacancy"]]
-        assert len(current) == 1
-        assert current[0]["privacy_warning_text"] is None
+class ServicesInitialQueryCountTest(TestCase):
+    """_services_initial must not run a query per service (N+1)."""
+
+    def setUp(self):
+        self._colleague = Colleague.objects.create(name="C", email="c@rijksoverheid.nl", source="wies")
+
+    def _assignment_with_services(self, count):
+        skill = Skill.objects.create(name=f"Skill-{count}")
+        assignment = Assignment.objects.create(name=f"A-{count}", source="wies")
+        for _ in range(count):
+            service = Service.objects.create(assignment=assignment, description="s", skill=skill, source="wies")
+            Placement.objects.create(colleague=self._colleague, service=service, period_source="SERVICE", source="wies")
+        return assignment
+
+    def test_query_count_is_constant(self):
+        small = self._assignment_with_services(2)
+        large = self._assignment_with_services(6)
+
+        with CaptureQueriesContext(connection) as q_small:
+            _services_initial(small)
+        with CaptureQueriesContext(connection) as q_large:
+            _services_initial(large)
+
+        assert len(q_large) == len(q_small), f"N+1: {len(q_small)} vs {len(q_large)} queries for 2 vs 6 services"
 
 
 class ColleagueAssignmentsHistoricalFilterTest(TestCase):

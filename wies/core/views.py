@@ -35,6 +35,7 @@ from wies.core.inline_edit.forms import (
     resolve_editables,
 )
 from wies.core.permission_engine import Verb, has_permission
+from wies.core.placement_visibility import LABELS, evaluate
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
@@ -69,7 +70,7 @@ from .services.organizations import (
 )
 from .services.placements import (
     create_assignments_from_csv,
-    filter_placements_by_min_end_date,
+    filter_visible_placements,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
@@ -137,100 +138,18 @@ def _build_close_url(request):
     return _url_drop_params(request.path, request.GET, PANEL_PARAMS)
 
 
-def _make_team_member_entry(
-    colleague, colleague_url=None, *, historical=False, privacy_warning_text=None, is_vacancy=False, skills=None
-):
-    """Build a standard team member dict for assignment panel display."""
-    return {
-        "colleague": colleague,
-        "colleague_url": colleague_url,
-        "skills": skills or [],
-        "historical": historical,
-        "privacy_warning_text": privacy_warning_text,
-        "is_vacancy": is_vacancy,
-    }
-
-
 def _build_assignment_panel_data(assignment, request):
     """Shared helper to build assignment panel context data for both views."""
-    today = timezone.now().date()
-    viewer = getattr(request.user, "colleague", None)
-    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
+    from wies.core.editables.assignment import visible_service_rows  # noqa: PLC0415 — avoids import cycle
 
-    # Single query: all services with all annotated placements
-    services = list(
-        assignment.services.select_related("skill").prefetch_related(
-            Prefetch(
-                "placements",
-                queryset=annotate_placement_dates(Placement.objects.select_related("colleague")),
-                to_attr="all_placements",
-            )
-        )
-    )
-
-    vacancy_list: list[dict] = []
-    # Group by (colleague_id, historical) to merge skills per colleague
-    current_grouped: dict[int, dict] = {}
-    historical_grouped: dict[int, dict] = {}
-
-    for service in services:
-        skill = {"name": service.skill.name, "description": service.description} if service.skill else None
-
-        # Vacancy: OPEN service that never had any placement
-        if not service.all_placements and service.status == "OPEN":
-            vacancy_list.append(_make_team_member_entry(None, is_vacancy=True, skills=[skill] if skill else []))
-            continue
-
-        for placement in service.all_placements:
-            cid = placement.colleague.id
-            placement_is_active = placement.actual_end_date is None or today <= placement.actual_end_date
-
-            if placement_is_active:
-                # Active placements are visible to everyone
-                if cid not in current_grouped:
-                    current_grouped[cid] = _make_team_member_entry(
-                        placement.colleague,
-                        colleague_url=_build_panel_url(request, collega=cid),
-                    )
-                if skill:
-                    current_grouped[cid]["skills"].append(skill)
-
-            elif viewer is not None and cid == viewer.id:
-                # Consultants can see their own ended placements
-                if cid not in historical_grouped:
-                    historical_grouped[cid] = _make_team_member_entry(
-                        placement.colleague,
-                        colleague_url=_build_panel_url(request, collega=cid),
-                        historical=True,
-                        privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
-                    )
-                if skill:
-                    historical_grouped[cid]["skills"].append(skill)
-
-            elif viewer_is_bm:
-                # BM can see all ended placements on their assignment
-                if cid not in historical_grouped:
-                    historical_grouped[cid] = _make_team_member_entry(
-                        placement.colleague,
-                        colleague_url=_build_panel_url(request, collega=cid),
-                        historical=True,
-                        privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
-                    )
-                if skill:
-                    historical_grouped[cid]["skills"].append(skill)
-
-            else:
-                # Others must not see ended placements
-                continue
-
-    team_members = vacancy_list + list(current_grouped.values()) + list(historical_grouped.values())
-
+    # team_count comes from the same viewer-filtered rows the team list renders,
+    # so the header total can't betray a hidden placement.
     return {
         "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
         "close_url": _build_close_url(request),
         "assignment": assignment,
-        "team_members": team_members,
+        "team_count": len(visible_service_rows(assignment, request)),
         "user_can_edit": has_permission(Verb.UPDATE, assignment, request.user),
         "show_updates_tab": assignment.source != "otys_iir",
         "organization_count": assignment.organization_relations.count(),
@@ -288,75 +207,34 @@ def _get_colleague_assignments(request, colleague, viewer):
     placement_qs = annotate_placement_dates(placement_qs)
     for placement in placement_qs:
         assignment_id = placement["service__assignment__id"]
-        placement_is_active = placement.get("actual_end_date") is None or today <= placement["actual_end_date"]
         owner_id = placement["service__assignment__owner_id"]
         viewer_is_assignment_bd = viewer is not None and owner_id is not None and owner_id == viewer.id
-
-        if placement_is_active:
-            if assignment_id not in active_by_id:
-                active_by_id[assignment_id] = _make_assignment_entry(
-                    placement["service__assignment__name"],
-                    assignment_id,
-                    request,
-                    start_date=placement.get("actual_start_date"),
-                    end_date=placement.get("actual_end_date"),
-                    placement_id=placement["id"],
-                )
-            else:
-                _merge_date_range(
-                    active_by_id[assignment_id], placement.get("actual_start_date"), placement.get("actual_end_date")
-                )
-            skill_name = placement["service__skill__name"]
-            if skill_name:
-                active_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
-        elif viewer_is_colleague:
-            # users can see their own ended placements
-            if assignment_id not in historical_by_id:
-                historical_by_id[assignment_id] = _make_assignment_entry(
-                    placement["service__assignment__name"],
-                    assignment_id,
-                    request,
-                    start_date=placement.get("actual_start_date"),
-                    end_date=placement.get("actual_end_date"),
-                    historical=True,
-                    privacy_warning_text="Alleen zichtbaar voor jou en de Business Manager",
-                    placement_id=placement["id"],
-                )
-            else:
-                _merge_date_range(
-                    historical_by_id[assignment_id],
-                    placement.get("actual_start_date"),
-                    placement.get("actual_end_date"),
-                )
-            skill_name = placement["service__skill__name"]
-            if skill_name:
-                historical_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
-        elif viewer_is_assignment_bd:
-            # business developers can see their the assignments they own
-            # users can see their own ended placements
-            if assignment_id not in historical_by_id:
-                historical_by_id[assignment_id] = _make_assignment_entry(
-                    placement["service__assignment__name"],
-                    assignment_id,
-                    request,
-                    start_date=placement.get("actual_start_date"),
-                    end_date=placement.get("actual_end_date"),
-                    historical=True,
-                    privacy_warning_text="Alleen zichtbaar voor jou en de consultant",
-                    placement_id=placement["id"],
-                )
-            else:
-                _merge_date_range(
-                    historical_by_id[assignment_id],
-                    placement.get("actual_start_date"),
-                    placement.get("actual_end_date"),
-                )
-            skill_name = placement["service__skill__name"]
-            if skill_name:
-                historical_by_id[assignment_id]["tags"][skill_name] = placement["service__description"]
-        else:
-            # others should not see these placements
+        start = placement.get("actual_start_date")
+        end = placement.get("actual_end_date")
+        # Active placements are public; ended or not-yet-started ones are only
+        # visible to the placed colleague and the assignment's BM-owner.
+        result = evaluate(start, end, colleague.id, viewer, viewer_is_assignment_bd, today)
+        if not result.visible:
             continue
+
+        bucket = active_by_id if result.timing == "active" else historical_by_id
+        if assignment_id not in bucket:
+            bucket[assignment_id] = _make_assignment_entry(
+                placement["service__assignment__name"],
+                assignment_id,
+                request,
+                start_date=start,
+                end_date=end,
+                historical=result.timing != "active",
+                privacy_warning_text=result.privacy_note,
+                period_label=LABELS.get(result.timing),
+                placement_id=placement["id"],
+            )
+        else:
+            _merge_date_range(bucket[assignment_id], start, end)
+        skill_name = placement["service__skill__name"]
+        if skill_name:
+            bucket[assignment_id]["tags"][skill_name] = placement["service__description"]
 
     # BM roles (active and ended)
     bm_assignments = Assignment.objects.filter(owner=colleague).values_list("id", "name", "start_date", "end_date")
@@ -429,11 +307,16 @@ def _build_colleague_panel_data(colleague, request):
     }
 
 
-def _build_placement_panel_data(placement, request):
-    """Build panel context for a single placement (colleague-on-assignment view)."""
+def _build_placement_panel_data(placement, request, *, visibility=None):
+    """Build panel context for a single placement (colleague-on-assignment view).
+
+    ``visibility`` (a PlacementVisibility) flags a non-active placement so the
+    card shows the timing chip + privacy note. Access control is the caller's
+    job — see ``_resolve_placement_panel``."""
     assignment = placement.service.assignment
     colleague = placement.colleague
     service = placement.service
+    today = timezone.now().date()
 
     # Build assignment card in the same format as colleague_assignment_cards.html expects
     primary_org = (
@@ -442,11 +325,12 @@ def _build_placement_panel_data(placement, request):
         .first()
     )
 
-    # Active team members on this assignment
+    # Only currently-active colleagues, so the avatar list can't leak ended or
+    # not-yet-started placements of others.
     team_members = list(
-        Placement.objects.filter(
-            service__assignment=assignment,
-        )
+        annotate_placement_dates(Placement.objects.filter(service__assignment=assignment))
+        .filter(Q(actual_start_date__isnull=True) | Q(actual_start_date__lte=today))
+        .filter(Q(actual_end_date__isnull=True) | Q(actual_end_date__gte=today))
         .select_related("colleague")
         .values_list("colleague__name", flat=True)
         .distinct()
@@ -460,8 +344,9 @@ def _build_placement_panel_data(placement, request):
         "end_date": None,
         "organization": primary_org,
         "tags": [],
-        "historical": False,
-        "privacy_warning_text": None,
+        "historical": visibility is not None and visibility.timing != "active",
+        "privacy_warning_text": visibility.privacy_note if visibility else None,
+        "period_label": LABELS.get(visibility.timing) if visibility else None,
         "team_members": team_members,
         "show_read_more": True,
     }
@@ -475,6 +360,28 @@ def _build_placement_panel_data(placement, request):
         "service": service,
         "assignment_card": assignment_card,
     }
+
+
+def _resolve_placement_panel(request, placement_id):
+    """Fetch a placement for the side panel, enforcing the same rule as the team
+    list: ended or not-yet-started placements are only shown to the placed
+    colleague and the assignment's BM-owner. Returns panel data, or None when
+    the placement does not exist or the viewer may not see it."""
+    try:
+        placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
+            id=placement_id
+        )
+    except Placement.DoesNotExist:
+        return None
+    assignment = placement.service.assignment
+    viewer = getattr(request.user, "colleague", None)
+    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
+    result = evaluate(
+        placement.start_date, placement.end_date, placement.colleague_id, viewer, viewer_is_bm, timezone.now().date()
+    )
+    if not result.visible:
+        return None
+    return _build_placement_panel_data(placement, request, visibility=result)
 
 
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
@@ -655,9 +562,11 @@ class PlacementListView(ListView):
             if order_by:
                 qs = qs.order_by(f"-{order_by}" if descending else order_by)
 
-        # filter out historical placements
+        # Active placements are public; ended ones are hidden from everyone;
+        # not-yet-started ones only for the placed colleague and the BM-owner.
         qs = annotate_placement_dates(qs)
-        return filter_placements_by_min_end_date(qs, timezone.now().date())
+        viewer = getattr(self.request.user, "colleague", None)
+        return filter_visible_placements(qs, timezone.now().date(), viewer)
 
     def _get_labels_by_category(self):
         """Parse selected label IDs grouped by category."""
@@ -760,6 +669,8 @@ class PlacementListView(ListView):
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if "HX-Request" in self.request.headers:
+            if self.request.GET.get("filter_modal"):
+                return ["parts/filters/filter_options_modal.html"]
             if self.request.headers.get("HX-Target") == "side_panel-container":
                 return ["parts/side_panel.html"]
             if self.request.headers.get("HX-Target") == "side_panel-content":
@@ -815,19 +726,15 @@ class PlacementListView(ListView):
             active_filters["labels"] = label_filter
 
         # Organization filter (multi-select via modal)
-        active_org_filter_count = 0
         org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
         org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
         org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
         if org_filter:
             active_filters["org"] = org_filter
-            active_org_filter_count += len(org_filter)
         if org_self_filter:
             active_filters["org_self"] = org_self_filter
-            active_org_filter_count += len(org_self_filter)
         if org_type_filter:
             active_filters["org_type"] = org_type_filter
-            active_org_filter_count += len(org_type_filter)
 
         # Build chip display data for org filters
         org_chip_data: list[dict] = []
@@ -907,6 +814,13 @@ class PlacementListView(ListView):
         skill_ids = skill_placement_qs.values_list("service__skill__id", flat=True)
         skill_counts = Counter(sid for sid in skill_ids if sid is not None)
 
+        # Org counts: exclude the org filter (like rol/labels) so the numbers
+        # reflect the other active filters instead of a global baseline.
+        org_filtered_qs = self._apply_filters(base_qs, exclude_filter="org").distinct()
+        org_placement_qs = Placement.objects.filter(id__in=org_filtered_qs.values_list("id", flat=True))
+        org_id_values = org_placement_qs.values_list("service__assignment__organizations__id", flat=True)
+        org_counts = Counter(oid for oid in org_id_values if oid is not None)
+
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
         for skill in Skill.objects.order_by("name"):
@@ -918,8 +832,6 @@ class PlacementListView(ListView):
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
-        context["active_org_filter_count"] = active_org_filter_count
-        context["active_org_filter_label"] = org_chip_data[0]["label"] if len(org_chip_data) == 1 else ""
         context["org_chip_data"] = org_chip_data
         context["client_modal_count_mode"] = "placements"
 
@@ -930,6 +842,14 @@ class PlacementListView(ListView):
                 "type": "modal",
                 "name": "organisatie",
                 "label": "Opdrachtgever",
+                "top_options": _get_top_org_options(
+                    "placements",
+                    get_excluded_org_ids(),
+                    set(org_filter),
+                    selected_self_ids=set(org_self_filter),
+                    selected_type_labels=set(org_type_filter),
+                    org_counts=org_counts,
+                ),
             },
             {
                 "type": "select-multi",
@@ -947,6 +867,8 @@ class PlacementListView(ListView):
                 "selected_values": list(loopt_af_values),
             },
         ]
+        _finalize_filter_groups(context["filter_groups"])
+        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
@@ -961,15 +883,9 @@ class PlacementListView(ListView):
         assignment_id = self.request.GET.get("opdracht")
 
         if placement_id:
-            try:
-                placement = Placement.objects.select_related(
-                    "colleague",
-                    "service__assignment",
-                    "service__skill",
-                ).get(id=placement_id)
-                context["panel_data"] = _build_placement_panel_data(placement, self.request)
-            except Placement.DoesNotExist:
-                pass
+            panel_data = _resolve_placement_panel(self.request, placement_id)
+            if panel_data is not None:
+                context["panel_data"] = panel_data
         elif colleague_id and not assignment_id:
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
@@ -1068,6 +984,8 @@ class AssignmentListView(ListView):
 
     def get_template_names(self):
         if "HX-Request" in self.request.headers:
+            if self.request.GET.get("filter_modal"):
+                return ["parts/filters/filter_options_modal.html"]
             if self.request.headers.get("HX-Target") == "side_panel-container":
                 return ["parts/side_panel.html"]
             if self.request.headers.get("HX-Target") == "side_panel-content":
@@ -1121,6 +1039,13 @@ class AssignmentListView(ListView):
         skill_ids = skill_filtered_qs.values_list("services__skill__id", flat=True)
         skill_counts = Counter(sid for sid in skill_ids if sid is not None)
 
+        # Org counts: exclude the org filter (like rol) so the numbers reflect
+        # the other active filters. base_qs is already limited to assignments
+        # with an unfilled open service, matching the open_assignments mode.
+        org_filtered_qs = self._apply_filters(base_qs, exclude_filter="org").distinct()
+        org_id_values = org_filtered_qs.values_list("organizations__id", flat=True)
+        org_counts = Counter(oid for oid in org_id_values if oid is not None)
+
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
         for skill in Skill.objects.order_by("name"):
@@ -1131,19 +1056,15 @@ class AssignmentListView(ListView):
             skill_options.append(option)
 
         # Organization filter (multi-select via modal)
-        active_org_filter_count = 0
         org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
         org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
         org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
         if org_filter:
             active_filters["org"] = org_filter
-            active_org_filter_count += len(org_filter)
         if org_self_filter:
             active_filters["org_self"] = org_self_filter
-            active_org_filter_count += len(org_self_filter)
         if org_type_filter:
             active_filters["org_type"] = org_type_filter
-            active_org_filter_count += len(org_type_filter)
 
         # Build chip display data for org filters
         org_chip_data: list[dict] = []
@@ -1183,8 +1104,6 @@ class AssignmentListView(ListView):
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
-        context["active_org_filter_count"] = active_org_filter_count
-        context["active_org_filter_label"] = org_chip_data[0]["label"] if len(org_chip_data) == 1 else ""
         context["org_chip_data"] = org_chip_data
         context["client_modal_count_mode"] = "open_assignments"
 
@@ -1193,6 +1112,14 @@ class AssignmentListView(ListView):
                 "type": "modal",
                 "name": "organisatie",
                 "label": "Opdrachtgever",
+                "top_options": _get_top_org_options(
+                    "open_assignments",
+                    get_excluded_org_ids(),
+                    set(org_filter),
+                    selected_self_ids=set(org_self_filter),
+                    selected_type_labels=set(org_type_filter),
+                    org_counts=org_counts,
+                ),
             },
             {
                 "type": "select-multi",
@@ -1207,6 +1134,8 @@ class AssignmentListView(ListView):
                 "label": "Beschikbaar vanaf",
             },
         ]
+        _finalize_filter_groups(context["filter_groups"])
+        context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
 
         # Build next page URL with all current filters
         if context.get("page_obj") and context["page_obj"].has_next():
@@ -1229,13 +1158,9 @@ class AssignmentListView(ListView):
         assignment_id = self.request.GET.get("opdracht")
 
         if placement_id:
-            try:
-                placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
-                    id=placement_id
-                )
-                context["panel_data"] = _build_placement_panel_data(placement, self.request)
-            except Placement.DoesNotExist:
-                pass
+            panel_data = _resolve_placement_panel(self.request, placement_id)
+            if panel_data is not None:
+                context["panel_data"] = panel_data
         elif colleague_id and not assignment_id:
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
@@ -2194,15 +2119,7 @@ def user_profile(request):
     panel_data = None
 
     if placement_id:
-        try:
-            placement = Placement.objects.select_related(
-                "colleague",
-                "service__assignment",
-                "service__skill",
-            ).get(id=placement_id)
-            panel_data = _build_placement_panel_data(placement, request)
-        except Placement.DoesNotExist:
-            pass
+        panel_data = _resolve_placement_panel(request, placement_id)
     elif assignment_id:
         try:
             assignment = Assignment.objects.get(id=assignment_id)
@@ -2420,7 +2337,7 @@ def search_suggestions(request):
     """Return org abbreviation suggestions for the search input (HTMX partial)."""
     term = request.GET.get("zoek", "")
     orgs = find_orgs_by_abbreviation(term)
-    return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs})
+    return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs, "search_term": term.strip()})
 
 
 def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int]:
@@ -2447,6 +2364,137 @@ def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int
             active_placements = active_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
         org_id_list = active_placements.values_list("service__assignment__organizations__id", flat=True)
     return Counter(org_id for org_id in org_id_list if org_id is not None)
+
+
+def _get_top_org_options(
+    count_mode: str,
+    excluded_org_ids: list[int],
+    selected_org_ids: set[str],
+    *,
+    selected_self_ids: set[str] | None = None,
+    selected_type_labels: set[str] | None = None,
+    org_counts: Counter[int] | None = None,
+    limit: int = 3,
+) -> list[dict]:
+    """Return opdrachtgever quick checkbox options: selected first, then top-N by count.
+
+    Each option carries its own ``param`` (``org``, ``org_self`` or
+    ``org_type``) so the sidebar quick row stays in sync with whatever was
+    picked in the modal — including a "direct onder…" self-node (``org_self``)
+    or an org-type group (``org_type``). The ``org`` group also pads up to
+    ``limit`` with the highest-count unselected orgs; self/type only appear
+    when actually selected (they have no top-N baseline).
+
+    ``org_counts`` lets the caller pass filter-aware per-org counts (computed
+    like rol/labels, excluding the org filter) so the numbers reflect the other
+    active filters. When omitted, falls back to the global ``_get_org_counts``
+    baseline (used by the modal, which has no other filter context).
+
+    Mirrors the select-multi groups (see ``_finalize_filter_groups``): a
+    selected option is ALWAYS shown inline as a checked checkbox, even when it
+    isn't among the top-N by count (e.g. picked via the modal). Selected
+    options are listed first so the active selection reads clearly; once
+    anything is selected the empty top-N options are dropped to keep the list
+    calm.
+    """
+    selected_self_ids = selected_self_ids or set()
+    selected_type_labels = selected_type_labels or set()
+
+    if org_counts is None:
+        org_counts = _get_org_counts(count_mode, excluded_org_ids)
+    selected_ids = {int(x) for x in selected_org_ids if str(x).isdigit()}
+    self_ids = {int(x) for x in selected_self_ids if str(x).isdigit()}
+
+    total_selected = len(selected_ids) + len(self_ids) + len(selected_type_labels)
+    # Pad the ``org`` group with the highest-count unselected orgs up to ``limit``
+    # total (counting self/type selections towards the total so the list stays
+    # calm once anything is picked).
+    fill = max(0, limit - total_selected)
+    top_unselected = [oid for oid, _ in org_counts.most_common() if oid not in selected_ids][:fill]
+    org_wanted = selected_ids | set(top_unselected)
+
+    options: list[dict] = []
+
+    if org_wanted:
+        labels = dict(OrganizationUnit.objects.filter(id__in=org_wanted).values_list("id", "label"))
+        options.extend(
+            {
+                "param": "org",
+                "value": str(org_id),
+                "label": labels.get(org_id) or f"Organisatie {org_id}",
+                "count": org_counts.get(org_id, 0),
+                "selected": org_id in selected_ids,
+            }
+            for org_id in org_wanted
+        )
+
+    if self_ids:
+        self_labels = dict(OrganizationUnit.objects.filter(id__in=self_ids).values_list("id", "label"))
+        options.extend(
+            {
+                "param": "org_self",
+                "value": str(org_id),
+                "label": f"{self_labels.get(org_id) or f'Organisatie {org_id}'} (direct)",
+                "count": org_counts.get(org_id, 0),
+                "selected": True,
+            }
+            for org_id in self_ids
+        )
+
+    options.extend(
+        {
+            "param": "org_type",
+            "value": type_label,
+            "label": ORG_TYPE_PLURAL.get(type_label, type_label),
+            "count": 0,
+            "selected": True,
+        }
+        for type_label in selected_type_labels
+    )
+
+    # Selected first, then by descending count, then by label for a stable order.
+    options.sort(key=lambda o: (not o["selected"], -o["count"], o["label"]))
+    return options
+
+
+def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> None:
+    """Post-process select-multi groups in place for the top-N + "Meer" modal.
+
+    For each ``select-multi`` group:
+      - assigns a unique ``group_id`` (the modal opens by this key),
+      - computes ``top_options``: the ``top_n`` options by count (selected ones
+        kept visible), shown inline in the sidebar,
+      - sets ``has_more`` when there are more options than fit inline.
+    The full ``options`` list (alphabetical) is kept for the modal. Mutates the
+    given groups in place; returns nothing.
+    """
+    label_seq = 0
+    for group in filter_groups:
+        if group.get("type") != "select-multi":
+            continue
+        # Unique key — "labels" repeats per category, so disambiguate.
+        if group["name"] == "labels":
+            group["group_id"] = f"labels-{label_seq}"
+            label_seq += 1
+        else:
+            group["group_id"] = group["name"]
+
+        real_options = [o for o in group["options"] if o.get("value")]
+        selected = set(group.get("selected_values", []))
+        by_count = sorted(real_options, key=lambda o: o.get("count", 0), reverse=True)
+        # Selected options first (so the active selection reads clearly), then
+        # fill up to top_n with the highest-count unselected options. Once
+        # anything is selected the empty top-N options drop away, keeping the
+        # list calm; the full alphabetical list stays in the "Meer" modal.
+        selected_opts = [o for o in by_count if o["value"] in selected]
+        unselected_opts = [o for o in by_count if o["value"] not in selected]
+        # Show all selected; pad with the highest-count unselected up to top_n.
+        # So with <top_n selected the user still sees some choices, and with
+        # >=top_n selected the empty options drop away (calmer, clearer).
+        fill = max(0, top_n - len(selected_opts))
+        top = selected_opts + unselected_opts[:fill]
+        group["top_options"] = top
+        group["has_more"] = len(real_options) > len(top)
 
 
 def _build_org_hierarchy(
