@@ -106,3 +106,27 @@
 .merge-preview .utrecht-table__row:hover {
   background: inherit;
 }
+
+/* Merge-duplicates preview table (a real <table> with rowspan cells). */
+.merge-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+.merge-table__th {
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--semantics-content-secondary-color, #64748b);
+  border-bottom: 1px solid var(--semantics-controls-border-color, #e2e8f0);
+  white-space: nowrap;
+}
+.merge-table__td {
+  padding: 0.75rem;
+  vertical-align: top;
+  border-bottom: 1px solid var(--semantics-controls-border-color, #f1f5f9);
+  line-height: 1.4;
+}

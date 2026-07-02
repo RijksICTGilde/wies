@@ -13,7 +13,7 @@ from wies.core.models import OrganizationUnit, OrganizationUnitRole
 class MultiselectDropdown(SelectMultiple):
     """Custom dropdown multiselect widget using the multiselect component."""
 
-    template_name = "rvo/forms/widgets/multiselect.html"
+    template_name = "nldd/forms/widgets/multiselect.html"
 
     def id_for_label(self, id_, index=None):
         # Return None so the <label> in field.html gets no "for" attribute.
@@ -33,7 +33,7 @@ class OrgPickerWidget(forms.Widget):
     (``OrganizationsField``) lives in ``wies/core/fields.py``.
     """
 
-    template_name = "rvo/widgets/org_picker.html"
+    template_name = "nldd/widgets/org_picker.html"
     # The JS expects a fixed prefix + element IDs (assignment-org-*).
     # When we need multiple picker instances in the future, this goes
     # on a parameter; for now we have one picker per page, same ID set.
