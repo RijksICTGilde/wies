@@ -275,7 +275,7 @@
       var dialog = document.getElementById("nldd-client-modal");
       if (dialog && dialog.hide) dialog.hide();
 
-      updateOrgFilterButtonText();
+      // The sidebar quick options re-render via the filter form's OOB swap.
       if (sidebarForm) htmx.trigger(sidebarForm, "change");
     });
   }
@@ -312,7 +312,7 @@
       var dialog = document.getElementById("nldd-client-modal");
       if (dialog && dialog.hide) dialog.hide();
 
-      updateOrgFilterButtonText();
+      // The sidebar quick options re-render via the filter form's OOB swap.
       if (sidebarForm) {
         htmx.trigger(sidebarForm, "change");
       }

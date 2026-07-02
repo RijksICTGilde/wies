@@ -107,28 +107,120 @@
     el.addEventListener("input", sync);
   }
 
-  // --- nldd-search-field -> #nldd-search-hidden -----------------------
+  // --- nldd-search-field: suggestions + Enter-commit ------------------
+  // nldd-search-field fires: `input` (typing), `search` (Enter / search
+  // button), `change` (blur). We show live suggestions while typing and
+  // commit the search (write hidden -> run filter, hide suggestions, blur)
+  // on `search`. Committing via a suggestion click routes through here too.
+  function suggestionsBox() {
+    return document.getElementById("nldd-search-suggestions");
+  }
+  function hideSuggestions() {
+    const box = suggestionsBox();
+    if (box) box.innerHTML = "";
+  }
+  function commitSearch(el, value) {
+    const hidden = document.getElementById("nldd-search-hidden");
+    if (!hidden) return;
+    if (typeof value === "string") {
+      try {
+        el.value = value;
+      } catch (_) {}
+    }
+    const v = value !== undefined ? value : el.value || "";
+    hidden.value = v;
+    hidden.dispatchEvent(new Event("change", { bubbles: true }));
+    hideSuggestions();
+    // Blur the inner input so the dropdown doesn't reopen on focus.
+    try {
+      el.blur();
+      el.shadowRoot?.querySelector("input")?.blur();
+    } catch (_) {}
+  }
+
   function attachSearchField(el) {
     if (el.__nddSearchAttached) return;
     el.__nddSearchAttached = true;
-    const hidden = document.getElementById("nldd-search-hidden");
-    if (!hidden) return;
     let timer = null;
-    const sync = () => {
-      const value =
-        el.value !== undefined ? el.value : el.getAttribute("value") || "";
-      if (hidden.value !== value) {
-        hidden.value = value;
-        hidden.dispatchEvent(new Event("change", { bubbles: true }));
+
+    el.addEventListener("input", (e) => {
+      const term = (e.detail?.value ?? el.value ?? "").trim();
+      clearTimeout(timer);
+      if (!term) {
+        hideSuggestions();
+        return;
       }
-    };
-    el.addEventListener("input", () => {
-      clearTimeout(timer);
-      timer = setTimeout(sync, 500);
+      timer = setTimeout(() => {
+        const box = suggestionsBox();
+        if (!box || !window.htmx) return;
+        window.htmx.ajax("GET", `/zoek-suggesties/?zoek=${encodeURIComponent(term)}`, {
+          target: "#nldd-search-suggestions",
+          swap: "innerHTML",
+        });
+      }, 250);
     });
-    el.addEventListener("change", () => {
-      clearTimeout(timer);
-      sync();
+
+    // Enter / search button commits immediately.
+    el.addEventListener("search", (e) => {
+      commitSearch(el, (e.detail?.value ?? el.value ?? "").trim());
+    });
+    // Clearing the field (× dismiss) empties the search.
+    el.addEventListener("change", (e) => {
+      const v = (e.detail?.value ?? el.value ?? "").trim();
+      if (!v) commitSearch(el, "");
+    });
+  }
+
+  function setupSearchSuggestionClicks() {
+    document.addEventListener("click", (e) => {
+      const btn = e.composedPath().find(
+        (x) => x instanceof Element && x.classList?.contains("search-suggestion"),
+      );
+      if (!btn) return;
+      const searchField = document.querySelector("[data-nldd-search-input]");
+
+      // "Zoeken op …" commits the current search term.
+      if (btn.hasAttribute("data-search-commit")) {
+        if (searchField) commitSearch(searchField, (searchField.value || "").trim());
+        return;
+      }
+
+      // Org suggestion: add it as an org filter and clear the search.
+      const orgId = btn.dataset.orgId;
+      if (orgId) {
+        const form = document.getElementById("nldd-filter-form");
+        const container = document.getElementById("nldd-org-filter-inputs");
+        if (container && !container.querySelector(`input[name="org"][value="${CSS.escape(orgId)}"]`)) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = "org";
+          input.value = orgId;
+          input.setAttribute("data-filter-input", "");
+          input.setAttribute("data-label", btn.dataset.orgLabel || "");
+          container.appendChild(input);
+        }
+        if (searchField) {
+          try {
+            searchField.value = "";
+          } catch (_) {}
+        }
+        const hidden = document.getElementById("nldd-search-hidden");
+        if (hidden) hidden.value = "";
+        hideSuggestions();
+        if (form) dispatchFormChange(form);
+      }
+    });
+
+    // Click outside closes the suggestions.
+    document.addEventListener("click", (e) => {
+      const path = e.composedPath();
+      const inSearch = path.some(
+        (x) =>
+          x instanceof Element &&
+          (x.id === "nldd-search-suggestions" ||
+            x.hasAttribute?.("data-nldd-search-input")),
+      );
+      if (!inSearch) hideSuggestions();
     });
   }
 
@@ -193,8 +285,95 @@
           el instanceof Element && el.tagName?.toLowerCase() === "nldd-token",
       );
       if (!token) return;
-      if (token.dataset.nddDismiss !== "filter") return;
+      if (token.dataset.nlddDismiss !== "filter") return;
       removeFilter(token.dataset.filterName, token.dataset.filterValue || null);
+    });
+  }
+
+  // --- "Wis alle filters" -------------------------------------------
+  // Clears search, every checkbox group and the org filter in one go,
+  // then re-runs the filter once.
+  function clearAllFilters() {
+    const form = document.getElementById("nldd-filter-form");
+    if (!form) return;
+
+    // Search
+    const hidden = document.getElementById("nldd-search-hidden");
+    const searchField = document.querySelector("[data-nldd-search-input]");
+    if (hidden) hidden.value = "";
+    if (searchField) {
+      try {
+        searchField.value = "";
+      } catch (_) {}
+    }
+
+    // Checkbox groups
+    form.querySelectorAll("[data-nldd-fieldset]").forEach((fieldset) => {
+      fieldset
+        .querySelectorAll("nldd-checkbox-field, input[type='checkbox']")
+        .forEach((cb) => {
+          try {
+            cb.checked = false;
+          } catch (_) {}
+          cb.removeAttribute("checked");
+        });
+      rebuildCheckboxesIn(fieldset);
+    });
+
+    // Org filter (modal-managed hidden inputs)
+    const orgContainer = document.getElementById("nldd-org-filter-inputs");
+    if (orgContainer) orgContainer.innerHTML = "";
+
+    dispatchFormChange(form);
+  }
+
+  function setupClearAllFilters() {
+    document.addEventListener("click", (e) => {
+      const btn = e.composedPath().find(
+        (el) =>
+          el instanceof Element &&
+          el.hasAttribute &&
+          el.hasAttribute("data-nldd-clear-all"),
+      );
+      if (!btn) return;
+      e.preventDefault();
+      clearAllFilters();
+    });
+  }
+
+  // --- Opdrachtgever quick checkboxes -------------------------------
+  // The top-3 org quick options in the sidebar each carry their own param
+  // (org / org_self / org_type). Ticking one writes/removes a hidden input
+  // in #nldd-org-filter-inputs and re-runs the filter — no modal needed.
+  function setupOrgQuickOptions() {
+    document.addEventListener("change", (e) => {
+      const cb = e.target;
+      if (
+        !(cb instanceof HTMLInputElement) ||
+        !cb.classList.contains("org-filter-quick__checkbox")
+      ) {
+        return;
+      }
+      const form = document.getElementById("nldd-filter-form");
+      const container = document.getElementById("nldd-org-filter-inputs");
+      if (!form || !container) return;
+      const param = cb.dataset.orgParam || "org";
+      const value = cb.value;
+      const existing = Array.from(
+        container.querySelectorAll(`input[name="${CSS.escape(param)}"]`),
+      ).find((el) => el.value === value);
+      if (cb.checked && !existing) {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = param;
+        input.value = value;
+        input.setAttribute("data-filter-input", "");
+        input.setAttribute("data-label", cb.dataset.orgLabel || "");
+        container.appendChild(input);
+      } else if (!cb.checked && existing) {
+        existing.remove();
+      }
+      dispatchFormChange(form);
     });
   }
 
@@ -413,6 +592,9 @@
 
     setupClickBridge();
     setupTokenDismiss();
+    setupClearAllFilters();
+    setupOrgQuickOptions();
+    setupSearchSuggestionClicks();
     setupFilterCollapseAndToggle();
     setupSidebarToggle();
     setupFilterOptionsModal();

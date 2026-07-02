@@ -7,8 +7,11 @@
   <div class="nldd-search-row">
     <nldd-button id="nldd-sidebar-toggle" variant="secondary" start-icon="chevron-left" end-icon="filter" text="Filters">
     </nldd-button>
-    <nldd-search-field id="nldd-search-input" placeholder="Zoek op collega, opdracht of opdrachtgever…" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-nldd-search-input class="nldd-search-row__field">
-    </nldd-search-field>
+    <div class="nldd-search-field-wrap">
+      <nldd-search-field id="nldd-search-input" show-search-button placeholder="Zoek op collega, opdracht of opdrachtgever…" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-nldd-search-input class="nldd-search-row__field">
+      </nldd-search-field>
+      <div id="nldd-search-suggestions" class="nldd-search-suggestions-container"></div>
+    </div>
   </div>
   </nldd-container>
 {% endif %}
@@ -42,6 +45,7 @@
             {% endif %}
           {% endif %}
         {% endfor %}
+        <button type="button" class="nldd-clear-all-filters" data-nldd-clear-all>Wis alle filters</button>
       </div>
     {% endif %}
   </div>

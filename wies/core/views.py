@@ -504,6 +504,87 @@ def staff_database(request):
     return render(request, "staff_database.html", context)
 
 
+def _get_top_org_options(
+    count_mode: str,
+    excluded_org_ids: list[int],
+    selected_org_ids: set[str],
+    *,
+    selected_self_ids: set[str] | None = None,
+    selected_type_labels: set[str] | None = None,
+    org_counts: Counter[int] | None = None,
+    limit: int = 3,
+) -> list[dict]:
+    """Return opdrachtgever quick checkbox options: selected first, then top-N by count.
+
+    Each option carries its own ``param`` (``org``, ``org_self`` or
+    ``org_type``) so the sidebar quick row stays in sync with whatever was
+    picked in the modal — including a "direct onder…" self-node (``org_self``)
+    or an org-type group (``org_type``). The ``org`` group also pads up to
+    ``limit`` with the highest-count unselected orgs; self/type only appear
+    when actually selected (they have no top-N baseline).
+
+    ``org_counts`` lets the caller pass filter-aware per-org counts (computed
+    like rol/labels, excluding the org filter) so the numbers reflect the other
+    active filters. When omitted, falls back to the global ``_get_org_counts``
+    baseline (used by the modal, which has no other filter context).
+    """
+    selected_self_ids = selected_self_ids or set()
+    selected_type_labels = selected_type_labels or set()
+
+    if org_counts is None:
+        org_counts = _get_org_counts(count_mode, excluded_org_ids)
+    selected_ids = {int(x) for x in selected_org_ids if str(x).isdigit()}
+    self_ids = {int(x) for x in selected_self_ids if str(x).isdigit()}
+
+    total_selected = len(selected_ids) + len(self_ids) + len(selected_type_labels)
+    fill = max(0, limit - total_selected)
+    top_unselected = [oid for oid, _ in org_counts.most_common() if oid not in selected_ids][:fill]
+    org_wanted = selected_ids | set(top_unselected)
+
+    options: list[dict] = []
+
+    if org_wanted:
+        labels = dict(OrganizationUnit.objects.filter(id__in=org_wanted).values_list("id", "label"))
+        options.extend(
+            {
+                "param": "org",
+                "value": str(org_id),
+                "label": labels.get(org_id) or f"Organisatie {org_id}",
+                "count": org_counts.get(org_id, 0),
+                "selected": org_id in selected_ids,
+            }
+            for org_id in org_wanted
+        )
+
+    if self_ids:
+        self_labels = dict(OrganizationUnit.objects.filter(id__in=self_ids).values_list("id", "label"))
+        options.extend(
+            {
+                "param": "org_self",
+                "value": str(org_id),
+                "label": f"{self_labels.get(org_id) or f'Organisatie {org_id}'} (direct)",
+                "count": org_counts.get(org_id, 0),
+                "selected": True,
+            }
+            for org_id in self_ids
+        )
+
+    options.extend(
+        {
+            "param": "org_type",
+            "value": type_label,
+            "label": ORG_TYPE_PLURAL.get(type_label, type_label),
+            "count": 0,
+            "selected": True,
+        }
+        for type_label in selected_type_labels
+    )
+
+    # Selected first, then by descending count, then by label for a stable order.
+    options.sort(key=lambda o: (not o["selected"], -o["count"], o["label"]))
+    return options
+
+
 def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> None:
     """Post-process select-multi groups in place for the top-N + "Meer" modal.
 
@@ -874,6 +955,13 @@ class PlacementListView(ListView):
                 "type": "modal",
                 "name": "organisatie",
                 "label": "Opdrachtgever",
+                "top_options": _get_top_org_options(
+                    "placements",
+                    get_excluded_org_ids(),
+                    set(org_filter),
+                    selected_self_ids=set(org_self_filter),
+                    selected_type_labels=set(org_type_filter),
+                ),
             },
             {
                 "type": "select-multi",
@@ -1164,6 +1252,13 @@ class AssignmentListView(ListView):
                 "type": "modal",
                 "name": "organisatie",
                 "label": "Opdrachtgever",
+                "top_options": _get_top_org_options(
+                    "open_assignments",
+                    get_excluded_org_ids(),
+                    set(org_filter),
+                    selected_self_ids=set(org_self_filter),
+                    selected_type_labels=set(org_type_filter),
+                ),
             },
             {
                 "type": "select-multi",
@@ -2675,7 +2770,11 @@ def search_suggestions(request):
     """Return org abbreviation suggestions for the search input (HTMX partial)."""
     term = request.GET.get("zoek", "")
     orgs = find_orgs_by_abbreviation(term)
-    return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs})
+    return render(
+        request,
+        "parts/search_suggestions.html",
+        {"org_suggestions": orgs, "search_term": term.strip()},
+    )
 
 
 def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int]:

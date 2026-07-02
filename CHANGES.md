@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- NLDD: bring the filter/search UX to parity with `main`/#402 — a "Wis alle filters" button next to the active chips (also clears the search), the opdrachtgever filter's inline top-3 quick checkboxes (`org`/`org_self`/`org_type`) alongside the "Meer" tree modal, a magnifier icon on the "Meer" buttons, and a full search experience (Enter-to-commit, live suggestions dropdown with a "Zoeken op …" action and opdrachtgever suggestions). Also fixes individual filter chips not being dismissable (a `data-nldd-dismiss` dataset-key mismatch) and a dead `updateOrgFilterButtonText()` call that aborted the client-modal apply.
 - NLDD: adopt the `nldd-sidebar-section` layout on every page (upgrade @nldd/design-system to 0.8.64) — a sticky sidebar on wide screens that collapses to a sheet on narrow ones; contextual sidebars everywhere (filters, beheer-nav, general nav)
 - NLDD: port the filter "Meer"-modal UX (#402) — each filter group shows its top-3 options plus a "Meer" button that opens the full alphabetical list in a modal with search; the selection applies only on "Filter toepassen"
 - NLDD: merge `main` into the NLDD design-system branch — adopt the opdracht/plaatsing side-panel features (Gegevens/Updates tabs, inline-edit of all fields, opdracht verwijderen, placement periods), the "Dubbele opdrachten samenvoegen" beheertool and the full privacyverklaring, all rebuilt in the NLDD design system; migrate the privacy-html generator to NLDD output
