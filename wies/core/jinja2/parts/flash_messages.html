@@ -3,10 +3,14 @@
   <div class="flash-messages" id="flash-messages">
     {% for message in page_messages %}
       {% set link = message.extra_tags|parse_message_link %}
-      <div class="nldd-alert nldd-alert--{{ 'success' if 'success' in message.tags else 'error' if 'error' in message.tags else 'info' }}">
-        {{ message }}
-        {% if link %}<a href="{{ link.url }}">{{ link.text }}</a>{% endif %}
-      </div>
+      {% set _variant = 'success' if 'success' in message.tags else 'critical' if 'error' in message.tags else 'neutral' %}
+      {% if link %}
+        <nldd-banner variant="{{ _variant }}" text="{{ message }}">
+          <nldd-rich-text><a href="{{ link.url }}">{{ link.text }}</a></nldd-rich-text>
+        </nldd-banner>
+      {% else %}
+        <nldd-banner variant="{{ _variant }}" text="{{ message }}"></nldd-banner>
+      {% endif %}
     {% endfor %}
   </div>
   <script>

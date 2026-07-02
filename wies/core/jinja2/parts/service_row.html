@@ -50,13 +50,13 @@
     </div>
     {{ svc_form.description.as_field_group() }}
     {% if svc_form.placement_end_date.errors %}
-      {% for error in svc_form.placement_end_date.errors %}<div class="nldd-alert nldd-alert--error">{{ error }}</div>{% endfor %}
+      {% for error in svc_form.placement_end_date.errors %}<nldd-banner variant="critical" text="{{ error }}"></nldd-banner>{% endfor %}
     {% endif %}
     {% if svc_form.colleague.errors %}
-      {% for error in svc_form.colleague.errors %}<div class="nldd-alert nldd-alert--error">{{ error }}</div>{% endfor %}
+      {% for error in svc_form.colleague.errors %}<nldd-banner variant="critical" text="{{ error }}"></nldd-banner>{% endfor %}
     {% endif %}
     {% if svc_form.non_field_errors() %}
-      {% for error in svc_form.non_field_errors() %}<div class="nldd-alert nldd-alert--error">{{ error }}</div>{% endfor %}
+      {% for error in svc_form.non_field_errors() %}<nldd-banner variant="critical" text="{{ error }}"></nldd-banner>{% endfor %}
     {% endif %}
   </div>
   <div class="service-row__actions"></div>

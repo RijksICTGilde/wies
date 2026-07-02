@@ -39,7 +39,7 @@
         <legend class="nldd-fieldset__legend">
           Opdrachtgever(s) <span class="nldd-fieldset__hint">(voeg minimaal 1 opdrachtgever toe)</span>
         </legend>
-        {% for error in form.organizations.errors %}<div class="nldd-alert nldd-alert--error">{{ error }}</div>{% endfor %}
+        {% for error in form.organizations.errors %}<nldd-banner variant="critical" text="{{ error }}"></nldd-banner>{% endfor %}
         {{ form.organizations.as_widget() }}
       </fieldset>
       <fieldset class="nldd-fieldset" id="diensten">
