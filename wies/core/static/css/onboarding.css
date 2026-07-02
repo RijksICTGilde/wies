@@ -76,9 +76,11 @@
 }
 
 /* RIG-only disclaimer on the welcome step — wraps a c-alert, so it only
-   handles width/spacing; the alert brings its own styling. */
+   handles width/spacing; the alert brings its own styling. Constrained to the
+   same column width as the text so it doesn't run edge-to-edge. */
 .onboarding-disclaimer {
-  margin-top: 1.25rem;
+  margin: 1.25rem auto 0;
+  max-width: 56ch;
   text-align: left;
 }
 
@@ -86,49 +88,6 @@
 .onboarding-labels {
   text-align: left;
   margin-top: 1.25rem;
-}
-
-/* Rijksprofiel koppel-rij (placeholder, koppeling volgt later) */
-.onboarding-rijksprofiel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  text-align: left;
-  margin-top: 1.25rem;
-  padding: 0.875rem 1rem;
-  border: 1px solid #e6e6e6;
-  border-radius: 8px;
-  background: #f7f8f9;
-}
-
-.onboarding-rijksprofiel__text {
-  display: flex;
-  flex-direction: column;
-  gap: 0.125rem;
-  min-width: 0;
-}
-
-.onboarding-rijksprofiel__title {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 600;
-}
-
-.onboarding-rijksprofiel__hint {
-  color: #4f5b66;
-  font-size: 0.875rem;
-}
-
-.onboarding-rijksprofiel__notice {
-  margin: 0.5rem 0 0;
-  padding: 0.5rem 0.75rem;
-  border-radius: 6px;
-  background: #e5f1f8;
-  color: #31536c;
-  font-size: 0.875rem;
-  text-align: left;
 }
 
 /* Footer: Back on the left, Next/finish on the right */

@@ -44,7 +44,7 @@
         <div class="onboarding-illustration">
           <c-icon icon="groep-3-personen" size="xl" color="hemelblauw" />
         </div>
-        <c-h3>Welkom bij Wies, {{ (user.first_name or '').strip() or 'collega' }}!</c-h3>
+        <c-h3>Hoi {{ (user.first_name or '').strip() or 'collega' }}!</c-h3>
         <c-paragraph>
         Wies helpt je om collega's, opdrachten en plaatsingen te beheren.
         Boven in het scherm vind je twee tabbladen:
@@ -60,7 +60,7 @@
           </li>
         </ul>
         <div class="onboarding-disclaimer">
-          <c-alert kind="warning">
+          <c-alert kind="info">
           Let op: Wies bevat op dit moment alleen opdrachten van het Rijks ICT Gilde (RIG).
           </c-alert>
         </div>
@@ -73,8 +73,10 @@
         </div>
         <c-h3>Vul je profiel aan</c-h3>
         <c-paragraph>
-        Kies de labels die bij je passen — zo vinden collega's je
-        makkelijker terug. Je kunt dit later altijd aanpassen op je profiel.
+        Beschrijf wie je bent en welke skills je hebt, zodat collega's
+        weten waarvoor ze bij je moeten aankloppen. Kies de labels die bij
+        je passen — zo vinden collega's je makkelijker terug. Je kunt dit
+        later altijd aanpassen op je profiel.
         </c-paragraph>
         {% if onboarding_colleague %}
           <c-data-list class="onboarding-labels">
@@ -88,25 +90,6 @@
         {% else %}
           <c-paragraph>Je profiel wordt klaargezet — je kunt labels straks invullen via <c-link href="{{ url('user-profile') }}">Mijn profiel</c-link>.</c-paragraph>
         {% endif %}
-        {# Rijksprofielservice — backend-koppeling volgt; knop toont voorlopig
-           een "binnenkort" melding (afgehandeld in onboarding.js). #}
-        <div class="onboarding-rijksprofiel">
-          <div class="onboarding-rijksprofiel__text">
-            <span class="onboarding-rijksprofiel__title">
-              <c-icon icon="paspoort" size="md" /> Rijksprofiel koppelen
-            </span>
-            <span class="onboarding-rijksprofiel__hint">Haal je gegevens automatisch op uit de Rijksprofielservice.</span>
-          </div>
-          <button type="button"
-                  class="rvo-button rvo-button--secondary rvo-button--size-sm onboarding-rijksprofiel__button"
-                  data-rijksprofiel-koppelen>
-            <c-icon icon="externe-link" size="sm" />
-            Koppelen
-          </button>
-        </div>
-        <p class="onboarding-rijksprofiel__notice"
-           data-rijksprofiel-notice
-           hidden>De koppeling met de Rijksprofielservice komt binnenkort beschikbaar.</p>
       </section>
       {# Step 3 — Controleer je opdracht (only when placed on ≥1 assignment).
          Consultants may correct name + omschrijving inline (field-level

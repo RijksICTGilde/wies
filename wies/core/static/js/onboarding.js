@@ -51,15 +51,6 @@
     });
   }
 
-  // Rijksprofiel "Koppelen" — backend link not built yet; reveal a notice.
-  var rijksprofielBtn = dialog.querySelector("[data-rijksprofiel-koppelen]");
-  var rijksprofielNotice = dialog.querySelector("[data-rijksprofiel-notice]");
-  if (rijksprofielBtn && rijksprofielNotice) {
-    rijksprofielBtn.addEventListener("click", function () {
-      rijksprofielNotice.hidden = false;
-    });
-  }
-
   // Server confirms completion (skip or finish) → close in place.
   document.body.addEventListener("closeOnboarding", function () {
     dialog.close();

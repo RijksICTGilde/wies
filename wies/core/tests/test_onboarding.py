@@ -65,14 +65,15 @@ class OnboardingWizardRenderTest(TestCase):
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
         self.assertContains(response, 'id="onboardingWizard"')
+        # Header title; the body title is personalized so it doesn't duplicate.
         self.assertContains(response, "Welkom bij Wies")
+        self.assertContains(response, "Hoi Tess!")
         # Welcome step explains the tabs and carries the RIG-only disclaimer.
         self.assertContains(response, "Wie zit waar?")
         self.assertContains(response, "Aanvragen")
         self.assertContains(response, "Rijks ICT Gilde (RIG)")
-        # Profile step (labels + Rijksprofiel placeholder) is present.
+        # Profile step (labels) is present.
         self.assertContains(response, "Vul je profiel aan")
-        self.assertContains(response, "Rijksprofiel koppelen")
         # A non-placed user has welcome + profile = two steps, no third.
         self.assertContains(response, 'data-step="2"')
         self.assertNotContains(response, 'data-step="3"')
