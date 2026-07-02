@@ -39,6 +39,7 @@ class OnboardingContextProcessorTest(TestCase):
     def test_show_onboarding_true_for_fresh_user(self):
         ctx = onboarding(_request_for(self.factory_user))
         assert ctx["show_onboarding"] is True
+        assert "onboarding_label_categories" in ctx
         assert "onboarding_assignments" in ctx
 
     def test_show_onboarding_false_once_completed(self):
@@ -69,9 +70,12 @@ class OnboardingWizardRenderTest(TestCase):
         self.assertContains(response, "Wie zit waar?")
         self.assertContains(response, "Aanvragen")
         self.assertContains(response, "Rijks ICT Gilde (RIG)")
-        # A non-placed, non-consultant user only has the single welcome step.
-        self.assertContains(response, 'data-step="1"')
-        self.assertNotContains(response, 'data-step="2"')
+        # Profile step (labels + Rijksprofiel placeholder) is present.
+        self.assertContains(response, "Vul je profiel aan")
+        self.assertContains(response, "Rijksprofiel koppelen")
+        # A non-placed user has welcome + profile = two steps, no third.
+        self.assertContains(response, 'data-step="2"')
+        self.assertNotContains(response, 'data-step="3"')
 
     def test_wizard_not_shown_after_completion(self):
         self.user.onboarding_completed_at = timezone.now()
@@ -83,7 +87,7 @@ class OnboardingWizardRenderTest(TestCase):
 
 
 class OnboardingAssignmentStepTest(TestCase):
-    """Step 2 — the consultant checks their own opdracht(en)."""
+    """Step 3 — the consultant checks their own opdracht(en)."""
 
     def setUp(self):
         self.client = Client()
@@ -145,16 +149,16 @@ class OnboardingAssignmentStepTest(TestCase):
         # BM is named and mailable.
         self.assertContains(response, "Bea Manager")
         self.assertContains(response, "mailto:bm@rijksoverheid.nl")
-        # Welcome + opdracht = two steps.
-        self.assertContains(response, 'data-step="2"')
+        # Welcome + profile + opdracht = three steps.
+        self.assertContains(response, 'data-step="3"')
 
     def test_wizard_skips_opdracht_step_when_not_placed(self):
         self.client.force_login(self.user)
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
         self.assertNotContains(response, "Controleer je opdracht")
-        # No opdracht step → only the welcome step remains.
-        self.assertNotContains(response, 'data-step="2"')
+        # No opdracht step → welcome + profile only, no third step.
+        self.assertNotContains(response, 'data-step="3"')
 
     def test_step_hidden_for_non_consultant_even_when_placed(self):
         # A placed user who is NOT in the Consultant group (e.g. a BDM or

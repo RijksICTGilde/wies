@@ -28,9 +28,10 @@
       </form>
     </div>
     <div class="modal-body onboarding-body">
-      {# Progress dots — one per step. The opdracht-check step is optional, so
-         the total (1 or 2) depends on whether the consultant is placed. #}
-      {% set total_steps = 1 + (1 if onboarding_assignments else 0) %}
+      {# Progress dots — one per step. Welcome + profile are always shown; the
+         opdracht-check step is optional, so the total (2 or 3) depends on
+         whether the consultant is placed. #}
+      {% set total_steps = 2 + (1 if onboarding_assignments else 0) %}
       <ol class="onboarding-steps" aria-hidden="true">
         {% for dot in range(1, total_steps + 1) %}
           <li class="onboarding-step-dot{{ ' is-active' if dot == 1 }}"
@@ -58,12 +59,56 @@
             <span>Bij <strong>Aanvragen</strong> vind je alle opdrachten die spelen — spot de nieuwe en kijk waar jij van waarde kunt zijn.</span>
           </li>
         </ul>
-        <p class="onboarding-disclaimer">
-          <c-icon icon="info" size="sm" />
+        <div class="onboarding-disclaimer">
+          <c-alert kind="warning">
           Let op: Wies bevat op dit moment alleen opdrachten van het Rijks ICT Gilde (RIG).
-        </p>
+          </c-alert>
+        </div>
       </section>
-      {# Step 2 — Controleer je opdracht (only when placed on ≥1 assignment).
+      {# Step 2 — Vul je profiel aan (labels + Rijksprofiel) #}
+      {% set ns.step = ns.step + 1 %}
+      <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
+        <div class="onboarding-illustration">
+          <c-icon icon="persoon-met-vinkje" size="xl" color="hemelblauw" />
+        </div>
+        <c-h3>Vul je profiel aan</c-h3>
+        <c-paragraph>
+        Kies de labels die bij je passen — zo vinden collega's je
+        makkelijker terug. Je kunt dit later altijd aanpassen op je profiel.
+        </c-paragraph>
+        {% if onboarding_colleague %}
+          <c-data-list class="onboarding-labels">
+          {% for category in onboarding_label_categories %}
+            <dt>{{ category.name }}</dt>
+            <dd>
+              {{ inline_edit(onboarding_colleague, "labels_" ~ category.id) }}
+            </dd>
+          {% endfor %}
+          </c-data-list>
+        {% else %}
+          <c-paragraph>Je profiel wordt klaargezet — je kunt labels straks invullen via <c-link href="{{ url('user-profile') }}">Mijn profiel</c-link>.</c-paragraph>
+        {% endif %}
+        {# Rijksprofielservice — backend-koppeling volgt; knop toont voorlopig
+           een "binnenkort" melding (afgehandeld in onboarding.js). #}
+        <div class="onboarding-rijksprofiel">
+          <div class="onboarding-rijksprofiel__text">
+            <span class="onboarding-rijksprofiel__title">
+              <c-icon icon="paspoort" size="md" /> Rijksprofiel koppelen
+            </span>
+            <span class="onboarding-rijksprofiel__hint">Haal je gegevens automatisch op uit de Rijksprofielservice.</span>
+          </div>
+          <button type="button"
+                  class="rvo-button rvo-button--secondary rvo-button--size-sm onboarding-rijksprofiel__button"
+                  data-rijksprofiel-koppelen>
+            <c-icon icon="externe-link" size="sm" />
+            Koppelen
+          </button>
+        </div>
+        <p class="onboarding-rijksprofiel__notice"
+           data-rijksprofiel-notice
+           hidden>De koppeling met de Rijksprofielservice komt binnenkort beschikbaar.</p>
+      </section>
+      {# Step 3 — Controleer je opdracht (only when placed on ≥1 assignment).
          Consultants may correct name + omschrijving inline (field-level
          permission rules open these for a placed colleague); the rest is
          read-only with a "contact your Business Manager" advice. #}
