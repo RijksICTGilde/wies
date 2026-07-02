@@ -301,3 +301,44 @@
 .onboarding-skip:hover {
   color: var(--rvo-color-hemelblauw, #007bc7);
 }
+
+/* --- Step: Controleer je opdracht ----------------------------------------- */
+
+/* One card per assignment the consultant is placed on. */
+.onboarding-assignments {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  text-align: left;
+}
+
+.onboarding-assignment {
+  border: 1px solid #d6dbe0;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  background: #fbfcfd;
+}
+
+/* "Contact your Business Manager" advice for the read-only fields. */
+.onboarding-assignment__bm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e9ed;
+  font-size: 0.875rem;
+}
+
+.onboarding-assignment__bm-text {
+  color: #4f5b66;
+}
+
+.onboarding-assignment__bm-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}

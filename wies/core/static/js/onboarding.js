@@ -8,10 +8,13 @@
   var dialog = document.querySelector("dialog[data-onboarding]");
   if (!dialog) return;
 
-  var TOTAL_STEPS = 5;
+  var panels = dialog.querySelectorAll(".onboarding-panel");
+  // Step count is derived, not fixed: the "Controleer je opdracht" step only
+  // renders when the consultant is placed on an assignment, so the total is 5
+  // or 6 depending on the template. One progress dot is rendered per panel.
+  var TOTAL_STEPS = panels.length;
   var current = 1;
 
-  var panels = dialog.querySelectorAll(".onboarding-panel");
   var dots = dialog.querySelectorAll(".onboarding-step-dot");
   var backBtn = dialog.querySelector("[data-onboarding-back]");
   var nextBtn = dialog.querySelector("[data-onboarding-next]");

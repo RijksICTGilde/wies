@@ -1,9 +1,15 @@
 {# First-login onboarding wizard. Rendered from base.html when show_onboarding
    is True (see wies.core.context_processors.onboarding). A self-opening
-   <dialog> with five client-side steps; navigation handled by onboarding.js.
+   <dialog> with client-side steps; navigation handled by onboarding.js.
    "Overslaan" and "Aan de slag" both POST to onboarding-complete, which marks
-   the wizard done so it never reappears. Keep TOTAL_STEPS in onboarding.js in
-   sync with the number of .onboarding-panel sections here. #}
+   the wizard done so it never reappears.
+
+   The step count is NOT fixed: the "Controleer je opdracht" step (step 4)
+   only renders when the consultant is placed on at least one assignment
+   (onboarding_assignments). onboarding.js derives the total from the number of
+   .onboarding-panel sections and one progress dot is rendered per panel, so
+   the two stay in sync automatically. #}
+{% set ns = namespace(step=0) %}
 <dialog id="onboardingWizard"
         class="modal-dialog modal-dialog--wide onboarding-wizard"
         closedby="none"
@@ -22,16 +28,18 @@
       </form>
     </div>
     <div class="modal-body onboarding-body">
-      {# Progress dots — one per step #}
+      {# Progress dots — one per step. The opdracht-check step is optional, so
+         the total (5 or 6) depends on whether the consultant is placed. #}
+      {% set total_steps = 5 + (1 if onboarding_assignments else 0) %}
       <ol class="onboarding-steps" aria-hidden="true">
-        <li class="onboarding-step-dot is-active" data-dot="1"></li>
-        <li class="onboarding-step-dot" data-dot="2"></li>
-        <li class="onboarding-step-dot" data-dot="3"></li>
-        <li class="onboarding-step-dot" data-dot="4"></li>
-        <li class="onboarding-step-dot" data-dot="5"></li>
+        {% for dot in range(1, total_steps + 1) %}
+          <li class="onboarding-step-dot{{ ' is-active' if dot == 1 }}"
+              data-dot="{{ dot }}"></li>
+        {% endfor %}
       </ol>
       {# Step 1 — Welcome #}
-      <section class="onboarding-panel is-active" data-step="1">
+      {% set ns.step = ns.step + 1 %}
+      <section class="onboarding-panel is-active" data-step="{{ ns.step }}">
         <div class="onboarding-illustration">
           <c-icon icon="groep-3-personen" size="xl" color="hemelblauw" />
         </div>
@@ -43,7 +51,8 @@
         </c-paragraph>
       </section>
       {# Step 2 — Tour: Wie zit waar? #}
-      <section class="onboarding-panel" data-step="2" hidden>
+      {% set ns.step = ns.step + 1 %}
+      <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
         <div class="onboarding-illustration">
           <c-icon icon="groep-3-personen" size="xl" color="hemelblauw" />
         </div>
@@ -65,7 +74,8 @@
         </div>
       </section>
       {# Step 3 — Tour: Ontdek nieuwe opdrachten #}
-      <section class="onboarding-panel" data-step="3" hidden>
+      {% set ns.step = ns.step + 1 %}
+      <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
         <div class="onboarding-illustration">
           <c-icon icon="document-met-lijnen" size="xl" color="hemelblauw" />
         </div>
@@ -96,8 +106,83 @@
           </div>
         </div>
       </section>
-      {# Step 4 — Profile introduction (explains the profile before filling it) #}
-      <section class="onboarding-panel" data-step="4" hidden>
+      {# Step 4 — Controleer je opdracht (only when placed on ≥1 assignment).
+         Consultants may correct name + omschrijving inline (field-level
+         permission rules open these for a placed colleague); the rest is
+         read-only with a "contact your Business Manager" advice. #}
+      {% if onboarding_assignments %}
+        {% set ns.step = ns.step + 1 %}
+        <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
+          <div class="onboarding-illustration">
+            <c-icon icon="klembord-met-vinkje" size="xl" color="hemelblauw" />
+          </div>
+          <c-h3>Controleer je opdracht</c-h3>
+          <c-paragraph>
+          {% if onboarding_assignments|length > 1 %}
+            Dit zijn de opdrachten waarop je bent geplaatst. Klopt de naam of
+            omschrijving niet? Pas het hier direct aan.
+          {% else %}
+            Dit is de opdracht waarop je bent geplaatst. Klopt de naam of
+            omschrijving niet? Pas het hier direct aan.
+          {% endif %}
+          </c-paragraph>
+          <div class="onboarding-assignments">
+            {% for entry in onboarding_assignments %}
+              {% set assignment = entry.assignment %}
+              <div class="onboarding-assignment">
+                <c-data-list>
+                <dt>Opdracht naam</dt>
+                <dd>
+                  {{ inline_edit(assignment, "name") }}
+                </dd>
+                <dt>Opdrachtomschrijving</dt>
+                <dd>
+                  {{ inline_edit(assignment, "extra_info") }}
+                </dd>
+                <dt>{{ "Opdrachtgevers" if assignment.organization_relations.count() > 1 else "Opdrachtgever" }}</dt>
+                <dd>
+                  {{ inline_edit(assignment, "organizations") }}
+                </dd>
+                <dt>Periode</dt>
+                <dd>
+                  {{ inline_edit(assignment, "period") }}
+                </dd>
+                {% for service in entry.services %}
+                  <dt>{{ "Jouw rol" if entry.services|length == 1 else "Rol" }}</dt>
+                  <dd>
+                    {{ inline_edit(service, "skill") }}
+                  </dd>
+                  <dt>Omschrijving rol</dt>
+                  <dd>
+                    {{ inline_edit(service, "description") }}
+                  </dd>
+                {% endfor %}
+                </c-data-list>
+                {# Correcties buiten naam/omschrijving lopen via de Business
+                   Manager — toon naam + een voorgevulde mailto. #}
+                <div class="onboarding-assignment__bm">
+                  {% if assignment.owner %}
+                    <span class="onboarding-assignment__bm-text">
+                      Klopt er iets anders niet? Neem contact op met je Business
+                      Manager, <strong>{{ assignment.owner.name }}</strong>.
+                    </span>
+                    {% if entry.owner_mailto %}
+                      <c-link href="{{ entry.owner_mailto }}" class="onboarding-assignment__bm-link">
+                      <c-icon icon="mail" size="sm" /> Mail {{ assignment.owner.name }}
+                      </c-link>
+                    {% endif %}
+                  {% else %}
+                    <span class="onboarding-assignment__bm-text">Klopt er iets anders niet? Neem contact op met je Business Manager.</span>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
+      {# Profile introduction (explains the profile before filling it) #}
+      {% set ns.step = ns.step + 1 %}
+      <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
         <div class="onboarding-illustration">
           <c-icon icon="user" size="xl" color="hemelblauw" />
         </div>
@@ -124,8 +209,9 @@
           </div>
         </div>
       </section>
-      {# Step 5 — Fill in profile (labels + Rijksprofiel), the actual input step #}
-      <section class="onboarding-panel" data-step="5" hidden>
+      {# Fill in profile (labels + Rijksprofiel), the actual input step #}
+      {% set ns.step = ns.step + 1 %}
+      <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
         <div class="onboarding-illustration">
           <c-icon icon="persoon-met-vinkje" size="xl" color="hemelblauw" />
         </div>

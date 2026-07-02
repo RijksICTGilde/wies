@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- XXX: onboarding voor nieuwe gebruikers — bij de eerste login verschijnt een welkomstwizard (welkom, profiel aanvullen met labels, korte rondleiding) over de homepage; overslaan of afronden onthoudt dat de wizard niet opnieuw getoond wordt
+- 430: onboarding voor nieuwe gebruikers — bij de eerste login verschijnt een welkomstwizard (welkom, korte rondleiding, controleer je opdracht, profiel aanvullen met labels) over de homepage; overslaan of afronden onthoudt dat de wizard niet opnieuw getoond wordt. Consultants die op een opdracht zijn geplaatst kunnen in de wizard de naam, omschrijving en hun rolomschrijving van hun eigen opdracht direct corrigeren; overige velden (rol, opdrachtgever, periode) zijn read-only en de wizard verwijst voor die wijzigingen naar de Business Manager (naam + mailto). De opdracht-controle stap is alleen zichtbaar voor consultants
 - 417: remove `ModelBackend` from `AUTHENTICATION_BACKENDS`; `AuthBackend` now inherits from `ModelBackend` so group permissions keep resolving via a single backend, but there is no second password-login path)
 - 334: Add privacy declaration and beheer document. The in-product privacy page is regenerated via `manage.py generate_privacy_html`
 
