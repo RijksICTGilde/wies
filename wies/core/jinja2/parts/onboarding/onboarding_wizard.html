@@ -4,11 +4,11 @@
    "Overslaan" and "Aan de slag" both POST to onboarding-complete, which marks
    the wizard done so it never reappears.
 
-   The step count is NOT fixed: the "Controleer je opdracht" step (step 4)
-   only renders when the consultant is placed on at least one assignment
-   (onboarding_assignments). onboarding.js derives the total from the number of
-   .onboarding-panel sections and one progress dot is rendered per panel, so
-   the two stay in sync automatically. #}
+   The step count is NOT fixed: step 1 is always the welcome page; the
+   "Controleer je opdracht" step only renders when the consultant is placed on
+   at least one assignment (onboarding_assignments). onboarding.js derives the
+   total from the number of .onboarding-panel sections and one progress dot is
+   rendered per panel, so the two stay in sync automatically. #}
 {% set ns = namespace(step=0) %}
 <dialog id="onboardingWizard"
         class="modal-dialog modal-dialog--wide onboarding-wizard"
@@ -29,15 +29,15 @@
     </div>
     <div class="modal-body onboarding-body">
       {# Progress dots — one per step. The opdracht-check step is optional, so
-         the total (5 or 6) depends on whether the consultant is placed. #}
-      {% set total_steps = 5 + (1 if onboarding_assignments else 0) %}
+         the total (1 or 2) depends on whether the consultant is placed. #}
+      {% set total_steps = 1 + (1 if onboarding_assignments else 0) %}
       <ol class="onboarding-steps" aria-hidden="true">
         {% for dot in range(1, total_steps + 1) %}
           <li class="onboarding-step-dot{{ ' is-active' if dot == 1 }}"
               data-dot="{{ dot }}"></li>
         {% endfor %}
       </ol>
-      {# Step 1 — Welcome #}
+      {# Step 1 — Welcome + wat vind je waar (tabjes) + RIG-disclaimer #}
       {% set ns.step = ns.step + 1 %}
       <section class="onboarding-panel is-active" data-step="{{ ns.step }}">
         <div class="onboarding-illustration">
@@ -46,67 +46,24 @@
         <c-h3>Welkom bij Wies, {{ (user.first_name or '').strip() or 'collega' }}!</c-h3>
         <c-paragraph>
         Wies helpt je om collega's, opdrachten en plaatsingen te beheren.
-        Je ziet in één oogopslag wie waar zit en welke aanvragen er lopen.
-        We helpen je in een paar stappen op weg.
+        Boven in het scherm vind je twee tabbladen:
         </c-paragraph>
+        <ul class="onboarding-tabs-explainer">
+          <li>
+            <c-icon icon="groep-3-personen" size="sm" color="hemelblauw" />
+            <span>Bij <strong>Wie zit waar?</strong> zie je in één oogopslag welke collega's waar geplaatst zijn.</span>
+          </li>
+          <li>
+            <c-icon icon="document-met-lijnen" size="sm" color="hemelblauw" />
+            <span>Bij <strong>Aanvragen</strong> vind je alle opdrachten die spelen — spot de nieuwe en kijk waar jij van waarde kunt zijn.</span>
+          </li>
+        </ul>
+        <p class="onboarding-disclaimer">
+          <c-icon icon="info" size="sm" />
+          Let op: Wies bevat op dit moment alleen opdrachten van het Rijks ICT Gilde (RIG).
+        </p>
       </section>
-      {# Step 2 — Tour: Wie zit waar? #}
-      {% set ns.step = ns.step + 1 %}
-      <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
-        <div class="onboarding-illustration">
-          <c-icon icon="groep-3-personen" size="xl" color="hemelblauw" />
-        </div>
-        <c-h3>Wie zit waar?</c-h3>
-        <c-paragraph>
-        Het overzicht van collega's en hun huidige plaatsingen, zodat je
-        snel ziet wie waar zit.
-        </c-paragraph>
-        {# Stylized mock: rows of "avatar + name + placement". #}
-        <div class="onboarding-preview onboarding-mock onboarding-mock--wiezitwaar"
-             aria-hidden="true">
-          {% for _ in range(4) %}
-            <div class="onboarding-mock__person">
-              <span class="onboarding-mock__avatar"></span>
-              <span class="onboarding-mock__bar onboarding-mock__bar--name"></span>
-              <span class="onboarding-mock__bar onboarding-mock__bar--place"></span>
-            </div>
-          {% endfor %}
-        </div>
-      </section>
-      {# Step 3 — Tour: Ontdek nieuwe opdrachten #}
-      {% set ns.step = ns.step + 1 %}
-      <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
-        <div class="onboarding-illustration">
-          <c-icon icon="document-met-lijnen" size="xl" color="hemelblauw" />
-        </div>
-        <c-h3>Ontdek nieuwe opdrachten</c-h3>
-        <c-paragraph>
-        Bij Aanvragen vind je alle opdrachten die spelen. Spot snel de
-        nieuwe en kijk waar jij van waarde kunt zijn.
-        </c-paragraph>
-        {# Stylized mock: a few opdracht cards (title + client + period bar),
-           the first carrying a "Nieuw" badge to signal fresh opdrachten. #}
-        <div class="onboarding-preview onboarding-mock onboarding-mock--aanvragen"
-             aria-hidden="true">
-          <div class="onboarding-mock__card onboarding-mock__card--new">
-            <span class="onboarding-mock__badge">Nieuw</span>
-            <span class="onboarding-mock__bar onboarding-mock__bar--title"></span>
-            <span class="onboarding-mock__bar onboarding-mock__bar--client"></span>
-            <span class="onboarding-mock__bar onboarding-mock__bar--period"></span>
-          </div>
-          <div class="onboarding-mock__card">
-            <span class="onboarding-mock__bar onboarding-mock__bar--title"></span>
-            <span class="onboarding-mock__bar onboarding-mock__bar--client"></span>
-            <span class="onboarding-mock__bar onboarding-mock__bar--period"></span>
-          </div>
-          <div class="onboarding-mock__card">
-            <span class="onboarding-mock__bar onboarding-mock__bar--title"></span>
-            <span class="onboarding-mock__bar onboarding-mock__bar--client"></span>
-            <span class="onboarding-mock__bar onboarding-mock__bar--period"></span>
-          </div>
-        </div>
-      </section>
-      {# Step 4 — Controleer je opdracht (only when placed on ≥1 assignment).
+      {# Step 2 — Controleer je opdracht (only when placed on ≥1 assignment).
          Consultants may correct name + omschrijving inline (field-level
          permission rules open these for a placed colleague); the rest is
          read-only with a "contact your Business Manager" advice. #}
@@ -180,78 +137,6 @@
           </div>
         </section>
       {% endif %}
-      {# Profile introduction (explains the profile before filling it) #}
-      {% set ns.step = ns.step + 1 %}
-      <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
-        <div class="onboarding-illustration">
-          <c-icon icon="user" size="xl" color="hemelblauw" />
-        </div>
-        <c-h3>Bouw je profiel</c-h3>
-        <c-paragraph>
-        Beschrijf wie je bent en welke skills je hebt, zodat collega's
-        weten waarvoor ze bij je moeten aankloppen. In de volgende stap
-        vul je vast je labels in.
-        </c-paragraph>
-        {# Stylized mock: avatar + name, a short bio (two text lines), and a
-           row of skill chips — the "describe yourself + skills" essence. #}
-        <div class="onboarding-preview onboarding-mock onboarding-mock--profiel"
-             aria-hidden="true">
-          <div class="onboarding-mock__profile-head">
-            <span class="onboarding-mock__avatar onboarding-mock__avatar--lg"></span>
-            <span class="onboarding-mock__bar onboarding-mock__bar--name"></span>
-          </div>
-          <span class="onboarding-mock__bar onboarding-mock__bar--bio"></span>
-          <span class="onboarding-mock__bar onboarding-mock__bar--bio onboarding-mock__bar--bio-short"></span>
-          <div class="onboarding-mock__chips">
-            <span class="onboarding-mock__chip"></span>
-            <span class="onboarding-mock__chip"></span>
-            <span class="onboarding-mock__chip"></span>
-          </div>
-        </div>
-      </section>
-      {# Fill in profile (labels + Rijksprofiel), the actual input step #}
-      {% set ns.step = ns.step + 1 %}
-      <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
-        <div class="onboarding-illustration">
-          <c-icon icon="persoon-met-vinkje" size="xl" color="hemelblauw" />
-        </div>
-        <c-h3>Vul je profiel aan</c-h3>
-        <c-paragraph>
-        Kies de labels die bij je passen — zo vinden collega's je
-        makkelijker terug. Je kunt dit later altijd aanpassen op je profiel.
-        </c-paragraph>
-        {% if onboarding_colleague %}
-          <c-data-list class="onboarding-labels">
-          {% for category in onboarding_label_categories %}
-            <dt>{{ category.name }}</dt>
-            <dd>
-              {{ inline_edit(onboarding_colleague, "labels_" ~ category.id) }}
-            </dd>
-          {% endfor %}
-          </c-data-list>
-        {% else %}
-          <c-paragraph>Je profiel wordt klaargezet — je kunt labels straks invullen via <c-link href="{{ url('user-profile') }}">Mijn profiel</c-link>.</c-paragraph>
-        {% endif %}
-        {# Rijksprofielservice — backend-koppeling volgt; knop toont voorlopig
-           een "binnenkort" melding (afgehandeld in onboarding.js). #}
-        <div class="onboarding-rijksprofiel">
-          <div class="onboarding-rijksprofiel__text">
-            <span class="onboarding-rijksprofiel__title">
-              <c-icon icon="paspoort" size="md" /> Rijksprofiel koppelen
-            </span>
-            <span class="onboarding-rijksprofiel__hint">Haal je gegevens automatisch op uit de Rijksprofielservice.</span>
-          </div>
-          <button type="button"
-                  class="rvo-button rvo-button--secondary rvo-button--size-sm onboarding-rijksprofiel__button"
-                  data-rijksprofiel-koppelen>
-            <c-icon icon="externe-link" size="sm" />
-            Koppelen
-          </button>
-        </div>
-        <p class="onboarding-rijksprofiel__notice"
-           data-rijksprofiel-notice
-           hidden>De koppeling met de Rijksprofielservice komt binnenkort beschikbaar.</p>
-      </section>
     </div>
     <div class="modal-footer onboarding-footer">
       <c-button kind="subtle" type="button" class="onboarding-back" data-onboarding-back hidden>

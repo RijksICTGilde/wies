@@ -3,7 +3,7 @@
 from django.utils import timezone
 
 from wies.core.editables.assignment import _owner_display_context
-from wies.core.models import LabelCategory, Placement
+from wies.core.models import Placement
 from wies.core.querysets import annotate_placement_dates
 
 
@@ -54,9 +54,8 @@ def onboarding(request):
     """Expose first-login onboarding state to the base template.
 
     ``show_onboarding`` is True for an authenticated user who has not yet
-    completed or skipped the wizard. ``onboarding_label_categories`` feeds
-    the profile step (same label categories as the profile page).
-    ``onboarding_assignments`` feeds the opdracht-check step.
+    completed or skipped the wizard. ``onboarding_assignments`` feeds the
+    consultant opdracht-check step.
     """
     user = getattr(request, "user", None)
     if user is None or not user.is_authenticated or user.onboarding_completed_at is not None:
@@ -65,7 +64,5 @@ def onboarding(request):
     colleague = getattr(user, "colleague", None)
     return {
         "show_onboarding": True,
-        "onboarding_label_categories": list(LabelCategory.objects.all()),
-        "onboarding_colleague": colleague,
         "onboarding_assignments": _onboarding_assignments(request, colleague),
     }

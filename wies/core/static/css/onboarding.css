@@ -56,224 +56,36 @@
   margin-inline: auto;
 }
 
-/* Label pickers read left-aligned even inside a centered panel */
-.onboarding-labels {
+/* Welcome step: "wat vind je waar" tab explanations */
+.onboarding-tabs-explainer {
+  list-style: none;
+  margin: 1rem auto 0;
+  padding: 0;
+  max-width: 44ch;
   text-align: left;
-  margin-top: 1.25rem;
-}
-
-/* Rijksprofiel koppel-rij (placeholder, koppeling volgt later) */
-.onboarding-rijksprofiel {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  text-align: left;
-  margin-top: 1.25rem;
-  padding: 0.875rem 1rem;
-  border: 1px solid #e6e6e6;
-  border-radius: 8px;
-  background: #f7f8f9;
-}
-
-.onboarding-rijksprofiel__text {
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
-  min-width: 0;
+  gap: 0.75rem;
 }
 
-.onboarding-rijksprofiel__title {
+.onboarding-tabs-explainer li {
+  display: flex;
+  align-items: start;
+  gap: 0.5rem;
+}
+
+/* RIG-only disclaimer on the welcome step */
+.onboarding-disclaimer {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.5rem;
-  font-weight: 600;
-}
-
-.onboarding-rijksprofiel__hint {
-  color: #4f5b66;
-  font-size: 0.875rem;
-}
-
-.onboarding-rijksprofiel__notice {
-  margin: 0.5rem 0 0;
+  margin-top: 1.25rem;
   padding: 0.5rem 0.75rem;
   border-radius: 6px;
-  background: #e5f1f8;
-  color: #31536c;
+  background: #f3f6f9;
+  color: #4f5b66;
   font-size: 0.875rem;
-  text-align: left;
-}
-
-/* Tour preview — a framed box holding a stylized mini-mockup of the page */
-.onboarding-preview {
-  margin: 1.25rem auto 0;
-  max-width: 32rem;
-  min-height: 10rem;
-  border: 1px solid #e6e6e6;
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-}
-
-/* ---- Shared mock primitives (abstract, non-textual page impressions) ---- */
-.onboarding-mock {
-  padding: 1rem;
-  text-align: left;
-}
-
-/* Grey bars stand in for text; widths differ per role for a realistic feel. */
-.onboarding-mock__bar {
-  display: block;
-  height: 0.5rem;
-  border-radius: 999px;
-  background: #dce0e4;
-}
-
-.onboarding-mock__bar--title {
-  width: 70%;
-  height: 0.625rem;
-  background: #c2c9d1;
-}
-
-.onboarding-mock__bar--client {
-  width: 50%;
-  background: #007bc7;
-  opacity: 0.5;
-}
-
-.onboarding-mock__bar--period {
-  width: 35%;
-  background: #e7eaed;
-}
-
-.onboarding-mock__bar--name {
-  width: 7rem;
-}
-
-.onboarding-mock__bar--place {
-  width: 5rem;
-  background: #e7eaed;
-}
-
-.onboarding-mock__bar--bio {
-  width: 100%;
-}
-
-.onboarding-mock__bar--bio-short {
-  width: 70%;
-}
-
-.onboarding-mock__avatar {
-  flex: none;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  background: #cdd7e5;
-}
-
-/* ---- Aanvragen: opdracht cards, the first flagged "Nieuw" ---- */
-.onboarding-mock--aanvragen {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
-.onboarding-mock__card {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.75rem 0.875rem;
-  border-radius: 6px;
-  background: #f7f8f9;
-  border: 1px solid #e6e6e6;
-}
-
-.onboarding-mock__card--new {
-  border-color: var(--rvo-color-hemelblauw, #007bc7);
-  background: #fff;
-}
-
-.onboarding-mock__badge {
-  position: absolute;
-  top: 0.625rem;
-  right: 0.75rem;
-  padding: 0.0625rem 0.5rem;
-  border-radius: 999px;
-  background: var(--rvo-color-hemelblauw, #007bc7);
-  color: #fff;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-/* ---- Wie zit waar?: rows of avatar + name + placement ---- */
-.onboarding-mock--wiezitwaar {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-}
-
-.onboarding-mock__person {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding-bottom: 0.625rem;
-  border-bottom: 1px solid #eef1f4;
-}
-
-.onboarding-mock__person:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.onboarding-mock__bar--place {
-  margin-left: auto;
-}
-
-/* ---- Mijn profiel: avatar + name, a short bio, and skill chips ---- */
-.onboarding-mock--profiel {
-  display: flex;
-  flex-direction: column;
-  gap: 0.625rem;
-  padding: 1.25rem;
-}
-
-.onboarding-mock__profile-head {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.25rem;
-}
-
-.onboarding-mock__avatar--lg {
-  width: 3rem;
-  height: 3rem;
-}
-
-.onboarding-mock__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-  margin-top: 0.5rem;
-}
-
-.onboarding-mock__chip {
-  width: 4rem;
-  height: 1.25rem;
-  border-radius: 999px;
-  background: #d6e6f4;
-}
-
-.onboarding-mock__chip:nth-child(2) {
-  width: 5.5rem;
-  background: #fbe7c2;
-}
-
-.onboarding-mock__chip:nth-child(3) {
-  width: 3.25rem;
-  background: #dce0e4;
 }
 
 /* Footer: Back on the left, Next/finish on the right */

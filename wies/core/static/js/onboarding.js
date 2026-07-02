@@ -10,8 +10,8 @@
 
   var panels = dialog.querySelectorAll(".onboarding-panel");
   // Step count is derived, not fixed: the "Controleer je opdracht" step only
-  // renders when the consultant is placed on an assignment, so the total is 5
-  // or 6 depending on the template. One progress dot is rendered per panel.
+  // renders when the consultant is placed on an assignment, so the total is 1
+  // or 2 depending on the template. One progress dot is rendered per panel.
   var TOTAL_STEPS = panels.length;
   var current = 1;
 
@@ -48,15 +48,6 @@
   if (backBtn) {
     backBtn.addEventListener("click", function () {
       show(current - 1);
-    });
-  }
-
-  // Rijksprofiel "Koppelen" — backend link not built yet; reveal a notice.
-  var rijksprofielBtn = dialog.querySelector("[data-rijksprofiel-koppelen]");
-  var rijksprofielNotice = dialog.querySelector("[data-rijksprofiel-notice]");
-  if (rijksprofielBtn && rijksprofielNotice) {
-    rijksprofielBtn.addEventListener("click", function () {
-      rijksprofielNotice.hidden = false;
     });
   }
 
