@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 430: onboarding voor nieuwe gebruikers — bij de eerste login verschijnt een welkomstwizard over de homepage. Stap 1 verwelkomt, legt de tabbladen (Wie zit waar? / Aanvragen) uit en toont een waarschuwing dat Wies op dit moment alleen RIG-opdrachten bevat. Stap 2 laat je je profiel aanvullen met labels (Rijksprofiel-koppeling volgt later). Consultants die op een opdracht zijn geplaatst krijgen een derde stap om hun eigen opdracht te controleren: naam, omschrijving en hun rolomschrijving kunnen ze direct corrigeren; overige velden (rol, opdrachtgever, periode) zijn read-only en de wizard verwijst voor die wijzigingen naar de Business Manager (naam + mailto). Overslaan of afronden onthoudt dat de wizard niet opnieuw getoond wordt
+- 430: onboarding-wizard bij de eerste login — welkom + uitleg van de tabbladen, profiel aanvullen met labels, en voor geplaatste consultants een stap om hun eigen opdracht te controleren (naam/omschrijving/rolomschrijving aanpasbaar, overige velden verwijzen naar de Business Manager). Overslaan of afronden onthoudt dat de wizard niet terugkomt
 
 ## 2026-07-02
 
