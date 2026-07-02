@@ -151,12 +151,12 @@
       radioLabel.appendChild(radio);
       actionsWrapper.appendChild(radioLabel);
 
-      var removeBtn = document.createElement("button");
-      removeBtn.type = "button";
-      removeBtn.className =
-        "assignment-org-remove rvo-button rvo-button--tertiary rvo-button--size-xs";
+      var removeBtn = document.createElement("nldd-button");
+      removeBtn.setAttribute("variant", "warning-subtle");
+      removeBtn.setAttribute("size", "sm");
+      removeBtn.setAttribute("start-icon", "trash");
+      removeBtn.setAttribute("text", "Verwijderen");
       removeBtn.dataset.orgId = row.nodeId;
-      removeBtn.textContent = "Verwijderen";
       removeBtn.setAttribute("aria-label", "Verwijder " + row.label);
       removeBtn.addEventListener("click", function () {
         var next = rows.filter(function (r) {

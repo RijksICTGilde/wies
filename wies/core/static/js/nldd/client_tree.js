@@ -165,11 +165,11 @@
         span.textContent = text;
         span.title = text;
         li.appendChild(span);
-        var removeBtn = document.createElement("button");
-        removeBtn.type = "button";
-        removeBtn.className = "nldd-client-modal__selection-remove";
-        removeBtn.setAttribute("aria-label", "Verwijder " + text);
-        removeBtn.textContent = "✕";
+        var removeBtn = document.createElement("nldd-icon-button");
+        removeBtn.setAttribute("icon", "dismiss");
+        removeBtn.setAttribute("variant", "neutral-transparent");
+        removeBtn.setAttribute("size", "sm");
+        removeBtn.setAttribute("text", "Verwijder " + text);
         removeBtn.addEventListener(
           "click",
           (function (id) {
