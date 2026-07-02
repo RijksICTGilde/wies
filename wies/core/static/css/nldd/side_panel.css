@@ -64,22 +64,6 @@
   outline-offset: 1px;
 }
 
-.nldd-panel__bar-back {
-  background: none;
-  border: 0;
-  color: inherit;
-  cursor: pointer;
-  padding: var(--primitives-space-6, 6px);
-  border-radius: 4px;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.nldd-panel__bar-back:hover {
-  background: var(--semantics-surfaces-tinted-background-color, #f4f6f9);
-}
-
 /* Identity sectie (avatar + email) onder de bar */
 .nldd-panel__identity {
   display: flex;
@@ -108,24 +92,6 @@
   gap: var(--primitives-space-6, 6px);
 }
 
-/* Detail list (icon + tekst) */
-.nldd-detail-list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--primitives-space-12, 12px);
-}
-.nldd-detail-item {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--primitives-space-10, 10px);
-}
-.nldd-detail-item > nldd-icon {
-  width: 20px;
-  height: 20px;
-  margin-top: 2px;
-  color: var(--semantics-content-secondary-color, #666);
-}
-
 /* Data list (key/value gegevens) */
 .nldd-data-list {
   display: grid;
@@ -139,16 +105,6 @@
 }
 .nldd-data-list dd {
   margin: 0;
-}
-
-.nldd-org-crumb {
-  display: inline-flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--primitives-space-4, 4px);
-}
-.nldd-org-crumb__sep {
-  color: var(--semantics-content-secondary-color, #666);
 }
 
 /* Assignment cards */
@@ -250,10 +206,6 @@
   align-items: center;
   font-size: 0.85rem;
 }
-.service-card__description {
-  margin-top: var(--primitives-space-4, 4px);
-}
-
 /* Vertical spacing utility */
 .nldd-stack {
   display: flex;
@@ -293,3 +245,4 @@
 .nldd-tabs__panel[hidden] {
   display: none;
 }
+

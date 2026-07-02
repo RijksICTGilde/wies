@@ -599,45 +599,8 @@
     setupClearAllFilters();
     setupOrgQuickOptions();
     setupSearchSuggestionClicks();
-    setupFilterCollapseAndToggle();
     setupSidebarToggle();
     setupFilterOptionsModal();
-  }
-
-  // --- Filter groep in/uitklappen + "Toon meer/minder" ----------------
-  function setupFilterCollapseAndToggle() {
-    document.addEventListener("click", (e) => {
-      // Header collapse toggle
-      const collapseBtn = e.target.closest("[data-nldd-collapse-toggle]");
-      if (collapseBtn) {
-        e.preventDefault();
-        const fieldset = collapseBtn.closest("[data-nldd-collapsible]");
-        if (fieldset) fieldset.toggleAttribute("data-collapsed");
-        return;
-      }
-
-      // "Toon meer / Toon minder" toggle
-      const toggleBtn = e.target.closest(".nldd-checkbox-filter__toggle");
-      if (toggleBtn) {
-        e.preventDefault();
-        const extra = toggleBtn.previousElementSibling;
-        if (!extra) return;
-        const expanding = extra.hidden;
-        extra.hidden = !expanding;
-        toggleBtn.classList.toggle(
-          "nldd-checkbox-filter__toggle--expanded",
-          expanding,
-        );
-        const icon = toggleBtn.querySelector(
-          ".nldd-checkbox-filter__toggle-icon",
-        );
-        const text = toggleBtn.querySelector(
-          ".nldd-checkbox-filter__toggle-text",
-        );
-        if (icon) icon.setAttribute("name", expanding ? "minus" : "plus");
-        if (text) text.textContent = expanding ? "Toon minder" : "Toon meer";
-      }
-    });
   }
 
   if (document.readyState === "loading") {

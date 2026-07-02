@@ -37,6 +37,20 @@ body {
   padding: 1rem;
 }
 
+/* Section heading above a sidebar nav list (e.g. "Instellingen", "Over deze site"). */
+.nldd-sidebar-heading {
+  margin: var(--primitives-space-8, 8px) var(--primitives-space-12, 12px)
+    var(--primitives-space-4, 4px);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--semantics-content-secondary-color, #64748b);
+}
+.nldd-sidebar-heading:not(:first-child) {
+  margin-top: var(--primitives-space-16, 16px);
+}
+
 /* The "Filters" button only makes sense while the sidebar is a sheet.
    On lg the sidebar is an always-visible aside, so hide the trigger. */
 #nldd-sidebar-toggle {
@@ -50,13 +64,75 @@ a {
   color: var(--semantics-links-color, inherit);
 }
 
+/* Opdrachtgever picker (OrgPickerWidget) — renders on the opdracht-create
+   form AND in the inline-edit side panel, so it lives in the global app.css. */
+.org-filter-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0 var(--primitives-space-12, 12px);
+  background: var(--semantics-surfaces-background-color, #fff);
+  border: 1px solid var(--semantics-controls-border-color, #cbd5e1);
+  border-radius: 6px;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.org-filter-trigger:hover {
+  border-color: var(--semantics-content-accent-color, #154273);
+}
+.org-filter-trigger:focus-visible {
+  outline: 2px solid var(--semantics-content-accent-color, #154273);
+  outline-offset: 1px;
+}
+.org-filter-trigger__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.org-filter-trigger__placeholder {
+  color: var(--semantics-content-secondary-color, #64748b);
+}
+.assignment-org-selections {
+  margin-top: var(--primitives-space-12, 12px);
+}
+.assignment-org-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.assignment-org-table th {
+  text-align: left;
+  font-weight: 600;
+  padding: var(--primitives-space-8, 8px) var(--primitives-space-12, 12px);
+  border-bottom: 1px solid var(--semantics-controls-border-color, #e2e8f0);
+  white-space: nowrap;
+}
+.assignment-org-table td {
+  padding: var(--primitives-space-8, 8px) var(--primitives-space-12, 12px);
+  border-bottom: 1px solid var(--semantics-controls-border-color, #f1f5f9);
+  vertical-align: middle;
+}
+.assignment-org-table td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
+.assignment-org-table__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--primitives-space-8, 8px);
+  white-space: nowrap;
+}
+
 /* Avatar circles (used in tables, panels, teams) */
 .nldd-avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: var(--primitives-space-40, 40px);
+  height: var(--primitives-space-40, 40px);
   border-radius: 50%;
   background: var(--semantics-content-accent-color, #154273);
   color: #fff;
@@ -65,13 +141,13 @@ a {
   flex-shrink: 0;
 }
 .nldd-avatar--sm {
-  width: 28px;
-  height: 28px;
+  width: var(--primitives-space-28, 28px);
+  height: var(--primitives-space-28, 28px);
   font-size: 0.75rem;
 }
 .nldd-avatar--lg {
-  width: 56px;
-  height: 56px;
+  width: var(--primitives-space-56, 56px);
+  height: var(--primitives-space-56, 56px);
   font-size: 1.5rem;
 }
 .nldd-avatar--vacant {
@@ -82,41 +158,6 @@ a {
 .nldd-text-secondary {
   color: var(--semantics-content-secondary-color, #64748b);
   font-size: 0.875rem;
-}
-
-/* Alert blocks (inline edit, import results, etc.) */
-.nldd-alert {
-  padding: 0.75rem 1rem;
-  border-radius: 6px;
-  margin-bottom: 0.5rem;
-}
-.nldd-alert--success {
-  background: var(
-    --semantics-feedback-positive-subtle-background-color,
-    #f0fdf4
-  );
-  border: 1px solid var(--semantics-feedback-positive-border-color, #86efac);
-}
-.nldd-alert--error {
-  background: var(
-    --semantics-feedback-negative-subtle-background-color,
-    #fef2f2
-  );
-  border: 1px solid var(--semantics-feedback-negative-border-color, #fca5a5);
-}
-.nldd-alert--warning {
-  background: var(
-    --semantics-feedback-cautionary-subtle-background-color,
-    #fffbeb
-  );
-  border: 1px solid var(--semantics-feedback-cautionary-border-color, #fcd34d);
-}
-.nldd-alert--info {
-  background: var(
-    --semantics-feedback-informative-subtle-background-color,
-    #eff6ff
-  );
-  border: 1px solid var(--semantics-feedback-informative-border-color, #93c5fd);
 }
 
 /* Form field styling (for NlddFormMixin templates) */
@@ -227,16 +268,16 @@ nldd-icon {
   flex-shrink: 0;
 }
 nldd-icon[size="16"] {
-  width: 16px;
-  height: 16px;
+  width: var(--primitives-space-16, 16px);
+  height: var(--primitives-space-16, 16px);
 }
 nldd-icon[size="20"] {
-  width: 20px;
-  height: 20px;
+  width: var(--primitives-space-20, 20px);
+  height: var(--primitives-space-20, 20px);
 }
 nldd-icon[size="24"] {
-  width: 24px;
-  height: 24px;
+  width: var(--primitives-space-24, 24px);
+  height: var(--primitives-space-24, 24px);
 }
 .edit-icon-button {
   background: none;
@@ -254,8 +295,8 @@ nldd-icon[size="24"] {
   background: var(--semantics-surfaces-tinted-background-color, #f4f6f9);
 }
 .edit-icon-button__pencil {
-  width: 18px;
-  height: 18px;
+  width: var(--primitives-space-18, 18px);
+  height: var(--primitives-space-18, 18px);
 }
 .field-actions {
   display: flex;
