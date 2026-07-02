@@ -1,7 +1,7 @@
 {% for user in object_list %}
   <nldd-list-item type="button" title="{{ user.first_name }} {{ user.last_name }}" hx-get="{{ url('user-edit', args=[user.id]) }}" hx-target="#userFormModal" hx-swap="innerHTML">
   <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
-  <nldd-icon-cell slot="start" size="40" vertical-alignment="top">
+  <nldd-icon-cell slot="start" size="40">
   <span class="nldd-avatar" aria-hidden="true">{{ user.first_name|first|upper if user.first_name else user.email|first|upper }}</span>
   </nldd-icon-cell>
   <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>

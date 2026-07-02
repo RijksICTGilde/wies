@@ -9,7 +9,7 @@
   {% include "parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  <nldd-container slot="header" padding="16">
+  <nldd-container padding="16">
   <div style="display: flex; align-items: center; gap: 12px;">
     <nldd-search-field id="nldd-search-input" style="flex: 1;" placeholder="Zoek op naam of email..." value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" hx-get="{{ url('admin-users') }}" hx-trigger="input changed delay:300ms" hx-target="#nldd-user-table" hx-swap="outerHTML" name="zoek">
     </nldd-search-field>
