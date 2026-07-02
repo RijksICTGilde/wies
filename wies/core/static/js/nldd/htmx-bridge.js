@@ -242,24 +242,28 @@
       return;
     }
 
-    // Multi-select: vink corresponderende nldd-checkbox-field uit.
-    const fieldset = form.querySelector(
-      `[data-nldd-fieldset][data-name="${CSS.escape(name)}"]`,
-    );
-    if (fieldset && value !== null) {
-      const cb = Array.from(
-        fieldset.querySelectorAll(
-          "nldd-checkbox-field, input[type='checkbox']",
-        ),
-      ).find((el) => el.getAttribute("value") === value);
-      if (cb) {
-        try {
-          cb.checked = false;
-        } catch (_) {}
-        cb.removeAttribute("checked");
-        rebuildCheckboxesIn(fieldset);
-        dispatchFormChange(form);
-        return;
+    // Multi-select: uncheck the matching checkbox. "labels" repeats per
+    // category, so several fieldsets share data-name="labels" — search ALL
+    // of them for the value, not just the first.
+    if (value !== null) {
+      const fieldsets = form.querySelectorAll(
+        `[data-nldd-fieldset][data-name="${CSS.escape(name)}"]`,
+      );
+      for (const fieldset of fieldsets) {
+        const cb = Array.from(
+          fieldset.querySelectorAll(
+            "nldd-checkbox-field, input[type='checkbox']",
+          ),
+        ).find((el) => el.getAttribute("value") === value);
+        if (cb) {
+          try {
+            cb.checked = false;
+          } catch (_) {}
+          cb.removeAttribute("checked");
+          rebuildCheckboxesIn(fieldset);
+          dispatchFormChange(form);
+          return;
+        }
       }
     }
 
