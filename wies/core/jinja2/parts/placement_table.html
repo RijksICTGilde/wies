@@ -1,17 +1,14 @@
-{# Placement table #}
+{# Placement table — echte nldd-table met responsive columns. #}
 <div id="nldd-placement-table">
-  <table class="nldd-table">
-    <thead>
-      <tr>
-        <th class="nldd-table__th" style="width: 40px;"></th>
-        <th class="nldd-table__th">Collega</th>
-        <th class="nldd-table__th">Opdracht</th>
-        <th class="nldd-table__th nldd-table__th--right">Loopt tot</th>
-        <th class="nldd-table__th" style="width: 32px;"></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% include "parts/placement_table_rows.html" %}
-    </tbody>
-  </table>
+  <nldd-table columns="40px minmax(160px, 3fr) minmax(220px, 4fr) minmax(96px, 132px) 24px"
+              accessible-label="Wie zit waar">
+    <nldd-table-row slot="header">
+      <nldd-cell></nldd-cell>
+      <nldd-text-cell text="Collega"></nldd-text-cell>
+      <nldd-text-cell text="Opdracht"></nldd-text-cell>
+      <nldd-text-cell text="Loopt tot" horizontal-alignment="right"></nldd-text-cell>
+      <nldd-cell></nldd-cell>
+    </nldd-table-row>
+    {% include "parts/placement_table_rows.html" %}
+  </nldd-table>
 </div>

@@ -1,6 +1,12 @@
-{# NDD user list — simpele list met klikbare list-items. #}
+{# NDD user table — echte nldd-table met kolommen (avatar, naam+e-mail, actie). #}
 <div id="nldd-user-table">
-  <nldd-list>
-  {% include "parts/user_table_rows.html" %}
-  </nldd-list>
+  <nldd-table columns="40px minmax(220px, 1fr) 24px"
+              accessible-label="Gebruikers">
+    <nldd-table-row slot="header">
+      <nldd-cell></nldd-cell>
+      <nldd-text-cell text="Gebruiker"></nldd-text-cell>
+      <nldd-cell></nldd-cell>
+    </nldd-table-row>
+    {% include "parts/user_table_rows.html" %}
+  </nldd-table>
 </div>

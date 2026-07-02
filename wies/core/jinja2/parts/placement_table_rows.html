@@ -4,38 +4,31 @@
   {% if clients|length > 1 %}
     {% set client_label = client_label ~ " (+" ~ (clients|length - 1) ~ ")" %}
   {% endif %}
-  <tr class="nldd-table__row"
-      hx-get="{{ placement.panel_url }}"
-      hx-target="#nldd-side-panel-content"
-      hx-swap="innerHTML"
-      tabindex="0">
-    <td class="nldd-table__td nldd-table__td--avatar">
+  <nldd-table-row hx-get="{{ placement.panel_url }}"
+                  hx-target="#nldd-side-panel-content"
+                  hx-swap="innerHTML"
+                  tabindex="0"
+                  style="cursor: pointer;">
+    <nldd-icon-cell>
       <span class="nldd-avatar" aria-hidden="true">{{ placement.colleague.name|first|upper }}</span>
-    </td>
-    <td class="nldd-table__td">
-      <strong>{{ placement.colleague.name }}</strong>
-      <span class="nldd-table__sub">{{ placement.service.skill.name if placement.service.skill else '' }}</span>
-    </td>
-    <td class="nldd-table__td">
-      <span>{{ placement.service.assignment.name }}</span>
-      <span class="nldd-table__sub">{{ client_label }}</span>
-    </td>
-    <td class="nldd-table__td nldd-table__td--right nldd-table__td--secondary">
-      {{ placement.end_date|datum_nl("j M Y") if placement.end_date else '' }}
-    </td>
-    <td class="nldd-table__td nldd-table__td--icon">
-      <nldd-icon name="chevron-right" size="16"></nldd-icon>
-    </td>
-  </tr>
+    </nldd-icon-cell>
+    <nldd-text-cell text="{{ placement.colleague.name }}"
+                    supporting-text="{{ placement.service.skill.name if placement.service.skill else '' }}"></nldd-text-cell>
+    <nldd-text-cell text="{{ placement.service.assignment.name }}"
+                    supporting-text="{{ client_label }}"></nldd-text-cell>
+    <nldd-text-cell text="{{ placement.end_date|datum_nl('j M Y') if placement.end_date else '' }}"
+                    color="secondary" horizontal-alignment="right"></nldd-text-cell>
+    <nldd-icon-cell color="secondary" size="16" icon="chevron-right"></nldd-icon-cell>
+  </nldd-table-row>
 {% else %}
-  <tr>
-    <td colspan="5" class="nldd-table__td nldd-table__td--empty">Geen inzetten gevonden.</td>
-  </tr>
+  <nldd-table-row>
+    <nldd-text-cell text="Geen inzetten gevonden."></nldd-text-cell>
+  </nldd-table-row>
 {% endfor %}
 {% if next_page_url %}
-  <tr hx-get="{{ next_page_url }}"
-      hx-trigger="revealed"
-      hx-swap="outerHTML">
-    <td colspan="5" class="nldd-table__td nldd-table__td--loading">Meer laden…</td>
-  </tr>
+  <nldd-table-row hx-get="{{ next_page_url }}"
+                  hx-trigger="revealed"
+                  hx-swap="outerHTML">
+    <nldd-text-cell text="Meer laden…" color="secondary"></nldd-text-cell>
+  </nldd-table-row>
 {% endif %}
