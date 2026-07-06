@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 430: onboarding-wizard bij de eerste login — welkom + uitleg van de tabbladen, profiel aanvullen met labels, en voor geplaatste consultants een stap om hun eigen opdracht te controleren (naam/omschrijving/rolomschrijving aanpasbaar, overige velden verwijzen naar de Business Manager). Overslaan of afronden onthoudt dat de wizard niet terugkomt
+- 430: first-login onboarding wizard — welcome + explanation of the tabs, fill in your profile with labels, and for placed consultants a step to check their own opdracht.
 
 ## 2026-07-02
 

@@ -28,7 +28,7 @@
       </form>
     </div>
     <div class="modal-body onboarding-body">
-      {# Progress dots — one per step. Welcome + profile are always shown; the
+      {# Progress dots, one per step. Welcome + profile are always shown; the
          opdracht-check step is optional, so the total (2 or 3) depends on
          whether the consultant is placed. #}
       {% set total_steps = 2 + (1 if onboarding_assignments else 0) %}
@@ -38,7 +38,7 @@
               data-dot="{{ dot }}"></li>
         {% endfor %}
       </ol>
-      {# Step 1 — Welcome + wat vind je waar (tabjes) + RIG-disclaimer #}
+      {# Step 1: Welcome + wat vind je waar (tabjes) + RIG-disclaimer #}
       {% set ns.step = ns.step + 1 %}
       <section class="onboarding-panel is-active" data-step="{{ ns.step }}">
         <div class="onboarding-illustration">
@@ -56,7 +56,7 @@
           </li>
           <li>
             <c-icon icon="document-met-lijnen" size="sm" color="hemelblauw" />
-            <span>Bij <strong>Aanvragen</strong> vind je alle opdrachten die spelen — spot de nieuwe en kijk waar jij van waarde kunt zijn.</span>
+            <span>Bij <strong>Aanvragen</strong> vind je alle opdrachten die spelen. Spot de nieuwe en kijk waar jij van waarde kunt zijn.</span>
           </li>
         </ul>
         <div class="onboarding-disclaimer">
@@ -65,7 +65,7 @@
           </c-alert>
         </div>
       </section>
-      {# Step 2 — Vul je profiel aan (labels + Rijksprofiel) #}
+      {# Step 2: Vul je profiel aan (labels + Rijksprofiel) #}
       {% set ns.step = ns.step + 1 %}
       <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
         <div class="onboarding-illustration">
@@ -75,7 +75,7 @@
         <c-paragraph>
         Beschrijf wie je bent en welke skills je hebt, zodat collega's
         weten waarvoor ze bij je moeten aankloppen. Kies de labels die bij
-        je passen — zo vinden collega's je makkelijker terug. Je kunt dit
+        je passen, zo vinden collega's je makkelijker terug. Je kunt dit
         later altijd aanpassen op je profiel.
         </c-paragraph>
         {% if onboarding_colleague %}
@@ -88,10 +88,10 @@
           {% endfor %}
           </c-data-list>
         {% else %}
-          <c-paragraph>Je profiel wordt klaargezet — je kunt labels straks invullen via <c-link href="{{ url('user-profile') }}">Mijn profiel</c-link>.</c-paragraph>
+          <c-paragraph>Je profiel wordt klaargezet. Je kunt labels straks invullen via <c-link href="{{ url('user-profile') }}">Mijn profiel</c-link>.</c-paragraph>
         {% endif %}
       </section>
-      {# Step 3 — Controleer je opdracht (only when placed on ≥1 assignment).
+      {# Step 3: Controleer je opdracht (only when placed on ≥1 assignment).
          Consultants may correct name + omschrijving inline (field-level
          permission rules open these for a placed colleague); the rest is
          read-only with a "contact your Business Manager" advice. #}
@@ -144,7 +144,7 @@
                 {% endfor %}
                 </c-data-list>
                 {# Correcties buiten naam/omschrijving lopen via de Business
-                   Manager — toon naam + een voorgevulde mailto. #}
+                   Manager: toon naam + een voorgevulde mailto. #}
                 <div class="onboarding-assignment__bm">
                   {% if assignment.owner %}
                     <span class="onboarding-assignment__bm-text">
