@@ -29,6 +29,9 @@
     <link rel="stylesheet" href="{{ static('css/modals.css') }}">
     <link rel="stylesheet" href="{{ static('css/org_picker.css') }}">
     <link rel="stylesheet" href="{{ static('css/client_modal.css') }}">
+    {% if show_onboarding %}
+      <link rel="stylesheet" href="{{ static('css/onboarding.css') }}">
+    {% endif %}
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
     <script src="{{ static('js/filters/filters.js') }}"></script>
     <script src="{{ static('js/show_more.js') }}"></script>
@@ -62,6 +65,15 @@
     </div>
     {% block panel %}
     {% endblock panel %}
+    {% if show_onboarding %}
+      {% include "parts/onboarding/onboarding_wizard.html" %}
+      {# inline_edit (label pickers) needs these; pages that already load them
+         are unaffected — the browser dedupes by URL. #}
+      <script src="{{ static('js/dialog.js') }}" defer></script>
+      <script src="{{ static('js/inline_edit.js') }}" defer></script>
+      <script src="{{ static('js/filters/multi_select.js') }}" defer></script>
+      <script src="{{ static('js/onboarding.js') }}" defer></script>
+    {% endif %}
     <script>
       // Dynamically set --sidebar-offset so sticky sidebar max-height
       // accounts for the header visible above the fold.

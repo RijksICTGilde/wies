@@ -1,0 +1,146 @@
+/* ============================================================================
+   First-login onboarding wizard
+   Builds on .modal-dialog / .modal-content from modals.css.
+   ============================================================================ */
+
+.onboarding-wizard {
+  max-width: 820px;
+  width: 100%;
+}
+
+/* No focus ring on the dialog itself (it's focused on open, see onboarding.js). */
+.onboarding-wizard:focus,
+.onboarding-wizard:focus-visible {
+  outline: none;
+}
+
+/* Steady height so the modal doesn't jump when panels swap. */
+.onboarding-body {
+  min-height: 24rem;
+}
+
+/* Progress dots */
+.onboarding-steps {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0;
+}
+
+.onboarding-step-dot {
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 50%;
+  background: #cfd4d9;
+  transition: background-color 0.2s ease;
+}
+
+.onboarding-step-dot.is-active {
+  background: var(--rvo-color-hemelblauw, #007bc7);
+}
+
+.onboarding-step-dot.is-done {
+  background: var(--rvo-color-hemelblauw, #007bc7);
+  opacity: 0.5;
+}
+
+/* Step panels */
+.onboarding-panel {
+  text-align: center;
+}
+
+.onboarding-panel .onboarding-illustration {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.onboarding-panel p {
+  max-width: 56ch;
+  margin-inline: auto;
+}
+
+/* Welcome step: "wat vind je waar" tab explanations */
+.onboarding-tabs-explainer {
+  list-style: none;
+  margin: 1rem auto 0;
+  padding: 0;
+  max-width: 56ch;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.onboarding-tabs-explainer li {
+  display: flex;
+  align-items: start;
+  gap: 0.5rem;
+}
+
+/* Constrain the disclaimer c-alert to the text column width. */
+.onboarding-disclaimer {
+  margin: 1.25rem auto 0;
+  max-width: 56ch;
+  text-align: left;
+}
+
+/* Label pickers read left-aligned even inside a centered panel */
+.onboarding-labels {
+  text-align: left;
+  margin-top: 1.25rem;
+}
+
+/* Footer: Back on the left, Next/finish on the right */
+.onboarding-footer {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.onboarding-footer-spacer {
+  flex: 1;
+}
+
+/* --- Step: Controleer je opdracht ----------------------------------------- */
+
+/* One card per placed-on assignment. */
+.onboarding-assignments {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  text-align: left;
+}
+
+.onboarding-assignment {
+  border: 1px solid #d6dbe0;
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  background: #fbfcfd;
+}
+
+/* "Contact your Business Manager" advice for the read-only fields. */
+.onboarding-assignment__bm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #e5e9ed;
+  font-size: 0.875rem;
+}
+
+.onboarding-assignment__bm-text {
+  color: #4f5b66;
+}
+
+.onboarding-assignment__bm-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}

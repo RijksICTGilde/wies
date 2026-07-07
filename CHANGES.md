@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 430: (migration) first-login onboarding wizard — welcome + explanation of the tabs, fill in your profile with labels, and for placed consultants a step to check their own opdracht. Adds `User.onboarding_completed_at` to remember when the wizard was finished or skipped.
 - 425: add debug page for request metadata to determine appropriate IP gathering in production
 
 ## 2026-07-02

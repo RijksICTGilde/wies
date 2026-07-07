@@ -19,6 +19,10 @@ class User(AbstractUser):
     username = None
     email = models.EmailField()
 
+    # Set once the user has seen (completed or skipped) the first-login
+    # onboarding wizard. While None, the wizard is shown on every page.
+    onboarding_completed_at = models.DateTimeField(null=True, blank=True)
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
