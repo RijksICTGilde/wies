@@ -7,6 +7,7 @@ from django.core.exceptions import ValidationError
 
 from wies.core.editables.assignment import AssignmentEditables
 from wies.core.editables.user import UserEditables
+from wies.core.prose import prose_form_field
 
 from .form_mixins import RvoErrorList, RvoFormMixin, RvoJinja2Renderer
 from .models import Colleague, Label, LabelCategory, Skill
@@ -202,7 +203,7 @@ class ServiceForm(RvoFormMixin, forms.Form):
         required=False,
         empty_label=" ",
     )
-    description = forms.CharField(label="Omschrijving rol", max_length=500, required=False)
+    description = prose_form_field(label="Omschrijving rol")
     new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)
     is_filled = forms.ChoiceField(
         label="Status",

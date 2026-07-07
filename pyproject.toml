@@ -12,6 +12,7 @@ dependencies = [
   "jinja2==3.1.6",
   "jinja_roos_components@git+https://github.com/RijksICTGilde/jinja-roos-components.git@0.6",
   "psycopg[binary]>=3.3.4",
+  "django-prose-editor[sanitize]>=0.25.1",
 ]
 
 [dependency-groups]

@@ -54,6 +54,7 @@ class RvoFormMixin:
         "RadioSelect": "rvo/forms/widgets/radio.html",
         "DateInput": "rvo/forms/widgets/date.html",
         "Textarea": "rvo/forms/widgets/textarea.html",
+        "ProseEditorWidget": "rvo/forms/widgets/prose_editor.html",
         "CheckboxInput": "rvo/forms/widgets/checkbox.html",
         "OrgPickerWidget": "rvo/widgets/org_picker.html",
     }

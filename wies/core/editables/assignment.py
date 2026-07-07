@@ -5,7 +5,6 @@ Permissions live in ``wies/core/permission_rules.py``.
 
 import urllib.parse
 
-from django import forms
 from django.db import transaction
 from django.db.models import Prefetch
 from django.urls import reverse
@@ -15,6 +14,7 @@ from wies.core.fields import OrganizationsField
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
 from wies.core.placement_visibility import LABELS, evaluate
+from wies.core.prose import prose_form_field
 from wies.core.services.assignments import apply_services_to_assignment, extract_services_data
 
 
@@ -320,9 +320,15 @@ class AssignmentEditables(EditableSet):
     )
 
     extra_info = Editable(
+        # Explicit `field` keeps the 1:1 model-field binding (so the value is
+        # saved) while form_field_factory supplies the ProseEditorFormField —
+        # which sanitises the HTML server-side (nh3) on clean, since the
+        # display renders it with |safe. Without `field`, form_field_factory
+        # would mark this as an unbound editable and the save would fail.
+        field="extra_info",
         label="Opdrachtomschrijving",
-        widget=forms.Textarea(attrs={"rows": 4}),
-        display="rvo/forms/displays/textarea.html",
+        form_field_factory=lambda: prose_form_field(label="Opdrachtomschrijving"),
+        display="rvo/forms/displays/prose_editor.html",
     )
 
     start_date = Editable(label="Startdatum")

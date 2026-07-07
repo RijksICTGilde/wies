@@ -2,6 +2,99 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* Prose editor: toolbar and content area styling */
+.prose-editor .ProseMirror {
+  min-height: 4.5em;
+}
+/* The menubar is position:sticky (top:0); a transparent background let the
+   editor text show through the toolbar when it overlapped on scroll, making
+   both unreadable. Give it an opaque white background. */
+.prose-editor .prose-menubar:not(:empty) {
+  background: #fff;
+  box-shadow: none;
+  border-bottom: 1px solid #ccc;
+}
+.prose-editor .prose-menubar button {
+  background: #fff;
+}
+.prose-editor .prose-menubar button:hover {
+  background: var(--rvo-color-grijs-200, #dce3ea);
+}
+
+/* Live character counter (see prose_editor_init.js). */
+.prose-editor-counter {
+  margin-top: var(--rvo-space-2xs, 0.25rem);
+  font-size: var(--rvo-font-size-sm, 0.875rem);
+  color: var(--rvo-color-grijs-700, #4f5358);
+  text-align: right;
+}
+.prose-editor-counter--over {
+  color: var(--rvo-color-rood, #d52b1e);
+  font-weight: 700;
+}
+
+/* Prose editor display: collapsed state for long content */
+.prose-editor-display--collapsed {
+  max-height: 10em;
+  overflow: hidden;
+}
+
+/* Prose editor: restore formatting stripped by RVO CSS reset */
+.prose-editor em,
+.prose-editor-display em {
+  font-style: italic;
+}
+.prose-editor strong,
+.prose-editor-display strong {
+  font-weight: bold;
+}
+.prose-editor ul,
+.prose-editor-display ul {
+  list-style: disc;
+  padding-left: 1.5em;
+}
+.prose-editor ol,
+.prose-editor-display ol {
+  list-style: decimal;
+  padding-left: 1.5em;
+}
+.prose-editor blockquote,
+.prose-editor-display blockquote {
+  border-left: 3px solid var(--rvo-color-grijs-300, #b1b9c0);
+  padding-left: 1em;
+  margin: 0 0 0.5em;
+  color: var(--rvo-color-grijs-700, #4f5358);
+  font-style: italic;
+}
+.prose-editor h2,
+.prose-editor-display h2 {
+  font-size: 1.3em;
+  font-weight: 700;
+  margin: 0.4em 0 0.3em;
+}
+.prose-editor h3,
+.prose-editor-display h3 {
+  font-size: 1.15em;
+  font-weight: 700;
+  margin: 0.4em 0 0.3em;
+}
+
+/* Prose editor display: restore paragraph spacing for rich text content */
+.prose-editor-display p {
+  margin: 0 0 0.5em;
+}
+.prose-editor-display p:last-child {
+  margin-bottom: 0;
+}
+.prose-editor-display ul,
+.prose-editor-display ol {
+  margin: 0 0 0.5em;
+  padding-left: 1.5em;
+}
+.prose-editor-display li {
+  margin-bottom: 0.25em;
+}
+
 /* Prevent flicker during HTMX swaps */
 #filter-and-table-container,
 #sidebar-filter-fields {

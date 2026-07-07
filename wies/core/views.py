@@ -2007,7 +2007,15 @@ def _attach_audit_render_data(event) -> None:
 
     from django import forms  # noqa: PLC0415
 
+    # Determine the widget: either declared directly on the spec, or — for
+    # editables backed by a form_field_factory (e.g. the prose-editor
+    # description fields) — the widget of the built form field. ProseEditorWidget
+    # subclasses forms.Textarea, so both resolve to the "textarea" render kind
+    # (full "Toon meer" block instead of an inline "van X naar Y").
     widget = getattr(spec, "widget", None)
+    if widget is None and getattr(spec, "form_field_factory", None) is not None:
+        factory = spec.form_field_factory
+        widget = (factory() if callable(factory) else factory).widget
     if isinstance(widget, forms.Textarea) or (isinstance(widget, type) and issubclass(widget, forms.Textarea)):
         event.render_kind = "textarea"
 
