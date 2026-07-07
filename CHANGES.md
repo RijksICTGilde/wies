@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 430: first-login onboarding wizard — welcome + explanation of the tabs, fill in your profile with labels, and for placed consultants a step to check their own opdracht.
+- 425: add debug page for request metadata to determine appropriate IP gathering in production
 
 ## 2026-07-02
 
