@@ -16,6 +16,7 @@ from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, E
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
 from wies.core.placement_visibility import LABELS, evaluate
 from wies.core.services.assignments import apply_services_to_assignment, extract_services_data
+from wies.core.services.urls import current_page_path
 
 
 def _bdm_queryset():
@@ -30,7 +31,8 @@ def _owner_display_context(assignment, request) -> dict:
     if not assignment.owner:
         return {"owner_url": "", "owner_mailto": ""}
 
-    owner_url = reverse("assignment-list") + f"?collega={assignment.owner.id}"
+    base_url = current_page_path(request)
+    owner_url = f"{base_url}?collega={assignment.owner.id}"
 
     owner_mailto = ""
     if assignment.owner.email:
