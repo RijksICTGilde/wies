@@ -9,12 +9,9 @@ from wies.core.querysets import annotate_placement_dates
 
 
 def _onboarding_owner_mailto(assignment) -> str:
-    """Bare mailto for the "contact your BM" link in the onboarding step.
+    """Return a mailto (address + subject, no body) for the BM of ``assignment``.
 
-    Unlike the assignment page's owner mailto (which pre-fills an
-    information-request body), this only sets the address and a subject — the
-    user is correcting/completing their own opdracht and writes the body
-    themselves, so a pre-filled "kun je me meer informatie geven?" would be off.
+    Empty when the assignment has no owner or the owner has no email.
     """
     if not assignment.owner or not assignment.owner.email:
         return ""
@@ -23,23 +20,11 @@ def _onboarding_owner_mailto(assignment) -> str:
 
 
 def _onboarding_assignments(colleague):
-    """Assignments the user is placed on, for the onboarding self-check step.
+    """Return the active assignments the user is placed on, for the self-check step.
 
-    Returns every assignment where ``colleague`` has an active placement (not
-    yet ended), matching what the profile page shows as active. Each entry
-    carries the ``Assignment`` object plus the ``services`` the user is placed
-    on (their rol + rolomschrijving), so the template can render ``inline_edit``
-    for name/omschrijving and the service description. The field-level
-    permission rules decide per field what is editable: for a placed consultant
-    on a wies-sourced opdracht name/omschrijving open up; on external (OTYS)
-    opdrachten everything stays read-only. Each entry also carries a bare
-    ``owner_mailto`` (address + subject, no body) for the "contact your BM"
-    advice on read-only fields.
-
-    Shown to anyone with an active placement, not just consultants: someone can
-    be placed on an ODI opdracht without holding the Consultant role (e.g.
-    bedrijfsvoering/OR), and they should still see and check their opdracht.
-    Empty when the user is not placed on anything; the wizard skips the step.
+    One entry per assignment, each with its ``Assignment``, the ``services`` the
+    user is placed on, and a bare ``owner_mailto``. Empty when the user has no
+    active placement. Editability is left to the field-level permission rules.
     """
     if colleague is None:
         return []
@@ -73,10 +58,7 @@ def _onboarding_assignments(colleague):
 def onboarding(request):
     """Expose first-login onboarding state to the base template.
 
-    ``show_onboarding`` is True for an authenticated user who has not yet
-    completed or skipped the wizard. ``onboarding_label_categories`` feeds the
-    profile step; ``onboarding_assignments`` feeds the consultant
-    opdracht-check step.
+    ``show_onboarding`` is True until the user finishes or skips the wizard.
     """
     user = getattr(request, "user", None)
     if user is None or not user.is_authenticated or user.onboarding_completed_at is not None:
