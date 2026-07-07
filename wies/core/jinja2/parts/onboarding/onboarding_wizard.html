@@ -100,7 +100,13 @@
           <div class="onboarding-illustration">
             <c-icon icon="klembord-met-vinkje" size="xl" color="hemelblauw" />
           </div>
-          <c-h3>{{ "Controleer je opdrachten" if onboarding_assignments|length > 1 else "Controleer je opdracht" }}</c-h3>
+          <c-h3>
+          {%- if onboarding_assignments|length > 1 -%}
+            Controleer je opdrachten ({{ onboarding_assignments|length }})
+          {%- else -%}
+            Controleer je opdracht
+          {%- endif -%}
+          </c-h3>
           <c-paragraph>
           {% if onboarding_assignments|length > 1 %}
             Dit zijn de opdrachten waarop je bent geplaatst. Klopt de naam of
