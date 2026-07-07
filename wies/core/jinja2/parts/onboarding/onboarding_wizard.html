@@ -13,6 +13,7 @@
 <dialog id="onboardingWizard"
         class="modal-dialog modal-dialog--wide onboarding-wizard"
         closedby="none"
+        tabindex="-1"
         data-onboarding>
   <div class="modal-content">
     <div class="modal-header">
@@ -22,9 +23,9 @@
             hx-post="{{ url('onboarding-complete') }}"
             hx-swap="none">
         {{ get_csrf_hidden_input(request) }}
-        <button type="submit"
-                class="close onboarding-skip"
-                aria-label="Onboarding overslaan">Overslaan</button>
+        <c-button kind="subtle" type="submit" class="onboarding-skip" aria-label="Onboarding overslaan">
+        Overslaan
+        </c-button>
       </form>
     </div>
     <div class="modal-body onboarding-body">
@@ -52,11 +53,11 @@
         <ul class="onboarding-tabs-explainer">
           <li>
             <c-icon icon="groep-3-personen" size="sm" color="hemelblauw" />
-            <span>Bij <strong>Wie zit waar?</strong> zie je in één oogopslag welke collega's waar geplaatst zijn.</span>
+            <c-span>Bij <c-strong>Wie zit waar?</c-strong> zie je in één oogopslag welke collega's waar geplaatst zijn.</c-span>
           </li>
           <li>
             <c-icon icon="document-met-lijnen" size="sm" color="hemelblauw" />
-            <span>Bij <strong>Aanvragen</strong> vind je alle opdrachten die spelen. Spot de nieuwe en kijk waar jij van waarde kunt zijn.</span>
+            <c-span>Bij <c-strong>Aanvragen</c-strong> vind je alle opdrachten die spelen. Spot de nieuwe en kijk waar jij van waarde kunt zijn.</c-span>
           </li>
         </ul>
         <div class="onboarding-disclaimer">
@@ -147,17 +148,17 @@
                    Manager: toon naam + een voorgevulde mailto. #}
                 <div class="onboarding-assignment__bm">
                   {% if assignment.owner %}
-                    <span class="onboarding-assignment__bm-text">
-                      Klopt er iets anders niet? Neem contact op met je Business
-                      Manager, <strong>{{ assignment.owner.name }}</strong>.
-                    </span>
+                    <c-span class="onboarding-assignment__bm-text">
+                    Klopt er iets anders niet? Neem contact op met je Business
+                    Manager, <c-strong>{{ assignment.owner.name }}</c-strong>.
+                    </c-span>
                     {% if entry.owner_mailto %}
                       <c-link href="{{ entry.owner_mailto }}" class="onboarding-assignment__bm-link">
                       <c-icon icon="mail" size="sm" /> Mail {{ assignment.owner.name }}
                       </c-link>
                     {% endif %}
                   {% else %}
-                    <span class="onboarding-assignment__bm-text">Klopt er iets anders niet? Neem contact op met je Business Manager.</span>
+                    <c-span class="onboarding-assignment__bm-text">Klopt er iets anders niet? Neem contact op met je Business Manager.</c-span>
                   {% endif %}
                 </div>
               </div>

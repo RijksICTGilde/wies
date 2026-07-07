@@ -8,6 +8,14 @@
   width: 100%;
 }
 
+/* On open, focus moves to the dialog itself (see onboarding.js) so no button
+   lights up. The container itself should not show a focus ring; interactive
+   controls inside keep their own. */
+.onboarding-wizard:focus,
+.onboarding-wizard:focus-visible {
+  outline: none;
+}
+
 /* Keep the body a steady height across steps so the modal doesn't jump
    as panels with different content swap in. */
 .onboarding-body {
@@ -99,21 +107,6 @@
 
 .onboarding-footer-spacer {
   flex: 1;
-}
-
-/* "Overslaan" link in the header reads as a quiet text button */
-.onboarding-skip {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: #4f5b66;
-  font-size: 0.875rem;
-  text-decoration: underline;
-  padding: 0.25rem 0.5rem;
-}
-
-.onboarding-skip:hover {
-  color: var(--rvo-color-hemelblauw, #007bc7);
 }
 
 /* --- Step: Controleer je opdracht ----------------------------------------- */

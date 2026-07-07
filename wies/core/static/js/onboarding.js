@@ -66,5 +66,10 @@
     show(1);
     dialog.showModal();
     document.documentElement.style.overflow = "hidden";
+    // By default showModal() focuses the first focusable element (the
+    // "Overslaan" button), which reads as "dismiss me". Move focus to the
+    // dialog itself instead so nothing lights up; its focus ring is
+    // suppressed in CSS. Interactive controls keep their own focus styling.
+    dialog.focus();
   }
 })();
