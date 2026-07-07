@@ -47,8 +47,8 @@
         </div>
         <c-h3>Hoi {{ (user.first_name or '').strip() or 'collega' }}!</c-h3>
         <c-paragraph>
-        Wies helpt je om collega's, opdrachten en plaatsingen te beheren.
-        Boven in het scherm vind je twee tabbladen:
+        Wies geeft je inzicht wie je collega's zijn, waar ze werken en wat voor
+        opdrachten ze doen. Boven in het scherm vind je twee tabbladen:
         </c-paragraph>
         <ul class="onboarding-tabs-explainer">
           <li>
@@ -57,12 +57,12 @@
           </li>
           <li>
             <c-icon icon="document-met-lijnen" size="sm" color="hemelblauw" />
-            <c-span>Bij <c-strong>Aanvragen</c-strong> vind je alle opdrachten die spelen. Spot de nieuwe en kijk waar jij van waarde kunt zijn.</c-span>
+            <c-span>Bij <c-strong>Aanvragen</c-strong> vind je de opdrachten waarvoor collega's gezocht worden. Spot de nieuwe en kijk waar jij van waarde kunt zijn.</c-span>
           </li>
         </ul>
         <div class="onboarding-disclaimer">
           <c-alert kind="info">
-          Let op: Wies bevat op dit moment alleen opdrachten van het Rijks ICT Gilde (RIG).
+          Let op: Wies bevat op dit moment alleen opdrachten van het Rijks ICT Gilde (RIG) en het Digi Gilde.
           </c-alert>
         </div>
       </section>
@@ -74,10 +74,8 @@
         </div>
         <c-h3>Vul je profiel aan</c-h3>
         <c-paragraph>
-        Beschrijf wie je bent en welke skills je hebt, zodat collega's
-        weten waarvoor ze bij je moeten aankloppen. Kies de labels die bij
-        je passen, zo vinden collega's je makkelijker terug. Je kunt dit
-        later altijd aanpassen op je profiel.
+        Kies de labels die bij je passen, zo vinden collega's je makkelijker
+        terug. Je kunt dit later altijd aanpassen op je profiel.
         </c-paragraph>
         {% if onboarding_colleague %}
           <c-data-list class="onboarding-labels">
@@ -102,14 +100,14 @@
           <div class="onboarding-illustration">
             <c-icon icon="klembord-met-vinkje" size="xl" color="hemelblauw" />
           </div>
-          <c-h3>Controleer je opdracht</c-h3>
+          <c-h3>{{ "Controleer je opdrachten" if onboarding_assignments|length > 1 else "Controleer je opdracht" }}</c-h3>
           <c-paragraph>
           {% if onboarding_assignments|length > 1 %}
             Dit zijn de opdrachten waarop je bent geplaatst. Klopt de naam of
-            omschrijving niet? Pas het hier direct aan.
+            omschrijving niet, of ontbreekt er iets? Vul het hier direct aan.
           {% else %}
             Dit is de opdracht waarop je bent geplaatst. Klopt de naam of
-            omschrijving niet? Pas het hier direct aan.
+            omschrijving niet, of ontbreekt er iets? Vul het hier direct aan.
           {% endif %}
           </c-paragraph>
           <div class="onboarding-assignments">
@@ -149,8 +147,8 @@
                 <div class="onboarding-assignment__bm">
                   {% if assignment.owner %}
                     <c-span class="onboarding-assignment__bm-text">
-                    Klopt er iets anders niet? Neem contact op met je Business
-                    Manager, <c-strong>{{ assignment.owner.name }}</c-strong>.
+                    Klopt er iets niet wat je niet kan aanpassen? Neem contact op
+                    met je Business Manager, <c-strong>{{ assignment.owner.name }}</c-strong>.
                     </c-span>
                     {% if entry.owner_mailto %}
                       <c-link href="{{ entry.owner_mailto }}" class="onboarding-assignment__bm-link">
@@ -158,7 +156,7 @@
                       </c-link>
                     {% endif %}
                   {% else %}
-                    <c-span class="onboarding-assignment__bm-text">Klopt er iets anders niet? Neem contact op met je Business Manager.</c-span>
+                    <c-span class="onboarding-assignment__bm-text">Klopt er iets niet wat je niet kan aanpassen? Neem contact op met je Business Manager.</c-span>
                   {% endif %}
                 </div>
               </div>

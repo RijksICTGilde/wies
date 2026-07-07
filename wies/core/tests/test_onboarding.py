@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import AnonymousUser, Group
+from django.contrib.auth.models import AnonymousUser
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.utils import timezone
@@ -97,13 +97,12 @@ class OnboardingAssignmentStepTest(TestCase):
         self.bm = Colleague.objects.create(
             user=self.bm_user, name="Bea Manager", email="bm@rijksoverheid.nl", source="wies"
         )
-        # The consultant going through onboarding (in the Consultant group —
-        # the step is consultant-only).
+        # The placed user going through onboarding. No Consultant group is
+        # required — anyone with an active placement sees the step.
         self.user = User.objects.create_user(email="con@rijksoverheid.nl", first_name="Cas")
         self.colleague = Colleague.objects.create(
             user=self.user, name="Cas Consultant", email="con@rijksoverheid.nl", source="wies"
         )
-        self.user.groups.add(Group.objects.get_or_create(name="Consultant")[0])
         self.skill = Skill.objects.create(name="Rol")
 
     def _place_on(self, name="Mijn opdracht", *, source="wies", description="Dienst"):
@@ -119,20 +118,22 @@ class OnboardingAssignmentStepTest(TestCase):
         ctx = onboarding(_request_for(self.user))
         entries = ctx["onboarding_assignments"]
         assert [e["assignment"].id for e in entries] == [assignment.id]
-        # The consultant's own service (rol) is attached for the rol/rolomschrijving rows.
+        # The user's own service (rol) is attached for the rol/rolomschrijving rows.
         assert [s.skill_id for s in entries[0]["services"]] == [self.skill.id]
-        # Owner mailto is prefilled from the BM's email.
+        # Owner mailto points at the BM's email, without a pre-filled body.
         assert entries[0]["owner_mailto"].startswith("mailto:bm@rijksoverheid.nl")
+        assert "&body=" not in entries[0]["owner_mailto"]
 
     def test_context_empty_when_not_placed(self):
         ctx = onboarding(_request_for(self.user))
         assert ctx["onboarding_assignments"] == []
 
-    def test_context_excludes_non_wies_sourced(self):
-        # An externally-sourced opdracht is not something the consultant edits here.
-        self._place_on(source="otys_iir")
+    def test_context_includes_external_sourced(self):
+        # External (OTYS) opdrachten are shown too, matching the profile's
+        # active list; their fields are read-only via the permission rules.
+        assignment = self._place_on(source="otys_iir")
         ctx = onboarding(_request_for(self.user))
-        assert ctx["onboarding_assignments"] == []
+        assert [e["assignment"].id for e in ctx["onboarding_assignments"]] == [assignment.id]
 
     def test_wizard_renders_opdracht_step_and_bm_contact(self):
         self._place_on(name="Datateam MinBZK", description="Data engineering")
@@ -161,16 +162,16 @@ class OnboardingAssignmentStepTest(TestCase):
         # No opdracht step → welcome + profile only, no third step.
         self.assertNotContains(response, 'data-step="3"')
 
-    def test_step_hidden_for_non_consultant_even_when_placed(self):
-        # A placed user who is NOT in the Consultant group (e.g. a BDM or
-        # Beheerder) does not get the opdracht-check step.
+    def test_step_shown_for_placed_user_without_consultant_group(self):
+        # A placed user who is NOT in the Consultant group (e.g. bedrijfsvoering
+        # or OR modelled via an ODI opdracht) still gets the opdracht-check step.
         self.user.groups.clear()
         self._place_on()
         ctx = onboarding(_request_for(self.user))
-        assert ctx["onboarding_assignments"] == []
+        assert len(ctx["onboarding_assignments"]) == 1
         self.client.force_login(self.user)
         response = self.client.get(reverse("home"))
-        self.assertNotContains(response, "Controleer je opdracht")
+        self.assertContains(response, "Controleer je opdracht")
 
 
 class OnboardingCompleteViewTest(TestCase):
