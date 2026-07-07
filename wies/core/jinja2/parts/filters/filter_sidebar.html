@@ -16,6 +16,8 @@
     <c-icon icon="kruis" size="md" class="sidebar-toggle__icon sidebar-toggle__icon--close" />
   </button>
 </div>
+{# "Wis alle filters" now sits with the active chips (see filter_chips.html),
+   so both read together above the results — no separate sidebar row. #}
 <form class="rvo-form filter-sidebar-form"
       hx-get="{{ filter_target_url }}"
       hx-target="#filter-and-table-container"
@@ -23,7 +25,7 @@
       hx-replace-url="true"
       hx-trigger="change,input delay:500ms from:[data-filter-input]"
       hx-include="[data-filter-input]">
-  <!-- Hidden input for search filter (updated by JS on Enter) -->
+  <!-- Search term — submitted only on Enter (set by JS from the #search field) -->
   <input type="hidden"
          id="search-filter-value"
          name="zoek"

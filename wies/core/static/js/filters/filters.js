@@ -23,35 +23,11 @@ document.addEventListener("click", function (e) {
 // Shared utilities
 // ============================================================================
 
-function updateOrgFilterButtonText() {
-  const button = document.getElementById("org-filter-button");
-  if (!button) return;
-  const inputs = document.querySelectorAll(
-    '#org-filter-inputs input[type="hidden"]',
-  );
-  const textSpan = button.querySelector(".org-filter-trigger__text");
-  if (textSpan) {
-    if (inputs.length === 0) {
-      textSpan.innerHTML =
-        '<span class="org-filter-trigger__placeholder">Selecteer</span>';
-    } else if (inputs.length === 1) {
-      textSpan.textContent = inputs[0].dataset.label || "1 geselecteerd";
-    } else {
-      textSpan.textContent = inputs.length + " geselecteerd";
-    }
-  }
-}
-
 function removeFilter(formSelector, filterName, filterType, filterValue) {
   const form = document.querySelector(formSelector);
   if (!form) return;
 
-  if (filterType === "zoek") {
-    const searchInput = document.querySelector("#search");
-    if (searchInput) searchInput.value = "";
-    const hiddenSearch = document.getElementById("search-filter-value");
-    if (hiddenSearch) hiddenSearch.value = "";
-  } else if (filterType === "select") {
+  if (filterType === "select") {
     const selectElement = form.querySelector(`[name="${filterName}"]`);
     if (selectElement) {
       selectElement.selectedIndex = 0;
@@ -102,7 +78,6 @@ function clearAllFilters(formSelector) {
 
   const orgInputsContainer = document.getElementById("org-filter-inputs");
   if (orgInputsContainer) orgInputsContainer.innerHTML = "";
-  updateOrgFilterButtonText();
 
   form.querySelectorAll("[data-filter-input]").forEach((input) => {
     if (input.tagName === "SELECT") {
@@ -126,10 +101,19 @@ function clearAllFilters(formSelector) {
     input.value = "";
   });
 
-  const searchInput = form.querySelector("#search");
+  // #search lives in #filter-and-table-container, OUTSIDE the sidebar form, and
+  // is hx-preserved (so a swap won't clear it) — clear it explicitly via the
+  // document, plus its has-value styling and the suggestions dropdown.
+  const searchInput = document.getElementById("search");
   if (searchInput) {
     searchInput.value = "";
+    const wrapper = searchInput.closest(".search-field-wrapper");
+    if (wrapper) wrapper.classList.remove("has-value");
   }
+  const suggestionsContainer = document.getElementById(
+    "search-suggestions-container",
+  );
+  if (suggestionsContainer) suggestionsContainer.innerHTML = "";
 
   document.querySelectorAll(".date-range-validation-message").forEach((msg) => {
     msg.style.display = "none";
@@ -225,6 +209,14 @@ document.addEventListener("DOMContentLoaded", function () {
 
     setupDateRangeListeners(sidebarFormSelector);
 
+    // "Wis alle filters" button (rendered with the active chips). Event-
+    // delegated so it keeps working after each OOB swap re-renders the chips.
+    document.addEventListener("click", function (e) {
+      if (!e.target.closest("[data-clear-all-filters]")) return;
+      e.preventDefault();
+      clearAllFilters(sidebarFormSelector);
+    });
+
     // Date input change — trigger form via htmx (like checkbox_filter.js does)
     document.addEventListener(
       "change",
@@ -242,7 +234,6 @@ document.addEventListener("DOMContentLoaded", function () {
     document.body.addEventListener("htmx:afterSwap", function (event) {
       if (event.detail.target.id === "filter-and-table-container") {
         setupDateRangeListeners(sidebarFormSelector);
-        updateOrgFilterButtonText();
       }
     });
   }
@@ -345,74 +336,135 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   // --------------------------------------------------------------------------
-  // Search clear buttons
+  // Search clear (×) buttons — event-delegated so they survive HTMX swaps.
+  //
+  // The clear button's visibility is driven by the wrapper's `has-value` class.
+  // We use delegation (not per-element binding) because the #search wrapper is
+  // re-rendered on every filter swap while its input is hx-preserved: a guarded
+  // per-element init would skip the fresh wrapper (the guard sits on the kept
+  // input), leaving a non-empty field with no visible × — which is the bug this
+  // replaces.
   // --------------------------------------------------------------------------
-  function initSearchClear(wrapper) {
-    var input = wrapper.querySelector(".utrecht-textbox");
-    var clearBtn = wrapper.querySelector(".search-clear");
-    if (!input || !clearBtn) return;
-
-    function updateVisibility() {
-      wrapper.classList.toggle("has-value", input.value.length > 0);
-    }
-
-    input.addEventListener("input", updateVisibility);
-    updateVisibility();
-
-    clearBtn.addEventListener("click", function () {
-      input.value = "";
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.focus();
-      // Clear suggestions dropdown
-      var suggestionsContainer = wrapper.querySelector(
-        "#search-suggestions-container",
-      );
-      if (suggestionsContainer) suggestionsContainer.innerHTML = "";
-      // Clear hidden search filter and refresh results
-      var hiddenSearch = document.getElementById("search-filter-value");
-      if (hiddenSearch) hiddenSearch.value = "";
-      var sidebarForm = document.querySelector(".filter-sidebar-form");
-      if (sidebarForm) htmx.trigger(sidebarForm, "change");
-    });
+  function setHasValue(input) {
+    var wrapper = input.closest(".search-field-wrapper");
+    if (wrapper) wrapper.classList.toggle("has-value", input.value.length > 0);
   }
 
-  document.querySelectorAll(".search-field-wrapper").forEach(initSearchClear);
-
-  // Re-init after HTMX swaps
-  document.body.addEventListener("htmx:afterSettle", function (event) {
-    event.detail.target
-      .querySelectorAll(".search-field-wrapper")
-      .forEach(initSearchClear);
+  // Keep the × in sync with what's typed.
+  document.body.addEventListener("input", function (e) {
+    var input = e.target.closest(".search-field-wrapper .utrecht-textbox");
+    if (input) setHasValue(input);
   });
 
-  // --------------------------------------------------------------------------
-  // Search submit on Enter: move value to hidden input, clear visible input
-  // --------------------------------------------------------------------------
-  document.body.addEventListener("keydown", function (e) {
-    if (e.key !== "Enter") return;
-    var input = e.target.closest("#search");
+  // Re-derive `has-value` after a swap: the hx-preserved #search keeps its text
+  // but its freshly rendered wrapper starts without the class.
+  function syncSearchHasValue() {
+    document
+      .querySelectorAll(".search-field-wrapper .utrecht-textbox")
+      .forEach(setHasValue);
+  }
+  document.body.addEventListener("htmx:afterSettle", syncSearchHasValue);
+  syncSearchHasValue();
+
+  // Filter labels carry data-tooltip (the full name) for the instant tooltip.
+  // Only keep it where the label is actually truncated, so short labels don't
+  // show a redundant tooltip repeating their visible text.
+  function pruneUntruncatedTooltips() {
+    document
+      .querySelectorAll(".checkbox-filter__option[data-tooltip]")
+      .forEach(function (row) {
+        var text = row.querySelector(".checkbox-filter__option-text");
+        if (!text) return;
+        var truncated = text.scrollWidth > text.clientWidth;
+        if (!truncated) row.removeAttribute("data-tooltip");
+      });
+  }
+  document.body.addEventListener("htmx:afterSettle", pruneUntruncatedTooltips);
+  pruneUntruncatedTooltips();
+
+  document.body.addEventListener("click", function (e) {
+    var clearBtn = e.target.closest(".search-clear");
+    if (!clearBtn) return;
+    var wrapper = clearBtn.closest(".search-field-wrapper");
+    if (!wrapper) return;
+    var input = wrapper.querySelector(".utrecht-textbox");
     if (!input) return;
-    e.preventDefault();
 
-    var value = input.value.trim();
-    if (!value) return;
-
-    // Move value to hidden filter input and clear visible input
-    var hiddenSearch = document.getElementById("search-filter-value");
-    if (hiddenSearch) hiddenSearch.value = value;
     input.value = "";
-    var wrapper = input.closest(".search-field-wrapper");
-    if (wrapper) wrapper.classList.remove("has-value");
+    setHasValue(input);
+    input.focus();
 
-    // Clear suggestions
+    // The side effects below only apply to the global search field; per-group
+    // checkbox-filter searches handle their own clearing in checkbox_filter.js.
+    if (input.id !== "search") return;
     var suggestionsContainer = document.getElementById(
       "search-suggestions-container",
     );
     if (suggestionsContainer) suggestionsContainer.innerHTML = "";
+    // Clear the submitted search term and refresh results.
+    var hiddenSearch = document.getElementById("search-filter-value");
+    if (hiddenSearch) hiddenSearch.value = "";
+    var sidebarForm = document.querySelector(".filter-sidebar-form");
+    if (sidebarForm) htmx.trigger(sidebarForm, "change");
+  });
 
-    // Trigger sidebar form to fire HTMX request with the search value
+  // --------------------------------------------------------------------------
+  // Search submits on Enter (or by clicking the "Zoeken op …" suggestion) — not
+  // while typing, so the heavy query runs only on a deliberate search. The term
+  // stays in the field, no chip. Live org suggestions keep loading via the
+  // input's own hx-get; the dropdown's first row is the search action + hint.
+  // --------------------------------------------------------------------------
+  // After a search is committed, suppress the suggestions dropdown until the
+  // user types again — otherwise an in-flight (delayed) suggestions request can
+  // repopulate and re-open it right after we cleared it.
+  var suppressSuggestions = false;
+
+  function commitSearch() {
+    var input = document.getElementById("search");
+    if (!input) return;
+    var hiddenSearch = document.getElementById("search-filter-value");
+    if (hiddenSearch) hiddenSearch.value = input.value.trim();
+    var suggestionsContainer = document.getElementById(
+      "search-suggestions-container",
+    );
+    if (suggestionsContainer) {
+      suggestionsContainer.innerHTML = "";
+      suggestionsContainer.hidden = true;
+    }
+    suppressSuggestions = true;
+    // Drop focus so the field's active/focus state clears — same end state
+    // whether the search ran via Enter, the magnifier, or a suggestion.
+    input.blur();
     var form = document.querySelector(".filter-sidebar-form");
     if (form) htmx.trigger(form, "change");
+  }
+
+  // Typing again re-enables suggestions.
+  document.body.addEventListener("input", function (e) {
+    if (e.target.closest("#search")) suppressSuggestions = false;
+  });
+
+  document.body.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter") return;
+    if (!e.target.closest("#search")) return;
+    e.preventDefault();
+    commitSearch();
+  });
+
+  // Click the "Zoeken op …" row → run the search (same as Enter)
+  document.body.addEventListener("click", function (e) {
+    if (!e.target.closest(".search-suggestion--search")) return;
+    commitSearch();
+  });
+
+  // Click the magnifier icon → run the search (same as Enter). Only acts on the
+  // global #search field's wrapper; per-group searches handle their own input.
+  document.body.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-search-submit]");
+    if (!btn) return;
+    var wrapper = btn.closest(".search-field-wrapper");
+    if (!wrapper || !wrapper.querySelector("#search")) return;
+    commitSearch();
   });
 
   // --------------------------------------------------------------------------
@@ -438,10 +490,16 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // When HTMX swaps in new suggestions, ensure the container is visible
+  // When HTMX swaps in new suggestions, ensure the container is visible —
+  // unless a search was just committed (then keep the dropdown closed).
   document.body.addEventListener("htmx:afterSwap", function (e) {
     if (e.detail.target.id === "search-suggestions-container") {
-      e.detail.target.hidden = false;
+      if (suppressSuggestions) {
+        e.detail.target.innerHTML = "";
+        e.detail.target.hidden = true;
+      } else {
+        e.detail.target.hidden = false;
+      }
     }
   });
 
@@ -451,13 +509,27 @@ document.addEventListener("DOMContentLoaded", function () {
   document.body.addEventListener("click", function (e) {
     var btn = e.target.closest(".search-suggestion");
     if (!btn) return;
+    // The "Zoeken op …" row is handled by commitSearch above, not as an org pick.
+    if (btn.classList.contains("search-suggestion--search")) return;
 
     var orgId = btn.dataset.orgId;
     var orgLabel = btn.dataset.orgLabel;
 
-    // Clear search input
+    // Clear search input and close the suggestions dropdown (it is hx-preserved,
+    // so it no longer clears via the filter swap — clear it explicitly).
     var searchInput = document.querySelector("#search");
-    if (searchInput) searchInput.value = "";
+    if (searchInput) {
+      searchInput.value = "";
+      var wrapper = searchInput.closest(".search-field-wrapper");
+      if (wrapper) wrapper.classList.remove("has-value");
+    }
+    var suggestionsContainer = document.getElementById(
+      "search-suggestions-container",
+    );
+    if (suggestionsContainer) suggestionsContainer.innerHTML = "";
+    // Picking an org suggestion replaces the text search — clear the term.
+    var hiddenSearch = document.getElementById("search-filter-value");
+    if (hiddenSearch) hiddenSearch.value = "";
 
     // Add org filter hidden input
     var container = document.getElementById("org-filter-inputs");
@@ -475,4 +547,86 @@ document.addEventListener("DOMContentLoaded", function () {
     var form = document.querySelector(".filter-sidebar-form");
     if (form) htmx.trigger(form, "change");
   });
+
+  // --------------------------------------------------------------------------
+  // Opdrachtgever quick options: top-N orgs shown as checkboxes under the
+  // search field. They share the "org" filter param with the modal — checking
+  // one adds/removes an org hidden input in #org-filter-inputs (single source
+  // of truth), so selection stays in sync with the modal.
+  // --------------------------------------------------------------------------
+  // Quick options share three params with the modal: "org" (incl. children),
+  // "org_self" (direct only) and "org_type" (an org-type group). Each hidden
+  // input is keyed by (param, value), so the sync must match on both.
+  var ORG_PARAMS = ["org", "org_self", "org_type"];
+
+  function getSelectedOrgKeys() {
+    var container = document.getElementById("org-filter-inputs");
+    var keys = new Set();
+    if (!container) return keys;
+    ORG_PARAMS.forEach(function (param) {
+      container
+        .querySelectorAll('input[name="' + param + '"]')
+        .forEach(function (input) {
+          keys.add(param + ":" + input.value);
+        });
+    });
+    return keys;
+  }
+
+  // Reflect current org selection onto the quick-option checkboxes.
+  function syncOrgQuickOptions() {
+    var selected = getSelectedOrgKeys();
+    document
+      .querySelectorAll(".org-filter-quick__checkbox")
+      .forEach(function (cb) {
+        var param = cb.dataset.orgParam || "org";
+        cb.checked = selected.has(param + ":" + cb.value);
+      });
+  }
+
+  // Capture phase + stopPropagation: update #org-filter-inputs BEFORE the
+  // checkbox's change event bubbles to the form's hx-trigger="change", so HTMX
+  // submits with the correct (post-toggle) org inputs — otherwise unchecking
+  // would submit with the org still present.
+  document.addEventListener(
+    "change",
+    function (e) {
+      if (!e.target.matches(".org-filter-quick__checkbox")) return;
+      e.stopPropagation();
+      var cb = e.target;
+      var container = document.getElementById("org-filter-inputs");
+      if (!container) return;
+
+      // Use the option's own param (org / org_self / org_type) so toggling a
+      // "direct onder…" or type quick option keeps its semantics.
+      var param = cb.dataset.orgParam || "org";
+      var selector = 'input[name="' + param + '"][value="' + cb.value + '"]';
+
+      if (cb.checked) {
+        // Add hidden input only if not already present
+        if (!container.querySelector(selector)) {
+          var input = document.createElement("input");
+          input.type = "hidden";
+          input.name = param;
+          input.value = cb.value;
+          input.setAttribute("data-filter-input", "");
+          input.setAttribute("data-label", cb.dataset.orgLabel || "");
+          container.appendChild(input);
+        }
+      } else {
+        container.querySelectorAll(selector).forEach(function (input) {
+          input.remove();
+        });
+      }
+
+      var form = document.querySelector(".filter-sidebar-form");
+      if (form) htmx.trigger(form, "change");
+    },
+    true,
+  ); // capture phase
+
+  // After the sidebar re-renders (OOB swap) or the modal applies a selection,
+  // re-sync the top-3 quick-option checkboxes with the true org state.
+  document.body.addEventListener("htmx:afterSettle", syncOrgQuickOptions);
+  syncOrgQuickOptions();
 });

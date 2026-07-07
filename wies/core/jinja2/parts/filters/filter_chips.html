@@ -16,20 +16,7 @@
       </button>
     </div>
   {% endfor %}
-  {# Search filter chip #}
-  {% if search_filter %}
-    <div class="filter-chip filter-chip--default"
-         data-filter-name="zoek"
-         data-filter-type="zoek">
-      <span>{{ search_filter }}</span>
-      <button type="button"
-              class="filter-chip-remove"
-              aria-label="Verwijder filter"
-              data-filter-name="zoek">
-        <c-icon icon="kruis" color="grijs-700" size="sm" />
-      </button>
-    </div>
-  {% endif %}
+  {# Search term stays in the search field itself — no chip. #}
   {# Regular filters #}
   {% for filter_group in filter_groups %}
     {% if filter_group.type == 'select' %}
@@ -102,4 +89,11 @@
       </div>
     {% endif %}
   {% endfor %}
+  {# Clear-all sits with the chips so the two read together. Lives in the
+     OOB-swapped content, so no JS visibility toggle is needed. #}
+  {% if active_filter_count %}
+    <c-button kind="tertiary" size="sm" icon="kruis" iconPlacement="before" type="button" class="filter-chips__clear" data-clear-all-filters>
+    Wis alle filters
+    </c-button>
+  {% endif %}
 </div>
