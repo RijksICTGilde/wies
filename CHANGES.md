@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?
+- 425: add debug page for request metadata to determine appropriate IP gathering in production
 
 ## 2026-07-02
 
