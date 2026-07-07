@@ -23,6 +23,6 @@ class AutoLoginMiddleware:
             if not user:
                 user = User.objects.first()
             if user:
-                login(request, user, backend="django.contrib.auth.backends.ModelBackend")
+                login(request, user, backend="wies.rijksauth.auth_backend.AuthBackend")
                 logger.info("Auto-login: logged in as %s", user)
         return self.get_response(request)

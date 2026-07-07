@@ -325,6 +325,11 @@ dialog#side_panel::backdrop {
   gap: 0.25rem;
 }
 
+/* Align the privacy note with the name row's padding when it sits inside a team item. */
+.rvo-item-list__item .assignment-card__privacy {
+  padding: 0 0.75rem 0.5rem;
+}
+
 .assignment-card__role {
   display: flex;
   align-items: center;

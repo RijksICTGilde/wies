@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0007_alter_placement_period_source_and_more"),
+        ("core", "0008_scrub_legacy_organizations_events"),
     ]
 
     operations = [

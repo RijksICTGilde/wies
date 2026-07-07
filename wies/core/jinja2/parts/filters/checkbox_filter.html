@@ -1,18 +1,22 @@
-{# Checkbox filter component (inline checkboxes with "Meer" toggle and optional counters)
+{# Checkbox filter component — top-N inline checkboxes + a "Meer" button that
+   opens the full alphabetical list in a modal.
    Usage:
-     {% with name="roles", label="Rollen", options=options, selected_values=selected %}
+     {% with name="rol", label="Rol", group_id="rol", top_options=..., has_more=..., selected_values=selected %}
        {% include "parts/filters/checkbox_filter.html" %}
      {% endwith %}
    Context:
-     - name: input name attribute
+     - name: input name attribute (e.g. "rol", "labels")
      - label: display label
-     - options: list of {value, label, count?}
+     - group_id: unique key for the group (opens the modal by this key)
+     - top_options: list of {value, label, count?} shown inline (top-N by count)
+     - has_more: whether there are more options than shown inline (renders "Meer")
      - selected_values: list of currently selected values
+     - filter_target_url: URL of the list view (for the modal hx-get)
 #}
-{% set real_options = options|selectattr('value')|list %}
-{% set visible = real_options[:3] %}
-{% set extra = real_options[3:] %}
-<fieldset class="checkbox-filter" data-checkbox-filter data-name="{{ name }}">
+<fieldset class="checkbox-filter"
+          data-checkbox-filter
+          data-name="{{ name }}"
+          data-group-id="{{ group_id }}">
   <legend class="checkbox-filter__legend-sr-only">{{ label }}</legend>
   <button type="button" class="checkbox-filter__header">
     <c-label>{{ label }}</c-label>
@@ -20,8 +24,9 @@
   </button>
   <div class="checkbox-filter__body">
     <div class="checkbox-filter__options">
-      {% for option in visible %}
-        <label class="rvo-checkbox checkbox-filter__option">
+      {% for option in top_options %}
+        <label class="rvo-checkbox checkbox-filter__option"
+               data-tooltip="{{ option.label }}">
           <input type="checkbox"
                  class="rvo-checkbox__input checkbox-filter__checkbox"
                  value="{{ option.value }}"
@@ -31,29 +36,20 @@
         </label>
       {% endfor %}
     </div>
-    {% if extra %}
-      {% set has_selected_extra = extra|selectattr('value', 'in', selected_values)|list|length > 0 %}
-      <div class="checkbox-filter__options checkbox-filter__options--extra"
-           {% if not has_selected_extra %}hidden{% endif %}>
-        {% for option in extra %}
-          <label class="rvo-checkbox checkbox-filter__option">
-            <input type="checkbox"
-                   class="rvo-checkbox__input checkbox-filter__checkbox"
-                   value="{{ option.value }}"
-                   {% if option.value in selected_values %}checked{% endif %} />
-            <span class="checkbox-filter__option-text">{{ option.label }}</span>
-            {% if option.count is defined %}<span class="checkbox-filter__count">{{ option.count }}</span>{% endif %}
-          </label>
-        {% endfor %}
-      </div>
-      {% if has_selected_extra %}
-        <c-button type="button" kind="tertiary" size="sm" class="checkbox-filter__toggle checkbox-filter__toggle--expanded">− Toon minder</c-button>
-      {% else %}
-        <c-button type="button" kind="tertiary" size="sm" class="checkbox-filter__toggle">+ Toon meer</c-button>
-      {% endif %}
+    {% if has_more %}
+      <button type="button"
+              class="checkbox-filter__more"
+              hx-get="{{ filter_target_url }}?filter_modal={{ group_id }}"
+              hx-target="#filterOptionsModalContainer"
+              hx-swap="innerHTML"
+              hx-push-url="false"
+              hx-include="[data-filter-input]">
+        <c-icon icon="zoek" size="md" class="checkbox-filter__more-icon" />
+        <span class="checkbox-filter__more-text">Meer</span>
+      </button>
     {% endif %}
   </div>
-  {# Hidden inputs for form submission - one per selected value #}
+  {# Hidden inputs for form submission - one per selected value (source of truth) #}
   <div class="checkbox-filter__hidden-inputs">
     {% for val in selected_values %}
       <input type="hidden" name="{{ name }}" value="{{ val }}" data-filter-input />

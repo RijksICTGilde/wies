@@ -6,6 +6,22 @@ This files lists the changes during the lifetime of this project.
 
 - 373: rich text editing voor omschrijvingen (Service.description, Assignment.extra_info) via django-prose-editor (#379)
 
+## 2026-07-02
+
+- 402: each filter group now shows its top-3 options plus a "Meer" button that opens a modal with all options (searchable, alphabetical); selected options sort to the top and stay visible even outside the top-3. The modal applies its selection only on "Filter toepassen" (closing without applying discards it), consistent with the opdrachtgever picker
+- 402: search now runs on Enter or the magnifier (not on every keystroke) and keeps its text instead of becoming a chip; org suggestions still load live while typing
+- 402: added a "Wis alle filters" button next to the active filter chips, so the chips and the clear-all action read together above the results
+- 402: fixes — "Toon meer/minder" label now updates; clearing the search no longer leaves a stale term or a missing × button
+- 417: remove `ModelBackend` from `AUTHENTICATION_BACKENDS`; `AuthBackend` now inherits from `ModelBackend` so group permissions keep resolving via a single backend, but there is no second password-login path)
+- 334: Add privacy declaration and beheer document. The in-product privacy page is regenerated via `manage.py generate_privacy_html`
+- 410: fix privacy leak (#383) where non-active plaatsingen were shown to everyone; ended and future (not-yet-started) plaatsingen are now only visible to the placed colleague and the opdracht's Business Manager, each with a privacy note and an "Afgelopen"/"Gepland" chip, consistently across the opdracht team list, the team count, the standalone plaatsing-pagina (`?plaatsing=N`, which was reachable by guessing the URL), the "Wie zit waar?"-overzicht and the profiel-overzicht. The security.txt is now accessible, it was hidden behind the SSO wall.
+
+## 2026-06-24
+
+- 411: (migration) fix assignment updates tab error when there is old unmigrated data
+- 413: fix that teammembers on assignment can be removed
+- 372: the BM-owner (and support staff in `STAFF_EMAILS`) can delete wies-sourced opdrachten, with a confirmation modal and an audit-trail event; both create and delete now snapshot the rollen (with who filled them) and the opdrachtgevers
+
 ## 2026-01-16
 
 - 398: bug fixes — Business Manager link no longer breaks the page and now survives editing/cancelling (#395), only the pencil icon opens inline edit (links and "Toon meer" no longer trigger edit mode), clicking a team member opens the panel via htmx again instead of a full page reload, team period changes now show in updates (#393), no more HiddenInput widget warnings (#389)

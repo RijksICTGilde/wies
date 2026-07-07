@@ -16,6 +16,7 @@ Including another URLconf
 """
 
 from django.conf import settings
+from django.contrib.auth.decorators import login_not_required
 from django.urls import path
 from django.views.generic import RedirectView
 
@@ -24,6 +25,7 @@ from wies.core.views import (
     PlacementListView,
     UserListView,
     assignment_create,
+    assignment_delete,
     assignment_events_partial,
     assignment_import_csv,
     client_modal,
@@ -62,7 +64,9 @@ urlpatterns = [
     path("robots.txt", robots_txt, name="robots-txt"),
     path(
         ".well-known/security.txt",
-        RedirectView.as_view(url="https://www.ncsc.nl/.well-known/security.txt", permanent=False),
+        # login_not_required so the LoginRequiredMiddleware does not bounce anonymous
+        # scanners to SSO before the redirect to the NCSC central file can run.
+        login_not_required(RedirectView.as_view(url="https://www.ncsc.nl/.well-known/security.txt", permanent=False)),
         name="security-txt",
     ),
     # Wies
@@ -75,6 +79,7 @@ urlpatterns = [
     path("opdrachten/aanmaken/", assignment_create, name="assignment-create"),
     path("opdrachten/importeren/", assignment_import_csv, name="assignment-import-csv"),
     path("opdrachten/<int:pk>/events/", assignment_events_partial, name="assignment-events-partial"),
+    path("opdrachten/<int:pk>/verwijderen/", assignment_delete, name="assignment-delete"),
     path("beheer/", RedirectView.as_view(pattern_name="admin-users", permanent=False), name="admin"),
     path("beheer/gebruikers/", UserListView.as_view(), name="admin-users"),
     path("beheer/gebruikers/aanmaken/", user_create, name="user-create"),

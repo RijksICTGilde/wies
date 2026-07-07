@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0008_alter_service_description"),
+        ("core", "0009_alter_service_description"),
     ]
 
     operations = [

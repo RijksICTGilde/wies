@@ -134,7 +134,6 @@ LOGIN_URL = "login"
 
 AUTHENTICATION_BACKENDS = [
     "wies.rijksauth.auth_backend.AuthBackend",
-    "django.contrib.auth.backends.ModelBackend",
 ]
 
 AUTH_USER_MODEL = "rijksauth.User"
