@@ -9,10 +9,7 @@ from wies.core.querysets import annotate_placement_dates
 
 
 def _onboarding_owner_mailto(assignment) -> str:
-    """Return a mailto (address + subject, no body) for the BM of ``assignment``.
-
-    Empty when the assignment has no owner or the owner has no email.
-    """
+    """Return a mailto (address + subject, no body) for the BM of ``assignment``."""
     if not assignment.owner or not assignment.owner.email:
         return ""
     subject = urllib.parse.quote(f"Opdracht {assignment.name}")
@@ -20,12 +17,7 @@ def _onboarding_owner_mailto(assignment) -> str:
 
 
 def _onboarding_assignments(colleague):
-    """Return the active assignments the user is placed on, for the self-check step.
-
-    One entry per assignment, each with its ``Assignment``, the ``services`` the
-    user is placed on, and a bare ``owner_mailto``. Empty when the user has no
-    active placement. Editability is left to the field-level permission rules.
-    """
+    """Return the active assignments the user is placed on, for the self-check step."""
     if colleague is None:
         return []
 
