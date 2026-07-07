@@ -1,14 +1,7 @@
-{# First-login onboarding wizard. Rendered from base.html when show_onboarding
-   is True (see wies.core.context_processors.onboarding). A self-opening
-   <dialog> with client-side steps; navigation handled by onboarding.js.
-   "Overslaan" and "Aan de slag" both POST to onboarding-complete, which marks
-   the wizard done so it never reappears.
-
-   The step count is NOT fixed: step 1 is always the welcome page; the
-   "Controleer je opdracht" step only renders when the consultant is placed on
-   at least one assignment (onboarding_assignments). onboarding.js derives the
-   total from the number of .onboarding-panel sections and one progress dot is
-   rendered per panel, so the two stay in sync automatically. #}
+{# First-login onboarding wizard, included by base.html when show_onboarding is
+   True (see wies.core.context_processors.onboarding). A self-opening <dialog>;
+   navigation and step count are handled by onboarding.js. "Overslaan" and "Aan
+   de slag" POST to onboarding-complete, which marks the wizard done. #}
 {% set ns = namespace(step=0) %}
 <dialog id="onboardingWizard"
         class="modal-dialog modal-dialog--wide onboarding-wizard"
@@ -29,9 +22,7 @@
       </form>
     </div>
     <div class="modal-body onboarding-body">
-      {# Progress dots, one per step. Welcome + profile are always shown; the
-         opdracht-check step is optional, so the total (2 or 3) depends on
-         whether the consultant is placed. #}
+      {# One dot per step: 2 (welcome + profile), or 3 with the opdracht step. #}
       {% set total_steps = 2 + (1 if onboarding_assignments else 0) %}
       <ol class="onboarding-steps" aria-hidden="true">
         {% for dot in range(1, total_steps + 1) %}
@@ -90,10 +81,8 @@
           <c-paragraph>Je profiel wordt klaargezet. Je kunt labels straks invullen via <c-link href="{{ url('user-profile') }}">Mijn profiel</c-link>.</c-paragraph>
         {% endif %}
       </section>
-      {# Step 3: Controleer je opdracht (only when placed on ≥1 assignment).
-         Consultants may correct name + omschrijving inline (field-level
-         permission rules open these for a placed colleague); the rest is
-         read-only with a "contact your Business Manager" advice. #}
+      {# Opdracht-check step, shown only when placed on ≥1 assignment. What is
+         editable per field is left to the inline_edit permission rules. #}
       {% if onboarding_assignments %}
         {% set ns.step = ns.step + 1 %}
         <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
@@ -148,8 +137,7 @@
                   </dd>
                 {% endfor %}
                 </c-data-list>
-                {# Correcties buiten naam/omschrijving lopen via de Business
-                   Manager: toon naam + een voorgevulde mailto. #}
+                {# Read-only fields: refer to the Business Manager (name + mailto). #}
                 <div class="onboarding-assignment__bm">
                   {% if assignment.owner %}
                     <c-span class="onboarding-assignment__bm-text">

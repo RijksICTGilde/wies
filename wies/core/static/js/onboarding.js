@@ -9,9 +9,7 @@
   if (!dialog) return;
 
   var panels = dialog.querySelectorAll(".onboarding-panel");
-  // Step count is derived, not fixed: the "Controleer je opdracht" step only
-  // renders when the consultant is placed on an assignment, so the total is 1
-  // or 2 depending on the template. One progress dot is rendered per panel.
+  // Derived from the rendered panels, since the opdracht step is conditional.
   var TOTAL_STEPS = panels.length;
   var current = 1;
 
@@ -66,10 +64,7 @@
     show(1);
     dialog.showModal();
     document.documentElement.style.overflow = "hidden";
-    // By default showModal() focuses the first focusable element (the
-    // "Overslaan" button), which reads as "dismiss me". Move focus to the
-    // dialog itself instead so nothing lights up; its focus ring is
-    // suppressed in CSS. Interactive controls keep their own focus styling.
+    // Focus the dialog, not the first button (which would be "Overslaan").
     dialog.focus();
   }
 })();

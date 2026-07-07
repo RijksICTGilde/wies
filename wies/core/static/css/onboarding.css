@@ -8,16 +8,13 @@
   width: 100%;
 }
 
-/* On open, focus moves to the dialog itself (see onboarding.js) so no button
-   lights up. The container itself should not show a focus ring; interactive
-   controls inside keep their own. */
+/* No focus ring on the dialog itself (it's focused on open, see onboarding.js). */
 .onboarding-wizard:focus,
 .onboarding-wizard:focus-visible {
   outline: none;
 }
 
-/* Keep the body a steady height across steps so the modal doesn't jump
-   as panels with different content swap in. */
+/* Steady height so the modal doesn't jump when panels swap. */
 .onboarding-body {
   min-height: 24rem;
 }
@@ -83,9 +80,7 @@
   gap: 0.5rem;
 }
 
-/* RIG-only disclaimer on the welcome step — wraps a c-alert, so it only
-   handles width/spacing; the alert brings its own styling. Constrained to the
-   same column width as the text so it doesn't run edge-to-edge. */
+/* Constrain the disclaimer c-alert to the text column width. */
 .onboarding-disclaimer {
   margin: 1.25rem auto 0;
   max-width: 56ch;
@@ -111,7 +106,7 @@
 
 /* --- Step: Controleer je opdracht ----------------------------------------- */
 
-/* One card per assignment the consultant is placed on. */
+/* One card per placed-on assignment. */
 .onboarding-assignments {
   display: flex;
   flex-direction: column;
