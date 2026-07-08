@@ -7,18 +7,11 @@
         GitHub
         </c-link>
       </li>
-      {% if APP_VERSION and '/beheer/' in request.path %}
-        <li>
-          <c-link icon="delta-naar-rechts" iconSize="xs" weight="normal" color="zwart" noUnderline>
-          Versie: {{ APP_VERSION }}
-          </c-link>
-        </li>
-      {% endif %}
-    </ul>
-  </div>
-  <div class="sidebar-footer__column">
-    <span class="sidebar-footer__title">Over deze site</span>
-    <ul class="sidebar-footer__menu">
+      <li>
+        <c-link href="{{ url('faq') }}" icon="delta-naar-rechts" iconSize="xs" weight="normal" color="zwart">
+        Veelgestelde vragen
+        </c-link>
+      </li>
       <li>
         <c-link href="{{ url('privacy') }}" icon="delta-naar-rechts" iconSize="xs" weight="normal" color="zwart">
         Privacy
@@ -34,6 +27,13 @@
         Contact
         </c-link>
       </li>
+      {% if APP_VERSION and '/beheer/' in request.path %}
+        <li>
+          <c-link icon="delta-naar-rechts" iconSize="xs" weight="normal" color="zwart" noUnderline>
+          Versie: {{ APP_VERSION }}
+          </c-link>
+        </li>
+      {% endif %}
     </ul>
   </div>
 </div>
