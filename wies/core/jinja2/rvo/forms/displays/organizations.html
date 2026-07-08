@@ -1,6 +1,6 @@
 {# Renders breadcrumbs with ancestors + label and the primary organization tagged. #}
 {% if value %}
-  {% set base_url = breadcrumb_base_url(request) %}
+  {% set base_url = current_page_path(request) %}
   {% for row in value %}
     {% set org_breadcrumb = get_org_breadcrumb(row.organization, base_url) %}
     <div class="org-breadcrumb">
