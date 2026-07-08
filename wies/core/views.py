@@ -2209,12 +2209,10 @@ def onboarding_complete(request):
     return redirect("home")
 
 
-@login_not_required
 def contact(request):
     return render(request, "contact.html")
 
 
-@login_not_required
 def faq(request):
     return render(request, "faq.html")
 

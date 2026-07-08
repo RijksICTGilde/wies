@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 443: de Veelgestelde vragen- en contactpagina zijn nu alleen zichtbaar na inloggen (waren publiek toegankelijk)
 - 449: fix icons/styling occasionally rendering broken after a deploy. fixed by including `Cache-Control: no-store` on HTML responses
 - 449: fix edit-pencil (and other inline-edit) icons rendering grey on pages that don't load `side_panel.css`. Moved inline-edit styling to the global `base.css`.
 

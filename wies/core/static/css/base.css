@@ -748,24 +748,6 @@ body {
   opacity: 1;
 }
 
-/* faq.html accordion — small tweaks on top of the bundled RVO accordion CSS. */
-
-/* RVO colours the item title hemelblauw, which reads as a link here; make it a
-   neutral, bold heading instead. */
-h3.rvo-accordion__item-title {
-  color: var(--rvo-color-grijs-800, #1e293b);
-  font-weight: 700;
-}
-
-/* RVO fixes the icon column width via `.rvo-icon` (flex: 16px), but our icon
-   sits in an `__item-icon` wrapper, so the width is lost and the title shifts
-   when the closed/open chevron swap to differently-sized glyphs. Pin the
-   wrapper to a fixed, centred column so the title stays put on toggle. */
-.rvo-accordion__item-summary .rvo-accordion__item-icon {
-  flex: 0 0 var(--rvo-icon-sm-width, 12px);
-  justify-content: center;
-}
-
 /* Inline-edit component (pencil, field layout, source lock).
    Loaded globally because inline-edit is reused across pages */
 .editable-field-display {
