@@ -31,9 +31,9 @@
         <div class="staff-tile__label">Mislukte logins (30 dagen)</div>
       </div>
     </div>
-    <h3>Logins per dag (laatste 90 dagen)</h3>
+    <h3>Daily Active Users (laatste 90 dagen)</h3>
     <div class="staff-chart">
-      {% for day, count in usage.daily_logins %}
+      {% for day, count in usage.daily_active_users %}
         <div class="staff-chart__bar"
              title="{{ day }}: {{ count }}"
              style="height: {{ (count / usage.max_daily * 100) if usage.max_daily else 0 }}%"></div>

@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?
+- ?: statistieken — de grafiek toont nu Daily Active Users (unieke inlogs per dag) in plaats van het totaal aantal logins per dag.
 
 ## 2026-07-08_3
 
