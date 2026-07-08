@@ -2207,6 +2207,11 @@ def contact(request):
     return render(request, "contact.html")
 
 
+@login_not_required
+def faq(request):
+    return render(request, "faq.html")
+
+
 def privacy(request):
     return render(request, "privacy.html")
 

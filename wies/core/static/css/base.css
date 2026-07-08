@@ -747,3 +747,57 @@ body {
 [data-tooltip]:hover::after {
   opacity: 1;
 }
+
+/* ============================================================================
+   Accordion (faq.html) — RVO rvo-accordion markup. The rvo-accordion CSS is
+   not in the bundled roos.css, so we style the same classes here, following
+   the RVO look: divider per item and a left border-indicator when open.
+   ============================================================================ */
+.rvo-accordion__item {
+  border-block-end: 1px solid var(--rvo-color-grijs-300, #b1b9c0);
+  border-inline-start: 6px solid transparent;
+  background: #fff;
+}
+
+.rvo-accordion__item:first-child {
+  border-block-start: 1px solid var(--rvo-color-grijs-300, #b1b9c0);
+}
+
+.rvo-accordion__item[open] {
+  border-inline-start-color: var(--rvo-color-hemelblauw, #007bc7);
+}
+
+.rvo-accordion__item-summary {
+  cursor: pointer;
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+/* Hide the default disclosure triangle; use a rotating chevron instead. */
+.rvo-accordion__item-summary::-webkit-details-marker {
+  display: none;
+}
+
+.rvo-accordion__item-summary::after {
+  content: "";
+  width: 0.6em;
+  height: 0.6em;
+  border-right: 2px solid var(--rvo-color-grijs-700, #4f5358);
+  border-bottom: 2px solid var(--rvo-color-grijs-700, #4f5358);
+  transform: rotate(45deg);
+  transition: transform 0.15s ease;
+  flex: none;
+}
+
+.rvo-accordion__item[open] .rvo-accordion__item-summary::after {
+  transform: rotate(-135deg);
+}
+
+.rvo-accordion__content {
+  padding: 0.5rem 1.25rem 1.25rem;
+}

@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block title %}
+  Veelgestelde vragen - Wies
+{% endblock title %}
+{% block content %}
+  <c-layout-flow gap="xl">
+  <section>
+    <c-h1>Veelgestelde vragen</c-h1>
+    <c-paragraph>
+    Hieronder vind je antwoorden op vragen die vaak gesteld worden over Wies.
+    Staat je vraag er niet bij? <c-link href="{{ url('contact') }}">Neem contact met ons op</c-link>.
+    </c-paragraph>
+  </section>
+  <section>
+    <div class="rvo-accordion faq-accordion">
+      <details class="rvo-accordion__item">
+        <summary class="rvo-accordion__item-summary">Wat is Wies?</summary>
+        <div class="rvo-accordion__content">
+          <c-paragraph>
+          Wies is een intern hulpmiddel van de Rijksorganisatie voor Ontwikkeling,
+          Digitalisering en Innovatie (ODI) binnen de Rijksoverheid. Het geeft een
+          overzicht van wie waar werkt, aan welke opdracht en wanneer, zodat je
+          collega's, opdrachten en plaatsingen makkelijk terugvindt.
+          </c-paragraph>
+        </div>
+      </details>
+      <details class="rvo-accordion__item">
+        <summary class="rvo-accordion__item-summary">Hoe is het inloggen beveiligd?</summary>
+        <div class="rvo-accordion__content">
+          <c-paragraph>
+          Je logt in met je Rijksaccount via SSO Rijk, de centrale inlogdienst van
+          de Rijksoverheid. Wies bewaart je wachtwoord niet en krijgt het ook nooit
+          te zien: tweefactor-authenticatie en het wachtwoordbeleid worden door SSO
+          Rijk afgedwongen. Alleen ODI-medewerkers krijgen toegang. Na het
+          inloggen houdt Wies een tijdelijke sessie bij die
+          automatisch verloopt; na uitloggen word je opnieuw om je gegevens gevraagd.
+          </c-paragraph>
+          <c-paragraph>
+          Je kunt overal bij Wies, ook buiten Citrix: open Wies gewoon in je browser
+          en log in met je Rijksaccount.
+          </c-paragraph>
+        </div>
+      </details>
+      <details class="rvo-accordion__item">
+        <summary class="rvo-accordion__item-summary">Hoe gaat Wies om met veiligheid en privacy?</summary>
+        <div class="rvo-accordion__content">
+          <c-paragraph>
+          Wies verwerkt alleen de gegevens die nodig zijn om plaatsingen en
+          opdrachten te beheren, en bevat geen gerubriceerde informatie. Wie wat mag
+          zien en bewerken is per rol en per veld geregeld. Het verkeer verloopt
+          versleuteld via HTTPS. De opzet is afgestemd met de Ondernemingsraad (OR)
+          en de Chief Information Security Officer (CISO), en er is een pre-scan DPIA
+          uitgevoerd.
+          </c-paragraph>
+          <c-paragraph>
+          Meer weten? Lees de <c-link href="{{ url('privacy') }}">privacyverklaring</c-link>
+          voor wat we vastleggen en waarom, en hoe je je privacyrechten kunt uitoefenen.
+          </c-paragraph>
+        </div>
+      </details>
+      <details class="rvo-accordion__item">
+        <summary class="rvo-accordion__item-summary">Waar draait Wies?</summary>
+        <div class="rvo-accordion__content">
+          <c-paragraph>
+          Wies wordt gehost in het Overheids Datacenter Noord (ODC-Noord) en
+          uitgerold via
+          <c-link href="https://zad.rijksapp.nl" target="_blank">ZAD (Zelfservice voor Applicatie Deployment)</c-link>.
+          Zo draait Wies op een vertrouwde overheidsomgeving die aan de geldende
+          beveiligingseisen voldoet.
+          </c-paragraph>
+        </div>
+      </details>
+      <details class="rvo-accordion__item">
+        <summary class="rvo-accordion__item-summary">Hoe wordt Wies ontwikkeld?</summary>
+        <div class="rvo-accordion__content">
+          <c-paragraph>
+          Wies wordt ontwikkeld door het Digi Gilde, in opdracht van de
+          Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie (ODI).
+          Dat gebeurt open source, in lijn met het uitgangspunt van een open
+          overheid: de volledige broncode staat publiek op
+          <c-link href="https://github.com/RijksICTGilde/wies" target="_blank">GitHub</c-link>
+          en is beschikbaar onder de EUPL 1.2-licentie, zodat iedereen kan meekijken,
+          meedenken en hergebruiken.
+          </c-paragraph>
+          <c-paragraph>
+          We bouwen op open standaarden en het
+          <c-link href="https://nldesignsystem.nl" target="_blank">NL Design System</c-link>
+          (RVO-huisstijl), zodat Wies aansluit bij de rest van de digitale overheid en
+          toegankelijk is voor iedereen.
+          </c-paragraph>
+        </div>
+      </details>
+    </div>
+  </section>
+  </c-layout-flow>
+{% endblock content %}
