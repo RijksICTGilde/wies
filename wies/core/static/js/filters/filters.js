@@ -457,11 +457,9 @@ document.addEventListener("DOMContentLoaded", function () {
     commitSearch();
   });
 
-  // Clicking out of the field (blur) commits the current text when it differs
-  // from the active search term — so trimming or clearing the field and clicking
-  // away keeps the URL/results in sync, without requiring Enter or the magnifier.
-  // (commitSearch() itself blurs the input; the value-equality check makes that
-  // re-entrant blur a no-op.)
+  // Commit on blur so clearing/trimming the field and clicking away syncs the
+  // results. The equality check skips unchanged blurs, including commitSearch()'s
+  // own internal blur() (which would otherwise re-enter here).
   document.body.addEventListener(
     "blur",
     function (e) {
