@@ -29,11 +29,11 @@
               <span class="service-card__period">
                 <span class="rvo-icon rvo-icon-kalender rvo-icon--sm" aria-hidden="true"></span>
                 {% if pl.start_date and pl.end_date %}
-                  {{ pl.start_date|datum_nl("j M Y") }} – {{ pl.end_date|datum_nl("j M Y") }}
+                  {{ pl.start_date|datum_nl("j N Y") }} – {{ pl.end_date|datum_nl("j N Y") }}
                 {% elif pl.start_date %}
-                  {{ pl.start_date|datum_nl("j M Y") }} – heden
+                  {{ pl.start_date|datum_nl("j N Y") }} – heden
                 {% elif pl.end_date %}
-                  t/m {{ pl.end_date|datum_nl("j M Y") }}
+                  t/m {{ pl.end_date|datum_nl("j N Y") }}
                 {% endif %}
               </span>
             {% endif %}
@@ -55,11 +55,11 @@
             {% if svc and (svc.start_date or svc.end_date) %}
               <span class="service-card__period">
                 {% if svc.start_date and svc.end_date %}
-                  {{ svc.start_date|datum_nl("j M Y") }} – {{ svc.end_date|datum_nl("j M Y") }}
+                  {{ svc.start_date|datum_nl("j N Y") }} – {{ svc.end_date|datum_nl("j N Y") }}
                 {% elif svc.start_date %}
-                  {{ svc.start_date|datum_nl("j M Y") }} – heden
+                  {{ svc.start_date|datum_nl("j N Y") }} – heden
                 {% elif svc.end_date %}
-                  t/m {{ svc.end_date|datum_nl("j M Y") }}
+                  t/m {{ svc.end_date|datum_nl("j N Y") }}
                 {% endif %}
               </span>
             {% endif %}
