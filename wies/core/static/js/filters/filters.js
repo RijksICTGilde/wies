@@ -457,6 +457,22 @@ document.addEventListener("DOMContentLoaded", function () {
     commitSearch();
   });
 
+  // Commit on blur so clearing/trimming the field and clicking away syncs the
+  // results. The equality check skips unchanged blurs, including commitSearch()'s
+  // own internal blur() (which would otherwise re-enter here).
+  document.body.addEventListener(
+    "blur",
+    function (e) {
+      var input = e.target;
+      if (!input || input.id !== "search") return;
+      var hiddenSearch = document.getElementById("search-filter-value");
+      var active = hiddenSearch ? hiddenSearch.value : "";
+      if (input.value.trim() === active) return;
+      commitSearch();
+    },
+    true, // capture: blur does not bubble
+  );
+
   // Click the magnifier icon → run the search (same as Enter). Only acts on the
   // global #search field's wrapper; per-group searches handle their own input.
   document.body.addEventListener("click", function (e) {

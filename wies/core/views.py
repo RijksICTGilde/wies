@@ -451,6 +451,13 @@ def staff_database(request):
                 return HttpResponse(status=405)
             management.call_command("loaddata", "base_dummy_data.json")
             messages.success(request, "Data geladen uit base_dummy_data.json")
+        elif action == "reset_onboarding":
+            request.user.onboarding_completed_at = None
+            request.user.save(update_fields=["onboarding_completed_at"])
+            messages.success(
+                request,
+                "Onboarding is gereset. De wizard verschijnt weer bij de volgende paginalading.",
+            )
         elif action == "sync_organizations":
             # Check if there's already an active task
             if has_active_task("sync_organizations"):

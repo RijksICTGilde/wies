@@ -2,11 +2,19 @@
 
 This files lists the changes during the lifetime of this project.
 
-## unreleased
+## 2026-07-08_2
 
 - 443: add a Veelgestelde vragen (FAQ) page with an accordion, linked from the sidebar footer; covers what Wies is, login security (SSO Rijk), veiligheid/privacy (afgestemd met OR/CISO, pre-scan DPIA), hosting (ODC-Noord via ZAD), and how Wies is developed (open source, EUPL 1.2)
+- add css comment to trigger styling errors after deploy
+- 446: the search field now commits on blur — trimming or clearing the text and clicking away updates the URL/results, without needing Enter or the magnifier
+
+## 2026-07-08
+
+- 438: fix assignment owner link in the assignment side panel so it points back to the page the user is on (instead of the `/assignments/` page)
+- 444: staff can reset their own onboarding wizard from the database page (for demos)
 - 430: (migration) first-login onboarding wizard — welcome + explanation of the tabs, fill in your profile with labels, and for placed consultants a step to check their own opdracht. Adds `User.onboarding_completed_at` to remember when the wizard was finished or skipped.
 - 425: add debug page for request metadata to determine appropriate IP gathering in production
+- 439: fix dates showing a capitalized month ("30 Jun 2027") in the "Wie zit waar?"-overzicht ("Tot"-kolom) and the opdracht-zijpaneel teamlijst; they now use the lowercase Dutch abbreviation ("30 jun 2027")
 
 ## 2026-07-02
 
