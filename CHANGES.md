@@ -2,8 +2,9 @@
 
 This files lists the changes during the lifetime of this project.
 
-## unreleased
+## 2026-07-08_2
 
+- add css comment to trigger styling errors after deploy
 - 446: the search field now commits on blur — trimming or clearing the text and clicking away updates the URL/results, without needing Enter or the magnifier
 
 ## 2026-07-08
