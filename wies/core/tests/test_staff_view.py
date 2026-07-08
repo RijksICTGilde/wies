@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase, override_settings
+from django.utils import timezone
 
 from wies.core.models import Assignment
 
@@ -58,3 +59,32 @@ class StaffDestructiveActionsGuardTest(TestCase):
         response = self.client.post("/beheer/database/", {"action": "sync_organizations"}, follow=False)
 
         assert response.status_code != 405
+
+
+@override_settings(STAFF_EMAILS=[STAFF_EMAIL])
+class StaffResetOnboardingTest(TestCase):
+    """Verify staff can reset their own onboarding flag from the database page."""
+
+    def setUp(self):
+        self.client = Client()
+        self.staff_user = User.objects.create_user(email=STAFF_EMAIL, first_name="Staff", last_name="User")
+        self.client.force_login(self.staff_user)
+
+    @override_settings(ENABLE_DESTRUCTIVE_STAFF_ACTIONS=False)
+    def test_reset_onboarding_card_always_visible(self):
+        # The reset card is non-destructive and shows even when destructive actions are disabled.
+        response = self.client.get("/beheer/database/")
+
+        assert response.status_code == 200
+        assert "Onboarding resetten" in response.content.decode()
+
+    @override_settings(ENABLE_DESTRUCTIVE_STAFF_ACTIONS=False)
+    def test_reset_onboarding_clears_flag(self):
+        self.staff_user.onboarding_completed_at = timezone.now()
+        self.staff_user.save(update_fields=["onboarding_completed_at"])
+
+        response = self.client.post("/beheer/database/", {"action": "reset_onboarding"})
+
+        assert response.status_code == 302
+        self.staff_user.refresh_from_db()
+        assert self.staff_user.onboarding_completed_at is None
