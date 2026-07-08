@@ -1,6 +1,8 @@
-class SecurityHeadersMiddleware:
+class ResponseHeadersMiddleware:
     """
-    Middleware to add security headers not covered by Django's SecurityMiddleware.
+    Post-processes every response to add headers not covered by Django's
+    SecurityMiddleware: security headers (Permissions-Policy,
+    Content-Security-Policy) and cache headers (no-store on HTML documents).
     """
 
     def __init__(self, get_response):
@@ -34,5 +36,18 @@ class SecurityHeadersMiddleware:
             "connect-src 'self'; "
             "frame-ancestors 'none';"
         )
+
+        # Never cache HTML documents. They embed content-hashed static URLs
+        # (WhiteNoise ManifestStaticFilesStorage), so a browser that reuses a
+        # stale HTML page after a deploy would request old hashes that no longer
+        # exist on the new container -> 404 -> unstyled page. Django sets no
+        # Cache-Control on HTML by default, which lets browsers heuristically
+        # cache it; force no-store so every navigation fetches fresh HTML while
+        # the immutable hashed assets stay aggressively cached.
+        #
+        # Guard: skip anything already carrying Cache-Control (e.g. WhiteNoise
+        # static responses) and only touch HTML responses.
+        if not response.has_header("Cache-Control") and "text/html" in response.get("Content-Type", ""):
+            response["Cache-Control"] = "no-store"
 
         return response

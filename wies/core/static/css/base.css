@@ -747,3 +747,55 @@ body {
 [data-tooltip]:hover::after {
   opacity: 1;
 }
+
+/* Inline-edit component (pencil, field layout, source lock).
+   Loaded globally because inline-edit is reused across pages */
+.editable-field-display {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--rvo-space-sm);
+  position: relative;
+}
+
+.editable-field-display__value {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--rvo-space-2xs);
+  min-width: 0;
+}
+
+.edit-icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--rvo-color-hemelblauw, #007bc7);
+  transition: color 0.2s ease;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.edit-icon-button:hover {
+  color: var(--rvo-color-donkerblauw);
+}
+
+.edit-icon-button:focus {
+  outline: 2px solid var(--rvo-color-focus);
+  outline-offset: 2px;
+}
+
+/* External source lock indicator — mirrors .edit-icon-button position */
+.source-lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  color: var(--rvo-color-grijs-500, #64748b);
+  cursor: default;
+  flex-shrink: 0;
+}
