@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ?
+
+## 2026-07-08_3
+
 - 443: add a Veelgestelde vragen (FAQ) page with an accordion, linked from the sidebar footer.
 - 443: compact sidebar footer — FAQ, Privacy, Toegankelijkheid and Contact now sit under one "Over Wies" heading
 - 450: bump Django to 6.0.7 (security release)
