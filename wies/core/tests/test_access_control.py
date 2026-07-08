@@ -49,6 +49,15 @@ class AccessControlTest(TestCase):
         assert response.status_code == 302
         assert response.url.startswith(reverse("login"))
 
+    def test_faq_and_contact_require_authentication(self):
+        """FAQ and contact pages are only visible after login; anonymous users bounce to login"""
+        for path in ("/faq/", "/contact/"):
+            with self.subTest(path=path):
+                response = self.client.get(path, follow=False)
+
+                assert response.status_code == 302
+                assert response.url.startswith(reverse("login"))
+
     def test_staff_page_requires_authentication(self):
         """Test that staff subpages redirect unauthenticated users"""
         for path in ("/beheer/statistieken/", "/beheer/database/"):
