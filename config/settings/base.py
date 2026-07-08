@@ -38,7 +38,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "wies.core.middleware.SecurityHeadersMiddleware",
+    "wies.core.middleware.ResponseHeadersMiddleware",
     # WhiteNoise is added in production.py only — see prod settings.
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
