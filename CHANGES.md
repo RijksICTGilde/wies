@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?
+- ?: fix onboarding wizard's Merken picker rendering broken on pages that don't load the filter/side-panel stylesheets
 
 ## 2026-07-08_3
 
