@@ -12,8 +12,6 @@ a failing Mattermost/HTTP call can't log-loop back into this handler.
 
 import logging
 
-from django.conf import settings
-
 # Mattermost accepts ~16k chars per message; keep the traceback well under that
 # so the surrounding markdown always fits.
 MAX_TRACEBACK_CHARS = 6000
@@ -51,10 +49,21 @@ class ErrorReportingHandler(logging.Handler):
                 user = request_user
                 user_email = getattr(request_user, "email", "") or ""
 
+        exception_type = ""
+        exception_message = ""
+        if record.exc_info:
+            exc_type, exc_value = record.exc_info[0], record.exc_info[1]
+            if exc_type is not None:
+                exception_type = exc_type.__name__
+            if exc_value is not None:
+                exception_message = str(exc_value)
+
         return ErrorEvent.objects.create(
             level=record.levelname,
             logger_name=record.name,
             message=record.getMessage(),
+            exception_type=exception_type,
+            exception_message=exception_message,
             traceback=traceback_text,
             method=method,
             path=path[:512],
@@ -64,16 +73,11 @@ class ErrorReportingHandler(logging.Handler):
         )
 
     def _notify(self, record: logging.LogRecord, error_event, traceback_text: str) -> None:
-        base_url = getattr(settings, "MATTERMOST_URL", "")
-        token = getattr(settings, "MATTERMOST_TOKEN", "")
-        channel_id = getattr(settings, "MATTERMOST_CHANNEL_ID", "")
-        if not (base_url and token and channel_id):
-            return  # DB row is the source of truth; posting is best-effort
+        # DB row is the source of truth; posting is best-effort and no-ops when
+        # Mattermost is not configured.
+        from wies.core.services.mattermost import send_ops_message  # noqa: PLC0415 - lazy, keeps import light
 
-        from wies.core.services.mattermost import MattermostClient  # noqa: PLC0415 - lazy, keeps import light
-
-        client = MattermostClient(base_url, token)
-        client.post_message(channel_id, self._build_message(record, error_event, traceback_text))
+        send_ops_message(self._build_message(record, error_event, traceback_text))
 
     def _build_message(self, record: logging.LogRecord, error_event, traceback_text: str) -> str:
         lines = [f"🔴 **{record.levelname}** in `{record.name}` (v{error_event.app_version})"]

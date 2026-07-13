@@ -397,42 +397,52 @@ def staff_required(view_func):
     return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
 
 
-ERRORS_PER_PAGE = 25
+ERRORS_PER_PAGE = 10
 
 
 @staff_required
 def staff_dashboard(request):
-    paginator = Paginator(ErrorEvent.objects.select_related("user").filter(visible=True), ERRORS_PER_PAGE)
-    page_obj = paginator.get_page(request.GET.get("pagina"))
+    # The error table is loaded separately via HTMX (see the error-table endpoint).
+    return render(request, "staff_dashboard.html", {"usage": get_usage_stats()})
 
-    if page_obj.has_next():
-        params = request.GET.copy()
-        params["pagina"] = page_obj.next_page_number()
-        next_page_url = f"?{params.urlencode()}"
-    else:
-        next_page_url = None
+
+def _render_error_table(request, page_number):
+    """Render the paginated error table fragment for the given page."""
+    paginator = Paginator(ErrorEvent.objects.select_related("user").filter(visible=True), ERRORS_PER_PAGE)
+    page_obj = paginator.get_page(page_number)
+
+    def page_url(number):
+        return f"{reverse('error-table')}?pagina={number}"
 
     context = {
         "object_list": page_obj.object_list,
         "page_obj": page_obj,
-        "next_page_url": next_page_url,
+        "current_page_url": page_url(page_obj.number),
+        "previous_page_url": page_url(page_obj.previous_page_number()) if page_obj.has_previous() else None,
+        "next_page_url": page_url(page_obj.next_page_number()) if page_obj.has_next() else None,
     }
+    return render(request, "parts/error_table.html", context)
 
-    # HTMX request for a subsequent page appends just the rows (reveal-to-load-more).
-    if "HX-Request" in request.headers and request.GET.get("pagina"):
-        return render(request, "parts/error_table_rows.html", context)
 
-    context["usage"] = get_usage_stats()
-    return render(request, "staff_dashboard.html", context)
+@staff_required
+def error_table(request):
+    """Paginated error table fragment, loaded via HTMX by the dashboard."""
+    return _render_error_table(request, request.GET.get("pagina"))
+
+
+@staff_required
+def error_detail(request, pk):
+    """Render the traceback of a single error as a modal fragment."""
+    error = get_object_or_404(ErrorEvent, pk=pk)
+    return render(request, "parts/error_detail_modal.html", {"error": error})
 
 
 @staff_required
 @require_POST
 def hide_error(request, pk):
-    """Hide a single handled error so it drops out of the statistieken table."""
+    """Hide a single handled error and return the refreshed current page of the table."""
     ErrorEvent.objects.filter(pk=pk).update(visible=False)
-    # Empty response so the HTMX outerHTML swap removes the row.
-    return HttpResponse(status=200)
+    return _render_error_table(request, request.GET.get("pagina"))
 
 
 @staff_required

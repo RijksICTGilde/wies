@@ -287,6 +287,10 @@ class ErrorEvent(models.Model):
     level = models.CharField(max_length=16, blank=True)
     logger_name = models.CharField(max_length=255, blank=True)
     message = models.TextField(blank=True)
+    # The raised exception's class name (e.g. "TypeError") and its str(), pulled
+    # from the log record's exc_info. Blank for log records without an exception.
+    exception_type = models.CharField(max_length=255, blank=True)
+    exception_message = models.TextField(blank=True)
     traceback = models.TextField(blank=True)
     # request context (only present for request-driven errors, not task failures)
     method = models.CharField(max_length=8, blank=True)
@@ -311,6 +315,11 @@ class ErrorEvent(models.Model):
 
     def __str__(self):
         return f"{self.level} {self.logger_name}: {self.message[:80]}"
+
+    @property
+    def short_description(self) -> str:
+        """Compact label for the table: the exception type, or the log message."""
+        return self.exception_type or self.message
 
 
 class OrganizationType(models.Model):

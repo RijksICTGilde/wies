@@ -21,6 +21,8 @@ class Migration(migrations.Migration):
                 ("level", models.CharField(blank=True, max_length=16)),
                 ("logger_name", models.CharField(blank=True, max_length=255)),
                 ("message", models.TextField(blank=True)),
+                ("exception_type", models.CharField(blank=True, max_length=255)),
+                ("exception_message", models.TextField(blank=True)),
                 ("traceback", models.TextField(blank=True)),
                 ("method", models.CharField(blank=True, max_length=8)),
                 ("path", models.CharField(blank=True, max_length=512)),

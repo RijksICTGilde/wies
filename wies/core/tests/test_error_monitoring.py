@@ -14,7 +14,7 @@ User = get_user_model()
 MATTERMOST_SETTINGS = {
     "MATTERMOST_URL": "https://mm.example.org",
     "MATTERMOST_TOKEN": "bot-token",
-    "MATTERMOST_CHANNEL_ID": "chan123",
+    "MATTERMOST_WIES_OPS_CHANNEL_ID": "chan123",
 }
 
 
@@ -73,6 +73,8 @@ class ErrorReportingHandlerTest(TestCase):
         assert event.method == "GET"
         assert event.path == "/kaboom/"
         assert event.user_email == "user@rijksoverheid.nl"
+        assert event.exception_type == "ValueError"
+        assert "invalid literal" in event.exception_message
         assert "ValueError" in event.traceback
 
         mock_post.assert_called_once()
@@ -81,7 +83,7 @@ class ErrorReportingHandlerTest(TestCase):
         assert "ValueError" in message
         assert "/kaboom/" in message
 
-    @override_settings(MATTERMOST_URL="", MATTERMOST_TOKEN="", MATTERMOST_CHANNEL_ID="")
+    @override_settings(MATTERMOST_URL="", MATTERMOST_TOKEN="", MATTERMOST_WIES_OPS_CHANNEL_ID="")
     @patch("wies.core.services.mattermost.MattermostClient.post_message")
     def test_emit_persists_but_skips_post_when_unconfigured(self, mock_post):
         self.handler.emit(make_record())

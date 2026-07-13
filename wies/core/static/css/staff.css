@@ -106,3 +106,95 @@
 .merge-preview .utrecht-table__row:hover {
   background: inherit;
 }
+
+/* Error detail modal */
+.error-detail__meta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0 0 1rem;
+}
+
+.error-detail__meta dt {
+  margin: 0;
+}
+
+.error-detail__meta dd {
+  margin: 0;
+}
+
+.error-detail__traceback {
+  margin: 0.5rem 0 0;
+  padding: 1rem;
+  max-height: 60vh;
+  overflow: auto;
+  background: var(--rvo-color-grijs-100, #f3f4f5);
+  border: 1px solid var(--rvo-color-grijs-200, #dde2e7);
+  border-radius: 4px;
+  font-family: ui-monospace, "SF Mono", "Cascadia Code", "Fira Code", Menlo, Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  white-space: pre;
+}
+
+/* Error table: fill the container and never overflow the page */
+#error_table_container .rvo-table--responsive {
+  overflow-x: auto;
+}
+
+.error-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+/* Compact error table rows */
+.error-table .rvo-table-cell,
+.error-table .rvo-table-header {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+  vertical-align: top;
+}
+
+/* Long values (path, email) truncate instead of pushing the table wider */
+.error-table .rvo-table-cell > span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Column widths: pin the narrow columns, let Waar/Gebruiker take the rest */
+.error-table__col-tijd {
+  width: 11rem;
+}
+
+.error-table__col-fout {
+  width: 10rem;
+}
+
+.error-table__col-waar {
+  width: auto;
+}
+
+.error-table__col-gebruiker {
+  width: auto;
+}
+
+.error-table__actions-col {
+  width: 5.5rem;
+  white-space: nowrap;
+}
+
+.error-table__actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.error-table__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}

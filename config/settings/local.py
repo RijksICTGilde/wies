@@ -40,7 +40,7 @@ if SKIP_OIDC:
 # /beheer/statistieken/, but nothing is posted to Mattermost.
 MATTERMOST_URL = os.environ.get("MATTERMOST_URL", "")
 MATTERMOST_TOKEN = os.environ.get("MATTERMOST_TOKEN", "")
-MATTERMOST_CHANNEL_ID = os.environ.get("MATTERMOST_CHANNEL_ID", "")
+MATTERMOST_WIES_OPS_CHANNEL_ID = os.environ.get("MATTERMOST_WIES_OPS_CHANNEL_ID", "")
 
 # LOGGING
 # ----------------------------------------------------------------------------------------------------------------------

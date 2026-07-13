@@ -52,7 +52,7 @@ MIDDLEWARE.insert(_AFTER_SECURITY, _WHITENOISE)  # noqa: F405
 # startup on a missing value).
 MATTERMOST_URL = os.environ.get("MATTERMOST_URL", "")
 MATTERMOST_TOKEN = os.environ.get("MATTERMOST_TOKEN", "")
-MATTERMOST_CHANNEL_ID = os.environ.get("MATTERMOST_CHANNEL_ID", "")
+MATTERMOST_WIES_OPS_CHANNEL_ID = os.environ.get("MATTERMOST_WIES_OPS_CHANNEL_ID", "")
 
 LOGGING = {
     "version": 1,
