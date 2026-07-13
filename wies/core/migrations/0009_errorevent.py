@@ -7,33 +7,41 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0008_scrub_legacy_organizations_events'),
+        ("core", "0008_scrub_legacy_organizations_events"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='ErrorEvent',
+            name="ErrorEvent",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('timestamp', models.DateTimeField(db_index=True, default=django.utils.timezone.now)),
-                ('level', models.CharField(blank=True, max_length=16)),
-                ('logger_name', models.CharField(blank=True, max_length=255)),
-                ('message', models.TextField(blank=True)),
-                ('traceback', models.TextField(blank=True)),
-                ('method', models.CharField(blank=True, max_length=8)),
-                ('path', models.CharField(blank=True, max_length=512)),
-                ('user_email', models.EmailField(blank=True, max_length=255)),
-                ('app_version', models.CharField(blank=True, max_length=255)),
-                ('visible', models.BooleanField(default=True)),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='error_events', to=settings.AUTH_USER_MODEL)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("timestamp", models.DateTimeField(db_index=True, default=django.utils.timezone.now)),
+                ("level", models.CharField(blank=True, max_length=16)),
+                ("logger_name", models.CharField(blank=True, max_length=255)),
+                ("message", models.TextField(blank=True)),
+                ("traceback", models.TextField(blank=True)),
+                ("method", models.CharField(blank=True, max_length=8)),
+                ("path", models.CharField(blank=True, max_length=512)),
+                ("user_email", models.EmailField(blank=True, max_length=255)),
+                ("app_version", models.CharField(blank=True, max_length=255)),
+                ("visible", models.BooleanField(default=True)),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="error_events",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name': 'Foutmelding',
-                'verbose_name_plural': 'Foutmeldingen',
-                'ordering': ['-timestamp'],
+                "verbose_name": "Foutmelding",
+                "verbose_name_plural": "Foutmeldingen",
+                "ordering": ["-timestamp"],
             },
         ),
     ]

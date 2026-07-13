@@ -22,7 +22,9 @@
   {% if error.traceback %}
     <details>
       <summary class="rvo-text rvo-text--sm rvo-text--subtle">Traceback</summary>
-      <pre class="rvo-text rvo-text--sm" style="white-space: pre-wrap; overflow-x: auto;">{{ error.traceback }}</pre>
+      <pre class="rvo-text rvo-text--sm"
+           style="white-space: pre-wrap;
+                  overflow-x: auto">{{ error.traceback }}</pre>
     </details>
   {% endif %}
   </c-table-cell>

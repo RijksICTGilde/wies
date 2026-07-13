@@ -56,9 +56,7 @@ class FakeRequest:
 class ErrorReportingHandlerTest(TestCase):
     def setUp(self):
         self.handler = ErrorReportingHandler()
-        self.user = User.objects.create_user(
-            email="user@rijksoverheid.nl", first_name="Test", last_name="User"
-        )
+        self.user = User.objects.create_user(email="user@rijksoverheid.nl", first_name="Test", last_name="User")
 
     @override_settings(**MATTERMOST_SETTINGS)
     @patch("wies.core.services.mattermost.MattermostClient.post_message")
