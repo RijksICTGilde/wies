@@ -11,6 +11,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
@@ -49,6 +50,7 @@ from .models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    ErrorEvent,
     Event,
     Label,
     LabelCategory,
@@ -395,9 +397,42 @@ def staff_required(view_func):
     return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
 
 
+ERRORS_PER_PAGE = 25
+
+
 @staff_required
 def staff_dashboard(request):
-    return render(request, "staff_dashboard.html", {"usage": get_usage_stats()})
+    paginator = Paginator(ErrorEvent.objects.select_related("user").filter(visible=True), ERRORS_PER_PAGE)
+    page_obj = paginator.get_page(request.GET.get("pagina"))
+
+    if page_obj.has_next():
+        params = request.GET.copy()
+        params["pagina"] = page_obj.next_page_number()
+        next_page_url = f"?{params.urlencode()}"
+    else:
+        next_page_url = None
+
+    context = {
+        "object_list": page_obj.object_list,
+        "page_obj": page_obj,
+        "next_page_url": next_page_url,
+    }
+
+    # HTMX request for a subsequent page appends just the rows (reveal-to-load-more).
+    if "HX-Request" in request.headers and request.GET.get("pagina"):
+        return render(request, "parts/error_table_rows.html", context)
+
+    context["usage"] = get_usage_stats()
+    return render(request, "staff_dashboard.html", context)
+
+
+@staff_required
+@require_POST
+def hide_error(request, pk):
+    """Hide a single handled error so it drops out of the statistieken table."""
+    ErrorEvent.objects.filter(pk=pk).update(visible=False)
+    # Empty response so the HTMX outerHTML swap removes the row.
+    return HttpResponse(status=200)
 
 
 @staff_required
@@ -2057,6 +2092,9 @@ def _attach_audit_render_data(event) -> None:
 
 
 def assignment_delete(request, pk):
+
+    'a' + 2
+
     assignment = get_object_or_404(Assignment, pk=pk)
     if not has_permission(Verb.DELETE, assignment, request.user):
         return HttpResponseForbidden()

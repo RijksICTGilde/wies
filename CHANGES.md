@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - ?
+- <PR#>: Basisfoutmonitoring — onverwachte serverfouten (500) en mislukte achtergrondtaken worden opgeslagen en zijn zichtbaar op de statistiekenpagina, plus een melding in Mattermost.
 
 ## 2026-07-08_3
 

@@ -39,5 +39,7 @@
              style="height: {{ (count / usage.max_daily * 100) if usage.max_daily else 0 }}%"></div>
       {% endfor %}
     </div>
+    <c-h2>Recente foutmeldingen</c-h2>
+    <div id="error_table" class="rvo-table-container">{% include "parts/error_table.html" %}</div>
   </div>
 {% endblock content %}

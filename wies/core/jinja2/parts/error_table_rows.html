@@ -1,0 +1,57 @@
+{% for error in object_list %}
+  <c-table-row>
+  <c-table-cell>
+  <span class="rvo-text rvo-text--sm">{{ error.timestamp|datetime_nl }}</span>
+  </c-table-cell>
+  <c-table-cell>
+  {% if error.path %}
+    <span class="rvo-text rvo-text--sm">{{ error.method }} {{ error.path }}</span>
+  {% else %}
+    <span class="rvo-text rvo-text--sm rvo-text--subtle">{{ error.logger_name }}</span>
+  {% endif %}
+  </c-table-cell>
+  <c-table-cell>
+  {% if error.user_email %}
+    <span class="rvo-text rvo-text--sm">{{ error.user_email }}</span>
+  {% else %}
+    <span class="rvo-text rvo-text--sm rvo-text--subtle">-</span>
+  {% endif %}
+  </c-table-cell>
+  <c-table-cell>
+  <div class="rvo-text rvo-text--bold rvo-text--sm">{{ error.message|truncate(120) }}</div>
+  {% if error.traceback %}
+    <details>
+      <summary class="rvo-text rvo-text--sm rvo-text--subtle">Traceback</summary>
+      <pre class="rvo-text rvo-text--sm" style="white-space: pre-wrap; overflow-x: auto;">{{ error.traceback }}</pre>
+    </details>
+  {% endif %}
+  </c-table-cell>
+  <c-table-cell>
+  <button type="button"
+          class="utrecht-button utrecht-button--rvo-tertiary-action rvo-link--no-underline"
+          title="Foutmelding verbergen"
+          aria-label="Foutmelding verbergen"
+          hx-post="{{ url('hide-error', args=[error.id]) }}"
+          hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+          hx-target="closest tr"
+          hx-swap="outerHTML swap:200ms">
+    <c-icon icon="kruis" size="md" color="grijs-700" />
+  </button>
+  </c-table-cell>
+  </c-table-row>
+{% else %}
+  <c-table-row>
+  <c-table-cell colspan="5">
+  <span class="rvo-text--italic">Geen foutmeldingen.</span>
+  </c-table-cell>
+  </c-table-row>
+{% endfor %}
+{% if next_page_url %}
+  <c-table-row hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
+  <c-table-cell colspan="5">
+  <div style="text-align: center; padding: 1rem;">
+    <span class="rvo-text--subtle">Meer laden...</span>
+  </div>
+  </c-table-cell>
+  </c-table-row>
+{% endif %}

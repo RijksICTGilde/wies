@@ -33,6 +33,15 @@ if SKIP_OIDC:
     MIDDLEWARE = [m for m in MIDDLEWARE if m != "django.contrib.auth.middleware.LoginRequiredMiddleware"]  # noqa: F405
     MIDDLEWARE.append("wies.rijksauth.middleware.AutoLoginMiddleware")
 
+# ERROR MONITORING
+# ----------------------------------------------------------------------------------------------------------------------
+# Mirror production so the error handler can be exercised locally. Leaving these
+# empty (the default) means ErrorEvent rows are still written and shown on
+# /beheer/statistieken/, but nothing is posted to Mattermost.
+MATTERMOST_URL = os.environ.get("MATTERMOST_URL", "")
+MATTERMOST_TOKEN = os.environ.get("MATTERMOST_TOKEN", "")
+MATTERMOST_CHANNEL_ID = os.environ.get("MATTERMOST_CHANNEL_ID", "")
+
 # LOGGING
 # ----------------------------------------------------------------------------------------------------------------------
 LOGGING = {
@@ -49,14 +58,27 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
+        # Persists unhandled 500s + task failures as ErrorEvent rows (and posts to
+        # Mattermost only if MATTERMOST_* are set). Mirrors production so the
+        # feature is testable in dev.
+        "error_reporting": {
+            "class": "wies.core.monitoring.ErrorReportingHandler",
+            "level": "ERROR",
+        },
     },
     "root": {
         "handlers": ["console"],
         "level": "INFO",
     },
     "loggers": {
+        # Unhandled request exceptions (500s) — Django logs these at ERROR.
+        "django.request": {
+            "handlers": ["console", "error_reporting"],
+            "level": "ERROR",
+            "propagate": False,
+        },
         "wies": {
-            "handlers": ["console"],
+            "handlers": ["console", "error_reporting"],
             "level": "INFO",
             "propagate": False,
         },
