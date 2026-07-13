@@ -131,7 +131,9 @@
   background: var(--rvo-color-grijs-100, #f3f4f5);
   border: 1px solid var(--rvo-color-grijs-200, #dde2e7);
   border-radius: 4px;
-  font-family: ui-monospace, "SF Mono", "Cascadia Code", "Fira Code", Menlo, Consolas, monospace;
+  font-family:
+    ui-monospace, "SF Mono", "Cascadia Code", "Fira Code", Menlo, Consolas,
+    monospace;
   font-size: 0.8125rem;
   line-height: 1.5;
   white-space: pre;

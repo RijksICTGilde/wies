@@ -13,7 +13,8 @@
 </c-table-body>
 </c-table>
 {% if page_obj.paginator.num_pages > 1 %}
-  <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--center" style="margin-top: 1rem;">
+  <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--center"
+       style="margin-top: 1rem">
     {% if previous_page_url %}
       <c-button kind="secondary" type="button" hx-get="{{ previous_page_url }}" hx-target="#error_table_container" hx-swap="innerHTML">Vorige</c-button>
     {% else %}
