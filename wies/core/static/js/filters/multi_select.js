@@ -4,9 +4,30 @@
 
   function positionDropdown(trigger, dropdown) {
     var rect = trigger.getBoundingClientRect();
-    dropdown.style.top = rect.bottom + "px";
+    var viewportHeight = window.innerHeight;
+    var margin = 8; // breathing room against the viewport edge
+    var spaceBelow = viewportHeight - rect.bottom - margin;
+    var spaceAbove = rect.top - margin;
+
     dropdown.style.left = rect.left + "px";
     dropdown.style.width = rect.width + "px";
+
+    // Prefer opening below the trigger. If there isn't enough room there and
+    // there's more space above, flip up. Either way, cap the height to the
+    // available space so the dropdown's own overflow-y makes every option
+    // reachable instead of spilling past the viewport edge (which, on a fixed
+    // element inside a scrollable modal, can't be scrolled into view).
+    var openUpward = spaceBelow < 200 && spaceAbove > spaceBelow;
+    var available = openUpward ? spaceAbove : spaceBelow;
+    dropdown.style.maxHeight = Math.max(available, 120) + "px";
+
+    if (openUpward) {
+      dropdown.style.top = "auto";
+      dropdown.style.bottom = viewportHeight - rect.top + "px";
+    } else {
+      dropdown.style.bottom = "auto";
+      dropdown.style.top = rect.bottom + "px";
+    }
   }
 
   function syncState(container) {
