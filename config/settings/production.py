@@ -15,6 +15,8 @@ ALLOWED_HOSTS = (
 # SECURITY
 # ----------------------------------------------------------------------------------------------------------------------
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+# One trusted proxy hop: the ODCN-managed ingress.
+TRUSTED_PROXY_HOPS = 1
 SECURE_SSL_REDIRECT = os.environ.get("DJANGO_SECURE_SSL_REDIRECT", "true").lower() != "false"
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_NAME = "__Secure-sessionid"

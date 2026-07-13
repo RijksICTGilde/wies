@@ -158,6 +158,12 @@ STAFF_EMAILS = [email.strip().lower() for email in os.environ.get("STAFF_EMAILS"
 # Default off (production-safe). Set to "true" in local/staging environments.
 ENABLE_DESTRUCTIVE_STAFF_ACTIONS = os.environ.get("ENABLE_DESTRUCTIVE_STAFF_ACTIONS", "").lower() == "true"
 
+# Number of trusted reverse-proxy hops in front of the app. Used to pick the
+# right X-Forwarded-For entry when logging the client IP on audit/auth events.
+# 0 = trust nothing, use REMOTE_ADDR only (safe default for dev/test — no
+# header spoofing honoured). Production overrides this (see production.py).
+TRUSTED_PROXY_HOPS = 0
+
 # OTYS API settings
 OTYS_API_KEY = os.environ.get("OTYS_API_KEY", "")
 OTYS_URL = os.environ.get("OTYS_URL", "")

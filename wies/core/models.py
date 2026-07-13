@@ -259,6 +259,9 @@ class Event(models.Model):
     action = models.CharField(max_length=16, choices=EventAction)
     source = models.CharField(max_length=16, choices=EventSource)
     object_id = models.IntegerField(null=True, blank=True)
+    # device approximation for BIO: network IP + User-Agent (best-effort, null for system/sync events)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=512, blank=True, default="")
     context = models.JSONField(default=dict, encoder=DjangoJSONEncoder)
 
     class Meta:

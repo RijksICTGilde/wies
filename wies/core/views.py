@@ -36,6 +36,7 @@ from wies.core.inline_edit.forms import (
 )
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.placement_visibility import LABELS, evaluate
+from wies.rijksauth.models import AuthEvent
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
@@ -402,8 +403,11 @@ def staff_dashboard(request):
 
 @staff_required
 def debug_request_meta(request):
+
     xff_raw = request.headers.get("x-forwarded-for", "")
     xff_entries = [p.strip() for p in xff_raw.split(",")] if xff_raw else []
+    # Own login events only — lets a staff member verify ip/user_agent get logged.
+    recent_auth_events = AuthEvent.objects.filter(user_email__iexact=request.user.email).order_by("-timestamp")[:10]
     return render(
         request,
         "debug_request_meta.html",
@@ -417,6 +421,7 @@ def debug_request_meta(request):
             "x_real_ip": request.headers.get("x-real-ip", ""),
             "user_agent": request.headers.get("user-agent", ""),
             "server_time": timezone.now(),
+            "recent_auth_events": recent_auth_events,
         },
     )
 
@@ -517,6 +522,7 @@ def staff_database(request):
                             source="user",
                             object_id=target.id,
                             user=request.user,
+                            request=request,
                             context={
                                 "merge": True,
                                 "merged_ids": deleted_ids,
@@ -1416,6 +1422,7 @@ def user_create(request):
                 email=form.cleaned_data["email"],
                 labels=form.cleaned_data.get("labels"),
                 groups=form.cleaned_data.get("groups"),
+                request=request,
             )
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect
@@ -1477,6 +1484,7 @@ def user_edit(request, pk):
                 email=form.cleaned_data["email"],
                 labels=form.cleaned_data.get("labels"),
                 groups=form.cleaned_data.get("groups"),
+                request=request,
             )
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect
@@ -1543,6 +1551,7 @@ def user_delete(request, pk):
             source="user",
             object_id=pk,
             user=request.user,
+            request=request,
             context=context,
         )
         response = HttpResponse(status=200)
@@ -1643,7 +1652,7 @@ def assignment_import_csv(request):
                 {"result": {"success": False, "errors": ["Invalid CSV file encoding. Please use UTF-8."]}},
             )
 
-        result = create_assignments_from_csv(request.user, csv_content)
+        result = create_assignments_from_csv(request.user, csv_content, request=request)
 
         # Return results in the form
         return render(request, "assignment_import.html", {"result": result})
@@ -2092,6 +2101,7 @@ def assignment_delete(request, pk):
                 source="user",
                 object_id=pk,
                 user=request.user,
+                request=request,
                 context=context,
             )
         messages.success(request, f"Opdracht '{name}' succesvol verwijderd")
@@ -2351,6 +2361,7 @@ def assignment_create(request):
             source="user",
             object_id=assignment.id,
             user=request.user,
+            request=request,
             context=_assignment_audit_snapshot(assignment),
         )
 
@@ -2838,7 +2849,7 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
                 with transaction.atomic():
                     spec.save(obj, formset)
                     after = spec.audit_state(obj) if spec.audit_state else None
-                    _emit_inline_edit_audit_event(spec, obj, before, after, request.user)
+                    _emit_inline_edit_audit_event(spec, obj, before, after, request.user, request=request)
             except ValidationError as exc:
                 for message in exc.messages:
                     _attach_formset_error(formset, message)
@@ -2857,7 +2868,7 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
 _AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "OrganizationUnit": "OrganizationUnit"}
 
 
-def _record_editable_change(editable, obj, object_type, old_value, new_value, user) -> None:
+def _record_editable_change(editable, obj, object_type, old_value, new_value, user, request=None) -> None:
     to_state = editable.audit_state or (lambda v: v)
     old_state = to_state(old_value)
     new_state = to_state(new_value)
@@ -2869,6 +2880,7 @@ def _record_editable_change(editable, obj, object_type, old_value, new_value, us
         source="user",
         object_id=obj.id,
         user=user,
+        request=request,
         context={
             "field_name": editable.field or editable.name or "",
             "field_label": editable.label or editable.name or "",
@@ -2878,18 +2890,20 @@ def _record_editable_change(editable, obj, object_type, old_value, new_value, us
     )
 
 
-def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_editables=None) -> None:
+def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_editables=None, request=None) -> None:
     object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
     if object_type is None:
         return
 
     if isinstance(spec, Editable):
-        _record_editable_change(spec, obj, object_type, before, after, user)
+        _record_editable_change(spec, obj, object_type, before, after, user, request=request)
         return
 
     if isinstance(spec, EditableGroup):
         for child in child_editables or []:
-            _record_editable_change(child, obj, object_type, before.get(child.name), after.get(child.name), user)
+            _record_editable_change(
+                child, obj, object_type, before.get(child.name), after.get(child.name), user, request=request
+            )
         return
 
     if isinstance(spec, EditableCollection):
@@ -2904,6 +2918,7 @@ def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_edita
             source="user",
             object_id=obj.id,
             user=user,
+            request=request,
             context={
                 "field_name": spec.name or "",
                 "field_label": spec.label or spec.name or "",
@@ -2925,7 +2940,7 @@ def _diff_collection_state(old_state: list[dict], new_state: list[dict]) -> list
     return changes
 
 
-def _emit_placement_change_on_assignment(placement, before_row: dict, user) -> None:
+def _emit_placement_change_on_assignment(placement, before_row: dict, user, request=None) -> None:
     """Record a placement edit as a "Team" event on its parent assignment,
     so it renders identically to the Team-bewerken flow (#393)."""
     from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids circular import
@@ -2940,6 +2955,7 @@ def _emit_placement_change_on_assignment(placement, before_row: dict, user) -> N
         source="user",
         object_id=assignment.id,
         user=user,
+        request=request,
         context={
             "field_name": "services",
             "field_label": "Team",
@@ -3016,10 +3032,11 @@ def inline_edit_view(request, model_label, pk, name):
                     after,
                     request.user,
                     child_editables=editables if isinstance(spec, EditableGroup) else None,
+                    request=request,
                 )
                 if placement_before is not None:
                     obj.refresh_from_db()
-                    _emit_placement_change_on_assignment(obj, placement_before, request.user)
+                    _emit_placement_change_on_assignment(obj, placement_before, request.user, request=request)
             return _render_inline_edit_display(
                 request,
                 editable_set,

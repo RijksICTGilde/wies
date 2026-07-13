@@ -28,6 +28,7 @@ class AuthBackend(ModelBackend):
                 {
                     "reason": "Unknown user",
                 },
+                request=request,
             )
             return None
 
