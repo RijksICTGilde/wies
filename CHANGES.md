@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 426: log the client IP and User-Agent on audit and login events (BIO device logging)
+- 426: (migration) log the client IP and User-Agent on audit and login events (BIO device logging)
 
 ## 2026-07-08_3
 
