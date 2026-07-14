@@ -69,23 +69,22 @@ class ErrorReportingHandler(logging.Handler):
 
     def _notify(self, record: logging.LogRecord, error_event) -> None:
         # DB row is the source of truth; posting is best-effort and no-ops when
-        # Mattermost is not configured. Import is lazy for the same startup
-        # reason as _persist (see that method's comment).
+        # Mattermost is not configured.
         from wies.core.services.mattermost import send_ops_message  # noqa: PLC0415 - deferred until an error is logged
 
         send_ops_message(self._build_message(record, error_event))
 
     def _build_message(self, record: logging.LogRecord, error_event) -> str:
-        # Short notification only. Sensitive detail (traceback, user) stays behind
-        # the login wall on the error detail page we link to. Imports are lazy for
-        # the same startup reason as _persist (see that method's comment).
         from django.conf import settings  # noqa: PLC0415 - deferred until an error is logged
         from django.urls import reverse  # noqa: PLC0415 - deferred until an error is logged
 
         headline = error_event.short_description or record.levelname
         lines = [f"🔴 **{headline}** (v{error_event.app_version})"]
-        if error_event.path:
-            lines.append(f"`{error_event.method} {error_event.path}`")
+        # Location: the request path for web errors, else the logger name (e.g. for
+        # background-task failures), mirroring how the URL shows for web errors.
+        where = f"{error_event.method} {error_event.path}".strip() or error_event.logger_name
+        if where:
+            lines.append(f"`{where}`")
 
         base_url = getattr(settings, "SITE_BASE_URL", "")
         if base_url:

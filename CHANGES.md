@@ -4,7 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 460: Basisfoutmonitoring — onverwachte serverfouten (500) en mislukte achtergrondtaken worden opgeslagen en zijn zichtbaar op de statistiekenpagina, plus een melding in Mattermost (kanaal wies-team).
+- 460: (migration)(add env vars) basic error monitoring — unhandled server errors (500) and failed background tasks are stored and shown on the statistics page, with a Mattermost notification (channel wies-team).
+- 460: A failing task is marked failed immediately instead of hanging until timeout.
 
 ## 2026-07-08_3
 

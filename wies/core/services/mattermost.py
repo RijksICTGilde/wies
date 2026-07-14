@@ -11,8 +11,7 @@ from django.conf import settings
 POST_TIMEOUT_SECONDS = 5
 
 # Resolved channel ids, keyed by (base_url, team, channel). A channel's id never
-# changes, so caching for the process lifetime is safe and avoids a lookup per
-# error. Only successful resolutions are cached.
+# changes, so caching for the process lifetime is safe.
 _channel_id_cache: dict[tuple[str, str, str], str] = {}
 
 

@@ -133,6 +133,27 @@ class ErrorReportingHandlerTest(TestCase):
         assert event.user_email == ""
         mock_post.assert_called_once()
 
+    @override_settings(**MATTERMOST_SETTINGS)
+    @patch("wies.core.services.mattermost.MattermostClient.post_message")
+    def test_task_failure_message_shows_type_and_logger_location(self, mock_post):
+        # A background-task failure: no request, so the location is the logger name.
+        record = logging.LogRecord(
+            name="wies.core.management.commands.db_worker",
+            level=logging.ERROR,
+            pathname=__file__,
+            lineno=1,
+            msg="kapot",
+            args=(),
+            exc_info=value_error_exc_info(),
+        )
+
+        self.handler.emit(record)
+
+        message = mock_post.call_args.args[1]
+        assert "ValueError" in message  # headline is the exception type
+        assert "`wies.core.management.commands.db_worker`" in message  # location fallback
+        assert "Traceback (most recent" not in message  # traceback stays behind login
+
 
 class MattermostChannelUrlTest(TestCase):
     def test_parse_channel_url_with_subpath(self):

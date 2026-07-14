@@ -128,6 +128,9 @@ class Command(BaseCommand):
                             task.error_message = "Command returned unexpected result format"
                         task.completed_at = timezone.now()
                         task.save(update_fields=["status", "error_message", "completed_at"])
-                        logger.error("Task %s failed: %s", task.id, task.error_message)
+                        # WARNING (not ERROR): the task command already logged the
+                        # failure with its traceback via TaskCommand. Logging ERROR
+                        # here too would create a second, traceback-less ErrorEvent.
+                        logger.warning("Task %s failed: %s", task.id, task.error_message)
 
         logger.info("DB worker shut down gracefully.")
