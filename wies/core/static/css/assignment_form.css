@@ -56,7 +56,7 @@ form#assignment-create-form .nldd-fieldset {
   gap: 1rem;
   border: 1px solid var(--primitives-color-coolgray-300, #c5ced6);
   border-radius: 4px;
-  background: white;
+  background: var(--semantics-surfaces-base-background-color, white);
 }
 
 .service-add-buttons {
