@@ -27,6 +27,7 @@
       (node.children && node.children.length ? " has-children" : "") +
       (node.self ? " self-node" : "");
     li.dataset.nodeId = String(node.id);
+    li.setAttribute("role", "treeitem");
     domNodes.set(String(node.id), li);
 
     // Fold/expand toggle
@@ -86,6 +87,7 @@
     if (node.children && node.children.length) {
       var childUl = document.createElement("ul");
       childUl.className = "client-tree-level";
+      childUl.setAttribute("role", "group");
       for (var i = 0; i < node.children.length; i++) {
         childUl.appendChild(buildTree(node.children[i]));
       }
@@ -247,6 +249,93 @@
   }
 
   // ============================================================
+  // KEYBOARD NAVIGATION (WAI-ARIA Treeview pattern)
+  // ↑/↓ = navigate visible nodes, ←/→ = collapse/expand,
+  // Home/End = first/last node. Space toggles the node via the
+  // focused checkbox's native behaviour.
+  // ============================================================
+
+  function getVisibleNodes() {
+    return Array.from(
+      container.querySelectorAll("li.client-tree-node:not(.search-hidden)"),
+    ).filter(function (li) {
+      // A node is visible only if none of its ancestors are collapsed.
+      var parent =
+        li.parentElement && li.parentElement.closest("li.client-tree-node");
+      while (parent) {
+        if (parent.classList.contains("collapsed")) return false;
+        parent =
+          parent.parentElement &&
+          parent.parentElement.closest("li.client-tree-node");
+      }
+      return true;
+    });
+  }
+
+  function focusNode(li) {
+    var cb = li.querySelector(":scope > label > input[type='checkbox']");
+    if (cb) cb.focus();
+  }
+
+  if (container) {
+    container.addEventListener("keydown", function (e) {
+      var target = e.target;
+      if (!target || target.type !== "checkbox") return;
+      var li = target.closest("li.client-tree-node");
+      if (!li) return;
+
+      var visible = getVisibleNodes();
+      var idx = visible.indexOf(li);
+
+      switch (e.key) {
+        case "ArrowDown":
+          e.preventDefault();
+          if (idx < visible.length - 1) focusNode(visible[idx + 1]);
+          break;
+        case "ArrowUp":
+          e.preventDefault();
+          if (idx > 0) focusNode(visible[idx - 1]);
+          break;
+        case "ArrowRight":
+          e.preventDefault();
+          if (li.classList.contains("has-children")) {
+            if (li.classList.contains("collapsed")) {
+              li.classList.remove("collapsed");
+            } else {
+              var firstChild = li.querySelector(
+                "ul > li.client-tree-node:not(.search-hidden)",
+              );
+              if (firstChild) focusNode(firstChild);
+            }
+          }
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          if (
+            li.classList.contains("has-children") &&
+            !li.classList.contains("collapsed")
+          ) {
+            li.classList.add("collapsed");
+          } else {
+            var parentLi =
+              li.parentElement &&
+              li.parentElement.closest("li.client-tree-node");
+            if (parentLi) focusNode(parentLi);
+          }
+          break;
+        case "Home":
+          e.preventDefault();
+          if (visible.length > 0) focusNode(visible[0]);
+          break;
+        case "End":
+          e.preventDefault();
+          if (visible.length > 0) focusNode(visible[visible.length - 1]);
+          break;
+      }
+    });
+  }
+
+  // ============================================================
   // EVENT LISTENERS
   // ============================================================
 
@@ -325,6 +414,8 @@
 
   var rootUl = document.createElement("ul");
   rootUl.className = "client-tree-level";
+  rootUl.setAttribute("role", "tree");
+  rootUl.setAttribute("aria-label", "Opdrachtgevers");
 
   for (var i = 0; i < data.length; i++) {
     rootUl.appendChild(buildTree(data[i]));
