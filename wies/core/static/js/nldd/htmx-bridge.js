@@ -5,20 +5,20 @@
 // document/form niet. Plus: HTMX hx-include ziet alleen built-in form
 // elementen, geen custom elements.
 //
-// Deze bridge:
-//   1. Hangt change/input listeners aan elke nldd-* form input zodat we
-//      events kunnen opvangen voordat ze verloren gaan.
-//   2. Spiegelt nldd-checkbox-field state naar standaard <input type="hidden">
-//      siblings binnen [data-nldd-fieldset] zodat hx-include die meeneemt.
-//   3. Spiegelt nldd-search-field naar #nldd-search-hidden met debounce.
-//   4. Spiegelt nldd-text-field (incl. type=date) als hidden input naast zich.
-//   5. Re-dispatcht een synthetische `change` op een hidden input zodat
-//      HTMX's hx-trigger="change from:[data-filter-input]" afvuurt.
-//   6. MutationObserver gescoped op .nldd-app vangt nieuwe NDD elementen
+// Filter inputs carry their own name + data-filter-input and are form-
+// associated (or plain), so hx-include submits their values natively — no
+// hidden-input mirroring needed. This bridge only covers what the browser
+// can't do for us:
+//   1. Nudges a re-filter (synthetic `change` on a [data-filter-input]
+//      element) when an nldd-* field or filter checkbox changes, so
+//      hx-trigger="change from:[data-filter-input]" fires.
+//   2. nldd-search-field → #nldd-search-hidden with debounce + suggestions.
+//   3. MutationObserver gescoped op .nldd-app vangt nieuwe NDD elementen
 //      (ook na HTMX swaps).
-//   7. Click bridge voor nldd-button met hx-* attributen.
-//   8. Dismiss handler voor nldd-token chips → verwijdert filter.
-//   9. Sidebar collapse toggle.
+//   4. Click bridge voor nldd-button met hx-* attributen.
+//   5. Dismiss handler voor nldd-token chips → verwijdert filter.
+//   6. Sidebar collapse toggle.
+//   7. "Meer"-modal: schrijft niet-inline picks in een overflow-slot.
 // ----------------------------------------------------------------------------
 
 (function () {
@@ -29,29 +29,9 @@
   const NDD_TEXT = "nldd-text-field";
   const NDD_SEARCH = "nldd-search-field";
 
-  // --- nldd-checkbox-field -> hidden input mirror ---------------------
-  function rebuildCheckboxesIn(fieldset) {
-    const name = fieldset.dataset.name;
-    if (!name) return;
-    const slot = fieldset.querySelector("[data-hidden-inputs]");
-    if (!slot) return;
-    slot.innerHTML = "";
-    fieldset
-      .querySelectorAll("nldd-checkbox-field, input[type='checkbox']")
-      .forEach((cb) => {
-        const checked =
-          cb.checked === true ||
-          (cb.checked === undefined && cb.hasAttribute("checked"));
-        if (checked) {
-          const input = document.createElement("input");
-          input.type = "hidden";
-          input.name = name;
-          input.value = cb.getAttribute("value") || "";
-          input.setAttribute("data-filter-input", "");
-          slot.appendChild(input);
-        }
-      });
-  }
+  // Filter checkboxes now carry their own `name` + `data-filter-input`, so
+  // hx-include submits them natively (rol=1&rol=2 → getlist) — no hidden-input
+  // mirror to maintain. All that remains on change is triggering a re-filter.
 
   function dispatchFormChange(form) {
     if (!form) return;
@@ -64,8 +44,6 @@
     if (el.__nddBridgeAttached) return;
     el.__nddBridgeAttached = true;
     const onChange = () => {
-      const fieldset = el.closest("[data-nldd-fieldset]");
-      if (fieldset) rebuildCheckboxesIn(fieldset);
       const form = el.closest("form");
       if (form) dispatchFormChange(form);
     };
@@ -73,38 +51,21 @@
     el.addEventListener("input", onChange);
   }
 
-  // --- nldd-text-field (date etc.) -> hidden input mirror ------------
+  // --- nldd-text-field (date etc.): re-filter on change ---------------
+  // nldd-text-field is form-associated, so its value reaches the request
+  // natively (no hidden-input mirror needed). We only have to nudge the form
+  // to re-run the filter when the value changes, since the form's hx-trigger
+  // listens for `change` from [data-filter-input] elements.
   function attachTextField(el) {
     if (el.__nddBridgeAttached) return;
     el.__nddBridgeAttached = true;
-    const name = el.getAttribute("name");
-    if (!name) return;
-    // Schrijf hidden input direct na het nldd-text-field element.
-    let hidden =
-      el.parentElement &&
-      el.parentElement.querySelector(
-        `input[type="hidden"][name="${CSS.escape(name)}"][data-bridged]`,
-      );
-    if (!hidden) {
-      hidden = document.createElement("input");
-      hidden.type = "hidden";
-      hidden.name = name;
-      hidden.setAttribute("data-filter-input", "");
-      hidden.setAttribute("data-bridged", "");
-      el.insertAdjacentElement("afterend", hidden);
-    }
-    const sync = () => {
-      const value =
-        el.value !== undefined ? el.value : el.getAttribute("value") || "";
-      if (hidden.value !== value) {
-        hidden.value = value;
-        const form = el.closest("form");
-        if (form) dispatchFormChange(form);
-      }
+    if (!el.getAttribute("name")) return;
+    const onChange = () => {
+      const form = el.closest("form");
+      if (form) dispatchFormChange(form);
     };
-    sync(); // initial
-    el.addEventListener("change", sync);
-    el.addEventListener("input", sync);
+    el.addEventListener("change", onChange);
+    el.addEventListener("input", onChange);
   }
 
   // --- nldd-search-field: suggestions + Enter-commit ------------------
@@ -153,10 +114,14 @@
       timer = setTimeout(() => {
         const box = suggestionsBox();
         if (!box || !window.htmx) return;
-        window.htmx.ajax("GET", `/zoek-suggesties/?zoek=${encodeURIComponent(term)}`, {
-          target: "#nldd-search-suggestions",
-          swap: "innerHTML",
-        });
+        window.htmx.ajax(
+          "GET",
+          `/zoek-suggesties/?zoek=${encodeURIComponent(term)}`,
+          {
+            target: "#nldd-search-suggestions",
+            swap: "innerHTML",
+          },
+        );
       }, 250);
     });
 
@@ -173,15 +138,19 @@
 
   function setupSearchSuggestionClicks() {
     document.addEventListener("click", (e) => {
-      const btn = e.composedPath().find(
-        (x) => x instanceof Element && x.classList?.contains("search-suggestion"),
-      );
+      const btn = e
+        .composedPath()
+        .find(
+          (x) =>
+            x instanceof Element && x.classList?.contains("search-suggestion"),
+        );
       if (!btn) return;
       const searchField = document.querySelector("[data-nldd-search-input]");
 
       // "Zoeken op …" commits the current search term.
       if (btn.hasAttribute("data-search-commit")) {
-        if (searchField) commitSearch(searchField, (searchField.value || "").trim());
+        if (searchField)
+          commitSearch(searchField, (searchField.value || "").trim());
         return;
       }
 
@@ -190,7 +159,12 @@
       if (orgId) {
         const form = document.getElementById("nldd-filter-form");
         const container = document.getElementById("nldd-org-filter-inputs");
-        if (container && !container.querySelector(`input[name="org"][value="${CSS.escape(orgId)}"]`)) {
+        if (
+          container &&
+          !container.querySelector(
+            `input[name="org"][value="${CSS.escape(orgId)}"]`,
+          )
+        ) {
           const input = document.createElement("input");
           input.type = "hidden";
           input.name = "org";
@@ -260,7 +234,6 @@
             cb.checked = false;
           } catch (_) {}
           cb.removeAttribute("checked");
-          rebuildCheckboxesIn(fieldset);
           dispatchFormChange(form);
           return;
         }
@@ -321,7 +294,6 @@
           } catch (_) {}
           cb.removeAttribute("checked");
         });
-      rebuildCheckboxesIn(fieldset);
     });
 
     // Org filter (modal-managed hidden inputs)
@@ -333,12 +305,14 @@
 
   function setupClearAllFilters() {
     document.addEventListener("click", (e) => {
-      const btn = e.composedPath().find(
-        (el) =>
-          el instanceof Element &&
-          el.hasAttribute &&
-          el.hasAttribute("data-nldd-clear-all"),
-      );
+      const btn = e
+        .composedPath()
+        .find(
+          (el) =>
+            el instanceof Element &&
+            el.hasAttribute &&
+            el.hasAttribute("data-nldd-clear-all"),
+        );
       if (!btn) return;
       e.preventDefault();
       clearAllFilters();
@@ -446,13 +420,19 @@
     function openWhenReady(modal, attempt) {
       if (!modal) return;
       const tryShow = () => {
-        if (typeof modal.show === "function" && modal.shadowRoot?.querySelector("dialog")) {
+        if (
+          typeof modal.show === "function" &&
+          modal.shadowRoot?.querySelector("dialog")
+        ) {
           modal.show();
         } else if ((attempt || 0) < 20) {
           requestAnimationFrame(() => openWhenReady(modal, (attempt || 0) + 1));
         }
       };
-      if (modal.updateComplete && typeof modal.updateComplete.then === "function") {
+      if (
+        modal.updateComplete &&
+        typeof modal.updateComplete.then === "function"
+      ) {
         modal.updateComplete.then(tryShow);
       } else {
         tryShow();
@@ -464,8 +444,7 @@
       if (
         t &&
         (t.id === "nldd-filter-options-modal-container" ||
-          (t.closest &&
-            t.closest("#nldd-filter-options-modal-container")))
+          (t.closest && t.closest("#nldd-filter-options-modal-container")))
       ) {
         openWhenReady(currentModal(), 0);
       }
@@ -496,7 +475,9 @@
       const modal = currentModal();
       if (!modal) return;
       const groupId = modal.getAttribute("data-group-id");
-      const values = [...modal.querySelectorAll(".nldd-filter-options-modal__checkbox")]
+      const values = [
+        ...modal.querySelectorAll(".nldd-filter-options-modal__checkbox"),
+      ]
         .filter((cb) => cb.checked)
         .map((cb) => cb.value);
 
@@ -505,19 +486,25 @@
       );
       const form = document.getElementById("nldd-filter-form");
       if (fieldset) {
-        // Reflect the modal selection onto the sidebar's inline checkboxes...
-        fieldset
-          .querySelectorAll(".nldd-filter-option__checkbox")
-          .forEach((cb) => {
-            cb.checked = values.includes(cb.value);
-          });
-        // ...and write the full selection (incl. options not shown inline)
-        // straight into the hidden-inputs slot so hx-include picks them up.
+        // Reflect the modal selection onto the sidebar's inline checkboxes.
+        // These submit natively via hx-include (name + data-filter-input).
+        const inline = fieldset.querySelectorAll(
+          ".nldd-filter-option__checkbox",
+        );
+        const inlineValues = new Set();
+        inline.forEach((cb) => {
+          cb.checked = values.includes(cb.value);
+          inlineValues.add(cb.value);
+        });
+        // The modal can select options that have no inline checkbox (the
+        // sidebar only shows the top-N). Those have nothing to submit through,
+        // so mirror only the non-inline picks into the overflow slot.
         const slot = fieldset.querySelector("[data-hidden-inputs]");
         const name = fieldset.dataset.name;
         if (slot && name) {
           slot.innerHTML = "";
           for (const v of values) {
+            if (inlineValues.has(v)) continue;
             const input = document.createElement("input");
             input.type = "hidden";
             input.name = name;
