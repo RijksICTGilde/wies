@@ -162,13 +162,9 @@ ENABLE_DESTRUCTIVE_STAFF_ACTIONS = os.environ.get("ENABLE_DESTRUCTIVE_STAFF_ACTI
 OTYS_API_KEY = os.environ.get("OTYS_API_KEY", "")
 OTYS_URL = os.environ.get("OTYS_URL", "")
 
-# ERROR MONITORING
-# Optional Mattermost bot config for error notifications. Left empty means the
-# error handler still persists ErrorEvent rows (shown on /beheer/statistieken/)
-# but skips posting. The channel is configured as its browser link
-# (https://host/chat/<team>/channels/<channel>); the channel id is resolved from
-# it via the API. SITE_BASE_URL builds absolute links to error detail pages in
-# the notifications (no trailing slash).
+# MATTERMOST settings
 MATTERMOST_TOKEN = os.environ.get("MATTERMOST_TOKEN", "")
 MATTERMOST_WIES_OPS_CHANNEL_URL = os.environ.get("MATTERMOST_WIES_OPS_CHANNEL_URL", "")
+
+# SITE_BASE_URL is used if links need to be shared outside (e.g. in mattermost message)
 SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "").rstrip("/")

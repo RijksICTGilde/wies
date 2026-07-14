@@ -404,9 +404,6 @@ def sync_organizations(
     Returns:
         SyncResult with counts
     """
-
-    "a" + 2
-
     result = SyncResult()
     seen_ids: set[int] = set()
     root_count = 0

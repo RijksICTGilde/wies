@@ -10,14 +10,15 @@ from django.conf import settings
 
 POST_TIMEOUT_SECONDS = 5
 
-# Resolved channel ids, keyed by (base_url, team, channel). A channel's id never
-# changes, so caching for the process lifetime is safe.
-_channel_id_cache: dict[tuple[str, str, str], str] = {}
+# Resolved ops-channel id, memoised for the process lifetime (a channel's id never
+# changes). Reset via clear_channel_id_cache() in tests.
+_ops_channel_id: str | None = None
 
 
 def clear_channel_id_cache() -> None:
-    """Drop cached channel-id resolutions (used by tests)."""
-    _channel_id_cache.clear()
+    """Drop the cached channel-id resolution (used by tests)."""
+    global _ops_channel_id  # noqa: PLW0603 (global for update) — module-level memoisation cache
+    _ops_channel_id = None
 
 
 def parse_channel_url(channel_url: str) -> tuple[str, str, str]:
@@ -82,14 +83,13 @@ def send_ops_message(message: str) -> bool:
     if not (channel_url and token):
         return False
 
+    global _ops_channel_id  # noqa: PLW0603 (global for update) — module-level memoisation cache
+
     base_url, team_name, channel_name = parse_channel_url(channel_url)
     client = MattermostClient(base_url, token)
 
-    cache_key = (base_url, team_name, channel_name)
-    channel_id = _channel_id_cache.get(cache_key)
-    if channel_id is None:
-        channel_id = client.resolve_channel_id(team_name, channel_name)
-        _channel_id_cache[cache_key] = channel_id
+    if _ops_channel_id is None:
+        _ops_channel_id = client.resolve_channel_id(team_name, channel_name)
 
-    client.post_message(channel_id, message)
+    client.post_message(_ops_channel_id, message)
     return True

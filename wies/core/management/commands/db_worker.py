@@ -129,8 +129,7 @@ class Command(BaseCommand):
                         task.completed_at = timezone.now()
                         task.save(update_fields=["status", "error_message", "completed_at"])
                         # WARNING (not ERROR): the task command already logged the
-                        # failure with its traceback via TaskCommand. Logging ERROR
-                        # here too would create a second, traceback-less ErrorEvent.
+                        # failure with its traceback via TaskCommand.
                         logger.warning("Task %s failed: %s", task.id, task.error_message)
 
         logger.info("DB worker shut down gracefully.")
