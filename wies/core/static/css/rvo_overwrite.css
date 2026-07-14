@@ -110,6 +110,28 @@
   color: white;
 }
 
+/* Form-field error styling — RVO ships the markup (error text, error-list,
+   input/textarea error modifiers) but no colours, so give them the red state.
+   Global because inline-edit forms (and their errors) appear on any page. */
+.rvo-form-field__error {
+  color: var(--rvo-color-rood);
+  font-size: 0.875rem;
+  margin-top: var(--rvo-space-xs);
+}
+
+.rvo-form-field__error-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--rvo-space-xs) 0 0;
+  color: var(--rvo-color-rood);
+  font-size: 0.875rem;
+}
+
+.rvo-input--error,
+.rvo-textarea--error {
+  border-color: var(--rvo-color-rood);
+}
+
 /* faq.html accordion — small tweaks on top of the bundled RVO accordion CSS. */
 
 /* RVO colours the item title hemelblauw, which reads as a link here; make it a

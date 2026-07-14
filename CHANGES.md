@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 456: fix onboarding wizard's Merken picker rendering broken on pages that don't load the filter/side-panel stylesheets
+- 456: fix multiselect dropdown (e.g. Merk in the profile onboarding) being unreachable when the trigger sits low on the screen
 - 460: (migration)(add env vars) basic error monitoring — unhandled server errors (500) and failed background tasks are stored and shown on the statistics page, with a Mattermost notification.
 - 460: A failing task is marked failed immediately instead of hanging until timeout.
 
