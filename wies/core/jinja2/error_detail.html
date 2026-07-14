@@ -15,15 +15,25 @@
     <c-h1>Foutmelding</c-h1>
     <dl class="error-detail__meta">
       <dt class="rvo-text rvo-text--bold rvo-text--sm">Tijd</dt>
-      <dd class="rvo-text rvo-text--sm">{{ error.timestamp|datetime_nl }}</dd>
+      <dd class="rvo-text rvo-text--sm">
+        {{ error.timestamp|datetime_nl }}
+      </dd>
       <dt class="rvo-text rvo-text--bold rvo-text--sm">Waar</dt>
       <dd class="rvo-text rvo-text--sm">
-        {% if error.path %}{{ error.method }} {{ error.path }}{% else %}{{ error.logger_name }}{% endif %}
+        {% if error.path %}
+          {{ error.method }} {{ error.path }}
+        {% else %}
+          {{ error.logger_name }}
+        {% endif %}
       </dd>
       <dt class="rvo-text rvo-text--bold rvo-text--sm">Gebruiker</dt>
-      <dd class="rvo-text rvo-text--sm">{{ error.user_email or "-" }}</dd>
+      <dd class="rvo-text rvo-text--sm">
+        {{ error.user_email or "-" }}
+      </dd>
       <dt class="rvo-text rvo-text--bold rvo-text--sm">Versie</dt>
-      <dd class="rvo-text rvo-text--sm">{{ error.app_version or "-" }}</dd>
+      <dd class="rvo-text rvo-text--sm">
+        {{ error.app_version or "-" }}
+      </dd>
     </dl>
     {% if error.exception_type %}
       <div class="rvo-text rvo-text--bold">{{ error.exception_type }}: {{ error.exception_message }}</div>
