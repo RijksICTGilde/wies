@@ -1,18 +1,6 @@
 """Mattermost bot integration.
 
-Slimmed down from the exploratory `scripts/mattermost_bot_test.py`: only the
-post-a-message path we need, authenticating with a bot token.
-
-`send_ops_message` is the entry point for the rest of the app — it targets the
-Wies ops channel and reads all Mattermost config from settings, so callers never
-handle URLs, tokens or channel ids.
-
-Config is a single channel *link* (e.g.
-``https://digilab.overheid.nl/chat/odi/channels/wies-team``) rather than a raw
-channel id, because the link is what an admin can copy straight from the browser.
-The API base, team name and channel name are parsed from it, and the numeric
-channel id is resolved via the API (and cached, so it costs one extra request the
-first time only).
+`send_ops_message` is the entry point for the rest of the app
 """
 
 from urllib.parse import urljoin, urlparse

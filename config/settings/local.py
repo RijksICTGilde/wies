@@ -33,15 +33,6 @@ if SKIP_OIDC:
     MIDDLEWARE = [m for m in MIDDLEWARE if m != "django.contrib.auth.middleware.LoginRequiredMiddleware"]  # noqa: F405
     MIDDLEWARE.append("wies.rijksauth.middleware.AutoLoginMiddleware")
 
-# ERROR MONITORING
-# ----------------------------------------------------------------------------------------------------------------------
-# Mirror production so the error handler can be exercised locally. Leaving these
-# empty (the default) means ErrorEvent rows are still written and shown on
-# /beheer/statistieken/, but nothing is posted to Mattermost.
-MATTERMOST_TOKEN = os.environ.get("MATTERMOST_TOKEN", "")
-MATTERMOST_WIES_OPS_CHANNEL_URL = os.environ.get("MATTERMOST_WIES_OPS_CHANNEL_URL", "")
-SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "http://localhost:8080").rstrip("/")
-
 # LOGGING
 # ----------------------------------------------------------------------------------------------------------------------
 LOGGING = {
