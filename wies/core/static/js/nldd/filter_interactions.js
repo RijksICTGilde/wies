@@ -20,31 +20,20 @@
 (function () {
   "use strict";
 
-  const NDD_CHECKBOX =
-    "nldd-checkbox-field, nldd-switch-field, input[type='checkbox'][data-nldd-input]";
   const NDD_TEXT = "nldd-text-field";
   const NDD_SEARCH = "nldd-search-field";
 
-  // Filter checkboxes now carry their own `name` + `data-filter-input`, so
-  // hx-include submits them natively (rol=1&rol=2 → getlist) — no hidden-input
-  // mirror to maintain. All that remains on change is triggering a re-filter.
+  // Filter checkboxes carry their own `name` + `data-filter-input`, so the
+  // browser submits them via hx-include and htmx's own
+  // hx-trigger="change from:[data-filter-input]" re-runs the filter — no glue
+  // needed here. Custom elements (nldd-text-field/-search-field) below aren't
+  // seen by that trigger, so they get a nudge.
 
   function dispatchFormChange(form) {
     if (!form) return;
     // Triggert hx-trigger="change from:[data-filter-input]" op de form.
     const sentinel = form.querySelector("[data-filter-input]");
     (sentinel || form).dispatchEvent(new Event("change", { bubbles: true }));
-  }
-
-  function attachCheckbox(el) {
-    if (el.__nddBridgeAttached) return;
-    el.__nddBridgeAttached = true;
-    const onChange = () => {
-      const form = el.closest("form");
-      if (form) dispatchFormChange(form);
-    };
-    el.addEventListener("change", onChange);
-    el.addEventListener("input", onChange);
   }
 
   // --- nldd-text-field (date etc.): re-filter on change ---------------
@@ -497,7 +486,6 @@
   // --- Scan + observe -----------------------------------------------
   function scan(root) {
     if (!root || !root.querySelectorAll) return;
-    root.querySelectorAll(NDD_CHECKBOX).forEach(attachCheckbox);
     root.querySelectorAll(NDD_TEXT).forEach(attachTextField);
     root.querySelectorAll(NDD_SEARCH).forEach(attachSearchField);
   }
@@ -512,7 +500,6 @@
       for (const m of mutations) {
         m.addedNodes.forEach((n) => {
           if (n.nodeType !== 1) return;
-          if (n.matches?.(NDD_CHECKBOX)) attachCheckbox(n);
           if (n.matches?.(NDD_TEXT)) attachTextField(n);
           if (n.matches?.(NDD_SEARCH)) attachSearchField(n);
           scan(n);
