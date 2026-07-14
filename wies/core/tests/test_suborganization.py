@@ -48,7 +48,10 @@ class SuborganizationInlineEditPermissionTest(TestCase):
 
         self.owner_user = User.objects.create_user(email="owner@rijksoverheid.nl", first_name="Owner")
         self.own_colleague = Colleague.objects.create(
-            user=self.owner_user, name="Owner", email="owner@rijksoverheid.nl", source="wies",
+            user=self.owner_user,
+            name="Owner",
+            email="owner@rijksoverheid.nl",
+            source="wies",
             suborganization=self.suborg_a,
         )
 

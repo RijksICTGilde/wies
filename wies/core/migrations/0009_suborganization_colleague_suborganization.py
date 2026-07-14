@@ -65,26 +65,31 @@ def backfill_suborganization(apps, schema_editor):
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0008_scrub_legacy_organizations_events'),
+        ("core", "0008_scrub_legacy_organizations_events"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Suborganization',
+            name="Suborganization",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, unique=True)),
+                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                ("name", models.CharField(max_length=100, unique=True)),
             ],
             options={
-                'ordering': [django.db.models.functions.text.Lower('name')],
+                "ordering": [django.db.models.functions.text.Lower("name")],
             },
         ),
         migrations.AddField(
-            model_name='colleague',
-            name='suborganization',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='colleagues', to='core.suborganization'),
+            model_name="colleague",
+            name="suborganization",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name="colleagues",
+                to="core.suborganization",
+            ),
         ),
         # Schema is in place above; safe to backfill data in the same migration.
         migrations.RunPython(backfill_suborganization, migrations.RunPython.noop),

@@ -225,9 +225,7 @@
     "fields": {
       "name": "Algemene Zaken",
       "label": "Ministerie van Algemene Zaken",
-      "abbreviations": [
-        "AZ"
-      ],
+      "abbreviations": ["AZ"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1010",
       "oin_number": "null",
       "system_id": "123",
@@ -242,9 +240,7 @@
     "fields": {
       "name": "Binnenlandse Zaken en Koninkrijksrelaties",
       "label": "Ministerie van Binnenlandse Zaken en Koninkrijksrelaties",
-      "abbreviations": [
-        "BZK"
-      ],
+      "abbreviations": ["BZK"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1034",
       "oin_number": "00000001003214345000",
       "system_id": "9632",
@@ -259,9 +255,7 @@
     "fields": {
       "name": "Buitenlandse Zaken",
       "label": "Ministerie van Buitenlandse Zaken",
-      "abbreviations": [
-        "BuZa"
-      ],
+      "abbreviations": ["BuZa"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1013",
       "oin_number": "00000001003227406000",
       "system_id": "2515",
@@ -276,9 +270,7 @@
     "fields": {
       "name": "Defensie",
       "label": "Ministerie van Defensie",
-      "abbreviations": [
-        "Def"
-      ],
+      "abbreviations": ["Def"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1018",
       "oin_number": "I0000003273709850000",
       "system_id": "4958",
@@ -293,9 +285,7 @@
     "fields": {
       "name": "Economische Zaken",
       "label": "Ministerie van Economische Zaken",
-      "abbreviations": [
-        "EZ"
-      ],
+      "abbreviations": ["EZ"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1045",
       "oin_number": "00000001003214369000",
       "system_id": "10621",
@@ -310,9 +300,7 @@
     "fields": {
       "name": "Financiën",
       "label": "Ministerie van Financiën",
-      "abbreviations": [
-        "FIN"
-      ],
+      "abbreviations": ["FIN"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1090",
       "oin_number": "00000001003214394000",
       "system_id": "68820",
@@ -327,9 +315,7 @@
     "fields": {
       "name": "Infrastructuur en Waterstaat",
       "label": "Ministerie van Infrastructuur en Waterstaat",
-      "abbreviations": [
-        "IenW"
-      ],
+      "abbreviations": ["IenW"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1130",
       "oin_number": "00000001003214321000",
       "system_id": "112773",
@@ -344,9 +330,7 @@
     "fields": {
       "name": "Justitie en Veiligheid",
       "label": "Ministerie van Justitie en Veiligheid",
-      "abbreviations": [
-        "JenV"
-      ],
+      "abbreviations": ["JenV"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1058",
       "oin_number": "00000003273808340000",
       "system_id": "11906",
@@ -361,9 +345,7 @@
     "fields": {
       "name": "Onderwijs, Cultuur en Wetenschap",
       "label": "Ministerie van Onderwijs, Cultuur en Wetenschap",
-      "abbreviations": [
-        "OCW"
-      ],
+      "abbreviations": ["OCW"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1109",
       "oin_number": null,
       "system_id": "71852",
@@ -378,9 +360,7 @@
     "fields": {
       "name": "Sociale Zaken en Werkgelegenheid",
       "label": "Ministerie van Sociale Zaken en Werkgelegenheid",
-      "abbreviations": [
-        "SZW"
-      ],
+      "abbreviations": ["SZW"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1073",
       "oin_number": "00000001003227522000",
       "system_id": "19087",
@@ -395,9 +375,7 @@
     "fields": {
       "name": "Volksgezondheid, Welzijn en Sport",
       "label": "Ministerie van Volksgezondheid, Welzijn en Sport",
-      "abbreviations": [
-        "VWS"
-      ],
+      "abbreviations": ["VWS"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/ministerie/mnre1025",
       "oin_number": null,
       "system_id": "8591",
@@ -412,9 +390,7 @@
     "fields": {
       "name": "Directoraat-generaal Belastingdienst",
       "label": "Directoraat-generaal Belastingdienst",
-      "abbreviations": [
-        "DGBD"
-      ],
+      "abbreviations": ["DGBD"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg12368",
       "oin_number": null,
       "system_id": "68888",
@@ -429,9 +405,7 @@
     "fields": {
       "name": "Rijkswaterstaat",
       "label": "Rijkswaterstaat",
-      "abbreviations": [
-        "RWS"
-      ],
+      "abbreviations": ["RWS"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10004",
       "oin_number": "00000001821699180000",
       "system_id": "112990",
@@ -446,9 +420,7 @@
     "fields": {
       "name": "Rijksinstituut voor Volksgezondheid en Milieu",
       "label": "Rijksinstituut voor Volksgezondheid en Milieu",
-      "abbreviations": [
-        "RIVM"
-      ],
+      "abbreviations": ["RIVM"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10123",
       "oin_number": null,
       "system_id": "66101",
@@ -463,9 +435,7 @@
     "fields": {
       "name": "Dienst Justitiële Inrichtingen",
       "label": "Dienst Justitiële Inrichtingen",
-      "abbreviations": [
-        "DJI"
-      ],
+      "abbreviations": ["DJI"],
       "tooi_identifier": "https://identifier.overheid.nl/tooi/id/oorg/oorg10114",
       "oin_number": null,
       "system_id": "13080",
@@ -600,11 +570,7 @@
     "fields": {
       "name": "Kees van den Berg",
       "email": "kees.van.den.berg@rijksoverheid.nl",
-      "skills": [
-        5,
-        8,
-        9
-      ],
+      "skills": [5, 8, 9],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -616,10 +582,7 @@
     "fields": {
       "name": "Stijn Ben Ali",
       "email": "stijn.ben.ali@rijksoverheid.nl",
-      "skills": [
-        1,
-        2
-      ],
+      "skills": [1, 2],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -631,11 +594,7 @@
     "fields": {
       "name": "Anna Demir",
       "email": "anna.demir@rijksoverheid.nl",
-      "skills": [
-        1,
-        7,
-        18
-      ],
+      "skills": [1, 7, 18],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -647,10 +606,7 @@
     "fields": {
       "name": "Sara de Haan",
       "email": "sara.de.haan@rijksoverheid.nl",
-      "skills": [
-        9,
-        19
-      ],
+      "skills": [9, 19],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -662,11 +618,7 @@
     "fields": {
       "name": "Pieter de Wit",
       "email": "pieter.de.wit@rijksoverheid.nl",
-      "skills": [
-        9,
-        11,
-        14
-      ],
+      "skills": [9, 11, 14],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -678,9 +630,7 @@
     "fields": {
       "name": "Diana Bos",
       "email": "diana.bos@rijksoverheid.nl",
-      "skills": [
-        13
-      ],
+      "skills": [13],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -692,10 +642,7 @@
     "fields": {
       "name": "Marieke Achahbar",
       "email": "marieke.achahbar@rijksoverheid.nl",
-      "skills": [
-        2,
-        27
-      ],
+      "skills": [2, 27],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -707,9 +654,7 @@
     "fields": {
       "name": "Rick Scholten",
       "email": "rick.scholten@rijksoverheid.nl",
-      "skills": [
-        18
-      ],
+      "skills": [18],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -721,9 +666,7 @@
     "fields": {
       "name": "Renate Santos",
       "email": "renate.santos@rijksoverheid.nl",
-      "skills": [
-        23
-      ],
+      "skills": [23],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -735,9 +678,7 @@
     "fields": {
       "name": "Sophie Willems",
       "email": "sophie.willems@rijksoverheid.nl",
-      "skills": [
-        29
-      ],
+      "skills": [29],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -749,10 +690,7 @@
     "fields": {
       "name": "Rob Scholten",
       "email": "rob.scholten@rijksoverheid.nl",
-      "skills": [
-        15,
-        21
-      ],
+      "skills": [15, 21],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -764,10 +702,7 @@
     "fields": {
       "name": "Dirk Kuiper",
       "email": "dirk.kuiper@rijksoverheid.nl",
-      "skills": [
-        7,
-        22
-      ],
+      "skills": [7, 22],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -779,11 +714,7 @@
     "fields": {
       "name": "Mark Achahbar",
       "email": "mark.achahbar@rijksoverheid.nl",
-      "skills": [
-        6,
-        18,
-        24
-      ],
+      "skills": [6, 18, 24],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -795,10 +726,7 @@
     "fields": {
       "name": "Aisha Scholten",
       "email": "aisha.scholten@rijksoverheid.nl",
-      "skills": [
-        21,
-        23
-      ],
+      "skills": [21, 23],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -810,9 +738,7 @@
     "fields": {
       "name": "Wendy Visser",
       "email": "wendy.visser@rijksoverheid.nl",
-      "skills": [
-        28
-      ],
+      "skills": [28],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -824,10 +750,7 @@
     "fields": {
       "name": "Anke Molenaar",
       "email": "anke.molenaar@rijksoverheid.nl",
-      "skills": [
-        3,
-        7
-      ],
+      "skills": [3, 7],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -839,11 +762,7 @@
     "fields": {
       "name": "Anke Jacobs",
       "email": "anke.jacobs@rijksoverheid.nl",
-      "skills": [
-        13,
-        16,
-        21
-      ],
+      "skills": [13, 16, 21],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -855,9 +774,7 @@
     "fields": {
       "name": "Laura van Leeuwen",
       "email": "laura.van.leeuwen@rijksoverheid.nl",
-      "skills": [
-        24
-      ],
+      "skills": [24],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -869,10 +786,7 @@
     "fields": {
       "name": "Laura Popov",
       "email": "laura.popov@rijksoverheid.nl",
-      "skills": [
-        13,
-        19
-      ],
+      "skills": [13, 19],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -884,10 +798,7 @@
     "fields": {
       "name": "Vincent Nguyen",
       "email": "vincent.nguyen@rijksoverheid.nl",
-      "skills": [
-        3,
-        25
-      ],
+      "skills": [3, 25],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -899,11 +810,7 @@
     "fields": {
       "name": "Kees Brouwer",
       "email": "kees.brouwer@rijksoverheid.nl",
-      "skills": [
-        6,
-        22,
-        27
-      ],
+      "skills": [6, 22, 27],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -915,10 +822,7 @@
     "fields": {
       "name": "Bas van Vliet",
       "email": "bas.van.vliet@rijksoverheid.nl",
-      "skills": [
-        15,
-        20
-      ],
+      "skills": [15, 20],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -930,11 +834,7 @@
     "fields": {
       "name": "Willem Vos",
       "email": "willem.vos@rijksoverheid.nl",
-      "skills": [
-        9,
-        18,
-        25
-      ],
+      "skills": [9, 18, 25],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -946,10 +846,7 @@
     "fields": {
       "name": "Suzanne Vos",
       "email": "suzanne.vos@rijksoverheid.nl",
-      "skills": [
-        6,
-        14
-      ],
+      "skills": [6, 14],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -961,9 +858,7 @@
     "fields": {
       "name": "Laura Demir",
       "email": "laura.demir@rijksoverheid.nl",
-      "skills": [
-        17
-      ],
+      "skills": [17],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -975,11 +870,7 @@
     "fields": {
       "name": "Esther Demir",
       "email": "esther.demir@rijksoverheid.nl",
-      "skills": [
-        5,
-        7,
-        12
-      ],
+      "skills": [5, 7, 12],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -991,11 +882,7 @@
     "fields": {
       "name": "Carlos de Jong",
       "email": "carlos.de.jong@rijksoverheid.nl",
-      "skills": [
-        1,
-        11,
-        16
-      ],
+      "skills": [1, 11, 16],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -1007,9 +894,7 @@
     "fields": {
       "name": "Renate Maas",
       "email": "renate.maas@rijksoverheid.nl",
-      "skills": [
-        2
-      ],
+      "skills": [2],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -1021,11 +906,7 @@
     "fields": {
       "name": "Niels de Boer",
       "email": "niels.de.boer@rijksoverheid.nl",
-      "skills": [
-        3,
-        16,
-        28
-      ],
+      "skills": [3, 16, 28],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -1037,11 +918,7 @@
     "fields": {
       "name": "Stefan Hendriks",
       "email": "stefan.hendriks@rijksoverheid.nl",
-      "skills": [
-        6,
-        16,
-        18
-      ],
+      "skills": [6, 16, 18],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -1053,11 +930,7 @@
     "fields": {
       "name": "Hanna Jacobs",
       "email": "hanna.jacobs@rijksoverheid.nl",
-      "skills": [
-        23,
-        24,
-        25
-      ],
+      "skills": [23, 24, 25],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -1069,11 +942,7 @@
     "fields": {
       "name": "Miriam Molenaar",
       "email": "miriam.molenaar@rijksoverheid.nl",
-      "skills": [
-        12,
-        15,
-        21
-      ],
+      "skills": [12, 15, 21],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -1085,9 +954,7 @@
     "fields": {
       "name": "Hassan Peters",
       "email": "hassan.peters@rijksoverheid.nl",
-      "skills": [
-        8
-      ],
+      "skills": [8],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -1099,11 +966,7 @@
     "fields": {
       "name": "Thomas Ben Ali",
       "email": "thomas.ben.ali@rijksoverheid.nl",
-      "skills": [
-        1,
-        8,
-        19
-      ],
+      "skills": [1, 8, 19],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -1115,9 +978,7 @@
     "fields": {
       "name": "Erik Vermeer",
       "email": "erik.vermeer@rijksoverheid.nl",
-      "skills": [
-        2
-      ],
+      "skills": [2],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -1129,9 +990,7 @@
     "fields": {
       "name": "Mark Nguyen",
       "email": "mark.nguyen@rijksoverheid.nl",
-      "skills": [
-        9
-      ],
+      "skills": [9],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -1143,9 +1002,7 @@
     "fields": {
       "name": "Wout Singh",
       "email": "wout.singh@rijksoverheid.nl",
-      "skills": [
-        24
-      ],
+      "skills": [24],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -1157,10 +1014,7 @@
     "fields": {
       "name": "Amina van der Veen",
       "email": "amina.van.der.veen@rijksoverheid.nl",
-      "skills": [
-        14,
-        27
-      ],
+      "skills": [14, 27],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -1172,10 +1026,7 @@
     "fields": {
       "name": "Martijn Bosman",
       "email": "martijn.bosman@rijksoverheid.nl",
-      "skills": [
-        14,
-        15
-      ],
+      "skills": [14, 15],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -1187,9 +1038,7 @@
     "fields": {
       "name": "Jeroen de Groot",
       "email": "jeroen.de.groot@rijksoverheid.nl",
-      "skills": [
-        13
-      ],
+      "skills": [13],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -1201,9 +1050,7 @@
     "fields": {
       "name": "Henk van der Veen",
       "email": "henk.van.der.veen@rijksoverheid.nl",
-      "skills": [
-        7
-      ],
+      "skills": [7],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -1215,9 +1062,7 @@
     "fields": {
       "name": "Vincent Hermans",
       "email": "vincent.hermans@rijksoverheid.nl",
-      "skills": [
-        9
-      ],
+      "skills": [9],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -1229,11 +1074,7 @@
     "fields": {
       "name": "Joost van der Heijden",
       "email": "joost.van.der.heijden@rijksoverheid.nl",
-      "skills": [
-        2,
-        4,
-        21
-      ],
+      "skills": [2, 4, 21],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -1245,9 +1086,7 @@
     "fields": {
       "name": "Daan Mulder",
       "email": "daan.mulder@rijksoverheid.nl",
-      "skills": [
-        6
-      ],
+      "skills": [6],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -1259,10 +1098,7 @@
     "fields": {
       "name": "Mariam Jacobs",
       "email": "mariam.jacobs@rijksoverheid.nl",
-      "skills": [
-        2,
-        6
-      ],
+      "skills": [2, 6],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -1274,10 +1110,7 @@
     "fields": {
       "name": "Naomi de Bruijn",
       "email": "naomi.de.bruijn@rijksoverheid.nl",
-      "skills": [
-        10,
-        14
-      ],
+      "skills": [10, 14],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -1289,9 +1122,7 @@
     "fields": {
       "name": "Wei Brouwer",
       "email": "wei.brouwer@rijksoverheid.nl",
-      "skills": [
-        10
-      ],
+      "skills": [10],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -1303,11 +1134,7 @@
     "fields": {
       "name": "Marco Popov",
       "email": "marco.popov@rijksoverheid.nl",
-      "skills": [
-        2,
-        18,
-        24
-      ],
+      "skills": [2, 18, 24],
       "labels": [],
       "source": "wies",
       "source_id": ""
@@ -1319,10 +1146,7 @@
     "fields": {
       "name": "Kevin Popov",
       "email": "kevin.popov@rijksoverheid.nl",
-      "skills": [
-        17,
-        29
-      ],
+      "skills": [17, 29],
       "labels": [],
       "source": "otys_iir",
       "source_id": ""
@@ -1334,9 +1158,7 @@
     "fields": {
       "name": "Marco Nguyen",
       "email": "marco.nguyen@rijksoverheid.nl",
-      "skills": [
-        29
-      ],
+      "skills": [29],
       "labels": [],
       "source": "wies",
       "source_id": ""

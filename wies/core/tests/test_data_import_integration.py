@@ -261,7 +261,11 @@ New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,ex
         iir_suborg = Suborganization.objects.create(name="I-Interim Rijk")
 
         colleague = Colleague.objects.create(
-            name="Existing OTYS User", source_id="99999", source="otys_iir", email="existing@otys.com", suborganization=iir_suborg
+            name="Existing OTYS User",
+            source_id="99999",
+            source="otys_iir",
+            email="existing@otys.com",
+            suborganization=iir_suborg,
         )
 
         # Mock OTYS API to return the same colleague
