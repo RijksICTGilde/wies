@@ -84,10 +84,7 @@
   font-size: 0.875rem;
 }
 .nldd-client-modal__selection-list li:hover {
-  background: var(
-    --semantics-surfaces-interactive-hovered-background-color,
-    #f0f4ff
-  );
+  background: var(--semantics-surfaces-tinted-background-color, #f0f4ff);
 }
 .nldd-client-modal__empty-state {
   font-style: italic;
@@ -119,10 +116,7 @@
   border-radius: 4px;
 }
 .client-tree-node > label:hover {
-  background: var(
-    --semantics-surfaces-interactive-hovered-background-color,
-    #f0f4ff
-  );
+  background: var(--semantics-surfaces-tinted-background-color, #f0f4ff);
 }
 .client-tree-node.checked > label {
   background: var(--semantics-surfaces-tinted-background-color, #dceaf7);

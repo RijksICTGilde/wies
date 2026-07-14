@@ -17,7 +17,7 @@ body {
 body {
   font-family: "RijksSansVF", system-ui, sans-serif;
   color: var(--semantics-content-color, #1a1a1a);
-  background: var(--semantics-surfaces-background-color, #fff);
+  background: var(--semantics-surfaces-base-background-color, #fff);
 }
 
 /* Layout is handled by <nldd-sidebar-section>: a sticky aside on lg that
@@ -72,8 +72,8 @@ a {
   width: 100%;
   min-height: 2.75rem;
   padding: 0 var(--primitives-space-12, 12px);
-  background: var(--semantics-surfaces-background-color, #fff);
-  border: 1px solid var(--semantics-controls-border-color, #cbd5e1);
+  background: var(--semantics-surfaces-base-background-color, #fff);
+  border: 1px solid var(--semantics-input-fields-border-color, #cbd5e1);
   border-radius: 6px;
   font: inherit;
   color: inherit;
@@ -106,12 +106,12 @@ a {
   text-align: left;
   font-weight: 600;
   padding: var(--primitives-space-8, 8px) var(--primitives-space-12, 12px);
-  border-bottom: 1px solid var(--semantics-controls-border-color, #e2e8f0);
+  border-bottom: 1px solid var(--semantics-input-fields-border-color, #e2e8f0);
   white-space: nowrap;
 }
 .assignment-org-table td {
   padding: var(--primitives-space-8, 8px) var(--primitives-space-12, 12px);
-  border-bottom: 1px solid var(--semantics-controls-border-color, #f1f5f9);
+  border-bottom: 1px solid var(--semantics-input-fields-border-color, #f1f5f9);
   vertical-align: middle;
 }
 .assignment-org-table td:last-child {
@@ -180,13 +180,13 @@ a {
 }
 .nldd-form-field__label--required::after {
   content: " *";
-  color: var(--semantics-feedback-negative-color, #dc2626);
+  color: var(--semantics-content-critical-color, #dc2626);
 }
 .nldd-form-field__error {
   margin-top: 0.25rem;
 }
 .nldd-form-field__error-text {
-  color: var(--semantics-feedback-negative-color, #dc2626);
+  color: var(--semantics-content-critical-color, #dc2626);
   font-size: 0.8125rem;
 }
 
@@ -196,16 +196,16 @@ a {
 .nldd-select {
   font: inherit;
   padding: 0.5rem 0.75rem;
-  border: 1px solid var(--semantics-controls-border-color, #cbd5e1);
+  border: 1px solid var(--semantics-input-fields-border-color, #cbd5e1);
   border-radius: 4px;
-  background: var(--semantics-surfaces-background-color, #fff);
+  background: var(--semantics-surfaces-base-background-color, #fff);
   color: inherit;
   width: 100%;
 }
 .nldd-input:focus,
 .nldd-textarea:focus,
 .nldd-select:focus {
-  outline: 2px solid var(--semantics-controls-is-focused-border-color, #154273);
+  outline: 2px solid var(--semantics-content-accent-color, #154273);
   outline-offset: -1px;
 }
 .nldd-textarea {
