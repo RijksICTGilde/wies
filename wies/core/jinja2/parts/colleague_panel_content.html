@@ -15,6 +15,11 @@
       </div>
     </div>
   </section>
+  {% if colleague.suborganization %}
+    <div class="rvo-layout-row rvo-layout-gap--sm label-badge-list">
+      <c-tag type="default" class="label-badge" style="background-color: #DCE3EA">{{ colleague.suborganization.name }}</c-tag>
+    </div>
+  {% endif %}
   {% set labels = colleague.labels.all() %}
   {% if labels %}
     <div class="rvo-layout-row rvo-layout-gap--sm label-badge-list">

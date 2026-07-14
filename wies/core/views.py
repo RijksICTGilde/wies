@@ -43,6 +43,7 @@ from .forms import (
     LabelCategoryForm,
     LabelForm,
     ServiceFormSet,
+    SuborganizationForm,
     UserForm,
 )
 from .models import (
@@ -57,9 +58,10 @@ from .models import (
     Placement,
     Service,
     Skill,
+    Suborganization,
 )
 from .permissions import is_staff_member
-from .querysets import annotate_placement_dates, annotate_usage_counts
+from .querysets import annotate_placement_dates, annotate_suborganization_usage_counts, annotate_usage_counts
 from .services.assignments import create_assignment_from_form, extract_services_data
 from .services.events import create_event
 from .services.organizations import (
@@ -661,6 +663,12 @@ class PlacementListView(ListView):
             if exclude_filter != cat_id:
                 qs = qs.filter(colleague__labels__id__in=cat_label_ids)
 
+        # Merk filter: OR within the merk group (one merk per colleague)
+        if exclude_filter != "merk":
+            suborganization_ids = [int(x) for x in self.request.GET.getlist("merk") if x.isdigit()]
+            if suborganization_ids:
+                qs = qs.filter(colleague__suborganization_id__in=suborganization_ids)
+
         # Filter by assignment end date (preset period)
         if exclude_filter != "loopt_af":
             loopt_af_values = set(self.request.GET.getlist("loopt_af"))
@@ -753,6 +761,11 @@ class PlacementListView(ListView):
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
 
+        # merk filter supports multi-select
+        suborganization_filter = {v for v in self.request.GET.getlist("merk") if v.isdigit()}
+        if suborganization_filter:
+            active_filters["merk"] = suborganization_filter
+
         # Organization filter (multi-select via modal)
         org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
         org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
@@ -836,6 +849,34 @@ class PlacementListView(ListView):
                 }
             )
 
+        # Merk filter group (one merk per colleague; counts exclude the merk filter)
+        suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="merk").distinct()
+        suborg_placement_qs = Placement.objects.filter(id__in=suborg_filtered_qs.values_list("id", flat=True))
+        suborg_id_values = suborg_placement_qs.values_list("colleague__suborganization_id", flat=True)
+        suborg_counts = Counter(mid for mid in suborg_id_values if mid is not None)
+
+        suborganization_options = [{"value": "", "label": ""}]
+        suborganization_selected_values = []
+        for suborganization in Suborganization.objects.all():
+            suborganization_options.append(
+                {
+                    "value": str(suborganization.id),
+                    "label": suborganization.name,
+                    "count": suborg_counts.get(suborganization.id, 0),
+                }
+            )
+            if str(suborganization.id) in active_filters.get("merk", set()):
+                suborganization_options[-1]["selected"] = True
+                suborganization_selected_values.append(str(suborganization.id))
+
+        suborganization_filter_group = {
+            "type": "select-multi",
+            "name": "merk",
+            "label": "Merk",
+            "options": suborganization_options,
+            "selected_values": suborganization_selected_values,
+        }
+
         # Skill/role counts: exclude role filter
         skill_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
         skill_placement_qs = Placement.objects.filter(id__in=skill_filtered_qs.values_list("id", flat=True))
@@ -894,6 +935,7 @@ class PlacementListView(ListView):
                 "options": self._get_loopt_af_options(base_qs),
                 "selected_values": list(loopt_af_values),
             },
+            suborganization_filter_group,
         ]
         _finalize_filter_groups(context["filter_groups"])
         context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
@@ -1256,6 +1298,12 @@ class UserListView(PermissionRequiredMixin, ListView):
             if exclude_filter != cat_id:
                 qs = qs.filter(colleague__labels__id__in=cat_label_ids)
 
+        # Merk filter: OR within the merk group (one merk per colleague)
+        if exclude_filter != "merk":
+            suborganization_ids = [int(x) for x in self.request.GET.getlist("merk") if x.isdigit()]
+            if suborganization_ids:
+                qs = qs.filter(colleague__suborganization_id__in=suborganization_ids)
+
         # Role filter
         if exclude_filter != "rol":
             role_filter = self.request.GET.get("rol")
@@ -1301,6 +1349,11 @@ class UserListView(PermissionRequiredMixin, ListView):
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
 
+        # merk filter supports multi-select
+        suborganization_filter = {v for v in self.request.GET.getlist("merk") if v.isdigit()}
+        if suborganization_filter:
+            active_filters["merk"] = suborganization_filter
+
         role_filter = self.request.GET.get("rol")
         if role_filter and role_filter.isdigit():
             active_filters["rol"] = role_filter
@@ -1339,6 +1392,34 @@ class UserListView(PermissionRequiredMixin, ListView):
                 }
             )
 
+        # Merk filter group (one merk per colleague; counts exclude the merk filter)
+        suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="merk").distinct()
+        suborg_user_qs = User.objects.filter(id__in=suborg_filtered_qs.values_list("id", flat=True))
+        suborg_id_values = suborg_user_qs.values_list("colleague__suborganization_id", flat=True)
+        suborg_counts = Counter(mid for mid in suborg_id_values if mid is not None)
+
+        suborganization_options = [{"value": "", "label": ""}]
+        suborganization_selected_values = []
+        for suborganization in Suborganization.objects.all():
+            suborganization_options.append(
+                {
+                    "value": str(suborganization.id),
+                    "label": suborganization.name,
+                    "count": suborg_counts.get(suborganization.id, 0),
+                }
+            )
+            if str(suborganization.id) in active_filters.get("merk", set()):
+                suborganization_options[-1]["selected"] = True
+                suborganization_selected_values.append(str(suborganization.id))
+
+        suborganization_filter_group = {
+            "type": "select-multi",
+            "name": "merk",
+            "label": "Merk",
+            "options": suborganization_options,
+            "selected_values": suborganization_selected_values,
+        }
+
         role_options = [
             {"value": "", "label": "Alle rollen"},
         ]
@@ -1361,6 +1442,7 @@ class UserListView(PermissionRequiredMixin, ListView):
                 "value": role_value,
             },
             *label_filter_groups,
+            suborganization_filter_group,
         ]
 
         context["primary_button"] = {
@@ -1983,6 +2065,110 @@ def label_delete(request, pk):
         response["HX-Trigger"] = "closeModal"
         return response
 
+    return HttpResponse(status=405)
+
+
+@permission_required("core.view_suborganization", raise_exception=True)
+def suborganization_admin(request):
+    """Main merken admin page."""
+    suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
+    return render(request, "merk_admin.html", {"merken": suborganizations})
+
+
+@permission_required("core.add_suborganization", raise_exception=True)
+def suborganization_create(request):
+    """Create a suborganization. POST-only; re-renders the merk list partial (htmx)."""
+    if request.method == "POST":
+        form = SuborganizationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
+            return render(request, "parts/merk_list.html", {"merken": suborganizations})
+        suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
+        return render(
+            request, "parts/merk_list.html", {"merken": suborganizations, "errors": dict(form.errors.items())}
+        )
+    return HttpResponse(status=405)
+
+
+@permission_required("core.change_suborganization", raise_exception=True)
+def suborganization_edit(request, pk):
+    """Edit a suborganization. Returns a partial for use with htmx."""
+    suborganization = get_object_or_404(Suborganization, pk=pk)
+    form_post_url = reverse("merk-edit", kwargs={"pk": pk})
+    modal_title = f"Bewerk merk: {suborganization.name}"
+    form_button_label = "Opslaan"
+    element_id = "merkFormModal"
+
+    if request.method == "GET":
+        form = SuborganizationForm(instance=suborganization)
+        return render(
+            request,
+            "parts/generic_form_modal.html",
+            {
+                "content": form,
+                "form_post_url": form_post_url,
+                "modal_title": modal_title,
+                "form_button_label": form_button_label,
+                "modal_element_id": element_id,
+                "target_element_id": element_id,
+                **get_delete_context("merk-delete", suborganization.pk, f"merk '{suborganization.name}'"),
+            },
+        )
+    if request.method == "POST":
+        form = SuborganizationForm(request.POST, instance=suborganization)
+        if form.is_valid():
+            form.save()
+            suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
+            response = render(request, "parts/merk_list.html", {"merken": suborganizations})
+            response["HX-Retarget"] = "#merk_list"
+            response["HX-Trigger"] = "closeModal"
+            return response
+        return render(
+            request,
+            "parts/generic_form_modal.html",
+            {
+                "content": form,
+                "form_post_url": form_post_url,
+                "modal_title": modal_title,
+                "form_button_label": form_button_label,
+                "modal_element_id": element_id,
+                "target_element_id": element_id,
+                **get_delete_context("merk-delete", suborganization.pk, f"merk '{suborganization.name}'"),
+            },
+        )
+    return None
+
+
+@permission_required("core.delete_suborganization", raise_exception=True)
+def suborganization_delete(request, pk):
+    """Delete a suborganization. For use with htmx."""
+    suborganization = get_object_or_404(Suborganization, pk=pk)
+    suborganization_use_count = suborganization.colleagues.count()
+
+    if request.method == "GET":
+        return render(
+            request,
+            "parts/generic_form_modal.html",
+            {
+                "modal_title": f"Verwijder merk: {suborganization.name}",
+                "warning_modal": True,
+                "modal_element_id": "merkFormModal",
+                "target_element_id": "merk_list",
+                "delete_warning": (
+                    f"Weet je zeker dat je dit merk wilt verwijderen? "
+                    f"Het wordt gebruikt door {suborganization_use_count} collega('s)."
+                ),
+                "form_post_url": reverse("merk-delete", kwargs={"pk": pk}),
+                "form_button_label": "Verwijderen",
+            },
+        )
+    if request.method == "POST":
+        suborganization.delete()
+        suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
+        response = render(request, "parts/merk_list.html", {"merken": suborganizations})
+        response["HX-Trigger"] = "closeModal"
+        return response
     return HttpResponse(status=405)
 
 

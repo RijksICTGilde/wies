@@ -70,6 +70,10 @@
         </c-paragraph>
         {% if onboarding_colleague %}
           <c-data-list class="onboarding-labels">
+          <dt>Merk</dt>
+          <dd>
+            {{ inline_edit(onboarding_colleague, "suborganization") }}
+          </dd>
           {% for category in onboarding_label_categories %}
             <dt>{{ category.name }}</dt>
             <dd>

@@ -9,7 +9,7 @@ from wies.core.editables.assignment import AssignmentEditables
 from wies.core.editables.user import UserEditables
 
 from .form_mixins import RvoErrorList, RvoFormMixin, RvoJinja2Renderer
-from .models import Colleague, Label, LabelCategory, Skill
+from .models import Colleague, Label, LabelCategory, Skill, Suborganization
 from .services.users import validate_email_domain
 from .widgets import MultiselectDropdown
 
@@ -25,6 +25,7 @@ __all__ = [
     "RvoFormMixin",
     "RvoJinja2Renderer",
     "ServiceForm",
+    "SuborganizationForm",
     "UserForm",
 ]
 
@@ -48,6 +49,26 @@ class LabelCategoryForm(RvoFormMixin, forms.ModelForm):
     class Meta:
         model = LabelCategory
         fields = ["name", "color"]
+
+
+class SuborganizationForm(RvoFormMixin, forms.ModelForm):
+    """Form for creating and updating Suborganization instances"""
+
+    name = forms.CharField(label="Naam", required=True)
+
+    class Meta:
+        model = Suborganization
+        fields = ["name"]
+
+    def clean_name(self):
+        new_name = self.cleaned_data["name"]
+        qs = Suborganization.objects.filter(name__iexact=new_name)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            msg = "Naam wordt al gebruikt"
+            raise ValidationError(msg)
+        return new_name
 
 
 class LabelForm(RvoFormMixin, forms.ModelForm):

@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- TODO: move Merk out of the generic label system into its own table; a colleague now has exactly one merk. Adds a "Merken" admin page and a merk filter (last filter option).
 - 456: fix onboarding wizard's Merken picker rendering broken on pages that don't load the filter/side-panel stylesheets
 - 456: fix multiselect dropdown (e.g. Merk in the profile onboarding) being unreachable when the trigger sits low on the screen
 

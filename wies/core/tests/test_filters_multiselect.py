@@ -28,13 +28,13 @@ class FilterCombiningTestBase(TestCase):
         self.skill_python = Skill.objects.create(name="Python Developer")
         self.skill_java = Skill.objects.create(name="Java Developer")
 
-        # Label categories
-        self.cat_merk = LabelCategory.objects.create(name="Merk", color="#DCE3EA")
+        # Label categories (Merk is no longer a label category — use two neutral ones)
+        self.cat_thema = LabelCategory.objects.create(name="Thema", color="#DCE3EA")
         self.cat_expertise = LabelCategory.objects.create(name="Expertise", color="#00AA00")
 
         # Labels
-        self.label_rig = Label.objects.create(name="Rijks ICT Gilde", category=self.cat_merk)
-        self.label_iir = Label.objects.create(name="I-Interim Rijk", category=self.cat_merk)
+        self.label_rig = Label.objects.create(name="Rijks ICT Gilde", category=self.cat_thema)
+        self.label_iir = Label.objects.create(name="I-Interim Rijk", category=self.cat_thema)
         self.label_agile = Label.objects.create(name="Agile", category=self.cat_expertise)
         self.label_cloud = Label.objects.create(name="Cloud", category=self.cat_expertise)
 

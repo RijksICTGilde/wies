@@ -8,16 +8,14 @@ from django.db import transaction
 from django.db.models import Q
 
 from wies.core.models import (
-    DEFAULT_LABELS,
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
-    Label,
-    LabelCategory,
     OrganizationUnit,
     Placement,
     Service,
     Skill,
+    Suborganization,
 )
 from wies.core.services.events import create_event
 
@@ -77,10 +75,10 @@ def create_assignments_from_csv(creator, csv_content: str):
     - client_1_url: URL from organisaties.overheid.nl. Becomes PRIMARY client.
     - client_2_url: URL from organisaties.overheid.nl. Becomes INVOLVED client.
     - client_3_url: URL from organisaties.overheid.nl. Becomes INVOLVED client.
-    - owner_brand: If provided, assigns the brand label to newly created assignment owners.
-                   If empty or not provided, no brand label is assigned.
-    - colleague_brand: If provided, assigns the brand label to newly created placement colleagues.
-                       If empty or not provided, no brand label is assigned.
+    - owner_brand: If provided, sets the suborganization on newly created assignment owners.
+                   If empty or not provided, no suborganization is assigned.
+    - colleague_brand: If provided, sets the suborganization on newly created placement colleagues.
+                       If empty or not provided, no suborganization is assigned.
     """
 
     dialect = csv.Sniffer().sniff(csv_content[:1024], delimiters=",;")
@@ -107,13 +105,16 @@ def create_assignments_from_csv(creator, csv_content: str):
 
     try:
         with transaction.atomic():
-            # Get or create the 'Merk' (Brand) label category
-            merken_category, _ = LabelCategory.objects.get_or_create(
-                name="Merk", defaults={"color": DEFAULT_LABELS["Merk"]["color"]}
-            )
+            # Cache for brand → Suborganization lookups to avoid repeated database queries
+            suborg_mapping = {}
 
-            # Cache for brand labels to avoid repeated database queries
-            label_mapping = {}
+            def resolve_suborganization(brand_name):
+                brand_name = (brand_name or "").strip()
+                if not brand_name:
+                    return None
+                if brand_name not in suborg_mapping:
+                    suborg_mapping[brand_name], _ = Suborganization.objects.get_or_create(name=brand_name)
+                return suborg_mapping[brand_name]
 
             colleagues_created = 0
             assignments_created = 0
@@ -122,29 +123,9 @@ def create_assignments_from_csv(creator, csv_content: str):
             skills_created = 0
             organizations_linked = 0
             for _, row in enumerate(csv_reader, start=2):  # Start at 2 (1 is header)
-                # Get owner brand label if specified in CSV
-                owner_brand_name = (row.get("owner_brand") or "").strip()
-                owner_brand_label = None
-                if owner_brand_name:
-                    if owner_brand_name in label_mapping:
-                        owner_brand_label = label_mapping[owner_brand_name]
-                    else:
-                        owner_brand_label, _ = Label.objects.get_or_create(
-                            name=owner_brand_name, category=merken_category
-                        )
-                        label_mapping[owner_brand_name] = owner_brand_label
-
-                # Get colleague brand label if specified in CSV
-                colleague_brand_name = (row.get("colleague_brand") or "").strip()
-                colleague_brand_label = None
-                if colleague_brand_name:
-                    if colleague_brand_name in label_mapping:
-                        colleague_brand_label = label_mapping[colleague_brand_name]
-                    else:
-                        colleague_brand_label, _ = Label.objects.get_or_create(
-                            name=colleague_brand_name, category=merken_category
-                        )
-                        label_mapping[colleague_brand_name] = colleague_brand_label
+                # Resolve owner/colleague merken from the CSV brand columns
+                owner_suborg = resolve_suborganization(row.get("owner_brand"))
+                colleague_suborg = resolve_suborganization(row.get("colleague_brand"))
 
                 assignment_owner_email = row["assignment_owner_email"]
                 if assignment_owner_email != "":
@@ -155,9 +136,8 @@ def create_assignments_from_csv(creator, csv_content: str):
                             name=row["assignment_owner"],
                             email=assignment_owner_email,
                             source="wies",
+                            suborganization=owner_suborg,
                         )
-                        if owner_brand_label:
-                            owner.labels.add(owner_brand_label)
                         colleagues_created += 1
                 else:
                     owner = None
@@ -230,9 +210,8 @@ def create_assignments_from_csv(creator, csv_content: str):
                             name=row["placement_colleague_name"],
                             email=colleague_email,
                             source="wies",
+                            suborganization=colleague_suborg,
                         )
-                        if colleague_brand_label:
-                            colleague.labels.add(colleague_brand_label)
                         colleagues_created += 1
 
                     existing_placement = Placement.objects.filter(

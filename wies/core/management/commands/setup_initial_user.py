@@ -9,7 +9,7 @@ from django.db import models
 from django.db.models.functions import Lower
 from django.utils import timezone
 
-from wies.core.models import Assignment, Colleague, Event, Label, Placement, Service
+from wies.core.models import Assignment, Colleague, Event, Label, Placement, Service, Suborganization
 from wies.core.services.users import _find_or_create_colleague_for_user
 
 logger = logging.getLogger(__name__)
@@ -21,13 +21,20 @@ def _assign_dev_labels(colleague):
     """Give the dev colleague a handful of labels across categories."""
     label_names = {
         "Expertise": ["AI", "Architectuur en technologie", "Cloud en platform technologie"],
-        "Merk": ["Rijks ICT Gilde"],
         "Thema": ["Artificiële intelligentie", "Digitale weerbaarheid"],
     }
     for category_name, names in label_names.items():
         labels = Label.objects.filter(category__name=category_name, name__in=names)
         colleague.labels.add(*labels)
     logger.info("Assigned %d labels to initial colleague", colleague.labels.count())
+
+
+def _assign_dev_suborganization(colleague):
+    """Give the dev colleague the 'Digi Gilde' suborganization (created if it doesn't exist)."""
+    suborganization, _ = Suborganization.objects.get_or_create(name="Digi Gilde")
+    colleague.suborganization = suborganization
+    colleague.save(update_fields=["suborganization"])
+    logger.info("Assigned suborganization '%s' to initial colleague", suborganization.name)
 
 
 def _create_dev_placements(colleague):
@@ -162,6 +169,9 @@ def _setup_dev_profile(colleague):
         _assign_dev_labels(colleague)
     else:
         logger.info("Colleague already has labels, skipping dev profile setup")
+
+    if colleague.suborganization is None:
+        _assign_dev_suborganization(colleague)
 
     if not colleague.placements.exists():
         _create_dev_placements(colleague)

@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
-from wies.core.models import DEFAULT_LABELS, Colleague, Label, LabelCategory
+from wies.core.models import Colleague, Suborganization
 from wies.core.services.events import create_event
 
 User = get_user_model()
@@ -56,7 +56,7 @@ def _find_or_create_colleague_for_user(user, first_name, last_name, email, *, so
     return Colleague.objects.create(user=user, name=name, email=email, source=source)
 
 
-def create_user(creator: User, first_name, last_name, email, labels=None, groups=None):
+def create_user(creator: User, first_name, last_name, email, labels=None, groups=None, suborganization=None):
     """
     :param creator: can be None when user create is triggered from system itself
     """
@@ -82,6 +82,9 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
     if labels:
         colleague.labels.set(labels)
         label_names = [label.name for label in labels]
+    if suborganization is not None:
+        colleague.suborganization = suborganization
+        colleague.save(update_fields=["suborganization"])
     if groups:
         user.groups.set(groups)
 
@@ -90,6 +93,7 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
         "first_name": first_name,
         "last_name": last_name,
         "label_names": label_names,
+        "suborganization_name": suborganization.name if suborganization else None,
         "group_names": [group.name for group in groups],
     }
     create_event(
@@ -159,7 +163,7 @@ def create_users_from_csv(creator, csv_content: str):
     - first_name (required)
     - last_name (required)
     - email (required)
-    - brand (optional, label name - will be assigned from "Merk" category, auto-created if needed)
+    - brand (optional, merk name - assigned as the colleague's merk, auto-created if needed)
     - Beheerder (optional, "y" or "n")
     - Consultant (optional, "y" or "n")
     - BDM (optional, "y" or "n")
@@ -167,8 +171,8 @@ def create_users_from_csv(creator, csv_content: str):
     Returns a dictionary with:
     - success: True if all users imported, False if validation errors
     - users_created: Number of users created
-    - labels_created: Number of new labels created
-    - created_labels: List of label names that were created
+    - suborganizations_created: Number of new suborganizations created
+    - created_suborganizations: List of suborganization names that were created
     - errors: List of validation error messages (empty if success=True)
     """
 
@@ -187,8 +191,8 @@ def create_users_from_csv(creator, csv_content: str):
         return {
             "success": False,
             "users_created": 0,
-            "brands_created": 0,
-            "created_brands": [],
+            "suborganizations_created": 0,
+            "created_suborganizations": [],
             "errors": ["CSV file is empty or has no headers."],
         }
 
@@ -199,8 +203,8 @@ def create_users_from_csv(creator, csv_content: str):
         return {
             "success": False,
             "users_created": 0,
-            "brands_created": 0,
-            "created_brands": [],
+            "suborganizations_created": 0,
+            "created_suborganizations": [],
             "errors": [f"Missing required columns: {', '.join(sorted(missing_columns))}"],
         }
 
@@ -250,15 +254,17 @@ def create_users_from_csv(creator, csv_content: str):
             rows.append(row)
 
     if errors:
-        return {"success": False, "users_created": 0, "labels_created": 0, "created_labels": [], "errors": errors}
+        return {
+            "success": False,
+            "users_created": 0,
+            "suborganizations_created": 0,
+            "created_suborganizations": [],
+            "errors": errors,
+        }
 
     users_created = 0
-    created_labels = []
-    label_mapping = {}  # mapping from str to Label, to avoid many DB queries
-
-    merken_category, _ = LabelCategory.objects.get_or_create(
-        name="Merk", defaults={"color": DEFAULT_LABELS["Merk"]["color"]}
-    )
+    created_suborganizations = []
+    suborg_mapping = {}  # mapping from str to Suborganization, to avoid many DB queries
 
     # Get all groups once
     groups_dict = {
@@ -273,17 +279,16 @@ def create_users_from_csv(creator, csv_content: str):
         email = row["email"].strip()
         brand_name = row.get("brand", "").strip()
 
-        # Handle label assignment from brand column
-        labels_to_assign = []
+        # Resolve the colleague's suborganization from the brand column (auto-created if new)
+        suborganization = None
         if brand_name:
-            if brand_name in label_mapping:
-                label = label_mapping[brand_name]
+            if brand_name in suborg_mapping:
+                suborganization = suborg_mapping[brand_name]
             else:
-                label, created = Label.objects.get_or_create(name=brand_name, category=merken_category)
-                label_mapping[brand_name] = label
+                suborganization, created = Suborganization.objects.get_or_create(name=brand_name)
+                suborg_mapping[brand_name] = suborganization
                 if created:
-                    created_labels.append(brand_name)
-            labels_to_assign.append(label)
+                    created_suborganizations.append(brand_name)
 
         groups_to_assign = []
         for group_name in ["Beheerder", "Consultant", "BDM"]:
@@ -303,7 +308,7 @@ def create_users_from_csv(creator, csv_content: str):
             first_name=first_name,
             last_name=last_name,
             email=email,
-            labels=labels_to_assign,
+            suborganization=suborganization,
             groups=groups_to_assign,
         )
         users_created += 1
@@ -311,7 +316,7 @@ def create_users_from_csv(creator, csv_content: str):
     return {
         "success": True,
         "users_created": users_created,
-        "labels_created": len(created_labels),
-        "created_labels": created_labels,
+        "suborganizations_created": len(created_suborganizations),
+        "created_suborganizations": created_suborganizations,
         "errors": errors,  # May contain warnings when success is True
     }

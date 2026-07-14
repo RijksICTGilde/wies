@@ -1,0 +1,41 @@
+{% if merken %}
+  <c-table>
+  <c-table-head>
+  <c-table-row>
+  <c-table-header>Naam</c-table-header>
+  <c-table-header>Toegepast</c-table-header>
+  </c-table-row>
+  </c-table-head>
+  <c-table-body>
+  {% for merk in merken %}
+    <c-table-row class="clickable-row" hx-get="{{ url('merk-edit', kwargs={'pk': merk.pk}) }}" hx-target="#merkFormModal" hx-swap="innerHTML" title="Bewerk {{ merk.name }}">
+    <c-table-cell>
+    <span class="rvo-badge label-badge" style="background-color: #DCE3EA">{{ merk.name }}</span>
+    </c-table-cell>
+    <c-table-cell>
+    <div class="table-cell-with-actions">
+      <span>{{ merk.usage_count|default(0) }}</span>
+      <c-icon icon="bewerken" size="md" color="hemelblauw" class="edit-icon" />
+    </div>
+    </c-table-cell>
+    </c-table-row>
+  {% endfor %}
+  </c-table-body>
+  </c-table>
+{% else %}
+  <c-paragraph class="empty-category-message">Nog geen merken. Maak een nieuw merk aan om te beginnen.</c-paragraph>
+{% endif %}
+<div class="label-form-container">
+  <form class="label-form"
+        hx-post="{{ url('merk-create') }}"
+        hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+        hx-target="#merk_list">
+    <c-input name="name" />
+    <c-button kind="secondary" icon="plus" iconPlacement="before" type="submit">
+    Merk toevoegen
+    </c-button>
+  </form>
+  {% if errors and errors.name %}
+    <div class="form-error">{{ errors.name }}</div>
+  {% endif %}
+</div>

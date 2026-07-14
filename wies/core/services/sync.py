@@ -4,7 +4,7 @@ import time
 from django.conf import settings
 from django.db import transaction
 
-from wies.core.models import DEFAULT_LABELS, Assignment, Colleague, Label, LabelCategory, Placement, Service
+from wies.core.models import Assignment, Colleague, Placement, Service, Suborganization
 
 from .otys import OTYSAPI
 
@@ -43,11 +43,8 @@ def sync_all_otys_iir_records():
                 vacancy_procedures[vacancy_uid] = []
 
     with transaction.atomic():
-        # Get or create the 'I-Interim Rijk' label for OTYS-synced colleagues
-        merken_category, _ = LabelCategory.objects.get_or_create(
-            name="Merk", defaults={"color": DEFAULT_LABELS["Merk"]["color"]}
-        )
-        i_interim_rijk_label, _ = Label.objects.get_or_create(name="I-Interim Rijk", category=merken_category)
+        # All OTYS-synced colleagues belong to the 'I-Interim Rijk' suborganization
+        i_interim_rijk_suborg, _ = Suborganization.objects.get_or_create(name="I-Interim Rijk")
 
         placements_synced = 0
 
@@ -75,16 +72,14 @@ def sync_all_otys_iir_records():
                 "name": name,
                 "source_url": f"{settings.OTYS_URL}/us/modular.html#/candidates/{uid}",
                 "email": email or "",
+                # All OTYS-synced colleagues belong to the 'I-Interim Rijk' suborganization
+                "suborganization": i_interim_rijk_suborg,
             }
 
             # Update or create colleague based on source and source_id
             colleague, created = Colleague.objects.update_or_create(
                 source_id=str(uid), source="otys_iir", defaults=colleague_data
             )
-
-            # Assign 'I-Interim Rijk' label to all OTYS-synced colleagues
-            if not colleague.labels.filter(id=i_interim_rijk_label.id).exists():
-                colleague.labels.add(i_interim_rijk_label)
 
             action = "Created" if created else "Updated"
             logger.debug("%s colleague: %s (uid: %s)", action, name, uid)
