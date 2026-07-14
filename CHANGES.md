@@ -4,7 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?
+- 456: fix onboarding wizard's Merken picker rendering broken on pages that don't load the filter/side-panel stylesheets
+- 456: fix multiselect dropdown (e.g. Merk in the profile onboarding) being unreachable when the trigger sits low on the screen
 
 ## 2026-07-08_3
 
