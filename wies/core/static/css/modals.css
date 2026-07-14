@@ -156,7 +156,7 @@
   font-size: 1.5rem;
   line-height: 1;
   cursor: pointer;
-  color: var(--rvo-color-grijs-600);
+  color: var(--primitives-color-coolgray-600, #636363);
   padding: 0.25rem;
   border-radius: 4px;
   width: 2rem;
@@ -168,8 +168,8 @@
 }
 
 .modal-close-button:hover {
-  background-color: var(--rvo-color-grijs-100);
-  color: var(--rvo-color-grijs-800);
+  background-color: var(--primitives-color-coolgray-100, #f3f4f5);
+  color: var(--primitives-color-coolgray-800, #333);
 }
 
 .modal-close-button:focus {

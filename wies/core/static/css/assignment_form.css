@@ -51,9 +51,9 @@ form#assignment-create-form
   display: flex;
   flex-direction: column;
   gap: 1rem;
-  border: 1px solid var(--rvo-color-grijs-300, #c5ced6);
+  border: 1px solid var(--primitives-color-coolgray-300, #c5ced6);
   border-radius: 4px;
-  background: var(--rvo-color-wit, white);
+  background: white;
 }
 
 .service-add-buttons {
@@ -69,7 +69,7 @@ form#assignment-create-form
   flex-direction: column;
   gap: 1rem;
   padding-top: 0.5rem;
-  border-top: 1px solid var(--rvo-color-grijs-200, #dde2e7);
+  border-top: 1px solid var(--primitives-color-coolgray-200, #dde2e7);
 }
 
 .service-row + .service-row {
@@ -94,7 +94,7 @@ form#assignment-create-form
 
 /* Style the "+ Nieuwe ... aanmaken" option in dropdowns */
 .service-row option[value="__new__"] {
-  color: var(--rvo-link-color, #007bc7);
+  color: var(--primitives-color-hemelblauw-600, #007bc7);
   font-weight: 600;
 }
 
@@ -122,4 +122,3 @@ form#assignment-create-form
     align-items: stretch;
   }
 }
-
