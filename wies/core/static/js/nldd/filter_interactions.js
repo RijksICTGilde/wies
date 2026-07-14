@@ -1,24 +1,20 @@
-// NDD ↔ HTMX bridge
+// Filter interactions (opdrachten/plaatsingen/gebruikers list filters).
 // ----------------------------------------------------------------------------
-// NDD componenten (web components met Shadow DOM) emitteren events met
-// composed:false. Die events sterven aan de shadow root en bereiken
-// document/form niet. Plus: HTMX hx-include ziet alleen built-in form
-// elementen, geen custom elements.
-//
 // Filter inputs carry their own name + data-filter-input and are form-
-// associated (or plain), so hx-include submits their values natively — no
-// hidden-input mirroring needed. This bridge only covers what the browser
-// can't do for us:
+// associated (or plain), so hx-include submits their values natively. This
+// module only covers the interaction glue the browser can't do for us:
 //   1. Nudges a re-filter (synthetic `change` on a [data-filter-input]
 //      element) when an nldd-* field or filter checkbox changes, so
 //      hx-trigger="change from:[data-filter-input]" fires.
 //   2. nldd-search-field → #nldd-search-hidden with debounce + suggestions.
-//   3. MutationObserver gescoped op .nldd-app vangt nieuwe NDD elementen
-//      (ook na HTMX swaps).
-//   4. Click bridge voor nldd-button met hx-* attributen.
-//   5. Dismiss handler voor nldd-token chips → verwijdert filter.
-//   6. Sidebar collapse toggle.
+//   3. MutationObserver picks up NDD elements added after HTMX swaps.
+//   4. Dismiss handler voor nldd-token chips → verwijdert filter.
+//   5. "Wis alle filters".
+//   6. Opdrachtgever quick-options.
 //   7. "Meer"-modal: schrijft niet-inline picks in een overflow-slot.
+//
+// The standalone bits that used to live here are now separate modules:
+// click_bridge.js (nldd-* hx-* forwarding) and sidebar_toggle.js.
 // ----------------------------------------------------------------------------
 
 (function () {
@@ -355,45 +351,6 @@
     });
   }
 
-  // --- Click bridge voor nldd-* hosts met hx-* attributes ------------
-  function setupClickBridge() {
-    document.addEventListener("click", (e) => {
-      const path = e.composedPath();
-      const host = path.find(
-        (el) =>
-          el instanceof Element &&
-          el.tagName &&
-          el.tagName.toLowerCase().startsWith("nldd-") &&
-          (el.hasAttribute("hx-get") || el.hasAttribute("hx-post")),
-      );
-      if (!host || !window.htmx) return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      const verb = host.hasAttribute("hx-get") ? "GET" : "POST";
-      const url = host.getAttribute("hx-get") || host.getAttribute("hx-post");
-      const opts = {};
-      const target = host.getAttribute("hx-target");
-      if (target) opts.target = target;
-      const swap = host.getAttribute("hx-swap");
-      if (swap) opts.swap = swap;
-      // hx-include support
-      const include = host.getAttribute("hx-include");
-      if (include) {
-        const values = {};
-        document.querySelectorAll(include + " input").forEach((input) => {
-          if (input.name && input.value) {
-            if (values[input.name] === undefined) values[input.name] = [];
-            values[input.name].push(input.value);
-          }
-        });
-        opts.values = values;
-      }
-      // Gebruik source zodat HTMX correcte headers (HX-Current-URL etc.) meestuurt
-      opts.source = host;
-      window.htmx.ajax(verb, url, opts);
-    });
-  }
-
   // --- Filter options "Meer" modal ----------------------------------
   // A sidebar group's "Meer" button opens filter_options_modal.html into
   // #nldd-filter-options-modal-container. Ticking there is deferred: only
@@ -537,24 +494,6 @@
     });
   }
 
-  // --- Sidebar collapse toggle --------------------------------------
-  // The "Filters" button drives the <nldd-sidebar-section>'s own sheet.
-  // The section renders the sidebar as a sticky aside on lg and collapses
-  // it to a left sheet when narrower; toggle() opens/closes that sheet.
-  function setupSidebarToggle() {
-    document.addEventListener("click", (e) => {
-      const path = e.composedPath();
-      const btn = path.find(
-        (el) => el instanceof Element && el.id === "nldd-sidebar-toggle",
-      );
-      if (!btn) return;
-      const section = document.querySelector("nldd-sidebar-section");
-      if (section && typeof section.toggle === "function") {
-        section.toggle();
-      }
-    });
-  }
-
   // --- Scan + observe -----------------------------------------------
   function scan(root) {
     if (!root || !root.querySelectorAll) return;
@@ -581,12 +520,10 @@
       }
     }).observe(app, { childList: true, subtree: true });
 
-    setupClickBridge();
     setupTokenDismiss();
     setupClearAllFilters();
     setupOrgQuickOptions();
     setupSearchSuggestionClicks();
-    setupSidebarToggle();
     setupFilterOptionsModal();
   }
 

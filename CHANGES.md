@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- NLDD: split the former `htmx-bridge.js` — now that filters submit natively, the file was filter-interaction glue, not a bridge. Renamed to `filter_interactions.js` and extracted the two standalone pieces (`click_bridge.js` for nldd-* hx-* forwarding, `sidebar_toggle.js`) into their own modules
 - NLDD: filter checkboxes now submit natively — each carries its own `name` + `data-filter-input`, so `hx-include` sends repeated params (`rol=1&rol=2`) straight to the view's `getlist`. Drops the hidden-input mirroring from `htmx-bridge.js` (the `rebuildCheckboxesIn`/`attachTextField` shadow-input machinery); the "Meer"-modal keeps a small overflow slot only for picks that have no inline checkbox
 - NLDD: keyboard navigation for the opdrachtgever tree (WAI-ARIA Treeview — arrow keys, Home/End, role="tree"/treeitem/group)
 - NLDD: bring the filter/search UX to parity with `main`/#402 — a "Wis alle filters" button next to the active chips (also clears the search), the opdrachtgever filter's inline top-3 quick checkboxes (`org`/`org_self`/`org_type`) alongside the "Meer" tree modal, a magnifier icon on the "Meer" buttons, and a full search experience (Enter-to-commit, live suggestions dropdown with a "Zoeken op …" action and opdrachtgever suggestions). Also fixes individual filter chips not being dismissable (a `data-nldd-dismiss` dataset-key mismatch) and a dead `updateOrgFilterButtonText()` call that aborted the client-modal apply.

@@ -140,7 +140,7 @@ Geen hidden-input spiegeling meer. #}
       {% endif %}
     </div>
     {# Overflow slot: selected values picked via the "Meer" modal that have no
-    inline checkbox in the top-N. The modal (htmx-bridge.js) rewrites this slot
+    inline checkbox in the top-N. The modal (filter_interactions.js) rewrites this slot
     on apply; here we seed it for page reloads. #} {% set inline_values =
     top_options|map(attribute='value')|list %}
     <span data-hidden-inputs hidden>
