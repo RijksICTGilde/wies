@@ -2102,7 +2102,7 @@ def _attach_audit_render_data(event) -> None:
 
 
 def assignment_delete(request, pk):
-    'a' + 2
+    "a" + 2
     assignment = get_object_or_404(Assignment, pk=pk)
     if not has_permission(Verb.DELETE, assignment, request.user):
         return HttpResponseForbidden()
