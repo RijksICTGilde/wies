@@ -408,7 +408,7 @@ def staff_dashboard(request):
 
 def _render_error_table(request, page_number):
     """Render the paginated error table fragment for the given page."""
-    paginator = Paginator(ErrorEvent.objects.select_related("user").filter(visible=True), ERRORS_PER_PAGE)
+    paginator = Paginator(ErrorEvent.objects.select_related("user"), ERRORS_PER_PAGE)
     page_obj = paginator.get_page(page_number)
 
     def page_url(number):
@@ -439,9 +439,9 @@ def error_detail(request, pk):
 
 @staff_required
 @require_POST
-def hide_error(request, pk):
-    """Hide a single handled error and return the refreshed current page of the table."""
-    ErrorEvent.objects.filter(pk=pk).update(visible=False)
+def delete_error(request, pk):
+    """Delete a single handled error and return the refreshed current page of the table."""
+    ErrorEvent.objects.filter(pk=pk).delete()
     return _render_error_table(request, request.GET.get("pagina"))
 
 
@@ -2102,6 +2102,7 @@ def _attach_audit_render_data(event) -> None:
 
 
 def assignment_delete(request, pk):
+    'a' + 2
     assignment = get_object_or_404(Assignment, pk=pk)
     if not has_permission(Verb.DELETE, assignment, request.user):
         return HttpResponseForbidden()

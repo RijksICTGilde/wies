@@ -8,7 +8,11 @@ from urllib.parse import urljoin, urlparse
 import requests
 from django.conf import settings
 
-POST_TIMEOUT_SECONDS = 5
+# Kept short: the post happens synchronously on the request/worker thread that
+# just errored, so a hung Mattermost must not add much latency to an already-failing
+# request. ~2s is low enough to bound that latency without falsely timing out a
+# healthy-but-slow Mattermost during an error spike.
+POST_TIMEOUT_SECONDS = 2
 
 # Resolved ops-channel id, memoised for the process lifetime (a channel's id never
 # changes). Reset via clear_channel_id_cache() in tests.

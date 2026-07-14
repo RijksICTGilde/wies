@@ -305,8 +305,6 @@ class ErrorEvent(models.Model):
     )
     user_email = models.EmailField(max_length=255, blank=True)
     app_version = models.CharField(max_length=255, blank=True)
-    # Staff can hide handled errors; hidden rows drop out of the statistieken table.
-    visible = models.BooleanField(default=True)
 
     class Meta:
         ordering = ["-timestamp"]

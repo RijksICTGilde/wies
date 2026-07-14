@@ -28,7 +28,6 @@ class Migration(migrations.Migration):
                 ("path", models.CharField(blank=True, max_length=512)),
                 ("user_email", models.EmailField(blank=True, max_length=255)),
                 ("app_version", models.CharField(blank=True, max_length=255)),
-                ("visible", models.BooleanField(default=True)),
                 (
                     "user",
                     models.ForeignKey(

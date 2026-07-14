@@ -1,7 +1,8 @@
 """Logging handler that persists errors and notifies Mattermost.
 
-Attached (production only) to the `django.request` and `wies` loggers at ERROR
-level. For each record it always writes an `ErrorEvent` row, then posts a
+Attached to the `django.request` and `wies` loggers at ERROR level in the
+production and local settings (and deliberately not in test). For each record it
+always writes an `ErrorEvent` row, then posts a
 notification to Mattermost. Any failure inside the handler is swallowed via the
 standard `logging.Handler` contract (`handleError`) so it can never break the
 request or task being logged.

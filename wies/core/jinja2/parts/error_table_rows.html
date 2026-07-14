@@ -33,13 +33,13 @@
     </a>
     <button type="button"
             class="error-table__icon-btn"
-            title="Foutmelding verbergen"
-            aria-label="Foutmelding verbergen"
-            hx-post="{{ url('hide-error', args=[error.id]) }}?pagina={{ page_obj.number }}"
+            title="Foutmelding verwijderen"
+            aria-label="Foutmelding verwijderen"
+            hx-post="{{ url('delete-error', args=[error.id]) }}?pagina={{ page_obj.number }}"
             hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
             hx-target="#error_table_container"
             hx-swap="innerHTML">
-      <c-icon icon="kruis" size="md" color="grijs-700" />
+      <c-icon icon="verwijderen" size="md" color="grijs-700" />
     </button>
   </div>
   </c-table-cell>
