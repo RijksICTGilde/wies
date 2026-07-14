@@ -432,9 +432,9 @@ def error_table(request):
 
 @staff_required
 def error_detail(request, pk):
-    """Render the traceback of a single error as a modal fragment."""
+    """Full detail page for a single error (traceback etc.), staff-only."""
     error = get_object_or_404(ErrorEvent, pk=pk)
-    return render(request, "parts/error_detail_modal.html", {"error": error})
+    return render(request, "error_detail.html", {"error": error})
 
 
 @staff_required

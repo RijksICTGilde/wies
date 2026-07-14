@@ -12,17 +12,13 @@ a failing Mattermost/HTTP call can't log-loop back into this handler.
 
 import logging
 
-# Mattermost accepts ~16k chars per message; keep the traceback well under that
-# so the surrounding markdown always fits.
-MAX_TRACEBACK_CHARS = 6000
-
 
 class ErrorReportingHandler(logging.Handler):
     def emit(self, record: logging.LogRecord) -> None:
         try:
             traceback_text = self._format_traceback(record)
             error_event = self._persist(record, traceback_text)
-            self._notify(record, error_event, traceback_text)
+            self._notify(record, error_event)
         except Exception:  # noqa: BLE001 - a logging handler must never raise
             self.handleError(record)
 
@@ -32,9 +28,8 @@ class ErrorReportingHandler(logging.Handler):
         return logging.Formatter().formatException(record.exc_info)
 
     def _persist(self, record: logging.LogRecord, traceback_text: str):
-        # Imported lazily so importing this module never pulls in the ORM early.
-        from wies.core.models import ErrorEvent  # noqa: PLC0415 - avoid import-time ORM/app-loading
-        from wies.core.services.version import get_app_version  # noqa: PLC0415 - keep module import-light
+        from wies.core.models import ErrorEvent  # noqa: PLC0415 - avoids AppRegistryNotReady at startup
+        from wies.core.services.version import get_app_version  # noqa: PLC0415 - deferred with the models import above
 
         method = ""
         path = ""
@@ -72,22 +67,29 @@ class ErrorReportingHandler(logging.Handler):
             app_version=get_app_version(),
         )
 
-    def _notify(self, record: logging.LogRecord, error_event, traceback_text: str) -> None:
+    def _notify(self, record: logging.LogRecord, error_event) -> None:
         # DB row is the source of truth; posting is best-effort and no-ops when
-        # Mattermost is not configured.
-        from wies.core.services.mattermost import send_ops_message  # noqa: PLC0415 - lazy, keeps import light
+        # Mattermost is not configured. Import is lazy for the same startup
+        # reason as _persist (see that method's comment).
+        from wies.core.services.mattermost import send_ops_message  # noqa: PLC0415 - deferred until an error is logged
 
-        send_ops_message(self._build_message(record, error_event, traceback_text))
+        send_ops_message(self._build_message(record, error_event))
 
-    def _build_message(self, record: logging.LogRecord, error_event, traceback_text: str) -> str:
-        lines = [f"🔴 **{record.levelname}** in `{record.name}` (v{error_event.app_version})"]
+    def _build_message(self, record: logging.LogRecord, error_event) -> str:
+        # Short notification only. Sensitive detail (traceback, user) stays behind
+        # the login wall on the error detail page we link to. Imports are lazy for
+        # the same startup reason as _persist (see that method's comment).
+        from django.conf import settings  # noqa: PLC0415 - deferred until an error is logged
+        from django.urls import reverse  # noqa: PLC0415 - deferred until an error is logged
+
+        headline = error_event.short_description or record.levelname
+        lines = [f"🔴 **{headline}** (v{error_event.app_version})"]
         if error_event.path:
-            where = f"`{error_event.method} {error_event.path}`"
-            if error_event.user_email:
-                where += f" — {error_event.user_email}"
-            lines.append(where)
-        lines.append(f"> {record.getMessage()}")
-        if traceback_text:
-            trimmed = traceback_text[-MAX_TRACEBACK_CHARS:]
-            lines.append(f"```\n{trimmed}\n```")
+            lines.append(f"`{error_event.method} {error_event.path}`")
+
+        base_url = getattr(settings, "SITE_BASE_URL", "")
+        if base_url:
+            detail_url = f"{base_url}{reverse('error-detail', args=[error_event.pk])}"
+            lines.append(f"[Bekijk details]({detail_url})")
+
         return "\n".join(lines)

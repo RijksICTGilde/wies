@@ -8,13 +8,14 @@ from django.test import TestCase, override_settings
 
 from wies.core.models import ErrorEvent
 from wies.core.monitoring.handler import ErrorReportingHandler
+from wies.core.services import mattermost
 
 User = get_user_model()
 
 MATTERMOST_SETTINGS = {
-    "MATTERMOST_URL": "https://mm.example.org",
     "MATTERMOST_TOKEN": "bot-token",
-    "MATTERMOST_WIES_OPS_CHANNEL_ID": "chan123",
+    "MATTERMOST_WIES_OPS_CHANNEL_URL": "https://mm.example.org/chat/odi/channels/wies-team",
+    "SITE_BASE_URL": "https://wies.example.org",
 }
 
 
@@ -58,6 +59,14 @@ class ErrorReportingHandlerTest(TestCase):
         self.handler = ErrorReportingHandler()
         self.user = User.objects.create_user(email="user@rijksoverheid.nl", first_name="Test", last_name="User")
 
+        # Never resolve the channel id over the network; return a fixed id. Also
+        # clear the module cache so resolutions don't leak between tests.
+        mattermost.clear_channel_id_cache()
+        self.addCleanup(mattermost.clear_channel_id_cache)
+        resolver = patch.object(mattermost.MattermostClient, "resolve_channel_id", return_value="chan123")
+        resolver.start()
+        self.addCleanup(resolver.stop)
+
     @override_settings(**MATTERMOST_SETTINGS)
     @patch("wies.core.services.mattermost.MattermostClient.post_message")
     def test_emit_persists_row_and_posts(self, mock_post):
@@ -82,8 +91,11 @@ class ErrorReportingHandlerTest(TestCase):
         assert channel_id == "chan123"
         assert "ValueError" in message
         assert "/kaboom/" in message
+        # Links to the detail page instead of dumping the traceback in chat.
+        assert f"https://wies.example.org/beheer/statistieken/fout/{event.pk}/" in message
+        assert "Traceback (most recent" not in message
 
-    @override_settings(MATTERMOST_URL="", MATTERMOST_TOKEN="", MATTERMOST_WIES_OPS_CHANNEL_ID="")
+    @override_settings(MATTERMOST_TOKEN="", MATTERMOST_WIES_OPS_CHANNEL_URL="")
     @patch("wies.core.services.mattermost.MattermostClient.post_message")
     def test_emit_persists_but_skips_post_when_unconfigured(self, mock_post):
         self.handler.emit(make_record())
@@ -120,3 +132,45 @@ class ErrorReportingHandlerTest(TestCase):
         assert event.user is None
         assert event.user_email == ""
         mock_post.assert_called_once()
+
+
+class MattermostChannelUrlTest(TestCase):
+    def test_parse_channel_url_with_subpath(self):
+        base_url, team, channel = mattermost.parse_channel_url(
+            "https://digilab.overheid.nl/chat/odi/channels/wies-team"
+        )
+        assert base_url == "https://digilab.overheid.nl/chat"
+        assert team == "odi"
+        assert channel == "wies-team"
+
+    def test_parse_channel_url_without_subpath(self):
+        base_url, team, channel = mattermost.parse_channel_url("https://mm.example.org/odi/channels/wies-team")
+        assert base_url == "https://mm.example.org"
+        assert team == "odi"
+        assert channel == "wies-team"
+
+    def test_parse_channel_url_rejects_non_channel_link(self):
+        with self.assertRaises(ValueError):  # noqa: PT027 - TestCase style matches this file
+            mattermost.parse_channel_url("https://digilab.overheid.nl/chat/odi/messages/foo")
+
+    @override_settings(
+        MATTERMOST_TOKEN="bot-token",
+        MATTERMOST_WIES_OPS_CHANNEL_URL="https://mm.example.org/chat/odi/channels/wies-team",
+    )
+    @patch("wies.core.services.mattermost.MattermostClient.post_message")
+    @patch("wies.core.services.mattermost.MattermostClient.resolve_channel_id", return_value="chan123")
+    def test_send_resolves_channel_id_once_and_caches(self, mock_resolve, mock_post):
+        mattermost.clear_channel_id_cache()
+        self.addCleanup(mattermost.clear_channel_id_cache)
+
+        assert mattermost.send_ops_message("een") is True
+        assert mattermost.send_ops_message("twee") is True
+
+        # Resolution happens once (cached); both messages post to the resolved id.
+        mock_resolve.assert_called_once_with("odi", "wies-team")
+        assert mock_post.call_count == 2
+        assert all(call.args[0] == "chan123" for call in mock_post.call_args_list)
+
+    @override_settings(MATTERMOST_TOKEN="", MATTERMOST_WIES_OPS_CHANNEL_URL="")
+    def test_send_noop_when_unconfigured(self):
+        assert mattermost.send_ops_message("hallo") is False

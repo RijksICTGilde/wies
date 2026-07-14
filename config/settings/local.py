@@ -38,9 +38,9 @@ if SKIP_OIDC:
 # Mirror production so the error handler can be exercised locally. Leaving these
 # empty (the default) means ErrorEvent rows are still written and shown on
 # /beheer/statistieken/, but nothing is posted to Mattermost.
-MATTERMOST_URL = os.environ.get("MATTERMOST_URL", "")
 MATTERMOST_TOKEN = os.environ.get("MATTERMOST_TOKEN", "")
-MATTERMOST_WIES_OPS_CHANNEL_ID = os.environ.get("MATTERMOST_WIES_OPS_CHANNEL_ID", "")
+MATTERMOST_WIES_OPS_CHANNEL_URL = os.environ.get("MATTERMOST_WIES_OPS_CHANNEL_URL", "")
+SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "http://localhost:8080").rstrip("/")
 
 # LOGGING
 # ----------------------------------------------------------------------------------------------------------------------

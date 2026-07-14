@@ -49,10 +49,14 @@ MIDDLEWARE.insert(_AFTER_SECURITY, _WHITENOISE)  # noqa: F405
 # ----------------------------------------------------------------------------------------------------------------------
 # Optional Mattermost bot config for error notifications. Left empty means the
 # error handler still persists ErrorEvent rows but skips posting (never crashes
-# startup on a missing value).
-MATTERMOST_URL = os.environ.get("MATTERMOST_URL", "")
+# startup on a missing value). The channel is configured as its browser link
+# (e.g. https://host/chat/<team>/channels/<channel>); the API base, team and
+# channel are parsed from it and the channel id resolved via the API.
 MATTERMOST_TOKEN = os.environ.get("MATTERMOST_TOKEN", "")
-MATTERMOST_WIES_OPS_CHANNEL_ID = os.environ.get("MATTERMOST_WIES_OPS_CHANNEL_ID", "")
+MATTERMOST_WIES_OPS_CHANNEL_URL = os.environ.get("MATTERMOST_WIES_OPS_CHANNEL_URL", "")
+# Public base URL (e.g. https://wies.example.org), used to build absolute links
+# to error detail pages in Mattermost notifications. No trailing slash.
+SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "").rstrip("/")
 
 LOGGING = {
     "version": 1,

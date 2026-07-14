@@ -107,7 +107,7 @@
   background: inherit;
 }
 
-/* Error detail modal */
+/* Error detail page */
 .error-detail__meta {
   display: grid;
   grid-template-columns: max-content 1fr;

@@ -25,17 +25,12 @@
   </c-table-cell>
   <c-table-cell class="error-table__actions-col">
   <div class="error-table__actions">
-    {% if error.traceback %}
-      <button type="button"
-              class="error-table__icon-btn"
-              title="Details bekijken"
-              aria-label="Details bekijken"
-              hx-get="{{ url('error-detail', args=[error.id]) }}"
-              hx-target="#errorDetailModal"
-              hx-swap="innerHTML">
-        <c-icon icon="oog" size="md" color="lintblauw" />
-      </button>
-    {% endif %}
+    <a href="{{ url('error-detail', args=[error.id]) }}"
+       class="error-table__icon-btn"
+       title="Details bekijken"
+       aria-label="Details bekijken">
+      <c-icon icon="oog" size="md" color="lintblauw" />
+    </a>
     <button type="button"
             class="error-table__icon-btn"
             title="Foutmelding verbergen"

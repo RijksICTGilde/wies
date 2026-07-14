@@ -95,11 +95,13 @@ class StaffErrorsSectionTest(TestCase):
         assert "Pagina 2 van 2" in body
         assert "Vorige" in body
 
-    def test_error_detail_shows_traceback_in_modal(self):
+    def test_error_detail_page_shows_traceback(self):
         error = ErrorEvent.objects.create(
             level="ERROR",
             logger_name="django.request",
             message="Kapot",
+            exception_type="ValueError",
+            exception_message="kaboom",
             traceback="Traceback (most recent call last):\n  ValueError: kaboom",
         )
 
@@ -107,7 +109,8 @@ class StaffErrorsSectionTest(TestCase):
 
         assert response.status_code == 200
         body = response.content.decode()
-        assert "errorDetailDialog" in body  # renders as a modal dialog
+        assert "Foutmelding" in body  # full page heading
+        assert "Terug naar statistieken" in body  # back link, not a modal
         assert "ValueError: kaboom" in body
 
     def test_error_detail_requires_staff(self):
