@@ -13,7 +13,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 from pathlib import Path
 
-import jinja_roos_components
 from django.utils.translation import gettext_lazy
 
 # env vars
@@ -116,10 +115,6 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = "static/"
-
-STATICFILES_DIRS = [
-    Path(jinja_roos_components.__file__).parent / "static",  # dir 'roos'
-]
 
 STATIC_ROOT = BASE_DIR / "staticfiles"
 

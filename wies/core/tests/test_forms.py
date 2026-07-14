@@ -6,7 +6,7 @@ from django.contrib.auth.models import Group
 from django.test import TestCase
 
 from wies.core.form_mixins import NlddFormMixin
-from wies.core.forms import RvoFormMixin, UserForm
+from wies.core.forms import UserForm
 from wies.core.models import Label, LabelCategory
 
 User = get_user_model()
@@ -124,7 +124,7 @@ class NlddUserFormRenderingTest(TestCase):
         """Test that using an unmapped widget logs a warning"""
 
         # Create a test form with an unmapped widget (FileInput)
-        class TestForm(RvoFormMixin, forms.Form):
+        class TestForm(NlddFormMixin, forms.Form):
             document = forms.FileField(label="Document")
 
         # Create the form and check that a warning is logged

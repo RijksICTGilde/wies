@@ -22,16 +22,6 @@ class WiesJinja2Renderer(Jinja2):
         return engines["jinja2"]
 
 
-# Keep old name as alias for backward compat during migration.
-RvoJinja2Renderer = WiesJinja2Renderer
-
-
-class RvoErrorList(ErrorList):
-    """Custom ErrorList with RVO template"""
-
-    template_name = "rvo/forms/errors/list/default.html"
-
-
 class NlddErrorList(ErrorList):
     """Custom ErrorList with NLDD template"""
 
@@ -53,7 +43,7 @@ class _BaseFormMixin:
 
     widget_templates: dict[str, str] = {}
 
-    # Invisible widgets need no RVO template; skip the warning for them (#389).
+    # Invisible widgets need no template; skip the warning for them (#389).
     widgets_without_rvo_template = {
         "HiddenInput",
         "MultipleHiddenInput",
@@ -114,27 +104,6 @@ class _BaseFormMixin:
     # Backward-compat alias used by forms that dynamically add fields
     # after __init__ and then configure them individually.
     _configure_field_for_rvo = _configure_field
-
-
-class RvoFormMixin(_BaseFormMixin):
-    """Configure forms for RVO design system rendering."""
-
-    _form_template = "rvo/forms/form.html"
-    _field_template = "rvo/forms/field.html"
-    _error_class = RvoErrorList
-
-    widget_templates = {
-        "TextInput": "rvo/forms/widgets/text.html",
-        "EmailInput": "rvo/forms/widgets/email.html",
-        "Select": "rvo/forms/widgets/select.html",
-        "CheckboxSelectMultiple": "rvo/forms/widgets/checkbox_select.html",
-        "MultiselectDropdown": "rvo/forms/widgets/multiselect.html",
-        "RadioSelect": "rvo/forms/widgets/radio.html",
-        "DateInput": "rvo/forms/widgets/date.html",
-        "Textarea": "rvo/forms/widgets/textarea.html",
-        "CheckboxInput": "rvo/forms/widgets/checkbox.html",
-        "OrgPickerWidget": "rvo/widgets/org_picker.html",
-    }
 
 
 class NlddFormMixin(_BaseFormMixin):

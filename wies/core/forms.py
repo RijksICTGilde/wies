@@ -8,7 +8,7 @@ from django.core.exceptions import ValidationError
 from wies.core.editables.assignment import AssignmentEditables
 from wies.core.editables.user import UserEditables
 
-from .form_mixins import NlddFormMixin, RvoErrorList, RvoFormMixin, RvoJinja2Renderer
+from .form_mixins import NlddFormMixin
 from .models import Colleague, Label, LabelCategory, Skill
 from .services.users import validate_email_domain
 from .widgets import MultiselectDropdown
@@ -21,9 +21,6 @@ __all__ = [
     "AssignmentCreateForm",
     "LabelCategoryForm",
     "LabelForm",
-    "RvoErrorList",
-    "RvoFormMixin",
-    "RvoJinja2Renderer",
     "ServiceForm",
     "UserForm",
 ]
