@@ -3,7 +3,7 @@
    ---------------------------------------------------------------------------- */
 
 /* Tighter legend spacing in diensten fieldset */
-#diensten .utrecht-form-fieldset__legend {
+#diensten .nldd-fieldset__legend {
   margin-block-end: 0;
 }
 
@@ -14,14 +14,11 @@
 }
 
 /* Tighter spacing within fieldsets */
-#assignment-create-form .utrecht-form-field {
+#assignment-create-form .nldd-form-field {
   margin-bottom: 0;
 }
 
-form#assignment-create-form .rvo-form-fieldset,
-form#assignment-create-form
-  .rvo-form-fieldset
-  .utrecht-form-fieldset__fieldset {
+form#assignment-create-form .nldd-fieldset {
   padding-bottom: 0.5rem;
   margin-bottom: 0;
 }
@@ -32,7 +29,7 @@ form#assignment-create-form
   gap: 1rem;
 }
 
-.assignment-form-row > .utrecht-form-field {
+.assignment-form-row > .nldd-form-field {
   flex: 1;
 }
 
@@ -41,6 +38,12 @@ form#assignment-create-form
   align-items: center;
   gap: 0.4rem;
   cursor: pointer;
+}
+
+/* Small, subtle hint (was rvo-text--sm rvo-text--subtle before NLDD). */
+.service-period-hint {
+  font-size: 0.875rem;
+  color: var(--semantics-content-secondary-color, #666);
 }
 
 /* ----------------------------------------------------------------------------
@@ -101,14 +104,6 @@ form#assignment-create-form
 /* Inline create fields */
 .service-new-skill {
   margin-top: 0.5rem;
-}
-
-/* Button group should always be horizontal */
-#assignment-create-form .utrecht-button-group {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: 0.5rem;
 }
 
 /* Responsive */

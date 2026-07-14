@@ -117,7 +117,7 @@
         var existingBtn = row.querySelector(".service-row__remove");
         if (existingBtn) existingBtn.remove();
 
-        row.querySelectorAll(".rvo-form-field__error").forEach(function (el) {
+        row.querySelectorAll(".nldd-form-field__error").forEach(function (el) {
           el.remove();
         });
 
@@ -221,7 +221,7 @@
       var hint = row.querySelector(".service-period-hint");
       if (!hint) {
         hint = document.createElement("p");
-        hint.className = "service-period-hint rvo-text--sm rvo-text--subtle";
+        hint.className = "service-period-hint";
         hint.style.display = "none";
         hint.textContent = "Vul eerst de opdrachtperiode in hierboven.";
         checkbox.closest(".service-period-section").appendChild(hint);

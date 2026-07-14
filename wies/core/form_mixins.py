@@ -44,7 +44,7 @@ class _BaseFormMixin:
     widget_templates: dict[str, str] = {}
 
     # Invisible widgets need no template; skip the warning for them (#389).
-    widgets_without_rvo_template = {
+    widgets_without_template = {
         "HiddenInput",
         "MultipleHiddenInput",
     }
@@ -85,7 +85,7 @@ class _BaseFormMixin:
             field.widget.template_name = self.widget_templates[widget_class_name]
             for attr, value in self.widget_config.get(widget_class_name, {}).items():
                 setattr(field.widget, attr, value)
-        elif widget_class_name in self.widgets_without_rvo_template:
+        elif widget_class_name in self.widgets_without_template:
             pass
         else:
             logger.warning(
@@ -100,10 +100,6 @@ class _BaseFormMixin:
 
         for field_name in self.fields:
             self._configure_field(field_name)
-
-    # Backward-compat alias used by forms that dynamically add fields
-    # after __init__ and then configure them individually.
-    _configure_field_for_rvo = _configure_field
 
 
 class NlddFormMixin(_BaseFormMixin):

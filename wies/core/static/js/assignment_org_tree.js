@@ -135,12 +135,12 @@
       actionsWrapper.className = "assignment-org-table__actions";
 
       var radioLabel = document.createElement("label");
-      radioLabel.className = "rvo-radio-button";
+      radioLabel.className = "nldd-radio";
       var radio = document.createElement("input");
       radio.type = "radio";
       radio.name = "primary_org_radio";
       radio.value = row.nodeId;
-      radio.className = "utrecht-radio-button";
+      radio.className = "nldd-radio__input";
       if (row.role === "PRIMARY") radio.checked = true;
       radio.addEventListener("change", function () {
         rows.forEach(function (r) {

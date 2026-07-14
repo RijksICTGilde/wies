@@ -103,10 +103,6 @@
   color: var(--primitives-color-coolgray-600, #636363);
 }
 
-.merge-preview .utrecht-table__row:hover {
-  background: inherit;
-}
-
 /* Merge-duplicates preview table (a real <table> with rowspan cells). */
 .merge-table {
   width: 100%;

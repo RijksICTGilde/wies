@@ -140,8 +140,8 @@ class UserForm(NlddFormMixin, forms.ModelForm):
             # used in clean
             self._category_field_names.add(field_name)
 
-            # necessary because RVOForm init already ran and otherwise wrong templates are referenced
-            self._configure_field_for_rvo(field_name)
+            # necessary because form init already ran and otherwise wrong templates are referenced
+            self._configure_field(field_name)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -229,7 +229,7 @@ class ServiceForm(NlddFormMixin, forms.Form):
             choices=skill_choices,
             required=False,
         )
-        self._configure_field_for_rvo("skill")
+        self._configure_field("skill")
 
     def clean(self):
         cleaned_data = super().clean()
