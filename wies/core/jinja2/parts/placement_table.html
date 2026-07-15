@@ -1,14 +1,8 @@
-{# Placement table — echte nldd-table met responsive columns. #}
+{# Wie zit waar — an nldd-list of clickable rows (each opens the side panel). A
+list, not a table: nldd-list-item gives native hover/focus feedback for
+navigable rows, which nldd-table-row (data display) does not. #}
 <div id="nldd-placement-table">
-  <nldd-table columns="40px minmax(160px, 3fr) minmax(220px, 4fr) minmax(96px, 132px) 24px"
-              accessible-label="Wie zit waar">
-    <nldd-table-row slot="header">
-      <nldd-cell></nldd-cell>
-      <nldd-text-cell text="Collega"></nldd-text-cell>
-      <nldd-text-cell text="Opdracht"></nldd-text-cell>
-      <nldd-text-cell text="Loopt tot" horizontal-alignment="right"></nldd-text-cell>
-      <nldd-cell></nldd-cell>
-    </nldd-table-row>
+  <nldd-list variant="simple" accessible-label="Wie zit waar">
     {% include "parts/placement_table_rows.html" %}
-  </nldd-table>
+  </nldd-list>
 </div>
