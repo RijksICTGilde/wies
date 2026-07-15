@@ -778,7 +778,7 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-        self.assertContains(response, 'id="tab-updates"')
+        self.assertContains(response, 'data-tab-panel="tab-panel-updates"')
         self.assertContains(response, 'id="tab-panel-updates"')
 
 

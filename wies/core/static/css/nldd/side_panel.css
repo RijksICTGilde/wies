@@ -200,34 +200,11 @@
   gap: var(--primitives-space-24, 24px);
 }
 
-/* Side-panel tabs (Gegevens / Updates) */
-.nldd-tabs__tablist {
-  display: flex;
-  gap: var(--primitives-space-8, 8px);
-  border-bottom: 1px solid var(--semantics-surfaces-base-border-color, #e0e0e0);
+/* Side-panel tab bar (Gegevens / Updates) uses the nldd-tab-bar component;
+   only the tab panels stay app-styled. */
+nldd-tab-bar {
+  display: block;
   margin-bottom: var(--primitives-space-16, 16px);
-}
-.nldd-tabs__tab {
-  appearance: none;
-  background: none;
-  border: none;
-  border-bottom: 2px solid transparent;
-  padding: var(--primitives-space-8, 8px) var(--primitives-space-12, 12px);
-  cursor: pointer;
-  color: var(--semantics-content-secondary-color, #666);
-  font: inherit;
-}
-.nldd-tabs__tab:hover {
-  color: var(--semantics-content-color, #1a1a1a);
-}
-.nldd-tabs__tab--active {
-  color: var(--semantics-content-color, #1a1a1a);
-  border-bottom-color: var(--semantics-content-accent-color, #154273);
-  font-weight: 600;
-}
-.nldd-tabs__tab:focus-visible {
-  outline: 2px solid var(--semantics-content-accent-color, #154273);
-  outline-offset: 2px;
 }
 .nldd-tabs__panel[hidden] {
   display: none;

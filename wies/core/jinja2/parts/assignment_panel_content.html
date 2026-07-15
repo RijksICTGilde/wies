@@ -5,35 +5,17 @@
 {% else %}
 <div class="nldd-panel">
   {% if panel_data.show_updates_tab %}
-  <div class="nldd-tabs">
-    <div class="nldd-tabs__tablist" role="tablist" aria-label="Tabs">
-      <button
-        id="tab-gegevens"
-        type="button"
-        role="tab"
-        class="nldd-tabs__tab nldd-tabs__tab--active"
-        aria-selected="true"
-        aria-controls="tab-panel-gegevens"
-        tabindex="0"
-      >
-        <span class="nldd-tabs__label">Gegevens</span>
-      </button>
-      <button
-        id="tab-updates"
-        type="button"
-        role="tab"
-        class="nldd-tabs__tab"
-        aria-selected="false"
-        aria-controls="tab-panel-updates"
-        tabindex="-1"
-        hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.id]) }}"
-        hx-target="#tab-panel-updates"
-        hx-swap="innerHTML"
-      >
-        <span class="nldd-tabs__label">Updates</span>
-      </button>
-    </div>
-    {% endif %}
+  <nldd-tab-bar variant="text" accessible-label="Opdrachtdetails" data-side-panel-tabs>
+    <nldd-tab-bar-item selected text="Gegevens" data-tab-panel="tab-panel-gegevens"></nldd-tab-bar-item>
+    <nldd-tab-bar-item
+      text="Updates"
+      data-tab-panel="tab-panel-updates"
+      hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.id]) }}"
+      hx-target="#tab-panel-updates"
+      hx-swap="innerHTML"
+    ></nldd-tab-bar-item>
+  </nldd-tab-bar>
+  {% endif %}
     <div
       id="tab-panel-gegevens"
       {%

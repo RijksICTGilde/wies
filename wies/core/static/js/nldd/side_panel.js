@@ -5,28 +5,20 @@
   "use strict";
 
   // --- Tab switching (Gegevens / Updates in the opdracht panel) ---
-  // Event delegation so it keeps working after HTMX swaps the panel content.
-  document.addEventListener("click", (e) => {
-    const tab = e.target.closest(".nldd-tabs__tab");
-    if (!tab) return;
-    const tabsContainer = tab.closest(".nldd-tabs");
-    if (!tabsContainer) return;
-    const allTabs = [...tabsContainer.querySelectorAll(".nldd-tabs__tab")];
-    const index = allTabs.indexOf(tab);
-    allTabs.forEach((t, i) => {
-      t.classList.toggle("nldd-tabs__tab--active", i === index);
-      t.setAttribute("aria-selected", i === index);
-      t.setAttribute("tabindex", i === index ? "0" : "-1");
-    });
-    const panels = tabsContainer.querySelectorAll(".nldd-tabs__panel");
-    panels.forEach((p, i) => {
-      if (i === index) {
-        p.removeAttribute("hidden");
-        p.setAttribute("tabindex", "0");
-      } else {
-        p.setAttribute("hidden", "");
-        p.setAttribute("tabindex", "-1");
-      }
+  // nldd-tab-bar manages its own selected state and fires `tabchange`; we just
+  // show the panel referenced by the selected item's data-tab-panel. Delegated
+  // on document so it survives HTMX swaps of the panel content.
+  document.addEventListener("tabchange", (e) => {
+    const bar = e.target.closest("[data-side-panel-tabs]");
+    if (!bar) return;
+    const selectedId = e.detail?.item?.dataset.tabPanel;
+    if (!selectedId) return;
+    bar.querySelectorAll("nldd-tab-bar-item").forEach((item) => {
+      const panel = document.getElementById(item.dataset.tabPanel);
+      if (!panel) return;
+      const show = item.dataset.tabPanel === selectedId;
+      panel.toggleAttribute("hidden", !show);
+      panel.setAttribute("tabindex", show ? "0" : "-1");
     });
   });
 
