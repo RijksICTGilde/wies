@@ -1,7 +1,7 @@
 {# NDD admin sidebar — navigatie voor beheerpagina's. #}
 <p class="nldd-sidebar-heading">Instellingen</p>
 <nldd-list>
-<nldd-list-item type="link" href="{{ url('admin-users') }}"
+<nldd-list-item href="{{ url('admin-users') }}"
 {% if '/beheer/gebruikers/' in request.path %}current{% endif %}
 >
 <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
@@ -13,7 +13,7 @@
 <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
 </nldd-list-item>
 {% if DEBUG %}
-  <nldd-list-item type="link" href="{{ url('organization-admin') }}"
+  <nldd-list-item href="{{ url('organization-admin') }}"
   {% if '/organisaties/' in request.path %}current{% endif %}
   >
   <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
@@ -25,7 +25,7 @@
   <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
   </nldd-list-item>
 {% endif %}
-<nldd-list-item type="link" href="{{ url('label-admin') }}"
+<nldd-list-item href="{{ url('label-admin') }}"
 {% if '/beheer/labels/' in request.path %}current{% endif %}
 >
 <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
@@ -37,7 +37,7 @@
 <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
 </nldd-list-item>
 {% if is_staff_member(user) %}
-  <nldd-list-item type="link" href="{{ url('staff-dashboard') }}"
+  <nldd-list-item href="{{ url('staff-dashboard') }}"
   {% if '/statistieken/' in request.path %}current{% endif %}
   >
   <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
@@ -48,7 +48,7 @@
   <nldd-title-cell text="Statistieken"></nldd-title-cell>
   <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
   </nldd-list-item>
-  <nldd-list-item type="link" href="{{ url('staff-database') }}"
+  <nldd-list-item href="{{ url('staff-database') }}"
   {% if '/database/' in request.path %}current{% endif %}
   >
   <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>

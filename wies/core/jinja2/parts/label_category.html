@@ -19,7 +19,7 @@
 <nldd-list>
   {% for label in category.labels.all() %}
   <nldd-list-item
-    type="button"
+    href="{{ url('label-edit', kwargs={'pk': label.pk}) }}"
     hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}"
     hx-target="#labelFormModal"
     hx-swap="innerHTML"

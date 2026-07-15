@@ -1,12 +1,8 @@
-{# NDD user table — echte nldd-table met kolommen (avatar, naam+e-mail, actie). #}
+{# Users — an nldd-list of clickable rows (each opens the edit modal). A list,
+not a table: nldd-list-item gives native hover/focus feedback that
+nldd-table-row (data display) lacks. #}
 <div id="nldd-user-table">
-  <nldd-table columns="40px minmax(220px, 1fr) 24px"
-              accessible-label="Gebruikers">
-    <nldd-table-row slot="header">
-      <nldd-cell></nldd-cell>
-      <nldd-text-cell text="Gebruiker"></nldd-text-cell>
-      <nldd-cell></nldd-cell>
-    </nldd-table-row>
+  <nldd-list variant="simple" accessible-label="Gebruikers">
     {% include "parts/user_table_rows.html" %}
-  </nldd-table>
+  </nldd-list>
 </div>
