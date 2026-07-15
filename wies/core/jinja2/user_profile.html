@@ -1,107 +1,110 @@
-{% extends "base.html" %}
-{% block sidebar %}
-  {% include "parts/general_sidebar.html" %}
-{% endblock sidebar %}
-{% block title %}
-  Mijn profiel — Wies NDD
-{% endblock title %}
-{% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/nldd/side_panel.css') }}">
-  <script src="{{ static('js/nldd/side_panel.js') }}" defer></script>
-{% endblock extra_head %}
-{# No sidebar on profile page — base.html auto-hides empty sidebar #}
-{% block content %}
-  <nldd-container>
+{% extends "base.html" %} {% block sidebar %} {% include
+"parts/general_sidebar.html" %} {% endblock sidebar %} {% block title %} Mijn
+profiel — Wies NDD {% endblock title %} {% block extra_head %}
+<link rel="stylesheet" href="{{ static('css/nldd/side_panel.css') }}" />
+<script src="{{ static('js/nldd/side_panel.js') }}" defer></script>
+{% endblock extra_head %} {# No sidebar on profile page — base.html auto-hides
+empty sidebar #} {% block content %}
+<nldd-container>
   <nldd-simple-section>
-  <nldd-rich-text>
-  <section class="nldd-panel__identity" style="margin-bottom: 1.5rem;">
-    <span class="nldd-avatar nldd-avatar--lg" aria-hidden="true">{{ user.first_name|first|upper if user.first_name else "?" }}</span>
-    <div class="nldd-panel__identity-info">
-      <strong style="font-size: 1.5rem;">Mijn profiel</strong>
-      {% if user.email %}<a class="nldd-panel__email" href="mailto:{{ user.email }}">{{ user.email }}</a>{% endif %}
-    </div>
-  </section>
-  <h3>Gegevens</h3>
-  <dl class="nldd-data-list">
-    <dt>Voornaam</dt>
-    <dd>
-      {{ inline_edit(user, "first_name") }}
-    </dd>
-    <dt>Achternaam</dt>
-    <dd>
-      {{ inline_edit(user, "last_name") }}
-    </dd>
-    <dt>E-mail</dt>
-    <dd>
-      {% if user.email %}
-        <a href="mailto:{{ user.email }}">{{ user.email }}</a>
-      {% else %}
-        —
-      {% endif %}
-    </dd>
-    {% for item in label_categories %}
-      <dt>{{ item.category.name }}</dt>
-      <dd>
-        {% if item.labels %}
+    <nldd-rich-text>
+      <section class="nldd-panel__identity" style="margin-bottom: 1.5rem">
+        <span class="nldd-avatar nldd-avatar--lg" aria-hidden="true"
+          >{{ user.first_name|first|upper if user.first_name else "?" }}</span
+        >
+        <div class="nldd-panel__identity-info">
+          <strong style="font-size: 1.5rem">Mijn profiel</strong>
+          {% if user.email %}<a
+            class="nldd-panel__email"
+            href="mailto:{{ user.email }}"
+            >{{ user.email }}</a
+          >{% endif %}
+        </div>
+      </section>
+      <h3>Gegevens</h3>
+      <dl class="nldd-data-list">
+        <dt>Voornaam</dt>
+        <dd>{{ inline_edit(user, "first_name") }}</dd>
+        <dt>Achternaam</dt>
+        <dd>{{ inline_edit(user, "last_name") }}</dd>
+        <dt>E-mail</dt>
+        <dd>
+          {% if user.email %}
+          <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+          {% else %} — {% endif %}
+        </dd>
+        {% for item in label_categories %}
+        <dt>{{ item.category.name }}</dt>
+        <dd>
+          {% if item.labels %}
           <div class="nldd-panel__tokens">
             {% for label in item.labels %}
-              <nldd-token style="--nldd-token-bg: {{ label.category.color }}">{{ label.name }}</nldd-token>
+            <nldd-token color="{{ label.category.nldd_color }}"
+              >{{ label.name }}</nldd-token
+            >
             {% endfor %}
           </div>
-        {% else %}
+          {% else %}
           <span class="nldd-text-secondary">—</span>
-        {% endif %}
-      </dd>
-    {% endfor %}
-  </dl>
-  <h3>Opdrachten</h3>
-  {% if assignment_list %}
-    <div class="nldd-assignment-cards">
-      {% for assignment in assignment_list %}
-        <a class="nldd-assignment-card{% if assignment.historical %} nldd-assignment-card--historical{% endif %}"
-           href="{{ assignment.assignment_url }}"
-           hx-get="{{ assignment.assignment_url }}"
-           hx-target="#nldd-side-panel-content"
-           hx-swap="innerHTML">
+          {% endif %}
+        </dd>
+        {% endfor %}
+      </dl>
+      <h3>Opdrachten</h3>
+      {% if assignment_list %}
+      <div class="nldd-assignment-cards">
+        {% for assignment in assignment_list %}
+        <a
+          class="nldd-assignment-card{% if assignment.historical %} nldd-assignment-card--historical{% endif %}"
+          href="{{ assignment.assignment_url }}"
+          hx-get="{{ assignment.assignment_url }}"
+          hx-target="#nldd-side-panel-content"
+          hx-swap="innerHTML"
+        >
           <div class="nldd-assignment-card__top">
             <strong>{{ assignment.name }}</strong>
             {% if assignment.start_date or assignment.end_date %}
-              <span class="nldd-text-secondary">
-                {{ assignment.start_date|datum_nl("N y") if assignment.start_date else "?" }}
-                – {{ assignment.end_date|datum_nl("N y") if assignment.end_date else "?" }}
-              </span>
+            <span class="nldd-text-secondary">
+              {{ assignment.start_date|datum_nl("N y") if assignment.start_date
+              else "?" }} – {{ assignment.end_date|datum_nl("N y") if
+              assignment.end_date else "?" }}
+            </span>
             {% endif %}
           </div>
           {% if assignment.tags %}
-            <div>
-              {% for tag in assignment.tags %}
-                <div style="font-size: 0.85rem;
-                            color: var(--semantics-content-secondary-color, #666)">
-                  {{ tag.skill if tag is mapping else tag }}
-                  {% if tag is mapping and tag.description %}· <span class="nldd-text-secondary">{{ tag.description }}</span>{% endif %}
-                </div>
-              {% endfor %}
+          <div>
+            {% for tag in assignment.tags %}
+            <div
+              style="
+                font-size: 0.85rem;
+                color: var(--semantics-content-secondary-color, #666);
+              "
+            >
+              {{ tag.skill if tag is mapping else tag }} {% if tag is mapping
+              and tag.description %}·
+              <span class="nldd-text-secondary">{{ tag.description }}</span>{%
+              endif %}
             </div>
-          {% endif %}
-          {% if assignment.historical %}<nldd-token>Afgelopen</nldd-token>{% endif %}
+            {% endfor %}
+          </div>
+          {% endif %} {% if assignment.historical
+          %}<nldd-token>Afgelopen</nldd-token>{% endif %}
         </a>
-      {% endfor %}
-    </div>
-  {% else %}
-    <p class="nldd-text-secondary">
-      <em>Geen opdrachten gevonden.</em>
-    </p>
-  {% endif %}
-  </nldd-rich-text>
+        {% endfor %}
+      </div>
+      {% else %}
+      <p class="nldd-text-secondary">
+        <em>Geen opdrachten gevonden.</em>
+      </p>
+      {% endif %}
+    </nldd-rich-text>
   </nldd-simple-section>
-  </nldd-container>
-{% endblock content %}
-{% block panel %}
-  <nldd-sheet id="nldd-side-panel" placement="right" accessible-label="Detail">
+</nldd-container>
+{% endblock content %} {% block panel %}
+<nldd-sheet id="nldd-side-panel" placement="right" accessible-label="Detail">
   <div id="nldd-side-panel-content">
-    {% if panel_data %}
-      {% include panel_data.panel_content_template %}
-    {% endif %}
+    {% if panel_data %} {% include panel_data.panel_content_template %} {% endif
+    %}
   </div>
-  </nldd-sheet>
+</nldd-sheet>
 {% endblock panel %}

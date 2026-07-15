@@ -1,11 +1,9 @@
-{% set category = editable.category %}
-{% set category_labels = value | selectattr("category_id", "equalto", category.id) | list %}
+{% set category = editable.category %} {% set category_labels = value |
+selectattr("category_id", "equalto", category.id) | list %}
 <div class="nldd-panel__tokens">
-  {% if category_labels %}
-    {% for label in category_labels %}
-      <nldd-token style="--nldd-token-bg: {{ category.color }}">{{ label.name }}</nldd-token>
-    {% endfor %}
-  {% else %}
-    <em class="nldd-text-secondary">Geen labels</em>
+  {% if category_labels %} {% for label in category_labels %}
+  <nldd-token color="{{ category.nldd_color }}">{{ label.name }}</nldd-token>
+  {% endfor %} {% else %}
+  <em class="nldd-text-secondary">Geen labels</em>
   {% endif %}
 </div>
