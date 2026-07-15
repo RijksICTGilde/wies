@@ -90,7 +90,7 @@
             has_permission(Verb.UPDATE, a, request.user,
             AssignmentEditables.services) %}
             <nldd-button
-              variant="tertiary"
+              variant="neutral-transparent"
               text="Team bewerken"
               end-icon="pencil"
               hx-get="{{ url('inline-edit', args=[a._meta.model_name, a.pk, 'services']) }}?edit=true"
@@ -105,7 +105,7 @@
         %}
         <section>
           <nldd-button
-            variant="warning-subtle"
+            variant="critical-tinted"
             text="Verwijder opdracht"
             start-icon="trash"
             hx-get="{{ url('assignment-delete', args=[panel_data.assignment.id]) }}"
