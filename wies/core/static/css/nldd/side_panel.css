@@ -149,7 +149,7 @@
 .nldd-team-member {
   display: flex;
   gap: var(--primitives-space-12, 12px);
-  align-items: center;
+  align-items: flex-start;
   padding: var(--primitives-space-8, 8px) var(--primitives-space-12, 12px);
   border-radius: 6px;
   text-decoration: none;
@@ -168,8 +168,16 @@
 .nldd-team-member__info {
   display: flex;
   flex-direction: column;
+  gap: var(--primitives-space-4, 4px);
   min-width: 0;
   flex: 1;
+}
+/* Name + role + status token share one wrapping row; details go below. */
+.nldd-team-member__name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--primitives-space-8, 8px);
 }
 .nldd-team-member__skill {
   font-size: 0.85rem;
@@ -178,24 +186,9 @@
 .nldd-team-member--filled.clickable-row {
   cursor: pointer;
 }
+.nldd-team-member__period,
 .nldd-team-member__privacy {
   display: flex;
-  gap: var(--primitives-space-4, 4px);
-  align-items: center;
-  margin-top: var(--primitives-space-4, 4px);
-}
-
-/* Service card rows (team list) */
-.service-card__name {
-  display: flex;
-  gap: var(--primitives-space-8, 8px);
-  align-items: center;
-  flex-wrap: wrap;
-  min-width: 0;
-  flex: 1;
-}
-.service-card__period {
-  display: inline-flex;
   gap: var(--primitives-space-4, 4px);
   align-items: center;
   font-size: 0.85rem;

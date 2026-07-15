@@ -20,47 +20,46 @@ BM-owner, hidden from unrelated viewers. #} {% if value %}
     endif
     %}
   >
-    <div class="service-card__name">
-      <span class="nldd-avatar">{{ row.colleague.name|first|upper }}</span>
-      <span
-        ><strong>{{ row.colleague.name }}</strong> · {{ row.skill_name }}</span
-      >
-      {% if row.period_label %}
-      <span class="service-card__tag"
-        ><nldd-token>{{ row.period_label }}</nldd-token></span
-      >
-      {% endif %} {% if pl and (pl.start_date or pl.end_date) %}
-      <span class="service-card__period nldd-text-secondary">
+    <span class="nldd-avatar">{{ row.colleague.name|first|upper }}</span>
+    <div class="nldd-team-member__info">
+      <span class="nldd-team-member__name">
+        <strong>{{ row.colleague.name }}</strong>
+        <span class="nldd-team-member__skill">· {{ row.skill_name }}</span>
+        {% if row.period_label %}<nldd-token>{{ row.period_label }}</nldd-token
+        >{% endif %}
+      </span>
+      {% if pl and (pl.start_date or pl.end_date) %}
+      <span class="nldd-team-member__period nldd-text-secondary">
         <nldd-icon name="calendar-event" size="16"></nldd-icon>
-        {% if pl.start_date and pl.end_date %} {{ pl.start_date|datum_nl("j M
-        Y") }} – {{ pl.end_date|datum_nl("j M Y") }} {% elif pl.start_date %} {{
-        pl.start_date|datum_nl("j M Y") }} – heden {% elif pl.end_date %} t/m {{
-        pl.end_date|datum_nl("j M Y") }} {% endif %}
+        {% if pl.start_date and pl.end_date %}{{ pl.start_date|datum_nl("j M Y")
+        }} – {{ pl.end_date|datum_nl("j M Y") }}{% elif pl.start_date %}{{
+        pl.start_date|datum_nl("j M Y") }} – heden{% elif pl.end_date %}t/m {{
+        pl.end_date|datum_nl("j M Y") }}{% endif %}
+      </span>
+      {% endif %} {% if row.privacy_warning_text %}
+      <span class="nldd-team-member__privacy nldd-text-secondary">
+        <nldd-icon name="lock-closed" size="16"></nldd-icon>
+        {{ row.privacy_warning_text }}
       </span>
       {% endif %}
     </div>
-    {% if row.privacy_warning_text %}
-    <div class="nldd-team-member__privacy">
-      <nldd-icon name="lock-closed" size="16"></nldd-icon>
-      <span class="nldd-text-secondary nldd-text-xs"
-        >{{ row.privacy_warning_text }}</span
-      >
-    </div>
-    {% endif %}
   </div>
   {% else %}
   <div class="nldd-team-member nldd-team-member--vacant">
-    <div class="service-card__name">
-      <span class="nldd-avatar nldd-avatar--vacant">?</span>
-      <span>{{ row.skill_name }}</span>
-      <span class="service-card__tag"><nldd-token>Aanvraag</nldd-token></span>
+    <span class="nldd-avatar nldd-avatar--vacant">?</span>
+    <div class="nldd-team-member__info">
+      <span class="nldd-team-member__name">
+        <strong>{{ row.skill_name }}</strong>
+        <nldd-token>Aanvraag</nldd-token>
+      </span>
       {% set svc = row.service %} {% if svc and (svc.start_date or svc.end_date)
       %}
-      <span class="service-card__period nldd-text-secondary">
-        {% if svc.start_date and svc.end_date %} {{ svc.start_date|datum_nl("j M
-        Y") }} – {{ svc.end_date|datum_nl("j M Y") }} {% elif svc.start_date %}
-        {{ svc.start_date|datum_nl("j M Y") }} – heden {% elif svc.end_date %}
-        t/m {{ svc.end_date|datum_nl("j M Y") }} {% endif %}
+      <span class="nldd-team-member__period nldd-text-secondary">
+        <nldd-icon name="calendar-event" size="16"></nldd-icon>
+        {% if svc.start_date and svc.end_date %}{{ svc.start_date|datum_nl("j M
+        Y") }} – {{ svc.end_date|datum_nl("j M Y") }}{% elif svc.start_date %}{{
+        svc.start_date|datum_nl("j M Y") }} – heden{% elif svc.end_date %}t/m {{
+        svc.end_date|datum_nl("j M Y") }}{% endif %}
       </span>
       {% endif %}
     </div>
