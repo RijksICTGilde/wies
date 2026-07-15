@@ -1,123 +1,132 @@
 {% if not panel_data %}
-  <div class="nldd-panel"><p class="nldd-text-secondary"><em>Niet gevonden.</em></p></div>
+<div class="nldd-panel">
+  <p class="nldd-text-secondary"><em>Niet gevonden.</em></p>
+</div>
 {% else %}
 <div class="nldd-panel">
   {% if panel_data.show_updates_tab %}
-    <div class="nldd-tabs">
-      <div class="nldd-tabs__tablist" role="tablist" aria-label="Tabs">
-        <button id="tab-gegevens"
-                type="button"
-                role="tab"
-                class="nldd-tabs__tab nldd-tabs__tab--active"
-                aria-selected="true"
-                aria-controls="tab-panel-gegevens"
-                tabindex="0">
-          <span class="nldd-tabs__label">Gegevens</span>
-        </button>
-        <button id="tab-updates"
-                type="button"
-                role="tab"
-                class="nldd-tabs__tab"
-                aria-selected="false"
-                aria-controls="tab-panel-updates"
-                tabindex="-1"
-                hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.id]) }}"
-                hx-target="#tab-panel-updates"
-                hx-swap="innerHTML">
-          <span class="nldd-tabs__label">Updates</span>
-        </button>
-      </div>
+  <div class="nldd-tabs">
+    <div class="nldd-tabs__tablist" role="tablist" aria-label="Tabs">
+      <button
+        id="tab-gegevens"
+        type="button"
+        role="tab"
+        class="nldd-tabs__tab nldd-tabs__tab--active"
+        aria-selected="true"
+        aria-controls="tab-panel-gegevens"
+        tabindex="0"
+      >
+        <span class="nldd-tabs__label">Gegevens</span>
+      </button>
+      <button
+        id="tab-updates"
+        type="button"
+        role="tab"
+        class="nldd-tabs__tab"
+        aria-selected="false"
+        aria-controls="tab-panel-updates"
+        tabindex="-1"
+        hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.id]) }}"
+        hx-target="#tab-panel-updates"
+        hx-swap="innerHTML"
+      >
+        <span class="nldd-tabs__label">Updates</span>
+      </button>
+    </div>
     {% endif %}
-    <div id="tab-panel-gegevens"
-         {% if panel_data.show_updates_tab %}class="nldd-tabs__panel" role="tabpanel" aria-labelledby="tab-gegevens" tabindex="0"{% endif %}>
+    <div
+      id="tab-panel-gegevens"
+      {%
+      if
+      panel_data.show_updates_tab
+      %}class="nldd-tabs__panel"
+      role="tabpanel"
+      aria-labelledby="tab-gegevens"
+      tabindex="0"
+      {%
+      endif
+      %}
+    >
       <div class="nldd-stack">
         <section>
           <h2>Opdrachtgegevens</h2>
           <dl class="nldd-data-list">
             <dt>Opdracht naam</dt>
-            <dd>
-              {{ inline_edit(panel_data.assignment, "name") }}
-            </dd>
+            <dd>{{ inline_edit(panel_data.assignment, "name") }}</dd>
             <dt>Opdrachtomschrijving</dt>
-            <dd>
-              {{ inline_edit(panel_data.assignment, "extra_info") }}
-            </dd>
+            <dd>{{ inline_edit(panel_data.assignment, "extra_info") }}</dd>
             {% if panel_data.assignment.source not in ('wies', '') %}
-              <dt>Externe bron</dt>
-              <dd>
-                {% if panel_data.assignment.source_url %}
-                  <a href="{{ panel_data.assignment.source_url }}" target="_blank">
-                    {{ panel_data.assignment.get_source_display() }}
-                    <nldd-icon name="square-arrow-right-top" size="16"></nldd-icon>
-                  </a>
-                {% else %}
-                  {{ panel_data.assignment.get_source_display() }}
-                {% endif %}
-              </dd>
+            <dt>Externe bron</dt>
+            <dd>
+              {% if panel_data.assignment.source_url %}
+              <a href="{{ panel_data.assignment.source_url }}" target="_blank">
+                {{ panel_data.assignment.get_source_display() }}
+                <nldd-icon name="square-arrow-right-top" size="16"></nldd-icon>
+              </a>
+              {% else %} {{ panel_data.assignment.get_source_display() }} {%
+              endif %}
+            </dd>
             {% endif %}
             <dt>
-              {% if panel_data.organization_count > 1 %}
-                Opdrachtgevers
-              {% else %}
-                Opdrachtgever
-              {% endif %}
+              {% if panel_data.organization_count > 1 %} Opdrachtgevers {% else
+              %} Opdrachtgever {% endif %}
             </dt>
-            <dd>
-              {{ inline_edit(panel_data.assignment, "organizations") }}
-            </dd>
+            <dd>{{ inline_edit(panel_data.assignment, "organizations") }}</dd>
             <dt>Periode</dt>
-            <dd>
-              {{ inline_edit(panel_data.assignment, "period") }}
-            </dd>
+            <dd>{{ inline_edit(panel_data.assignment, "period") }}</dd>
             {% if panel_data.assignment.created_at %}
-              <dt>Plaatsingsdatum</dt>
-              <dd>
-                {{ panel_data.assignment.created_at|datum_nl("j F Y") }}
-              </dd>
+            <dt>Plaatsingsdatum</dt>
+            <dd>{{ panel_data.assignment.created_at|datum_nl("j F Y") }}</dd>
             {% endif %}
             <dt>Business Manager</dt>
-            <dd>
-              {{ inline_edit(panel_data.assignment, "owner") }}
-            </dd>
+            <dd>{{ inline_edit(panel_data.assignment, "owner") }}</dd>
           </dl>
         </section>
         <section>
           <div class="section-header">
             <h2>Team ({{ panel_data.team_count }})</h2>
-            {% set a = panel_data.assignment %}
-            {% set ie_target = "inline-edit-assignment-" ~ a.pk ~ "-services" %}
-            {% if has_permission(Verb.UPDATE, a, request.user, AssignmentEditables.services) %}
-              <nldd-button variant="tertiary"
-                           text="Team bewerken"
-                           end-icon="edit"
-                           hx-get="{{ url('inline-edit', args=[a._meta.model_name, a.pk, 'services']) }}?edit=true"
-                           hx-target="#{{ ie_target }}"
-                           hx-swap="outerHTML"></nldd-button>
+            {% set a = panel_data.assignment %} {% set ie_target =
+            "inline-edit-assignment-" ~ a.pk ~ "-services" %} {% if
+            has_permission(Verb.UPDATE, a, request.user,
+            AssignmentEditables.services) %}
+            <nldd-button
+              variant="tertiary"
+              text="Team bewerken"
+              end-icon="pencil"
+              hx-get="{{ url('inline-edit', args=[a._meta.model_name, a.pk, 'services']) }}?edit=true"
+              hx-target="#{{ ie_target }}"
+              hx-swap="outerHTML"
+            ></nldd-button>
             {% endif %}
           </div>
           {{ inline_edit(a, "services") }}
         </section>
-        {% if has_permission(Verb.DELETE, panel_data.assignment, request.user) %}
-          <section>
-            <nldd-button variant="warning-subtle"
-                         text="Verwijder opdracht"
-                         start-icon="trash"
-                         hx-get="{{ url('assignment-delete', args=[panel_data.assignment.id]) }}"
-                         hx-target="#assignmentDeleteModal"
-                         hx-swap="innerHTML"></nldd-button>
-          </section>
-          <div id="assignmentDeleteModal"></div>
+        {% if has_permission(Verb.DELETE, panel_data.assignment, request.user)
+        %}
+        <section>
+          <nldd-button
+            variant="warning-subtle"
+            text="Verwijder opdracht"
+            start-icon="trash"
+            hx-get="{{ url('assignment-delete', args=[panel_data.assignment.id]) }}"
+            hx-target="#assignmentDeleteModal"
+            hx-swap="innerHTML"
+          ></nldd-button>
+        </section>
+        <div id="assignmentDeleteModal"></div>
         {% endif %}
       </div>
     </div>
     {% if panel_data.show_updates_tab %}
-      <div id="tab-panel-updates"
-           class="nldd-tabs__panel"
-           role="tabpanel"
-           aria-labelledby="tab-updates"
-           hidden
-           tabindex="-1"></div>
-    </div>
+    <div
+      id="tab-panel-updates"
+      class="nldd-tabs__panel"
+      role="tabpanel"
+      aria-labelledby="tab-updates"
+      hidden
+      tabindex="-1"
+    ></div>
+  </div>
   {% endif %}
 </div>
 {% endif %}

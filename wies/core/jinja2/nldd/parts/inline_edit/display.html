@@ -1,33 +1,45 @@
-{# Wrapper stays classless so HTMX swaps between display/form/collection
-  modes don't toggle layout classes on the target. #}
+{# Wrapper stays classless so HTMX swaps between display/form/collection modes
+don't toggle layout classes on the target. #}
 <div id="{{ target }}">
   <div class="editable-field-display">
-    {% if alert %}
-      {% set _variant = 'critical' if alert.kind == 'error' else 'warning' if alert.kind == 'warning' else 'success' if alert.kind == 'success' else 'neutral' %}
-      <nldd-banner variant="{{ _variant }}" text="{{ alert.message }}"></nldd-banner>
+    {% if alert %} {% set _variant = 'critical' if alert.kind == 'error' else
+    'warning' if alert.kind == 'warning' else 'success' if alert.kind ==
+    'success' else 'neutral' %}
+    <nldd-banner
+      variant="{{ _variant }}"
+      text="{{ alert.message }}"
+    ></nldd-banner>
     {% endif %}
     <div class="editable-field-display__value">
-      {% if display and display.template %}
-        {% include display.template %}
-      {% else %}
-        <span>{{ display.text if display else "" }}</span>
+      {% if display and display.template %} {% include display.template %} {%
+      else %}
+      <span>{{ display.text if display else "" }}</span>
       {% endif %}
     </div>
     {% if user_can_edit and not hide_edit_button %}
-      <button type="button"
-              class="edit-icon-button"
-              hx-get="{{ edit_url }}?edit=true"
-              hx-target="#{{ target }}"
-              hx-swap="outerHTML"
-              data-tooltip="Bewerk {{ label|lower }}"
-              aria-label="Bewerk {{ label }}">
-        <nldd-icon name="edit" class="edit-icon-button__pencil"></nldd-icon>
-      </button>
+    <button
+      type="button"
+      class="edit-icon-button"
+      hx-get="{{ edit_url }}?edit=true"
+      hx-target="#{{ target }}"
+      hx-swap="outerHTML"
+      data-tooltip="Bewerk {{ label|lower }}"
+      aria-label="Bewerk {{ label }}"
+    >
+      <nldd-icon name="pencil" class="edit-icon-button__pencil"></nldd-icon>
+    </button>
     {% elif not user_can_edit and external_source %}
-      <span class="source-lock"
-            data-tooltip="Wordt beheerd in {{ external_source }}">
-        <nldd-icon name="lock" size="16" role="img" aria-label="Vergrendeld"></nldd-icon>
-      </span>
+    <span
+      class="source-lock"
+      data-tooltip="Wordt beheerd in {{ external_source }}"
+    >
+      <nldd-icon
+        name="lock-closed"
+        size="16"
+        role="img"
+        aria-label="Vergrendeld"
+      ></nldd-icon>
+    </span>
     {% endif %}
   </div>
 </div>

@@ -1,51 +1,58 @@
-{# Shared assignment card list for colleague panel and profile page.
-   Expects: assignments (list), hx_target (string) #}
-{% if assignments %}
-  <div class="nldd-assignment-cards">
-    {% for assignment in assignments %}
-      <a class="nldd-assignment-card{% if assignment.historical %} nldd-assignment-card--historical{% endif %}"
-         href="{{ assignment.assignment_url }}"
-         hx-get="{{ assignment.assignment_url }}"
-         hx-target="{{ hx_target }}"
-         hx-swap="innerHTML">
-        <div class="nldd-assignment-card__top">
-          <strong>{{ assignment.name }}</strong>
-          {% if assignment.historical %}
-            <nldd-token>{{ assignment.period_label or "Afgelopen" }}</nldd-token>
-          {% elif assignment.show_read_more %}
-            <span class="nldd-assignment-card__read-more">Lees meer ›</span>
-          {% elif assignment.start_date or assignment.end_date %}
-            <span class="nldd-text-secondary">
-              {{ assignment.start_date|datum_nl("N y") if assignment.start_date else "?" }}
-              – {{ assignment.end_date|datum_nl("N y") if assignment.end_date else "?" }}
-            </span>
-          {% endif %}
-        </div>
-        {% if assignment.organization %}<span class="nldd-text-secondary">{{ assignment.organization }}</span>{% endif %}
-        {% if assignment.team_members %}
-          <div class="nldd-team-list" style="margin-top: 0.25rem;">
-            <span class="nldd-text-secondary">Collega's op deze opdracht:</span>
-            {% for member in assignment.team_members %}
-              <span class="nldd-avatar nldd-avatar--sm" title="{{ member }}">{{ member|first|upper }}</span>
-            {% endfor %}
-          </div>
-        {% endif %}
-        {% if assignment.tags %}
-          <div style="margin-top: 0.25rem;">
-            {% for tag in assignment.tags %}<nldd-token>{{ tag.skill if tag is mapping else tag }}</nldd-token>{% endfor %}
-          </div>
-        {% endif %}
-        {% if assignment.privacy_warning_text %}
-          <div style="margin-top: 0.25rem;">
-            <nldd-icon name="lock" size="16"></nldd-icon>
-            <span class="nldd-text-secondary">{{ assignment.privacy_warning_text }}</span>
-          </div>
-        {% endif %}
-      </a>
-    {% endfor %}
-  </div>
+{# Shared assignment card list for colleague panel and profile page. Expects:
+assignments (list), hx_target (string) #} {% if assignments %}
+<div class="nldd-assignment-cards">
+  {% for assignment in assignments %}
+  <a
+    class="nldd-assignment-card{% if assignment.historical %} nldd-assignment-card--historical{% endif %}"
+    href="{{ assignment.assignment_url }}"
+    hx-get="{{ assignment.assignment_url }}"
+    hx-target="{{ hx_target }}"
+    hx-swap="innerHTML"
+  >
+    <div class="nldd-assignment-card__top">
+      <strong>{{ assignment.name }}</strong>
+      {% if assignment.historical %}
+      <nldd-token>{{ assignment.period_label or "Afgelopen" }}</nldd-token>
+      {% elif assignment.show_read_more %}
+      <span class="nldd-assignment-card__read-more">Lees meer ›</span>
+      {% elif assignment.start_date or assignment.end_date %}
+      <span class="nldd-text-secondary">
+        {{ assignment.start_date|datum_nl("N y") if assignment.start_date else
+        "?" }} – {{ assignment.end_date|datum_nl("N y") if assignment.end_date
+        else "?" }}
+      </span>
+      {% endif %}
+    </div>
+    {% if assignment.organization %}<span class="nldd-text-secondary"
+      >{{ assignment.organization }}</span
+    >{% endif %} {% if assignment.team_members %}
+    <div class="nldd-team-list" style="margin-top: 0.25rem">
+      <span class="nldd-text-secondary">Collega's op deze opdracht:</span>
+      {% for member in assignment.team_members %}
+      <span class="nldd-avatar nldd-avatar--sm" title="{{ member }}"
+        >{{ member|first|upper }}</span
+      >
+      {% endfor %}
+    </div>
+    {% endif %} {% if assignment.tags %}
+    <div style="margin-top: 0.25rem">
+      {% for tag in assignment.tags %}<nldd-token
+        >{{ tag.skill if tag is mapping else tag }}</nldd-token
+      >{% endfor %}
+    </div>
+    {% endif %} {% if assignment.privacy_warning_text %}
+    <div style="margin-top: 0.25rem">
+      <nldd-icon name="lock-closed" size="16"></nldd-icon>
+      <span class="nldd-text-secondary"
+        >{{ assignment.privacy_warning_text }}</span
+      >
+    </div>
+    {% endif %}
+  </a>
+  {% endfor %}
+</div>
 {% else %}
-  <p class="nldd-text-secondary">
-    <em>Geen opdrachten gevonden.</em>
-  </p>
+<p class="nldd-text-secondary">
+  <em>Geen opdrachten gevonden.</em>
+</p>
 {% endif %}

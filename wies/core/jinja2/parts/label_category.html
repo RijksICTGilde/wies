@@ -6,7 +6,7 @@
     <nldd-button
       variant="neutral-transparent"
       text="Bewerk categorie"
-      end-icon="edit"
+      end-icon="pencil"
       size="sm"
       hx-get="{{ url('label-category-edit', kwargs={'pk': category.pk}) }}"
       hx-target="#labelFormModal"
@@ -35,7 +35,7 @@
       text="{{ label.usage_count|default(0) }} keer toegepast"
     ></nldd-text-cell>
     <nldd-icon-cell slot="end" size="20" color="secondary">
-      <nldd-icon name="edit"></nldd-icon>
+      <nldd-icon name="pencil"></nldd-icon>
     </nldd-icon-cell>
     <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
   </nldd-list-item>

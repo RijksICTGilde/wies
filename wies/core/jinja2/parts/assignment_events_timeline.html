@@ -1,79 +1,65 @@
 {% if events %}
-  <div class="event-timeline">
-    {% for event in events %}
-      {% if event.user and event.user.colleague %}
-        {% set author = event.user.colleague.name %}
-        {% set initial = author|first|upper %}
-      {% else %}
-        {% set author = "Onbekende gebruiker" %}
-        {% set initial = "?" %}
+<div class="event-timeline">
+  {% for event in events %} {% if event.user and event.user.colleague %} {% set
+  author = event.user.colleague.name %} {% set initial = author|first|upper %}
+  {% else %} {% set author = "Onbekende gebruiker" %} {% set initial = "?" %} {%
+  endif %}
+  <div class="event-timeline__item">
+    <div class="event-timeline__avatar">
+      <span class="nldd-avatar nldd-avatar--sm">{{ initial }}</span>
+    </div>
+    <div class="event-timeline__content">
+      <strong>{{ author }}</strong>
+      {% if event.action == "create" %} maakte deze opdracht aan {% elif
+      event.context.get("merge") %} voegde {{ event.context.merged_ids|length }}
+      dubbele opdracht(en) samen (#{{ event.context.merged_ids|join(", #") }})
+      {% elif event.render_kind == "text" %} wijzigde
+      <strong>{{ event.context.field_label }}</strong> {% if event.formatted_old
+      %}van "{{ event.formatted_old }}"{% endif %} naar "{{ event.formatted_new
+      }}" {% elif event.render_kind in ("textarea", "collection") %} wijzigde
+      <strong>{{ event.context.field_label }}</strong>
       {% endif %}
-      <div class="event-timeline__item">
-        <div class="event-timeline__avatar">
-          <span class="nldd-avatar nldd-avatar--sm">{{ initial }}</span>
-        </div>
-        <div class="event-timeline__content">
-          <strong>{{ author }}</strong>
-          {% if event.action == "create" %}
-            maakte deze opdracht aan
-          {% elif event.context.get("merge") %}
-            voegde {{ event.context.merged_ids|length }} dubbele opdracht(en) samen (#{{ event.context.merged_ids|join(", #") }})
-          {% elif event.render_kind == "text" %}
-            wijzigde <strong>{{ event.context.field_label }}</strong>
-            {% if event.formatted_old %}van "{{ event.formatted_old }}"{% endif %}
-            naar "{{ event.formatted_new }}"
-          {% elif event.render_kind in ("textarea", "collection") %}
-            wijzigde <strong>{{ event.context.field_label }}</strong>
-          {% endif %}
-          <div class="event-timeline__meta">
-            <span class="nldd-text-secondary nldd-text-xs"
-                  title="{{ event.timestamp|datum_nl('j F Y, H:i') }}">{{ event.timestamp|tijdgeleden }}</span>
-            {% if event.action == "create" %}
-              <span class="event-tag event-tag--create">
-                <nldd-icon name="plus" size="16"></nldd-icon>
-                Aangemaakt
-              </span>
-            {% else %}
-              <span class="event-tag event-tag--update">
-                <nldd-icon name="edit" size="16"></nldd-icon>
-                Gewijzigd
-              </span>
-            {% endif %}
-          </div>
-          {% if event.render_kind == "collection" and event.diff_entries %}
-            <ul style="margin-top: 0.25rem;">
-              {% for entry in event.diff_entries %}
-                <li>
-                  {{ entry.text }}
-                  {% if entry.old %}
-                    {% with label="Van", value=entry.old %}
-                      {% include "parts/event_value_block.html" %}
-                    {% endwith %}
-                  {% endif %}
-                  {% if entry.new %}
-                    {% with label="Naar", value=entry.new %}
-                      {% include "parts/event_value_block.html" %}
-                    {% endwith %}
-                  {% endif %}
-                </li>
-              {% endfor %}
-            </ul>
-          {% elif event.render_kind == "textarea" %}
-            {% if event.formatted_old %}
-              {% with label="Van", value=event.formatted_old %}
-                {% include "parts/event_value_block.html" %}
-              {% endwith %}
-            {% endif %}
-            {% with label="Naar", value=event.formatted_new %}
-              {% include "parts/event_value_block.html" %}
-            {% endwith %}
-          {% endif %}
-        </div>
+      <div class="event-timeline__meta">
+        <span
+          class="nldd-text-secondary nldd-text-xs"
+          title="{{ event.timestamp|datum_nl('j F Y, H:i') }}"
+          >{{ event.timestamp|tijdgeleden }}</span
+        >
+        {% if event.action == "create" %}
+        <span class="event-tag event-tag--create">
+          <nldd-icon name="plus" size="16"></nldd-icon>
+          Aangemaakt
+        </span>
+        {% else %}
+        <span class="event-tag event-tag--update">
+          <nldd-icon name="pencil" size="16"></nldd-icon>
+          Gewijzigd
+        </span>
+        {% endif %}
       </div>
-    {% endfor %}
+      {% if event.render_kind == "collection" and event.diff_entries %}
+      <ul style="margin-top: 0.25rem">
+        {% for entry in event.diff_entries %}
+        <li>
+          {{ entry.text }} {% if entry.old %} {% with label="Van",
+          value=entry.old %} {% include "parts/event_value_block.html" %} {%
+          endwith %} {% endif %} {% if entry.new %} {% with label="Naar",
+          value=entry.new %} {% include "parts/event_value_block.html" %} {%
+          endwith %} {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+      {% elif event.render_kind == "textarea" %} {% if event.formatted_old %} {%
+      with label="Van", value=event.formatted_old %} {% include
+      "parts/event_value_block.html" %} {% endwith %} {% endif %} {% with
+      label="Naar", value=event.formatted_new %} {% include
+      "parts/event_value_block.html" %} {% endwith %} {% endif %}
+    </div>
   </div>
+  {% endfor %}
+</div>
 {% else %}
-  <p class="nldd-text-secondary">
-    <em>Geen updates</em>
-  </p>
+<p class="nldd-text-secondary">
+  <em>Geen updates</em>
+</p>
 {% endif %}

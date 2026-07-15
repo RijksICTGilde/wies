@@ -1,71 +1,72 @@
-{# Display partial for the Assignment services EditableCollection.
-
-   Renders the team list from `value` (row dicts produced by
-   _services_initial, viewer-filtered + vacancies-first by
-   _services_display_context / visible_service_rows). The whole block
-   toggles with edit mode: on edit the inline-edit wrapper is swapped for
-   the formset; on save/cancel it swaps back to this display.
-
-   Filled rows link through to the placement side panel; vacant rows carry
-   no link. Historical placements are flagged with a privacy note for the
-   placed colleague and BM-owner, hidden from unrelated viewers.
-#}
-{% if value %}
-  <div class="nldd-team-list">
-    {% for row in value %}
-      {% if row.colleague %}
-        {% set pl = row.placement %}
-        <div class="nldd-team-member nldd-team-member--filled{% if pl %} clickable-row{% endif %}"
-             {% if pl %}hx-get="/?plaatsing={{ pl.id }}" hx-target="#nldd-side-panel-content" hx-swap="innerHTML"{% endif %}>
-          <div class="service-card__name">
-            <span class="nldd-avatar">{{ row.colleague.name|first|upper }}</span>
-            <span><strong>{{ row.colleague.name }}</strong> · {{ row.skill_name }}</span>
-            {% if row.period_label %}
-              <span class="service-card__tag"><nldd-token>{{ row.period_label }}</nldd-token></span>
-            {% endif %}
-            {% if pl and (pl.start_date or pl.end_date) %}
-              <span class="service-card__period nldd-text-secondary">
-                <nldd-icon name="calendar-event" size="16"></nldd-icon>
-                {% if pl.start_date and pl.end_date %}
-                  {{ pl.start_date|datum_nl("j M Y") }} – {{ pl.end_date|datum_nl("j M Y") }}
-                {% elif pl.start_date %}
-                  {{ pl.start_date|datum_nl("j M Y") }} – heden
-                {% elif pl.end_date %}
-                  t/m {{ pl.end_date|datum_nl("j M Y") }}
-                {% endif %}
-              </span>
-            {% endif %}
-          </div>
-          {% if row.privacy_warning_text %}
-            <div class="nldd-team-member__privacy">
-              <nldd-icon name="lock" size="16"></nldd-icon>
-              <span class="nldd-text-secondary nldd-text-xs">{{ row.privacy_warning_text }}</span>
-            </div>
-          {% endif %}
-        </div>
-      {% else %}
-        <div class="nldd-team-member nldd-team-member--vacant">
-          <div class="service-card__name">
-            <span class="nldd-avatar nldd-avatar--vacant">?</span>
-            <span>{{ row.skill_name }}</span>
-            <span class="service-card__tag"><nldd-token>Aanvraag</nldd-token></span>
-            {% set svc = row.service %}
-            {% if svc and (svc.start_date or svc.end_date) %}
-              <span class="service-card__period nldd-text-secondary">
-                {% if svc.start_date and svc.end_date %}
-                  {{ svc.start_date|datum_nl("j M Y") }} – {{ svc.end_date|datum_nl("j M Y") }}
-                {% elif svc.start_date %}
-                  {{ svc.start_date|datum_nl("j M Y") }} – heden
-                {% elif svc.end_date %}
-                  t/m {{ svc.end_date|datum_nl("j M Y") }}
-                {% endif %}
-              </span>
-            {% endif %}
-          </div>
-        </div>
+{# Display partial for the Assignment services EditableCollection. Renders the
+team list from `value` (row dicts produced by _services_initial, viewer-filtered
++ vacancies-first by _services_display_context / visible_service_rows). The
+whole block toggles with edit mode: on edit the inline-edit wrapper is swapped
+for the formset; on save/cancel it swaps back to this display. Filled rows link
+through to the placement side panel; vacant rows carry no link. Historical
+placements are flagged with a privacy note for the placed colleague and
+BM-owner, hidden from unrelated viewers. #} {% if value %}
+<div class="nldd-team-list">
+  {% for row in value %} {% if row.colleague %} {% set pl = row.placement %}
+  <div
+    class="nldd-team-member nldd-team-member--filled{% if pl %} clickable-row{% endif %}"
+    {%
+    if
+    pl
+    %}hx-get="/?plaatsing={{ pl.id }}"
+    hx-target="#nldd-side-panel-content"
+    hx-swap="innerHTML"
+    {%
+    endif
+    %}
+  >
+    <div class="service-card__name">
+      <span class="nldd-avatar">{{ row.colleague.name|first|upper }}</span>
+      <span
+        ><strong>{{ row.colleague.name }}</strong> · {{ row.skill_name }}</span
+      >
+      {% if row.period_label %}
+      <span class="service-card__tag"
+        ><nldd-token>{{ row.period_label }}</nldd-token></span
+      >
+      {% endif %} {% if pl and (pl.start_date or pl.end_date) %}
+      <span class="service-card__period nldd-text-secondary">
+        <nldd-icon name="calendar-event" size="16"></nldd-icon>
+        {% if pl.start_date and pl.end_date %} {{ pl.start_date|datum_nl("j M
+        Y") }} – {{ pl.end_date|datum_nl("j M Y") }} {% elif pl.start_date %} {{
+        pl.start_date|datum_nl("j M Y") }} – heden {% elif pl.end_date %} t/m {{
+        pl.end_date|datum_nl("j M Y") }} {% endif %}
+      </span>
       {% endif %}
-    {% endfor %}
+    </div>
+    {% if row.privacy_warning_text %}
+    <div class="nldd-team-member__privacy">
+      <nldd-icon name="lock-closed" size="16"></nldd-icon>
+      <span class="nldd-text-secondary nldd-text-xs"
+        >{{ row.privacy_warning_text }}</span
+      >
+    </div>
+    {% endif %}
   </div>
+  {% else %}
+  <div class="nldd-team-member nldd-team-member--vacant">
+    <div class="service-card__name">
+      <span class="nldd-avatar nldd-avatar--vacant">?</span>
+      <span>{{ row.skill_name }}</span>
+      <span class="service-card__tag"><nldd-token>Aanvraag</nldd-token></span>
+      {% set svc = row.service %} {% if svc and (svc.start_date or svc.end_date)
+      %}
+      <span class="service-card__period nldd-text-secondary">
+        {% if svc.start_date and svc.end_date %} {{ svc.start_date|datum_nl("j M
+        Y") }} – {{ svc.end_date|datum_nl("j M Y") }} {% elif svc.start_date %}
+        {{ svc.start_date|datum_nl("j M Y") }} – heden {% elif svc.end_date %}
+        t/m {{ svc.end_date|datum_nl("j M Y") }} {% endif %}
+      </span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %} {% endfor %}
+</div>
 {% else %}
-  <span class="nldd-text-secondary"><em>Geen team gevonden.</em></span>
+<span class="nldd-text-secondary"><em>Geen team gevonden.</em></span>
 {% endif %}
