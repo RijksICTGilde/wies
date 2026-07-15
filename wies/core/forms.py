@@ -121,6 +121,12 @@ class UserForm(RvoFormMixin, forms.ModelForm):
         required=False,
         widget=forms.CheckboxSelectMultiple(),
     )
+    suborganization = forms.ModelChoiceField(
+        label="Merk",
+        queryset=Suborganization.objects.all(),
+        required=False,
+        empty_label=" ",
+    )
 
     # Init will create category_* fields for the different label categories
 
@@ -145,6 +151,9 @@ class UserForm(RvoFormMixin, forms.ModelForm):
 
         # Map labels stored on model to separate fields per category, which are dynamically generated
         instance = kwargs.get("instance")
+        if instance and hasattr(instance, "colleague") and instance.colleague is not None:
+            self.fields["suborganization"].initial = instance.colleague.suborganization_id
+        self._configure_field_for_rvo("suborganization")
         self._category_field_names = set()
         for category in LabelCategory.objects.all():
             field_name = f"category_{category.name}"

@@ -108,9 +108,10 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
     return user
 
 
-def update_user(updater, user, first_name, last_name, email, labels=None, groups=None):
+def update_user(updater, user, first_name, last_name, email, labels=None, groups=None, suborganization=None):
     """
     :param updater: user that performs the update action. Can be None if done by system
+    :param suborganization: the colleague's merk (a Suborganization), or None to clear it
     """
 
     if groups is None:
@@ -134,6 +135,8 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
     if labels is not None:
         colleague.labels.set(labels)
         label_names = [label.name for label in labels]
+    colleague.suborganization = suborganization
+    colleague.save(update_fields=["suborganization"])
     if groups:
         user.groups.set(groups)
 
@@ -142,6 +145,7 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
         "last_name": last_name,
         "email": email,
         "label_names": label_names,
+        "suborganization_name": colleague.suborganization.name if colleague.suborganization else None,
         "group_names": [group.name for group in groups],
     }
     create_event(

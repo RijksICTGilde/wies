@@ -1498,6 +1498,7 @@ def user_create(request):
                 email=form.cleaned_data["email"],
                 labels=form.cleaned_data.get("labels"),
                 groups=form.cleaned_data.get("groups"),
+                suborganization=form.cleaned_data.get("suborganization"),
             )
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect
@@ -1559,6 +1560,7 @@ def user_edit(request, pk):
                 email=form.cleaned_data["email"],
                 labels=form.cleaned_data.get("labels"),
                 groups=form.cleaned_data.get("groups"),
+                suborganization=form.cleaned_data.get("suborganization"),
             )
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect

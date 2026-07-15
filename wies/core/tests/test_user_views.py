@@ -4,6 +4,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from wies.core.forms import UserForm
 from wies.core.models import Colleague, Event, Label, LabelCategory, Suborganization
 
 User = get_user_model()
@@ -44,6 +45,10 @@ class UserViewsTest(TestCase):
         self.category, _ = LabelCategory.objects.get_or_create(name="Testcategorie", defaults={"color": "#0066CC"})
         self.label_a = Label.objects.create(name="Brand A", category=self.category)
         self.label_b = Label.objects.create(name="Brand B", category=self.category)
+
+        # Create test merken (suborganizations)
+        self.merk_a = Suborganization.objects.create(name="Merk A")
+        self.merk_b = Suborganization.objects.create(name="Merk B")
 
         # Create test groups for form testing
         self.admin_group = Group.objects.create(name="Beheerder")
@@ -181,6 +186,71 @@ class UserViewsTest(TestCase):
         assert created_event.object_type == "User"
         assert created_event.action == "create"
         assert created_event.context["email"] == "newuser@rijksoverheid.nl"
+
+    def test_user_create_with_merk(self):
+        """Test that the selected merk (suborganization) is assigned to the new user's colleague"""
+        self.client.force_login(self.auth_user)
+
+        response = self.client.post(
+            reverse("user-create"),
+            {
+                "first_name": "Merk",
+                "last_name": "User",
+                "email": "merkuser@rijksoverheid.nl",
+                "suborganization": self.merk_a.id,
+            },
+        )
+
+        assert response.status_code == 302
+        new_user = User.objects.get(email="merkuser@rijksoverheid.nl")
+        assert new_user.colleague.suborganization_id == self.merk_a.id
+
+    def test_user_edit_updates_merk(self):
+        """Test that editing a user changes the colleague's merk"""
+        self.client.force_login(self.auth_user)
+        self.colleague1.suborganization = self.merk_a
+        self.colleague1.save()
+
+        response = self.client.post(
+            reverse("user-edit", args=[self.user1.id]),
+            {
+                "first_name": self.user1.first_name,
+                "last_name": self.user1.last_name,
+                "email": self.user1.email,
+                "suborganization": self.merk_b.id,
+            },
+        )
+
+        assert response.status_code == 302
+        self.colleague1.refresh_from_db()
+        assert self.colleague1.suborganization_id == self.merk_b.id
+
+    def test_user_edit_clears_merk(self):
+        """Test that submitting the edit form with no merk clears the colleague's merk"""
+        self.client.force_login(self.auth_user)
+        self.colleague1.suborganization = self.merk_a
+        self.colleague1.save()
+
+        response = self.client.post(
+            reverse("user-edit", args=[self.user1.id]),
+            {
+                "first_name": self.user1.first_name,
+                "last_name": self.user1.last_name,
+                "email": self.user1.email,
+            },
+        )
+
+        assert response.status_code == 302
+        self.colleague1.refresh_from_db()
+        assert self.colleague1.suborganization_id is None
+
+    def test_user_edit_get_prefills_merk(self):
+        """Test that the edit form pre-selects the colleague's current merk"""
+        self.colleague1.suborganization = self.merk_a
+        self.colleague1.save()
+
+        form = UserForm(instance=self.user1)
+        assert form.fields["suborganization"].initial == self.merk_a.id
 
     def test_user_create_without_labels(self):
         """Test user creation without labels (optional field)"""

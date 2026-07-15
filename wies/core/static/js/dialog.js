@@ -44,6 +44,7 @@ document.addEventListener("closeModal", function () {
   const modalContainers = [
     "labelFormModal",
     "userFormModal",
+    "merkFormModal",
     "clientModalContainer",
   ];
   modalContainers.forEach((modalId) => {
