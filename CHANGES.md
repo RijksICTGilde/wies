@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 463: (migration) change "merk" to be a single select. "merk" now has its own table
+- 463: (migration) change "merk" to be a single select. "merk" now has its own table. Merk filter now comes after labels.
 - 456: fix onboarding wizard's Merken picker rendering broken on pages that don't load the filter/side-panel stylesheets
 - 456: fix multiselect dropdown (e.g. Merk in the profile onboarding) being unreachable when the trigger sits low on the screen
 

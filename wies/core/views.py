@@ -928,6 +928,7 @@ class PlacementListView(ListView):
                 "selected_values": skill_selected_values,
             },
             *label_filter_groups,
+            suborganization_filter_group,
             {
                 "type": "select-multi",
                 "name": "loopt_af",
@@ -935,7 +936,6 @@ class PlacementListView(ListView):
                 "options": self._get_loopt_af_options(base_qs),
                 "selected_values": list(loopt_af_values),
             },
-            suborganization_filter_group,
         ]
         _finalize_filter_groups(context["filter_groups"])
         context["filter_modal_group_id"] = self.request.GET.get("filter_modal", "")
