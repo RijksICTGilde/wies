@@ -149,11 +149,15 @@ class UserForm(RvoFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Map labels stored on model to separate fields per category, which are dynamically generated
         instance = kwargs.get("instance")
+
+        # Pre-select the colleague's current merk when editing an existing user
+        # (suborganization isn't in Meta.fields, so ModelForm won't populate it).
         if instance and hasattr(instance, "colleague") and instance.colleague is not None:
             self.fields["suborganization"].initial = instance.colleague.suborganization_id
         self._configure_field_for_rvo("suborganization")
+
+        # Map labels stored on model to separate fields per category, which are dynamically generated
         self._category_field_names = set()
         for category in LabelCategory.objects.all():
             field_name = f"category_{category.name}"

@@ -1,6 +1,4 @@
-"""Editables for Colleague — a static ``suborganization`` FK field plus one labels
-field per LabelCategory, built dynamically.
-
+"""Editables for Colleague
 Permissions live in ``wies/core/permissions.py``.
 """
 
