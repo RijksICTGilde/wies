@@ -766,6 +766,30 @@ class PlacementListView(ListView):
         context["groupby_field"] = group_param if group_param in self.GROUPBY_ORDERING else ""
         context["groupby_options"] = self.GROUPBY_OPTIONS
 
+        # Distinct counts over the full filtered result set (not just the current page),
+        # shown as two grouping toggles in place of the plain result count.
+        full_qs = self.object_list
+        colleague_count = full_qs.values("colleague_id").distinct().count()
+        assignment_count = full_qs.values("service__assignment_id").distinct().count()
+        context["colleague_count"] = colleague_count
+        context["assignment_count"] = assignment_count
+        context["colleague_count_label"] = "collega" if colleague_count == 1 else "collega's"
+        context["assignment_count_label"] = "opdracht" if assignment_count == 1 else "opdrachten"
+
+        # Toggle URLs: clicking an active grouping turns it off (back to no grouping).
+        def _groupby_url(value):
+            params = self.request.GET.copy()
+            params.pop("pagina", None)
+            if group_param == value:
+                params.pop("groep", None)
+            else:
+                params["groep"] = value
+            query = params.urlencode()
+            return f"{reverse('home')}?{query}" if query else reverse("home")
+
+        context["groupby_person_url"] = _groupby_url("person")
+        context["groupby_assignment_url"] = _groupby_url("assignment")
+
         active_filters: dict = {}
 
         loopt_af_values = set(self.request.GET.getlist("loopt_af"))

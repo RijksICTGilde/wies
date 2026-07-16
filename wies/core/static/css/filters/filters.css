@@ -500,6 +500,48 @@
   font-size: var(--rvo-font-size-md, 1rem);
 }
 
+/* Grouping toggles rendered as a segmented pill control */
+.groupby-toggle {
+  display: inline-flex;
+  gap: 0;
+  border: 1px solid var(--rvo-color-hemelblauw, #007bc7);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.groupby-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.35rem 0.9rem;
+  color: var(--rvo-color-hemelblauw, #007bc7);
+  background: var(--rvo-color-wit, #fff);
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.groupby-link + .groupby-link {
+  border-left: 1px solid var(--rvo-color-hemelblauw, #007bc7);
+}
+
+.groupby-link:hover {
+  background: var(--rvo-color-hemelblauw-150, #f0f6fc);
+}
+
+.groupby-link--active,
+.groupby-link--active:hover {
+  color: var(--rvo-color-wit, #fff);
+  background: var(--rvo-color-hemelblauw, #007bc7);
+}
+
+.groupby-link b {
+  font-weight: 700;
+}
+
 .filter-chips-container {
   display: flex;
   flex-wrap: wrap;

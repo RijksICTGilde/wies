@@ -1,5 +1,14 @@
 {# HTMX partial: Updates the main content area when filters change #}
 <div id="filter-and-table-container">
+  {# Carries the active grouping through sidebar filter changes (hx-include picks it up).
+     Lives here (not in the sidebar) so grouping toggles, which only re-swap this container, keep it current. #}
+  {% if groupby_field %}
+    <input type="hidden"
+           name="groep"
+           value="{{ groupby_field }}"
+           data-filter-input
+           id="active-groupby-input" />
+  {% endif %}
   <!-- Page Header -->
   <div class="layout__main__header">
     <!-- Row 1: Title + Search -->
@@ -24,19 +33,23 @@
         </div>
       </div>
     </div>
-    <!-- Row 2: Result count + Group by + Active Filter Chips -->
+    <!-- Row 2: Grouping toggles (colleagues / assignments) + Active Filter Chips -->
     <div class="header-row">
-      <c-paragraph class="results-count">
-      <b>{{ page_obj.paginator.count }}</b> resultaten
-      </c-paragraph>
-      <div class="groupby-field"
-           hx-get="{{ filter_target_url }}"
+      <div class="groupby-toggle" role="group" aria-label="Groepeer op">
+        <a href="{{ groupby_person_url }}"
+           class="groupby-link{% if groupby_field == 'person' %} groupby-link--active{% endif %}"
+           hx-get="{{ groupby_person_url }}"
            hx-target="#filter-and-table-container"
            hx-swap="innerHTML settle:0"
            hx-replace-url="true"
-           hx-trigger="change"
-           hx-include="[data-filter-input]">
-        <c-select-field label="Groepeer op" name="groep" id="groupby-select" data-filter-input :options="groupby_options" value="{{ groupby_field }}" />
+           aria-pressed="{{ 'true' if groupby_field == 'person' else 'false' }}"><b>{{ colleague_count }}</b> {{ colleague_count_label }}</a>
+        <a href="{{ groupby_assignment_url }}"
+           class="groupby-link{% if groupby_field == 'assignment' %} groupby-link--active{% endif %}"
+           hx-get="{{ groupby_assignment_url }}"
+           hx-target="#filter-and-table-container"
+           hx-swap="innerHTML settle:0"
+           hx-replace-url="true"
+           aria-pressed="{{ 'true' if groupby_field == 'assignment' else 'false' }}"><b>{{ assignment_count }}</b> {{ assignment_count_label }}</a>
       </div>
       <!-- Active Filter Chips -->
       {% include "parts/filters/filter_chips.html" %}
