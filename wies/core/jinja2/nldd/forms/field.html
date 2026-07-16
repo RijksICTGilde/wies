@@ -1,9 +1,27 @@
-<div class="nldd-form-field">
-  {% if field.label %}
-    <label class="nldd-form-field__label{% if field.field.required %} nldd-form-field__label--required{% endif %}"
-           {% if field.id_for_label %}for="{{ field.id_for_label }}"{% endif %}
-           id="label-{{ field.html_name }}">{{ field.label }}</label>
-  {% endif %}
-  {{ field }}
-  {% if field.errors %}{{ field.errors }}{% endif %}
-</div>
+{# Text-like fields render a real, form-associated nldd-text-field wrapped in
+   nldd-form-field (label + optional badge + error wiring come from the
+   component). Other widgets (checkbox/select/radio) are still plain inputs, so
+   they keep the hand-rolled wrapper until they migrate too. #}
+{% set widget_name = field.field.widget.__class__.__name__ %}
+{% set nldd_field_widgets = ["TextInput", "EmailInput", "Textarea", "NumberInput"] %}
+{% if widget_name in nldd_field_widgets %}
+  <nldd-form-field {% if field.label %}label="{{ field.label }}"{% endif %}
+                   {% if not field.field.required %}optional{% endif %}>
+    {{ field }}
+    {% if field.errors %}
+      {% for error in field.errors %}
+        <nldd-form-field-error-text>{{ error }}</nldd-form-field-error-text>
+      {% endfor %}
+    {% endif %}
+  </nldd-form-field>
+{% else %}
+  <div class="nldd-form-field">
+    {% if field.label %}
+      <label class="nldd-form-field__label{% if field.field.required %} nldd-form-field__label--required{% endif %}"
+             {% if field.id_for_label %}for="{{ field.id_for_label }}"{% endif %}
+             id="label-{{ field.html_name }}">{{ field.label }}</label>
+    {% endif %}
+    {{ field }}
+    {% if field.errors %}{{ field.errors }}{% endif %}
+  </div>
+{% endif %}

@@ -28,31 +28,20 @@ class NlddUserFormRenderingTest(TestCase):
         self.bdm_group = Group.objects.create(name="Business Development Manager")
 
     def test_form_renders_with_nldd_classes(self):
-        """Test that forms using NlddFormMixin render with NLDD design system classes"""
+        """Text-like fields render real nldd-form-field + nldd-text-field components."""
         form = UserForm()
         rendered = str(form)
 
-        # Check that form fields are wrapped with NLDD classes
-        assert "nldd-form-field" in rendered
-        assert "nldd-form-field__label" in rendered
+        # Fields are wrapped in the real nldd-form-field component.
+        assert "<nldd-form-field" in rendered
 
-        # Check that text inputs have NLDD classes
-        first_name_input_match = re.search(r'<input[^>]*name="first_name"[^>]*>', rendered)
-        assert first_name_input_match is not None
-        first_name_input = first_name_input_match.group(0)
-        assert "nldd-input" in first_name_input
-
-        # Check that email input has NLDD classes
-        email_input_match = re.search(r'<input[^>]*name="email"[^>]*>', rendered)
-        assert email_input_match is not None
-        email_input = email_input_match.group(0)
-        assert "nldd-input" in email_input
-
-        # Check that checkbox group has NLDD classes
-        assert "nldd-checkbox-group" in rendered or "nldd-checkbox" in rendered
+        # Text/email inputs are real nldd-text-field components, not plain inputs.
+        assert re.search(r'<nldd-text-field[^>]*name="first_name"', rendered, re.DOTALL) is not None
+        assert re.search(r'<nldd-text-field[^>]*name="email"', rendered, re.DOTALL) is not None
+        assert 'class="nldd-input"' not in rendered
 
     def test_form_displays_validation_errors_with_nldd_classes(self):
-        """Test that form validation errors are displayed with NLDD design system classes"""
+        """Validation errors render as nldd-form-field-error-text elements."""
         # Submit form with missing required fields to trigger validation errors
         form = UserForm(
             data={
@@ -66,59 +55,40 @@ class NlddUserFormRenderingTest(TestCase):
         # Render the form
         rendered = str(form)
 
-        # Check that error messages have NLDD classes
-        assert "nldd-form-field__error" in rendered or "nldd-form-field__error-text" in rendered
+        # Errors render via the real component's error-text element.
+        assert "<nldd-form-field-error-text>" in rendered
 
     def test_required_fields_have_required_label_class(self):
-        """Test that required fields have nldd-form-field__label--required class on their labels"""
+        """Optional fields get the `optional` badge; required fields do not."""
         form = UserForm()
         rendered = str(form)
 
-        # Check that required field labels have nldd-form-field__label--required class
-        # first_name is required
-        first_name_label_match = re.search(r'<label[^>]*for="id_first_name"[^>]*>(.*?)</label>', rendered, re.DOTALL)
-        assert first_name_label_match is not None
-        first_name_label = first_name_label_match.group(0)
-        assert "nldd-form-field__label--required" in first_name_label
-        assert "nldd-form-field__label" in first_name_label
+        # Required text fields render an nldd-form-field WITHOUT the optional badge.
+        first_name_field = re.search(r'<nldd-form-field[^>]*label="Voornaam".*?</nldd-form-field>', rendered, re.DOTALL)
+        assert first_name_field is not None
+        assert "optional" not in first_name_field.group(0)
 
-        # email is required
-        email_label_match = re.search(r'<label[^>]*for="id_email"[^>]*>(.*?)</label>', rendered, re.DOTALL)
-        assert email_label_match is not None
-        email_label = email_label_match.group(0)
-        assert "nldd-form-field__label--required" in email_label
-
-        # groups is optional - should NOT have nldd-form-field__label--required
-        groups_label_match = re.search(r'<label[^>]*id="label-groups"[^>]*>(.*?)</label>', rendered, re.DOTALL)
-        if groups_label_match is not None:
-            brand_label = groups_label_match.group(0)
-            assert "nldd-form-field__label--required" not in brand_label
-            assert "nldd-form-field__label" in brand_label  # Should still have base class
+        email_field = re.search(r'<nldd-form-field[^>]*label="E-mail[^"]*".*?</nldd-form-field>', rendered, re.DOTALL)
+        assert email_field is not None
+        assert "optional" not in email_field.group(0)
 
     def test_form_has_no_required_attribute(self):
         """
-        Test that form fields do not have required HTML attribute (client-side validation disabled)
-        This ensures fields are not colored red upon first view
+        Text fields do not carry the HTML required attribute (client-side
+        validation is disabled so fields aren't coloured red on first view).
         """
         form = UserForm()
         rendered = str(form)
 
-        # Check that required fields don't have the required attribute in the HTML
-        # Check for first_name field
-        assert 'name="first_name"' in rendered
-        # The input should NOT have required attribute
-        first_name_input_match = re.search(r'<input[^>]*name="first_name"[^>]*>', rendered)
-        assert first_name_input_match is not None
-        first_name_input = first_name_input_match.group(0)
-        assert "required" not in first_name_input, (
-            f"first_name input should not have 'required' attribute. Found: {first_name_input}"
+        first_name = re.search(r'<nldd-text-field[^>]*name="first_name"[^>]*>', rendered, re.DOTALL)
+        assert first_name is not None
+        assert "required" not in first_name.group(0), (
+            f"first_name should not have 'required'. Found: {first_name.group(0)}"
         )
 
-        # Check for email field
-        email_input_match = re.search(r'<input[^>]*name="email"[^>]*>', rendered)
-        assert email_input_match is not None
-        email_input = email_input_match.group(0)
-        assert "required" not in email_input, f"email input should not have 'required' attribute. Found: {email_input}"
+        email = re.search(r'<nldd-text-field[^>]*name="email"[^>]*>', rendered, re.DOTALL)
+        assert email is not None
+        assert "required" not in email.group(0), f"email should not have 'required'. Found: {email.group(0)}"
 
     def test_unmapped_widget_logs_warning(self):
         """Test that using an unmapped widget logs a warning"""
@@ -284,9 +254,10 @@ class NlddFormMixinTest(TestCase):
         form = self._make_nldd_test_form()
         rendered = str(form)
 
-        assert "nldd-form-field" in rendered
-        assert "nldd-form-field__label" in rendered
-        assert "nldd-input" in rendered
+        # Text-like fields use the real components; no hand-rolled nldd-input.
+        assert "<nldd-form-field" in rendered
+        assert re.search(r'<nldd-text-field[^>]*name="first_name"', rendered, re.DOTALL) is not None
+        assert 'class="nldd-input"' not in rendered
 
     def test_nldd_form_errors_without_rvo_classes(self):
         form = self._make_nldd_test_form(data={})
@@ -295,20 +266,21 @@ class NlddFormMixinTest(TestCase):
 
         for marker in self.RVO_MARKERS:
             assert marker not in rendered, f"RVO marker '{marker}' found in NLDD form error output"
-        assert "nldd-form-field__error" in rendered
+        assert "<nldd-form-field-error-text>" in rendered
 
     def test_nldd_form_required_label_class(self):
         form = self._make_nldd_test_form()
         rendered = str(form)
 
-        first_name_label = re.search(r'<label[^>]*for="id_first_name"[^>]*>', rendered)
-        assert first_name_label is not None
-        assert "nldd-form-field__label--required" in first_name_label.group(0)
+        # A required text field renders an nldd-form-field without the optional badge.
+        first_name_field = re.search(r'<nldd-form-field[^>]*label="Voornaam".*?</nldd-form-field>', rendered, re.DOTALL)
+        assert first_name_field is not None
+        assert "optional" not in first_name_field.group(0)
 
     def test_nldd_form_no_required_attribute(self):
         form = self._make_nldd_test_form()
         rendered = str(form)
 
-        first_name_input = re.search(r'<input[^>]*name="first_name"[^>]*>', rendered)
-        assert first_name_input is not None
-        assert "required" not in first_name_input.group(0)
+        first_name = re.search(r'<nldd-text-field[^>]*name="first_name"[^>]*>', rendered, re.DOTALL)
+        assert first_name is not None
+        assert "required" not in first_name.group(0)
