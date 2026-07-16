@@ -500,46 +500,186 @@
   font-size: var(--rvo-font-size-md, 1rem);
 }
 
-/* Grouping toggles rendered as a segmented pill control */
-.groupby-toggle {
-  display: inline-flex;
-  gap: 0;
-  border: 1px solid var(--rvo-color-hemelblauw, #007bc7);
-  border-radius: 999px;
+/* Visually hidden but available to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
   overflow: hidden;
-}
-
-.groupby-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35em;
-  padding: 0.35rem 0.9rem;
-  color: var(--rvo-color-hemelblauw, #007bc7);
-  background: var(--rvo-color-wit, #fff);
-  text-decoration: none;
-  cursor: pointer;
+  clip: rect(0, 0, 0, 0);
   white-space: nowrap;
-  transition:
-    background-color 0.12s ease,
-    color 0.12s ease;
+  border: 0;
 }
 
-.groupby-link + .groupby-link {
-  border-left: 1px solid var(--rvo-color-hemelblauw, #007bc7);
+/* Toolbar: a controls row (on a light strip) with a result-count + chips row below it. */
+.table-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.groupby-link:hover {
-  background: var(--rvo-color-hemelblauw-150, #f0f6fc);
+/* Row 1: search + grouping, on their own light strip. */
+.table-toolbar__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--rvo-space-sm, 0.75rem);
+  padding: 0.5rem 0.6rem;
+  background: var(--rvo-color-grijs-100, #f1f5f9);
+  border-radius: var(--rvo-border-radius-md, 8px);
 }
 
-.groupby-link--active,
-.groupby-link--active:hover {
-  color: var(--rvo-color-wit, #fff);
-  background: var(--rvo-color-hemelblauw, #007bc7);
+/* Row 2: result count with the active chips beside it — no strip, on the page. */
+.table-toolbar__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--rvo-space-sm, 0.75rem);
 }
 
-.groupby-link b {
+.table-toolbar .results-count {
+  flex: 0 0 auto;
+  margin: 0;
+  white-space: nowrap;
+  color: var(--rvo-color-grijs-700, #334155);
+  font-size: var(--rvo-font-size-md, 1rem);
+}
+
+/* Search on the left of the controls row. */
+.table-toolbar .search-field-wrapper {
+  flex: 0 1 20rem;
+  max-width: 100%;
+}
+
+.table-toolbar .search-field-wrapper .utrecht-textbox {
+  height: 2.5rem;
+  background: var(--rvo-color-wit, #fff);
+}
+
+.table-toolbar .mobile-filter-toggle,
+.table-toolbar .groupby-menu {
+  flex: 0 0 auto;
+}
+
+/* Active filter chips beside the result count. */
+.table-toolbar__chips {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Give the plain chips a clear grey fill so they read on the white page. */
+.table-toolbar__chips .filter-chip--default {
+  background-color: var(--rvo-color-grijs-200, #e2e8f0);
+  border-color: var(--rvo-color-grijs-300, #cbd5e1);
+}
+
+/* Keep chips to a single line; long labels ellipsis (full text in the data-tooltip),
+   so the row stays tidy and the remove button is always reachable. */
+.table-toolbar__chips .filter-chip__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  max-width: 16rem;
+}
+
+/* ---- Grouping: quiet Airtable-style toolbar button + popover menu ---- */
+.groupby-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* Override the tertiary button's blue/bold/underline defaults to a neutral,
+   outlined toolbar control (grey text + icon, white fill, subtle border). */
+.groupby-menu__trigger.rvo-button {
+  --rvo-button-tertiary-color: var(--rvo-color-grijs-700, #334155);
+  --rvo-button-tertiary-hover-color: var(--rvo-color-grijs-800, #1e293b);
+  --rvo-button-tertiary-focus-color: var(--rvo-color-grijs-800, #1e293b);
+  --rvo-button-tertiary-font-weight: var(--rvo-font-weight-normal, 400);
+  --rvo-button-tertiary-hover-text-decoration: none;
+  gap: 0.4rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--rvo-color-grijs-300, #cbd5e1);
+  border-radius: var(--rvo-border-radius-sm, 4px);
+  background: var(--rvo-color-wit, #fff);
+  cursor: pointer;
+}
+
+.groupby-menu__trigger.rvo-button:hover {
+  background: var(--rvo-color-grijs-100, #f1f5f9);
+}
+
+/* Toolbar icons follow the (grey) text colour instead of the button accent. */
+.groupby-menu__trigger .utrecht-icon.rvo-icon {
+  background-color: var(--rvo-color-grijs-700, #334155);
+}
+
+/* Active grouping: a blue badge, like Airtable's "Grouped by …".
+   A touch more saturated than the grey toolbar strip so it reads as a state. */
+.groupby-menu__trigger--active.rvo-button,
+.groupby-menu__trigger--active.rvo-button:hover {
+  --rvo-button-tertiary-color: var(--rvo-color-hemelblauw, #007bc7);
+  --rvo-button-tertiary-hover-color: var(--rvo-color-hemelblauw, #007bc7);
+  border-color: var(--rvo-color-hemelblauw, #007bc7);
+  background: var(--rvo-color-hemelblauw-150, #d9ebf7);
+}
+
+.groupby-menu__trigger--active .utrecht-icon.rvo-icon {
+  background-color: var(--rvo-color-hemelblauw, #007bc7);
+}
+
+.groupby-menu__chevron {
+  margin-left: 0.15rem;
+  transition: transform 0.15s ease-in-out;
+}
+
+.groupby-menu__trigger[aria-expanded="true"] .groupby-menu__chevron {
+  transform: rotate(180deg);
+}
+
+.groupby-menu__dropdown {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  z-index: 20;
+  min-width: 14rem;
+  padding: 0.25rem;
+  background: var(--rvo-color-wit, #fff);
+  border: 1px solid var(--rvo-color-grijs-300, #cad0d8);
+  border-radius: var(--rvo-border-radius-md, 8px);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+}
+
+.groupby-menu__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--rvo-color-zwart, #000);
+  text-decoration: none;
+  border-radius: var(--rvo-border-radius-sm, 4px);
+  white-space: nowrap;
+}
+
+.groupby-menu__option:hover,
+.groupby-menu__option:focus-visible {
+  background: var(--rvo-color-grijs-100, #f3f4f5);
+}
+
+.groupby-menu__option--active {
   font-weight: 700;
+}
+
+.groupby-menu__check {
+  display: inline-flex;
+  width: 1rem;
+  justify-content: center;
+  color: var(--rvo-color-hemelblauw, #007bc7);
 }
 
 .filter-chips-container {

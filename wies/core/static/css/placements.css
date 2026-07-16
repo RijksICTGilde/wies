@@ -72,20 +72,32 @@
   display: inline-block;
 }
 
-/* Foldable group header rows */
+/* Foldable group header rows — plain when collapsed, tinted band when expanded. */
 .placement-table .placement-group-header {
   cursor: pointer;
   user-select: none;
 }
 
 .placement-table .placement-group-header:hover {
-  background-color: var(--rvo-color-grijs-100);
+  background-color: var(--rvo-color-grijs-100, #f1f5f9);
+}
+
+.placement-table .placement-group-header[aria-expanded="true"],
+.placement-table .placement-group-header[aria-expanded="true"]:hover {
+  background-color: var(--rvo-color-lichtblauw-150, #eef7fc);
+}
+
+/* Wie-column of the header: chevron on the left, avatars pulled to the right edge
+   of the cell so they sit next to the assignment name in the Wat & waar column. */
+.placement-group-header__who {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .placement-group-header__chevron {
   display: inline-flex;
   align-items: center;
-  margin-right: 0.25rem;
   transition: transform 0.15s ease-in-out;
 }
 
@@ -94,6 +106,37 @@
   transform: rotate(-90deg);
 }
 
-.placement-table tr[data-group-member][hidden] {
+/* Collega name-chips in the Wie column, left-aligned, kept on one line (+X for the rest). */
+.placement-group-header__avatars {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+}
+
+/* Avatar + first name in a pill; full name shown via the data-tooltip. */
+.person-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.6rem 0.15rem 0.15rem;
+  background: var(--rvo-color-wit, #fff);
+  border: 1px solid var(--rvo-color-grijs-300, #cbd5e1);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.person-chip__name {
+  font-size: var(--rvo-font-size-sm, 0.875rem);
+  color: var(--rvo-color-grijs-800, #1e293b);
+}
+
+/* "+X" overflow chip: no avatar, a touch tighter. */
+.person-chip--more {
+  padding: 0.15rem 0.6rem;
+  color: var(--rvo-color-grijs-700, #334155);
+}
+
+.placement-table tr[data-group-member].is-collapsed {
   display: none;
 }

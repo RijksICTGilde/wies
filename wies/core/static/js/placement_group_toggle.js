@@ -7,23 +7,52 @@
     let row = header.nextElementSibling;
     while (row && !row.hasAttribute("data-group-header")) {
       if (row.hasAttribute("data-group-member")) {
-        if (next) {
-          row.removeAttribute("hidden");
-        } else {
-          row.setAttribute("hidden", "");
-        }
+        row.classList.toggle("is-collapsed", !next);
       }
       row = row.nextElementSibling;
     }
   }
 
+  function closeAllGroupbyMenus() {
+    document.querySelectorAll("[data-groupby-menu]").forEach(function (menu) {
+      const trigger = menu.querySelector("[data-groupby-trigger]");
+      const dropdown = menu.querySelector(".groupby-menu__dropdown");
+      if (trigger) trigger.setAttribute("aria-expanded", "false");
+      if (dropdown) dropdown.setAttribute("hidden", "");
+    });
+  }
+
+  // Delegated on document so it survives HTMX swaps of the table container.
   document.addEventListener("click", function (event) {
     const header = event.target.closest("[data-group-header]");
-    if (!header) return;
-    toggleGroup(header);
+    if (header) {
+      toggleGroup(header);
+      return;
+    }
+
+    // Grouping menu open/close.
+    const trigger = event.target.closest("[data-groupby-trigger]");
+    if (trigger) {
+      const menu = trigger.closest("[data-groupby-menu]");
+      const dropdown = menu.querySelector(".groupby-menu__dropdown");
+      const open = trigger.getAttribute("aria-expanded") === "true";
+      closeAllGroupbyMenus();
+      if (!open) {
+        trigger.setAttribute("aria-expanded", "true");
+        dropdown.removeAttribute("hidden");
+      }
+      return;
+    }
+
+    // Any other click (including a menu option, which then HTMX-swaps) closes menus.
+    closeAllGroupbyMenus();
   });
 
   document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape") {
+      closeAllGroupbyMenus();
+      return;
+    }
     if (event.key !== "Enter" && event.key !== " ") return;
     const header = event.target.closest("[data-group-header]");
     if (!header || event.target !== header) return;

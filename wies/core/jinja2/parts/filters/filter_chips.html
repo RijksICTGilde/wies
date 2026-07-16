@@ -3,10 +3,11 @@
   {# Organization filter chips #}
   {% for chip in org_chip_data %}
     <div class="filter-chip filter-chip--default"
+         data-tooltip="{{ chip.label }}"
          data-filter-name="{{ chip.param_name }}"
          data-filter-type="org"
          data-filter-value="{{ chip.param_value }}">
-      <span>{{ chip.label }}</span>
+      <span class="filter-chip__text">{{ chip.label }}</span>
       <button type="button"
               class="filter-chip-remove"
               aria-label="Verwijder filter"
@@ -25,9 +26,10 @@
         {% for option in filter_group.options %}
           {% if option.value == filter_value %}
             <div class="filter-chip filter-chip--default"
+                 data-tooltip="{{ option.label }}"
                  data-filter-name="{{ filter_group.name }}"
                  data-filter-type="select">
-              <span>{{ option.label }}</span>
+              <span class="filter-chip__text">{{ option.label }}</span>
               <button type="button"
                       class="filter-chip-remove"
                       aria-label="Verwijder filter"
@@ -45,11 +47,12 @@
           {% for option in filter_group.options %}
             {% if option.value == selected_id %}
               <div class="filter-chip {% if option.category_color %}filter-chip--label{% else %}filter-chip--default{% endif %}"
+                   data-tooltip="{{ option.label }}"
                    data-filter-name="{{ filter_group.name }}"
                    data-filter-value="{{ selected_id }}"
                    data-filter-type="select-multi"
                    {% if option.category_color %}style="background-color: {{ option.category_color }}"{% endif %}>
-                <span>{{ option.label }}</span>
+                <span class="filter-chip__text">{{ option.label }}</span>
                 <button type="button"
                         class="filter-chip-remove"
                         aria-label="Verwijder filter"
