@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 463: (migration) change "merk" to be a single select. "merk" now has its own table. Merk filter now comes after labels.
+- 463: (migration)(remove labelcategory) change "merk" to be a single select. "merk" now has its own table (`suborganization`). Merk filter now comes after labels.
 
 ## 2026-07-15
 
