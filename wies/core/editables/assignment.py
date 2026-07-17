@@ -281,6 +281,26 @@ def _change_colleague_names(change: dict) -> set[str]:
     return names
 
 
+def _visible_colleague_names(assignment, request, viewer) -> set[str]:
+    """Names ``viewer`` may already see on this opdracht.
+
+    Cached on the request, keyed by opdracht: the timeline calls this once per
+    team event and ``visible_service_rows`` costs a query each time. Keyed on
+    the request rather than the assignment instance because the answer depends
+    on the viewer, and a request has exactly one.
+    """
+    cache = getattr(request, "wies_visible_colleague_names", None)
+    if cache is None:
+        cache = {}
+        request.wies_visible_colleague_names = cache
+    if assignment.id not in cache:
+        names = {row["colleague"].name for row in visible_service_rows(assignment, request) if row["colleague"]}
+        if viewer is not None:
+            names.add(viewer.name)
+        cache[assignment.id] = names
+    return cache[assignment.id]
+
+
 def _services_visible_changes(assignment, request, changes: list[dict]) -> list[dict]:
     """Viewer-filtered team changes for the audit timeline, mirroring
     ``visible_service_rows``: a name the team list hides must not resurface
@@ -295,9 +315,7 @@ def _services_visible_changes(assignment, request, changes: list[dict]) -> list[
     viewer = getattr(getattr(request, "user", None), "colleague", None)
     if viewer is not None and assignment.owner_id == viewer.id:
         return changes
-    allowed = {row["colleague"].name for row in visible_service_rows(assignment, request) if row["colleague"]}
-    if viewer is not None:
-        allowed.add(viewer.name)
+    allowed = _visible_colleague_names(assignment, request, viewer)
     return [change for change in changes if _change_colleague_names(change) <= allowed]
 
 

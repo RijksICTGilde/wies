@@ -4,7 +4,9 @@ import importlib
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
+from django.db import connection
 from django.test import Client, TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 from django.utils import timezone
 
@@ -890,6 +892,25 @@ class TimelinePlacementPrivacyTests(TestCase):
         response = self._get_timeline(self.unrelated_user)
 
         self.assertContains(response, "Toegevoegd: Communicatie Medewerker (open)")
+
+    def test_filter_does_not_query_per_event(self):
+        """The visible-name set is identical for every event in one request, so
+        it must be resolved once. Asserted as "does not grow with the number of
+        events" rather than a fixed count, which would break on any unrelated
+        query change."""
+        self.client.force_login(self.unrelated_user)
+        url = reverse("assignment-events-partial", args=[self.assignment.id])
+
+        with CaptureQueriesContext(connection) as one_event:
+            self.client.get(url)
+        for _ in range(9):
+            self._team_event(
+                [{"old": None, "new": self._row(self.service.id, "Software Engineer", "Hidden Colleague")}]
+            )
+        with CaptureQueriesContext(connection) as ten_events:
+            self.client.get(url)
+
+        assert len(ten_events.captured_queries) == len(one_event.captured_queries)
 
     def test_non_team_events_are_unaffected(self):
         """Opdracht-level fields are on the Gegevens tab anyway."""
