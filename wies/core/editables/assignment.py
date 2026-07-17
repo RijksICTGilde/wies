@@ -272,6 +272,35 @@ def _date_nl(iso: str | None) -> str | None:
     return f"{d}-{m}-{y}"
 
 
+def _change_colleague_names(change: dict) -> set[str]:
+    names = set()
+    for side in ("old", "new"):
+        row = change.get(side)
+        if row and row.get("colleague_name"):
+            names.add(row["colleague_name"])
+    return names
+
+
+def _services_visible_changes(assignment, request, changes: list[dict]) -> list[dict]:
+    """Viewer-filtered team changes for the audit timeline, mirroring
+    ``visible_service_rows``: a name the team list hides must not resurface
+    here. Keyed on the colleague *name* in the snapshot, not the row id: the
+    snapshot is frozen, so a row whose placement was since removed or re-filled
+    would otherwise leak the earlier name.
+
+    A change survives only if every name it mentions is one the viewer may
+    already see on this opdracht. Vacancies name nobody and always survive.
+    Dropped whole rather than redacted, so the timeline cannot betray that a
+    hidden placement exists (same reason ``team_count`` is filtered)."""
+    viewer = getattr(getattr(request, "user", None), "colleague", None)
+    if viewer is not None and assignment.owner_id == viewer.id:
+        return changes
+    allowed = {row["colleague"].name for row in visible_service_rows(assignment, request) if row["colleague"]}
+    if viewer is not None:
+        allowed.add(viewer.name)
+    return [change for change in changes if _change_colleague_names(change) <= allowed]
+
+
 def _services_render_change(change: dict) -> dict:
     old, new = change.get("old"), change.get("new")
     if old is None:
@@ -367,6 +396,7 @@ class AssignmentEditables(EditableSet):
         save=_save_services,
         audit_state=_services_audit_state,
         render_change=_services_render_change,
+        visible_changes=_services_visible_changes,
         hide_edit_button=True,
         form_template="parts/assignment_services_form.html",
         display="rvo/forms/displays/assignment_services.html",
