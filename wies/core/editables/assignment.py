@@ -289,10 +289,9 @@ def _visible_colleague_names(assignment, request, viewer) -> set[str]:
     the request rather than the assignment instance because the answer depends
     on the viewer, and a request has exactly one.
     """
-    cache = getattr(request, "wies_visible_colleague_names", None)
-    if cache is None:
-        cache = {}
-        request.wies_visible_colleague_names = cache
+    if not hasattr(request, "wies_visible_colleague_names"):
+        request.wies_visible_colleague_names = {}
+    cache = request.wies_visible_colleague_names
     if assignment.id not in cache:
         names = {row["colleague"].name for row in visible_service_rows(assignment, request) if row["colleague"]}
         if viewer is not None:
