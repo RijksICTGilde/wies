@@ -1996,34 +1996,52 @@ def assignment_events_partial(request, pk):
         .select_related("user__colleague")
         .order_by("-timestamp")[:20]
     )
-    for event in events:
-        _attach_audit_render_data(event)
+    events = [event for event in events if _attach_audit_render_data(event, assignment, request)]
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
 
 
-def _attach_audit_render_data(event) -> None:
+def _attach_audit_render_data(event, obj, request) -> bool:
+    """Prepare `event` for the timeline. False means the viewer may see nothing
+    of it and it must not be rendered at all."""
     event.render_kind = "text"
     event.diff_entries = None
     event.formatted_old = event.context.get("old_value")
     event.formatted_new = event.context.get("new_value")
 
-    # Delete events are kept for the audit trail (visible in /beheer/database/)
-    # but never rendered here — a deleted opdracht has no panel to open.
+    # Delete events are kept for the audit trail but never rendered here — a
+    # deleted opdracht has no panel to open.
     if event.action != "update":
-        return
+        return True
     model_label = event.object_type.lower()
     editable_set = REGISTRY.get(model_label)
     if editable_set is None:
-        return
+        return True
     spec = editable_set._editables.get(event.context.get("field_name", ""))
     if spec is None:
-        return
+        return True
 
     if isinstance(spec, EditableCollection):
         event.render_kind = "collection"
+        changes = event.context.get("changes", [])
+        if spec.visible_changes is not None:
+            try:
+                visible = spec.visible_changes(obj, request, changes)
+            except AttributeError, TypeError:
+                # A legacy row shape the filter can't read is a row whose names
+                # we can't clear, so show no rows rather than risk a leak.
+                logger.warning(
+                    "Audit visible_changes failed for collection Event id=%s field=%s; hiding its rows",
+                    event.id,
+                    event.context.get("field_name"),
+                    exc_info=True,
+                )
+                return False
+            if changes and not visible:
+                return False
+            changes = visible
         if spec.render_change is not None:
             try:
-                event.diff_entries = [spec.render_change(c) for c in event.context.get("changes", [])]
+                event.diff_entries = [spec.render_change(c) for c in changes]
             except TypeError:
                 logger.warning(
                     "Audit render_change failed for collection Event id=%s field=%s; falling back to raw context",
@@ -2032,7 +2050,7 @@ def _attach_audit_render_data(event) -> None:
                     exc_info=True,
                 )
                 event.diff_entries = None
-        return
+        return True
 
     from django import forms  # noqa: PLC0415
 
@@ -2054,6 +2072,7 @@ def _attach_audit_render_data(event) -> None:
             event.context.get("field_name"),
             exc_info=True,
         )
+    return True
 
 
 def assignment_delete(request, pk):

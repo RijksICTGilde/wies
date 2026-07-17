@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - ?: x
+- 468: fix the opdracht Updates tab revealing colleague names of planned or ended placements, which the Team tab hides from everyone except the placed colleague and the BM-owner
 
 ## 2026-07-15
 

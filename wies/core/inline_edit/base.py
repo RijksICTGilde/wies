@@ -132,6 +132,12 @@ class EditableCollection:
     # bullet line in the audit log UI, optionally with an inline
     # Van/Naar block under the bullet for long values.
     render_change: Callable[[dict], dict] | None = None
+    # Drop changes the viewer may not see, before ``render_change`` runs.
+    # ``audit_state`` snapshots every row regardless of viewer, so a
+    # collection whose display is viewer-filtered MUST filter here too or
+    # the audit log becomes a second, unguarded read path onto the same
+    # rows. Signature ``(obj, request, changes) -> changes``.
+    visible_changes: Callable[[Model, Any, list[dict]], list[dict]] | None = None
     # Suppress the auto-rendered pencil + clickable-value wrapper on the
     # display partial. Use when the parent template provides its own
     # edit trigger (e.g. the "Team bewerken" button).
