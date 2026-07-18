@@ -5,6 +5,8 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - ?: x
+- 473: fix the opdrachtgever filter counts including planned placements that placement visibility hides from unrelated viewers
+- 473: stop the inline-edit endpoint from revealing whether an object exists to users who may not edit it (a missing and a forbidden object now return the same response)
 
 ## 2026-07-17
 
