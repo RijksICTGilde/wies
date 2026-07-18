@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - ?: x
+- ?: CSV-import (gebruikers en opdrachten) weigert nu bestanden groter dan 50 MB, zodat een extreem groot bestand niet het geheugen van een worker kan opslokken
 
 ## 2026-07-17
 
