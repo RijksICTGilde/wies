@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - ?: x
+- 479: fix dat de overzichten "Wie zit waar?" en Gebruikers een 500-foutmelding gaven wanneer de labels-filter een niet-numerieke waarde in de URL bevatte; zo'n waarde wordt nu genegeerd, net als bij de organisatie- en rolfilters
 
 ## 2026-07-17
 
