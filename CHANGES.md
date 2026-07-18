@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - ?: x
+- ?: uitloggen kan alleen nog via de knop (POST), niet meer via een kaal GET-verzoek, zodat een externe pagina je niet ongemerkt kan uitloggen
 
 ## 2026-07-17
 
