@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - ?: x
+- 481: de productiecontainer valt niet meer stil terug op de lokale ontwikkelinstellingen (DEBUG aan) als DJANGO_SETTINGS_MODULE bij het starten ontbreekt; het startscript kiest dan standaard de productie-instellingen (een expliciet meegegeven waarde blijft leidend). Lokale ontwikkeling verandert niet.
 
 ## 2026-07-17
 
