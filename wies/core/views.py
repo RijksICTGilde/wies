@@ -1551,6 +1551,15 @@ def user_delete(request, pk):
     return HttpResponse(status=405)
 
 
+MAX_CSV_UPLOAD_BYTES = 2 * 1024 * 1024  # a user/opdracht CSV is far smaller than 2 MB
+_CSV_MAX_MB = MAX_CSV_UPLOAD_BYTES // (1024 * 1024)
+_CSV_TOO_LARGE_MSG = f"Bestand te groot. Upload een CSV-bestand van maximaal {_CSV_MAX_MB} MB."
+
+
+def _csv_too_large(csv_file) -> bool:
+    return bool(csv_file.size) and csv_file.size > MAX_CSV_UPLOAD_BYTES
+
+
 @permission_required("rijksauth.add_user", raise_exception=True)
 def user_import_csv(request):
     """
@@ -1578,6 +1587,13 @@ def user_import_csv(request):
                 request,
                 "user_import.html",
                 {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
+            )
+
+        if _csv_too_large(csv_file):
+            return render(
+                request,
+                "user_import.html",
+                {"result": {"success": False, "errors": [_CSV_TOO_LARGE_MSG]}},
             )
 
         try:
@@ -1632,6 +1648,13 @@ def assignment_import_csv(request):
                 request,
                 "assignment_import.html",
                 {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
+            )
+
+        if _csv_too_large(csv_file):
+            return render(
+                request,
+                "assignment_import.html",
+                {"result": {"success": False, "errors": [_CSV_TOO_LARGE_MSG]}},
             )
 
         try:
