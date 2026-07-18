@@ -4,8 +4,7 @@
        role="link"
        aria-label="{{ assignment.name }}"
        hx-get="{{ assignment.panel_url }}"
-       hx-target="#side_panel-container"
-       onkeydown="if(event.key==='Enter')htmx.trigger(this,'click')">
+       hx-target="#side_panel-container">
     <div class="assignment-card__name">
       <strong class="assignment-card__title truncate" title="{{ assignment.name }}">{{ assignment.name }}</strong>
     </div>
