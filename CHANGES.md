@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - ?:
+- 486: de opdracht-CSV-import geeft nu een nette foutmelding in plaats van een 500 wanneer een waarde te lang is voor het veld of het bestand geen geldig CSV is.
 
 ## 2026-07-20
 
