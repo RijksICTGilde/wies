@@ -23,7 +23,11 @@
             <div class="user-avatar">{{ row.colleague.name|first|upper }}</div>
             <span><strong>{{ row.colleague.name }}</strong> · {{ row.skill_name }}</span>
             {% if row.period_label %}
-              <span class="service-card__tag"><c-tag type="default">{{ row.period_label }}</c-tag></span>
+              <span class="service-card__tag">
+                <c-tag type="default">
+                  {{ row.period_label }}
+                </c-tag>
+              </span>
             {% endif %}
             {% if pl and (pl.start_date or pl.end_date) %}
               <span class="service-card__period">
@@ -50,7 +54,11 @@
           <div class="service-card__name">
             <div class="user-avatar user-avatar--vacant">?</div>
             <span>{{ row.skill_name }}</span>
-            <span class="service-card__tag"><c-tag type="default">Aanvraag</c-tag></span>
+            <span class="service-card__tag">
+              <c-tag type="default">
+                Aanvraag
+              </c-tag>
+            </span>
             {% set svc = row.service %}
             {% if svc and (svc.start_date or svc.end_date) %}
               <span class="service-card__period">

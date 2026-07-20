@@ -28,10 +28,18 @@
              role="list"
              aria-label="Gezochte rollen">
           {% for service in assignment.services_with_skills[:3] %}
-            <span role="listitem"><c-tag type="info">{{ service.skill.name }}</c-tag></span>
+            <span role="listitem">
+              <c-tag type="info">
+                {{ service.skill.name }}
+              </c-tag>
+            </span>
           {% endfor %}
           {% if assignment.services_with_skills|length > 3 %}
-            <span role="listitem"><c-tag type="info">+{{ assignment.services_with_skills|length - 3 }} meer</c-tag></span>
+            <span role="listitem">
+              <c-tag type="info">
+                +{{ assignment.services_with_skills|length - 3 }} meer
+              </c-tag>
+            </span>
           {% endif %}
         </div>
       {% endif %}

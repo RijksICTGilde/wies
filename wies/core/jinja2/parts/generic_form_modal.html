@@ -1,7 +1,9 @@
 <dialog id="{{ modal_element_id }}" class="modal-dialog" closedby="none">
   <div class="modal-content">
     <div class="modal-header">
-      <c-h2>{{ modal_title }}</c-h2>
+      <c-h2>
+        {{ modal_title }}
+      </c-h2>
       <button type="button" class="close modal-close-button">×</button>
     </div>
     <form method="post"
@@ -12,7 +14,9 @@
       <div class="modal-body">
         {% if delete_warning %}
           <div class="modal-body__warning">
-            <c-paragraph>{{ delete_warning }}</c-paragraph>
+            <c-paragraph>
+              {{ delete_warning }}
+            </c-paragraph>
           </div>
         {% else %}
           {{ content }}
@@ -21,18 +25,22 @@
       <div class="modal-footer">
         <div class="modal-footer-buttons">
           <div class="close">
-            <c-button kind="{{ 'warning-subtle' if warning_modal else 'secondary' }}" type="button">
-            Annuleren
+            <c-button kind="{{ 'warning-subtle' if warning_modal else 'secondary' }}"
+                      type="button">
+              Annuleren
             </c-button>
           </div>
           {% if delete_url %}
-            <c-button kind="warning-subtle" hx-get="{{ delete_url }}" hx-target="#{{ modal_element_id }}" hx-swap="innerHTML">
-            Verwijderen
+            <c-button kind="warning-subtle"
+                      hx-get="{{ delete_url }}"
+                      hx-target="#{{ modal_element_id }}"
+                      hx-swap="innerHTML">
+              Verwijderen
             </c-button>
           {% endif %}
         </div>
         <c-button kind="{{ 'warning' if warning_modal else 'primary' }}" type="submit">
-        {{ form_button_label }}
+          {{ form_button_label }}
         </c-button>
       </div>
     </form>
