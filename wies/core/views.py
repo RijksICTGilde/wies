@@ -156,6 +156,27 @@ def _build_assignment_panel_data(assignment, request):
     }
 
 
+def _assignment_hidden_by_org(assignment) -> bool:
+    """True when the assignment belongs to an excluded organization (e.g. an
+    intelligence service). Such assignments are hidden from every list, so they
+    must be equally unreachable via the side panel and the events/delete routes."""
+    excluded = get_excluded_org_ids()
+    return bool(excluded) and assignment.organizations.filter(id__in=excluded).exists()
+
+
+def _resolve_assignment_panel(request, assignment_id):
+    """Resolve the ?opdracht= side panel. Returns panel data, or None when the id
+    is malformed, the assignment does not exist, or it belongs to an excluded
+    organization."""
+    try:
+        assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
+    except Assignment.DoesNotExist, ValueError, TypeError:
+        return None
+    if _assignment_hidden_by_org(assignment):
+        return None
+    return _build_assignment_panel_data(assignment, request)
+
+
 def _merge_date_range(existing: dict, start, end):
     """Widen the date range of an assignment entry to include the given start/end."""
     if start and (existing["start_date"] is None or start < existing["start_date"]):
@@ -374,6 +395,8 @@ def _resolve_placement_panel(request, placement_id):
     except Placement.DoesNotExist:
         return None
     assignment = placement.service.assignment
+    if _assignment_hidden_by_org(assignment):
+        return None
     viewer = getattr(request.user, "colleague", None)
     viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
     result = evaluate(
@@ -921,11 +944,9 @@ class PlacementListView(ListView):
             except Colleague.DoesNotExist:
                 pass
         elif assignment_id:
-            try:
-                assignment = Assignment.objects.get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
-            except Assignment.DoesNotExist:
-                pass
+            panel_data = _resolve_assignment_panel(self.request, assignment_id)
+            if panel_data is not None:
+                context["panel_data"] = panel_data
         return context
 
 
@@ -1196,11 +1217,9 @@ class AssignmentListView(ListView):
             except Colleague.DoesNotExist:
                 pass
         elif assignment_id:
-            try:
-                assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
-                context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
-            except Assignment.DoesNotExist:
-                pass
+            panel_data = _resolve_assignment_panel(self.request, assignment_id)
+            if panel_data is not None:
+                context["panel_data"] = panel_data
 
         return context
 
@@ -1988,6 +2007,8 @@ def label_delete(request, pk):
 
 def assignment_events_partial(request, pk):
     assignment = get_object_or_404(Assignment, pk=pk)
+    if _assignment_hidden_by_org(assignment):
+        raise Http404
     events = list(
         Event.objects.filter(
             object_type="Assignment",
@@ -2077,6 +2098,8 @@ def _attach_audit_render_data(event, obj, request) -> bool:
 
 def assignment_delete(request, pk):
     assignment = get_object_or_404(Assignment, pk=pk)
+    if _assignment_hidden_by_org(assignment):
+        raise Http404
     if not has_permission(Verb.DELETE, assignment, request.user):
         return HttpResponseForbidden()
 
@@ -2168,11 +2191,7 @@ def user_profile(request):
     if placement_id:
         panel_data = _resolve_placement_panel(request, placement_id)
     elif assignment_id:
-        try:
-            assignment = Assignment.objects.get(id=assignment_id)
-            panel_data = _build_assignment_panel_data(assignment, request)
-        except Assignment.DoesNotExist:
-            pass
+        panel_data = _resolve_assignment_panel(request, assignment_id)
     elif colleague_id:
         try:
             panel_colleague = Colleague.objects.get(id=colleague_id)
