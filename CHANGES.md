@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - ?:
+- 489: opdrachten van uitgesloten organisaties (zoals inlichtingendiensten) zijn nu ook via het zijpaneel en de updates-/verwijder-routes onbereikbaar, niet alleen verborgen uit de lijsten; ze waren nog op te vragen door het id te raden.
 
 ## 2026-07-20
 
