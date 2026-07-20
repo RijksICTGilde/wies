@@ -4,7 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: x
+- 487: login now binds an account to its OIDC subject (`sub`) instead of the email address alone, and rejects a token whose email is already bound to a different `sub`; this prevents account takeover when the token's email claim cannot be fully trusted
+- 487: login now requires the OIDC email to be verified (`email_verified`), rejecting the login otherwise
+- 487: production now refuses to start unless OIDC_DISCOVERY_URL uses https, protecting OIDC signature validation
 
 ## 2026-07-17
 

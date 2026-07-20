@@ -1,5 +1,7 @@
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+
 from .base import *  # noqa: F403
 from .base import DATABASES
 
@@ -76,3 +78,8 @@ DATABASES["default"]["CONN_HEALTH_CHECKS"] = True
 OIDC_CLIENT_ID = os.environ["OIDC_CLIENT_ID"]
 OIDC_CLIENT_SECRET = os.environ["OIDC_CLIENT_SECRET"]
 OIDC_DISCOVERY_URL = os.environ["OIDC_DISCOVERY_URL"]
+# Signature validation rests on the JWKS authlib fetches from this URL. Over http://
+# (or a MITM-able endpoint) all OIDC validation is worthless, so fail fast at startup.
+if not OIDC_DISCOVERY_URL.startswith("https://"):
+    msg = "OIDC_DISCOVERY_URL must use https:// in production"
+    raise ImproperlyConfigured(msg)
