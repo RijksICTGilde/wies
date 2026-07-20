@@ -30,6 +30,7 @@ class AuthViewsTest(TestCase):
                 "given_name": "Test",
                 "family_name": "User",
                 "email": "test@rijksoverheid.nl",
+                "email_verified": True,
             },
         }
 
@@ -77,6 +78,7 @@ class AuthViewsTest(TestCase):
                 "given_name": "Test",
                 "family_name": "User",
                 "email": "test@rijksoverheid.nl",
+                "email_verified": True,
             },
         }
 
@@ -180,6 +182,7 @@ class AuthViewsTest(TestCase):
                 "given_name": "Test",
                 "family_name": "User",
                 "email": "test@rijksoverheid.nl",
+                "email_verified": True,
             },
         }
         self.client.cookies["wies_post_logout"] = "1"

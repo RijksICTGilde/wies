@@ -46,7 +46,12 @@ def login(request):
 def auth(request):
     oidc_response = _get_oidc().authorize_access_token(request)
     userinfo = oidc_response["userinfo"]
-    user = auth_authenticate(request, username=userinfo["sub"], email=userinfo["email"])
+    user = auth_authenticate(
+        request,
+        username=userinfo["sub"],
+        email=userinfo["email"],
+        email_verified=userinfo.get("email_verified", False),
+    )
     if user:
         auth_login(request, user)
         # Keep the id_token so logout can end the upstream Keycloak/SSO session.

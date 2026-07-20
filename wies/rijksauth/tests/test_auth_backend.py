@@ -3,6 +3,7 @@ from django.contrib.auth import authenticate, get_user_model
 from django.test import TestCase
 
 from wies.rijksauth.auth_backend import AuthBackend
+from wies.rijksauth.models import AuthEvent
 
 User = get_user_model()
 
@@ -24,6 +25,7 @@ class AuthBackendTest(TestCase):
             request=None,
             username="sub-abc",
             email="test@rijksoverheid.nl",
+            email_verified=True,
         )
 
         assert user is not None
@@ -41,6 +43,7 @@ class AuthBackendTest(TestCase):
             request=None,
             username="sub-abc",
             email="changed@rijksoverheid.nl",
+            email_verified=True,
         )
 
         assert user is not None
@@ -55,6 +58,7 @@ class AuthBackendTest(TestCase):
             request=None,
             username="attacker-sub",
             email="test@rijksoverheid.nl",
+            email_verified=True,
         )
 
         assert user is None
@@ -67,19 +71,52 @@ class AuthBackendTest(TestCase):
             request=None,
             username="whatever-sub",
             email="not@existing.com",
+            email_verified=True,
         )
 
         assert user is None
 
     def test_second_login_uses_sub_after_claim(self):
         """After the first-login claim, a later login with the same sub matches regardless of email."""
-        first = authenticate(request=None, username="sub-abc", email="test@rijksoverheid.nl")
+        first = authenticate(request=None, username="sub-abc", email="test@rijksoverheid.nl", email_verified=True)
         assert first is not None
 
-        second = authenticate(request=None, username="sub-abc", email="renamed@rijksoverheid.nl")
+        second = authenticate(request=None, username="sub-abc", email="renamed@rijksoverheid.nl", email_verified=True)
 
         assert second is not None
         assert second.pk == first.pk
+
+    def test_first_login_denied_when_email_not_verified(self):
+        """First-login binding is refused when the OIDC email is not verified upstream."""
+        user = authenticate(
+            request=None,
+            username="sub-abc",
+            email="test@rijksoverheid.nl",
+            email_verified=False,
+        )
+
+        assert user is None
+        self.test_user.refresh_from_db()
+        assert self.test_user.oidc_sub is None
+        assert AuthEvent.objects.filter(
+            user_email="test@rijksoverheid.nl",
+            name="Login.fail",
+            context__reason="Email not verified",
+        ).exists()
+
+    def test_bound_user_denied_when_email_not_verified(self):
+        """Even an already-bound account is refused when the email is not verified."""
+        self.test_user.oidc_sub = "sub-abc"
+        self.test_user.save(update_fields=["oidc_sub"])
+
+        user = authenticate(
+            request=None,
+            username="sub-abc",
+            email="test@rijksoverheid.nl",
+            email_verified=False,
+        )
+
+        assert user is None
 
     def test_get_user_existing(self):
         """Test that get_user returns existing User by ID"""

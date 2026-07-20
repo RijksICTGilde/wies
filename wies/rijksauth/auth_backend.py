@@ -11,7 +11,7 @@ User = get_user_model()
 
 
 class AuthBackend(ModelBackend):
-    def authenticate(self, request, username=None, email=None, **kwargs):
+    def authenticate(self, request, username=None, email=None, *, email_verified=False, **kwargs):
         # `username` carries the OIDC `sub` claim (see rijksauth.views.auth).
         if not username:
             msg = "username is required"
@@ -19,6 +19,12 @@ class AuthBackend(ModelBackend):
         if not email:
             msg = "email is required"
             raise ValueError(msg)
+
+        # A token whose email is not verified upstream is never trusted, on any path.
+        if not email_verified:
+            logger.info("User not authenticated, email not verified.")
+            create_auth_event(email, "Login.fail", {"reason": "Email not verified"})
+            return None
 
         oidc_sub = username
 
