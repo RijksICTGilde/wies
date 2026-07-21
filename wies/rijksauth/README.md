@@ -8,7 +8,7 @@ Reusable Django app for OIDC authentication in Dutch government projects. Works 
 
 - **`User` model** — email-based authentication (no username), extends `AbstractUser`
 - **`AuthEvent` model** — audit log for login events (`Login.success`, `Login.fail`) with timestamp, email, and JSON context
-- **`AuthBackend`** — authenticates users by email lookup
+- **`AuthBackend`** — authenticates users by their stable OIDC subject (`sub`), binding it to a pre-provisioned account by email on first login. An account already bound to a different subject is never re-bound, which prevents account takeover via a spoofable email claim.
 - **Auth views** — `login` (redirect to OIDC provider), `auth` (OIDC callback), `logout`
 - **`AutoLoginMiddleware`** — auto-login for local dev when OIDC provider is unreachable
 - **`ensure_initial_user`** — management command to bootstrap a first admin user from environment variables (idempotent)

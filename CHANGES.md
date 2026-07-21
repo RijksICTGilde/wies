@@ -4,8 +4,15 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: x
-- 481: de productiecontainer valt niet meer stil terug op de lokale ontwikkelinstellingen (DEBUG aan) als DJANGO_SETTINGS_MODULE bij het starten ontbreekt; het startscript kiest dan standaard de productie-instellingen (een expliciet meegegeven waarde blijft leidend). Lokale ontwikkeling verandert niet.
+- 477: logging out is now only possible via the button (POST), no longer via a bare GET request, so an external page cannot log you out without your knowledge
+- 481: the production container no longer silently falls back to the local development settings (DEBUG on) when DJANGO_SETTINGS_MODULE is missing at startup; the startup script then defaults to the production settings (an explicitly provided value still takes precedence). Local development is unchanged.
+- 486: the opdracht and user CSV imports now show a graceful error message instead of a 500 when a value is too long for its field or the file is not valid CSV.
+
+## 2026-07-20
+
+- 487: login now binds an account to its OIDC subject (`sub`) instead of the email address alone, and rejects a token whose email is already bound to a different `sub`; this prevents account takeover when the token's email claim cannot be fully trusted
+- 487: login now requires the OIDC email to be verified (`email_verified`), rejecting the login otherwise
+- 487: production now refuses to start unless OIDC_DISCOVERY_URL uses https, protecting OIDC signature validation
 
 ## 2026-07-17
 
