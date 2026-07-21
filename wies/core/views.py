@@ -598,7 +598,7 @@ class PlacementListView(ListView):
 
     def _get_labels_by_category(self):
         """Parse selected label IDs grouped by category."""
-        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid]
+        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid.isdigit()]
         if not label_ids:
             return {}
         labels_by_category = {}
@@ -688,7 +688,7 @@ class PlacementListView(ListView):
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
         qs = self._get_base_queryset()
-        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid]
+        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid.isdigit()]
         if label_ids and not self._get_labels_by_category():
             return Placement.objects.none()
         qs = self._apply_filters(qs)
@@ -748,7 +748,7 @@ class PlacementListView(ListView):
         # label filter supports multi-select
         label_filter = set()
         for label_id in self.request.GET.getlist("labels"):
-            if label_id != "":
+            if label_id.isdigit():
                 label_filter.add(label_id)
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
@@ -966,7 +966,7 @@ class AssignmentListView(ListView):
 
     def _apply_filters(self, qs, *, exclude_filter=None):
         if exclude_filter != "rol":
-            rol_filter = self.request.GET.getlist("rol")
+            rol_filter = [x for x in self.request.GET.getlist("rol") if x.isdigit()]
             if rol_filter:
                 qs = qs.filter(
                     services__skill__id__in=rol_filter,
@@ -1056,7 +1056,7 @@ class AssignmentListView(ListView):
         # rol filter supports multi-select
         rol_filter = set()
         for rol_id in self.request.GET.getlist("rol"):
-            if rol_id != "":
+            if rol_id.isdigit():
                 rol_filter.add(rol_id)
         if len(rol_filter) > 0:
             active_filters["rol"] = rol_filter
@@ -1237,7 +1237,7 @@ class UserListView(PermissionRequiredMixin, ListView):
 
     def _get_labels_by_category(self):
         """Parse selected label IDs grouped by category."""
-        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid]
+        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid.isdigit()]
         if not label_ids:
             return {}
         labels_by_category = {}
@@ -1267,7 +1267,7 @@ class UserListView(PermissionRequiredMixin, ListView):
     def get_queryset(self):
         """Apply filters to users queryset - exclude superusers"""
         qs = self._get_base_queryset()
-        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid]
+        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid.isdigit()]
         if label_ids and not self._get_labels_by_category():
             return User.objects.none()
         qs = self._apply_filters(qs)
@@ -1296,7 +1296,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         # label filter supports multi-select
         label_filter = set()
         for label_id in self.request.GET.getlist("labels"):
-            if label_id != "":
+            if label_id.isdigit():
                 label_filter.add(label_id)
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
