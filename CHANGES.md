@@ -4,7 +4,6 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- XXX: the background worker now runs on its own settings module (config.settings.worker) and no longer requires the OIDC credentials to be set at startup
 - 473: fix the opdrachtgever filter counts including planned placements that placement visibility hides from unrelated viewers
 - 473: stop the inline-edit endpoint from revealing whether an object exists to users who may not edit it (a missing and a forbidden object now return the same response)
 - 478: the user and opdracht CSV imports now reject files larger than 50 MB, so an extremely large file cannot exhaust a worker's memory
@@ -13,6 +12,7 @@ This files lists the changes during the lifetime of this project.
 - 486: the opdracht and user CSV imports now show a graceful error message instead of a 500 when a value is too long for its field or the file is not valid CSV.
 - 479: fix the "Wie zit waar?" and Gebruikers overviews returning a 500 error and showing "Wis filters" when the labels filter contained a non-numeric value in the URL; such a value is now ignored, just like the organization and role filters.
 - 491: PR preview environments are now reliably removed when a PR closes, preview images build on every push regardless of merge conflicts or CI status, previews also build when a draft PR is marked ready for review, and a preview can be rebuilt manually from the Actions UI; the weekly registry cleanup of old preview images is fixed
+- 493: (remove env vars)(add env vars) the background worker now runs on its own settings module (config.settings.worker) and no longer requires the OIDC credentials to be set at startup
 
 ## 2026-07-20
 
