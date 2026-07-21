@@ -124,12 +124,18 @@ class Command(BaseCommand):
                         task.status = "failed"
                         if result and isinstance(result, dict):
                             task.error_message = result.get("error", "Command returned failure")
+                            task.completed_at = timezone.now()
+                            task.save(update_fields=["status", "error_message", "completed_at"])
+                            # WARNING (not ERROR): the task command already logged
+                            # the failure with its traceback via TaskCommand.
+                            logger.warning("Task %s failed: %s", task.id, task.error_message)
                         else:
+                            # A command returned something that doesn't follow the
+                            # protocol; nobody logged this, so raise it to ERROR to
+                            # surface it as an ErrorEvent.
                             task.error_message = "Command returned unexpected result format"
-                        task.completed_at = timezone.now()
-                        task.save(update_fields=["status", "error_message", "completed_at"])
-                        # WARNING (not ERROR): the task command already logged the
-                        # failure with its traceback via TaskCommand.
-                        logger.warning("Task %s failed: %s", task.id, task.error_message)
+                            task.completed_at = timezone.now()
+                            task.save(update_fields=["status", "error_message", "completed_at"])
+                            logger.error("Task %s failed: %s", task.id, task.error_message)
 
         logger.info("DB worker shut down gracefully.")

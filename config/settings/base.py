@@ -170,6 +170,5 @@ MATTERMOST_WIES_OPS_CHANNEL_URL = os.environ.get("MATTERMOST_WIES_OPS_CHANNEL_UR
 SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "").rstrip("/")
 
 # Error monitoring throttle: within this window, only the first error per
-# (exception_type, path) is persisted + posted to Mattermost; repeats are dropped.
-# See wies.core.monitoring.handler.
-ERROR_THROTTLE_MINUTES = int(os.environ.get("ERROR_THROTTLE_MINUTES", "5"))
+# (exception_type, path) is persisted + posted to Mattermost
+ERROR_THROTTLE_MINUTES = 5
