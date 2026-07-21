@@ -43,6 +43,9 @@ class Migration(migrations.Migration):
                 "verbose_name": "Foutmelding",
                 "verbose_name_plural": "Foutmeldingen",
                 "ordering": ["-timestamp"],
+                "indexes": [
+                    models.Index(fields=["exception_type", "path", "timestamp"], name="core_errore_excepti_90c784_idx")
+                ],
             },
         ),
     ]

@@ -1,10 +1,12 @@
 """Tests for the error monitoring handler (wies.core.monitoring)."""
 
 import logging
+from datetime import timedelta
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
+from django.utils import timezone
 
 from wies.core.models import ErrorEvent
 from wies.core.monitoring.handler import ErrorReportingHandler
@@ -153,6 +155,64 @@ class ErrorReportingHandlerTest(TestCase):
         assert "ValueError" in message  # headline is the exception type
         assert "`wies.core.management.commands.db_worker`" in message  # location fallback
         assert "Traceback (most recent" not in message  # traceback stays behind login
+
+
+@override_settings(**MATTERMOST_SETTINGS, ERROR_THROTTLE_MINUTES=5)
+class ErrorThrottleTest(TestCase):
+    """The (exception_type, path) throttle: one row + one post per window."""
+
+    def setUp(self):
+        self.handler = ErrorReportingHandler()
+        mattermost.clear_channel_id_cache()
+        self.addCleanup(mattermost.clear_channel_id_cache)
+        resolver = patch.object(mattermost.MattermostClient, "resolve_channel_id", return_value="chan123")
+        resolver.start()
+        self.addCleanup(resolver.stop)
+
+    @patch("wies.core.services.mattermost.MattermostClient.post_message")
+    def test_repeat_within_window_is_dropped(self, mock_post):
+        exc = value_error_exc_info()
+        self.handler.emit(make_record(exc_info=exc))
+        self.handler.emit(make_record(exc_info=exc))
+
+        # Same (exception_type, path): only the first is persisted and posted.
+        assert ErrorEvent.objects.count() == 1
+        mock_post.assert_called_once()
+
+    @patch("wies.core.services.mattermost.MattermostClient.post_message")
+    def test_different_keys_each_pass(self, mock_post):
+        # Different path → different key → not throttled against each other.
+        self.handler.emit(make_record(exc_info=value_error_exc_info(), request=FakeRequest(user=None)))
+        other = FakeRequest(user=None)
+        other.path = "/other/"
+        self.handler.emit(make_record(exc_info=value_error_exc_info(), request=other))
+
+        assert ErrorEvent.objects.count() == 2
+        assert mock_post.call_count == 2
+
+    @patch("wies.core.services.mattermost.MattermostClient.post_message")
+    def test_passes_again_once_window_has_elapsed(self, mock_post):
+        exc = value_error_exc_info()
+        self.handler.emit(make_record(exc_info=exc))
+
+        # Age the existing row past the window so the next one is not throttled.
+        stale = timezone.now() - timedelta(minutes=6)
+        ErrorEvent.objects.update(timestamp=stale)
+
+        self.handler.emit(make_record(exc_info=exc))
+
+        assert ErrorEvent.objects.count() == 2
+        assert mock_post.call_count == 2
+
+    @override_settings(ERROR_THROTTLE_MINUTES=0)
+    @patch("wies.core.services.mattermost.MattermostClient.post_message")
+    def test_throttle_disabled_records_every_time(self, mock_post):
+        exc = value_error_exc_info()
+        self.handler.emit(make_record(exc_info=exc))
+        self.handler.emit(make_record(exc_info=exc))
+
+        assert ErrorEvent.objects.count() == 2
+        assert mock_post.call_count == 2
 
 
 class MattermostChannelUrlTest(TestCase):

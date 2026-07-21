@@ -310,6 +310,9 @@ class ErrorEvent(models.Model):
         ordering = ["-timestamp"]
         verbose_name = "Foutmelding"
         verbose_name_plural = "Foutmeldingen"
+        # Supports the monitoring handler's throttle lookup on
+        # (exception_type, path, recent timestamp).
+        indexes = [models.Index(fields=["exception_type", "path", "timestamp"])]
 
     def __str__(self):
         return f"{self.level} {self.logger_name}: {self.message[:80]}"
