@@ -9,7 +9,7 @@
 #
 # Before first use, replace the two <PIN> placeholders. See README notes below.
 
-name: Security Scan
+name: trivy
 
 on:
   push:
