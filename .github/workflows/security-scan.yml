@@ -1,0 +1,79 @@
+# Trivy scanning with results published to the repo's Security tab (Code scanning alerts).
+#
+# Design notes (post-CVE-2026-33634):
+#   - Does NOT use aquasecurity/trivy-action or setup-trivy. Trivy runs from its
+#     official container image, pinned by immutable digest.
+#   - Every third-party action is pinned to a full commit SHA, never a tag.
+#   - Default permissions are empty; each job opts in to the minimum it needs.
+#   - The scan job has no access to deployment secrets.
+#
+# Before first use, replace the two <PIN> placeholders. See README notes below.
+
+name: Security Scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly re-scan: new CVEs get published against code you haven't touched.
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+# Deny by default. Jobs grant themselves what they need.
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Pinned by digest, not tag. Digest resolved with:
+  #   docker buildx imagetools inspect ghcr.io/aquasecurity/trivy:0.72.0 --format '{{println .Manifest.Digest}}'
+  TRIVY_IMAGE: ghcr.io/aquasecurity/trivy@sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f
+
+jobs:
+  trivy:
+    name: Trivy (deps, secrets, IaC)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout
+      security-events: write # upload SARIF to code scanning
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # Don't leave the GITHUB_TOKEN sitting in .git/config for later steps.
+          persist-credentials: false
+
+      # Authenticating to ghcr.io avoids anonymous rate limits on both the
+      # scanner image and the Trivy vulnerability DB.
+      - name: Log in to ghcr.io
+        run: echo "${{ github.token }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+
+      - name: Run Trivy filesystem scan
+        run: |
+          mkdir -p "${RUNNER_TEMP}/trivy-out" "${RUNNER_TEMP}/trivy-cache"
+          docker run --rm \
+            -v "${GITHUB_WORKSPACE}:/scan:ro" \
+            -v "${RUNNER_TEMP}/trivy-out:/out" \
+            -v "${RUNNER_TEMP}/trivy-cache:/cache" \
+            -e TRIVY_CACHE_DIR=/cache \
+            -e GITHUB_TOKEN="${{ github.token }}" \
+            "${TRIVY_IMAGE}" \
+              filesystem /scan \
+              --scanners vuln,secret,misconfig \
+              --severity MEDIUM,HIGH,CRITICAL \
+              --ignore-unfixed \
+              --format sarif \
+              --output /out/trivy.sarif \
+              --exit-code 0 \
+              --timeout 10m
+
+      - name: Upload results to code scanning
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: ${{ runner.temp }}/trivy-out/trivy.sarif
+          category: trivy-fs
