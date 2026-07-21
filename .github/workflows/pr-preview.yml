@@ -15,9 +15,9 @@ on:
         description: "PR number to rebuild and redeploy"
         required: true
 
-# Group name matches PR Cleanup's, so closing a PR cancels in-flight preview
-# runs (manual dispatch runs group by PR number instead; the deploy job's
-# PR-open check covers those).
+# Dedupes runs per branch (manual dispatch runs group by PR number instead).
+# On close, PR Cleanup cancels in-flight runs here via the API; the deploy
+# job's PR-open check covers runs it cannot see, such as manual dispatches.
 concurrency:
   group: pr-preview-${{ github.head_ref || inputs.pr_number || github.ref_name }}
   cancel-in-progress: true
