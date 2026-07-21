@@ -748,7 +748,7 @@ class PlacementListView(ListView):
         # label filter supports multi-select
         label_filter = set()
         for label_id in self.request.GET.getlist("labels"):
-            if label_id != "":
+            if label_id.isdigit():
                 label_filter.add(label_id)
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
@@ -966,7 +966,7 @@ class AssignmentListView(ListView):
 
     def _apply_filters(self, qs, *, exclude_filter=None):
         if exclude_filter != "rol":
-            rol_filter = self.request.GET.getlist("rol")
+            rol_filter = [x for x in self.request.GET.getlist("rol") if x.isdigit()]
             if rol_filter:
                 qs = qs.filter(
                     services__skill__id__in=rol_filter,
@@ -1056,7 +1056,7 @@ class AssignmentListView(ListView):
         # rol filter supports multi-select
         rol_filter = set()
         for rol_id in self.request.GET.getlist("rol"):
-            if rol_id != "":
+            if rol_id.isdigit():
                 rol_filter.add(rol_id)
         if len(rol_filter) > 0:
             active_filters["rol"] = rol_filter
@@ -1296,7 +1296,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         # label filter supports multi-select
         label_filter = set()
         for label_id in self.request.GET.getlist("labels"):
-            if label_id != "":
+            if label_id.isdigit():
                 label_filter.add(label_id)
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
