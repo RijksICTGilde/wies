@@ -4,6 +4,13 @@ on:
   pull_request:
     types: [closed]
 
+# Shares the PR Preview concurrency group, so closing a PR cancels any
+# in-flight preview run before cleanup; otherwise that run's deploy step
+# re-creates the ZAD deployment right after it was deleted here.
+concurrency:
+  group: pr-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 env:
   IMAGE_TAG: pr-${{ github.event.pull_request.number }}
   DEPLOYMENT_NAME: pr-${{ github.event.pull_request.number }}

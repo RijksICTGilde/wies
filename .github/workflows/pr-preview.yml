@@ -2,20 +2,26 @@ name: PR Preview
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to rebuild and redeploy"
+        required: true
 
 concurrency:
-  group: pr-preview-${{ github.event.pull_request.number }}
+  group: pr-preview-${{ github.event.pull_request.number || inputs.pr_number }}
   cancel-in-progress: true
 
 env:
   IMAGE_NAME: ghcr.io/rijksictgilde/wies
-  MOVING_TAG: pr-${{ github.event.pull_request.number }}
-  DEPLOYMENT_NAME: pr-${{ github.event.pull_request.number }}
+  PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+  MOVING_TAG: pr-${{ github.event.pull_request.number || inputs.pr_number }}
+  DEPLOYMENT_NAME: pr-${{ github.event.pull_request.number || inputs.pr_number }}
 
 jobs:
   build:
-    if: github.event.pull_request.user.type != 'Bot' && github.event.pull_request.draft != true
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.user.type != 'Bot' && github.event.pull_request.draft != true)
     runs-on: ubuntu-latest
 
     permissions:
@@ -26,8 +32,13 @@ jobs:
       immutable_tag: ${{ steps.tag.outputs.immutable }}
 
     steps:
+      # Check out the PR head instead of the merge ref: the preview must
+      # build even when the PR has a merge conflict with main, and the
+      # merge ref does not exist on workflow_dispatch.
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          ref: refs/pull/${{ env.PR_NUMBER }}/head
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4
@@ -40,8 +51,8 @@ jobs:
         id: tag
         run: |
           TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)
-          SHORT_SHA=$(echo "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
-          IMMUTABLE="pr-${{ github.event.pull_request.number }}-${TIMESTAMP}-${SHORT_SHA}"
+          SHORT_SHA=$(git rev-parse HEAD | cut -c1-7)
+          IMMUTABLE="pr-${PR_NUMBER}-${TIMESTAMP}-${SHORT_SHA}"
           echo "immutable=${IMMUTABLE}" >> "$GITHUB_OUTPUT"
           echo "Immutable tag: ${IMMUTABLE}"
 
@@ -79,12 +90,26 @@ jobs:
       pull-requests: write
 
     environment:
-      name: pr-${{ github.event.pull_request.number }}
+      name: pr-${{ github.event.pull_request.number || inputs.pr_number }}
       url: ${{ steps.deploy.outputs.url }}
 
     steps:
+      # A PR can be merged while this run is in flight; deploying then
+      # would re-create the environment PR Cleanup just deleted.
+      - name: Check PR is still open
+        id: prstate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          STATE=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq .state)
+          echo "state=${STATE}" >> "$GITHUB_OUTPUT"
+          if [ "${STATE}" != "open" ]; then
+            echo "::notice::PR ${PR_NUMBER} is ${STATE}; skipping deploy"
+          fi
+
       - name: Deploy to ZAD
         id: deploy
+        if: steps.prstate.outputs.state == 'open'
         uses: RijksICTGilde/zad-actions/deploy@v4
         with:
           api-key: ${{ secrets.ZAD_API_KEY }}
