@@ -12,6 +12,7 @@ setup:
   echo "Setup application for local development: install dependencies, setup fresh db"
   uv sync  # to enable exploration in dependencies
   if [ ! -f .env ]; then cp .env.local.example .env; fi
+  if [ ! -f .env.worker ]; then cp .env.worker.example .env.worker; fi
   docker compose down -v
   docker compose build
   docker compose run --rm django python manage.py migrate
