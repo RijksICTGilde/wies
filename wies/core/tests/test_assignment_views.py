@@ -450,13 +450,16 @@ class AssignmentEditAttributeTest(TestCase):
 
         assert response.status_code == 404
 
-    def test_assignment_edit_nonexistent_assignment_returns_404(self):
-        """Test that nonexistent assignment ID returns 404"""
+    def test_assignment_edit_nonexistent_object_indistinguishable_from_forbidden(self):
+        """A nonexistent object PK returns the same denial partial as a forbidden
+        one (HTTP 200 + denial banner), not a 404, so the endpoint can't be walked
+        as a 404-vs-200 existence oracle over sequential PKs."""
         self.client.force_login(self.user_with_permission)
 
         response = self.client.get(reverse("inline-edit", args=["assignment", 99999, "name"]))
 
-        assert response.status_code == 404
+        assert response.status_code == 200
+        self.assertContains(response, "geen rechten")
 
     # ========== Event Logging Tests ==========
 
