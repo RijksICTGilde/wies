@@ -8,6 +8,9 @@
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
         hx-target="#{{ target }}"
         hx-swap="outerHTML">
+    <input type="hidden"
+           name="_concurrency_token"
+           value="{{ concurrency_token }}">
     <c-layout-flow gap="{%- if multi -%}md{%- else -%}0{%- endif -%}">
       {% for bound in form %}
         <div class="rvo-form-field">

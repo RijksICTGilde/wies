@@ -1,3 +1,5 @@
+import hashlib
+import json
 import logging
 import urllib.parse
 from collections import Counter
@@ -13,7 +15,7 @@ from django.core import management
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
+from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
 from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
@@ -2795,6 +2797,31 @@ PERMISSION_DENIED_ALERT = {
     "message": "Je hebt geen rechten om dit veld te bewerken.",
 }
 
+CONCURRENCY_CONFLICT_ALERT = {
+    "kind": "warning",
+    "message": "Deze gegevens zijn ondertussen door iemand anders gewijzigd. Herlaad de pagina en probeer opnieuw.",
+}
+
+
+def _concurrency_token(editable_set, spec, obj) -> str:
+    """A short hash of the values this edit is based on, embedded in the edit
+    form and re-checked (under a row lock) at save time. If the underlying
+    values changed since the form was rendered, the tokens differ and the save
+    is rejected instead of silently overwriting the other change."""
+    if isinstance(spec, EditableCollection):
+        state = spec.audit_state(obj) if spec.audit_state else None
+    else:
+        state = {}
+        for e in resolve_editables(editable_set, spec):
+            value = _current_value(obj, e)
+            if isinstance(value, list):  # M2M: order-independent
+                value = sorted(str(getattr(item, "pk", item)) for item in value)
+            elif isinstance(value, Model):
+                value = value.pk
+            state[e.field or e.name] = value
+    payload = json.dumps(state, sort_keys=True, default=str)
+    return hashlib.sha256(payload.encode()).hexdigest()[:16]
+
 
 def _permission_denied(
     editable_set: type[EditableSet],
@@ -2902,7 +2929,12 @@ def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) 
     # Edit-mode partial: form + save/cancel. On validation failure, `form` carries inline errors.
     from wies.core.inline_edit.base import EditableGroup  # noqa: PLC0415
 
-    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "form": form, "editable": spec}
+    ctx = {
+        **_inline_edit_base_ctx(editable_set, spec, obj),
+        "form": form,
+        "editable": spec,
+        "concurrency_token": _concurrency_token(editable_set, spec, obj),
+    }
     template = (
         spec.form_template if isinstance(spec, EditableGroup) and spec.form_template else "parts/inline_edit/form.html"
     )
@@ -2911,7 +2943,11 @@ def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) 
 
 def _render_inline_edit_collection_form(request, editable_set, spec, obj, formset) -> HttpResponse:
     # Inner body from spec.form_template; receives the formset as `formset`.
-    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "formset": formset}
+    ctx = {
+        **_inline_edit_base_ctx(editable_set, spec, obj),
+        "formset": formset,
+        "concurrency_token": _concurrency_token(editable_set, spec, obj),
+    }
     return render(request, "parts/inline_edit/collection_form.html", ctx)
 
 
@@ -2927,9 +2963,15 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
     if request.method == "POST":
         formset = spec.formset_factory(data=request.POST)
         if formset.is_valid():
-            before = spec.audit_state(obj) if spec.audit_state else None
+            submitted_token = request.POST.get("_concurrency_token", "")
             try:
                 with transaction.atomic():
+                    obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
+                    if submitted_token and submitted_token != _concurrency_token(editable_set, spec, obj):
+                        return _render_inline_edit_display(
+                            request, editable_set, spec, editables=[], obj=obj, alert=CONCURRENCY_CONFLICT_ALERT
+                        )
+                    before = spec.audit_state(obj) if spec.audit_state else None
                     spec.save(obj, formset)
                     after = spec.audit_state(obj) if spec.audit_state else None
                     _emit_inline_edit_audit_event(spec, obj, before, after, request.user)
@@ -3098,19 +3140,27 @@ def inline_edit_view(request, model_label, pk, name):
         )
         form = form_cls(request.POST)
         if form.is_valid():
-            if isinstance(spec, EditableGroup):
-                before = {e.name: _current_value(obj, e) for e in editables}
-            else:
-                before = _current_value(obj, spec)
-            # A placement edit (e.g. period via the profile) has no audit
-            # type of its own; mirror it onto the parent assignment's
-            # timeline like the "Team bewerken" flow (#393).
-            placement_before = None
-            if type(obj).__name__ == "Placement":
-                from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids circular import
-
-                placement_before = placement_audit_row(obj)
+            # The edit form always carries a token, so honest concurrent edits
+            # are covered; a tokenless (non-form) POST is trusted as before.
+            submitted_token = request.POST.get("_concurrency_token", "")
             with transaction.atomic():
+                obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
+                if submitted_token and submitted_token != _concurrency_token(editable_set, spec, obj):
+                    return _render_inline_edit_display(
+                        request, editable_set, spec, editables, obj, alert=CONCURRENCY_CONFLICT_ALERT
+                    )
+                if isinstance(spec, EditableGroup):
+                    before = {e.name: _current_value(obj, e) for e in editables}
+                else:
+                    before = _current_value(obj, spec)
+                # A placement edit (e.g. period via the profile) has no audit
+                # type of its own; mirror it onto the parent assignment's
+                # timeline like the "Team bewerken" flow (#393).
+                placement_before = None
+                if type(obj).__name__ == "Placement":
+                    from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 - circular import
+
+                    placement_before = placement_audit_row(obj)
                 save_spec(spec, editables, form.cleaned_data, obj)
                 if isinstance(spec, EditableGroup):
                     after = {e.name: _current_value(obj, e) for e in editables}

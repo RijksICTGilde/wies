@@ -12,6 +12,9 @@
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
         hx-target="#{{ target }}"
         hx-swap="outerHTML">
+    <input type="hidden"
+           name="_concurrency_token"
+           value="{{ concurrency_token }}">
     {% include editable.form_template %}
     <div class="field-actions">
       <c-button type="submit" kind="primary">
