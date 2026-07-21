@@ -1,5 +1,7 @@
-<input type="checkbox"
-       name="{{ widget.name }}"
-       {% if widget.value %}checked{% endif %}
-       class="nldd-checkbox"
-       {% include "nldd/forms/widgets/attrs.html" %}>
+{# Real NLDD checkbox. Form-associated: its value reaches the form natively.
+   The visible label sits in nldd/forms/field.html, so mirror it into
+   accessible-label — nldd-checkbox forwards that to the inner input. #}
+<nldd-checkbox name="{{ widget.name }}"
+{% if widget.value %}checked{% endif %}
+{% include "nldd/forms/widgets/attrs.html" %}
+></nldd-checkbox>

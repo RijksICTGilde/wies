@@ -1,36 +1,23 @@
-{% for user in object_list %} {# href renders the interactive anchor
+{% for user in object_list %}
+  {# href renders the interactive anchor
 (hover/focus/keyboard); htmx intercepts the click to open the edit modal instead
 of navigating. #}
-<nldd-list-item
-  href="{{ url('user-edit', args=[user.id]) }}"
-  hx-get="{{ url('user-edit', args=[user.id]) }}"
-  hx-target="#userFormModal"
-  hx-swap="innerHTML"
->
-  <span class="nldd-avatar" slot="start" aria-hidden="true"
-    >{{ user.first_name|first|upper if user.first_name else
-    user.email|first|upper }}</span
-  >
+  <nldd-list-item href="{{ url('user-edit', args=[user.id]) }}" hx-get="{{ url('user-edit', args=[user.id]) }}" hx-target="#userFormModal" hx-swap="innerHTML">
+  <nldd-avatar slot="start" size="40" name="{{ user.get_full_name() or user.email }}" decorative></nldd-avatar>
   <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
-  <nldd-text-cell
-    text="{{ user.first_name }} {{ user.last_name }}"
-    supporting-text="{{ user.email }}"
-  ></nldd-text-cell>
+  <nldd-text-cell text="{{ user.first_name }} {{ user.last_name }}" supporting-text="{{ user.email }}"></nldd-text-cell>
   <nldd-spacer-cell slot="end" size="8"></nldd-spacer-cell>
   <nldd-icon-cell slot="end" size="16">
-    <nldd-icon name="chevron-right"></nldd-icon>
+  <nldd-icon name="chevron-right"></nldd-icon>
   </nldd-icon-cell>
-</nldd-list-item>
+  </nldd-list-item>
 {% else %}
-<nldd-list-item>
+  <nldd-list-item>
   <nldd-text-cell text="Geen gebruikers gevonden."></nldd-text-cell>
-</nldd-list-item>
-{% endfor %} {% if next_page_url %}
-<nldd-list-item
-  hx-get="{{ next_page_url }}"
-  hx-trigger="revealed"
-  hx-swap="outerHTML"
->
+  </nldd-list-item>
+{% endfor %}
+{% if next_page_url %}
+  <nldd-list-item hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
   <nldd-text-cell text="Meer laden…" color="secondary"></nldd-text-cell>
-</nldd-list-item>
+  </nldd-list-item>
 {% endif %}

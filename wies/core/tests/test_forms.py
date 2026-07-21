@@ -41,22 +41,28 @@ class NlddUserFormRenderingTest(TestCase):
         assert 'class="nldd-input"' not in rendered
 
     def test_form_displays_validation_errors_with_nldd_classes(self):
-        """Validation errors render as nldd-form-field-error-text elements."""
-        # Submit form with missing required fields to trigger validation errors
-        form = UserForm(
-            data={
-                # Missing required fields
-            }
-        )
+        """Validation errors render as nldd-form-field-error-text elements.
 
-        # Form should not be valid
+        The error text must be wired to its input: nldd-form-field only reveals
+        it when the input reflects `invalid` and names the error's id in
+        `error-message`. Without that the message renders at height 0 and no
+        screen reader announces it.
+        """
+        form = UserForm(data={})  # missing required fields
+
         assert not form.is_valid()
 
-        # Render the form
         rendered = str(form)
 
-        # Errors render via the real component's error-text element.
-        assert "<nldd-form-field-error-text>" in rendered
+        error_ids = re.findall(r'<nldd-form-field-error-text id="([^"]+)"', rendered)
+        assert error_ids, "no error texts rendered with an id"
+
+        for error_id in error_ids:
+            assert re.search(
+                rf'<nldd-[a-z-]+field[^>]*invalid[^>]*error-message="[^"]*{re.escape(error_id)}',
+                rendered,
+                re.DOTALL,
+            ), f"error text {error_id} is not referenced by an invalid input"
 
     def test_required_fields_have_required_label_class(self):
         """Optional fields get the `optional` badge; required fields do not."""
@@ -266,7 +272,8 @@ class NlddFormMixinTest(TestCase):
 
         for marker in self.RVO_MARKERS:
             assert marker not in rendered, f"RVO marker '{marker}' found in NLDD form error output"
-        assert "<nldd-form-field-error-text>" in rendered
+        # Wired to its input by id, otherwise the component keeps it hidden.
+        assert re.search(r'<nldd-form-field-error-text id="[^"]+"', rendered) is not None
 
     def test_nldd_form_required_label_class(self):
         form = self._make_nldd_test_form()

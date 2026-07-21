@@ -1,7 +1,4 @@
 {% extends "base.html" %}
-{% block sidebar %}
-  {% include "parts/general_sidebar.html" %}
-{% endblock sidebar %}
 {% block extra_head %}
   <link rel="stylesheet" href="{{ static('css/assignment_form.css') }}">
   <script src="{{ static('js/dialog.js') }}"></script>
@@ -39,7 +36,9 @@
         <legend class="nldd-fieldset__legend">
           Opdrachtgever(s) <span class="nldd-fieldset__hint">(voeg minimaal 1 opdrachtgever toe)</span>
         </legend>
-        {% for error in form.organizations.errors %}<nldd-banner variant="critical" text="{{ error }}"></nldd-banner>{% endfor %}
+        {% for error in form.organizations.errors %}
+          <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
+        {% endfor %}
         {{ form.organizations.as_widget() }}
       </fieldset>
       <fieldset class="nldd-fieldset" id="diensten">

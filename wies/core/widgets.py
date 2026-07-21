@@ -11,13 +11,19 @@ from wies.core.models import OrganizationUnit, OrganizationUnitRole
 
 
 class MultiselectDropdown(SelectMultiple):
-    """Custom dropdown multiselect widget using the multiselect component."""
+    """Multi-select as an NLDD token field: type to filter, picks become tokens.
+
+    Replaces a hand-rolled dropdown whose trigger, listbox and "Wis selectie"
+    had no JavaScript or CSS behind them at all — the panel never opened, so
+    the values could not be changed.
+    """
 
     template_name = "nldd/forms/widgets/multiselect.html"
 
     def id_for_label(self, id_, index=None):
-        # Return None so the <label> in field.html gets no "for" attribute.
-        # The widget uses aria-labelledby instead.
+        # Return None so the <label> in field.html gets no "for" attribute: the
+        # host is a custom element, not a labelable control. The accessible name
+        # travels via accessible-label instead (set in _configure_field).
         return None
 
 

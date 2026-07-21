@@ -1,18 +1,21 @@
 {# Text-like fields render a real, form-associated nldd-text-field wrapped in
    nldd-form-field (label + optional badge + error wiring come from the
-   component). Other widgets (checkbox/select/radio) are still plain inputs, so
-   they keep the hand-rolled wrapper until they migrate too. #}
+   component). #}
 {% set widget_name = field.field.widget.__class__.__name__ %}
-{% set nldd_field_widgets = ["TextInput", "EmailInput", "Textarea", "NumberInput"] %}
+{% set nldd_field_widgets = ["TextInput", "EmailInput", "Textarea", "NumberInput", "Select", "DateInput"] %}
 {% if widget_name in nldd_field_widgets %}
-  <nldd-form-field {% if field.label %}label="{{ field.label }}"{% endif %}
-                   {% if not field.field.required %}optional{% endif %}>
-    {{ field }}
-    {% if field.errors %}
-      {% for error in field.errors %}
-        <nldd-form-field-error-text>{{ error }}</nldd-form-field-error-text>
-      {% endfor %}
-    {% endif %}
+  {# nldd-form-field only reveals an error text when the input reflects
+     `invalid` and points at it by id via `error-message` — without that wiring
+     the messages render at height 0 and screen readers never announce them. #}
+  {% set error_ids = wire_field_errors(field) %}
+  <nldd-form-field
+  {% if field.label %}label="{{ field.label }}"{% endif %}
+  {% if not field.field.required %}optional{% endif %}
+  >
+  {{ field }}
+  {% for error in field.errors %}
+    <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
   </nldd-form-field>
 {% else %}
   <div class="nldd-form-field">

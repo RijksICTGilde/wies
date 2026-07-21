@@ -1,59 +1,26 @@
-{# Multiselect dropdown widget - renders the custom dropdown component.
-   Receives standard Django widget context (widget.name, widget.optgroups, widget.attrs).
-#}
-{% set selected_values = [] %}
+{# Real NLDD token field: type to filter, chosen values become dismissible
+   tokens. Form-associated — it appends one entry per value under `name`, so
+   Django's getlist() sees the same shape as a native multi-select.
+   Options come from a slotted nldd-menu, exactly like nldd-combo-box. #}
+{% set selected = [] %}
 {% for group_name, group_choices, group_index in widget.optgroups %}
   {% for option in group_choices %}
     {% if option.selected %}
-      {% set _ = selected_values.append(option.value|string) %}
+      {% set _ = selected.append(option.value|string) %}
     {% endif %}
   {% endfor %}
 {% endfor %}
-{% set selected_count = selected_values|length %}
-{% set label_id = 'label-' ~ widget.name %}
-<div class="multiselect" data-multiselect data-name="{{ widget.name }}">
-  <button type="button"
-          class="multiselect__trigger nldd-select"
-          aria-haspopup="listbox"
-          aria-expanded="false"
-          aria-labelledby="{{ label_id }}">
-    <span class="multiselect__trigger-text">
-      {%- if selected_count == 1 -%}
-        {%- for group_name, group_choices, group_index in widget.optgroups -%}
-          {%- for option in group_choices -%}
-            {%- if option.selected %}{{ option.label }}
-            {% endif -%}
-          {%- endfor -%}
-        {%- endfor -%}
-      {%- elif selected_count > 1 -%}
-        {{ selected_count }} geselecteerd
-      {%- endif -%}
-    </span>
-  </button>
-  <div class="multiselect__dropdown" role="listbox" hidden>
-    <button type="button"
-            class="multiselect__clear"
-            {% if selected_count == 0 %}hidden{% endif %}>Wis selectie</button>
-    {% for group_name, group_choices, group_index in widget.optgroups %}
-      {% for option in group_choices %}
-        {% if option.value|string != '' %}
-          <label class="multiselect__option">
-            <input type="checkbox"
-                   class="nldd-checkbox multiselect__checkbox"
-                   value="{{ option.value }}"
-                   {% if option.selected %}checked{% endif %} />
-            <span class="multiselect__label">{{ option.label }}</span>
-          </label>
-        {% endif %}
-      {% endfor %}
-    {% endfor %}
-  </div>
-  <div class="multiselect__hidden-inputs">
-    {% for val in selected_values %}
-      <input type="hidden"
-             name="{{ widget.name }}"
-             value="{{ val }}"
-             data-filter-input />
-    {% endfor %}
-  </div>
-</div>
+<nldd-token-field name="{{ widget.name }}" values="{{ selected|join(',') }}" placeholder="{{ widget.attrs.placeholder|default('Kies of typ om te zoeken…') }}"
+{% if widget.attrs['accessible-label'] %}accessible-label="{{ widget.attrs['accessible-label'] }}"{% endif %}
+{% if widget.attrs.required %}required{% endif %}
+>
+<nldd-menu variant="listbox">
+{% for group_name, group_choices, group_index in widget.optgroups %}
+  {% for option in group_choices %}
+    {% if option.value|string %}
+      <nldd-menu-item value="{{ option.value }}" text="{{ option.label }}"></nldd-menu-item>
+    {% endif %}
+  {% endfor %}
+{% endfor %}
+</nldd-menu>
+</nldd-token-field>

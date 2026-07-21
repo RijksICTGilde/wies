@@ -117,12 +117,11 @@
       );
       if (!btn) return;
       const action = btn.dataset.nddAction;
+      // Sluiten zit niet meer hier: de panel-templates gebruiken een echte
+      // nldd-top-title-bar en nldd-sheet sluit zichzelf op diens dismiss.
       if (action === "panel-back") {
         e.preventDefault();
         panelBack();
-      } else if (action === "panel-close") {
-        e.preventDefault();
-        closeSidePanel();
       }
     });
 

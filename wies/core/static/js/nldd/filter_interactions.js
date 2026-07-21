@@ -13,8 +13,9 @@
 //   6. Opdrachtgever quick-options.
 //   7. "Meer"-modal: schrijft niet-inline picks in een overflow-slot.
 //
-// The standalone bits that used to live here are now separate modules:
-// click_bridge.js (nldd-* hx-* forwarding) and sidebar_toggle.js.
+// The sidebar toggle that used to live here is now sidebar_toggle.js. The
+// nldd-* hx-* click forwarding is gone entirely: htmx 2 wires custom elements
+// itself, so the bridge only produced a second, duplicate request.
 // ----------------------------------------------------------------------------
 
 (function () {

@@ -126,34 +126,6 @@ a {
   white-space: nowrap;
 }
 
-/* Avatar circles (used in tables, panels, teams) */
-.nldd-avatar {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--primitives-space-40, 40px);
-  height: var(--primitives-space-40, 40px);
-  border-radius: 50%;
-  background: var(--semantics-content-accent-color, #154273);
-  color: #fff;
-  font-weight: 600;
-  font-size: 1rem;
-  flex-shrink: 0;
-}
-.nldd-avatar--sm {
-  width: var(--primitives-space-28, 28px);
-  height: var(--primitives-space-28, 28px);
-  font-size: 0.75rem;
-}
-.nldd-avatar--lg {
-  width: var(--primitives-space-56, 56px);
-  height: var(--primitives-space-56, 56px);
-  font-size: 1.5rem;
-}
-.nldd-avatar--vacant {
-  background: var(--semantics-content-secondary-color, #94a3b8);
-}
-
 /* Secondary text helper */
 .nldd-text-secondary {
   color: var(--semantics-content-secondary-color, #64748b);
@@ -190,10 +162,10 @@ a {
   font-size: 0.8125rem;
 }
 
-/* Native form inputs (NLDD forms use native inputs, not web components) */
-.nldd-input,
-.nldd-textarea,
-.nldd-select {
+/* Native inputs still rendered by hand: the date widget (nldd-date-field needs
+   a newer design-system than 0.8.66) and a few one-off inputs outside the
+   widget system (user_import, label_category). */
+.nldd-input {
   font: inherit;
   padding: 0.5rem 0.75rem;
   border: 1px solid var(--semantics-input-fields-border-color, #cbd5e1);
@@ -202,21 +174,14 @@ a {
   color: inherit;
   width: 100%;
 }
-.nldd-input:focus,
-.nldd-textarea:focus,
-.nldd-select:focus {
+.nldd-input:focus {
   outline: 2px solid var(--semantics-content-accent-color, #154273);
   outline-offset: -1px;
 }
-.nldd-textarea {
-  min-height: 5rem;
-  resize: vertical;
-}
-.nldd-select-wrapper {
-  position: relative;
-}
 
-/* Checkbox and radio */
+/* Checkbox groups: an nldd-checkbox plus its <label> per option. The label is
+   ours because nldd-checkbox-field's would hide the checkbox in a shadow root,
+   where it no longer submits with the form. */
 .nldd-checkbox-group,
 .nldd-radio-group {
   display: flex;

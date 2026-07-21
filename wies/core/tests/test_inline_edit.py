@@ -747,29 +747,39 @@ class AssignmentServicesDisplayTest(TestCase):
         self.assertContains(resp, 'hx-target="#nldd-side-panel-content"')
         self.assertContains(resp, "plaatsing=")
         self.assertContains(resp, self.colleague.name)
-        self.assertContains(resp, "nldd-team-member--filled")
-        self.assertContains(resp, "clickable-row")
+        # The filled row is the list item carrying the placement link.
+        filled_row = self._row_containing(resp, self.colleague.name)
+        assert "hx-get" in filled_row
+        assert "plaatsing=" in filled_row
+
+    @staticmethod
+    def _rows(resp) -> list[str]:
+        """The team rows, in render order, as raw `nldd-list-item` markup."""
+        content = resp.content.decode()
+        return [f"<nldd-list-item{part}" for part in content.split("<nldd-list-item")[1:]]
+
+    def _row_containing(self, resp, needle: str) -> str:
+        match = next((row for row in self._rows(resp) if needle in row), None)
+        assert match is not None, f"no team row containing {needle!r}"
+        return match
 
     def test_vacant_row_has_no_link(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        self.assertContains(resp, "nldd-team-member--vacant")
         self.assertContains(resp, "Aanvraag")
-        # Vacant row should not carry an hx-target (only filled anchors do).
-        content = resp.content.decode()
-        vacant_start = content.index("nldd-team-member--vacant")
-        vacant_end = content.index("</div>", vacant_start)
-        assert "hx-get" not in content[vacant_start:vacant_end]
-        assert "href=" not in content[vacant_start:vacant_end]
+        # A vacancy has nothing to link to — only filled rows open a panel.
+        vacant_row = self._row_containing(resp, "Aanvraag")
+        assert "hx-get" not in vacant_row
+        assert "href=" not in vacant_row
 
     def test_vacant_row_renders_before_filled_row(self):
         """Vacancies-first ordering (issue #331) — even though the filled
         service was created first."""
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        content = resp.content.decode()
-        vacant_pos = content.index("nldd-team-member--vacant")
-        filled_pos = content.index("nldd-team-member--filled")
+        rows = self._rows(resp)
+        vacant_pos = next(i for i, row in enumerate(rows) if "Aanvraag" in row)
+        filled_pos = next(i for i, row in enumerate(rows) if self.colleague.name in row)
         assert vacant_pos < filled_pos
 
     def test_display_omits_team_level_edit_button(self):
@@ -785,7 +795,7 @@ class AssignmentServicesDisplayTest(TestCase):
         # No clickable wrapper, no pencil button on the team-level
         # editable-field-display (per-row description pencils are still
         # rendered and unrelated to this check).
-        team_outer = team_wrapper.split("nldd-team-list")[0]
+        team_outer = team_wrapper.split("<nldd-list")[0]
         assert 'role="button"' not in team_outer
         assert "edit-icon-button" not in team_outer
 
@@ -1204,8 +1214,10 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
             )
             assert m, f"no row found for placement_id={placement_id}"
             idx = m.group(1)
+            # nldd-checkbox since the widget migration; keep <input> in the
+            # pattern so this still reads as "the checkbox", whatever renders it.
             cb = re.search(
-                rf'<input[^>]*name="service-{idx}-has_custom_period"[^>]*>',
+                rf'<(?:input|nldd-checkbox)[^>]*name="service-{idx}-has_custom_period"[^>]*>',
                 content,
             )
             assert cb, f"no has_custom_period checkbox found for row {idx}"

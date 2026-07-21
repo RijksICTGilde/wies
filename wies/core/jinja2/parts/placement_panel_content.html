@@ -1,56 +1,58 @@
 {% if not panel_data %}
-<div class="nldd-panel">
-  <p class="nldd-text-secondary"><em>Niet gevonden.</em></p>
-</div>
-{% else %} {% set colleague = panel_data.colleague %} {% set service =
-panel_data.service %} {% set placement = panel_data.placement %}
-<div class="nldd-panel">
-  <section class="nldd-panel__identity">
-    <span class="nldd-avatar nldd-avatar--lg" aria-hidden="true"
-      >{{ colleague.name|first|upper }}</span
-    >
-    <div class="nldd-panel__identity-info">
-      <strong style="font-size: 1.25rem">{{ colleague.name }}</strong>
-      {% if colleague.email %}
-      <a class="nldd-panel__email" href="mailto:{{ colleague.email }}"
-        >{{ colleague.email }}</a
-      >
-      {% endif %}
-    </div>
-  </section>
-  {% set labels = colleague.labels.all() %} {% if labels %}
-  <div class="nldd-panel__tokens">
-    {% for label in labels %}
-    <nldd-token color="{{ label.category.nldd_color }}"
-      >{{ label.name }}</nldd-token
-    >
-    {% endfor %}
+  <div class="nldd-panel">
+    <p class="nldd-text-secondary"><em>Niet gevonden.</em></p>
   </div>
-  {% endif %}
-  <nldd-rich-text spacing="snug">
+{% else %}
+  {% set colleague = panel_data.colleague %} {% set service = panel_data.service %} {% set placement = panel_data.placement %}
+  {# nldd-sheet sluit zichzelf op de dismiss van zijn eigen top-title-bar. #}
+  <nldd-top-title-bar class="is-compact" text="Plaatsing" dismiss-text="Sluiten"></nldd-top-title-bar>
+  <div class="nldd-panel">
+    <section class="nldd-panel__identity">
+      <nldd-avatar size="56" name="{{ colleague.name }}" decorative></nldd-avatar>
+      <div class="nldd-panel__identity-info">
+        <strong style="font-size: 1.25rem">{{ colleague.name }}</strong>
+        {% if colleague.email %}
+          <a class="nldd-panel__email" href="mailto:{{ colleague.email }}">{{ colleague.email }}</a>
+        {% endif %}
+      </div>
+    </section>
+    {% set labels = colleague.labels.all() %}
+    {% if labels %}
+      <div class="nldd-panel__tokens">
+        {% for label in labels %}
+          <nldd-token color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-token>
+        {% endfor %}
+      </div>
+    {% endif %}
+    <nldd-rich-text spacing="snug">
     <h2>Informatie over huidige opdracht</h2>
     {% with assignments=[panel_data.assignment_card],
-    hx_target="#nldd-side-panel-content" %} {% include
-    "parts/colleague_assignment_cards.html" %} {% endwith %}
+      hx_target="#nldd-side-panel-content" %}
+      {% include
+      "parts/colleague_assignment_cards.html" %}
+    {% endwith %}
     <h3>Details inzet</h3>
     <dl class="nldd-data-list">
       <dt>Rol van {{ colleague.name.split()[0] }}</dt>
-      <dd>{{ inline_edit(service, "skill") }}</dd>
+      <dd>
+        {{ inline_edit(service, "skill") }}
+      </dd>
       <dt>Omschrijving</dt>
-      <dd>{{ inline_edit(service, "description") }}</dd>
+      <dd>
+        {{ inline_edit(service, "description") }}
+      </dd>
       <dt>Periode</dt>
-      <dd>{{ inline_edit(placement, "period") }}</dd>
+      <dd>
+        {{ inline_edit(placement, "period") }}
+      </dd>
     </dl>
-  </nldd-rich-text>
-  <section>
-    {% set colleague_url = '/opdrachten/?collega=' ~ colleague.id %}
-    <a
-      href="{{ colleague_url }}"
-      hx-get="{{ colleague_url }}"
-      hx-target="#nldd-side-panel-content"
-      hx-swap="innerHTML"
-      >Bekijk alle opdrachten van {{ colleague.name.split()[0] }} ›</a
-    >
-  </section>
-</div>
+    </nldd-rich-text>
+    <section>
+      {% set colleague_url = '/opdrachten/?collega=' ~ colleague.id %}
+      <a href="{{ colleague_url }}"
+         hx-get="{{ colleague_url }}"
+         hx-target="#nldd-side-panel-content"
+         hx-swap="innerHTML">Bekijk alle opdrachten van {{ colleague.name.split()[0] }} ›</a>
+    </section>
+  </div>
 {% endif %}

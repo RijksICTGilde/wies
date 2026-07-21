@@ -18,51 +18,9 @@
   gap: var(--primitives-space-16, 16px);
 }
 
-/* Bar bovenin: titel links + Sluit-link rechts (matcht Storybook nldd-sheet patroon).
-   Sticky zodat het altijd zichtbaar is bij scrollen.
-   Negatieve margin compenseert de panel padding zodat de bar volledig de breedte heeft. */
-.nldd-panel__bar {
-  display: flex;
-  align-items: center;
-  gap: var(--primitives-space-12, 12px);
-  margin: calc(-1 * var(--primitives-space-24, 24px))
-    calc(-1 * var(--primitives-space-24, 24px)) 0;
-  padding: var(--primitives-space-16, 16px) var(--primitives-space-24, 24px);
-  background: var(--semantics-surfaces-base-background-color, #fff);
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-.nldd-panel__bar-title {
-  margin: 0;
-  font-size: 1.125rem;
-  font-weight: 700;
-  flex: 1;
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.nldd-panel__bar-action {
-  background: none;
-  border: 0;
-  font: inherit;
-  font-weight: 600;
-  color: var(--semantics-links-color, #0d4a8a);
-  cursor: pointer;
-  padding: var(--primitives-space-6, 6px) var(--primitives-space-8, 8px);
-  border-radius: 4px;
-  flex-shrink: 0;
-}
-.nldd-panel__bar-action:hover {
-  color: var(--semantics-links-is-hovered-color, #0a3a6e);
-}
-.nldd-panel__bar-action:focus-visible {
-  outline: 2px solid var(--semantics-links-color, #0d4a8a);
-  outline-offset: 1px;
-}
+/* De bar bovenin is nu een echte nldd-top-title-bar in de panel-templates;
+   nldd-sheet sluit zichzelf op de dismiss daarvan. De handgebouwde
+   .nldd-panel__bar imitatie is daarmee vervallen. */
 
 /* Identity sectie (avatar + email) onder de bar */
 .nldd-panel__identity {
@@ -107,28 +65,9 @@
   margin: 0;
 }
 
-/* Assignment cards */
-.nldd-assignment-cards {
-  display: flex;
-  flex-direction: column;
-  gap: var(--primitives-space-8, 8px);
-}
-.nldd-assignment-card {
-  display: flex;
-  flex-direction: column;
-  gap: var(--primitives-space-4, 4px);
-  padding: var(--primitives-space-12, 12px) var(--primitives-space-14, 14px);
-  border: 1px solid var(--components-top-title-bar-divider-color, #e5e5e5);
-  border-radius: 8px;
-  text-decoration: none;
-  color: inherit;
-  background: var(--semantics-surfaces-base-background-color, #fff);
-  cursor: pointer;
-}
-.nldd-assignment-card:hover {
-  background: var(--semantics-surfaces-tinted-background-color, #f0f4ff);
-  border-color: var(--semantics-content-accent-color, #0d4a8a);
-}
+/* Assignment cards. De kaart zelf is een nldd-card in een nldd-collection:
+   rand, hover, radius en de overlay-link komen uit het design system. Wat
+   hier rest is de inhoudelijke opmaak binnen de kaart. */
 .nldd-assignment-card__top {
   display: flex;
   justify-content: space-between;
@@ -139,59 +78,19 @@
 .nldd-assignment-card--historical {
   opacity: 0.75;
 }
+.nldd-assignment-card__tags,
+.nldd-assignment-card__privacy {
+  margin-top: var(--primitives-space-4, 4px);
+}
 
-/* Team list */
+/* De teamrijen zijn nu een echte nldd-list met cellen; alleen de avatarstrip
+   binnen een opdrachtkaart ("Collega's op deze opdracht") blijft een eigen rij. */
 .nldd-team-list {
   display: flex;
-  flex-direction: column;
-  gap: var(--primitives-space-4, 4px);
-}
-.nldd-team-member {
-  display: flex;
-  gap: var(--primitives-space-12, 12px);
-  align-items: flex-start;
-  padding: var(--primitives-space-8, 8px) var(--primitives-space-12, 12px);
-  border-radius: 6px;
-  text-decoration: none;
-  color: inherit;
-  cursor: pointer;
-}
-.nldd-team-member:hover {
-  background: var(--semantics-surfaces-tinted-background-color, #f0f4ff);
-}
-.nldd-team-member--vacant {
-  cursor: default;
-}
-.nldd-team-member--historical {
-  opacity: 0.7;
-}
-.nldd-team-member__info {
-  display: flex;
-  flex-direction: column;
-  gap: var(--primitives-space-4, 4px);
-  min-width: 0;
-  flex: 1;
-}
-/* Name + role + status token share one wrapping row; details go below. */
-.nldd-team-member__name {
-  display: flex;
-  align-items: center;
   flex-wrap: wrap;
-  gap: var(--primitives-space-8, 8px);
-}
-.nldd-team-member__skill {
-  font-size: 0.85rem;
-  color: var(--semantics-content-secondary-color, #666);
-}
-.nldd-team-member--filled.clickable-row {
-  cursor: pointer;
-}
-.nldd-team-member__period,
-.nldd-team-member__privacy {
-  display: flex;
-  gap: var(--primitives-space-4, 4px);
   align-items: center;
-  font-size: 0.85rem;
+  gap: var(--primitives-space-4, 4px);
+  margin-top: var(--primitives-space-4, 4px);
 }
 /* Vertical spacing utility */
 .nldd-stack {

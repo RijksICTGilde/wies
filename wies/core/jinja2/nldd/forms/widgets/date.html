@@ -1,5 +1,10 @@
-<input type="date"
-       name="{{ widget.name }}"
-       {% if widget.value != None %}value="{{ widget.value }}"{% endif %}
-       class="nldd-input"
-       {% include "nldd/forms/widgets/attrs.html" %}>
+{# Real NLDD date field (nieuw in 0.8.70). Form-associated en submit de ISO-
+   waarde onder één naam, dus DateInput met format %Y-%m-%d blijft kloppen.
+   De eigen kalenderknop vervangt de browser-datepicker, die in Safari niet te
+   sluiten was. Let op: error-message-ids (meervoud), anders dan nldd-text-field. #}
+<nldd-date-field name="{{ widget.name }}"
+{% if widget.value != None %}value="{{ widget.value }}"{% endif %}
+{% if widget.attrs.required %}required{% endif %}
+{% if widget.attrs.placeholder %}placeholder="{{ widget.attrs.placeholder }}"{% endif %}
+{% if widget.attrs.invalid %}invalid error-message-ids="{{ widget.attrs['error-message'] }}"{% endif %}
+></nldd-date-field>

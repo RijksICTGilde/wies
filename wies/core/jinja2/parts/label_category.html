@@ -1,94 +1,52 @@
 <div class="category-section" id="category-{{ category.name|lower }}">
   <div class="category-header">
     <nldd-rich-text>
-      <h2>{{ category.name }}</h2>
+    <h2>{{ category.name }}</h2>
     </nldd-rich-text>
-    <nldd-button
-      variant="neutral-transparent"
-      text="Bewerk categorie"
-      end-icon="pencil"
-      size="sm"
-      hx-get="{{ url('label-category-edit', kwargs={'pk': category.pk}) }}"
-      hx-target="#labelFormModal"
-      hx-swap="innerHTML"
-    >
+    <nldd-button variant="neutral-transparent" text="Bewerk categorie" end-icon="pencil" size="sm" hx-get="{{ url('label-category-edit', kwargs={'pk': category.pk}) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
     </nldd-button>
   </div>
 </div>
 {% if category.labels.all() %}
-<nldd-list>
+  <nldd-list>
   {% for label in category.labels.all() %}
-  <nldd-list-item
-    href="{{ url('label-edit', kwargs={'pk': label.pk}) }}"
-    hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}"
-    hx-target="#labelFormModal"
-    hx-swap="innerHTML"
-    title="Bewerk {{ label.name }}"
-  >
+    <nldd-list-item href="{{ url('label-edit', kwargs={'pk': label.pk}) }}" hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}" hx-target="#labelFormModal" hx-swap="innerHTML" title="Bewerk {{ label.name }}">
     <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
     <nldd-title-cell>
-      <nldd-token color="{{ label.category.nldd_color }}"
-        >{{ label.name }}</nldd-token
-      >
+    <nldd-token color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-token>
     </nldd-title-cell>
-    <nldd-text-cell
-      text="{{ label.usage_count|default(0) }} keer toegepast"
-    ></nldd-text-cell>
+    <nldd-text-cell text="{{ label.usage_count|default(0) }} keer toegepast"></nldd-text-cell>
     <nldd-icon-cell slot="end" size="20" color="secondary">
-      <nldd-icon name="pencil"></nldd-icon>
+    <nldd-icon name="pencil"></nldd-icon>
     </nldd-icon-cell>
     <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
-  </nldd-list-item>
+    </nldd-list-item>
   {% endfor %}
-</nldd-list>
-<div class="label-form-container">
-  <form
-    class="label-form"
-    hx-post="/beheer/labels/categorie/{{ category.id }}/labels/aanmaken/"
-    hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
-    hx-target="#label_category_{{ category.id }}"
-  >
-    <input
-      type="text"
-      name="name"
-      class="nldd-input"
-      placeholder="Nieuw label"
-    />
-    <nldd-button
-      variant="secondary"
-      start-icon="plus"
-      type="submit"
-      text="Label toevoegen"
-    ></nldd-button>
-  </form>
-  {% if errors and errors.name %}
-  <div class="form-error">{{ errors.name }}</div>
-  {% endif %}
-</div>
+  </nldd-list>
+  <div class="label-form-container">
+    <form class="label-form"
+          hx-post="/beheer/labels/categorie/{{ category.id }}/labels/aanmaken/"
+          hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+          hx-target="#label_category_{{ category.id }}">
+      <nldd-text-field name="name" placeholder="Nieuw label" accessible-label="Nieuw label"></nldd-text-field>
+      <nldd-button variant="secondary" start-icon="plus" type="submit" text="Label toevoegen"></nldd-button>
+    </form>
+    {% if errors and errors.name %}
+      <div class="form-error">{{ errors.name }}</div>
+    {% endif %}
+  </div>
 {% else %}
-<p class="nldd-text-secondary">Geen labels in deze categorie</p>
-<div class="label-form-container">
-  <form
-    class="label-form"
-    hx-post="/beheer/labels/categorie/{{ category.id }}/labels/aanmaken/"
-    hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
-    hx-target="#label_category_{{ category.id }}"
-  >
-    <input
-      type="text"
-      name="name"
-      class="nldd-input"
-      placeholder="Nieuw label"
-    />
-    <nldd-button
-      variant="secondary"
-      start-icon="plus"
-      type="submit"
-      text="Label toevoegen"
-    ></nldd-button>
-  </form>
-  {% if errors and errors.name %}
-  <div class="form-error">{{ errors.name }}</div>
-  {% endif %}
-</div>
+  <p class="nldd-text-secondary">Geen labels in deze categorie</p>
+  <div class="label-form-container">
+    <form class="label-form"
+          hx-post="/beheer/labels/categorie/{{ category.id }}/labels/aanmaken/"
+          hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+          hx-target="#label_category_{{ category.id }}">
+      <nldd-text-field name="name" placeholder="Nieuw label" accessible-label="Nieuw label"></nldd-text-field>
+      <nldd-button variant="secondary" start-icon="plus" type="submit" text="Label toevoegen"></nldd-button>
+    </form>
+    {% if errors and errors.name %}
+      <div class="form-error">{{ errors.name }}</div>
+    {% endif %}
+  </div>
 {% endif %}

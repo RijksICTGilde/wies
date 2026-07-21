@@ -24,14 +24,16 @@ document.addEventListener("htmx:afterSwap", function (e) {
     });
   });
 
-  // NDD: auto-show nldd-window when HTMX loads content
+  // NDD: auto-show nldd-window when HTMX loads content.
+  // show() reads the <dialog> out of the shadow root and returns silently when
+  // it isn't there yet. Right after a swap the element is upgraded but Lit has
+  // not rendered, so wait for updateComplete or the modal stays invisible.
   const windows = e.detail.target.querySelectorAll("nldd-window");
   windows.forEach(function (win) {
-    if (typeof win.show === "function") {
-      win.show();
-    } else {
-      customElements.whenDefined("nldd-window").then(() => win.show());
-    }
+    customElements
+      .whenDefined("nldd-window")
+      .then(() => win.updateComplete)
+      .then(() => win.show());
   });
 });
 

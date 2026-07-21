@@ -28,6 +28,23 @@ class NlddErrorList(ErrorList):
     template_name = "nldd/forms/errors/list/default.html"
 
 
+def wire_field_errors(field) -> list[str]:
+    """Point a bound field's widget at its error texts, and return their ids.
+
+    ``nldd-form-field`` only reveals an ``nldd-form-field-error-text`` when the
+    slotted input reflects ``invalid`` and names it in ``error-message``.
+    Without that wiring the messages render at height 0 and screen readers
+    never announce them, so the user sees no reason why a save failed.
+
+    Called from the field template because errors only exist after validation,
+    long after the widget was configured.
+    """
+    error_ids = [f"error-{field.html_name}-{i}" for i, _ in enumerate(field.errors, start=1)]
+    if error_ids:
+        field.field.widget.attrs.update({"invalid": True, "error-message": " ".join(error_ids)})
+    return error_ids
+
+
 class _BaseFormMixin:
     """Shared form configuration logic for any design system.
 
@@ -79,6 +96,19 @@ class _BaseFormMixin:
         # (name, email) is more nuisance than help.
         field.widget.attrs.setdefault("autocomplete", "off")
 
+        # nldd-form-field labels only its first child, which for these widgets is
+        # a wrapper (nldd-dropdown) or a control with no visible label of its own.
+        # Without an explicit name the control is unlabelled for screen readers,
+        # so derive one from the field label. The native <select> takes plain
+        # aria-label; the NLDD components expose accessible-label instead.
+        label_attr = {
+            "Select": "aria-label",
+            "CheckboxInput": "accessible-label",
+            "MultiselectDropdown": "accessible-label",
+        }.get(field.widget.__class__.__name__)
+        if label_attr and field.label:
+            field.widget.attrs.setdefault(label_attr, str(field.label))
+
         # Auto-assign widget template + any per-widget configuration.
         widget_class_name = field.widget.__class__.__name__
         if widget_class_name in self.widget_templates:
@@ -105,8 +135,8 @@ class _BaseFormMixin:
 class NlddFormMixin(_BaseFormMixin):
     """Configure forms for NLDD design system rendering.
 
-    Uses native HTML inputs (no Shadow DOM web components) so HTMX
-    and Django form handling work without a bridge layer.
+    Every field renders as a real NLDD component; they are form-associated, so
+    HTMX and Django form handling keep working without a bridge layer.
     """
 
     _form_template = "nldd/forms/form.html"

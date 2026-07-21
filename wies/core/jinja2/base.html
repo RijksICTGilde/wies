@@ -21,6 +21,9 @@
     {% endblock extra_head %}
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
     <script defer src="{{ static('vendor/nldd/ndd.bundle.js') }}"></script>
+    {# Global: rows carrying href + hx-get exist on several pages and arrive in
+       htmx swaps too, so this cannot be opted into per page. #}
+    <script src="{{ static('js/nldd/hx_link_guard.js') }}"></script>
     <script>
       document.addEventListener("click", (e) => {
         const item = e.composedPath().find(
@@ -63,17 +66,22 @@
       {% endblock sidebar %}
     {% endset %}
     <nldd-sidebar-section class="wies-layout" width="1920px" sidebar-label="Zijbalk">
-      {% if _sidebar_content.strip() %}
-        <div slot="sidebar">
-          {{ _sidebar_content }}
-        </div>
-      {% endif %}
-      <main class="wies-layout__main">
-        {% include "parts/flash_messages.html" %}
-        {% block content %}
-        {% endblock content %}
-      </main>
+    {% if _sidebar_content.strip() %}
+      <div slot="sidebar">{{ _sidebar_content }}</div>
+    {% endif %}
+    <main class="wies-layout__main">
+      {% include "parts/flash_messages.html" %}
+      {% block content %}
+      {% endblock content %}
+    </main>
     </nldd-sidebar-section>
+    <nldd-page-footer>
+    <nldd-page-footer-legal-bar slot="legal-bar" accessible-label="Over deze site">
+    <nldd-page-footer-legal-bar-item slot="end" href="{{ url('privacy') }}" text="Privacy"></nldd-page-footer-legal-bar-item>
+    <nldd-page-footer-legal-bar-item slot="end" href="{{ url('toegankelijkheid') }}" text="Toegankelijkheid"></nldd-page-footer-legal-bar-item>
+    <nldd-page-footer-legal-bar-item slot="end" href="{{ url('contact') }}" text="Contact"></nldd-page-footer-legal-bar-item>
+    </nldd-page-footer-legal-bar>
+    </nldd-page-footer>
     {% block panel %}
     {% endblock panel %}
   </body>

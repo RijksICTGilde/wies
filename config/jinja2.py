@@ -18,6 +18,7 @@ from wies.core.editables import (
     ServiceEditables,
     UserEditables,
 )
+from wies.core.form_mixins import wire_field_errors
 from wies.core.inline_edit.jinja import inline_edit
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.permissions import is_staff_member
@@ -152,6 +153,7 @@ def environment(**options):
             "DEBUG": settings.DEBUG,
             "APP_VERSION": get_app_version(),
             "inline_edit": inline_edit,
+            "wire_field_errors": wire_field_errors,
             "get_org_breadcrumb": get_org_breadcrumb,
             "breadcrumb_base_url": breadcrumb_base_url,
             "has_permission": has_permission,
