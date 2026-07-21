@@ -417,7 +417,6 @@ def _render_error_table(request, page_number):
     context = {
         "object_list": page_obj.object_list,
         "page_obj": page_obj,
-        "current_page_url": page_url(page_obj.number),
         "previous_page_url": page_url(page_obj.previous_page_number()) if page_obj.has_previous() else None,
         "next_page_url": page_url(page_obj.next_page_number()) if page_obj.has_next() else None,
     }
