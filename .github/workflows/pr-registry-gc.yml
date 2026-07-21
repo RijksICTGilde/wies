@@ -19,7 +19,8 @@ jobs:
 
     steps:
       - name: Prune old PR container images
-        uses: snok/container-retention-policy@v3
+        # No moving v3 tag exists for this action; pin the exact release.
+        uses: snok/container-retention-policy@v3.1.0
         with:
           account: rijksictgilde
           token: ${{ secrets.GITHUB_TOKEN }}
