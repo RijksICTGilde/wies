@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 491: PR preview environments are now reliably removed when a PR closes (closing cancels any in-flight preview run), preview images build on every push regardless of merge conflicts or CI status, previews also build when a draft PR is marked ready for review, and a preview can be rebuilt manually from the Actions UI; the weekly registry cleanup of old preview images is fixed (it referenced a non-existent action version and had never run)
+- 491: PR preview environments are now reliably removed when a PR closes, preview images build on every push regardless of merge conflicts or CI status, previews also build when a draft PR is marked ready for review, and a preview can be rebuilt manually from the Actions UI; the weekly registry cleanup of old preview images is fixed
 - 478: the user and opdracht CSV imports now reject files larger than 50 MB, so an extremely large file cannot exhaust a worker's memory
 - 477: logging out is now only possible via the button (POST), no longer via a bare GET request, so an external page cannot log you out without your knowledge
 - 481: the production container no longer silently falls back to the local development settings (DEBUG on) when DJANGO_SETTINGS_MODULE is missing at startup; the startup script then defaults to the production settings (an explicitly provided value still takes precedence). Local development is unchanged.
