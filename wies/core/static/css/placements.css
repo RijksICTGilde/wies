@@ -23,7 +23,12 @@
 
 /* Typography classes replaced with RVO design system classes in templates */
 
-/* Make sure the placement table container uses full width */
+#placement-content {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+/* ---- Variant "groups" (PR 462): fold-out placement table ---- */
 .placement-table {
   width: 100%;
   max-width: none;
@@ -33,12 +38,6 @@
   table-layout: fixed;
 }
 
-#placement-content {
-  margin-top: 0;
-  padding-top: 0;
-}
-
-/* Column width optimization for placement table only */
 .placement-table .rvo-table th:nth-child(1),
 .placement-table .rvo-table td:nth-child(1) {
   width: 28%; /* Wie column */
@@ -57,14 +56,12 @@
   white-space: nowrap;
 }
 
-/* Kolom verdeling: Tot kolom compact, rest vult de ruimte */
 .placement-table .rvo-table-header:last-child,
 .placement-table .rvo-table-cell:last-child {
   width: 9rem;
   white-space: nowrap;
 }
 
-/* Role tags with overflow protection */
 .placement-table .rvo-tag {
   max-width: 100%;
   overflow: hidden;
@@ -87,8 +84,6 @@
   background-color: var(--rvo-color-lichtblauw-150, #eef7fc);
 }
 
-/* Wie-column of the header: chevron on the left, avatars pulled to the right edge
-   of the cell so they sit next to the assignment name in the Wat & waar column. */
 .placement-group-header__who {
   display: flex;
   align-items: center;
@@ -101,12 +96,133 @@
   transition: transform 0.15s ease-in-out;
 }
 
-.placement-group-header[aria-expanded="false"]
-  .placement-group-header__chevron {
+.placement-group-header[aria-expanded="false"] .placement-group-header__chevron {
   transform: rotate(-90deg);
 }
 
-/* Collega name-chips in the Wie column, left-aligned, kept on one line (+X for the rest). */
+.placement-table tr[data-group-member].is-collapsed {
+  display: none;
+}
+
+/* ---- "Wie zit waar?" card list ---- */
+
+/* Opdracht-cards in a two-column grid; persoon-cards in three columns. */
+.wzw-card-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+/* minmax(0, …) lets columns shrink below content width so long names truncate
+   instead of overflowing the grid off-screen. */
+.wzw-card-list--assignment {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.wzw-card-list--person {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+/* Fewer columns as the space narrows so cards don't get cramped. */
+@media (max-width: 75rem) {
+  .wzw-card-list--person {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 48rem) {
+  .wzw-card-list--assignment,
+  .wzw-card-list--person {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.wzw-card-list__empty,
+.wzw-card-list__more {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 1.5rem;
+}
+
+/* Base card: clickable block that opens the side panel. */
+.wzw-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: var(--rvo-color-wit, #fff);
+  border: 1px solid var(--rvo-color-grijs-300, #cbd5e1);
+  border-radius: var(--rvo-border-radius-md, 8px);
+  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color 0.12s ease,
+    box-shadow 0.12s ease;
+}
+
+.wzw-card:hover,
+.wzw-card:focus-visible {
+  border-color: var(--rvo-color-hemelblauw, #007bc7);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 10%);
+  outline: none;
+}
+
+.wzw-card__title {
+  font-size: 1.05rem;
+}
+
+.wzw-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.wzw-card__subtitle {
+  display: block;
+  max-width: 100%;
+}
+
+.wzw-card__body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.wzw-card__end {
+  color: var(--rvo-color-grijs-700, #334155);
+  font-size: var(--rvo-font-size-sm, 0.875rem);
+}
+
+/* Persoon-card: big avatar beside name + opdracht count. */
+.wzw-card--persoon {
+  flex-direction: row;
+  align-items: center;
+}
+
+.wzw-card__avatar {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.wzw-card__persoon-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+/* Truncate long names/opdrachtgever inside cards instead of overflowing. */
+.wzw-card .truncate {
+  display: block;
+  max-width: 100%;
+}
+
+/* Collega name-chips, kept on one line (+X for the rest). */
 .placement-group-header__avatars {
   display: flex;
   align-items: center;
@@ -135,8 +251,4 @@
 .person-chip--more {
   padding: 0.15rem 0.6rem;
   color: var(--rvo-color-grijs-700, #334155);
-}
-
-.placement-table tr[data-group-member].is-collapsed {
-  display: none;
 }

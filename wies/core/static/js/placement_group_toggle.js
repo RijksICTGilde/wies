@@ -1,4 +1,5 @@
 (function () {
+  // Fold-out group header (variant "groups"): expand/collapse the member rows.
   function toggleGroup(header) {
     const expanded = header.getAttribute("aria-expanded") !== "false";
     const next = !expanded;
@@ -24,13 +25,14 @@
 
   // Delegated on document so it survives HTMX swaps of the table container.
   document.addEventListener("click", function (event) {
+    // Fold-out group header toggle.
     const header = event.target.closest("[data-group-header]");
     if (header) {
       toggleGroup(header);
       return;
     }
 
-    // Grouping menu open/close.
+    // View/sort menu open/close.
     const trigger = event.target.closest("[data-groupby-trigger]");
     if (trigger) {
       const menu = trigger.closest("[data-groupby-menu]");
@@ -55,8 +57,9 @@
     }
     if (event.key !== "Enter" && event.key !== " ") return;
     const header = event.target.closest("[data-group-header]");
-    if (!header || event.target !== header) return;
-    event.preventDefault();
-    toggleGroup(header);
+    if (header && event.target === header) {
+      event.preventDefault();
+      toggleGroup(header);
+    }
   });
 })();

@@ -5,6 +5,7 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - ?: x
+- ?: explore two "Wie zit waar?" layouts behind a ?ui= switch (default ?ui=groups = the PR 462 fold-out group table; ?ui=cards = Plaatsing/Persoon/Opdracht where Persoon and Opdracht are card grids, each card opening the matching side panel, with a "Sorteer" dropdown replacing the column-header sorting)
 
 ## 2026-07-15
 

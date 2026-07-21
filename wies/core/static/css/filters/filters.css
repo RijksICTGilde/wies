@@ -531,20 +531,12 @@
   border-radius: var(--rvo-border-radius-md, 8px);
 }
 
-/* Row 2: result count with the active chips beside it — no strip, on the page. */
+/* Row 2: the active filter chips — no strip, on the page. */
 .table-toolbar__summary {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: var(--rvo-space-sm, 0.75rem);
-}
-
-.table-toolbar .results-count {
-  flex: 0 0 auto;
-  margin: 0;
-  white-space: nowrap;
-  color: var(--rvo-color-grijs-700, #334155);
-  font-size: var(--rvo-font-size-md, 1rem);
 }
 
 /* Search on the left of the controls row. */
@@ -588,7 +580,7 @@
   max-width: 16rem;
 }
 
-/* ---- Grouping: quiet Airtable-style toolbar button + popover menu ---- */
+/* ---- View menu: a count chip that opens a popover menu (Persoon / Opdracht) ---- */
 .groupby-menu {
   position: relative;
   flex: 0 0 auto;
@@ -619,18 +611,15 @@
   background-color: var(--rvo-color-grijs-700, #334155);
 }
 
-/* Active grouping: a blue badge, like Airtable's "Grouped by …".
-   A touch more saturated than the grey toolbar strip so it reads as a state. */
-.groupby-menu__trigger--active.rvo-button,
-.groupby-menu__trigger--active.rvo-button:hover {
-  --rvo-button-tertiary-color: var(--rvo-color-hemelblauw, #007bc7);
-  --rvo-button-tertiary-hover-color: var(--rvo-color-hemelblauw, #007bc7);
-  border-color: var(--rvo-color-hemelblauw, #007bc7);
-  background: var(--rvo-color-hemelblauw-150, #d9ebf7);
+/* The view name is bold; the button's normal-weight default must not flatten it. */
+.groupby-menu__label b {
+  font-weight: var(--rvo-font-weight-bold, 700);
 }
 
-.groupby-menu__trigger--active .utrecht-icon.rvo-icon {
-  background-color: var(--rvo-color-hemelblauw, #007bc7);
+/* View-menu count word gets a capital, to match the menu labels (Plaatsing …).
+   Not on the sort menu, whose label already starts with a capital ("Sorteer:"). */
+.groupby-menu:not(.sort-menu) .groupby-menu__label b::first-letter {
+  text-transform: uppercase;
 }
 
 .groupby-menu__chevron {
@@ -642,17 +631,28 @@
   transform: rotate(180deg);
 }
 
+/* Sort menu sits at the right end of the controls row. */
+.sort-menu {
+  margin-left: auto;
+}
+
 .groupby-menu__dropdown {
   position: absolute;
   top: calc(100% + 0.25rem);
   left: 0;
   z-index: 20;
-  min-width: 14rem;
+  min-width: 12rem;
   padding: 0.25rem;
   background: var(--rvo-color-wit, #fff);
   border: 1px solid var(--rvo-color-grijs-300, #cad0d8);
   border-radius: var(--rvo-border-radius-md, 8px);
   box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+}
+
+/* Right-aligned variant (sort menu) so it doesn't overflow the right edge. */
+.groupby-menu__dropdown--right {
+  left: auto;
+  right: 0;
 }
 
 .groupby-menu__option {
@@ -673,6 +673,16 @@
 
 .groupby-menu__option--active {
   font-weight: 700;
+}
+
+/* View icon before the label; grey so it reads as a quiet affordance. */
+.groupby-menu__option-icon.utrecht-icon.rvo-icon {
+  background-color: var(--rvo-color-grijs-700, #334155);
+}
+
+/* Label grows so the checkmark aligns to the right edge of the option. */
+.groupby-menu__option-label {
+  flex: 1 1 auto;
 }
 
 .groupby-menu__check {

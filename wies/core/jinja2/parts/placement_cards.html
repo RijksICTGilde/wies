@@ -1,0 +1,114 @@
+{# Card list for "Wie zit waar?" — one card per opdracht or per persoon,
+   depending on the active view. Each card opens the matching side panel. #}
+
+{# Collega-chips (avatar + first name), max 3 + "+X". The tooltip shows the full
+   name + role. `members` is a list of {name, role} dicts. #}
+{% macro colleague_chips(members) %}
+  {% macro member_label(m) %}{{ m.name }}{% if m.role %} · {{ m.role }}{% endif %}{% endmacro %}
+  <div class="placement-group-header__avatars">
+    {% for m in members[:3] %}
+      <span class="person-chip" data-tooltip="{{ member_label(m) | trim }}">
+        <span class="user-avatar user-avatar--sm">{{ m.name|first|upper }}</span>
+        <span class="person-chip__name">{{ m.name.split()[0] }}</span>
+      </span>
+    {% endfor %}
+    {% if members|length > 3 %}
+      <span class="person-chip person-chip--more"
+            data-tooltip="{{ members[3:] | map(attribute='name') | join(', ') }}">
+        <span class="person-chip__name">+{{ members|length - 3 }}</span>
+      </span>
+    {% endif %}
+  </div>
+{% endmacro %}
+
+{# Opdracht-card: name + opdrachtgever, team-chips, einddatum.
+   `members` is a list of {name, role} dicts. #}
+{% macro opdracht_card(assignment, members) %}
+  {% set clients = assignment.sorted_clients %}
+  <div class="wzw-card wzw-card--opdracht"
+       tabindex="0"
+       role="link"
+       aria-label="{{ assignment.name }}"
+       hx-get="{{ assignment.panel_url }}"
+       hx-target="#side_panel-container"
+       onkeydown="if(event.key==='Enter')htmx.trigger(this,'click')">
+    <div class="wzw-card__header">
+      <strong class="wzw-card__title truncate" title="{{ assignment.name }}">{{ assignment.name }}</strong>
+      {% if clients %}
+        <span class="wzw-card__subtitle truncate">
+          {{ clients[0].organization.label or clients[0].organization.name }}
+          {% if clients|length > 1 %}(+{{ clients|length - 1 }}){% endif %}
+        </span>
+      {% endif %}
+    </div>
+    <div class="wzw-card__body">
+      {{ colleague_chips(members) }}
+      {% if assignment.end_date %}
+        <span class="wzw-card__end icon-text-inline">
+          <c-icon icon="kalender" size="md" color="grijs-700" />
+          tot {{ assignment.end_date | datum_nl("j N Y") }}
+        </span>
+      {% endif %}
+    </div>
+  </div>
+{% endmacro %}
+
+{# Persoon-card: big avatar, name. With exactly one opdracht, show its name +
+   opdrachtgever; with more, show the count. #}
+{% macro persoon_card(colleague, name, assignments) %}
+  <div class="wzw-card wzw-card--persoon"
+       tabindex="0"
+       role="link"
+       aria-label="{{ name }}"
+       hx-get="{{ colleague.panel_url }}"
+       hx-target="#side_panel-container"
+       onkeydown="if(event.key==='Enter')htmx.trigger(this,'click')">
+    <div class="user-avatar wzw-card__avatar">{{ name|first|upper }}</div>
+    <div class="wzw-card__persoon-info">
+      <strong class="wzw-card__title truncate" title="{{ name }}">{{ name }}</strong>
+      {% if assignments|length == 1 %}
+        {% set clients = assignments[0].sorted_clients %}
+        <span class="wzw-card__subtitle truncate" title="{{ assignments[0].name }}">{{ assignments[0].name }}</span>
+        {% if clients %}
+          <span class="rvo-text--subtle truncate">
+            {{ clients[0].organization.label or clients[0].organization.name }}
+            {% if clients|length > 1 %}(+{{ clients|length - 1 }}){% endif %}
+          </span>
+        {% endif %}
+      {% else %}
+        <span class="rvo-text--subtle">{{ assignments|length }} opdrachten</span>
+      {% endif %}
+    </div>
+  </div>
+{% endmacro %}
+
+{% set is_person_group = groupby_field == 'person' %}
+{% if object_list %}
+  {% for group_label, group_rows in groupby_placements(object_list, groupby_field) %}
+    {% if is_person_group %}
+      {# Unique opdrachten of this person, first-seen order. #}
+      {% set assignments = [] %}
+      {% set seen_ids = [] %}
+      {% for placement in group_rows %}
+        {% if placement.service.assignment.id not in seen_ids %}
+          {{ seen_ids.append(placement.service.assignment.id) or '' }}
+          {{ assignments.append(placement.service.assignment) or '' }}
+        {% endif %}
+      {% endfor %}
+      {{ persoon_card(group_rows[0].colleague, group_label, assignments) }}
+    {% else %}
+      {# Full team of the opdracht (from the view), not just the filtered placements. #}
+      {% set assignment = group_rows[0].service.assignment %}
+      {{ opdracht_card(assignment, team_members_by_assignment[assignment.id]) }}
+    {% endif %}
+  {% endfor %}
+{% else %}
+  <div class="wzw-card-list__empty">
+    <span class="rvo-text--italic rvo-text--subtle">Geen inzetten gevonden.</span>
+  </div>
+{% endif %}
+{% if next_page_url %}
+  <div class="wzw-card-list__more" hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
+    <span class="rvo-text--subtle">Meer laden...</span>
+  </div>
+{% endif %}

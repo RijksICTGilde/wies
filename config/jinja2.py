@@ -143,23 +143,20 @@ def _placement_group_key(placement, field):
 def groupby_placements(placements, field):
     """Group an iterable of placements by `field` (person or assignment).
 
-    Returns a list of (label, [placements]) tuples ordered alphabetically, with
-    missing-value groups sorted last.
+    Returns a list of (label, [placements]) tuples in first-seen order, so the
+    caller's queryset ordering (the active ?order= sort) drives the group order.
     """
     if not field:
         return [(None, list(placements))]
 
     groups: dict = {}
     for placement in placements:
-        key = _placement_group_key(placement, field)
-        label = key[1]
+        label = _placement_group_key(placement, field)[1]
         if label not in groups:
-            groups[label] = (key, [])
-        groups[label][1].append(placement)
+            groups[label] = []
+        groups[label].append(placement)
 
-    # kv[1][0] is the (missing-flag, label) tuple — sorts missing-value groups last.
-    ordered = sorted(groups.items(), key=lambda kv: kv[1][0])
-    return [(label, items) for label, (_, items) in ordered]
+    return list(groups.items())
 
 
 def environment(**options):

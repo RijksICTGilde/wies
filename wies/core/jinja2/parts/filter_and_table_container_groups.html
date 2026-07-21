@@ -1,21 +1,23 @@
 {# HTMX partial: Updates the main content area when filters change #}
 <div id="filter-and-table-container">
-  {# Carries the active view through sidebar filter changes (hx-include picks it up).
-     Lives here (not in the sidebar) so the view switch, which only re-swaps this container, keeps it current. #}
-  <input type="hidden"
-         name="groep"
-         value="{{ groupby_field }}"
-         data-filter-input
-         id="active-groupby-input" />
+  {# Carries the active grouping through sidebar filter changes (hx-include picks it up).
+     Lives here (not in the sidebar) so grouping toggles, which only re-swap this container, keep it current. #}
+  {% if groupby_field %}
+    <input type="hidden"
+           name="groep"
+           value="{{ groupby_field }}"
+           data-filter-input
+           id="active-groupby-input" />
+  {% endif %}
   {# Carries the active UI variant through filter changes. #}
   <input type="hidden" name="ui" value="{{ ui_variant }}" data-filter-input id="active-ui-input" />
-  <!-- Page Header: toolbar strip — controls row, then active filter chips row -->
+  <!-- Page Header: toolbar strip — controls row, then result count + chips row -->
   <div class="layout__main__header">
     <c-h1 noMargins class="sr-only">Wie zit waar?</c-h1>
     <div class="table-toolbar">
-      <!-- Row 1: view menu (with result count) + search -->
+      <!-- Row 1: result count + search + grouping -->
       <div class="table-toolbar__controls">
-        {% include "parts/toolbar/groupby_menu.html" %}
+        <span class="results-count"><b>{{ page_obj.paginator.count }}</b> {{ 'resultaat' if page_obj.paginator.count == 1 else 'resultaten' }}</span>
         <!-- Search Field -->
         <div class="search-field-wrapper">
           <button type="button"
@@ -28,8 +30,7 @@
           <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
           <div id="search-suggestions-container" hx-preserve="true"></div>
         </div>
-        <!-- Sort dropdown, pushed to the right -->
-        {% include "parts/toolbar/sort_menu.html" %}
+        {% include "parts/toolbar/groupby_menu_groups.html" %}
         <!-- Mobile filter toggle -->
         <c-button kind="secondary" size="md" icon="trechter" iconPlacement="before" type="button" class="mobile-filter-toggle" data-toggle-filters>
         Filters
@@ -43,26 +44,25 @@
       {% endif %}
     </div>
   </div>
-  {% if groupby_field == 'placement' %}
-    <!-- Plaatsing view: flat table -->
-    <c-table id="placement_table" class="placement-table">
-    <c-table-head>
-    <c-table-row>
-    <c-table-header>Wie</c-table-header>
-    <c-table-header>Wat & waar</c-table-header>
-    <c-table-header>Tot</c-table-header>
-    </c-table-row>
-    </c-table-head>
-    <c-table-body>
-    {% include "parts/placement_table_rows.html" %}
-    </c-table-body>
-    </c-table>
-  {% else %}
-    <!-- Card list: opdracht-cards or persoon-cards depending on the active view -->
-    <div class="wzw-card-list wzw-card-list--{{ groupby_field }}">
-    {% include "parts/placement_cards.html" %}
-    </div>
-  {% endif %}
+  <!-- Placement Table -->
+  <c-table id="placement_table" class="placement-table">
+  <c-table-head>
+  <c-table-row>
+  {% with field="name", label="Wie", target="#filter-and-table-container", sort_state=get_sort_state(request, "name") %}
+    {% include "parts/generic_sortable_header.html" %}
+  {% endwith %}
+  {% with field="assignment", label="Wat & waar", target="#filter-and-table-container", sort_state=get_sort_state(request, "assignment") %}
+    {% include "parts/generic_sortable_header.html" %}
+  {% endwith %}
+  {% with field="end_date", label="Tot", target="#filter-and-table-container", sort_state=get_sort_state(request, "end_date") %}
+    {% include "parts/generic_sortable_header.html" %}
+  {% endwith %}
+  </c-table-row>
+  </c-table-head>
+  <c-table-body>
+  {% include "parts/placement_rows_groups.html" %}
+  </c-table-body>
+  </c-table>
 </div>
 {# OOB swap: update sidebar filter fields (counts, selected states) — only for HTMX requests #}
 {% if render_filter_fields_oob %}

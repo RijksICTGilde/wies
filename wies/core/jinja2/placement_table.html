@@ -17,7 +17,11 @@
   {% include "parts/filters/filter_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  {% include "parts/filter_and_table_container.html" %}
+  {% if ui_variant == 'cards' %}
+    {% include "parts/filter_and_table_container.html" %}
+  {% else %}
+    {% include "parts/filter_and_table_container_groups.html" %}
+  {% endif %}
 {% endblock content %}
 {% block panel %}
   <div id="side_panel-container">

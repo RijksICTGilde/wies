@@ -1,21 +1,20 @@
-{# View menu (Persoon / Opdracht): a dropdown button showing the active view's
-   icon + its count in parentheses, so it reads as a view picker that also counts. #}
-<div class="groupby-menu" data-groupby-menu>
+{# Sort dropdown, right of the search. Sets ?order= and re-swaps the container.
+   Reuses the groupby-menu styling + the shared open/close JS (data-groupby-menu). #}
+<div class="groupby-menu sort-menu" data-groupby-menu>
   <button type="button"
           class="groupby-menu__trigger rvo-button rvo-button--tertiary rvo-button--size-md rvo-button--icon-before groupby-menu__trigger--active"
           aria-haspopup="menu"
           aria-expanded="false"
-          aria-label="Weergave: {{ groupby_active_label }}"
+          aria-label="Sorteren: {{ sort_active_label }}"
           data-groupby-trigger>
-    <c-icon icon="{{ groupby_active_icon }}" size="md" class="rvo-link__icon--before" />
-    <span class="groupby-menu__label"><b>{{ results_label }}</b> ({{ results_count }})</span>
+    <span class="groupby-menu__label">Sorteer: <b>{{ sort_active_label }}</b></span>
       <c-icon icon="delta-omlaag" size="xs" class="groupby-menu__chevron" />
     </button>
-    <div class="groupby-menu__dropdown"
+    <div class="groupby-menu__dropdown groupby-menu__dropdown--right"
          role="menu"
-         aria-label="Weergave"
+         aria-label="Sorteren"
          hidden>
-      {% for option in groupby_options %}
+      {% for option in sort_options %}
         <a href="{{ option.url }}"
            class="groupby-menu__option{% if option.active %} groupby-menu__option--active{% endif %}"
            role="menuitemradio"
@@ -24,7 +23,6 @@
            hx-target="#filter-and-table-container"
            hx-swap="innerHTML settle:0"
            hx-replace-url="true">
-          <c-icon icon="{{ option.icon }}" size="md" class="groupby-menu__option-icon" />
           <span class="groupby-menu__option-label">{{ option.label }}</span>
           <span class="groupby-menu__check" aria-hidden="true">
             {% if option.active %}<c-icon icon="vinkje" size="xs" />{% endif %}
