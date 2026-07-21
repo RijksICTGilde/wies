@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 491: PR preview environments are now reliably removed when a PR closes (closing cancels any in-flight preview run), preview images build on every push regardless of merge conflicts or CI status, previews also build when a draft PR is marked ready for review, and a preview can be rebuilt manually from the Actions UI
+- 491: PR preview environments are now reliably removed when a PR closes (closing cancels any in-flight preview run), preview images build on every push regardless of merge conflicts or CI status, previews also build when a draft PR is marked ready for review, and a preview can be rebuilt manually from the Actions UI; the weekly registry cleanup of old preview images is fixed (it referenced a non-existent action version and had never run)
 - 477: logging out is now only possible via the button (POST), no longer via a bare GET request, so an external page cannot log you out without your knowledge
 - 486: the opdracht and user CSV imports now shows a graceful error message instead of a 500 when a value is too long for its field or the file is not valid CSV.
 
