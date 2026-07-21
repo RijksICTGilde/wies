@@ -41,9 +41,30 @@ class InlineEditConcurrencyTests(TestCase):
         response = self.client.post(self._url(), {"name": "My Stale Name", "_concurrency_token": token})
 
         assert response.status_code == 200
-        self.assertContains(response, "Herlaad de pagina")
+        self.assertContains(response, "door iemand anders gewijzigd")
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Concurrent Name"
+
+    def test_conflict_rerenders_form_with_fresh_token_and_keeps_input(self):
+        token = self._token_from_form()
+
+        Assignment.objects.filter(pk=self.assignment.pk).update(name="Concurrent Name")
+
+        response = self.client.post(self._url(), {"name": "My Stale Name", "_concurrency_token": token})
+
+        # The form comes back (not the display), still holding the submitted
+        # value, with a token matching the new state — Opslaan saves anyway.
+        content = response.content.decode()
+        match = re.search(r'name="_concurrency_token"\s+value="([^"]*)"', content)
+        assert match, "the re-rendered form must embed a fresh _concurrency_token"
+        assert match.group(1) != token
+        assert "My Stale Name" in content
+
+        response = self.client.post(self._url(), {"name": "My Stale Name", "_concurrency_token": match.group(1)})
+
+        assert response.status_code == 200
+        self.assignment.refresh_from_db()
+        assert self.assignment.name == "My Stale Name"
 
     def test_fresh_edit_still_saves(self):
         token = self._token_from_form()
@@ -89,3 +110,27 @@ class InlineEditCollectionConcurrencyTokenTests(TestCase):
         Service.objects.filter(pk=self.service.pk).update(description="Changed by someone else")
 
         assert self._token() != before
+
+    def test_stale_team_save_rerenders_form_with_alert(self):
+        token = self._token()
+
+        Service.objects.filter(pk=self.service.pk).update(description="Changed by someone else")
+
+        data = {
+            "service-TOTAL_FORMS": "1",
+            "service-INITIAL_FORMS": "1",
+            "service-MIN_NUM_FORMS": "1",
+            "service-MAX_NUM_FORMS": "1000",
+            "service-0-id": str(self.service.id),
+            "service-0-skill": str(self.service.skill_id),
+            "service-0-description": "My edit",
+            "service-0-is_filled": "aanvraag",
+            "service-0-has_custom_period": "on",
+            "_concurrency_token": token,
+        }
+        response = self.client.post(self.url, data)
+
+        assert response.status_code == 200
+        self.assertContains(response, "door iemand anders gewijzigd")
+        self.service.refresh_from_db()
+        assert self.service.description == "Changed by someone else"

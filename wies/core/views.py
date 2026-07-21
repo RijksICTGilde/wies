@@ -2799,7 +2799,8 @@ PERMISSION_DENIED_ALERT = {
 
 CONCURRENCY_CONFLICT_ALERT = {
     "kind": "warning",
-    "message": "Deze gegevens zijn ondertussen door iemand anders gewijzigd. Herlaad de pagina en probeer opnieuw.",
+    "message": "Deze gegevens zijn ondertussen door iemand anders gewijzigd. "
+    "Kies Opslaan om je wijziging toch door te voeren, of Annuleren om de gewijzigde gegevens te zien.",
 }
 
 
@@ -2925,7 +2926,9 @@ def _render_inline_edit_display(
     return response
 
 
-def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) -> HttpResponse:
+def _render_inline_edit_form(
+    request, editable_set, spec, editables, obj, form, *, alert: dict | None = None
+) -> HttpResponse:
     # Edit-mode partial: form + save/cancel. On validation failure, `form` carries inline errors.
     from wies.core.inline_edit.base import EditableGroup  # noqa: PLC0415
 
@@ -2934,6 +2937,7 @@ def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) 
         "form": form,
         "editable": spec,
         "concurrency_token": _concurrency_token(editable_set, spec, obj),
+        "alert": alert,
     }
     template = (
         spec.form_template if isinstance(spec, EditableGroup) and spec.form_template else "parts/inline_edit/form.html"
@@ -2941,12 +2945,15 @@ def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) 
     return render(request, template, ctx)
 
 
-def _render_inline_edit_collection_form(request, editable_set, spec, obj, formset) -> HttpResponse:
+def _render_inline_edit_collection_form(
+    request, editable_set, spec, obj, formset, *, alert: dict | None = None
+) -> HttpResponse:
     # Inner body from spec.form_template; receives the formset as `formset`.
     ctx = {
         **_inline_edit_base_ctx(editable_set, spec, obj),
         "formset": formset,
         "concurrency_token": _concurrency_token(editable_set, spec, obj),
+        "alert": alert,
     }
     return render(request, "parts/inline_edit/collection_form.html", ctx)
 
@@ -2968,8 +2975,11 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
                 with transaction.atomic():
                     obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
                     if submitted_token and submitted_token != _concurrency_token(editable_set, spec, obj):
-                        return _render_inline_edit_display(
-                            request, editable_set, spec, editables=[], obj=obj, alert=CONCURRENCY_CONFLICT_ALERT
+                        # Re-render the bound form (user's input kept) with a
+                        # token for the new state: Opslaan saves anyway,
+                        # Annuleren shows the changed data.
+                        return _render_inline_edit_collection_form(
+                            request, editable_set, spec, obj, formset, alert=CONCURRENCY_CONFLICT_ALERT
                         )
                     before = spec.audit_state(obj) if spec.audit_state else None
                     spec.save(obj, formset)
@@ -3146,8 +3156,11 @@ def inline_edit_view(request, model_label, pk, name):
             with transaction.atomic():
                 obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
                 if submitted_token and submitted_token != _concurrency_token(editable_set, spec, obj):
-                    return _render_inline_edit_display(
-                        request, editable_set, spec, editables, obj, alert=CONCURRENCY_CONFLICT_ALERT
+                    # Re-render the bound form (user's input kept) with a
+                    # token for the new state: Opslaan saves anyway,
+                    # Annuleren shows the changed data.
+                    return _render_inline_edit_form(
+                        request, editable_set, spec, editables, obj, form, alert=CONCURRENCY_CONFLICT_ALERT
                     )
                 if isinstance(spec, EditableGroup):
                     before = {e.name: _current_value(obj, e) for e in editables}
