@@ -1551,10 +1551,7 @@ def user_delete(request, pk):
     return HttpResponse(status=405)
 
 
-# Safety ceiling so a single upload can't exhaust a worker's memory (the file is
-# read + decoded fully in-memory). This is not a business limit: a real
-# user/opdracht CSV is a few thousand rows at most, far below this, so it never
-# rejects a legitimate file. Raise it if a genuinely larger import ever appears.
+# Safety ceiling so a single upload can't exhaust a worker's memory
 MAX_CSV_UPLOAD_BYTES = 50 * 1024 * 1024
 _CSV_MAX_MB = MAX_CSV_UPLOAD_BYTES // (1024 * 1024)
 _CSV_TOO_LARGE_MSG = f"Bestand te groot. Upload een CSV-bestand van maximaal {_CSV_MAX_MB} MB."
