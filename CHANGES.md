@@ -4,7 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 477: uitloggen kan alleen nog via de knop (POST), niet meer via een kaal GET-verzoek, zodat een externe pagina je niet ongemerkt kan uitloggen
+- 477: logging out is now only possible via the button (POST), no longer via a bare GET request, so an external page cannot log you out without your knowledge
+- 486: the opdracht and user CSV imports now shows a graceful error message instead of a 500 when a value is too long for its field or the file is not valid CSV.
 
 ## 2026-07-20
 
