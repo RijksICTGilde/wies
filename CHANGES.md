@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- XXX: the background worker now runs on its own settings module (config.settings.worker) and no longer requires the OIDC credentials to be set at startup
 - 473: fix the opdrachtgever filter counts including planned placements that placement visibility hides from unrelated viewers
 - 473: stop the inline-edit endpoint from revealing whether an object exists to users who may not edit it (a missing and a forbidden object now return the same response)
 - 478: the user and opdracht CSV imports now reject files larger than 50 MB, so an extremely large file cannot exhaust a worker's memory
