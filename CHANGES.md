@@ -4,8 +4,17 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: x
-- ?: CSV-import (gebruikers en opdrachten) weigert nu bestanden groter dan 50 MB, zodat een extreem groot bestand niet het geheugen van een worker kan opslokken
+- 478: the user and opdracht CSV imports now reject files larger than 50 MB, so an extremely large file cannot exhaust a worker's memory
+- 477: logging out is now only possible via the button (POST), no longer via a bare GET request, so an external page cannot log you out without your knowledge
+- 481: the production container no longer silently falls back to the local development settings (DEBUG on) when DJANGO_SETTINGS_MODULE is missing at startup; the startup script then defaults to the production settings (an explicitly provided value still takes precedence). Local development is unchanged.
+- 486: the opdracht and user CSV imports now show a graceful error message instead of a 500 when a value is too long for its field or the file is not valid CSV.
+- 479: fix the "Wie zit waar?" and Gebruikers overviews returning a 500 error and showing "Wis filters" when the labels filter contained a non-numeric value in the URL; such a value is now ignored, just like the organization and role filters.
+
+## 2026-07-20
+
+- 487: login now binds an account to its OIDC subject (`sub`) instead of the email address alone, and rejects a token whose email is already bound to a different `sub`; this prevents account takeover when the token's email claim cannot be fully trusted
+- 487: login now requires the OIDC email to be verified (`email_verified`), rejecting the login otherwise
+- 487: production now refuses to start unless OIDC_DISCOVERY_URL uses https, protecting OIDC signature validation
 
 ## 2026-07-17
 
