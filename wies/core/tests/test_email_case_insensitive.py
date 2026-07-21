@@ -26,7 +26,9 @@ class AuthBackendCaseInsensitiveTest(TestCase):
     def test_authenticate_finds_user_with_different_case(self):
         existing = User.objects.create_user(email="John.Doe@rijksoverheid.nl", first_name="John", last_name="Doe")
 
-        result = AuthBackend().authenticate(request=None, username="sub-123", email="JOHN.DOE@RIJKSOVERHEID.NL")
+        result = AuthBackend().authenticate(
+            request=None, username="sub-123", email="JOHN.DOE@RIJKSOVERHEID.NL", email_verified=True
+        )
 
         assert result == existing
 
