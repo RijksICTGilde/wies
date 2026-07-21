@@ -55,13 +55,13 @@ class ErrorReportingHandler(logging.Handler):
                 exception_message = str(exc_value)
 
         return ErrorEvent.objects.create(
-            level=record.levelname,
-            logger_name=record.name,
+            level=record.levelname[:16],
+            logger_name=record.name[:255],
             message=record.getMessage(),
-            exception_type=exception_type,
+            exception_type=exception_type[:255],
             exception_message=exception_message,
             traceback=traceback_text,
-            method=method,
+            method=method[:8],
             path=path[:512],
             user=user,
             user_email=user_email,
