@@ -4,8 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?:
-- 486: de opdracht-CSV-import geeft nu een nette foutmelding in plaats van een 500 wanneer een waarde te lang is voor het veld of het bestand geen geldig CSV is.
+- 477: logging out is now only possible via the button (POST), no longer via a bare GET request, so an external page cannot log you out without your knowledge
+- 486: the opdracht CSV import now shows a graceful error message instead of a 500 when a value is too long for its field or the file is not valid CSV.
 
 ## 2026-07-20
 

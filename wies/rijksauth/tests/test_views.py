@@ -96,7 +96,7 @@ class AuthViewsTest(TestCase):
         self.client.force_login(self.colleague)
         assert "_auth_user_id" in self.client.session
 
-        response = self.client.get(reverse("logout"))
+        response = self.client.post(reverse("logout"))
 
         assert response.status_code == 302
         assert response.url == "/inloggen/"
@@ -110,10 +110,17 @@ class AuthViewsTest(TestCase):
 
     def test_logout_when_not_logged_in(self):
         """Test logout works gracefully when user is not logged in"""
-        response = self.client.get(reverse("logout"))
+        response = self.client.post(reverse("logout"))
 
         assert response.status_code == 302
         assert response.url == "/inloggen/"
+
+    def test_logout_rejects_get(self):
+        """Logout must be POST-only: a GET (e.g. a cross-site <img src> pointing
+        at the logout URL) must not be able to log the user out."""
+        response = self.client.get(reverse("logout"))
+
+        assert response.status_code == 405
 
     @patch("wies.rijksauth.views._get_oidc")
     def test_logout_redirects_to_keycloak_end_session(self, mock_get_oidc):
@@ -126,7 +133,7 @@ class AuthViewsTest(TestCase):
         session["oidc_id_token"] = "fake-id-token"  # noqa: S105 (hardcoded-password) — test fixture, not a real token
         session.save()
 
-        response = self.client.get(reverse("logout"))
+        response = self.client.post(reverse("logout"))
 
         assert response.status_code == 302
         assert response.url.startswith("https://kc.example/realms/wies/protocol/openid-connect/logout?")

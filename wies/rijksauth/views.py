@@ -10,6 +10,7 @@ from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_not_required
 from django.shortcuts import redirect
 from django.urls import reverse, reverse_lazy
+from django.views.decorators.http import require_POST
 
 from .services.events import create_auth_event
 
@@ -76,6 +77,7 @@ def auth(request):
 
 
 @login_not_required
+@require_POST
 def logout(request):
     id_token = request.session.get(settings.OIDC_ID_TOKEN_SESSION_KEY)
     if request.user and request.user.is_authenticated:
