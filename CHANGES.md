@@ -5,7 +5,8 @@ This files lists the changes during the lifetime of this project.
 ## unreleased
 
 - 477: logging out is now only possible via the button (POST), no longer via a bare GET request, so an external page cannot log you out without your knowledge
-- 486: the opdracht and user CSV imports now shows a graceful error message instead of a 500 when a value is too long for its field or the file is not valid CSV.
+- 481: the production container no longer silently falls back to the local development settings (DEBUG on) when DJANGO_SETTINGS_MODULE is missing at startup; the startup script then defaults to the production settings (an explicitly provided value still takes precedence). Local development is unchanged.
+- 486: the opdracht and user CSV imports now show a graceful error message instead of a 500 when a value is too long for its field or the file is not valid CSV.
 
 ## 2026-07-20
 
