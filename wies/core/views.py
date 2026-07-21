@@ -2414,8 +2414,13 @@ def search_suggestions(request):
     return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs, "search_term": term.strip()})
 
 
-def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int]:
-    """Return per-org self-counts based on count_mode."""
+def _get_org_counts(count_mode: str, excluded_org_ids: list[int], viewer) -> Counter[int]:
+    """Return per-org self-counts based on count_mode.
+
+    ``viewer`` (the viewing Colleague or None) gates the placements count through
+    ``filter_visible_placements`` so a planned/ended placement never inflates the
+    count shown to someone who may not see it, the same rule the list already applies.
+    """
     if count_mode == "none":
         return Counter()
     if count_mode == "open_assignments":
@@ -2431,12 +2436,12 @@ def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int
             assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
         org_id_list = assignment_qs.values_list("organizations__id", flat=True)
     else:
-        active_placements = annotate_placement_dates(Placement.objects.all()).filter(
-            actual_end_date__gte=timezone.now().date()
+        visible_placements = filter_visible_placements(
+            annotate_placement_dates(Placement.objects.all()), timezone.now().date(), viewer
         )
         if excluded_org_ids:
-            active_placements = active_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
-        org_id_list = active_placements.values_list("service__assignment__organizations__id", flat=True)
+            visible_placements = visible_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
+        org_id_list = visible_placements.values_list("service__assignment__organizations__id", flat=True)
     return Counter(org_id for org_id in org_id_list if org_id is not None)
 
 
@@ -2445,6 +2450,7 @@ def _get_top_org_options(
     excluded_org_ids: list[int],
     selected_org_ids: set[str],
     *,
+    viewer=None,
     selected_self_ids: set[str] | None = None,
     selected_type_labels: set[str] | None = None,
     org_counts: Counter[int] | None = None,
@@ -2475,7 +2481,7 @@ def _get_top_org_options(
     selected_type_labels = selected_type_labels or set()
 
     if org_counts is None:
-        org_counts = _get_org_counts(count_mode, excluded_org_ids)
+        org_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
     selected_ids = {int(x) for x in selected_org_ids if str(x).isdigit()}
     self_ids = {int(x) for x in selected_self_ids if str(x).isdigit()}
 
@@ -2707,7 +2713,8 @@ def client_modal(request):
     excluded_org_ids = get_excluded_org_ids()
     count_mode = request.GET.get("count_mode", "placements")
 
-    org_self_counts = _get_org_counts(count_mode, excluded_org_ids)
+    viewer = getattr(request.user, "colleague", None)
+    org_self_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
     hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 
@@ -2991,6 +2998,15 @@ def _emit_placement_change_on_assignment(placement, before_row: dict, user) -> N
     )
 
 
+def _pk_stub(model, pk):
+    """An unsaved model instance carrying only ``pk``. Enough for the denial
+    partial's target/edit_url so a missing object renders byte-identically to a
+    forbidden one, without a second DB round-trip or a real record."""
+    stub = model()
+    stub.pk = pk
+    return stub
+
+
 def inline_edit_view(request, model_label, pk, name):
     """Generic HTMX endpoint. See ``features/inline-editing.md`` for the full contract."""
     editable_set = REGISTRY.get(model_label)
@@ -3000,11 +3016,15 @@ def inline_edit_view(request, model_label, pk, name):
     if spec is None:
         raise Http404("Unknown editable")
 
-    obj = get_object_or_404(editable_set.model, pk=pk)
+    obj = editable_set.model.objects.filter(pk=pk).first()
 
-    # Permission ladder — denial always returns display partial with alert.
-    denial = _permission_denied(editable_set, spec, request.user, obj)
+    # Permission ladder: a missing object and a forbidden one both return the
+    # SAME denial partial, so this endpoint can't be walked as a 404-vs-200
+    # existence oracle over sequential PKs (mirrors how the side panel returns an
+    # identical empty response for not-found and not-visible).
+    denial = _permission_denied(editable_set, spec, request.user, obj) if obj is not None else PERMISSION_DENIED_ALERT
     if denial:
+        display_obj = obj if obj is not None else _pk_stub(editable_set.model, pk)
         editables_for_display: list[Editable] = (
             [] if isinstance(spec, EditableCollection) else resolve_editables(editable_set, spec)
         )
@@ -3013,7 +3033,7 @@ def inline_edit_view(request, model_label, pk, name):
             editable_set,
             spec,
             editables_for_display,
-            obj,
+            display_obj,
             alert=denial,
             user_can_edit=False,
         )

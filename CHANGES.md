@@ -4,6 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 473: fix the opdrachtgever filter counts including planned placements that placement visibility hides from unrelated viewers
+- 473: stop the inline-edit endpoint from revealing whether an object exists to users who may not edit it (a missing and a forbidden object now return the same response)
 - 478: the user and opdracht CSV imports now reject files larger than 50 MB, so an extremely large file cannot exhaust a worker's memory
 - 477: logging out is now only possible via the button (POST), no longer via a bare GET request, so an external page cannot log you out without your knowledge
 - 481: the production container no longer silently falls back to the local development settings (DEBUG on) when DJANGO_SETTINGS_MODULE is missing at startup; the startup script then defaults to the production settings (an explicitly provided value still takes precedence). Local development is unchanged.
