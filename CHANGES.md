@@ -18,6 +18,7 @@ This files lists the changes during the lifetime of this project.
 - 494: add trivy container scanning as recurring action
 - 482: veiligheidsmaatregel: de Content-Security-Policy voor scripts staat geen inline JavaScript meer toe (`script-src 'self'`). Alle scripts en klik-/toetsafhandeling zijn naar externe JS-bestanden verplaatst, zodat eventueel geïnjecteerde inline-JavaScript niet meer kan worden uitgevoerd. Inline stijlen blijven toegestaan.
 - 482: de htmx-geschiedeniscache staat nu op alle pagina's uit in plaats van alleen op het opdrachtenoverzicht en de plaatsingentabel; terugnavigeren haalt een pagina voortaan overal vers op.
+- PRNUM: fix the PR preview cleanup never running: its first step called `gh` without `--repo` in a job that has no checkout, so it failed immediately and the ZAD deployment and PR-tagged images of every closed PR were left behind
 
 ## 2026-07-20
 
