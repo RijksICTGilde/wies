@@ -20,7 +20,7 @@ This files lists the changes during the lifetime of this project.
 - 482: de htmx-geschiedeniscache staat nu op alle pagina's uit in plaats van alleen op het opdrachtenoverzicht en de plaatsingentabel; terugnavigeren haalt een pagina voortaan overal vers op.
 - 497: bumped dev/CI dependencies and GitHub Actions
 - 497: the production images (web/worker) no longer contain dev/test tooling, reducing the runtime attack surface
-- ?: harden ci: pin actions on sha, explicit permissions per action stage
+- 498: harden ci: pin actions on sha, explicit permissions per action stage
 
 ## 2026-07-20
 
