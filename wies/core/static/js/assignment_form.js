@@ -36,11 +36,12 @@
         var existing = actionsDiv.querySelector(".service-row__remove");
         if (visibleRows.length > 1) {
           if (!existing) {
-            var btn = document.createElement("button");
-            btn.type = "button";
-            btn.className =
-              "service-row__remove rvo-button rvo-button--warning-subtle rvo-button--size-sm";
-            btn.textContent = "Verwijderen";
+            var btn = document.createElement("nldd-button");
+            btn.className = "service-row__remove";
+            btn.setAttribute("variant", "warning-subtle");
+            btn.setAttribute("size", "sm");
+            btn.setAttribute("start-icon", "trash");
+            btn.setAttribute("text", "Verwijderen");
             btn.setAttribute("aria-label", "Dienst verwijderen");
             btn.addEventListener("click", function () {
               row.remove();
@@ -116,7 +117,7 @@
         var existingBtn = row.querySelector(".service-row__remove");
         if (existingBtn) existingBtn.remove();
 
-        row.querySelectorAll(".rvo-form-field__error").forEach(function (el) {
+        row.querySelectorAll(".nldd-form-field__error").forEach(function (el) {
           el.remove();
         });
 
@@ -220,7 +221,7 @@
       var hint = row.querySelector(".service-period-hint");
       if (!hint) {
         hint = document.createElement("p");
-        hint.className = "service-period-hint rvo-text--sm rvo-text--subtle";
+        hint.className = "service-period-hint";
         hint.style.display = "none";
         hint.textContent = "Vul eerst de opdrachtperiode in hierboven.";
         checkbox.closest(".service-period-section").appendChild(hint);

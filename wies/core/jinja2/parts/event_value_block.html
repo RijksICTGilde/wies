@@ -5,8 +5,8 @@
      label  (required): "Van" or "Naar".
      value  (required): the string to display.
 #}
-<div class="rvo-margin-block-start--xs">
-  <span class="rvo-text--subtle rvo-text--xs">{{ label }}:</span>
+<div style="margin-top: 0.25rem;">
+  <span class="nldd-text-secondary nldd-text-xs">{{ label }}:</span>
   {% if value|length > 300 %}
     <span>
       <span class="truncated-text" style="display: block;">{{ value[:300] }}...</span>

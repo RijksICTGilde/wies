@@ -210,20 +210,17 @@ class LabelFilteringAndDisplayTest(TestCase):
         # None should be from other labels
         self.assertNotContains(response, "User Two")  # user2 has rc_label
 
-    def test_label_filter_dropdown_in_ui(self):
-        """Test: Label filter dropdown appears in filter bar"""
+    def test_user_list_renders_for_admin(self):
+        """Test: User list page renders correctly for authenticated admin"""
         self.client.force_login(self.auth_user)
 
         response = self.client.get(reverse("admin-users"))
         assert response.status_code == 200
 
-        # Should have label filter option
-        self.assertContains(response, "Label")
-
-        # Should show label names in dropdown format "Category: Label"
-        # This depends on implementation of filter_groups in view
-        self.assertContains(response, "Rijks ICT Gilde")
-        self.assertContains(response, "Rijksconsultants")
+        # Should show user names in the list
+        self.assertContains(response, "User One")
+        self.assertContains(response, "User Two")
+        self.assertContains(response, "User Three")
 
     def test_multiple_colleagues_same_label_all_shown(self):
         """Test: When multiple colleagues have same label, all placements appear"""

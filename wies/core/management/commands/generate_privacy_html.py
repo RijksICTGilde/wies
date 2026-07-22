@@ -17,9 +17,11 @@ PREAMBLE = """\
   Privacy - Wies
 {% endblock title %}
 {% block content %}
+  <nldd-container padding="24">
+  <nldd-rich-text>
 """
 
-POSTAMBLE = "{% endblock content %}\n"
+POSTAMBLE = "  </nldd-rich-text>\n  </nldd-container>\n{% endblock content %}\n"
 
 
 def _render_inline(children) -> str:  # noqa: C901 — dispatch table over markdown-it token types; splitting hides the mapping
@@ -44,36 +46,25 @@ def _render_inline(children) -> str:  # noqa: C901 — dispatch table over markd
             attrs = f' href="{escape(href, quote=True)}"'
             if href.startswith(("http://", "https://")):
                 attrs += ' target="_blank"'
-            out.append(f"<c-link{attrs}>")
+            out.append(f"<a{attrs}>")
         elif tok.type == "link_close":
-            out.append("</c-link>")
+            out.append("</a>")
         elif tok.type == "code_inline":
             out.append(f"<code>{escape(tok.content, quote=False)}</code>")
     return "".join(out)
 
 
-def _render_body(tokens) -> str:  # noqa: C901 — dispatch table over markdown-it token types; splitting hides the mapping
+def _render_body(tokens) -> str:
+    # nldd-rich-text styles semantic HTML directly, so we emit plain
+    # <h1>/<h2>/<p>/<ul> without RVO layout wrappers.
     out: list[str] = []
-    in_xs_section = False
-    lg_opened = False
 
     i = 0
     while i < len(tokens):
         tok = tokens[i]
-        if tok.type == "heading_open" and tok.tag == "h1":
+        if tok.type == "heading_open" and tok.tag in ("h1", "h2"):
             inline = tokens[i + 1]
-            out.append(f"<c-h1>{_render_inline(inline.children)}</c-h1>")
-            out.append('<div class="rvo-layout-column rvo-layout-gap--lg">')
-            lg_opened = True
-            i += 3
-            continue
-        if tok.type == "heading_open" and tok.tag == "h2":
-            if in_xs_section:
-                out.append("</div>")
-            out.append('<div class="rvo-layout-column rvo-layout-gap--xs">')
-            in_xs_section = True
-            inline = tokens[i + 1]
-            out.append(f"<c-h2>{_render_inline(inline.children)}</c-h2>")
+            out.append(f"<{tok.tag}>{_render_inline(inline.children)}</{tok.tag}>")
             i += 3
             continue
         if tok.type == "paragraph_open":
@@ -82,7 +73,7 @@ def _render_body(tokens) -> str:  # noqa: C901 — dispatch table over markdown-
             if tok.hidden:
                 out.append(rendered_inline)
             else:
-                out.append(f"<c-paragraph>{rendered_inline}</c-paragraph>")
+                out.append(f"<p>{rendered_inline}</p>")
             i += 3
             continue
         if tok.type == "bullet_list_open":
@@ -103,10 +94,6 @@ def _render_body(tokens) -> str:  # noqa: C901 — dispatch table over markdown-
             continue
         i += 1
 
-    if in_xs_section:
-        out.append("</div>")
-    if lg_opened:
-        out.append("</div>")
     return "\n".join(out)
 
 

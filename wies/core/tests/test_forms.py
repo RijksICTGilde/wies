@@ -5,14 +5,15 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.test import TestCase
 
-from wies.core.forms import RvoFormMixin, UserForm
+from wies.core.form_mixins import NlddFormMixin
+from wies.core.forms import UserForm
 from wies.core.models import Label, LabelCategory
 
 User = get_user_model()
 
 
-class RvoFormMixinTest(TestCase):
-    """Tests for RvoFormMixin functionality and form rendering"""
+class NlddUserFormRenderingTest(TestCase):
+    """Tests for NlddFormMixin functionality and form rendering via UserForm"""
 
     def setUp(self):
         """Create test data"""
@@ -26,113 +27,80 @@ class RvoFormMixinTest(TestCase):
         self.consultant_group = Group.objects.create(name="Consultant")
         self.bdm_group = Group.objects.create(name="Business Development Manager")
 
-    def test_form_renders_with_rvo_classes(self):
-        """Test that forms using RvoFormMixin render with RVO design system classes"""
+    def test_form_renders_with_nldd_classes(self):
+        """Text-like fields render real nldd-form-field + nldd-text-field components."""
         form = UserForm()
         rendered = str(form)
 
-        # Check that form fields are wrapped with RVO classes
-        assert "utrecht-form-field" in rendered
-        assert "rvo-form-field__label" in rendered
-        assert "rvo-label" in rendered
+        # Fields are wrapped in the real nldd-form-field component.
+        assert "<nldd-form-field" in rendered
 
-        # Check that text inputs have RVO classes
-        first_name_input_match = re.search(r'<input[^>]*name="first_name"[^>]*>', rendered)
-        assert first_name_input_match is not None
-        first_name_input = first_name_input_match.group(0)
-        assert "utrecht-textbox" in first_name_input
-        assert "rvo-input" in first_name_input
+        # Text/email inputs are real nldd-text-field components, not plain inputs.
+        assert re.search(r'<nldd-text-field[^>]*name="first_name"', rendered, re.DOTALL) is not None
+        assert re.search(r'<nldd-text-field[^>]*name="email"', rendered, re.DOTALL) is not None
+        assert 'class="nldd-input"' not in rendered
 
-        # Check that email input has RVO classes
-        email_input_match = re.search(r'<input[^>]*name="email"[^>]*>', rendered)
-        assert email_input_match is not None
-        email_input = email_input_match.group(0)
-        assert "utrecht-textbox" in email_input
-        assert "rvo-input" in email_input
+    def test_form_displays_validation_errors_with_nldd_classes(self):
+        """Validation errors render as nldd-form-field-error-text elements.
 
-        # Check that select has RVO classes and wrapper
-        # no longer select. TODO: decide on multi-select or fix single select
+        The error text must be wired to its input: nldd-form-field only reveals
+        it when the input reflects `invalid` and names the error's id in
+        `error-message`. Without that the message renders at height 0 and no
+        screen reader announces it.
+        """
+        form = UserForm(data={})  # missing required fields
 
-        # Check that checkbox group has RVO classes
-        assert "rvo-checkbox__group" in rendered
-        assert "rvo-checkbox" in rendered
-        assert "rvo-checkbox__input" in rendered
-
-    def test_form_displays_validation_errors_with_rvo_classes(self):
-        """Test that form validation errors are displayed with RVO design system classes"""
-        # Submit form with missing required fields to trigger validation errors
-        form = UserForm(
-            data={
-                # Missing required fields
-            }
-        )
-
-        # Form should not be valid
         assert not form.is_valid()
 
-        # Render the form
         rendered = str(form)
 
-        # Check that error messages have RVO classes
-        assert "rvo-form-field__error" in rendered
-        assert "rvo-text--error" in rendered
+        error_ids = re.findall(r'<nldd-form-field-error-text id="([^"]+)"', rendered)
+        assert error_ids, "no error texts rendered with an id"
+
+        for error_id in error_ids:
+            assert re.search(
+                rf'<nldd-[a-z-]+field[^>]*invalid[^>]*error-message="[^"]*{re.escape(error_id)}',
+                rendered,
+                re.DOTALL,
+            ), f"error text {error_id} is not referenced by an invalid input"
 
     def test_required_fields_have_required_label_class(self):
-        """Test that required fields have rvo-label--required class on their labels"""
+        """Optional fields get the `optional` badge; required fields do not."""
         form = UserForm()
         rendered = str(form)
 
-        # Check that required field labels have rvo-label--required class
-        # first_name is required
-        first_name_label_match = re.search(r'<label[^>]*for="id_first_name"[^>]*>(.*?)</label>', rendered, re.DOTALL)
-        assert first_name_label_match is not None
-        first_name_label = first_name_label_match.group(0)
-        assert "rvo-label--required" in first_name_label
-        assert "rvo-label" in first_name_label
+        # Required text fields render an nldd-form-field WITHOUT the optional badge.
+        first_name_field = re.search(r'<nldd-form-field[^>]*label="Voornaam".*?</nldd-form-field>', rendered, re.DOTALL)
+        assert first_name_field is not None
+        assert "optional" not in first_name_field.group(0)
 
-        # email is required
-        email_label_match = re.search(r'<label[^>]*for="id_email"[^>]*>(.*?)</label>', rendered, re.DOTALL)
-        assert email_label_match is not None
-        email_label = email_label_match.group(0)
-        assert "rvo-label--required" in email_label
-
-        # groups is optional - should NOT have rvo-label--required
-        groups_label_match = re.search(r'<label[^>]*id="label-groups"[^>]*>(.*?)</label>', rendered, re.DOTALL)
-        assert groups_label_match is not None
-        brand_label = groups_label_match.group(0)
-        assert "rvo-label--required" not in brand_label
-        assert "rvo-label" in brand_label  # Should still have base class
+        email_field = re.search(r'<nldd-form-field[^>]*label="E-mail[^"]*".*?</nldd-form-field>', rendered, re.DOTALL)
+        assert email_field is not None
+        assert "optional" not in email_field.group(0)
 
     def test_form_has_no_required_attribute(self):
         """
-        Test that form fields do not have required HTML attribute (client-side validation disabled)
-        This ensures fields are not colored red upon first view
+        Text fields do not carry the HTML required attribute (client-side
+        validation is disabled so fields aren't coloured red on first view).
         """
         form = UserForm()
         rendered = str(form)
 
-        # Check that required fields don't have the required attribute in the HTML
-        # Check for first_name field
-        assert 'name="first_name"' in rendered
-        # The input should NOT have required attribute
-        first_name_input_match = re.search(r'<input[^>]*name="first_name"[^>]*>', rendered)
-        assert first_name_input_match is not None
-        first_name_input = first_name_input_match.group(0)
-        assert "required" not in first_name_input, (
-            f"first_name input should not have 'required' attribute. Found: {first_name_input}"
+        first_name = re.search(r'<nldd-text-field[^>]*name="first_name"[^>]*>', rendered, re.DOTALL)
+        assert first_name is not None
+        assert "required" not in first_name.group(0), (
+            f"first_name should not have 'required'. Found: {first_name.group(0)}"
         )
 
-        # Check for email field
-        email_input_match = re.search(r'<input[^>]*name="email"[^>]*>', rendered)
-        assert email_input_match is not None
-        email_input = email_input_match.group(0)
-        assert "required" not in email_input, f"email input should not have 'required' attribute. Found: {email_input}"
+        email = re.search(r'<nldd-text-field[^>]*name="email"[^>]*>', rendered, re.DOTALL)
+        assert email is not None
+        assert "required" not in email.group(0), f"email should not have 'required'. Found: {email.group(0)}"
 
     def test_unmapped_widget_logs_warning(self):
         """Test that using an unmapped widget logs a warning"""
 
         # Create a test form with an unmapped widget (FileInput)
-        class TestForm(RvoFormMixin, forms.Form):
+        class TestForm(NlddFormMixin, forms.Form):
             document = forms.FileField(label="Document")
 
         # Create the form and check that a warning is logged
@@ -143,7 +111,7 @@ class RvoFormMixinTest(TestCase):
         assert len(log.output) == 1
         assert "FileInput" in log.output[0]
         assert "document" in log.output[0]
-        assert "not in RVO widget_templates mapping" in log.output[0]
+        assert "not in widget_templates mapping" in log.output[0]
 
 
 class UserFormEmailDomainValidationTest(TestCase):
@@ -247,3 +215,79 @@ class UserFormEmailDomainValidationTest(TestCase):
         )
         assert not form.is_valid()
         assert "email" in form.errors
+
+
+class NlddFormMixinTest(TestCase):
+    """Tests that NlddFormMixin renders forms without any RVO classes."""
+
+    RVO_MARKERS = (
+        "rvo-",
+        "utrecht-textbox",
+        "utrecht-select",
+        "utrecht-textarea",
+        "utrecht-form-field",
+        "utrecht-radio-button",
+    )
+
+    def setUp(self):
+        Group.objects.get_or_create(name="Beheerder")
+        Group.objects.get_or_create(name="Consultant")
+        Group.objects.get_or_create(name="Business Development Manager")
+        self.category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
+        Label.objects.create(name="Brand A", category=self.category)
+
+    def _make_nldd_test_form(self, **kwargs):
+        """Create a simple test form using NlddFormMixin."""
+
+        class NlddTestForm(NlddFormMixin, forms.Form):
+            first_name = forms.CharField(label="Voornaam", required=True)
+            last_name = forms.CharField(label="Achternaam", required=True)
+            email = forms.EmailField(label="E-mailadres", required=True)
+            role = forms.ChoiceField(label="Rol", choices=[("a", "Admin"), ("b", "User")], required=False)
+            notes = forms.CharField(label="Notities", widget=forms.Textarea, required=False)
+            active = forms.BooleanField(label="Actief", required=False)
+
+        return NlddTestForm(**kwargs)
+
+    def test_nldd_form_renders_without_rvo_classes(self):
+        form = self._make_nldd_test_form()
+        rendered = str(form)
+
+        for marker in self.RVO_MARKERS:
+            assert marker not in rendered, f"RVO marker '{marker}' found in NLDD form output"
+
+    def test_nldd_form_renders_with_nldd_classes(self):
+        form = self._make_nldd_test_form()
+        rendered = str(form)
+
+        # Text-like fields use the real components; no hand-rolled nldd-input.
+        assert "<nldd-form-field" in rendered
+        assert re.search(r'<nldd-text-field[^>]*name="first_name"', rendered, re.DOTALL) is not None
+        assert 'class="nldd-input"' not in rendered
+
+    def test_nldd_form_errors_without_rvo_classes(self):
+        form = self._make_nldd_test_form(data={})
+        assert not form.is_valid()
+        rendered = str(form)
+
+        for marker in self.RVO_MARKERS:
+            assert marker not in rendered, f"RVO marker '{marker}' found in NLDD form error output"
+        # Wired to its input by id, otherwise the component keeps it hidden.
+        assert re.search(r'<nldd-form-field-error-text id="[^"]+"', rendered) is not None
+
+    def test_nldd_form_required_label_class(self):
+        form = self._make_nldd_test_form()
+        rendered = str(form)
+
+        # A required text field renders an nldd-form-field without the optional badge.
+        first_name_field = re.search(r'<nldd-form-field[^>]*label="Voornaam".*?</nldd-form-field>', rendered, re.DOTALL)
+        assert first_name_field is not None
+        assert "optional" not in first_name_field.group(0)
+
+    def test_nldd_form_no_required_attribute(self):
+        form = self._make_nldd_test_form()
+        rendered = str(form)
+
+        first_name = re.search(r'<nldd-text-field[^>]*name="first_name"[^>]*>', rendered, re.DOTALL)
+        assert first_name is not None
+        assert "required" not in first_name.group(0)

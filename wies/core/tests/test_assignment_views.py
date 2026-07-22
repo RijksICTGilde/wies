@@ -591,7 +591,9 @@ class AssignmentEditAttributeTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "Team")
         self.assertContains(response, "Toegevoegd: Java (open)")
-        self.assertContains(response, "rvo-list")
+        # Collection changes render as a bulleted list.
+        self.assertContains(response, "<ul")
+        self.assertContains(response, "<li>")
 
     def test_timeline_renders_text_change_inline(self):
         """Text field changes render inline as 'van X naar Y'"""
@@ -783,7 +785,7 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-        self.assertContains(response, 'id="tab-updates"')
+        self.assertContains(response, 'data-tab-panel="tab-panel-updates"')
         self.assertContains(response, 'id="tab-panel-updates"')
 
 

@@ -1,0 +1,8 @@
+{# Wie zit waar — an nldd-list of clickable rows (each opens the side panel). A
+list, not a table: nldd-list-item gives native hover/focus feedback for
+navigable rows, which nldd-table-row (data display) does not. #}
+<div id="nldd-placement-table">
+  <nldd-list variant="simple" accessible-label="Wie zit waar">
+  {% include "parts/placement_table_rows.html" %}
+  </nldd-list>
+</div>

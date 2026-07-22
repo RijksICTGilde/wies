@@ -8,7 +8,7 @@ from django import forms
 from django.db.models import ManyToManyField
 from django.forms.models import fields_for_model
 
-from wies.core.form_mixins import RvoFormMixin
+from wies.core.form_mixins import NlddFormMixin
 from wies.core.inline_edit.base import Editable, EditableGroup, EditableSet
 
 if TYPE_CHECKING:
@@ -71,7 +71,7 @@ def build_form_class(
     obj: Model | None = None,
     group_clean: Callable[[dict], dict] | None = None,
 ) -> tuple[type[forms.Form], dict[str, Any]]:
-    """Return (FormClass, initial): RvoFormMixin-enabled form with one field per Editable."""
+    """Return (FormClass, initial): NlddFormMixin-enabled form with one field per Editable."""
     form_fields: dict[str, forms.Field] = {}
     initial: dict[str, Any] = {}
     for e in editables:
@@ -90,7 +90,7 @@ def build_form_class(
 
         attrs["clean"] = _clean
 
-    created_cls = type("InlineEditForm", (RvoFormMixin, forms.Form), attrs)
+    created_cls = type("InlineEditForm", (NlddFormMixin, forms.Form), attrs)
     form_cls = cast("type[forms.Form]", created_cls)
     return form_cls, initial
 

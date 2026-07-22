@@ -23,6 +23,18 @@ document.addEventListener("htmx:afterSwap", function (e) {
       });
     });
   });
+
+  // NDD: auto-show nldd-window when HTMX loads content.
+  // show() reads the <dialog> out of the shadow root and returns silently when
+  // it isn't there yet. Right after a swap the element is upgraded but Lit has
+  // not rendered, so wait for updateComplete or the modal stays invisible.
+  const windows = e.detail.target.querySelectorAll("nldd-window");
+  windows.forEach(function (win) {
+    customElements
+      .whenDefined("nldd-window")
+      .then(() => win.updateComplete)
+      .then(() => win.show());
+  });
 });
 
 // ESC key → close topmost modal dialog (closedby="none" blocks native ESC)
@@ -50,9 +62,9 @@ document.addEventListener("closeModal", function () {
     const modalContainer = document.getElementById(modalId);
     if (modalContainer) {
       const dialog = modalContainer.querySelector("dialog");
-      if (dialog) {
-        dialog.close();
-      }
+      if (dialog) dialog.close();
+      const win = modalContainer.querySelector("nldd-window");
+      if (win && typeof win.hide === "function") win.hide();
     }
   });
 });

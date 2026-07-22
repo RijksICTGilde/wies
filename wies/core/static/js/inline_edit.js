@@ -12,13 +12,10 @@ function showSavedToast() {
   const container = document.createElement("div");
   container.className = "flash-messages";
   container.id = "flash-messages";
+  // Mirror the app's NLDD flash pattern (parts/flash_messages.html):
+  // an nldd-banner in a .flash-messages container.
   container.innerHTML =
-    '<div class="rvo-alert rvo-alert--success rvo-alert--padding-md" role="alert">' +
-    '  <div class="rvo-alert__container">' +
-    '    <span class="utrecht-icon rvo-icon rvo-icon-bevestiging rvo-status-icon rvo-status-icon-bevestiging rvo-icon--xl" role="img" aria-label="Bevestiging"></span>' +
-    '    <div class="rvo-alert-text">Opgeslagen</div>' +
-    "  </div>" +
-    "</div>";
+    '<nldd-banner variant="success" text="Opgeslagen"></nldd-banner>';
   // Append to dialog if open (dialogs render in top-layer, above body),
   // otherwise append to body.
   const dialog = document.querySelector("dialog[open]");

@@ -10,7 +10,7 @@
 
 /* Vertical connecting lines for nested levels */
 .org-tree__list .org-tree__list {
-  border-left: 2px solid var(--rvo-color-grijs-200, #e0e4e8);
+  border-left: 2px solid var(--primitives-color-coolgray-200, #e0e4e8);
   margin-left: 4px;
 }
 
@@ -58,22 +58,22 @@ details[open] > .org-tree__summary > .org-tree__chevron {
 
 .org-tree__chevron-spacer {
   display: inline-block;
-  width: var(--rvo-icon-sm-width, 12px);
+  width: 12px;
   flex-shrink: 0;
 }
 
 .org-tree__abbr {
-  color: var(--rvo-color-hemelblauw, #666);
+  color: var(--primitives-color-hemelblauw-500, #666);
   font-size: 0.875rem;
 }
 
 .org-tree__item--inactive .org-tree__label {
-  color: var(--rvo-color-grijs-500, #64748b);
+  color: var(--primitives-color-coolgray-500, #64748b);
   font-style: italic;
 }
 
 .org-tree__badge--inactive {
-  color: var(--rvo-color-grijs-500, #64748b);
+  color: var(--primitives-color-coolgray-500, #64748b);
   font-size: 0.85em;
 }
 
@@ -83,12 +83,12 @@ details[open] > .org-tree__summary > .org-tree__chevron {
 }
 
 .org-tree__label mark {
-  background: var(--rvo-color-geel-200, #fef3cd);
+  background: var(--primitives-color-geel-200, #fef3cd);
   color: inherit;
   font-weight: 600;
 }
 
 .org-tree__empty {
-  color: var(--rvo-color-grijs-500, #64748b);
+  color: var(--primitives-color-coolgray-500, #64748b);
   font-style: italic;
 }

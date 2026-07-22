@@ -1,45 +1,30 @@
 {% for placement in object_list %}
-  <c-table-row class="clickable-row" hx-get="{{ placement.panel_url }}" hx-target="#side_panel-container">
-  <c-table-cell>
-  <div class="user-table-cell">
-    <div class="user-avatar">{{ placement.colleague.name|first|upper }}</div>
-    <div class="user-info">
-      <strong>{{ placement.colleague.name }}</strong>
-      {% if placement.service.skill %}<span>{{ placement.service.skill.name }}</span>{% endif %}
-    </div>
-  </div>
-  </c-table-cell>
-  <c-table-cell>
-  <strong>{{ placement.service.assignment.name }}</strong>
-  {% set clients = placement.service.assignment.sorted_clients %}
-  {% if clients %}
-    <div class="rvo-text--subtle icon-text-inline--block">
-      <c-icon icon="basis-kantoorgebouw" size="md" color="grijs-700" />
-      {{ clients[0].organization.label or clients[0].organization.name }}
-      {% if clients|length > 1 %}(+{{ clients|length - 1 }}){% endif %}
-    </div>
+  {% set clients = placement.service.assignment.sorted_clients %} {% set client_label = clients[0].organization.label or clients[0].organization.name if clients else "" %}
+  {% if clients|length > 1 %}
+    {% set client_label = client_label ~ " (+" ~
+        (clients|length - 1) ~ ")" %}
   {% endif %}
-  </c-table-cell>
-  <c-table-cell>
-  {% if placement.actual_end_date %}
-    <span class="icon-text-inline">
-      <c-icon icon="kalender" size="md" color="grijs-700" />
-      {{ placement.actual_end_date|datum_nl("j N Y") }}
-    </span>
-  {% endif %}
-  </c-table-cell>
-  </c-table-row>
+  {# href makes nldd-list-item render
+its interactive anchor wrapper (hover/focus feedback + keyboard); htmx
+intercepts the click to open the side panel instead of navigating. #}
+  <nldd-list-item href="{{ placement.panel_url }}" hx-get="{{ placement.panel_url }}" hx-target="#nldd-side-panel-content" hx-swap="innerHTML">
+  <nldd-avatar slot="start" size="40" name="{{ placement.colleague.name }}" decorative></nldd-avatar>
+  <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
+  <nldd-text-cell text="{{ placement.colleague.name }}" supporting-text="{{ placement.service.skill.name if placement.service.skill else '' }}"></nldd-text-cell>
+  <nldd-text-cell text="{{ placement.service.assignment.name }}" supporting-text="{{ client_label }}"></nldd-text-cell>
+  <nldd-text-cell text="{{ placement.actual_end_date|datum_nl('j N Y') if placement.actual_end_date else '' }}" color="secondary" horizontal-alignment="right"></nldd-text-cell>
+  <nldd-spacer-cell slot="end" size="8"></nldd-spacer-cell>
+  <nldd-icon-cell slot="end" size="16">
+  <nldd-icon name="chevron-right"></nldd-icon>
+  </nldd-icon-cell>
+  </nldd-list-item>
 {% else %}
-  <c-table-row>
-  <c-table-cell colspan="3">
-  <span class="rvo-text--italic">Geen inzetten gevonden.</span>
-  </c-table-cell>
-  </c-table-row>
+  <nldd-list-item>
+  <nldd-text-cell text="Geen inzetten gevonden."></nldd-text-cell>
+  </nldd-list-item>
 {% endfor %}
 {% if next_page_url %}
-  <c-table-row hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
-  <c-table-cell colspan="3" class="rvo-text--center">
-  <span class="rvo-text--subtle">Meer laden...</span>
-  </c-table-cell>
-  </c-table-row>
+  <nldd-list-item hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
+  <nldd-text-cell text="Meer laden…" color="secondary"></nldd-text-cell>
+  </nldd-list-item>
 {% endif %}

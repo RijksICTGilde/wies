@@ -370,7 +370,7 @@ class AssignmentEditables(EditableSet):
     extra_info = Editable(
         label="Opdrachtomschrijving",
         widget=forms.Textarea(attrs={"rows": 4}),
-        display="rvo/forms/displays/textarea.html",
+        display="nldd/forms/displays/textarea.html",
     )
 
     start_date = Editable(label="Startdatum")
@@ -384,7 +384,7 @@ class AssignmentEditables(EditableSet):
         empty_label=" ",
         error_messages={"required": "Selecteer een business manager."},
         audit_state=lambda c: c.name if c else None,
-        display="rvo/forms/displays/assignment_owner.html",
+        display="nldd/forms/displays/assignment_owner.html",
         display_context=_owner_display_context,
     )
 
@@ -393,7 +393,7 @@ class AssignmentEditables(EditableSet):
         fields=[start_date, end_date],
         clean=_validate_period,
         save=_save_period,
-        display="rvo/forms/displays/assignment_period.html",
+        display="nldd/forms/displays/assignment_period.html",
     )
 
     organizations = Editable(
@@ -403,7 +403,7 @@ class AssignmentEditables(EditableSet):
         save=_save_organizations,
         audit_state=_organizations_audit_state,
         render_change=_organizations_render_change,
-        display="rvo/forms/displays/organizations.html",
+        display="nldd/forms/displays/organizations.html",
     )
 
     services = EditableCollection(
@@ -416,6 +416,6 @@ class AssignmentEditables(EditableSet):
         visible_changes=_services_visible_changes,
         hide_edit_button=True,
         form_template="parts/assignment_services_form.html",
-        display="rvo/forms/displays/assignment_services.html",
+        display="nldd/forms/displays/assignment_services.html",
         display_context=_services_display_context,
     )

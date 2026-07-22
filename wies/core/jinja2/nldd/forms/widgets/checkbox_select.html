@@ -1,0 +1,30 @@
+{# Checkbox group of real NLDD checkboxes.
+   Deliberately NOT nldd-checkbox-field: that renders its label nicely but keeps
+   the form-associated nldd-checkbox in its shadow root, and a form-associated
+   element only joins the form it is in the light DOM of — so every value was
+   silently dropped from the POST. Use nldd-checkbox directly and pair it with
+   our own <label>. #}
+<div class="nldd-checkbox-group">
+  {% for group, options, index in widget.optgroups %}
+    {% if group %}
+      <div>
+        <label>{{ group }}</label>
+      {% endif %}
+      {% for option_widget in options %}
+        {% set option_id = option_widget.name ~ '_' ~ option_widget.value %}
+        <label class="nldd-checkbox-option" for="{{ option_id }}">
+          <nldd-checkbox id="{{ option_id }}" name="{{ option_widget.name }}" value="{{ option_widget.value }}" accessible-label="{{ option_widget.label }}"
+          {% if option_widget.selected %}checked{% endif %}
+          {% for name, value in option_widget.attrs.items() %}
+            {% if value is not sameas False and name not in ('id', 'autocomplete') %}
+              {{ name }}
+              {% if value is not sameas True %}="{{ value }}"{% endif %}
+            {% endif %}
+          {% endfor %}
+          ></nldd-checkbox>
+          <span class="nldd-checkbox-option__label">{{ option_widget.label }}</span>
+        </label>
+      {% endfor %}
+      {% if group %}</div>{% endif %}
+  {% endfor %}
+</div>

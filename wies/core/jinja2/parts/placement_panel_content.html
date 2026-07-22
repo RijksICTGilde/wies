@@ -1,54 +1,58 @@
-{% set colleague = panel_data.colleague %}
-{% set service = panel_data.service %}
-{% set placement = panel_data.placement %}
-<div class="rvo-layout-column rvo-layout-gap--lg">
-  <section>
-    <div class="card card--horizontal">
-      <div class="card__image">
-        <img alt="Profielfoto van {{ colleague.name }}"
-             src="{{ static('img/placeholder-avatar.svg') }}" />
+{% if not panel_data %}
+  <div class="nldd-panel">
+    <p class="nldd-text-secondary"><em>Niet gevonden.</em></p>
+  </div>
+{% else %}
+  {% set colleague = panel_data.colleague %} {% set service = panel_data.service %} {% set placement = panel_data.placement %}
+  {# nldd-sheet sluit zichzelf op de dismiss van zijn eigen top-title-bar. #}
+  <nldd-top-title-bar class="is-compact" text="Plaatsing" dismiss-text="Sluiten"></nldd-top-title-bar>
+  <div class="nldd-panel">
+    <section class="nldd-panel__identity">
+      <nldd-avatar size="56" name="{{ colleague.name }}" decorative></nldd-avatar>
+      <div class="nldd-panel__identity-info">
+        <strong style="font-size: 1.25rem">{{ colleague.name }}</strong>
+        {% if colleague.email %}
+          <a class="nldd-panel__email" href="mailto:{{ colleague.email }}">{{ colleague.email }}</a>
+        {% endif %}
       </div>
-      <div class="card__content">
-        <c-h3 noMargins>{{ colleague.name }}</c-h3>
-        <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
-          <c-icon icon="mail" size="md" color="hemelblauw" />
-          <c-link href="mailto:{{ colleague.email }}">{{ colleague.email }}</c-link>
-        </div>
+    </section>
+    {% set labels = colleague.labels.all() %}
+    {% if labels %}
+      <div class="nldd-panel__tokens">
+        {% for label in labels %}
+          <nldd-token color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-token>
+        {% endfor %}
       </div>
-    </div>
-  </section>
-  {% set labels = colleague.labels.all() %}
-  {% if labels %}
-    <div class="rvo-layout-row rvo-layout-gap--sm label-badge-list">
-      {% for label in labels %}
-        <c-tag type="default" class="label-badge" style="background-color: {{ label.category.color }}">{{ label.name }}</c-tag>
-      {% endfor %}
-    </div>
-  {% endif %}
-  <section>
-    <c-h2 style="margin-bottom: var(--rvo-space-sm);">Informatie over huidige opdracht</c-h2>
-    {% with assignments=[panel_data.assignment_card], hx_target="#side_panel-content" %}
-      {% include "parts/colleague_assignment_cards.html" %}
+    {% endif %}
+    <nldd-rich-text spacing="snug">
+    <h2>Informatie over huidige opdracht</h2>
+    {% with assignments=[panel_data.assignment_card],
+      hx_target="#nldd-side-panel-content" %}
+      {% include
+      "parts/colleague_assignment_cards.html" %}
     {% endwith %}
-  </section>
-  <section>
-    <c-data-list>
-    <dt>Rol van {{ colleague.name.split()[0] }}</dt>
-    <dd>
-      {{ inline_edit(service, "skill") }}
-    </dd>
-    <dt>Omschrijving</dt>
-    <dd>
-      {{ inline_edit(service, "description") }}
-    </dd>
-    <dt>Periode</dt>
-    <dd>
-      {{ inline_edit(placement, "period") }}
-    </dd>
-    </c-data-list>
-  </section>
-  <section>
-    {% set colleague_url = '/opdrachten/?collega=' ~ colleague.id %}
-    <c-link href="{{ colleague_url }}" hx-get="{{ colleague_url }}" hx-target="#side_panel-content">Bekijk alle opdrachten van {{ colleague.name.split()[0] }} ›</c-link>
-  </section>
-</div>
+    <h3>Details inzet</h3>
+    <dl class="nldd-data-list">
+      <dt>Rol van {{ colleague.name.split()[0] }}</dt>
+      <dd>
+        {{ inline_edit(service, "skill") }}
+      </dd>
+      <dt>Omschrijving</dt>
+      <dd>
+        {{ inline_edit(service, "description") }}
+      </dd>
+      <dt>Periode</dt>
+      <dd>
+        {{ inline_edit(placement, "period") }}
+      </dd>
+    </dl>
+    </nldd-rich-text>
+    <section>
+      {% set colleague_url = '/opdrachten/?collega=' ~ colleague.id %}
+      <a href="{{ colleague_url }}"
+         hx-get="{{ colleague_url }}"
+         hx-target="#nldd-side-panel-content"
+         hx-swap="innerHTML">Bekijk alle opdrachten van {{ colleague.name.split()[0] }} ›</a>
+    </section>
+  </div>
+{% endif %}

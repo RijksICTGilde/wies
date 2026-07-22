@@ -8,19 +8,16 @@
        form.non_field_errors() so its "voeg minimaal één dienst toe" message
        surfaces alongside formset-level errors.
 #}
-<p class="rvo-text--sm">
-  Voeg een aanvraag toe voor een openstaande plek, of een plaatsing als de consultant al bekend is.
-</p>
+<p>Voeg een aanvraag toe voor een openstaande plek, of een plaatsing als de consultant al bekend is.</p>
 {{ formset.management_form }}
 {% set _extra_errors = extra_errors if extra_errors is defined else [] %}
 {% if formset.non_form_errors() or _extra_errors %}
-  <c-alert kind="error" id="diensten-error">
-  {% for error in formset.non_form_errors() %}{{ error }}{% endfor %}
-  {% for error in _extra_errors %}
-    {{ error }}
-    <br>
-  {% endfor %}
-  </c-alert>
+  <nldd-banner variant="critical" id="diensten-error">
+  <nldd-rich-text>
+  {% for error in formset.non_form_errors() %}<p>{{ error }}</p>{% endfor %}
+  {% for error in _extra_errors %}<p>{{ error }}</p>{% endfor %}
+  </nldd-rich-text>
+  </nldd-banner>
 {% endif %}
 <div id="services-container"
      {% if obj is defined and obj.start_date %}data-assignment-start="{{ obj.start_date.isoformat() }}"{% endif %}
@@ -32,20 +29,6 @@
   {% endfor %}
 </div>
 <div class="service-add-buttons">
-  <button type="button"
-          class="rvo-button rvo-button--secondary rvo-button--icon-before"
-          data-add-service="aanvraag">
-    <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before"
-          role="img"
-          aria-label="Aanvraag toevoegen"></span>
-    Aanvraag toevoegen
-  </button>
-  <button type="button"
-          class="rvo-button rvo-button--secondary rvo-button--icon-before"
-          data-add-service="ingevuld">
-    <span class="utrecht-icon rvo-icon rvo-icon-plus rvo-icon--md rvo-link__icon--before"
-          role="img"
-          aria-label="Geplaatste consultant toevoegen"></span>
-    Geplaatste consultant toevoegen
-  </button>
+  <nldd-button type="button" variant="secondary" text="Aanvraag toevoegen" start-icon="plus" size="sm" data-add-service="aanvraag"></nldd-button>
+  <nldd-button type="button" variant="secondary" text="Geplaatste consultant toevoegen" start-icon="plus" size="sm" data-add-service="ingevuld"></nldd-button>
 </div>

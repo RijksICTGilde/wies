@@ -138,7 +138,7 @@ class InlineEditInfrastructureTest(TestCase):
         assert resp.status_code == 200
         self.assertContains(resp, "Original name")
         self.assertContains(resp, "editable-field-display")
-        self.assertContains(resp, "rvo-icon-bewerken")
+        self.assertContains(resp, "edit-icon-button__pencil")
 
     def test_only_pencil_enters_edit_mode(self):
         """The value itself is not clickable — only the pencil button opens
@@ -159,7 +159,7 @@ class InlineEditInfrastructureTest(TestCase):
         resp = self.client.get(self.url + "?edit=true")
         assert resp.status_code == 200
         self.assertContains(resp, 'name="name"')
-        self.assertContains(resp, "rvo-form-field")
+        self.assertContains(resp, "nldd-form-field")
         self.assertContains(resp, "Opslaan")
         self.assertContains(resp, "Annuleren")
 
@@ -184,7 +184,7 @@ class InlineEditInfrastructureTest(TestCase):
         # non-null + has no blank=True).
         resp = self.client.post(self.url, {"name": ""})
         assert resp.status_code == 200
-        self.assertContains(resp, "rvo-form-field__error")
+        self.assertContains(resp, "nldd-form-field__error-text")
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Original name"
 
@@ -224,7 +224,7 @@ class InlineEditPermissionTest(TestCase):
         assert resp.status_code == 200
         self.assertContains(resp, "geen rechten")
         # No edit trigger rendered on a denied response.
-        self.assertNotContains(resp, "rvo-icon-bewerken")
+        self.assertNotContains(resp, "edit-icon-button__pencil")
         # And no form.
         self.assertNotContains(resp, 'name="name"')
 
@@ -456,7 +456,7 @@ class AssignmentPanelRenderTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "Panel Assignment")
         # Edit icon present for this authorized user.
-        self.assertContains(response, "rvo-icon-bewerken")
+        self.assertContains(response, "edit-icon-button__pencil")
         # Name should be addressable at the new inline-edit URL.
         self.assertContains(
             response,
@@ -485,7 +485,7 @@ class ProfilePageRenderTest(TestCase):
         # Editable name field is present.
         self.assertContains(response, "inline-edit-user-")
         # Edit pencil for own profile.
-        self.assertContains(response, "rvo-icon-bewerken")
+        self.assertContains(response, "edit-icon-button__pencil")
 
 
 class AssignmentEditablesFullTest(TestCase):
@@ -742,36 +742,44 @@ class AssignmentServicesDisplayTest(TestCase):
     def test_filled_row_is_clickable_to_placement_panel(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        # Renders inside an open panel, so it must swap the inner content;
-        # targeting #side_panel-container rebuilds the dialog and htmx falls
-        # back to a full page load.
-        self.assertContains(resp, 'hx-target="#side_panel-content"')
-        self.assertNotContains(resp, 'hx-target="#side_panel-container"')
+        # Renders inside the open NLDD side panel, so it swaps the inner
+        # content (#nldd-side-panel-content) rather than rebuilding the sheet.
+        self.assertContains(resp, 'hx-target="#nldd-side-panel-content"')
         self.assertContains(resp, "plaatsing=")
         self.assertContains(resp, self.colleague.name)
-        self.assertContains(resp, "rvo-item-list__item--filled")
-        self.assertContains(resp, "clickable-row")
+        # The filled row is the list item carrying the placement link.
+        filled_row = self._row_containing(resp, self.colleague.name)
+        assert "hx-get" in filled_row
+        assert "plaatsing=" in filled_row
+
+    @staticmethod
+    def _rows(resp) -> list[str]:
+        """The team rows, in render order, as raw `nldd-list-item` markup."""
+        content = resp.content.decode()
+        return [f"<nldd-list-item{part}" for part in content.split("<nldd-list-item")[1:]]
+
+    def _row_containing(self, resp, needle: str) -> str:
+        match = next((row for row in self._rows(resp) if needle in row), None)
+        assert match is not None, f"no team row containing {needle!r}"
+        return match
 
     def test_vacant_row_has_no_link(self):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        self.assertContains(resp, "rvo-item-list__item--vacant")
         self.assertContains(resp, "Aanvraag")
-        # Vacant row should not carry an hx-target (only filled anchors do).
-        content = resp.content.decode()
-        vacant_start = content.index("rvo-item-list__item--vacant")
-        vacant_end = content.index("</div>", vacant_start)
-        assert "hx-get" not in content[vacant_start:vacant_end]
-        assert "href=" not in content[vacant_start:vacant_end]
+        # A vacancy has nothing to link to — only filled rows open a panel.
+        vacant_row = self._row_containing(resp, "Aanvraag")
+        assert "hx-get" not in vacant_row
+        assert "href=" not in vacant_row
 
     def test_vacant_row_renders_before_filled_row(self):
         """Vacancies-first ordering (issue #331) — even though the filled
         service was created first."""
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
-        content = resp.content.decode()
-        vacant_pos = content.index("rvo-item-list__item--vacant")
-        filled_pos = content.index("rvo-item-list__item--filled")
+        rows = self._rows(resp)
+        vacant_pos = next(i for i, row in enumerate(rows) if "Aanvraag" in row)
+        filled_pos = next(i for i, row in enumerate(rows) if self.colleague.name in row)
         assert vacant_pos < filled_pos
 
     def test_display_omits_team_level_edit_button(self):
@@ -787,7 +795,7 @@ class AssignmentServicesDisplayTest(TestCase):
         # No clickable wrapper, no pencil button on the team-level
         # editable-field-display (per-row description pencils are still
         # rendered and unrelated to this check).
-        team_outer = team_wrapper.split("rvo-item-list")[0]
+        team_outer = team_wrapper.split("<nldd-list")[0]
         assert 'role="button"' not in team_outer
         assert "edit-icon-button" not in team_outer
 
@@ -1206,8 +1214,10 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
             )
             assert m, f"no row found for placement_id={placement_id}"
             idx = m.group(1)
+            # nldd-checkbox since the widget migration; keep <input> in the
+            # pattern so this still reads as "the checkbox", whatever renders it.
             cb = re.search(
-                rf'<input[^>]*name="service-{idx}-has_custom_period"[^>]*>',
+                rf'<(?:input|nldd-checkbox)[^>]*name="service-{idx}-has_custom_period"[^>]*>',
                 content,
             )
             assert cb, f"no has_custom_period checkbox found for row {idx}"

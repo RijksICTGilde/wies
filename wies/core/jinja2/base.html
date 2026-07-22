@@ -3,92 +3,96 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="color-scheme" content="light dark">
     <title>
       {% block title %}
         Wies
       {% endblock title %}
     </title>
-    {# Favicon #}
     <link rel="icon"
           type="image/png"
           href="{{ static('favicon-96x96.png') }}"
           sizes="96x96" />
-    <link rel="icon" type="image/svg+xml" href="{{ static('favicon.svg') }}" />
-    <link rel="shortcut icon" href="/favicon.ico" />
-    <link rel="stylesheet"
-          href="{{ static('roos/dist/@nl-rvo/design-tokens/index.css') }}" />
-    <link rel="stylesheet"
-          href="{{ static('roos/dist/@nl-rvo/component-library-css/index.css') }}" />
-    <link rel="stylesheet"
-          href="{{ static('roos/dist/@nl-rvo/assets/icons/index.css') }}">
-    <link rel="stylesheet"
-          href="{{ static('roos/dist/@nl-rvo/assets/fonts/index.css') }}">
-    <link rel="stylesheet" href="{{ static('roos/dist/roos.css') }}">
-    <link rel="stylesheet" href="{{ static('css/rvo_overwrite.css') }}">
-    <link rel="stylesheet" href="{{ static('css/base.css') }}">
-    <link rel="stylesheet" href="{{ static('css/modals.css') }}">
-    <link rel="stylesheet" href="{{ static('css/org_picker.css') }}">
-    <link rel="stylesheet" href="{{ static('css/client_modal.css') }}">
-    {% if show_onboarding %}
-      <link rel="stylesheet" href="{{ static('css/onboarding.css') }}">
-    {% endif %}
-    <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
-    <script src="{{ static('js/filters/filters.js') }}"></script>
-    <script src="{{ static('js/show_more.js') }}"></script>
-    {# Org-picker stack: tree_state → org_tree_base → assignment_org_tree.
-       Order matters; the later scripts reference symbols from the earlier ones. #}
-    <script src="{{ static('js/tree_state.js') }}"></script>
-    <script src="{{ static('js/org_tree_base.js') }}"></script>
-    <script src="{{ static('js/assignment_org_tree.js') }}" defer></script>
+    <link rel="icon" type="image/svg+xml" href="{{ static('favicon.svg') }}">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="stylesheet" href="{{ static('vendor/nldd/ndd.styles.css') }}">
+    <link rel="stylesheet" href="{{ static('css/nldd/app.css') }}">
     {% block extra_head %}
     {% endblock extra_head %}
+    <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
+    <script defer src="{{ static('vendor/nldd/ndd.bundle.js') }}"></script>
+    {# Global: rows carrying href + hx-get exist on several pages and arrive in
+       htmx swaps too, so this cannot be opted into per page. #}
+    <script src="{{ static('js/nldd/hx_link_guard.js') }}"></script>
+    <script>
+      document.addEventListener("click", (e) => {
+        const item = e.composedPath().find(
+          (el) => el instanceof Element && el.localName === "nldd-menu-item" && el.dataset && el.dataset.href
+        );
+        if (item) window.location.href = item.dataset.href;
+      });
+    </script>
   </head>
-  <body class="rvo-theme">
+  <body>
     {% block header %}
-      {% include "parts/header_logo.html" %}
+      <nldd-top-navigation-bar logo-title="Rijksorganisatie voor Ontwikkeling," logo-subtitle="Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}">
+      <nldd-menu-bar slot="global" accessible-label="Hoofdnavigatie">
+      <nldd-menu-bar-item text="Wie zit waar?" href="{{ url('home') }}"
+      {% if request.path == '/' %}current{% endif %}
+      ></nldd-menu-bar-item>
+      <nldd-menu-bar-item text="Aanvragen" href="{{ url('assignment-list') }}"
+      {% if '/opdrachten/' in request.path %}current{% endif %}
+      ></nldd-menu-bar-item>
+      </nldd-menu-bar>
+      {% if request.user.is_authenticated %}
+        <nldd-menu-bar slot="utility" accessible-label="Gebruikersmenu">
+        <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="person" expandable content-priority="text">
+        <nldd-menu>
+        <nldd-menu-item text="Profiel" data-href="{{ url('user-profile') }}"></nldd-menu-item>
+        {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
+          <nldd-menu-divider></nldd-menu-divider>
+          <nldd-menu-item text="Beheer" data-href="{{ url('admin-users') }}"></nldd-menu-item>
+        {% endif %}
+        <nldd-menu-divider></nldd-menu-divider>
+        <nldd-menu-item text="Uitloggen" data-href="{{ url('logout') }}"></nldd-menu-item>
+        </nldd-menu>
+        </nldd-menu-bar-item>
+        </nldd-menu-bar>
+      {% endif %}
+      </nldd-top-navigation-bar>
     {% endblock header %}
-    <div class="layout {% if request.GET.get('filters') == '0' %}layout--collapsed{% endif %}"
-         id="layout">
-      <div class="layout__body">
-        {% include "parts/menubar.html" %}
-        <aside class="sidebar">
-          {% block sidebar %}
-          {% endblock sidebar %}
-          {% include "parts/footer_sidebar.html" %}
-        </aside>
-        <main class="layout__main">
-          {% include "parts/flash_messages.html" %}
-          {% block content %}
-          {% endblock content %}
-        </main>
-      </div>
-    </div>
+    {% set _sidebar_content %}
+      {% block sidebar %}
+      {% endblock sidebar %}
+    {% endset %}
+    <nldd-sidebar-section class="wies-layout" width="1920px" sidebar-label="Zijbalk">
+    {% if _sidebar_content.strip() %}
+      <div slot="sidebar">{{ _sidebar_content }}</div>
+    {% endif %}
+    <main class="wies-layout__main">
+      {% include "parts/flash_messages.html" %}
+      {% block content %}
+      {% endblock content %}
+    </main>
+    </nldd-sidebar-section>
+    <nldd-page-footer>
+    <nldd-page-footer-legal-bar slot="legal-bar" accessible-label="Over deze site">
+    <nldd-page-footer-legal-bar-item slot="end" href="{{ url('privacy') }}" text="Privacy"></nldd-page-footer-legal-bar-item>
+    <nldd-page-footer-legal-bar-item slot="end" href="{{ url('toegankelijkheid') }}" text="Toegankelijkheid"></nldd-page-footer-legal-bar-item>
+    <nldd-page-footer-legal-bar-item slot="end" href="{{ url('contact') }}" text="Contact"></nldd-page-footer-legal-bar-item>
+    </nldd-page-footer-legal-bar>
+    </nldd-page-footer>
     {% block panel %}
     {% endblock panel %}
     {% if show_onboarding %}
       {% include "parts/onboarding/onboarding_wizard.html" %}
       {# inline_edit (label pickers) needs these; pages that already load them
-         are unaffected — the browser dedupes by URL. #}
+         are unaffected — the browser dedupes by URL. The label picker renders
+         an nldd-token-field (from the NLDD bundle in <head>), so the old
+         multi_select.js is no longer needed here. #}
       <script src="{{ static('js/dialog.js') }}" defer></script>
       <script src="{{ static('js/inline_edit.js') }}" defer></script>
-      <script src="{{ static('js/filters/multi_select.js') }}" defer></script>
       <script src="{{ static('js/onboarding.js') }}" defer></script>
     {% endif %}
-    <script>
-      // Dynamically set --sidebar-offset so sticky sidebar max-height
-      // accounts for the header visible above the fold.
-      (function() {
-        const sidebar = document.querySelector('.sidebar');
-        if (!sidebar) return;
-        const update = () => {
-          const rect = sidebar.getBoundingClientRect();
-          const offset = Math.max(0, rect.top);
-          document.documentElement.style.setProperty('--sidebar-offset', offset + 'px');
-        };
-        update();
-        window.addEventListener('scroll', update, {passive: true});
-        window.addEventListener('resize', update);
-      })();
-    </script>
   </body>
 </html>

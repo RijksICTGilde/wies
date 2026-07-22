@@ -1,65 +1,73 @@
 {% extends "base.html" %}
+{% block title %}
+  Mijn
+  profiel — Wies NDD
+{% endblock title %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/side_panel.css') }}">
-  <link rel="stylesheet" href="{{ static('css/assignment_form.css') }}">
-  <link rel="stylesheet" href="{{ static('css/filters/filters.css') }}">
-  <link rel="stylesheet" href="{{ static('css/user_profile.css') }}">
-  <script src="{{ static('js/filters/multi_select.js') }}" defer></script>
-  <script src="{{ static('js/dialog.js') }}" defer></script>
-  <script src="{{ static('js/side_panel.js') }}" defer></script>
-  <script src="{{ static('js/inline_edit.js') }}" defer></script>
-  <script src="{{ static('js/assignment_form.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ static('css/nldd/side_panel.css') }}" />
+  <script src="{{ static('js/nldd/side_panel.js') }}" defer></script>
 {% endblock extra_head %}
+{# No sidebar on profile page — base.html auto-hides
+empty sidebar #}
 {% block content %}
-  <div class="profile-page rvo-layout-column rvo-layout-gap--xl">
-    {# Profile info #}
-    <section class="rvo-layout-column rvo-layout-gap--md">
-      <c-grid division="1fr auto" gap="md">
-      <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--center">
-        <img alt="Profielfoto van {{ user.get_full_name() }}"
-             src="{{ static('img/placeholder-avatar.svg') }}"
-             class="profile-avatar" />
-        <c-h1 noMargins>Mijn profiel</c-h1>
-      </div>
-      <form method="post" action="{{ url('logout') }}">
-        {{ get_csrf_hidden_input(request) }}
-        <c-button kind="primary" type="submit">Uitloggen</c-button>
-      </form>
-      </c-grid>
-      <c-data-list class="profile-data-list">
-      <dt>Voornaam</dt>
+  <nldd-container>
+  <nldd-simple-section>
+  <nldd-rich-text>
+  <section class="nldd-panel__identity" style="margin-bottom: 1.5rem">
+    <nldd-avatar size="56" name="{{ user.get_full_name() or user.email }}" decorative></nldd-avatar>
+    <div class="nldd-panel__identity-info">
+      <strong style="font-size: 1.5rem">Mijn profiel</strong>
+      {% if user.email %}<a class="nldd-panel__email" href="mailto:{{ user.email }}">{{ user.email }}</a>{% endif %}
+    </div>
+  </section>
+  <h3>Gegevens</h3>
+  <dl class="nldd-data-list">
+    <dt>Voornaam</dt>
+    <dd>
+      {{ inline_edit(user, "first_name") }}
+    </dd>
+    <dt>Achternaam</dt>
+    <dd>
+      {{ inline_edit(user, "last_name") }}
+    </dd>
+    <dt>E-mail</dt>
+    <dd>
+      {% if user.email %}
+        <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+      {% else %}
+        —
+      {% endif %}
+    </dd>
+    {% for item in label_categories %}
+      <dt>{{ item.category.name }}</dt>
       <dd>
-        {{ inline_edit(user, "first_name") }}
+        {% if item.labels %}
+          <div class="nldd-panel__tokens">
+            {% for label in item.labels %}
+              <nldd-token color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-token>
+            {% endfor %}
+          </div>
+        {% else %}
+          <span class="nldd-text-secondary">—</span>
+        {% endif %}
       </dd>
-      <dt>Achternaam</dt>
-      <dd>
-        {{ inline_edit(user, "last_name") }}
-      </dd>
-      <dt>E-mail</dt>
-      <dd>
-        <c-link href="mailto:{{ user.email }}">{{ user.email }}</c-link>
-      </dd>
-      {% for item in label_categories %}
-        <dt>{{ item.category.name }}</dt>
-        <dd>
-          {{ inline_edit(colleague, "labels_" ~ item.category.id) }}
-        </dd>
-      {% endfor %}
-      </c-data-list>
-    </section>
-    {# Assignments section #}
-    <section>
-      <c-h2>Opdrachten</c-h2>
-      {% with assignments=assignment_list, hx_target="#side_panel-container" %}
-        {% include "parts/colleague_assignment_cards.html" %}
-      {% endwith %}
-    </section>
-  </div>
+    {% endfor %}
+  </dl>
+  <h3>Opdrachten</h3>
+  {% with assignments = assignment_list, hx_target = "#nldd-side-panel-content" %}
+    {% include "parts/colleague_assignment_cards.html" %}
+  {% endwith %}
+  </nldd-rich-text>
+  </nldd-simple-section>
+  </nldd-container>
 {% endblock content %}
 {% block panel %}
-  <div id="side_panel-container">
+  <nldd-sheet id="nldd-side-panel" placement="right" accessible-label="Detail">
+  <div id="nldd-side-panel-content">
     {% if panel_data %}
-      {% include "parts/side_panel.html" %}
-    {% endif %}
+      {% include panel_data.panel_content_template %}
+    {% endif
+    %}
   </div>
+  </nldd-sheet>
 {% endblock panel %}

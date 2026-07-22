@@ -1,0 +1,19 @@
+{# Radio group of real NLDD radio buttons.
+   Deliberately NOT nldd-radio-button-field/-group: the field keeps the
+   form-associated nldd-radio-button in its shadow root, and a form-associated
+   element only joins the form it is in the light DOM of — so the selected value
+   never reached the POST. Use nldd-radio-button directly with our own <label>.
+   The buttons share a `name`, which is what ties the group together. #}
+<div class="nldd-radio-group">
+  {% for group_name, group_choices, group_index in widget.optgroups %}
+    {% for option_widget in group_choices %}
+      {% set option_id = option_widget.name ~ '_' ~ loop.index %}
+      <label class="nldd-radio" for="{{ option_id }}">
+        <nldd-radio-button id="{{ option_id }}" name="{{ option_widget.name }}" value="{{ option_widget.value }}" accessible-label="{{ option_widget.label }}"
+        {% if option_widget.selected %}checked{% endif %}
+        ></nldd-radio-button>
+        <span>{{ option_widget.label }}</span>
+      </label>
+    {% endfor %}
+  {% endfor %}
+</div>

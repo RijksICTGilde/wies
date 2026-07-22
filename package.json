@@ -1,0 +1,14 @@
+{
+  "name": "wies-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build-nldd": "node scripts/build-nldd.mjs"
+  },
+  "dependencies": {
+    "@nldd/design-system": "^0.8.70"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0"
+  }
+}

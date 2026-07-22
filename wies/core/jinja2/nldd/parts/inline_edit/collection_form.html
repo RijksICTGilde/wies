@@ -1,0 +1,12 @@
+<div id="{{ target }}">
+  <form hx-post="{{ edit_url }}"
+        hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+        hx-target="#{{ target }}"
+        hx-swap="outerHTML">
+    {% include editable.form_template %}
+    <div class="field-actions">
+      <nldd-button type="submit" variant="primary" text="Opslaan"></nldd-button>
+      <nldd-button type="button" variant="secondary" text="Annuleren" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML"></nldd-button>
+    </div>
+  </form>
+</div>

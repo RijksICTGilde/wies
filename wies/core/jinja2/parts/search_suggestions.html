@@ -2,8 +2,10 @@
   <ul class="search-suggestions" role="listbox">
     {# Primary action: full-text search on the typed term (same as pressing Enter) #}
     <li>
-      <button type="button" class="search-suggestion search-suggestion--search">
-        <c-icon icon="zoek" size="sm" class="search-suggestion__icon" />
+      <button type="button"
+              class="search-suggestion search-suggestion--search"
+              data-search-commit>
+        <nldd-icon name="magnifier" class="search-suggestion__icon"></nldd-icon>
         <span>Zoeken op <strong>"{{ search_term }}"</strong></span>
       </button>
     </li>

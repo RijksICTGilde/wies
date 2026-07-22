@@ -90,5 +90,5 @@ def inline_edit(ctx, obj, name, **extras):
         **extras,
     }
     # Trusted template; any user-supplied values go through Jinja's auto-escape.
-    html = render_to_string("parts/inline_edit/display.html", render_ctx, request=request)
+    html = render_to_string("nldd/parts/inline_edit/display.html", render_ctx, request=request)
     return mark_safe(html)  # noqa: S308

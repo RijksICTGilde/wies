@@ -10,8 +10,8 @@
 .staff-tile {
   flex: 1;
   min-width: 9rem;
-  background: #fff;
-  border: 1px solid var(--rvo-color-grijs-200, #cfd2d5);
+  background: var(--semantics-surfaces-base-background-color, #fff);
+  border: 1px solid var(--primitives-color-coolgray-200, #cfd2d5);
   border-radius: 4px;
   padding: 0.85rem 1rem;
 }
@@ -24,7 +24,7 @@
 
 .staff-tile__label {
   font-size: 0.85rem;
-  color: var(--rvo-color-grijs-700, #535353);
+  color: var(--primitives-color-coolgray-700, #535353);
   margin-top: 0.25rem;
 }
 
@@ -34,38 +34,38 @@
   gap: 1px;
   height: 80px;
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--rvo-color-grijs-200, #cfd2d5);
+  border-bottom: 1px solid var(--primitives-color-coolgray-200, #cfd2d5);
   margin-bottom: 1.5rem;
 }
 
 .staff-chart__bar {
   flex: 1;
-  background: var(--rvo-color-hemelblauw, #01689b);
+  background: var(--primitives-color-hemelblauw-500, #01689b);
   min-height: 1px;
   border-radius: 1px 1px 0 0;
 }
 
 .staff-chart__bar:hover {
-  background: var(--rvo-color-donkerblauw, #00476b);
+  background: var(--primitives-color-donkerblauw-500, #00476b);
 }
 
 .staff-counts {
   display: flex;
   gap: 1.5rem;
-  color: var(--rvo-color-grijs-700, #535353);
+  color: var(--primitives-color-coolgray-700, #535353);
   margin-bottom: 1rem;
 }
 
 .staff-counts strong {
-  color: var(--rvo-color-zwart, #1a1a1a);
+  color: var(--primitives-color-coolgray-900, #1a1a1a);
 }
 
 .staff-action-card {
-  border: 1px solid var(--rvo-color-grijs-200, #cfd2d5);
+  border: 1px solid var(--primitives-color-coolgray-200, #cfd2d5);
   border-radius: 4px;
   padding: 1rem 1.25rem;
   margin-bottom: 0.75rem;
-  background: #fff;
+  background: var(--semantics-surfaces-base-background-color, #fff);
 }
 
 .staff-action-card h2 {
@@ -75,7 +75,7 @@
 
 .staff-action-card p {
   margin: 0 0 0.75rem;
-  color: var(--rvo-color-grijs-700, #535353);
+  color: var(--primitives-color-coolgray-700, #535353);
   font-size: 0.9rem;
 }
 
@@ -86,7 +86,7 @@
 .merge-group {
   margin-bottom: 3rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--rvo-color-grijs-200, #dde2e7);
+  border-bottom: 1px solid var(--primitives-color-coolgray-200, #dde2e7);
 }
 
 .merge-group:last-child {
@@ -100,11 +100,31 @@
 .merge-group__meta {
   font-weight: 400;
   font-size: 0.85rem;
-  color: var(--rvo-color-grijs-600, #636363);
+  color: var(--primitives-color-coolgray-600, #636363);
 }
 
-.merge-preview .utrecht-table__row:hover {
-  background: inherit;
+/* Merge-duplicates preview table (a real <table> with rowspan cells). */
+.merge-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+.merge-table__th {
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--semantics-content-secondary-color, #64748b);
+  border-bottom: 1px solid var(--semantics-controls-border-color, #e2e8f0);
+  white-space: nowrap;
+}
+.merge-table__td {
+  padding: 0.75rem;
+  vertical-align: top;
+  border-bottom: 1px solid var(--semantics-controls-border-color, #f1f5f9);
+  line-height: 1.4;
 }
 
 /* Error detail page */

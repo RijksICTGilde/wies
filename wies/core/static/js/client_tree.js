@@ -61,6 +61,7 @@
         var dialog = document.getElementById("clientModal");
         if (dialog) dialog.close();
 
+        updateOrgFilterButtonText();
         if (sidebarForm) {
           htmx.trigger(sidebarForm, "change");
         }
@@ -73,6 +74,7 @@
         var dialog = document.getElementById("clientModal");
         if (dialog) dialog.close();
 
+        updateOrgFilterButtonText();
         if (sidebarForm) htmx.trigger(sidebarForm, "change");
       },
     });
@@ -81,9 +83,6 @@
   document.body.addEventListener("htmx:afterSettle", function (e) {
     if (e.detail.target && e.detail.target.id === "clientModalContainer") {
       init();
-      // Focus the modal's search field when it opens
-      var search = document.getElementById("client-search");
-      if (search) search.focus();
     }
   });
 })();

@@ -1,0 +1,21 @@
+{# Renders breadcrumbs with ancestors + label and the primary organization tagged. #}
+{% if value %}
+  {% set base_url = current_page_path(request) %}
+  {% for row in value %}
+    {% set org_breadcrumb = get_org_breadcrumb(row.organization, base_url) %}
+    <div class="org-breadcrumb">
+      {% if org_breadcrumb.ancestors %}
+        {% for ancestor in org_breadcrumb.ancestors %}
+          <a href="{{ ancestor.url }}" class="org-breadcrumb__ancestor">{{ ancestor.label }}</a>
+          <span class="org-breadcrumb__separator">›</span>
+        {% endfor %}
+      {% endif %}
+      <a href="{{ org_breadcrumb.url }}">{{ org_breadcrumb.label }}</a>
+      {% if row.role == "PRIMARY" and value|length > 1 %}
+        <span class="nldd-text-secondary">(primair)</span>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% else %}
+  <span class="nldd-text-secondary"><em>Geen organisatie opgegeven</em></span>
+{% endif %}

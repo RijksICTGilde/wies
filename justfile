@@ -113,3 +113,8 @@ update-vendor:
     -o wies/core/static/vendor/htmx/htmx.min.js
   @echo "Done! Vendor packages updated:"
   @echo "  - htmx.min.js ({{HTMX_VERSION}})"
+
+# Build NLDD vendor assets from @nldd/design-system (npm)
+build-nldd:
+  npm install
+  npm run build-nldd

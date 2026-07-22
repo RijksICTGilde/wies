@@ -10,7 +10,6 @@ from django.utils import timezone
 from django.utils.formats import date_format
 from django.utils.html import format_html, json_script
 from jinja2 import Environment
-from jinja_roos_components import setup_components
 
 from wies.core.editables import (
     AssignmentEditables,
@@ -19,6 +18,7 @@ from wies.core.editables import (
     ServiceEditables,
     UserEditables,
 )
+from wies.core.form_mixins import wire_field_errors
 from wies.core.inline_edit.jinja import inline_edit
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.permissions import is_staff_member
@@ -148,7 +148,6 @@ def get_sort_state(request, field):
 
 def environment(**options):
     env = Environment(**options)  # noqa: S701 - autoescape handled by Django
-    setup_components(env)
     env.globals.update(
         {
             "static": static,
@@ -162,6 +161,7 @@ def environment(**options):
             "DEBUG": settings.DEBUG,
             "APP_VERSION": get_app_version(),
             "inline_edit": inline_edit,
+            "wire_field_errors": wire_field_errors,
             "get_org_breadcrumb": get_org_breadcrumb,
             "current_page_path": current_page_path,
             "has_permission": has_permission,

@@ -1,34 +1,34 @@
-{% set colleague = panel_data.colleague %}
-<div class="rvo-layout-column rvo-layout-gap--lg">
-  <section>
-    <div class="card card--horizontal">
-      <div class="card__image">
-        <img alt="Profielfoto van {{ colleague.name }}"
-             src="{{ static('img/placeholder-avatar.svg') }}" />
+{% if not panel_data %}
+  <div class="nldd-panel">
+    <p class="nldd-text-secondary"><em>Niet gevonden.</em></p>
+  </div>
+{% else %}
+  {% set colleague = panel_data.colleague %}
+  {# nldd-sheet sluit zichzelf op de dismiss van zijn eigen top-title-bar. #}
+  <nldd-top-title-bar class="is-compact" text="Persoonsgegevens" dismiss-text="Sluiten"></nldd-top-title-bar>
+  <div class="nldd-panel">
+    <section class="nldd-panel__identity">
+      <nldd-avatar size="56" name="{{ colleague.name }}" decorative></nldd-avatar>
+      <div class="nldd-panel__identity-info">
+        <strong style="font-size: 1.25rem">{{ colleague.name }}</strong>
+        {% if colleague.email %}
+          <a class="nldd-panel__email" href="mailto:{{ colleague.email }}">{{ colleague.email }}</a>
+        {% endif %}
       </div>
-      <div class="card__content">
-        <c-h3 noMargins>{{ colleague.name }}</c-h3>
-        <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
-          <c-icon icon="mail" size="md" color="hemelblauw" />
-          <c-link href="mailto:{{ colleague.email }}">{{ colleague.email }}</c-link>
-        </div>
+    </section>
+    {% set labels = colleague.labels.all() %}
+    {% if labels %}
+      <div class="nldd-panel__tokens">
+        {% for label in labels %}
+          <nldd-token color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-token>
+        {% endfor %}
       </div>
-    </div>
-  </section>
-  {% set labels = colleague.labels.all() %}
-  {% if labels %}
-    <div class="rvo-layout-row rvo-layout-gap--sm label-badge-list">
-      {% for label in labels %}
-        <c-tag type="default" class="label-badge" style="background-color: {{ label.category.color }}">{{ label.name }}</c-tag>
-      {% endfor %}
-    </div>
-  {% else %}
-    <span class="rvo-text--italic">Geen labels toegewezen</span>
-  {% endif %}
-  <section>
-    <c-h2>Opdrachten</c-h2>
-    {% with assignments=panel_data.assignments, hx_target="#side_panel-content" %}
+    {% endif %}
+    <nldd-rich-text spacing="snug">
+    <h3>Opdrachten</h3>
+    {% with assignments = panel_data.assignments, hx_target = "#nldd-side-panel-content" %}
       {% include "parts/colleague_assignment_cards.html" %}
     {% endwith %}
-  </section>
-</div>
+    </nldd-rich-text>
+  </div>
+{% endif %}

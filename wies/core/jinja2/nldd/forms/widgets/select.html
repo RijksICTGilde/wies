@@ -1,0 +1,24 @@
+{# Real NLDD dropdown: a visual wrapper around a native <select>, so the browser
+   keeps form submission and keyboard handling. The wrapper lives here rather
+   than in field.html so the widget also renders correctly on its own via
+   as_widget(). The aria-label sits on the <select> because nldd-form-field's
+   label wiring only reaches its first child — the nldd-dropdown host — and that
+   never forwards a name inward; NlddFormMixin._configure_field supplies it. #}
+<nldd-dropdown>
+<select name="{{ widget.name }}"
+        {% include "nldd/forms/widgets/attrs.html" %}>
+  {% for group_name, group_choices, group_index in widget.optgroups %}
+    {% if group_name %}<optgroup label="{{ group_name }}">{% endif %}
+      {% for option_widget in group_choices %}
+        <option value="{{ option_widget.value }}"
+                {% if option_widget.selected %}selected{% endif %}
+                {% if option_widget.attrs %} {% for name, value in option_widget.attrs.items() %}{% if value is not sameas False %}{{ name }}{% if value is not sameas True %}="{{ value }}"{% endif %}
+                {% endif %}
+                {% endfor %}
+                {% endif %}>{{ option_widget.label }}
+        </option>
+      {% endfor %}
+      {% if group_name %}</optgroup>{% endif %}
+  {% endfor %}
+</select>
+</nldd-dropdown>

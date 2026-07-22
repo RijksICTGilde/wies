@@ -577,11 +577,128 @@ def staff_database(request):
     return render(request, "staff_database.html", context)
 
 
+def _get_top_org_options(
+    count_mode: str,
+    excluded_org_ids: list[int],
+    selected_org_ids: set[str],
+    *,
+    viewer=None,
+    selected_self_ids: set[str] | None = None,
+    selected_type_labels: set[str] | None = None,
+    org_counts: Counter[int] | None = None,
+    limit: int = 3,
+) -> list[dict]:
+    """Return opdrachtgever quick checkbox options: selected first, then top-N by count.
+
+    Each option carries its own ``param`` (``org``, ``org_self`` or
+    ``org_type``) so the sidebar quick row stays in sync with whatever was
+    picked in the modal — including a "direct onder…" self-node (``org_self``)
+    or an org-type group (``org_type``). The ``org`` group also pads up to
+    ``limit`` with the highest-count unselected orgs; self/type only appear
+    when actually selected (they have no top-N baseline).
+
+    ``org_counts`` lets the caller pass filter-aware per-org counts (computed
+    like rol/labels, excluding the org filter) so the numbers reflect the other
+    active filters. When omitted, falls back to the global ``_get_org_counts``
+    baseline (used by the modal, which has no other filter context).
+    """
+    selected_self_ids = selected_self_ids or set()
+    selected_type_labels = selected_type_labels or set()
+
+    if org_counts is None:
+        org_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
+    selected_ids = {int(x) for x in selected_org_ids if str(x).isdigit()}
+    self_ids = {int(x) for x in selected_self_ids if str(x).isdigit()}
+
+    total_selected = len(selected_ids) + len(self_ids) + len(selected_type_labels)
+    fill = max(0, limit - total_selected)
+    top_unselected = [oid for oid, _ in org_counts.most_common() if oid not in selected_ids][:fill]
+    org_wanted = selected_ids | set(top_unselected)
+
+    options: list[dict] = []
+
+    if org_wanted:
+        labels = dict(OrganizationUnit.objects.filter(id__in=org_wanted).values_list("id", "label"))
+        options.extend(
+            {
+                "param": "org",
+                "value": str(org_id),
+                "label": labels.get(org_id) or f"Organisatie {org_id}",
+                "count": org_counts.get(org_id, 0),
+                "selected": org_id in selected_ids,
+            }
+            for org_id in org_wanted
+        )
+
+    if self_ids:
+        self_labels = dict(OrganizationUnit.objects.filter(id__in=self_ids).values_list("id", "label"))
+        options.extend(
+            {
+                "param": "org_self",
+                "value": str(org_id),
+                "label": f"{self_labels.get(org_id) or f'Organisatie {org_id}'} (direct)",
+                "count": org_counts.get(org_id, 0),
+                "selected": True,
+            }
+            for org_id in self_ids
+        )
+
+    options.extend(
+        {
+            "param": "org_type",
+            "value": type_label,
+            "label": ORG_TYPE_PLURAL.get(type_label, type_label),
+            "count": 0,
+            "selected": True,
+        }
+        for type_label in selected_type_labels
+    )
+
+    # Selected first, then by descending count, then by label for a stable order.
+    options.sort(key=lambda o: (not o["selected"], -o["count"], o["label"]))
+    return options
+
+
+def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> None:
+    """Post-process select-multi groups in place for the top-N + "Meer" modal.
+
+    For each ``select-multi`` group:
+      - assigns a unique ``group_id`` (the modal opens by this key),
+      - computes ``top_options``: the ``top_n`` options by count (selected ones
+        kept visible), shown inline in the sidebar,
+      - sets ``has_more`` when there are more options than fit inline.
+    The full ``options`` list is kept for the modal. Mutates in place.
+    """
+    label_seq = 0
+    for group in filter_groups:
+        if group.get("type") != "select-multi":
+            continue
+        # "labels" repeats per category, so disambiguate the key.
+        if group["name"] == "labels":
+            group["group_id"] = f"labels-{label_seq}"
+            label_seq += 1
+        else:
+            group["group_id"] = group["name"]
+
+        real_options = [o for o in group["options"] if o.get("value")]
+        selected = set(group.get("selected_values", []))
+        by_count = sorted(real_options, key=lambda o: o.get("count", 0), reverse=True)
+        # Show all selected first, then pad with the highest-count unselected up
+        # to top_n. Once >= top_n are selected the empty options drop away; the
+        # full list stays in the "Meer" modal.
+        selected_opts = [o for o in by_count if o["value"] in selected]
+        unselected_opts = [o for o in by_count if o["value"] not in selected]
+        fill = max(0, top_n - len(selected_opts))
+        top = selected_opts + unselected_opts[:fill]
+        group["top_options"] = top
+        group["has_more"] = len(real_options) > len(top)
+
+
 class PlacementListView(ListView):
     """View for placements table view with infinite scroll pagination"""
 
     model = Placement
-    template_name = "placement_table.html"
+    template_name = "placements.html"
     paginate_by = 50
     page_kwarg = "pagina"
 
@@ -742,10 +859,9 @@ class PlacementListView(ListView):
         """Return appropriate template based on request type"""
         if "HX-Request" in self.request.headers:
             if self.request.GET.get("filter_modal"):
-                return ["parts/filters/filter_options_modal.html"]
-            if self.request.headers.get("HX-Target") == "side_panel-container":
-                return ["parts/side_panel.html"]
-            if self.request.headers.get("HX-Target") == "side_panel-content":
+                return ["parts/filter_options_modal.html"]
+            hx_target = self.request.headers.get("HX-Target", "")
+            if hx_target in ("nldd-side-panel-content", "side_panel-content", "side_panel-container"):
                 placement_id = self.request.GET.get("plaatsing")
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
@@ -759,7 +875,7 @@ class PlacementListView(ListView):
             if self.request.GET.get("pagina"):
                 return ["parts/placement_table_rows.html"]
             return ["parts/filter_and_table_container.html"]
-        return ["placement_table.html"]
+        return ["placements.html"]
 
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
@@ -798,15 +914,19 @@ class PlacementListView(ListView):
             active_filters["labels"] = label_filter
 
         # Organization filter (multi-select via modal)
+        active_org_filter_count = 0
         org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
         org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
         org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
         if org_filter:
             active_filters["org"] = org_filter
+            active_org_filter_count += len(org_filter)
         if org_self_filter:
             active_filters["org_self"] = org_self_filter
+            active_org_filter_count += len(org_self_filter)
         if org_type_filter:
             active_filters["org_type"] = org_type_filter
+            active_org_filter_count += len(org_type_filter)
 
         # Build chip display data for org filters
         org_chip_data: list[dict] = []
@@ -886,13 +1006,6 @@ class PlacementListView(ListView):
         skill_ids = skill_placement_qs.values_list("service__skill__id", flat=True)
         skill_counts = Counter(sid for sid in skill_ids if sid is not None)
 
-        # Org counts: exclude the org filter (like rol/labels) so the numbers
-        # reflect the other active filters instead of a global baseline.
-        org_filtered_qs = self._apply_filters(base_qs, exclude_filter="org").distinct()
-        org_placement_qs = Placement.objects.filter(id__in=org_filtered_qs.values_list("id", flat=True))
-        org_id_values = org_placement_qs.values_list("service__assignment__organizations__id", flat=True)
-        org_counts = Counter(oid for oid in org_id_values if oid is not None)
-
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
         for skill in Skill.objects.order_by("name"):
@@ -904,6 +1017,8 @@ class PlacementListView(ListView):
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
+        context["active_org_filter_count"] = active_org_filter_count
+        context["active_org_filter_label"] = org_chip_data[0]["label"] if len(org_chip_data) == 1 else ""
         context["org_chip_data"] = org_chip_data
         context["client_modal_count_mode"] = "placements"
 
@@ -920,7 +1035,6 @@ class PlacementListView(ListView):
                     set(org_filter),
                     selected_self_ids=set(org_self_filter),
                     selected_type_labels=set(org_type_filter),
-                    org_counts=org_counts,
                 ),
             },
             {
@@ -973,11 +1087,41 @@ class PlacementListView(ListView):
         return context
 
 
+class PlacementListNDDView(PlacementListView):
+    """PoC view: inzettenlijst met NDD Design System (MinBZK)."""
+
+    template_name = "placements.html"
+
+    def get_template_names(self) -> list[str]:
+        if "HX-Request" in self.request.headers:
+            if self.request.GET.get("filter_modal"):
+                return ["parts/filter_options_modal.html"]
+            if self.request.headers.get("HX-Target") == "nldd-side-panel-content":
+                placement_id = self.request.GET.get("plaatsing")
+                colleague_id = self.request.GET.get("collega")
+                assignment_id = self.request.GET.get("opdracht")
+                if placement_id:
+                    return ["parts/placement_panel_content.html"]
+                if colleague_id and not assignment_id:
+                    return ["parts/colleague_panel_content.html"]
+                if assignment_id:
+                    return ["parts/assignment_panel_content.html"]
+            if self.request.GET.get("pagina"):
+                return ["parts/placement_table_rows.html"]
+            return ["parts/filter_and_table_container.html"]
+        return ["placements.html"]
+
+    def get_context_data(self, **kwargs: object) -> dict:
+        context = super().get_context_data(**kwargs)
+        context["filter_target_url"] = reverse("ndd-home")
+        return context
+
+
 class AssignmentListView(ListView):
     """View for vacancy assignments displayed as cards with infinite scroll pagination"""
 
     model = Assignment
-    template_name = "assignment_card_grid.html"
+    template_name = "assignments.html"
     paginate_by = 24
     page_kwarg = "pagina"
 
@@ -1057,10 +1201,9 @@ class AssignmentListView(ListView):
     def get_template_names(self):
         if "HX-Request" in self.request.headers:
             if self.request.GET.get("filter_modal"):
-                return ["parts/filters/filter_options_modal.html"]
-            if self.request.headers.get("HX-Target") == "side_panel-container":
-                return ["parts/side_panel.html"]
-            if self.request.headers.get("HX-Target") == "side_panel-content":
+                return ["parts/filter_options_modal.html"]
+            hx_target = self.request.headers.get("HX-Target", "")
+            if hx_target in ("nldd-side-panel-content", "side_panel-content", "side_panel-container"):
                 colleague_id = self.request.GET.get("collega")
                 assignment_id = self.request.GET.get("opdracht")
                 placement_id = self.request.GET.get("plaatsing")
@@ -1071,8 +1214,8 @@ class AssignmentListView(ListView):
                 return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/assignment_card_rows.html"]
-            return ["parts/filter_and_card_container.html"]
-        return ["assignment_card_grid.html"]
+            return ["parts/filter_and_card_container_assignments.html"]
+        return ["assignments.html"]
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -1111,13 +1254,6 @@ class AssignmentListView(ListView):
         skill_ids = skill_filtered_qs.values_list("services__skill__id", flat=True)
         skill_counts = Counter(sid for sid in skill_ids if sid is not None)
 
-        # Org counts: exclude the org filter (like rol) so the numbers reflect
-        # the other active filters. base_qs is already limited to assignments
-        # with an unfilled open service, matching the open_assignments mode.
-        org_filtered_qs = self._apply_filters(base_qs, exclude_filter="org").distinct()
-        org_id_values = org_filtered_qs.values_list("organizations__id", flat=True)
-        org_counts = Counter(oid for oid in org_id_values if oid is not None)
-
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
         for skill in Skill.objects.order_by("name"):
@@ -1128,15 +1264,19 @@ class AssignmentListView(ListView):
             skill_options.append(option)
 
         # Organization filter (multi-select via modal)
+        active_org_filter_count = 0
         org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
         org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
         org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
         if org_filter:
             active_filters["org"] = org_filter
+            active_org_filter_count += len(org_filter)
         if org_self_filter:
             active_filters["org_self"] = org_self_filter
+            active_org_filter_count += len(org_self_filter)
         if org_type_filter:
             active_filters["org_type"] = org_type_filter
+            active_org_filter_count += len(org_type_filter)
 
         # Build chip display data for org filters
         org_chip_data: list[dict] = []
@@ -1176,6 +1316,8 @@ class AssignmentListView(ListView):
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
+        context["active_org_filter_count"] = active_org_filter_count
+        context["active_org_filter_label"] = org_chip_data[0]["label"] if len(org_chip_data) == 1 else ""
         context["org_chip_data"] = org_chip_data
         context["client_modal_count_mode"] = "open_assignments"
 
@@ -1190,7 +1332,6 @@ class AssignmentListView(ListView):
                     set(org_filter),
                     selected_self_ids=set(org_self_filter),
                     selected_type_labels=set(org_type_filter),
-                    org_counts=org_counts,
                 ),
             },
             {
@@ -1246,6 +1387,81 @@ class AssignmentListView(ListView):
             except Assignment.DoesNotExist:
                 pass
 
+        return context
+
+
+class AssignmentListNDDView(AssignmentListView):
+    """PoC view: vacaturelijst met NDD Design System (MinBZK)."""
+
+    template_name = "assignments.html"
+
+    def get_template_names(self) -> list[str]:
+        if "HX-Request" in self.request.headers:
+            if self.request.GET.get("filter_modal"):
+                return ["parts/filter_options_modal.html"]
+            if self.request.headers.get("HX-Target") == "nldd-side-panel-content":
+                colleague_id = self.request.GET.get("collega")
+                assignment_id = self.request.GET.get("opdracht")
+                if colleague_id and not assignment_id:
+                    return ["parts/colleague_panel_content.html"]
+                return ["parts/assignment_panel_content.html"]
+            if self.request.GET.get("pagina"):
+                return ["parts/assignment_card_rows.html"]
+            return ["parts/filter_and_card_container_assignments.html"]
+        return ["assignments.html"]
+
+    def get_context_data(self, **kwargs: object) -> dict:
+        context = super().get_context_data(**kwargs)
+        context["filter_target_url"] = reverse("ndd-assignments")
+        return context
+
+
+class UserListNDDView(PermissionRequiredMixin, ListView):
+    """PoC view: gebruikerslijst met NDD Design System."""
+
+    model = User
+    template_name = "user_admin.html"
+    paginate_by = 50
+    page_kwarg = "pagina"
+    permission_required = "rijksauth.view_user"
+
+    def _get_base_queryset(self):
+        qs = (
+            User.objects.prefetch_related("groups", "colleague__labels__category")
+            .filter(is_superuser=False)
+            .order_by("last_name", "first_name")
+        )
+        search_filter = self.request.GET.get("zoek")
+        if search_filter:
+            qs = qs.annotate(
+                full_name=Concat("first_name", Value(" "), "last_name"),
+            ).filter(
+                Q(full_name__icontains=search_filter)
+                | Q(first_name__icontains=search_filter)
+                | Q(last_name__icontains=search_filter)
+                | Q(email__icontains=search_filter)
+            )
+        return qs
+
+    def get_queryset(self):
+        return self._get_base_queryset().distinct()
+
+    def get_template_names(self):
+        if "HX-Request" in self.request.headers:
+            if self.request.GET.get("pagina"):
+                return ["parts/user_table_rows.html"]
+            return ["parts/user_table.html"]
+        return ["user_admin.html"]
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["search_filter"] = self.request.GET.get("zoek")
+        if context.get("page_obj") and context["page_obj"].has_next():
+            params = self.request.GET.copy()
+            params["pagina"] = context["page_obj"].next_page_number()
+            context["next_page_url"] = f"?{params.urlencode()}"
+        else:
+            context["next_page_url"] = None
         return context
 
 
@@ -1465,9 +1681,9 @@ def user_create(request):
             # For standard form posts, use normal redirect
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
-                response["HX-Redirect"] = reverse("admin-users")
+                response["HX-Redirect"] = reverse("ndd-admin-users")
                 return response
-            return redirect("admin-users")
+            return redirect(reverse("ndd-admin-users"))
         # Re-render form with errors (stays in modal with HTMX)
         return render(
             request,
@@ -1526,9 +1742,9 @@ def user_edit(request, pk):
             # For standard form posts, use normal redirect
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
-                response["HX-Redirect"] = reverse("admin-users")
+                response["HX-Redirect"] = reverse("ndd-admin-users")
                 return response
-            return redirect("admin-users")
+            return redirect(reverse("ndd-admin-users"))
         # Re-render form with errors (stays in modal with HTMX)
         return render(
             request,
@@ -1590,7 +1806,7 @@ def user_delete(request, pk):
             context=context,
         )
         response = HttpResponse(status=200)
-        response["HX-Redirect"] = reverse("admin-users")
+        response["HX-Redirect"] = reverse("ndd-admin-users")
         return response
     return HttpResponse(status=405)
 
@@ -1718,6 +1934,60 @@ def assignment_import_csv(request):
     return HttpResponse(status=405)
 
 
+@permission_required(
+    [
+        "core.add_assignment",
+        "core.add_service",
+        "core.add_placement",
+        "core.add_colleague",
+    ],
+    raise_exception=True,
+)
+def assignment_import_csv_ndd(request):
+    """
+    NDD variant of assignment CSV import.
+
+    GET: Display the import form (NDD design system)
+    POST: Process the uploaded CSV file and create assignments
+          (with related services, placements, colleagues, and skills)
+
+    For expected CSV format, see create_assignment_from_csv function
+    """
+    if request.method == "GET":
+        return render(request, "assignment_import.html")
+    if request.method == "POST":
+        if "csv_file" not in request.FILES:
+            return render(
+                request,
+                "assignment_import.html",
+                {"result": {"success": False, "errors": ["Geen bestand geüpload. Upload een CSV-bestand."]}},
+            )
+
+        csv_file = request.FILES["csv_file"]
+
+        if not csv_file.name.endswith(".csv"):
+            return render(
+                request,
+                "assignment_import.html",
+                {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
+            )
+
+        try:
+            csv_content = csv_file.read().decode("utf-8")
+        except UnicodeDecodeError:
+            return render(
+                request,
+                "assignment_import.html",
+                {"result": {"success": False, "errors": ["Invalid CSV file encoding. Please use UTF-8."]}},
+            )
+
+        result = create_assignments_from_csv(csv_content)
+
+        # Return results in the form
+        return render(request, "assignment_import.html", {"result": result})
+    return HttpResponse(status=405)
+
+
 @permission_required("core.view_organizationunit", raise_exception=True)
 def organization_admin(request):
     """Show all organization units in a collapsible tree, grouped by type. Only available in DEBUG mode."""
@@ -1787,6 +2057,13 @@ def label_admin(request):
     return render(request, "label_admin.html", {"categories": categories})
 
 
+@permission_required("core.view_labelcategory", raise_exception=True)
+def label_admin_ndd(request):
+    """PoC view: label admin met NDD Design System."""
+    categories = annotate_usage_counts(LabelCategory.objects.all())
+    return render(request, "label_admin.html", {"categories": categories})
+
+
 @permission_required("core.change_labelcategory", raise_exception=True)
 def label_category_create(request):
     """
@@ -1819,9 +2096,7 @@ def label_category_create(request):
             form.save()
             messages.success(request, f"Categorie '{form.cleaned_data['name']}' succesvol aangemaakt")
             response = HttpResponse(status=200)
-            hx_redirect = reverse("label-admin")
-            # redirecting to part of the page does using anchor does not seem to work yet
-            response["HX-Redirect"] = hx_redirect
+            response["HX-Redirect"] = reverse("ndd-label-admin")
             return response
         return render(
             request,
@@ -1871,7 +2146,7 @@ def label_category_edit(request, pk):
         if form.is_valid():
             form.save()
             response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("label-admin")
+            response["HX-Redirect"] = reverse("ndd-label-admin")
             return response
 
         return render(
@@ -1918,7 +2193,7 @@ def label_category_delete(request, pk):
         category.delete()
         messages.success(request, f"Categorie '{category_name}' succesvol verwijderd")
         response = HttpResponse(status=200)
-        response["HX-Redirect"] = reverse("label-admin")
+        response["HX-Redirect"] = reverse("ndd-label-admin")
         return response
     return HttpResponse(status=405)
 
@@ -2066,6 +2341,245 @@ def assignment_events_partial(request, pk):
     )
     events = [event for event in events if _attach_audit_render_data(event, assignment, request)]
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
+
+
+def user_profile_ndd(request):
+    """NDD Design System variant of the user profile page."""
+    user = request.user
+    colleague = getattr(user, "colleague", None)
+
+    # Side panel handling
+    colleague_id = request.GET.get("collega")
+    assignment_id = request.GET.get("opdracht")
+    panel_data = None
+
+    if assignment_id:
+        try:
+            assignment = Assignment.objects.get(id=assignment_id)
+            panel_data = _build_assignment_panel_data(assignment, request, reverse("ndd-profile"))
+        except Assignment.DoesNotExist:
+            pass
+    elif colleague_id:
+        try:
+            panel_colleague = Colleague.objects.get(id=colleague_id)
+            panel_data = _build_colleague_panel_data(panel_colleague, request)
+        except Colleague.DoesNotExist:
+            pass
+
+    # HTMX partial responses for panel swaps
+    if "HX-Request" in request.headers:
+        hx_target = request.headers.get("HX-Target")
+        if hx_target == "nldd-side-panel-content" and panel_data:
+            return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+
+    # Build label data per category for the data list rows
+    label_categories = []
+    for category in LabelCategory.objects.order_by("name"):
+        selected = list(colleague.labels.filter(category=category).order_by("name")) if colleague else []
+        label_categories.append({"category": category, "labels": selected})
+
+    assignment_list = _get_colleague_assignments(request, colleague, viewer=colleague) if colleague else []
+
+    return render(
+        request,
+        "user_profile.html",
+        {
+            "colleague": colleague,
+            "label_categories": label_categories,
+            "assignment_list": assignment_list,
+            "panel_data": panel_data,
+        },
+    )
+
+
+def contact_ndd(request):
+    return render(request, "contact.html")
+
+
+def privacy_ndd(request):
+    return render(request, "privacy.html")
+
+
+def toegankelijkheid_ndd(request):
+    return render(request, "toegankelijkheid.html")
+
+
+@staff_required
+def staff_dashboard_ndd(request):
+    return render(request, "staff_dashboard.html", {"usage": get_usage_stats()})
+
+
+@staff_required
+def staff_database_ndd(request):
+    context = {
+        "assignment_count": Assignment.objects.count(),
+        "colleague_count": Colleague.objects.count(),
+        "organization_count": OrganizationUnit.objects.count(),
+        "latest_tasks": get_latest_tasks(limit=3),
+        "destructive_actions_enabled": settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS,
+    }
+    if request.method == "POST":
+        action = request.POST.get("action")
+        if action == "clear_data":
+            if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
+                return HttpResponse(status=405)
+            Assignment.objects.all().delete()
+            Colleague.objects.all().delete()
+            Skill.objects.all().delete()
+            Placement.objects.all().delete()
+            Service.objects.all().delete()
+            LabelCategory.objects.all().delete()
+            Label.objects.all().delete()
+            OrganizationUnit.objects.update(parent=None)
+            OrganizationUnit.objects.all().delete()
+            OrganizationType.objects.all().delete()
+        elif action == "load_base_data":
+            if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
+                return HttpResponse(status=405)
+            management.call_command("loaddata", "base_dummy_data.json")
+            messages.success(request, "Data geladen uit base_dummy_data.json")
+        elif action == "reset_onboarding":
+            request.user.onboarding_completed_at = None
+            request.user.save(update_fields=["onboarding_completed_at"])
+            messages.success(
+                request,
+                "Onboarding is gereset. De wizard verschijnt weer bij de volgende paginalading.",
+            )
+        elif action == "sync_organizations":
+            if has_active_task("sync_organizations"):
+                messages.error(request, "Er is al een sync_organizations taak actief. Wacht tot deze is afgerond.")
+            else:
+                create_task(command="sync_organizations", created_by=request.user, timeout_minutes=5)
+                messages.success(request, "Organisatiesynchronisatie is gestart")
+            if request.headers.get("HX-Request"):
+                context["latest_tasks"] = get_latest_tasks(limit=3)
+                return render(request, "parts/task_list.html", context)
+        elif action == "merge_duplicates_preview":
+            from wies.core.services.assignments import find_duplicate_groups  # noqa: PLC0415
+
+            groups = find_duplicate_groups()
+            if not groups:
+                messages.info(request, "Geen dubbele opdrachten gevonden.")
+            else:
+                context["merge_groups"] = [
+                    {
+                        "name": group[0].name,
+                        "owner": str(group[0].owner),
+                        "count": len(group),
+                        "target": group[0],
+                        "duplicates": group[1:],
+                    }
+                    for group in groups
+                ]
+            return render(request, "staff_database.html", context)
+        elif action == "merge_duplicates_apply":
+            from wies.core.services.assignments import (  # noqa: PLC0415 — conditional import for rare admin action
+                find_duplicate_groups,
+                merge_group,
+            )
+
+            groups = find_duplicate_groups()
+            if not groups:
+                messages.info(request, "Geen dubbele opdrachten gevonden.")
+            else:
+                with transaction.atomic():
+                    total = sum(len(g) - 1 for g in groups)
+                    for group in groups:
+                        target = group[0]
+                        deleted_ids = [a.id for a in group[1:]]
+                        merge_group(group)
+                        create_event(
+                            object_type="Assignment",
+                            action="update",
+                            source="user",
+                            object_id=target.id,
+                            user=request.user,
+                            context={
+                                "merge": True,
+                                "merged_ids": deleted_ids,
+                                "name": target.name,
+                            },
+                        )
+                    messages.success(
+                        request,
+                        f"{total} dubbele opdracht(en) samengevoegd in {len(groups)} groep(en).",
+                    )
+        return redirect("ndd-staff-database")
+    return render(request, "staff_database.html", context)
+
+
+def organization_admin_ndd(request):
+    """NDD variant of organization admin. Same logic as organization_admin()."""
+    if not settings.DEBUG:
+        raise Http404
+    rows = OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations", "end_date")
+    today = timezone.now().date()
+    units_by_id: dict[int, dict] = {}
+    for row in rows:
+        row["is_inactive"] = row["end_date"] is not None and row["end_date"] <= today
+        row["tree_children"] = []
+        units_by_id[row["id"]] = row
+
+    roots: list[dict] = []
+    for unit in units_by_id.values():
+        parent_id = unit["parent_id"]
+        if parent_id and parent_id in units_by_id:
+            units_by_id[parent_id]["tree_children"].append(unit)
+        else:
+            roots.append(unit)
+
+    def sort_key(u):
+        return u["label"] or u["name"]
+
+    for unit in units_by_id.values():
+        unit["tree_children"].sort(key=sort_key)
+    roots.sort(key=sort_key)
+
+    root_ids = {u["id"] for u in roots}
+    type_links = (
+        OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
+        .select_related("organizationtype")
+        .values_list("organizationunit_id", "organizationtype__label")
+    )
+    root_types: dict[int, list[str]] = {}
+    for unit_id, type_label in type_links:
+        root_types.setdefault(unit_id, []).append(type_label)
+
+    grouped: dict[str, list[dict]] = {}
+    ungrouped: list[dict] = []
+    for unit in roots:
+        type_labels = root_types.get(unit["id"], [])
+        if type_labels:
+            for type_label in type_labels:
+                grouped.setdefault(type_label, []).append(unit)
+        else:
+            ungrouped.append(unit)
+
+    type_groups = [(ORG_TYPE_PLURAL.get(name, name), units) for name, units in sorted(grouped.items())]
+    if ungrouped:
+        type_groups.append(("Overig", ungrouped))
+
+    return render(request, "organization_admin.html", {"type_groups": type_groups})
+
+
+def user_import_csv_ndd(request):
+    """NDD variant of user CSV import. Same logic, NDD template."""
+    template = "user_import.html"
+    if request.method == "GET":
+        return render(request, template)
+    if request.method != "POST":
+        return HttpResponse(status=405)
+    if "csv_file" not in request.FILES:
+        return render(request, template, {"result": {"success": False, "errors": ["Geen bestand geüpload."]}})
+    csv_file = request.FILES["csv_file"]
+    if not csv_file.name.endswith(".csv"):
+        return render(request, template, {"result": {"success": False, "errors": ["Ongeldig bestandstype."]}})
+    try:
+        csv_content = csv_file.read().decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return render(request, template, {"result": {"success": False, "errors": ["Ongeldige bestandscodering."]}})
+    result = create_users_from_csv(request.user, csv_content)
+    return render(request, template, {"result": result})
 
 
 def _attach_audit_render_data(event, obj, request) -> bool:
@@ -2251,9 +2765,7 @@ def user_profile(request):
     # HTMX partial responses for panel swaps
     if "HX-Request" in request.headers:
         hx_target = request.headers.get("HX-Target")
-        if hx_target == "side_panel-container" and panel_data:
-            return render(request, "parts/side_panel.html", {"panel_data": panel_data})
-        if hx_target == "side_panel-content" and panel_data:
+        if hx_target in ("nldd-side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
     # Build label data per category for the data list rows
@@ -2455,7 +2967,11 @@ def search_suggestions(request):
     """Return org abbreviation suggestions for the search input (HTMX partial)."""
     term = request.GET.get("zoek", "")
     orgs = find_orgs_by_abbreviation(term)
-    return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs, "search_term": term.strip()})
+    return render(
+        request,
+        "parts/search_suggestions.html",
+        {"org_suggestions": orgs, "search_term": term.strip()},
+    )
 
 
 def _get_org_counts(count_mode: str, excluded_org_ids: list[int], viewer) -> Counter[int]:
@@ -2487,138 +3003,6 @@ def _get_org_counts(count_mode: str, excluded_org_ids: list[int], viewer) -> Cou
             visible_placements = visible_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
         org_id_list = visible_placements.values_list("service__assignment__organizations__id", flat=True)
     return Counter(org_id for org_id in org_id_list if org_id is not None)
-
-
-def _get_top_org_options(
-    count_mode: str,
-    excluded_org_ids: list[int],
-    selected_org_ids: set[str],
-    *,
-    viewer=None,
-    selected_self_ids: set[str] | None = None,
-    selected_type_labels: set[str] | None = None,
-    org_counts: Counter[int] | None = None,
-    limit: int = 3,
-) -> list[dict]:
-    """Return opdrachtgever quick checkbox options: selected first, then top-N by count.
-
-    Each option carries its own ``param`` (``org``, ``org_self`` or
-    ``org_type``) so the sidebar quick row stays in sync with whatever was
-    picked in the modal — including a "direct onder…" self-node (``org_self``)
-    or an org-type group (``org_type``). The ``org`` group also pads up to
-    ``limit`` with the highest-count unselected orgs; self/type only appear
-    when actually selected (they have no top-N baseline).
-
-    ``org_counts`` lets the caller pass filter-aware per-org counts (computed
-    like rol/labels, excluding the org filter) so the numbers reflect the other
-    active filters. When omitted, falls back to the global ``_get_org_counts``
-    baseline (used by the modal, which has no other filter context).
-
-    Mirrors the select-multi groups (see ``_finalize_filter_groups``): a
-    selected option is ALWAYS shown inline as a checked checkbox, even when it
-    isn't among the top-N by count (e.g. picked via the modal). Selected
-    options are listed first so the active selection reads clearly; once
-    anything is selected the empty top-N options are dropped to keep the list
-    calm.
-    """
-    selected_self_ids = selected_self_ids or set()
-    selected_type_labels = selected_type_labels or set()
-
-    if org_counts is None:
-        org_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
-    selected_ids = {int(x) for x in selected_org_ids if str(x).isdigit()}
-    self_ids = {int(x) for x in selected_self_ids if str(x).isdigit()}
-
-    total_selected = len(selected_ids) + len(self_ids) + len(selected_type_labels)
-    # Pad the ``org`` group with the highest-count unselected orgs up to ``limit``
-    # total (counting self/type selections towards the total so the list stays
-    # calm once anything is picked).
-    fill = max(0, limit - total_selected)
-    top_unselected = [oid for oid, _ in org_counts.most_common() if oid not in selected_ids][:fill]
-    org_wanted = selected_ids | set(top_unselected)
-
-    options: list[dict] = []
-
-    if org_wanted:
-        labels = dict(OrganizationUnit.objects.filter(id__in=org_wanted).values_list("id", "label"))
-        options.extend(
-            {
-                "param": "org",
-                "value": str(org_id),
-                "label": labels.get(org_id) or f"Organisatie {org_id}",
-                "count": org_counts.get(org_id, 0),
-                "selected": org_id in selected_ids,
-            }
-            for org_id in org_wanted
-        )
-
-    if self_ids:
-        self_labels = dict(OrganizationUnit.objects.filter(id__in=self_ids).values_list("id", "label"))
-        options.extend(
-            {
-                "param": "org_self",
-                "value": str(org_id),
-                "label": f"{self_labels.get(org_id) or f'Organisatie {org_id}'} (direct)",
-                "count": org_counts.get(org_id, 0),
-                "selected": True,
-            }
-            for org_id in self_ids
-        )
-
-    options.extend(
-        {
-            "param": "org_type",
-            "value": type_label,
-            "label": ORG_TYPE_PLURAL.get(type_label, type_label),
-            "count": 0,
-            "selected": True,
-        }
-        for type_label in selected_type_labels
-    )
-
-    # Selected first, then by descending count, then by label for a stable order.
-    options.sort(key=lambda o: (not o["selected"], -o["count"], o["label"]))
-    return options
-
-
-def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> None:
-    """Post-process select-multi groups in place for the top-N + "Meer" modal.
-
-    For each ``select-multi`` group:
-      - assigns a unique ``group_id`` (the modal opens by this key),
-      - computes ``top_options``: the ``top_n`` options by count (selected ones
-        kept visible), shown inline in the sidebar,
-      - sets ``has_more`` when there are more options than fit inline.
-    The full ``options`` list (alphabetical) is kept for the modal. Mutates the
-    given groups in place; returns nothing.
-    """
-    label_seq = 0
-    for group in filter_groups:
-        if group.get("type") != "select-multi":
-            continue
-        # Unique key — "labels" repeats per category, so disambiguate.
-        if group["name"] == "labels":
-            group["group_id"] = f"labels-{label_seq}"
-            label_seq += 1
-        else:
-            group["group_id"] = group["name"]
-
-        real_options = [o for o in group["options"] if o.get("value")]
-        selected = set(group.get("selected_values", []))
-        by_count = sorted(real_options, key=lambda o: o.get("count", 0), reverse=True)
-        # Selected options first (so the active selection reads clearly), then
-        # fill up to top_n with the highest-count unselected options. Once
-        # anything is selected the empty top-N options drop away, keeping the
-        # list calm; the full alphabetical list stays in the "Meer" modal.
-        selected_opts = [o for o in by_count if o["value"] in selected]
-        unselected_opts = [o for o in by_count if o["value"] not in selected]
-        # Show all selected; pad with the highest-count unselected up to top_n.
-        # So with <top_n selected the user still sees some choices, and with
-        # >=top_n selected the empty options drop away (calmer, clearer).
-        fill = max(0, top_n - len(selected_opts))
-        top = selected_opts + unselected_opts[:fill]
-        group["top_options"] = top
-        group["has_more"] = len(real_options) > len(top)
 
 
 def _build_org_hierarchy(
@@ -2892,7 +3276,7 @@ def _render_inline_edit_display(
         "alert": alert,
         **extra,
     }
-    response = render(request, "parts/inline_edit/display.html", ctx)
+    response = render(request, "nldd/parts/inline_edit/display.html", ctx)
     if saved:
         response["HX-Trigger-After-Swap"] = "inline-edit-saved"
     return response
@@ -2904,7 +3288,9 @@ def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) 
 
     ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "form": form, "editable": spec}
     template = (
-        spec.form_template if isinstance(spec, EditableGroup) and spec.form_template else "parts/inline_edit/form.html"
+        spec.form_template
+        if isinstance(spec, EditableGroup) and spec.form_template
+        else "nldd/parts/inline_edit/form.html"
     )
     return render(request, template, ctx)
 
@@ -2912,7 +3298,7 @@ def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) 
 def _render_inline_edit_collection_form(request, editable_set, spec, obj, formset) -> HttpResponse:
     # Inner body from spec.form_template; receives the formset as `formset`.
     ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "formset": formset}
-    return render(request, "parts/inline_edit/collection_form.html", ctx)
+    return render(request, "nldd/parts/inline_edit/collection_form.html", ctx)
 
 
 def _attach_formset_error(formset, message: str) -> None:

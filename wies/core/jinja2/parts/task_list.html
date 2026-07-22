@@ -1,63 +1,41 @@
-<c-h3>Recente taken</c-h3>
+<nldd-rich-text>
+<h3>Recente taken</h3>
+</nldd-rich-text>
 {% if latest_tasks %}
-  <c-table>
-  <c-table-head>
-  <c-table-row>
-  <c-table-header>Status</c-table-header>
-  <c-table-header>Aangemaakt</c-table-header>
-  <c-table-header>Gestart</c-table-header>
-  <c-table-header>Afgerond</c-table-header>
-  <c-table-header>Door</c-table-header>
-  <c-table-header>Resultaat</c-table-header>
-  </c-table-row>
-  </c-table-head>
-  <c-table-body>
+  <nldd-list>
   {% for task in latest_tasks %}
-    <c-table-row>
-    <c-table-cell>
-    {% if task.status == 'pending' %}
-      <c-status-icon type="info" size="sm" /> <strong>Wachtend</strong>
-    {% elif task.status == 'running' %}
-      <c-status-icon type="info" size="sm" /> <strong>Bezig</strong>
-    {% elif task.status == 'completed' %}
-      <c-status-icon type="bevestiging" size="sm" /> <strong>Voltooid</strong>
+    <nldd-list-item>
+    <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
+    <nldd-icon-cell slot="start" size="20">
+    {% if task.status == 'completed' %}
+      <nldd-icon name="check-circle-filled" color="success"></nldd-icon>
     {% elif task.status == 'failed' %}
-      <c-status-icon type="foutmelding" size="sm" /> <strong>Mislukt</strong>
-    {% endif %}
-    </c-table-cell>
-    <c-table-cell>{{ task.created_at.strftime("%Y-%m-%d %H:%M:%S") }}</c-table-cell>
-    <c-table-cell>
-    {% if task.started_at %}
-      {{ task.started_at.strftime("%Y-%m-%d %H:%M:%S") }}
+      <nldd-icon name="exclamation-triangle-filled" color="error"></nldd-icon>
+    {% elif task.status == 'running' %}
+      <nldd-icon name="arrow-2-counter-clockwise"></nldd-icon>
     {% else %}
-      -
+      <nldd-icon name="clock"></nldd-icon>
     {% endif %}
-    </c-table-cell>
-    <c-table-cell>
-    {% if task.completed_at %}
-      {{ task.completed_at.strftime("%Y-%m-%d %H:%M:%S") }}
-    {% else %}
-      -
-    {% endif %}
-    </c-table-cell>
-    <c-table-cell>
+    </nldd-icon-cell>
+    <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
+    {# djlint:off T028 #} {% set supporting = task.created_at.strftime("%Y-%m-%d
+     %H:%M:%S") %}
     {% if task.created_by %}
-      {{ task.created_by.get_full_name() or task.created_by.username }}
+      {% set supporting = supporting ~ "
+              door " ~ (task.created_by.get_full_name() or task.created_by.username) %} {%
+        endif %}
+        <nldd-title-cell text="{{ task.status|capitalize }}" supporting-text="{{ supporting }}"></nldd-title-cell>
+        {% if task.result %}
+          {% set result_text = "Aangemaakt: " ~
+                    task.result.created ~ ", Bijgewerkt: " ~ task.result.updated %}
+        {% else %}
+          {% set result_text = "-" %}
+        {% endif %}
+        <nldd-text-cell text="{{ result_text }}"></nldd-text-cell>
+        {# djlint:on #}
+        </nldd-list-item>
+      {% endfor %}
+      </nldd-list>
     {% else %}
-      -
+      <p class="nldd-text-secondary">Geen taken gevonden.</p>
     {% endif %}
-    </c-table-cell>
-    <c-table-cell>
-    {% if task.result %}
-      Aangemaakt: {{ task.result.created }}, Bijgewerkt: {{ task.result.updated }}, Ongewijzigd: {{ task.result.unchanged }}, Gedeactiveerd: {{ task.result.deactivated }}, Verwijderd: {{ task.result.deleted }}
-    {% else %}
-      -
-    {% endif %}
-    </c-table-cell>
-    </c-table-row>
-  {% endfor %}
-  </c-table-body>
-  </c-table>
-{% else %}
-  <c-paragraph>Geen taken gevonden.</c-paragraph>
-{% endif %}

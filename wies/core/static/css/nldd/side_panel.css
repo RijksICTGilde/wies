@@ -1,0 +1,110 @@
+/* NDD side panel — minimale styling, nldd-sheet doet het meeste werk. */
+
+#nldd-side-panel {
+  --components-sheet-side-md-width: 700px;
+  --components-sheet-side-lg-width: 800px;
+}
+
+#nldd-side-panel-content {
+  padding: var(--primitives-space-24, 24px);
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+/* --- Panel inner content -------------------------------------------- */
+.nldd-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-16, 16px);
+}
+
+/* De bar bovenin is nu een echte nldd-top-title-bar in de panel-templates;
+   nldd-sheet sluit zichzelf op de dismiss daarvan. De handgebouwde
+   .nldd-panel__bar imitatie is daarmee vervallen. */
+
+/* Identity sectie (avatar + email) onder de bar */
+.nldd-panel__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-12, 12px);
+}
+.nldd-panel__identity-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.nldd-panel__email {
+  display: block;
+  font-size: 0.875rem;
+  color: var(--semantics-links-color, #0d4a8a);
+  text-decoration: none;
+  margin-top: 0.15rem;
+}
+.nldd-panel__email:hover {
+  text-decoration: underline;
+}
+
+.nldd-panel__tokens {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--primitives-space-6, 6px);
+}
+
+/* Data list (key/value gegevens) */
+.nldd-data-list {
+  display: grid;
+  grid-template-columns: minmax(120px, max-content) 1fr;
+  gap: var(--primitives-space-6, 6px) var(--primitives-space-16, 16px);
+  margin: 0;
+}
+.nldd-data-list dt {
+  font-weight: 600;
+  color: var(--semantics-content-color, #333);
+}
+.nldd-data-list dd {
+  margin: 0;
+}
+
+/* Assignment cards. De kaart zelf is een nldd-card in een nldd-collection:
+   rand, hover, radius en de overlay-link komen uit het design system. Wat
+   hier rest is de inhoudelijke opmaak binnen de kaart. */
+.nldd-assignment-card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--primitives-space-8, 8px);
+  flex-wrap: wrap;
+}
+.nldd-assignment-card--historical {
+  opacity: 0.75;
+}
+.nldd-assignment-card__tags,
+.nldd-assignment-card__privacy {
+  margin-top: var(--primitives-space-4, 4px);
+}
+
+/* De teamrijen zijn nu een echte nldd-list met cellen; alleen de avatarstrip
+   binnen een opdrachtkaart ("Collega's op deze opdracht") blijft een eigen rij. */
+.nldd-team-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--primitives-space-4, 4px);
+  margin-top: var(--primitives-space-4, 4px);
+}
+/* Vertical spacing utility */
+.nldd-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-24, 24px);
+}
+
+/* Side-panel tab bar (Gegevens / Updates) uses the nldd-tab-bar component;
+   only the tab panels stay app-styled. */
+nldd-tab-bar {
+  display: block;
+  margin-bottom: var(--primitives-space-16, 16px);
+}
+.nldd-tabs__panel[hidden] {
+  display: none;
+}

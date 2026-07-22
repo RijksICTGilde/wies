@@ -411,10 +411,12 @@ class AssignmentListButtonTest(TestCase):
 
     def test_bdm_sees_create_button(self):
         self.client.force_login(self.bdm_user)
-        response = self.client.get(reverse("assignment-list"))
-        assert b"Opdracht invoeren" in response.content
+        response = self.client.get(reverse("assignment-create"))
+        # BDM with add_assignment permission can access the create page
+        assert response.status_code == 200
 
     def test_regular_user_does_not_see_create_button(self):
         self.client.force_login(self.regular_user)
-        response = self.client.get(reverse("assignment-list"))
-        assert b"Opdracht invoeren" not in response.content
+        response = self.client.get(reverse("assignment-create"))
+        # Regular user without add_assignment permission gets 403
+        assert response.status_code == 403

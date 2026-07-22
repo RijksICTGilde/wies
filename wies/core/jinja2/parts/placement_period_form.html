@@ -10,32 +10,35 @@
         hx-swap="outerHTML"
         data-service-start="{{ obj.service.start_date.isoformat() if obj.service.start_date else '' }}"
         data-service-end="{{ obj.service.end_date.isoformat() if obj.service.end_date else '' }}">
-    <c-layout-flow gap="md">
-    {{ form.period_source.as_widget(attrs={"style": "display:none", "data-period-source": ""}) }}
-    <div class="rvo-form-field">
-      <span class="rvo-label">Periode</span>
-      <label class="service-period-toggle">
-        <input type="checkbox"
-               id="placement-inherit-period"
-               {% if form.period_source.value() == "SERVICE" %}checked{% endif %}>
-        <span>Neem opdrachtperiode over</span>
-      </label>
+    <div class="nldd-form-fields nldd-form-fields--spaced">
+      {{ form.period_source.as_widget(attrs={"style": "display:none", "data-period-source": ""}) }}
+      <div class="nldd-form-field">
+        <span class="nldd-form-field__label">Periode</span>
+        <label class="nldd-checkbox-option">
+          <input type="checkbox"
+                 id="placement-inherit-period"
+                 class="nldd-checkbox"
+                 {% if form.period_source.value() == "SERVICE" %}checked{% endif %}>
+          <span class="nldd-checkbox-option__label">Neem opdrachtperiode over</span>
+        </label>
+      </div>
+      <div class="nldd-form-field">
+        <label class="nldd-form-field__label"
+               for="{{ form.specific_start_date.id_for_label }}">{{ form.specific_start_date.label }}</label>
+        {{ form.specific_start_date.as_widget(attrs={"data-specific-start": ""}) }}
+        {% for error in form.specific_start_date.errors %}<p class="nldd-form-field__error-text">{{ error }}</p>{% endfor %}
+      </div>
+      <div class="nldd-form-field">
+        <label class="nldd-form-field__label"
+               for="{{ form.specific_end_date.id_for_label }}">{{ form.specific_end_date.label }}</label>
+        {{ form.specific_end_date.as_widget(attrs={"data-specific-end": ""}) }}
+        {% for error in form.specific_end_date.errors %}<p class="nldd-form-field__error-text">{{ error }}</p>{% endfor %}
+      </div>
     </div>
-    <div class="rvo-form-field">
-      <label class="rvo-label" for="{{ form.specific_start_date.id_for_label }}">{{ form.specific_start_date.label }}</label>
-      {{ form.specific_start_date.as_widget(attrs={"data-specific-start": ""}) }}
-      {% for error in form.specific_start_date.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
-    </div>
-    <div class="rvo-form-field">
-      <label class="rvo-label" for="{{ form.specific_end_date.id_for_label }}">{{ form.specific_end_date.label }}</label>
-      {{ form.specific_end_date.as_widget(attrs={"data-specific-end": ""}) }}
-      {% for error in form.specific_end_date.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
-    </div>
-    </c-layout-flow>
-    {% for error in form.non_field_errors() %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
+    {% for error in form.non_field_errors() %}<p class="nldd-form-field__error-text">{{ error }}</p>{% endfor %}
     <div class="field-actions">
-      <c-button type="submit" kind="primary">Opslaan</c-button>
-      <c-button type="button" kind="secondary" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML">Annuleren</c-button>
+      <nldd-button type="submit" variant="primary" text="Opslaan"></nldd-button>
+      <nldd-button type="button" variant="secondary" text="Annuleren" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML"></nldd-button>
     </div>
   </form>
 </div>

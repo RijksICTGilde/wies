@@ -42,7 +42,7 @@ def _build_label_editable(category):
         widget=MultiselectDropdown,
         choices=_labels_choices(category),
         save=_save_labels_for_category(category.id),
-        display="rvo/forms/displays/colleague_labels.html",
+        display="nldd/forms/displays/colleague_labels.html",
     )
     editable.name = name
     editable.category = category  # read by the display partial
