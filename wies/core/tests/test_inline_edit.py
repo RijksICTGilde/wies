@@ -350,7 +350,8 @@ class InlineEditGroupTest(TestCase):
         self.assignment.start_date = "2026-03-01"
         self.assignment.end_date = "2026-06-30"
         self.assignment.save()
-        resp = self.client.post(
+        resp = post_inline_edit(
+            self.client,
             self.url,
             {"start_date": "2026-03-01", "end_date": "2026-06-30"},
         )
@@ -902,7 +903,7 @@ class AssignmentServicesAuditTest(TestCase):
             ),
             **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
         }
-        resp = self.client.post(self.url, data)
+        resp = post_inline_edit(self.client, self.url, data)
         assert resp.status_code == 200
         assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
 

@@ -499,7 +499,8 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that saving the same value does not create an event"""
         self.client.force_login(self.user_with_permission)
 
-        self.client.post(
+        post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Test Assignment"},  # Same as current value
         )
