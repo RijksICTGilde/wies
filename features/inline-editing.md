@@ -395,6 +395,12 @@ changed the data in the meantime, so instead of overwriting, the bound
 form comes back with a warning and a token for the new state — Opslaan
 then saves anyway, Annuleren shows the changed data.
 
+For a single `Editable` whose value is text, the warning names the value
+that is stored now (`_concurrency_conflict_alert`), so the user can see
+what Opslaan would overwrite. A group, a collection or a non-text value
+(dates, related objects, lists) keeps the generic message: each would
+need its own formatting to read well.
+
 The token is rendered by `form.html` / `collection_form.html`, never by
 a custom body, so a new editable cannot forget it. A POST without a
 token cannot be checked and therefore counts as a conflict (and is

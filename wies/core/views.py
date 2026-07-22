@@ -2804,6 +2804,31 @@ CONCURRENCY_CONFLICT_ALERT = {
     "Kies 'Opslaan' om je wijziging toch door te voeren, of 'Annuleren' om de gewijzigde gegevens te zien.",
 }
 
+CONFLICT_VALUE_MAX_LENGTH = 120
+
+
+def _concurrency_conflict_alert(spec, obj) -> dict:
+    """The conflict warning, naming the stored value where that is readable.
+
+    Only for a single text field: a group, a collection or a non-text value
+    (dates, related objects, lists) would need its own formatting per field to
+    read well, so those keep the generic message.
+    """
+    if not isinstance(spec, Editable):
+        return CONCURRENCY_CONFLICT_ALERT
+    value = _current_value(obj, spec)
+    if not (value is None or isinstance(value, str)):
+        return CONCURRENCY_CONFLICT_ALERT
+    current = (value or "").strip()
+    if len(current) > CONFLICT_VALUE_MAX_LENGTH:
+        current = current[:CONFLICT_VALUE_MAX_LENGTH].rstrip() + "…"
+    stored = f"de opgeslagen waarde is nu '{current}'" if current else "het veld is nu leeg"
+    return {
+        "kind": "warning",
+        "message": f"Dit veld is ondertussen gewijzigd: {stored}. "
+        "Kies 'Opslaan' om je wijziging toch door te voeren, of 'Annuleren' om de gewijzigde waarde te zien.",
+    }
+
 
 def _edit_state(editable_set, spec, obj):
     """The values this edit is based on, in a JSON-serialisable shape."""
@@ -3227,7 +3252,13 @@ def inline_edit_view(request, model_label, pk, name):
                 # the new state: Opslaan saves anyway, Annuleren shows the
                 # changed data. Rendered after the lock is released.
                 return _render_inline_edit_form(
-                    request, editable_set, spec, editables, obj, form, alert=CONCURRENCY_CONFLICT_ALERT
+                    request,
+                    editable_set,
+                    spec,
+                    editables,
+                    obj,
+                    form,
+                    alert=_concurrency_conflict_alert(spec, obj),
                 )
             return _render_inline_edit_display(
                 request,

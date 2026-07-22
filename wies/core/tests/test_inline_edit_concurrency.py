@@ -115,6 +115,26 @@ class InlineEditConcurrencyTests(TestCase):
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Original Name"
 
+    def test_conflict_on_a_text_field_names_the_stored_value(self):
+        """Seeing what is stored now is what lets the user decide between
+        overwriting it and keeping it."""
+        token = self._token_from_form()
+
+        Assignment.objects.filter(pk=self.assignment.pk).update(name="Concurrent Name")
+
+        response = self.client.post(self._url(), {"name": "My Stale Name", "_concurrency_token": token})
+
+        self.assertContains(response, "de opgeslagen waarde is nu &#39;Concurrent Name&#39;")
+
+    def test_conflict_says_the_field_is_empty_when_it_was_cleared(self):
+        token = self._token_from_form()
+
+        Assignment.objects.filter(pk=self.assignment.pk).update(name="")
+
+        response = self.client.post(self._url(), {"name": "My Stale Name", "_concurrency_token": token})
+
+        self.assertContains(response, "het veld is nu leeg")
+
     def test_fresh_edit_still_saves(self):
         token = self._token_from_form()
 
@@ -184,6 +204,8 @@ class InlineEditCollectionConcurrencyTokenTests(TestCase):
 
         assert response.status_code == 200
         self.assertContains(response, "ondertussen gewijzigd")
+        # A list of rows has no single value worth naming, so the warning stays generic.
+        self.assertNotContains(response, "de opgeslagen waarde is nu")
         self.service.refresh_from_db()
         assert self.service.description == "Changed by someone else"
 
