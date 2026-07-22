@@ -1,15 +1,21 @@
 {# HTMX partial: Updates the main content area when filters change #}
 <div id="filter-and-table-container">
-  <!-- Page Header -->
+  {# Carries the active grouping through sidebar filter changes (hx-include picks it up).
+     Lives here (not in the sidebar) so grouping toggles, which only re-swap this container, keep it current. #}
+  {% if groupby_field %}
+    <input type="hidden"
+           name="groep"
+           value="{{ groupby_field }}"
+           data-filter-input
+           id="active-groupby-input" />
+  {% endif %}
+  <!-- Page Header: toolbar strip — controls row, then result count + chips row -->
   <div class="layout__main__header">
-    <!-- Row 1: Title + Search -->
-    <div class="header-row header-row--between">
-      <c-h1 noMargins>Wie zit waar?</c-h1>
-      <div class="header-actions">
-        <!-- Mobile filter toggle -->
-        <c-button kind="secondary" size="md" icon="trechter" iconPlacement="before" type="button" class="mobile-filter-toggle" data-toggle-filters>
-        Filters
-        </c-button>
+    <c-h1 noMargins class="sr-only">Wie zit waar?</c-h1>
+    <div class="table-toolbar">
+      <!-- Row 1: result count + search + grouping -->
+      <div class="table-toolbar__controls">
+        <span class="results-count"><b>{{ page_obj.paginator.count }}</b> {{ 'resultaat' if page_obj.paginator.count == 1 else 'resultaten' }}</span>
         <!-- Search Field -->
         <div class="search-field-wrapper">
           <button type="button"
@@ -22,15 +28,18 @@
           <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
           <div id="search-suggestions-container" hx-preserve="true"></div>
         </div>
+        {% include "parts/toolbar/groupby_menu.html" %}
+        <!-- Mobile filter toggle -->
+        <c-button kind="secondary" size="md" icon="trechter" iconPlacement="before" type="button" class="mobile-filter-toggle" data-toggle-filters>
+        Filters
+        </c-button>
       </div>
-    </div>
-    <!-- Row 2: Result count + Active Filter Chips -->
-    <div class="header-row">
-      <c-paragraph class="results-count">
-      <b>{{ page_obj.paginator.count }}</b> resultaten
-      </c-paragraph>
-      <!-- Active Filter Chips -->
-      {% include "parts/filters/filter_chips.html" %}
+      <!-- Row 2: active filter chips -->
+      {% if active_filter_count %}
+        <div class="table-toolbar__summary">
+          <div class="table-toolbar__chips">{% include "parts/filters/filter_chips.html" %}</div>
+        </div>
+      {% endif %}
     </div>
   </div>
   <!-- Placement Table -->

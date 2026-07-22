@@ -146,6 +146,39 @@ def get_sort_state(request, field):
     return None
 
 
+def _placement_group_key(placement, field):
+    """Return (has_value, label) where has_value=0 for real values and 1 for missing — sorts missing last."""
+    if field == "person":
+        name = placement.colleague.name
+        return (0, name) if name else (1, "Geen naam")
+    if field == "assignment":
+        name = placement.service.assignment.name
+        return (0, name) if name else (1, "Geen opdracht")
+    return (0, "")
+
+
+def groupby_placements(placements, field):
+    """Group an iterable of placements by `field` (person or assignment).
+
+    Returns a list of (label, [placements]) tuples ordered alphabetically, with
+    missing-value groups sorted last.
+    """
+    if not field:
+        return [(None, list(placements))]
+
+    groups: dict = {}
+    for placement in placements:
+        key = _placement_group_key(placement, field)
+        label = key[1]
+        if label not in groups:
+            groups[label] = (key, [])
+        groups[label][1].append(placement)
+
+    # kv[1][0] is the (missing-flag, label) tuple — sorts missing-value groups last.
+    ordered = sorted(groups.items(), key=lambda kv: kv[1][0])
+    return [(label, items) for label, (_, items) in ordered]
+
+
 def environment(**options):
     env = Environment(**options)  # noqa: S701 - autoescape handled by Django
     setup_components(env)
@@ -157,6 +190,7 @@ def environment(**options):
             "get_csrf_hidden_input": get_csrf_hidden_input,
             "get_toggle_sort_url": get_toggle_sort_url,
             "get_sort_state": get_sort_state,
+            "groupby_placements": groupby_placements,
             "get_messages": get_messages,
             "is_staff_member": is_staff_member,
             "DEBUG": settings.DEBUG,

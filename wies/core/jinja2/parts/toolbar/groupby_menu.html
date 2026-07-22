@@ -1,0 +1,34 @@
+{# Subtle "Groeperen" text-button + popover menu (Persoon / Opdracht). #}
+<div class="groupby-menu" data-groupby-menu>
+  <button type="button"
+          class="groupby-menu__trigger rvo-button rvo-button--tertiary rvo-button--size-md rvo-button--icon-before{% if groupby_field %} groupby-menu__trigger--active{% endif %}"
+          aria-haspopup="menu"
+          aria-expanded="false"
+          data-groupby-trigger>
+    <c-icon icon="menu" size="md" class="rvo-link__icon--before" />
+    <span class="groupby-menu__label">
+      {%- if groupby_active_label -%}Groeperen: {{ groupby_active_label }}{%- else -%}Groeperen{%- endif -%}
+      </span>
+      <c-icon icon="delta-omlaag" size="xs" class="groupby-menu__chevron" />
+    </button>
+    <div class="groupby-menu__dropdown"
+         role="menu"
+         aria-label="Groepeer op"
+         hidden>
+      {% for option in groupby_options %}
+        <a href="{{ option.url }}"
+           class="groupby-menu__option{% if option.active %} groupby-menu__option--active{% endif %}"
+           role="menuitemradio"
+           aria-checked="{{ 'true' if option.active else 'false' }}"
+           hx-get="{{ option.url }}"
+           hx-target="#filter-and-table-container"
+           hx-swap="innerHTML settle:0"
+           hx-replace-url="true">
+          <span class="groupby-menu__check" aria-hidden="true">
+            {% if option.active %}<c-icon icon="vinkje" size="xs" />{% endif %}
+          </span>
+          {{ option.label }}
+        </a>
+      {% endfor %}
+    </div>
+  </div>
