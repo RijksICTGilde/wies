@@ -55,7 +55,7 @@ up-production-django:
 # make sure to run up-production-postgres first
 # to check if container runs properly. not directly used in production
 up-production-worker:
-  docker run --rm --env-file .env -e DJANGO_SETTINGS_MODULE=config.settings.worker --network wies-network wies-worker
+  docker run --rm --env-file .env.worker --network wies-network wies-worker
 
 # Rebuild db
 rebuild-db:

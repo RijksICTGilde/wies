@@ -14,7 +14,7 @@ SECRET_KEY = os.environ.get(
 )
 ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]  # noqa: S104
 
-# for authlib OIDC connection, if left out, login will not be enforced
+# for authlib OIDC connection
 OIDC_CLIENT_ID = os.environ.get("OIDC_CLIENT_ID", "default-client-id")
 OIDC_CLIENT_SECRET = os.environ.get("OIDC_CLIENT_SECRET", "default-client-secret")
 OIDC_DISCOVERY_URL = os.environ.get("OIDC_DISCOVERY_URL", "https://test.example.com/.well-known/openid-configuration")
