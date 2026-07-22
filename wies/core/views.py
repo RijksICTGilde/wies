@@ -2805,32 +2805,43 @@ CONCURRENCY_CONFLICT_ALERT = {
 }
 
 
-def _concurrency_token(editable_set, spec, obj) -> str:
-    """A short hash of the values this edit is based on, embedded in the edit
-    form and re-checked (under a row lock) at save time. If the underlying
-    values changed since the form was rendered, the tokens differ and the save
-    is rejected instead of silently overwriting the other change."""
+def _edit_state(editable_set, spec, obj):
+    """The values this edit is based on, in a JSON-serialisable shape."""
     if isinstance(spec, EditableCollection):
         if spec.audit_state is None:
             # Every token would otherwise hash the same empty payload, so no
             # conflict could ever be detected for this collection.
             message = f"EditableCollection {spec.name!r} needs an audit_state to build a concurrency token"
             raise ImproperlyConfigured(message)
-        state = spec.audit_state(obj)
-    else:
-        state = {}
-        for e in resolve_editables(editable_set, spec):
-            value = _current_value(obj, e)
-            if isinstance(value, list):  # M2M: order-independent
-                value = sorted(str(getattr(item, "pk", item)) for item in value)
-            elif isinstance(value, Model):
-                value = value.pk
-            state[e.field or e.name] = value
+        return spec.audit_state(obj)
+    state = {}
+    for e in resolve_editables(editable_set, spec):
+        value = _current_value(obj, e)
+        if isinstance(value, list):
+            # Rows carry their own shape (dicts for organizations, models for
+            # M2M), so let audit_state flatten them where it exists rather than
+            # leaning on repr; order-independent either way.
+            value = e.audit_state(value) if e.audit_state else sorted(str(getattr(i, "pk", i)) for i in value)
+        elif isinstance(value, Model):
+            value = value.pk
+        state[e.field or e.name] = value
+    return state
+
+
+def _hash_state(state) -> str:
     payload = json.dumps(state, sort_keys=True, default=str)
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
 
 
-def _has_concurrency_conflict(request, editable_set, spec, obj) -> bool:
+def _concurrency_token(editable_set, spec, obj) -> str:
+    """A short hash of the values this edit is based on, embedded in the edit
+    form and re-checked (under a row lock) at save time. If the underlying
+    values changed since the form was rendered, the tokens differ and the save
+    is rejected instead of silently overwriting the other change."""
+    return _hash_state(_edit_state(editable_set, spec, obj))
+
+
+def _has_concurrency_conflict(request, editable_set, spec, obj, *, state=None) -> bool:
     """Whether this POST was built on a stale view of ``obj``.
 
     Call inside the transaction that holds the row lock, so the state read here
@@ -2841,6 +2852,9 @@ def _has_concurrency_conflict(request, editable_set, spec, obj) -> bool:
     absence means the POST was not built on a form we handed out and its
     staleness cannot be established. Letting it through would silently disable
     the check for whichever caller omitted the field.
+
+    ``state`` reuses a snapshot the caller already read, so the collection path
+    doesn't query the whole team twice while holding the lock.
     """
     submitted = request.POST.get("_concurrency_token", "")
     if not submitted:
@@ -2851,7 +2865,9 @@ def _has_concurrency_conflict(request, editable_set, spec, obj) -> bool:
             obj.pk,
         )
         return True
-    return submitted != _concurrency_token(editable_set, spec, obj)
+    if state is None:
+        state = _edit_state(editable_set, spec, obj)
+    return submitted != _hash_state(state)
 
 
 def _permission_denied(
@@ -3001,11 +3017,13 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
             try:
                 with transaction.atomic():
                     obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
-                    conflict = _has_concurrency_conflict(request, editable_set, spec, obj)
+                    # One snapshot, used both to check the token and as the
+                    # audit event's "before" — the team query is not cheap.
+                    before = _edit_state(editable_set, spec, obj)
+                    conflict = _has_concurrency_conflict(request, editable_set, spec, obj, state=before)
                     if not conflict:
-                        before = spec.audit_state(obj) if spec.audit_state else None
                         spec.save(obj, formset)
-                        after = spec.audit_state(obj) if spec.audit_state else None
+                        after = _edit_state(editable_set, spec, obj)
                         _emit_inline_edit_audit_event(editable_set, spec, obj, before, after, request.user)
             except ValidationError as exc:
                 for message in exc.messages:

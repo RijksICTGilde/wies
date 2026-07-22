@@ -51,6 +51,9 @@ class InlineEditConcurrencyTests(TestCase):
 
         assert response.status_code == 200
         self.assertContains(response, "door iemand anders gewijzigd")
+        # The form is swapped in by HTMX; the live region is what announces the
+        # warning to a screen reader.
+        self.assertContains(response, 'role="alert"')
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Concurrent Name"
 

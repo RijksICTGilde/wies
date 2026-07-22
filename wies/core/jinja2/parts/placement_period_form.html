@@ -9,26 +9,26 @@
      data-service-start="{{ obj.service.start_date.isoformat() if obj.service.start_date else '' }}"
      data-service-end="{{ obj.service.end_date.isoformat() if obj.service.end_date else '' }}">
   <c-layout-flow gap="md">
-  {{ form.period_source.as_widget(attrs={"style": "display:none", "data-period-source": ""}) }}
-  <div class="rvo-form-field">
-    <span class="rvo-label">Periode</span>
-    <label class="service-period-toggle">
-      <input type="checkbox"
-             id="placement-inherit-period"
-             {% if form.period_source.value() == "SERVICE" %}checked{% endif %}>
-      <span>Neem opdrachtperiode over</span>
-    </label>
-  </div>
-  <div class="rvo-form-field">
-    <label class="rvo-label" for="{{ form.specific_start_date.id_for_label }}">{{ form.specific_start_date.label }}</label>
-    {{ form.specific_start_date.as_widget(attrs={"data-specific-start": ""}) }}
-    {% for error in form.specific_start_date.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
-  </div>
-  <div class="rvo-form-field">
-    <label class="rvo-label" for="{{ form.specific_end_date.id_for_label }}">{{ form.specific_end_date.label }}</label>
-    {{ form.specific_end_date.as_widget(attrs={"data-specific-end": ""}) }}
-    {% for error in form.specific_end_date.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
-  </div>
+    {{ form.period_source.as_widget(attrs={"style": "display:none", "data-period-source": ""}) }}
+    <div class="rvo-form-field">
+      <span class="rvo-label">Periode</span>
+      <label class="service-period-toggle">
+        <input type="checkbox"
+               id="placement-inherit-period"
+               {% if form.period_source.value() == "SERVICE" %}checked{% endif %}>
+        <span>Neem opdrachtperiode over</span>
+      </label>
+    </div>
+    <div class="rvo-form-field">
+      <label class="rvo-label" for="{{ form.specific_start_date.id_for_label }}">{{ form.specific_start_date.label }}</label>
+      {{ form.specific_start_date.as_widget(attrs={"data-specific-start": ""}) }}
+      {% for error in form.specific_start_date.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
+    </div>
+    <div class="rvo-form-field">
+      <label class="rvo-label" for="{{ form.specific_end_date.id_for_label }}">{{ form.specific_end_date.label }}</label>
+      {{ form.specific_end_date.as_widget(attrs={"data-specific-end": ""}) }}
+      {% for error in form.specific_end_date.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
+    </div>
   </c-layout-flow>
 </div>
 <script src="{{ static('js/placement_period_toggle.js') }}"></script>

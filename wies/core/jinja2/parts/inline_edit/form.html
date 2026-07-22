@@ -19,20 +19,27 @@
       {% include editable.form_template %}
     {% else %}
       <c-layout-flow gap="{%- if multi -%}md{%- else -%}0{%- endif -%}">
-      {% for bound in form %}
-        <div class="rvo-form-field">
-          {% if multi and bound.label %}
-            <label class="rvo-label" for="{{ bound.id_for_label }}">{{ bound.label }}</label>
-          {% endif %}
-          {{ bound.as_widget(attrs={"autofocus": loop.first}) }}
-          {% for error in bound.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
-        </div>
-      {% endfor %}
+        {% for bound in form %}
+          <div class="rvo-form-field">
+            {% if multi and bound.label %}
+              <label class="rvo-label" for="{{ bound.id_for_label }}">{{ bound.label }}</label>
+            {% endif %}
+            {{ bound.as_widget(attrs={"autofocus": loop.first}) }}
+            {% for error in bound.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
       </c-layout-flow>
     {% endif %}
     {% for error in form.non_field_errors() %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
+    {# role="alert": the form is swapped in by HTMX, so without a live region a
+       screen reader would not announce that the save was held back. #}
     {% if alert %}
-      <c-alert kind="{{ alert.kind }}" class="rvo-margin-block-start--md rvo-margin-block-end--md">{{ alert.message }}</c-alert>
+      <div role="alert">
+        <c-alert kind="{{ alert.kind }}"
+                 class="rvo-margin-block-start--md rvo-margin-block-end--md">
+          {{ alert.message }}
+        </c-alert>
+      </div>
     {% endif %}
     <div class="field-actions">
       <c-button type="submit" kind="primary">

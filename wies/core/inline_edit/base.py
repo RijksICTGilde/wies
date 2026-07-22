@@ -181,18 +181,12 @@ class EditableSet:
     # Whether inline edits of this model are recorded as audit events.
     audit_events: bool = False
 
-    # Overrides the ``object_type`` stored on those events; defaults to the
-    # model's class name. Set it to keep the stored value stable across a model
-    # rename, so it keeps matching the events already written under the old name.
-    audit_object_type: str | None = None
-
     @classmethod
     def audit_type(cls) -> str | None:
         """The ``object_type`` for this model's audit events, or None when it is
-        not audited."""
-        if not cls.audit_events:
-            return None
-        return cls.audit_object_type or cls.model.__name__
+        not audited. It is stored on the event, so renaming the model would
+        orphan the events already written under the old name."""
+        return cls.model.__name__ if cls.audit_events else None
 
     @classmethod
     def resolve_dynamic(cls, name: str) -> Editable | EditableGroup | EditableCollection | None:

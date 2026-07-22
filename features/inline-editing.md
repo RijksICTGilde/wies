@@ -408,6 +408,14 @@ Two consequences when extending the engine:
 - Tests that POST to the endpoint must fetch the form first. Use
   `post_inline_edit` from `wies/core/tests/inline_edit_helpers.py`.
 
+The lock is taken on the object being edited, so two edits of the _same_
+object serialize. Edits of _different_ objects do not, even when they
+write the same rows: `AssignmentEditables.services` rewrites the
+placements of its assignment, while a period edit via the profile locks
+only that `Placement`. A team save can therefore still pass its check and
+then overwrite a placement edit that commits in between. The window is
+narrow and both writers go through a lock, but it is not closed.
+
 ## Audit events
 
 An `EditableSet` records audit events only when it sets
@@ -418,20 +426,13 @@ class AssignmentEditables(EditableSet):
     audit_events = True
 ```
 
-The event's `object_type` defaults to the model's class name. That value
-is persisted on existing events, so set `audit_object_type` to override it
-and keep it stable across a model rename:
+The event's `object_type` is the model's class name, and it is persisted
+on every event written, so renaming the model orphans the events already
+stored under the old name — migrate them along with the rename.
 
-```python
-class AssignmentEditables(EditableSet):
-    audit_events = True
-    audit_object_type = "Opdracht"   # only if it must differ from the class name
-```
-
-Today `AssignmentEditables` and `UserEditables` set `audit_events`;
-neither needs an override. Colleague, Service and Placement edits are not
-recorded under their own type — Placement instead mirrors onto its
-assignment, see below.
+Today `AssignmentEditables` and `UserEditables` set `audit_events`.
+Colleague, Service and Placement edits are not recorded under their own
+type — Placement instead mirrors onto its assignment, see below.
 
 ## Mirroring an edit onto another object's timeline
 
