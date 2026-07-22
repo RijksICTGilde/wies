@@ -73,7 +73,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read # checkout
-      security-events: write # upload SARIF to code scanning
+      security-events: write # upload SARIF to code scanning section
     steps:
       - name: Checkout
         uses: actions/checkout@v6
