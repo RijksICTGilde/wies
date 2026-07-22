@@ -9,11 +9,13 @@
 # result sets distinct in the Security tab.
 #
 # Design notes:
-#   - Uses aquasecurity/trivy-action, pinned to a full commit SHA (never a tag).
-#   - Every third-party action is pinned to a full commit SHA or major tag.
+#   - Uses aquasecurity/trivy-action, pinned to a full commit SHA (the trailing
+#     # vX.Y.Z comment records which release that SHA is).
 #   - Default permissions are empty; each job opts in to the minimum it needs.
 #   - The scan jobs have no access to deployment secrets.
-#   - Only HIGH/CRITICAL findings that have an available fix are reported.
+#   - Reports HIGH/CRITICAL findings (severity: HIGH,CRITICAL). Currently
+#     ignore-unfixed is false, so findings without an available fix are shown
+#     too — flip it to true to surface only actionable (fixable) findings.
 
 name: trivy
 
@@ -49,7 +51,7 @@ jobs:
           persist-credentials: false
 
       - name: Run Trivy filesystem scan
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: fs
           scan-ref: .
@@ -110,7 +112,7 @@ jobs:
           tags: wies:scan
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           scan-type: image
           image-ref: wies:scan
