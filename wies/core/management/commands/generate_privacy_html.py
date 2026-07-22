@@ -125,6 +125,13 @@ def render_privacy_template(markdown_source: str) -> str:
 def _djlint_format(content: str) -> str:
     """Format ``content`` with djlint to match the project's house style.
 
+    The ``--profile``/``--indent`` flags are passed explicitly and MUST stay in
+    sync with what the ``djlint-reformat-jinja`` pre-commit hook produces (see
+    ``.pre-commit-config.yaml``). djlint does not reliably read ``[tool.djlint]``
+    from ``pyproject.toml`` here, so relying on that config instead of these flags
+    yields a different indentation than the hook -- the hook then reformats the
+    generated file on commit and ``test_privacy_html_is_up_to_date`` fails.
+
     djlint exits non-zero when it makes changes (even with ``--reformat``), so
     we deliberately do not pass ``check=True``. The file is rewritten in place;
     we read it back and return the formatted text.
