@@ -15,6 +15,9 @@ This files lists the changes during the lifetime of this project.
 - 460: (migration)(add env vars) basic error monitoring — unhandled server errors (500) and failed background tasks are stored and shown on the statistics page, with a Mattermost notification.
 - 460: A failing task is marked failed immediately instead of hanging until timeout.
 - 493: (remove env vars) the background worker now runs on its own settings module (config.settings.worker) and no longer requires the OIDC credentials to be set at startup. locally worker now also uses its own dedicate .env file
+- 494: add trivy container scanning as recurring action
+- 482: veiligheidsmaatregel: de Content-Security-Policy voor scripts staat geen inline JavaScript meer toe (`script-src 'self'`). Alle scripts en klik-/toetsafhandeling zijn naar externe JS-bestanden verplaatst, zodat eventueel geïnjecteerde inline-JavaScript niet meer kan worden uitgevoerd. Inline stijlen blijven toegestaan.
+- 482: de htmx-geschiedeniscache staat nu op alle pagina's uit in plaats van alleen op het opdrachtenoverzicht en de plaatsingentabel; terugnavigeren haalt een pagina voortaan overal vers op.
 - 426: (migration) log the client IP and User-Agent on audit and login events (BIO device logging)
 
 ## 2026-07-20

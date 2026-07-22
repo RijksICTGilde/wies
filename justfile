@@ -85,7 +85,7 @@ test-django:
 
 # Run JavaScript tests
 test-js:
-  node --test "js_tests/**/*.test.js"
+  node --test js_tests/
 
 # Run linting checks
 lint:

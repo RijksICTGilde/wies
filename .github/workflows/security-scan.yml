@@ -1,0 +1,123 @@
+# Trivy scanning with results published to the repo's Security tab (Code scanning alerts).
+#
+# Two complementary jobs:
+#   - filesystem: scans the repo source for vulnerable deps, leaked secrets and
+#     IaC/config misconfigurations (Dockerfile, workflows, ...).
+#   - image: builds the deployed container and scans it, adding coverage of the
+#     OS package layer (Debian packages) that the filesystem scan can't see.
+# They overlap on Python dependency CVEs; separate SARIF categories keep the two
+# result sets distinct in the Security tab.
+#
+# Design notes:
+#   - Uses aquasecurity/trivy-action, pinned to a full commit SHA (the trailing
+#     # vX.Y.Z comment records which release that SHA is).
+#   - Default permissions are empty; each job opts in to the minimum it needs.
+#   - The scan jobs have no access to deployment secrets.
+#   - Reports only actionable findings: HIGH/CRITICAL (severity: HIGH,CRITICAL)
+#     that have a fix available (ignore-unfixed: true). Set ignore-unfixed to
+#     false to also surface CVEs with no released fix yet.
+
+name: trivy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly re-scan: new CVEs get published against code you haven't touched.
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+# Deny by default. Jobs grant themselves what they need.
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  filesystem:
+    name: Trivy (deps, secrets, IaC)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout
+      security-events: write # upload SARIF to code scanning
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          # Don't leave the GITHUB_TOKEN sitting in .git/config for later steps.
+          persist-credentials: false
+
+      - name: Run Trivy filesystem scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          scanners: vuln,secret,misconfig
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          # Apply the severity filter to the SARIF too. Without this the
+          # --severity flag only filters vulnerabilities; misconfig findings
+          # (e.g. LOW "no HEALTHCHECK") leak through into the results.
+          limit-severities-for-sarif: true
+          format: sarif
+          output: trivy-fs.sarif
+          exit-code: "0"
+          timeout: 10m
+
+      - name: Upload results to code scanning
+        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4
+        if: always()
+        with:
+          sarif_file: trivy-fs.sarif
+          category: trivy-fs
+
+  image:
+    name: Trivy (container image)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # checkout
+      security-events: write # upload SARIF to code scanning section
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Build the web image locally (no push) so Trivy can scan the same
+      # artifact that gets deployed. The worker target shares the django-run
+      # base, so its OS packages and Python deps are covered by this scan.
+      - name: Build web image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: web
+          push: false
+          load: true
+          tags: wies:scan
+
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: image
+          image-ref: wies:scan
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          # Apply the severity filter to the SARIF too (see filesystem job).
+          limit-severities-for-sarif: true
+          format: sarif
+          output: trivy-image.sarif
+          exit-code: "0"
+          timeout: 10m
+
+      - name: Upload results to code scanning
+        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4
+        if: always()
+        with:
+          sarif_file: trivy-image.sarif
+          category: trivy-image

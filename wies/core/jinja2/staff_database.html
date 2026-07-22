@@ -19,7 +19,7 @@
         <h2>Database leegmaken</h2>
         <p>Verwijder alle opdrachten, collega's, organisaties en labels. Gebruikers blijven behouden.</p>
         <form method="post"
-              onsubmit="return confirm('Weet je zeker dat je alle data wilt verwijderen?');">
+              data-confirm="Weet je zeker dat je alle data wilt verwijderen?">
           {{ get_csrf_hidden_input(request) }}
           <input type="hidden" name="action" value="clear_data">
           <c-button kind="warning-subtle" type="submit">Database leegmaken</c-button>
@@ -113,7 +113,7 @@
             </div>
           {% endfor %}
           <form method="post"
-                onsubmit="return confirm('Weet je zeker dat je deze opdrachten wilt samenvoegen? Dit kan niet ongedaan worden gemaakt.');">
+                data-confirm="Weet je zeker dat je deze opdrachten wilt samenvoegen? Dit kan niet ongedaan worden gemaakt.">
             {{ get_csrf_hidden_input(request) }}
             <input type="hidden" name="action" value="merge_duplicates_apply">
             <c-button kind="primary" type="submit">Samenvoegen bevestigen</c-button>

@@ -3,13 +3,13 @@
         closedby="none"
         id="side_panel">
   <div class="side-panel__header">
-    <c-button kind="tertiary" size="md" icon="terug" iconPlacement="before" type="button" @click="panelBack()">
+    <c-button kind="tertiary" size="md" icon="terug" iconPlacement="before" type="button" data-action="side-panel-back">
     Terug
     </c-button>
     <button autofocus
             type="button"
             class="modal-close-button"
-            onclick="closeSidePanel()">×</button>
+            data-action="side-panel-close">×</button>
   </div>
   <div id="side_panel-content" class="rvo-dialog__content">{% include panel_data.panel_content_template %}</div>
 </dialog>
