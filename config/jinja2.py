@@ -1,4 +1,5 @@
 from datetime import date
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.messages import get_messages
@@ -52,6 +53,22 @@ def datum_nl(datum, fmt="N Y"):
         except ValueError:
             return datum
     return date_format(datum, fmt)
+
+
+NL_TIMEZONE = ZoneInfo("Europe/Amsterdam")
+
+
+def datetime_nl(dt, fmt="%Y-%m-%d %H:%M:%S"):
+    """Format a timezone-aware datetime in Dutch local time (Europe/Amsterdam).
+
+    The project stores times in UTC (TIME_ZONE=UTC); this converts to the local
+    zone for display, honouring daylight saving.
+    """
+    if dt is None:
+        return ""
+    if timezone.is_aware(dt):
+        dt = dt.astimezone(NL_TIMEZONE)
+    return dt.strftime(fmt)
 
 
 def tijdgeleden(dt):
@@ -157,6 +174,7 @@ def environment(**options):
         }
     )
     env.filters["datum_nl"] = datum_nl
+    env.filters["datetime_nl"] = datetime_nl
     env.filters["tijdgeleden"] = tijdgeleden
     env.filters["json_script"] = json_script
     env.filters["parse_message_link"] = parse_message_link

@@ -54,6 +54,12 @@ LOGGING = {
         "console": {
             "class": "logging.StreamHandler",
         },
+        # Persists unhandled 500s + background task failures as ErrorEvent rows
+        # and posts a Mattermost notification. See wies/core/monitoring/.
+        "error_reporting": {
+            "class": "wies.core.monitoring.ErrorReportingHandler",
+            "level": "ERROR",
+        },
     },
     "root": {
         "handlers": ["console"],
@@ -62,6 +68,20 @@ LOGGING = {
     "loggers": {
         "django": {
             "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        # Unhandled request exceptions (500s). Django logs these at ERROR with
+        # exc_info + the request attached; 404s/403s are below ERROR so they are
+        # not captured.
+        "django.request": {
+            "handlers": ["console", "error_reporting"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+        # App-level errors, including db_worker task failures.
+        "wies": {
+            "handlers": ["console", "error_reporting"],
             "level": "INFO",
             "propagate": False,
         },
