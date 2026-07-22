@@ -18,8 +18,8 @@ This files lists the changes during the lifetime of this project.
 - 494: add trivy container scanning as recurring action
 - 482: veiligheidsmaatregel: de Content-Security-Policy voor scripts staat geen inline JavaScript meer toe (`script-src 'self'`). Alle scripts en klik-/toetsafhandeling zijn naar externe JS-bestanden verplaatst, zodat eventueel geïnjecteerde inline-JavaScript niet meer kan worden uitgevoerd. Inline stijlen blijven toegestaan.
 - 482: de htmx-geschiedeniscache staat nu op alle pagina's uit in plaats van alleen op het opdrachtenoverzicht en de plaatsingentabel; terugnavigeren haalt een pagina voortaan overal vers op.
-- TODO: bump dev/CI dependencies and GitHub Actions
-- TODO: the production images (web/worker) no longer contain dev/test tooling, reducing the runtime attack surface
+- 497: bumped dev/CI dependencies and GitHub Actions
+- 497: the production images (web/worker) no longer contain dev/test tooling, reducing the runtime attack surface
 
 ## 2026-07-20
 
