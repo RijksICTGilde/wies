@@ -12,6 +12,8 @@ This files lists the changes during the lifetime of this project.
 - 486: the opdracht and user CSV imports now show a graceful error message instead of a 500 when a value is too long for its field or the file is not valid CSV.
 - 479: fix the "Wie zit waar?" and Gebruikers overviews returning a 500 error and showing "Wis filters" when the labels filter contained a non-numeric value in the URL; such a value is now ignored, just like the organization and role filters.
 - 491: PR preview environments are now reliably removed when a PR closes, preview images build on every push regardless of merge conflicts or CI status, previews also build when a draft PR is marked ready for review, and a preview can be rebuilt manually from the Actions UI; the weekly registry cleanup of old preview images is fixed
+- 460: (migration)(add env vars) basic error monitoring — unhandled server errors (500) and failed background tasks are stored and shown on the statistics page, with a Mattermost notification.
+- 460: A failing task is marked failed immediately instead of hanging until timeout.
 - 493: (remove env vars) the background worker now runs on its own settings module (config.settings.worker) and no longer requires the OIDC credentials to be set at startup. locally worker now also uses its own dedicate .env file
 
 ## 2026-07-20

@@ -39,5 +39,13 @@
              style="height: {{ (count / usage.max_daily * 100) if usage.max_daily else 0 }}%"></div>
       {% endfor %}
     </div>
+    <c-h2>Recente foutmeldingen</c-h2>
+    <div id="error_table_container"
+         class="rvo-table-container"
+         hx-get="{{ url('error-table') }}"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+      <span class="rvo-text rvo-text--subtle">Foutmeldingen laden...</span>
+    </div>
   </div>
 {% endblock content %}

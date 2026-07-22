@@ -37,6 +37,8 @@ services:
       - .:/app:z
     command: python manage.py db_worker
     env_file: .env.worker
+    environment:
+      APP_VERSION: ${APP_VERSION:-}
     depends_on:
       postgres:
         condition: service_healthy

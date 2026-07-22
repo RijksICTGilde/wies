@@ -11,6 +11,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
@@ -49,6 +50,7 @@ from .models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    ErrorEvent,
     Event,
     Label,
     LabelCategory,
@@ -395,9 +397,51 @@ def staff_required(view_func):
     return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
 
 
+ERRORS_PER_PAGE = 10
+
+
 @staff_required
 def staff_dashboard(request):
+    # The error table is loaded separately via HTMX (see the error-table endpoint).
     return render(request, "staff_dashboard.html", {"usage": get_usage_stats()})
+
+
+def _render_error_table(request, page_number):
+    """Render the paginated error table fragment for the given page."""
+    paginator = Paginator(ErrorEvent.objects.select_related("user"), ERRORS_PER_PAGE)
+    page_obj = paginator.get_page(page_number)
+
+    def page_url(number):
+        return f"{reverse('error-table')}?pagina={number}"
+
+    context = {
+        "object_list": page_obj.object_list,
+        "page_obj": page_obj,
+        "previous_page_url": page_url(page_obj.previous_page_number()) if page_obj.has_previous() else None,
+        "next_page_url": page_url(page_obj.next_page_number()) if page_obj.has_next() else None,
+    }
+    return render(request, "parts/error_table.html", context)
+
+
+@staff_required
+def error_table(request):
+    """Paginated error table fragment, loaded via HTMX by the dashboard."""
+    return _render_error_table(request, request.GET.get("pagina"))
+
+
+@staff_required
+def error_detail(request, pk):
+    """Full detail page for a single error (traceback etc.), staff-only."""
+    error = get_object_or_404(ErrorEvent, pk=pk)
+    return render(request, "error_detail.html", {"error": error})
+
+
+@staff_required
+@require_POST
+def delete_error(request, pk):
+    """Delete a single handled error and return the refreshed current page of the table."""
+    ErrorEvent.objects.filter(pk=pk).delete()
+    return _render_error_table(request, request.GET.get("pagina"))
 
 
 @staff_required
