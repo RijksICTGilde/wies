@@ -8,9 +8,7 @@
        form.non_field_errors() so its "voeg minimaal één dienst toe" message
        surfaces alongside formset-level errors.
 #}
-<p>
-  Voeg een aanvraag toe voor een openstaande plek, of een plaatsing als de consultant al bekend is.
-</p>
+<p>Voeg een aanvraag toe voor een openstaande plek, of een plaatsing als de consultant al bekend is.</p>
 {{ formset.management_form }}
 {% set _extra_errors = extra_errors if extra_errors is defined else [] %}
 {% if formset.non_form_errors() or _extra_errors %}
@@ -31,16 +29,6 @@
   {% endfor %}
 </div>
 <div class="service-add-buttons">
-  <nldd-button type="button"
-               variant="secondary"
-               text="Aanvraag toevoegen"
-               start-icon="plus"
-               size="sm"
-               data-add-service="aanvraag"></nldd-button>
-  <nldd-button type="button"
-               variant="secondary"
-               text="Geplaatste consultant toevoegen"
-               start-icon="plus"
-               size="sm"
-               data-add-service="ingevuld"></nldd-button>
+  <nldd-button type="button" variant="secondary" text="Aanvraag toevoegen" start-icon="plus" size="sm" data-add-service="aanvraag"></nldd-button>
+  <nldd-button type="button" variant="secondary" text="Geplaatste consultant toevoegen" start-icon="plus" size="sm" data-add-service="ingevuld"></nldd-button>
 </div>

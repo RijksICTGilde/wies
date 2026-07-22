@@ -3,31 +3,32 @@
    de selectie wordt pas toegepast op "Filter toepassen". Sluiten (×/Escape/
    Annuleren) verwerpt de wijzigingen. #}
 {% set group = (filter_groups | selectattr('group_id', 'equalto', filter_modal_group_id) | list | first) %}
-<nldd-window id="nldd-filter-options-modal" accessible-label="{{ group.label if group else 'Filter' }}" width="640px" height="600px"
-             data-group-name="{{ group.name if group else '' }}"
-             data-group-id="{{ group.group_id if group else '' }}">
-  <nldd-page sticky-header sticky-footer>
-    <nldd-top-title-bar slot="header" text="{{ group.label if group else 'Filter' }}" dismiss-text="Sluiten"></nldd-top-title-bar>
-    <div class="nldd-filter-options-modal__body">
-      <nldd-search-field id="filter-options-search" placeholder="Zoeken…" aria-label="Zoeken op {{ group.label if group else '' }}"></nldd-search-field>
-      <div class="nldd-filter-options-modal__list" id="filter-options-list">
-        {% if group %}
-          {% for option in group.options if option.value %}
-            <label class="nldd-filter-options-modal__option" data-option-label="{{ option.label | lower }}">
-              <input type="checkbox" class="nldd-filter-options-modal__checkbox" value="{{ option.value }}"
-                     {% if option.value in group.selected_values %}checked{% endif %}>
-              <span class="nldd-filter-options-modal__option-text">{{ option.label }}</span>
-              {% if option.count is defined %}<span class="nldd-filter-option__count">{{ option.count }}</span>{% endif %}
-            </label>
-          {% endfor %}
-        {% endif %}
-      </div>
-    </div>
-    <nldd-container slot="footer" padding-inline="16" padding-bottom="16">
-      <nldd-button-group orientation="horizontal">
-        <nldd-button variant="primary" text="Filter toepassen" id="filter-options-apply-btn"></nldd-button>
-        <nldd-button variant="secondary" text="Annuleren" data-nldd-action="filter-options-close"></nldd-button>
-      </nldd-button-group>
-    </nldd-container>
-  </nldd-page>
+<nldd-window id="nldd-filter-options-modal" accessible-label="{{ group.label if group else 'Filter' }}" width="640px" height="600px" data-group-name="{{ group.name if group else '' }}" data-group-id="{{ group.group_id if group else '' }}">
+<nldd-page sticky-header sticky-footer>
+<nldd-top-title-bar slot="header" text="{{ group.label if group else 'Filter' }}" dismiss-text="Sluiten"></nldd-top-title-bar>
+<div class="nldd-filter-options-modal__body">
+  <nldd-search-field id="filter-options-search" placeholder="Zoeken…" aria-label="Zoeken op {{ group.label if group else '' }}"></nldd-search-field>
+  <div class="nldd-filter-options-modal__list" id="filter-options-list">
+    {% if group %}
+      {% for option in group.options if option.value %}
+        <label class="nldd-filter-options-modal__option"
+               data-option-label="{{ option.label | lower }}">
+          <input type="checkbox"
+                 class="nldd-filter-options-modal__checkbox"
+                 value="{{ option.value }}"
+                 {% if option.value in group.selected_values %}checked{% endif %}>
+          <span class="nldd-filter-options-modal__option-text">{{ option.label }}</span>
+          {% if option.count is defined %}<span class="nldd-filter-option__count">{{ option.count }}</span>{% endif %}
+        </label>
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+<nldd-container slot="footer" padding-inline="16" padding-bottom="16">
+<nldd-button-group orientation="horizontal">
+<nldd-button variant="primary" text="Filter toepassen" id="filter-options-apply-btn"></nldd-button>
+<nldd-button variant="secondary" text="Annuleren" data-nldd-action="filter-options-close"></nldd-button>
+</nldd-button-group>
+</nldd-container>
+</nldd-page>
 </nldd-window>

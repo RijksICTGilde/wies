@@ -6,7 +6,7 @@
       {% set _variant = 'success' if 'success' in message.tags else 'critical' if 'error' in message.tags else 'neutral' %}
       {% if link %}
         <nldd-banner variant="{{ _variant }}" text="{{ message }}">
-          <nldd-rich-text><a href="{{ link.url }}">{{ link.text }}</a></nldd-rich-text>
+        <nldd-rich-text><a href="{{ link.url }}">{{ link.text }}</a></nldd-rich-text>
         </nldd-banner>
       {% else %}
         <nldd-banner variant="{{ _variant }}" text="{{ message }}"></nldd-banner>

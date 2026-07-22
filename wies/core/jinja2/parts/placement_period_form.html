@@ -23,12 +23,14 @@
         </label>
       </div>
       <div class="nldd-form-field">
-        <label class="nldd-form-field__label" for="{{ form.specific_start_date.id_for_label }}">{{ form.specific_start_date.label }}</label>
+        <label class="nldd-form-field__label"
+               for="{{ form.specific_start_date.id_for_label }}">{{ form.specific_start_date.label }}</label>
         {{ form.specific_start_date.as_widget(attrs={"data-specific-start": ""}) }}
         {% for error in form.specific_start_date.errors %}<p class="nldd-form-field__error-text">{{ error }}</p>{% endfor %}
       </div>
       <div class="nldd-form-field">
-        <label class="nldd-form-field__label" for="{{ form.specific_end_date.id_for_label }}">{{ form.specific_end_date.label }}</label>
+        <label class="nldd-form-field__label"
+               for="{{ form.specific_end_date.id_for_label }}">{{ form.specific_end_date.label }}</label>
         {{ form.specific_end_date.as_widget(attrs={"data-specific-end": ""}) }}
         {% for error in form.specific_end_date.errors %}<p class="nldd-form-field__error-text">{{ error }}</p>{% endfor %}
       </div>

@@ -1,87 +1,61 @@
 {# NDD filter chips + table container — outer container blijft hetzelfde id
 zodat HTMX outerHTML-swap correct gaat. nldd-top-title-bar wordt alleen op
 initial render meegestuurd (slot=header van nldd-page); bij HTMX swap blijft de
-title-bar staan. #} {% if not request.headers.get("HX-Request") %}
-<nldd-container padding="16">
+title-bar staan. #}
+{% if not request.headers.get("HX-Request") %}
+  <nldd-container padding="16">
   <div class="nldd-search-row">
-    <nldd-button
-      id="nldd-sidebar-toggle"
-      variant="secondary"
-      start-icon="chevron-left"
-      end-icon="list-decreasing-lines"
-      text="Filters"
-    >
+    <nldd-button id="nldd-sidebar-toggle" variant="secondary" start-icon="chevron-left" end-icon="list-decreasing-lines" text="Filters">
     </nldd-button>
     <div class="nldd-search-field-wrap">
-      <nldd-search-field
-        id="nldd-search-input"
-        show-search-button
-        placeholder="Zoek op collega, opdracht of opdrachtgever…"
-        value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}"
-        data-nldd-search-input
-        class="nldd-search-row__field"
-      >
+      <nldd-search-field id="nldd-search-input" show-search-button placeholder="Zoek op collega, opdracht of opdrachtgever…" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-nldd-search-input class="nldd-search-row__field">
       </nldd-search-field>
-      <div
-        id="nldd-search-suggestions"
-        class="nldd-search-suggestions-container"
-      ></div>
+      <div id="nldd-search-suggestions"
+           class="nldd-search-suggestions-container"></div>
     </div>
   </div>
-</nldd-container>
+  </nldd-container>
 {% endif %}
 <div id="nldd-filter-and-table-container">
-  {# Resultaten + actieve filter tokens #} {% set has_active_filters =
-  (org_chip_data|length > 0) or search_filter or (active_filters|length > 0) %}
+  {# Resultaten + actieve filter tokens #} {% set has_active_filters = (org_chip_data|length > 0) or search_filter or (active_filters|length > 0) %}
   <div class="nldd-results-bar">
     <p class="nldd-results-bar__count">
       <strong>{{ paginator.count }}</strong>
       {{ "resultaat" if paginator.count == 1 else "resultaten" }}
     </p>
     {% if has_active_filters %}
-    <div class="nldd-filter-tokens">
-      {% for chip in org_chip_data %}
-      <nldd-token
-        control="dismiss"
-        dismiss-text="Verwijder filter {{ chip.label }}"
-        data-nldd-dismiss="filter"
-        data-filter-name="{{ chip.param_name }}"
-        data-filter-value="{{ chip.param_value }}"
-        >{{ chip.label }}</nldd-token
-      >
-      {% endfor %} {% if search_filter %}
-      <nldd-token
-        control="dismiss"
-        dismiss-text="Verwijder zoekopdracht"
-        data-nldd-dismiss="filter"
-        data-filter-name="zoek"
-        >{{ search_filter }}</nldd-token
-      >
-      {% endif %} {% for filter_group in filter_groups %} {% if
-      filter_group.type == 'select-multi' %} {% set values =
-      active_filters.get(filter_group.name) %} {% if values %} {% for
-      selected_value in values %} {% for option in filter_group.options %} {% if
-      option.value == selected_value %}
-      <nldd-token
-        control="dismiss"
-        dismiss-text="Verwijder filter {{ option.label }}"
-        data-nldd-dismiss="filter"
-        data-filter-name="{{ filter_group.name }}"
-        data-filter-value="{{ selected_value }}"
-        >{{ option.label }}</nldd-token
-      >
-      {% endif %} {% endfor %} {% endfor %} {% endif %} {% endif %} {% endfor %}
-      <button type="button" class="nldd-clear-all-filters" data-nldd-clear-all>
-        Wis alle filters
-      </button>
-    </div>
+      <div class="nldd-filter-tokens">
+        {% for chip in org_chip_data %}
+          <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ chip.label }}" data-nldd-dismiss="filter" data-filter-name="{{ chip.param_name }}" data-filter-value="{{ chip.param_value }}">{{ chip.label }}</nldd-token>
+        {% endfor %}
+        {% if search_filter %}
+          <nldd-token control="dismiss" dismiss-text="Verwijder zoekopdracht" data-nldd-dismiss="filter" data-filter-name="zoek">{{ search_filter }}</nldd-token>
+        {% endif %}
+        {% for filter_group in filter_groups %}
+          {% if
+            filter_group.type == 'select-multi' %}
+            {% set values = active_filters.get(filter_group.name) %}
+            {% if values %}
+              {% for
+                selected_value in values %}
+                {% for option in filter_group.options %}
+                  {% if
+                    option.value == selected_value %}
+                    <nldd-token control="dismiss" dismiss-text="Verwijder filter {{ option.label }}" data-nldd-dismiss="filter" data-filter-name="{{ filter_group.name }}" data-filter-value="{{ selected_value }}">{{ option.label }}</nldd-token>
+                  {% endif %}
+                {% endfor %}
+              {% endfor %}
+            {% endif %}
+          {% endif %}
+        {% endfor %}
+        <button type="button" class="nldd-clear-all-filters" data-nldd-clear-all>Wis alle filters</button>
+      </div>
     {% endif %}
   </div>
   {% include "parts/placement_table.html" %}
 </div>
 {# OOB swap: re-render hele filter form zodat counts + checkbox state up-to-date
-zijn #} {% if render_filter_fields_oob %}
-<div hx-swap-oob="outerHTML:#nldd-filter-form">
-  {% include "parts/filter_sidebar.html" %}
-</div>
+zijn #}
+{% if render_filter_fields_oob %}
+  <div hx-swap-oob="outerHTML:#nldd-filter-form">{% include "parts/filter_sidebar.html" %}</div>
 {% endif %}
