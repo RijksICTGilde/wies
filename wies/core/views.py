@@ -1,3 +1,4 @@
+import json
 import logging
 import urllib.parse
 from collections import Counter
@@ -115,7 +116,8 @@ def get_delete_context(delete_url_name, object_pk, object_name):
 
 
 # Query params that drive the side panel; stripped when (re)building a page URL.
-PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing")
+# ``bewerken`` zet het plaatsingspaneel in de bewerkstand (de child sheet).
+PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken")
 
 
 def _url_drop_params(path, query, names, **overrides):
@@ -361,6 +363,10 @@ def _build_placement_panel_data(placement, request, *, visibility=None):
         "colleague": colleague,
         "service": service,
         "assignment_card": assignment_card,
+        # Eén "Bewerken"-knop opent de child sheet; hij verschijnt alleen als er
+        # ook echt iets te bewerken valt.
+        "user_can_edit_details": bool(_placement_edit_specs(placement, request.user)),
+        "edit_panel_url": _build_panel_url(request, plaatsing=placement.id, bewerken=1),
     }
 
 
@@ -383,7 +389,14 @@ def _resolve_placement_panel(request, placement_id):
     )
     if not result.visible:
         return None
-    return _build_placement_panel_data(placement, request, visibility=result)
+    panel_data = _build_placement_panel_data(placement, request, visibility=result)
+    if request.GET.get("bewerken"):
+        edit_panel = _build_placement_edit_panel_data(placement, request)
+        # Zonder bewerkrechten valt ?bewerken= terug op het leespaneel in plaats
+        # van een lege of verboden sheet.
+        if edit_panel is not None:
+            panel_data.update(edit_panel)
+    return panel_data
 
 
 @login_not_required  # page cannot require login because you land on this after unsuccesful login
@@ -861,17 +874,13 @@ class PlacementListView(ListView):
             if self.request.GET.get("filter_modal"):
                 return ["parts/filter_options_modal.html"]
             hx_target = self.request.headers.get("HX-Target", "")
-            if hx_target in ("nldd-side-panel-content", "side_panel-content", "side_panel-container"):
-                placement_id = self.request.GET.get("plaatsing")
-                colleague_id = self.request.GET.get("collega")
-                assignment_id = self.request.GET.get("opdracht")
-
-                if placement_id:
-                    return ["parts/placement_panel_content.html"]
-                if colleague_id and not assignment_id:
-                    return ["parts/colleague_panel_content.html"]
-                if assignment_id:
-                    return ["parts/assignment_panel_content.html"]
+            if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container"):
+                # panel_data kiest zijn eigen sjabloon (o.a. de bewerk-child-sheet);
+                # get_context_data heeft het hier al klaargezet.
+                panel_data = getattr(self, "_panel_data", None)
+                if panel_data:
+                    return [panel_data["panel_content_template"]]
+                return ["parts/placement_panel_content.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/placement_table_rows.html"]
             return ["parts/filter_and_table_container.html"]
@@ -1084,6 +1093,9 @@ class PlacementListView(ListView):
                 context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
             except Assignment.DoesNotExist:
                 pass
+        # get_context_data draait vóór get_template_names, dus die kan hier het
+        # paneelsjabloon uit aflezen in plaats van het opnieuw af te leiden.
+        self._panel_data = context.get("panel_data")
         return context
 
 
@@ -1092,24 +1104,8 @@ class PlacementListNDDView(PlacementListView):
 
     template_name = "placements.html"
 
-    def get_template_names(self) -> list[str]:
-        if "HX-Request" in self.request.headers:
-            if self.request.GET.get("filter_modal"):
-                return ["parts/filter_options_modal.html"]
-            if self.request.headers.get("HX-Target") == "nldd-side-panel-content":
-                placement_id = self.request.GET.get("plaatsing")
-                colleague_id = self.request.GET.get("collega")
-                assignment_id = self.request.GET.get("opdracht")
-                if placement_id:
-                    return ["parts/placement_panel_content.html"]
-                if colleague_id and not assignment_id:
-                    return ["parts/colleague_panel_content.html"]
-                if assignment_id:
-                    return ["parts/assignment_panel_content.html"]
-            if self.request.GET.get("pagina"):
-                return ["parts/placement_table_rows.html"]
-            return ["parts/filter_and_table_container.html"]
-        return ["placements.html"]
+    # get_template_names komt van PlacementListView: die kiest het paneelsjabloon
+    # al uit panel_data, dus deze klasse hoefde dat niet te herhalen.
 
     def get_context_data(self, **kwargs: object) -> dict:
         context = super().get_context_data(**kwargs)
@@ -1203,14 +1199,11 @@ class AssignmentListView(ListView):
             if self.request.GET.get("filter_modal"):
                 return ["parts/filter_options_modal.html"]
             hx_target = self.request.headers.get("HX-Target", "")
-            if hx_target in ("nldd-side-panel-content", "side_panel-content", "side_panel-container"):
-                colleague_id = self.request.GET.get("collega")
-                assignment_id = self.request.GET.get("opdracht")
-                placement_id = self.request.GET.get("plaatsing")
-                if placement_id:
-                    return ["parts/placement_panel_content.html"]
-                if colleague_id and not assignment_id:
-                    return ["parts/colleague_panel_content.html"]
+            if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container"):
+                # Zie PlacementListView.get_template_names.
+                panel_data = getattr(self, "_panel_data", None)
+                if panel_data:
+                    return [panel_data["panel_content_template"]]
                 return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
                 return ["parts/assignment_card_rows.html"]
@@ -1387,6 +1380,8 @@ class AssignmentListView(ListView):
             except Assignment.DoesNotExist:
                 pass
 
+        # Zie PlacementListView.get_context_data: get_template_names leest dit.
+        self._panel_data = context.get("panel_data")
         return context
 
 
@@ -1399,12 +1394,8 @@ class AssignmentListNDDView(AssignmentListView):
         if "HX-Request" in self.request.headers:
             if self.request.GET.get("filter_modal"):
                 return ["parts/filter_options_modal.html"]
-            if self.request.headers.get("HX-Target") == "nldd-side-panel-content":
-                colleague_id = self.request.GET.get("collega")
-                assignment_id = self.request.GET.get("opdracht")
-                if colleague_id and not assignment_id:
-                    return ["parts/colleague_panel_content.html"]
-                return ["parts/assignment_panel_content.html"]
+            if self.request.headers.get("HX-Target") == "side-panel-content":
+                return super().get_template_names()
             if self.request.GET.get("pagina"):
                 return ["parts/assignment_card_rows.html"]
             return ["parts/filter_and_card_container_assignments.html"]
@@ -2369,7 +2360,7 @@ def user_profile_ndd(request):
     # HTMX partial responses for panel swaps
     if "HX-Request" in request.headers:
         hx_target = request.headers.get("HX-Target")
-        if hx_target == "nldd-side-panel-content" and panel_data:
+        if hx_target == "side-panel-content" and panel_data:
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
     # Build label data per category for the data list rows
@@ -2765,7 +2756,7 @@ def user_profile(request):
     # HTMX partial responses for panel swaps
     if "HX-Request" in request.headers:
         hx_target = request.headers.get("HX-Target")
-        if hx_target in ("nldd-side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
+        if hx_target in ("side-panel-content", "side_panel-content", "side_panel-container") and panel_data:
             return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
 
     # Build label data per category for the data list rows
@@ -3540,3 +3531,151 @@ def inline_edit_view(request, model_label, pk, name):
             form_cls(initial=initial),
         )
     return _render_inline_edit_display(request, editable_set, spec, editables, obj)
+
+
+# --- Plaatsing bewerken (child sheet) ---------------------------------------
+#
+# Het plaatsingspaneel bewerkt drie dingen die over TWEE modellen verdeeld zijn:
+# Service.skill, Service.description en de Placement.period-groep. Een
+# EditableGroup kan dat niet dekken (die hoort bij één model), dus bouwen we hier
+# één formulier uit de losse specs en hergebruiken we per spec de bestaande
+# save- en audit-machinerie van inline_edit_view.
+
+
+def _placement_edit_specs(placement, user):
+    """De bewerkbare specs voor dit plaatsingspaneel, elk met hun eigen object.
+
+    Alleen specs waarvoor de gebruiker UPDATE-rechten heeft komen terug, zodat
+    het formulier nooit een veld toont dat bij opslaan geweigerd zou worden.
+    """
+    from wies.core.editables.placement import PlacementEditables  # noqa: PLC0415 — avoids import cycle
+    from wies.core.editables.service import ServiceEditables  # noqa: PLC0415
+
+    service = placement.service
+    candidates = [
+        (ServiceEditables, ServiceEditables.skill, service),
+        (ServiceEditables, ServiceEditables.description, service),
+        (PlacementEditables, PlacementEditables.period, placement),
+    ]
+    return [(s, spec, obj) for (s, spec, obj) in candidates if has_permission(Verb.UPDATE, obj, user, spec)]
+
+
+def _placement_edit_form_class(specs, *, bound_obj=None):
+    """Eén formulierklasse over alle toegestane specs, plus de initial-waarden.
+
+    De veldnamen van de drie specs botsen niet, dus ze kunnen plat in één
+    formulier. De clean van de periodegroep blijft gelden.
+    """
+    editables: list[Editable] = []
+    initial: dict = {}
+    group_clean = None
+    for editable_set, spec, obj in specs:
+        spec_editables = resolve_editables(editable_set, spec)
+        editables.extend(spec_editables)
+        for e in spec_editables:
+            initial[e.field or e.name] = _current_value(obj, e)
+        if getattr(spec, "clean", None):
+            group_clean = spec.clean
+    form_cls, _ = build_form_class(editables, obj=bound_obj, group_clean=group_clean)
+    return form_cls, initial
+
+
+def _save_placement_edit(request, placement, specs, cleaned_data):
+    """Sla alle specs op in één transactie, met dezelfde audit-events als inline edit."""
+    from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids import cycle
+    from wies.core.inline_edit.forms import save_spec  # noqa: PLC0415
+
+    placement_before = placement_audit_row(placement)
+    with transaction.atomic():
+        for editable_set, spec, obj in specs:
+            spec_editables = resolve_editables(editable_set, spec)
+            if isinstance(spec, EditableGroup):
+                before = {e.name: _current_value(obj, e) for e in spec_editables}
+            else:
+                before = _current_value(obj, spec)
+            save_spec(spec, spec_editables, cleaned_data, obj)
+            if isinstance(spec, EditableGroup):
+                after = {e.name: _current_value(obj, e) for e in spec_editables}
+            else:
+                after = _current_value(obj, spec)
+            _emit_inline_edit_audit_event(
+                spec,
+                obj,
+                before,
+                after,
+                request.user,
+                child_editables=spec_editables if isinstance(spec, EditableGroup) else None,
+            )
+        # Een plaatsingswijziging heeft geen eigen audit-type; spiegel hem op de
+        # tijdlijn van de opdracht, net als de "Team bewerken"-flow (#393).
+        placement.refresh_from_db()
+        _emit_placement_change_on_assignment(placement, placement_before, request.user)
+
+
+def _safe_return_path(raw: str | None, fallback: str) -> str:
+    """Alleen een pad op deze site; anders de fallback.
+
+    De waarde komt uit een hidden input, dus hij is door de client te sturen.
+    Hij belandt in HX-Push-Url (alleen de adresbalk, geen navigatie), maar een
+    protocol-relative "//host" zou daar alsnog een vreemde origin tonen.
+    """
+    if raw and raw.startswith("/") and not raw.startswith("//"):
+        return raw
+    return fallback
+
+
+@require_POST
+def placement_edit_view(request, pk):
+    """Sla het gecombineerde bewerkformulier van de plaatsing-child-sheet op.
+
+    Bij succes stuurt deze view de client via HX-Location terug naar de
+    ouder-URL; die rendert het paneel opnieuw via de gewone panel-route. Zelf het
+    ouderpaneel renderen kan niet: alle paneel-URL's worden uit ``request.path``
+    opgebouwd, en dat is hier het POST-pad. De knoppen in dat paneel wezen dan
+    naar deze endpoint, die met GET een leeg gebonden formulier opleverde — en
+    opslaan wiste vervolgens de velden.
+
+    Bij fouten komt het formulier opnieuw, met meldingen. POST-only, zodat een
+    GET nooit een leeg formulier kan tonen.
+    """
+    placement = (
+        Placement.objects.select_related("colleague", "service__assignment", "service__skill").filter(pk=pk).first()
+    )
+    if placement is None or _resolve_placement_panel(request, pk) is None:
+        raise Http404("Unknown placement")
+
+    specs = _placement_edit_specs(placement, request.user)
+    if not specs:
+        return HttpResponseForbidden()
+
+    fallback = _build_panel_url(request, plaatsing=placement.id)
+    return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
+
+    form_cls, _ = _placement_edit_form_class(specs)
+    form = form_cls(request.POST)
+    if not form.is_valid():
+        panel_data = _build_placement_panel_data(placement, request)
+        panel_data["form"] = form
+        panel_data["parent_url"] = return_path
+        panel_data["edit_url"] = reverse("placement-edit", args=[placement.id])
+        return render(request, "parts/placement_edit_panel_content.html", {"panel_data": panel_data})
+
+    _save_placement_edit(request, placement, specs, form.cleaned_data)
+
+    response = HttpResponse(status=204)
+    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
+    return response
+
+
+def _build_placement_edit_panel_data(placement, request):
+    """Context voor de bewerk-child-sheet, of None zonder bewerkrechten."""
+    specs = _placement_edit_specs(placement, request.user)
+    if not specs:
+        return None
+    form_cls, initial = _placement_edit_form_class(specs)
+    return {
+        "panel_content_template": "parts/placement_edit_panel_content.html",
+        "form": form_cls(initial=initial),
+        "parent_url": _url_drop_params(request.path, request.GET, ("bewerken",)),
+        "edit_url": reverse("placement-edit", args=[placement.id]),
+    }

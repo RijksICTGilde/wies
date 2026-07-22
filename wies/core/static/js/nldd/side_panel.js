@@ -22,8 +22,16 @@
     });
   });
 
-  const SHEET_ID = "nldd-side-panel";
-  const CONTENT_ID = "nldd-side-panel-content";
+  const SHEET_ID = "side-panel";
+  const CONTENT_ID = "side-panel-content";
+  // Queryparams die een paneel openen (spiegelt PANEL_PARAMS in views.py, minus
+  // 'pagina' dat over de lijst gaat). 'bewerken' hangt aan 'plaatsing' en opent
+  // dus nooit op zichzelf een paneel.
+  const PANEL_PARAMS = ["collega", "opdracht", "plaatsing"];
+
+  function hasPanelParam(url) {
+    return PANEL_PARAMS.some((name) => url.searchParams.has(name));
+  }
 
   const panelStack = [];
   let _skipNextPush = false;
@@ -73,8 +81,8 @@
     closeSheet();
     clearContent();
     const url = new URL(window.location);
-    url.searchParams.delete("collega");
-    url.searchParams.delete("opdracht");
+    PANEL_PARAMS.forEach((name) => url.searchParams.delete(name));
+    url.searchParams.delete("bewerken");
     history.replaceState({}, "", url.toString());
   }
 
@@ -82,7 +90,7 @@
     if (panelStack.length > 0) {
       const prevUrl = panelStack.pop();
       const url = new URL(prevUrl, window.location.origin);
-      if (url.searchParams.has("collega") || url.searchParams.has("opdracht")) {
+      if (hasPanelParam(url)) {
         history.replaceState({}, "", prevUrl);
         _skipNextPush = true;
         swapPanel(prevUrl);
@@ -125,20 +133,60 @@
       }
     });
 
+    // nldd-top-title-bar vuurt 'back' (bubbles + composed) als zijn terugknop
+    // wordt gebruikt; child panels zoals het bewerkformulier gaan zo terug naar
+    // hun ouder in de panelStack. Alleen de eigen titelbalk van het paneel telt:
+    // een balk in een geneste overlay stuurt zijn eigen 'back' omhoog.
+    document.addEventListener("back", (e) => {
+      const content = document.getElementById(CONTENT_ID);
+      if (!content || e.target.parentElement !== content) return;
+      panelBack();
+    });
+
     // nldd-sheet emit een 'close' event wanneer gebruiker op backdrop klikt of ESC drukt
     const sheet = getSheet();
     if (sheet) {
-      sheet.addEventListener("close", () => {
+      // WORKAROUND voor een bug in het design system (@nldd/design-system 0.8.70).
+      // nldd-sheet sluit zichzelf zodra er een 'dismiss' langskomt met ergens een
+      // nldd-top-title-bar in het composed path — ongeacht of dat zijn EIGEN balk
+      // is (zie utilities/dismiss-from-title-bar.ts, waar die beperking ook staat
+      // beschreven). De datumkiezer van nldd-date-field is een popover met een
+      // eigen titelbalk, en nldd-popover stopt die dismiss niet zoals sheet en
+      // window dat wel doen. Gevolg: "Annuleer" in de datumkiezer sloot ook de
+      // zijsheet.
+      //
+      // De listener hangt op de content (bubble-fase), niet op de sheet: dan is
+      // het component zelf al klaar met het event — de datumkiezer sluit dus
+      // gewoon — en stoppen we het net voordat de sheet het ziet. Weghalen zodra
+      // de DS dit oplost.
+      const content = document.getElementById(CONTENT_ID);
+      if (content) {
+        content.addEventListener("dismiss", (e) => {
+          const ownBar = content.querySelector(":scope > nldd-top-title-bar");
+          const bar = e
+            .composedPath()
+            .find(
+              (el) =>
+                el instanceof Element &&
+                el.tagName.toLowerCase() === "nldd-top-title-bar",
+            );
+          if (bar && bar !== ownBar) e.stopPropagation();
+        });
+      }
+
+      sheet.addEventListener("close", (e) => {
+        // Alleen als DEZE sheet sluit. Overlays in de inhoud (de datepicker van
+        // een nldd-date-field is zelf ook een sheet) vuren een 'close' die
+        // bubbelt; zonder deze check leegden we het paneel bij het sluiten
+        // daarvan.
+        if (e.target !== sheet) return;
         // Sync URL state als sheet via backdrop/ESC dichtgaat
         const url = new URL(window.location);
-        if (
-          url.searchParams.has("collega") ||
-          url.searchParams.has("opdracht")
-        ) {
+        if (hasPanelParam(url)) {
           panelStack.length = 0;
           clearContent();
-          url.searchParams.delete("collega");
-          url.searchParams.delete("opdracht");
+          PANEL_PARAMS.forEach((name) => url.searchParams.delete(name));
+          url.searchParams.delete("bewerken");
           history.replaceState({}, "", url.toString());
           document.documentElement.style.overflow = "";
         }
@@ -148,8 +196,7 @@
     // Browser back/forward
     window.addEventListener("popstate", () => {
       const url = new URL(window.location);
-      const hasPanel =
-        url.searchParams.has("collega") || url.searchParams.has("opdracht");
+      const hasPanel = hasPanelParam(url);
       if (!hasPanel && isSheetOpen(getSheet())) {
         panelStack.length = 0;
         closeSheet();
@@ -174,6 +221,12 @@
       _skipNextPush = false;
       return;
     }
+
+    // Alleen navigeren tussen panelen is een stap in de stack. Een POST (het
+    // bewerkformulier) is dat niet: die zet zijn eigen URL via HX-Push-Url, en
+    // pushen we hier alsnog, dan blijft het POST-pad in de adresbalk staan.
+    const verb = event.detail.requestConfig && event.detail.requestConfig.verb;
+    if (verb && verb.toLowerCase() !== "get") return;
 
     const requestPath =
       (event.detail.pathInfo && event.detail.pathInfo.requestPath) ||

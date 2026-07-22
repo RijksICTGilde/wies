@@ -1,34 +1,45 @@
 {% if not panel_data %}
-  <div class="nldd-panel">
-    <p class="nldd-text-secondary"><em>Niet gevonden.</em></p>
-  </div>
+  {# nldd-sheet sluit zichzelf op de dismiss van zijn eigen top-title-bar. #}
+  <nldd-top-title-bar slot="header" text="Persoonsgegevens" dismiss-text="Sluit"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <p class="nldd-text-secondary"><em>Niet gevonden.</em></p>
+  </nldd-simple-section>
 {% else %}
   {% set colleague = panel_data.colleague %}
-  {# nldd-sheet sluit zichzelf op de dismiss van zijn eigen top-title-bar. #}
-  <nldd-top-title-bar class="is-compact" text="Persoonsgegevens" dismiss-text="Sluiten"></nldd-top-title-bar>
-  <div class="nldd-panel">
-    <section class="nldd-panel__identity">
-      <nldd-avatar size="56" name="{{ colleague.name }}" decorative></nldd-avatar>
-      <div class="nldd-panel__identity-info">
-        <strong style="font-size: 1.25rem">{{ colleague.name }}</strong>
-        {% if colleague.email %}
-          <a class="nldd-panel__email" href="mailto:{{ colleague.email }}">{{ colleague.email }}</a>
-        {% endif %}
-      </div>
-    </section>
-    {% set labels = colleague.labels.all() %}
-    {% if labels %}
-      <div class="nldd-panel__tokens">
-        {% for label in labels %}
-          <nldd-token color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-token>
-        {% endfor %}
-      </div>
+  {# collapse-anchor: de naam staat in de bar pas zodra de naam in de inhoud eronder wegscrollt. #}
+  <nldd-top-title-bar slot="header" text="{{ colleague.name }}" collapse-anchor="panel-title" dismiss-text="Sluit"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <nldd-list no-dividers accessible-label="Collega">
+  <nldd-list-item>
+  <nldd-cell>
+  <nldd-avatar size="48" name="{{ colleague.name }}" decorative></nldd-avatar>
+  </nldd-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-title-cell id="panel-title" size="4" text="{{ colleague.name }}">
+  <span slot="supporting-text">
+    {% if colleague.email %}
+      <nldd-link href="mailto:{{ colleague.email }}" text="{{ colleague.email }}"></nldd-link>
     {% endif %}
-    <nldd-rich-text spacing="snug">
-    <h3>Opdrachten</h3>
-    {% with assignments = panel_data.assignments, hx_target = "#nldd-side-panel-content" %}
-      {% include "parts/colleague_assignment_cards.html" %}
-    {% endwith %}
-    </nldd-rich-text>
-  </div>
+  </span>
+  </nldd-title-cell>
+  </nldd-list-item>
+  </nldd-list>
+  {% set labels = colleague.labels.all() %}
+  {% if labels %}
+    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+    <nldd-container layout="wrap" gap="6">
+    {% for label in labels %}
+      <nldd-tag color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-tag>
+    {% endfor %}
+    </nldd-container>
+  {% endif %}
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-title size="3">
+  <h3>Opdrachten</h3>
+  </nldd-title>
+  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+  {% with assignments = panel_data.assignments, hx_target = "#side-panel-content" %}
+    {% include "parts/colleague_assignment_cards.html" %}
+  {% endwith %}
+  </nldd-simple-section>
 {% endif %}

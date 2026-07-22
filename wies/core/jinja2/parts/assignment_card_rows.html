@@ -1,5 +1,5 @@
 {% for assignment in object_list %}
-  <nldd-card accessible-label="{{ assignment.name }}" class="nldd-vacancy-card" hx-get="{{ assignment.panel_url }}" hx-target="#nldd-side-panel-content" hx-swap="innerHTML" tabindex="0" role="button">
+  <nldd-card accessible-label="{{ assignment.name }}" class="nldd-vacancy-card" hx-get="{{ assignment.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" tabindex="0" role="button">
   <nldd-container padding="16">
   {% if assignment.services_with_skills %}
     <div class="nldd-vacancy-card__tags">

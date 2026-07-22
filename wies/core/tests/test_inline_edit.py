@@ -743,8 +743,8 @@ class AssignmentServicesDisplayTest(TestCase):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
         # Renders inside the open NLDD side panel, so it swaps the inner
-        # content (#nldd-side-panel-content) rather than rebuilding the sheet.
-        self.assertContains(resp, 'hx-target="#nldd-side-panel-content"')
+        # content (#side-panel-content) rather than rebuilding the sheet.
+        self.assertContains(resp, 'hx-target="#side-panel-content"')
         self.assertContains(resp, "plaatsing=")
         self.assertContains(resp, self.colleague.name)
         # The filled row is the list item carrying the placement link.

@@ -32,16 +32,16 @@
             </nldd-icon-button>
           </div>
           {% if category.labels.all() %}
-            <div class="nldd-panel__tokens">
-              {% for label in category.labels.all() %}
-                <nldd-token color="{{ category.nldd_color }}" style="cursor: pointer" hx-get="{{ url('label-edit', args=[label.id]) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
-                {{ label.name }}
-                <span style="color: var(--semantics-content-secondary-color, #666);
-                             font-size: 0.85em;
-                             margin-left: 0.25em">({{ label.usage_count|default(0) }})</span>
-                </nldd-token>
-              {% endfor %}
-            </div>
+            <nldd-container layout="wrap" gap="6">
+            {% for label in category.labels.all() %}
+              <nldd-token color="{{ category.nldd_color }}" style="cursor: pointer" hx-get="{{ url('label-edit', args=[label.id]) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+              {{ label.name }}
+              <span style="color: var(--semantics-content-secondary-color, #666);
+                           font-size: 0.85em;
+                           margin-left: 0.25em">({{ label.usage_count|default(0) }})</span>
+              </nldd-token>
+            {% endfor %}
+            </nldd-container>
           {% else %}
             <p style="color: var(--semantics-content-secondary-color, #666);
                       font-style: italic">Geen labels in deze categorie</p>

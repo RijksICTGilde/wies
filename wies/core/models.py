@@ -70,9 +70,9 @@ class LabelCategory(models.Model):
     color = models.CharField(max_length=7)  # Hex color like #FF5733
 
     # Maps each stored hex (the choices offered in LabelCategoryForm) to an
-    # nldd-token `color` variant, which carries theme-aware category colours.
-    # The old `--nldd-token-bg: <hex>` approach painted a light-only strip that
-    # showed through the token in dark mode.
+    # NLDD `color` variant, which carries theme-aware category colours. The old
+    # `--nldd-token-bg: <hex>` approach painted a light-only strip that showed
+    # through the token in dark mode.
     _NLDD_COLOR_BY_HEX = {
         "#DCE3EA": "neutral",
         "#B3D7EE": "lichtblauw",
@@ -89,7 +89,7 @@ class LabelCategory(models.Model):
 
     @property
     def nldd_color(self) -> str:
-        """nldd-token `color` variant for this category (falls back to neutral)."""
+        """NLDD `color` variant for this category (falls back to neutral)."""
         return self._NLDD_COLOR_BY_HEX.get(self.color, "neutral")
 
 

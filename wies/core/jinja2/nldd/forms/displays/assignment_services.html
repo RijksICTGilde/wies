@@ -15,7 +15,7 @@ Echte nldd-list met cellen per rij: de avatar is een eigen span in slot="start"
     {% if row.colleague %}
       {% set pl = row.placement %}
       <nldd-list-item
-      {% if pl %} href="/?plaatsing={{ pl.id }}" hx-get="/?plaatsing={{ pl.id }}" hx-target="#nldd-side-panel-content" hx-swap="innerHTML" {% endif %}
+      {% if pl %} href="/?plaatsing={{ pl.id }}" hx-get="/?plaatsing={{ pl.id }}" hx-target="#side-panel-content" hx-swap="innerHTML" {% endif %}
       >
       <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
       <nldd-avatar slot="start" size="40" name="{{ row.colleague.name }}" decorative></nldd-avatar>

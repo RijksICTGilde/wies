@@ -16,12 +16,12 @@
   {% include "parts/filter_and_card_container_assignments.html" %}
 {% endblock content %}
 {% block panel %}
-  <nldd-sheet id="nldd-side-panel" placement="right" accessible-label="Detail">
-  <div id="nldd-side-panel-content">
-    {% if panel_data %}
-      {% include panel_data.panel_content_template %}
-    {% endif %}
-  </div>
+  <nldd-sheet id="side-panel" placement="right" width="480px" accessible-label="Detail">
+  <nldd-page id="side-panel-content" sticky-header>
+  {% if panel_data %}
+    {% include panel_data.panel_content_template %}
+  {% endif %}
+  </nldd-page>
   </nldd-sheet>
   <div id="nldd-client-modal-container"></div>
   <div id="nldd-filter-options-modal-container"></div>

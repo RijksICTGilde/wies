@@ -3,7 +3,7 @@
 Verifieert dat:
 - De homepage rendert met NLDD-specifieke assets en geen RVO assets meelaadt.
 - HTMX partials de juiste templates gebruiken.
-- Side panel partial wordt geserveerd voor HX-Target=nldd-side-panel-container.
+- Side panel partial wordt geserveerd voor HX-Target=side-panel-container.
 - Geen NDD tags lekken naar NLDD templates (isolatie-garantie).
 """
 
@@ -77,12 +77,12 @@ class NDDPanelTest(TestCase):
         response = self.client.get(
             reverse("ndd-home"),
             {"collega": str(self.colleague.id)},
-            headers={"hx-request": "true", "hx-target": "nldd-side-panel-content"},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         assert response.status_code == 200
         body = response.content.decode()
         assert self.colleague.name in body
-        assert "nldd-panel" in body
+        assert "<nldd-simple-section" in body
         # Géén volledige page render
         assert 'class="nldd-app"' not in body
 
@@ -91,24 +91,24 @@ class NDDPanelTest(TestCase):
         response = self.client.get(
             reverse("ndd-home"),
             {"plaatsing": str(placement.id)},
-            headers={"hx-request": "true", "hx-target": "nldd-side-panel-content"},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         assert response.status_code == 200
         body = response.content.decode()
         assert self.colleague.name in body
-        assert "nldd-panel" in body
+        assert "<nldd-simple-section" in body
         assert 'class="nldd-app"' not in body
 
     def test_ndd_panel_partial_for_opdracht(self):
         response = self.client.get(
             reverse("ndd-home"),
             {"opdracht": str(self.assignment.id)},
-            headers={"hx-request": "true", "hx-target": "nldd-side-panel-content"},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
         )
         assert response.status_code == 200
         body = response.content.decode()
         assert self.assignment.name in body
-        assert "nldd-panel" in body
+        assert "<nldd-simple-section" in body
         assert 'class="nldd-app"' not in body
 
 

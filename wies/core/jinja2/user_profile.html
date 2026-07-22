@@ -13,13 +13,22 @@ empty sidebar #}
   <nldd-container>
   <nldd-simple-section>
   <nldd-rich-text>
-  <section class="nldd-panel__identity" style="margin-bottom: 1.5rem">
-    <nldd-avatar size="56" name="{{ user.get_full_name() or user.email }}" decorative></nldd-avatar>
-    <div class="nldd-panel__identity-info">
-      <strong style="font-size: 1.5rem">Mijn profiel</strong>
-      {% if user.email %}<a class="nldd-panel__email" href="mailto:{{ user.email }}">{{ user.email }}</a>{% endif %}
-    </div>
-  </section>
+  <nldd-list no-dividers accessible-label="Profiel">
+  <nldd-list-item>
+  <nldd-cell>
+  <nldd-avatar size="48" name="{{ user.get_full_name() or user.email }}" decorative></nldd-avatar>
+  </nldd-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-title-cell size="4" text="Mijn profiel">
+  <span slot="supporting-text">
+    {% if user.email %}
+      <nldd-link href="mailto:{{ user.email }}" text="{{ user.email }}"></nldd-link>
+    {% endif %}
+  </span>
+  </nldd-title-cell>
+  </nldd-list-item>
+  </nldd-list>
+  <nldd-spacer size="24" direction="vertical"></nldd-spacer>
   <h3>Gegevens</h3>
   <dl class="nldd-data-list">
     <dt>Voornaam</dt>
@@ -42,11 +51,11 @@ empty sidebar #}
       <dt>{{ item.category.name }}</dt>
       <dd>
         {% if item.labels %}
-          <div class="nldd-panel__tokens">
-            {% for label in item.labels %}
-              <nldd-token color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-token>
-            {% endfor %}
-          </div>
+          <nldd-container layout="wrap" gap="6">
+          {% for label in item.labels %}
+            <nldd-tag color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-tag>
+          {% endfor %}
+          </nldd-container>
         {% else %}
           <span class="nldd-text-secondary">—</span>
         {% endif %}
@@ -54,7 +63,7 @@ empty sidebar #}
     {% endfor %}
   </dl>
   <h3>Opdrachten</h3>
-  {% with assignments = assignment_list, hx_target = "#nldd-side-panel-content" %}
+  {% with assignments = assignment_list, hx_target = "#side-panel-content" %}
     {% include "parts/colleague_assignment_cards.html" %}
   {% endwith %}
   </nldd-rich-text>
@@ -62,12 +71,11 @@ empty sidebar #}
   </nldd-container>
 {% endblock content %}
 {% block panel %}
-  <nldd-sheet id="nldd-side-panel" placement="right" accessible-label="Detail">
-  <div id="nldd-side-panel-content">
-    {% if panel_data %}
-      {% include panel_data.panel_content_template %}
-    {% endif
-    %}
-  </div>
+  <nldd-sheet id="side-panel" placement="right" width="480px" accessible-label="Detail">
+  <nldd-page id="side-panel-content" sticky-header>
+  {% if panel_data %}
+    {% include panel_data.panel_content_template %}
+  {% endif %}
+  </nldd-page>
   </nldd-sheet>
 {% endblock panel %}

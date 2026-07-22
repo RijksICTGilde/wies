@@ -7,7 +7,7 @@
   {# href makes nldd-list-item render
 its interactive anchor wrapper (hover/focus feedback + keyboard); htmx
 intercepts the click to open the side panel instead of navigating. #}
-  <nldd-list-item href="{{ placement.panel_url }}" hx-get="{{ placement.panel_url }}" hx-target="#nldd-side-panel-content" hx-swap="innerHTML">
+  <nldd-list-item href="{{ placement.panel_url }}" hx-get="{{ placement.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
   <nldd-avatar slot="start" size="40" name="{{ placement.colleague.name }}" decorative></nldd-avatar>
   <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
   <nldd-text-cell text="{{ placement.colleague.name }}" supporting-text="{{ placement.service.skill.name if placement.service.skill else '' }}"></nldd-text-cell>

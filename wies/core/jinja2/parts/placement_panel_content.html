@@ -1,58 +1,97 @@
 {% if not panel_data %}
-  <div class="nldd-panel">
-    <p class="nldd-text-secondary"><em>Niet gevonden.</em></p>
-  </div>
+  {# nldd-sheet sluit zichzelf op de dismiss van zijn eigen top-title-bar. #}
+  <nldd-top-title-bar slot="header" text="Plaatsing" dismiss-text="Sluit"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <p class="nldd-text-secondary"><em>Niet gevonden.</em></p>
+  </nldd-simple-section>
 {% else %}
   {% set colleague = panel_data.colleague %} {% set service = panel_data.service %} {% set placement = panel_data.placement %}
-  {# nldd-sheet sluit zichzelf op de dismiss van zijn eigen top-title-bar. #}
-  <nldd-top-title-bar class="is-compact" text="Plaatsing" dismiss-text="Sluiten"></nldd-top-title-bar>
-  <div class="nldd-panel">
-    <section class="nldd-panel__identity">
-      <nldd-avatar size="56" name="{{ colleague.name }}" decorative></nldd-avatar>
-      <div class="nldd-panel__identity-info">
-        <strong style="font-size: 1.25rem">{{ colleague.name }}</strong>
-        {% if colleague.email %}
-          <a class="nldd-panel__email" href="mailto:{{ colleague.email }}">{{ colleague.email }}</a>
-        {% endif %}
-      </div>
-    </section>
-    {% set labels = colleague.labels.all() %}
-    {% if labels %}
-      <div class="nldd-panel__tokens">
-        {% for label in labels %}
-          <nldd-token color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-token>
-        {% endfor %}
-      </div>
+  {# collapse-anchor: de naam staat in de bar pas zodra de naam in de inhoud eronder wegscrollt. #}
+  <nldd-top-title-bar slot="header" text="{{ colleague.name }}" collapse-anchor="panel-title" dismiss-text="Sluit"></nldd-top-title-bar>
+  <nldd-simple-section padding-top="0">
+  <nldd-list no-dividers accessible-label="Collega">
+  <nldd-list-item>
+  <nldd-cell>
+  <nldd-avatar size="48" name="{{ colleague.name }}" decorative></nldd-avatar>
+  </nldd-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-title-cell id="panel-title" size="4" text="{{ colleague.name }}">
+  <span slot="supporting-text">
+    {% if colleague.email %}
+      <nldd-link href="mailto:{{ colleague.email }}" text="{{ colleague.email }}"></nldd-link>
     {% endif %}
-    <nldd-rich-text spacing="snug">
-    <h2>Informatie over huidige opdracht</h2>
-    {% with assignments=[panel_data.assignment_card],
-      hx_target="#nldd-side-panel-content" %}
-      {% include
-      "parts/colleague_assignment_cards.html" %}
-    {% endwith %}
-    <h3>Details inzet</h3>
-    <dl class="nldd-data-list">
-      <dt>Rol van {{ colleague.name.split()[0] }}</dt>
-      <dd>
-        {{ inline_edit(service, "skill") }}
-      </dd>
-      <dt>Omschrijving</dt>
-      <dd>
-        {{ inline_edit(service, "description") }}
-      </dd>
-      <dt>Periode</dt>
-      <dd>
-        {{ inline_edit(placement, "period") }}
-      </dd>
-    </dl>
-    </nldd-rich-text>
-    <section>
-      {% set colleague_url = '/opdrachten/?collega=' ~ colleague.id %}
-      <a href="{{ colleague_url }}"
-         hx-get="{{ colleague_url }}"
-         hx-target="#nldd-side-panel-content"
-         hx-swap="innerHTML">Bekijk alle opdrachten van {{ colleague.name.split()[0] }} ›</a>
-    </section>
-  </div>
+  </span>
+  </nldd-title-cell>
+  </nldd-list-item>
+  </nldd-list>
+  {% set labels = colleague.labels.all() %}
+  {% if labels %}
+    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+    <nldd-container layout="wrap" gap="6">
+    {% for label in labels %}
+      <nldd-tag color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-tag>
+    {% endfor %}
+    </nldd-container>
+  {% endif %}
+  <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+  <nldd-title size="4">
+  <h3>Huidige opdracht</h3>
+  </nldd-title>
+  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  {% set card = panel_data.assignment_card %}
+  <nldd-list variant="box" accessible-label="Details inzet">
+  {# Geen href op de rij: een icon-button IN de anchor die href oplevert is
+     genest interactief (dubbele tabstop, en de knop triggert ook de link).
+     De knop is nu het enige besturingselement van de rij. #}
+  <nldd-list-item>
+  <nldd-text-cell width="100px" text="Opdracht"></nldd-text-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-text-cell text="{{ card.name }}" supporting-text="{{ card.organization or '' }}"></nldd-text-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-cell>
+  <nldd-icon-button size="sm" icon="chevron-right" text="Bekijk opdracht" hx-get="{{ card.assignment_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"></nldd-icon-button>
+  </nldd-cell>
+  </nldd-list-item>
+  {% if card.team_members %}
+    <nldd-list-item>
+    <nldd-text-cell width="100px" text="Team"></nldd-text-cell>
+    <nldd-spacer-cell size="12"></nldd-spacer-cell>
+    <nldd-text-cell text="{{ card.team_members|join(', ') }}"></nldd-text-cell>
+    </nldd-list-item>
+  {% endif %}
+  <nldd-list-item>
+  <nldd-text-cell width="100px" text="Rol"></nldd-text-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-text-cell text="{{ service.skill.name if service.skill else '–' }}" supporting-text="{{ service.description or '' }}"></nldd-text-cell>
+  {% if panel_data.user_can_edit_details %}
+    <nldd-spacer-cell size="8"></nldd-spacer-cell>
+    <nldd-cell>
+    <nldd-icon-button size="sm" icon="pencil" text="Rol bewerken" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"></nldd-icon-button>
+    </nldd-cell>
+  {% endif %}
+  </nldd-list-item>
+  <nldd-list-item>
+  <nldd-text-cell width="100px" text="Periode"></nldd-text-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-text-cell>
+  {% if placement.start_date or placement.end_date %}
+    {{ placement.start_date|datum_nl("j F Y") if placement.start_date else "–" }}
+    t/m
+    {{ placement.end_date|datum_nl("j F Y") if placement.end_date else "heden" }}
+  {% else %}
+    <em class="nldd-text-secondary">Geen periode ingesteld</em>
+  {% endif %}
+  </nldd-text-cell>
+  {% if panel_data.user_can_edit_details %}
+    <nldd-spacer-cell size="8"></nldd-spacer-cell>
+    <nldd-cell>
+    <nldd-icon-button size="sm" icon="pencil" text="Periode bewerken" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"></nldd-icon-button>
+    </nldd-cell>
+  {% endif %}
+  </nldd-list-item>
+  </nldd-list>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {% set colleague_url = '/opdrachten/?collega=' ~ colleague.id %}
+  <nldd-link href="{{ colleague_url }}" size="md" text="Bekijk alle opdrachten van {{ colleague.name.split()[0] }}" hx-get="{{ colleague_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"></nldd-link>
+  </nldd-simple-section>
 {% endif %}
