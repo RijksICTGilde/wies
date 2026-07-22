@@ -2800,8 +2800,8 @@ PERMISSION_DENIED_ALERT = {
 
 CONCURRENCY_CONFLICT_ALERT = {
     "kind": "warning",
-    "message": "Deze gegevens zijn ondertussen door iemand anders gewijzigd. "
-    "Kies Opslaan om je wijziging toch door te voeren, of Annuleren om de gewijzigde gegevens te zien.",
+    "message": "Deze gegevens zijn ondertussen gewijzigd. "
+    "Kies 'Opslaan' om je wijziging toch door te voeren, of 'Annuleren' om de gewijzigde gegevens te zien.",
 }
 
 

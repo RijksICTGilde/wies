@@ -51,7 +51,7 @@ class InlineEditConcurrencyTests(TestCase):
         response = self.client.post(self._url(), {"name": "My Stale Name", "_concurrency_token": token})
 
         assert response.status_code == 200
-        self.assertContains(response, "door iemand anders gewijzigd")
+        self.assertContains(response, "ondertussen gewijzigd")
         # The form is swapped in by HTMX; the live region is what announces the
         # warning to a screen reader.
         self.assertContains(response, 'role="alert"')
@@ -97,7 +97,7 @@ class InlineEditConcurrencyTests(TestCase):
         # Correcting the input now hits the conflict check it was built on.
         response = self.client.post(self._url(), {"name": "My Corrected Name", "_concurrency_token": match.group(1)})
 
-        self.assertContains(response, "door iemand anders gewijzigd")
+        self.assertContains(response, "ondertussen gewijzigd")
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Concurrent Name"
 
@@ -183,7 +183,7 @@ class InlineEditCollectionConcurrencyTokenTests(TestCase):
         response = self.client.post(self.url, self._post_data(token))
 
         assert response.status_code == 200
-        self.assertContains(response, "door iemand anders gewijzigd")
+        self.assertContains(response, "ondertussen gewijzigd")
         self.service.refresh_from_db()
         assert self.service.description == "Changed by someone else"
 
@@ -203,7 +203,7 @@ class InlineEditCollectionConcurrencyTokenTests(TestCase):
 
         response = self.client.post(self.url, self._post_data(match.group(1)))
 
-        self.assertContains(response, "door iemand anders gewijzigd")
+        self.assertContains(response, "ondertussen gewijzigd")
         self.service.refresh_from_db()
         assert self.service.description == "Changed by someone else"
 
@@ -266,7 +266,7 @@ class InlineEditGroupCustomTemplateConcurrencyTests(TestCase):
         )
 
         assert response.status_code == 200
-        self.assertContains(response, "door iemand anders gewijzigd")
+        self.assertContains(response, "ondertussen gewijzigd")
         self.placement.refresh_from_db()
         assert self.placement.specific_end_date == concurrent_end
 
@@ -312,7 +312,7 @@ class TokenlessPostTests(TestCase):
             response = self.client.post(self.url, {"name": "No Token"})
 
         assert response.status_code == 200
-        self.assertContains(response, "door iemand anders gewijzigd")
+        self.assertContains(response, "ondertussen gewijzigd")
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Original"
         assert "without a concurrency token" in "\n".join(logs.output)
