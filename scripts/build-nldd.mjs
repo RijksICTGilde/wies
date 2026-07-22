@@ -38,9 +38,23 @@ const pkg = JSON.parse(readFileSync(pkgJsonPath, "utf8"));
 const jsEntry = join(pkgRoot, "dist/components/index.js");
 const cssSrc = join(pkgRoot, "dist/css/settings.css");
 const richTextCssSrc = join(pkgRoot, "dist/css/rich-text.css");
+// De FOUC-guard zit in de gebundelde `styles`-entry van het pakket, die we hier
+// niet gebruiken omdat we de CSS per bestand ophalen. Zonder deze regel flitsen
+// de web components ongestyled voorbij tot ze zijn ge-upgrade.
+const foucCssSrc = join(pkgRoot, "dist/css/fouc.css");
+// nldd-form leeft in light DOM en heeft daarom een globale stylesheet nodig
+// voor zijn vertical rhythm; zonder dit staan formuliervelden tegen elkaar aan.
+const formCssSrc = join(pkgRoot, "dist/css/form.css");
 const fontsDir = join(pkgRoot, "dist/fonts");
 
-for (const f of [jsEntry, cssSrc, richTextCssSrc, fontsDir]) {
+for (const f of [
+  jsEntry,
+  cssSrc,
+  richTextCssSrc,
+  foucCssSrc,
+  formCssSrc,
+  fontsDir,
+]) {
   if (!existsSync(f))
     throw new Error(`Missing expected file: ${relative(pkgRoot, f)}`);
 }
@@ -109,6 +123,10 @@ const combined = [
   loadAndRewrite(cssSrc),
   `/* @nldd/design-system ${pkg.version} — rich-text.css */`,
   loadAndRewrite(richTextCssSrc),
+  `/* @nldd/design-system ${pkg.version} — fouc.css */`,
+  loadAndRewrite(foucCssSrc),
+  `/* @nldd/design-system ${pkg.version} — form.css */`,
+  loadAndRewrite(formCssSrc),
 ].join("\n\n");
 
 writeFileSync(join(outDir, "ndd.styles.css"), combined);
