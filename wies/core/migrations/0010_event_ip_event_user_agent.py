@@ -5,17 +5,17 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("rijksauth", "0005_user_onboarding_completed_at"),
+        ("core", "0009_errorevent"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="authevent",
+            model_name="event",
             name="ip",
             field=models.GenericIPAddressField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name="authevent",
+            model_name="event",
             name="user_agent",
             field=models.CharField(blank=True, default="", max_length=512),
         ),

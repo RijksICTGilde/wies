@@ -15,6 +15,7 @@ This files lists the changes during the lifetime of this project.
 - 460: (migration)(add env vars) basic error monitoring — unhandled server errors (500) and failed background tasks are stored and shown on the statistics page, with a Mattermost notification.
 - 460: A failing task is marked failed immediately instead of hanging until timeout.
 - 493: (remove env vars) the background worker now runs on its own settings module (config.settings.worker) and no longer requires the OIDC credentials to be set at startup. locally worker now also uses its own dedicate .env file
+- 426: (migration) log the client IP and User-Agent on audit and login events (BIO device logging)
 
 ## 2026-07-20
 
@@ -30,7 +31,6 @@ This files lists the changes during the lifetime of this project.
 
 - 456: fix onboarding wizard's Merken picker rendering broken on pages that don't load the filter/side-panel stylesheets
 - 456: fix multiselect dropdown (e.g. Merk in the profile onboarding) being unreachable when the trigger sits low on the screen
-- 426: (migration) log the client IP and User-Agent on audit and login events (BIO device logging)
 
 ## 2026-07-08_3
 

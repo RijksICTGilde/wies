@@ -5,17 +5,17 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0008_scrub_legacy_organizations_events"),
+        ("rijksauth", "0006_user_oidc_sub"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name="event",
+            model_name="authevent",
             name="ip",
             field=models.GenericIPAddressField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name="event",
+            model_name="authevent",
             name="user_agent",
             field=models.CharField(blank=True, default="", max_length=512),
         ),
