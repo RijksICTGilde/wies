@@ -33,8 +33,12 @@
       <link rel="stylesheet" href="{{ static('css/onboarding.css') }}">
     {% endif %}
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
+    <script src="{{ static('js/htmx_config.js') }}"></script>
     <script src="{{ static('js/filters/filters.js') }}"></script>
     <script src="{{ static('js/show_more.js') }}"></script>
+    <script src="{{ static('js/ui_handlers.js') }}" defer></script>
+    <script src="{{ static('js/sidebar_offset.js') }}" defer></script>
+    <script src="{{ static('js/flash_messages.js') }}" defer></script>
     {# Org-picker stack: tree_state → org_tree_base → assignment_org_tree.
        Order matters; the later scripts reference symbols from the earlier ones. #}
     <script src="{{ static('js/tree_state.js') }}"></script>
@@ -74,21 +78,5 @@
       <script src="{{ static('js/filters/multi_select.js') }}" defer></script>
       <script src="{{ static('js/onboarding.js') }}" defer></script>
     {% endif %}
-    <script>
-      // Dynamically set --sidebar-offset so sticky sidebar max-height
-      // accounts for the header visible above the fold.
-      (function() {
-        const sidebar = document.querySelector('.sidebar');
-        if (!sidebar) return;
-        const update = () => {
-          const rect = sidebar.getBoundingClientRect();
-          const offset = Math.max(0, rect.top);
-          document.documentElement.style.setProperty('--sidebar-offset', offset + 'px');
-        };
-        update();
-        window.addEventListener('scroll', update, {passive: true});
-        window.addEventListener('resize', update);
-      })();
-    </script>
   </body>
 </html>
