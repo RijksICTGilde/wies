@@ -15,6 +15,7 @@ This files lists the changes during the lifetime of this project.
 - 460: (migration)(add env vars) basic error monitoring — unhandled server errors (500) and failed background tasks are stored and shown on the statistics page, with a Mattermost notification.
 - 460: A failing task is marked failed immediately instead of hanging until timeout.
 - 493: (remove env vars) the background worker now runs on its own settings module (config.settings.worker) and no longer requires the OIDC credentials to be set at startup. locally worker now also uses its own dedicate .env file
+- 494: add trivy container scanning as recurring action
 
 ## 2026-07-20
 
