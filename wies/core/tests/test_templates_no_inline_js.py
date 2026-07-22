@@ -19,17 +19,21 @@ from django.test import TestCase
 
 TEMPLATE_DIR = Path(__file__).resolve().parent.parent / "jinja2"
 
+# Every pattern is case-insensitive: HTML tag and attribute names are, so
+# `<SCRIPT>` and `onClick=` execute exactly like their lowercase spelling and
+# must not slip past a guard that only knows the lowercase form.
+
 # `on<event>="` — the quote requirement keeps prose ("... on maandag=") out.
-INLINE_HANDLER = re.compile(r"""\son[a-z]+\s*=\s*["']""")
+INLINE_HANDLER = re.compile(r"""\son[a-z]+\s*=\s*["']""", re.IGNORECASE)
 
 # jinja-roos-components event attributes, which render as on*= handlers.
-COMPONENT_HANDLER = re.compile(r"""\s@[a-z]+\s*=\s*["']""")
+COMPONENT_HANDLER = re.compile(r"""\s@[a-z]+\s*=\s*["']""", re.IGNORECASE)
 
 # A <script> tag without a src attribute, i.e. an inline block.
-INLINE_SCRIPT = re.compile(r"""<script(?![^>]*\ssrc\s*=)[^>]*>""")
+INLINE_SCRIPT = re.compile(r"""<script(?![^>]*\ssrc\s*=)[^>]*>""", re.IGNORECASE)
 
 # htmx's inline-scripting attribute and javascript: URLs.
-HX_ON = re.compile(r"""\shx-on[a-z:-]*\s*=""")
+HX_ON = re.compile(r"""\shx-on[a-z:-]*\s*=""", re.IGNORECASE)
 JAVASCRIPT_URL = re.compile(r"""=\s*["']\s*javascript:""", re.IGNORECASE)
 
 CHECKS = (
@@ -43,6 +47,46 @@ CHECKS = (
 
 def _templates() -> list[Path]:
     return sorted(TEMPLATE_DIR.rglob("*.html"))
+
+
+class PatternTest(TestCase):
+    """The patterns themselves, so the scan below cannot pass by being blind."""
+
+    VIOLATIONS = (
+        '<button onclick="alert(1)">',
+        '<button onClick="alert(1)">',  # attribute names are case-insensitive
+        '<button ONCLICK="alert(1)">',
+        "<button onsubmit='x()'>",
+        '<c-button @click="panelBack()">',
+        '<c-button @keydown="x()">',
+        "<script>alert(1)</script>",
+        "<SCRIPT>alert(1)</SCRIPT>",  # tag names are case-insensitive
+        '<script type="module">x()</script>',
+        '<div hx-on:click="x()">',
+        '<a href="javascript:alert(1)">',
+        '<a href="JavaScript:alert(1)">',
+    )
+
+    CLEAN = (
+        "<script src=\"{{ static('js/ui_handlers.js') }}\"></script>",
+        "<script defer src=\"{{ static('js/x.js') }}\"></script>",
+        '<button data-action="side-panel-back">Terug</button>',
+        '<form data-confirm="Weet je het zeker?">',
+        '<div data-keyboard-activate hx-get="{{ url }}">',
+        '<span class="icon-text-inline">Toon meer</span>',
+        '<a href="/opdrachten/">Opdrachten</a>',
+    )
+
+    def test_violations_are_caught(self):
+        for sample in self.VIOLATIONS:
+            with self.subTest(sample=sample):
+                assert any(pattern.search(sample) for pattern, _ in CHECKS), f"not flagged: {sample}"
+
+    def test_clean_markup_is_not_flagged(self):
+        for sample in self.CLEAN:
+            with self.subTest(sample=sample):
+                hits = [description for pattern, description in CHECKS if pattern.search(sample)]
+                assert not hits, f"false positive on {sample}: {hits}"
 
 
 class NoInlineJavaScriptInTemplatesTest(TestCase):
