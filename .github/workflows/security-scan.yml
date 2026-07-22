@@ -55,7 +55,11 @@ jobs:
           scan-ref: .
           scanners: vuln,secret,misconfig
           severity: HIGH,CRITICAL
-          ignore-unfixed: true
+          ignore-unfixed: false
+          # Apply the severity filter to the SARIF too. Without this the
+          # --severity flag only filters vulnerabilities; misconfig findings
+          # (e.g. LOW "no HEALTHCHECK") leak through into the results.
+          limit-severities-for-sarif: true
           format: sarif
           output: trivy-fs.sarif
           exit-code: "0"
@@ -112,6 +116,8 @@ jobs:
           image-ref: wies:scan
           severity: HIGH,CRITICAL
           ignore-unfixed: true
+          # Apply the severity filter to the SARIF too (see filesystem job).
+          limit-severities-for-sarif: true
           format: sarif
           output: trivy-image.sarif
           exit-code: "0"
