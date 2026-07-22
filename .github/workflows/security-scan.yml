@@ -68,6 +68,16 @@ jobs:
           sarif_file: trivy-fs.sarif
           category: trivy-fs
 
+      # Debug: keep the raw SARIF so we can inspect what Trivy actually found
+      # (0 results vs. results that failed to upload). Remove once confirmed.
+      - name: Upload SARIF as artifact (debug)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-fs-sarif
+          path: trivy-fs.sarif
+          if-no-files-found: warn
+
   image:
     name: Trivy (container image)
     runs-on: ubuntu-latest
@@ -113,3 +123,13 @@ jobs:
         with:
           sarif_file: trivy-image.sarif
           category: trivy-image
+
+      # Debug: keep the raw SARIF so we can inspect what Trivy actually found
+      # (0 results vs. results that failed to upload). Remove once confirmed.
+      - name: Upload SARIF as artifact (debug)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: trivy-image-sarif
+          path: trivy-image.sarif
+          if-no-files-found: warn
