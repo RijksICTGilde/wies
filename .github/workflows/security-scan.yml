@@ -13,9 +13,9 @@
 #     # vX.Y.Z comment records which release that SHA is).
 #   - Default permissions are empty; each job opts in to the minimum it needs.
 #   - The scan jobs have no access to deployment secrets.
-#   - Reports HIGH/CRITICAL findings (severity: HIGH,CRITICAL). Currently
-#     ignore-unfixed is false, so findings without an available fix are shown
-#     too — flip it to true to surface only actionable (fixable) findings.
+#   - Reports only actionable findings: HIGH/CRITICAL (severity: HIGH,CRITICAL)
+#     that have a fix available (ignore-unfixed: true). Set ignore-unfixed to
+#     false to also surface CVEs with no released fix yet.
 
 name: trivy
 
@@ -57,7 +57,7 @@ jobs:
           scan-ref: .
           scanners: vuln,secret,misconfig
           severity: HIGH,CRITICAL
-          ignore-unfixed: false
+          ignore-unfixed: true
           # Apply the severity filter to the SARIF too. Without this the
           # --severity flag only filters vulnerabilities; misconfig findings
           # (e.g. LOW "no HEALTHCHECK") leak through into the results.
@@ -68,21 +68,11 @@ jobs:
           timeout: 10m
 
       - name: Upload results to code scanning
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4
         if: always()
         with:
           sarif_file: trivy-fs.sarif
           category: trivy-fs
-
-      # Debug: keep the raw SARIF so we can inspect what Trivy actually found
-      # (0 results vs. results that failed to upload). Remove once confirmed.
-      - name: Upload SARIF as artifact (debug)
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: trivy-fs-sarif
-          path: trivy-fs.sarif
-          if-no-files-found: warn
 
   image:
     name: Trivy (container image)
@@ -117,7 +107,7 @@ jobs:
           scan-type: image
           image-ref: wies:scan
           severity: HIGH,CRITICAL
-          ignore-unfixed: false
+          ignore-unfixed: true
           # Apply the severity filter to the SARIF too (see filesystem job).
           limit-severities-for-sarif: true
           format: sarif
@@ -126,18 +116,8 @@ jobs:
           timeout: 10m
 
       - name: Upload results to code scanning
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4
         if: always()
         with:
           sarif_file: trivy-image.sarif
           category: trivy-image
-
-      # Debug: keep the raw SARIF so we can inspect what Trivy actually found
-      # (0 results vs. results that failed to upload). Remove once confirmed.
-      - name: Upload SARIF as artifact (debug)
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: trivy-image-sarif
-          path: trivy-image.sarif
-          if-no-files-found: warn
