@@ -167,3 +167,14 @@ TRUSTED_PROXY_HOPS = 0
 # OTYS API settings
 OTYS_API_KEY = os.environ.get("OTYS_API_KEY", "")
 OTYS_URL = os.environ.get("OTYS_URL", "")
+
+# MATTERMOST settings
+MATTERMOST_TOKEN = os.environ.get("MATTERMOST_TOKEN", "")
+MATTERMOST_WIES_OPS_CHANNEL_URL = os.environ.get("MATTERMOST_WIES_OPS_CHANNEL_URL", "")
+
+# SITE_BASE_URL is used if links need to be shared outside (e.g. in mattermost message)
+SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "").rstrip("/")
+
+# Error monitoring throttle: within this window, only the first error per
+# (exception_type, path) is persisted + posted to Mattermost
+ERROR_THROTTLE_MINUTES = 5

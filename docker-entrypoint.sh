@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
+# Default to production settings so a container started without an explicit
+# DJANGO_SETTINGS_MODULE cannot fall back to the local/dev settings (DEBUG on,
+# insecure dev SECRET_KEY, default DB password). Local dev is unaffected:
+# docker-compose runs runserver as its command and never invokes this entrypoint.
+export DJANGO_SETTINGS_MODULE="${DJANGO_SETTINGS_MODULE:-config.settings.production}"
+
 echo "Waiting for database..."
 MAX_RETRIES=30
 RETRY_COUNT=0

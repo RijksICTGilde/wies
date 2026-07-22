@@ -11,6 +11,7 @@ from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
@@ -50,6 +51,7 @@ from .models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    ErrorEvent,
     Event,
     Label,
     LabelCategory,
@@ -396,9 +398,51 @@ def staff_required(view_func):
     return user_passes_test(is_staff_member, login_url="/geen-toegang/")(view_func)
 
 
+ERRORS_PER_PAGE = 10
+
+
 @staff_required
 def staff_dashboard(request):
+    # The error table is loaded separately via HTMX (see the error-table endpoint).
     return render(request, "staff_dashboard.html", {"usage": get_usage_stats()})
+
+
+def _render_error_table(request, page_number):
+    """Render the paginated error table fragment for the given page."""
+    paginator = Paginator(ErrorEvent.objects.select_related("user"), ERRORS_PER_PAGE)
+    page_obj = paginator.get_page(page_number)
+
+    def page_url(number):
+        return f"{reverse('error-table')}?pagina={number}"
+
+    context = {
+        "object_list": page_obj.object_list,
+        "page_obj": page_obj,
+        "previous_page_url": page_url(page_obj.previous_page_number()) if page_obj.has_previous() else None,
+        "next_page_url": page_url(page_obj.next_page_number()) if page_obj.has_next() else None,
+    }
+    return render(request, "parts/error_table.html", context)
+
+
+@staff_required
+def error_table(request):
+    """Paginated error table fragment, loaded via HTMX by the dashboard."""
+    return _render_error_table(request, request.GET.get("pagina"))
+
+
+@staff_required
+def error_detail(request, pk):
+    """Full detail page for a single error (traceback etc.), staff-only."""
+    error = get_object_or_404(ErrorEvent, pk=pk)
+    return render(request, "error_detail.html", {"error": error})
+
+
+@staff_required
+@require_POST
+def delete_error(request, pk):
+    """Delete a single handled error and return the refreshed current page of the table."""
+    ErrorEvent.objects.filter(pk=pk).delete()
+    return _render_error_table(request, request.GET.get("pagina"))
 
 
 @staff_required
@@ -604,7 +648,7 @@ class PlacementListView(ListView):
 
     def _get_labels_by_category(self):
         """Parse selected label IDs grouped by category."""
-        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid]
+        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid.isdigit()]
         if not label_ids:
             return {}
         labels_by_category = {}
@@ -694,7 +738,7 @@ class PlacementListView(ListView):
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
         qs = self._get_base_queryset()
-        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid]
+        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid.isdigit()]
         if label_ids and not self._get_labels_by_category():
             return Placement.objects.none()
         qs = self._apply_filters(qs)
@@ -754,7 +798,7 @@ class PlacementListView(ListView):
         # label filter supports multi-select
         label_filter = set()
         for label_id in self.request.GET.getlist("labels"):
-            if label_id != "":
+            if label_id.isdigit():
                 label_filter.add(label_id)
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
@@ -972,7 +1016,7 @@ class AssignmentListView(ListView):
 
     def _apply_filters(self, qs, *, exclude_filter=None):
         if exclude_filter != "rol":
-            rol_filter = self.request.GET.getlist("rol")
+            rol_filter = [x for x in self.request.GET.getlist("rol") if x.isdigit()]
             if rol_filter:
                 qs = qs.filter(
                     services__skill__id__in=rol_filter,
@@ -1062,7 +1106,7 @@ class AssignmentListView(ListView):
         # rol filter supports multi-select
         rol_filter = set()
         for rol_id in self.request.GET.getlist("rol"):
-            if rol_id != "":
+            if rol_id.isdigit():
                 rol_filter.add(rol_id)
         if len(rol_filter) > 0:
             active_filters["rol"] = rol_filter
@@ -1243,7 +1287,7 @@ class UserListView(PermissionRequiredMixin, ListView):
 
     def _get_labels_by_category(self):
         """Parse selected label IDs grouped by category."""
-        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid]
+        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid.isdigit()]
         if not label_ids:
             return {}
         labels_by_category = {}
@@ -1273,7 +1317,7 @@ class UserListView(PermissionRequiredMixin, ListView):
     def get_queryset(self):
         """Apply filters to users queryset - exclude superusers"""
         qs = self._get_base_queryset()
-        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid]
+        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid.isdigit()]
         if label_ids and not self._get_labels_by_category():
             return User.objects.none()
         qs = self._apply_filters(qs)
@@ -1302,7 +1346,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         # label filter supports multi-select
         label_filter = set()
         for label_id in self.request.GET.getlist("labels"):
-            if label_id != "":
+            if label_id.isdigit():
                 label_filter.add(label_id)
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
@@ -1560,6 +1604,16 @@ def user_delete(request, pk):
     return HttpResponse(status=405)
 
 
+# Safety ceiling so a single upload can't exhaust a worker's memory
+MAX_CSV_UPLOAD_BYTES = 50 * 1024 * 1024
+_CSV_MAX_MB = MAX_CSV_UPLOAD_BYTES // (1024 * 1024)
+_CSV_TOO_LARGE_MSG = f"Bestand te groot. Upload een CSV-bestand van maximaal {_CSV_MAX_MB} MB."
+
+
+def _csv_too_large(csv_file) -> bool:
+    return bool(csv_file.size) and csv_file.size > MAX_CSV_UPLOAD_BYTES
+
+
 @permission_required("rijksauth.add_user", raise_exception=True)
 def user_import_csv(request):
     """
@@ -1587,6 +1641,13 @@ def user_import_csv(request):
                 request,
                 "user_import.html",
                 {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
+            )
+
+        if _csv_too_large(csv_file):
+            return render(
+                request,
+                "user_import.html",
+                {"result": {"success": False, "errors": [_CSV_TOO_LARGE_MSG]}},
             )
 
         try:
@@ -1641,6 +1702,13 @@ def assignment_import_csv(request):
                 request,
                 "assignment_import.html",
                 {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
+            )
+
+        if _csv_too_large(csv_file):
+            return render(
+                request,
+                "assignment_import.html",
+                {"result": {"success": False, "errors": [_CSV_TOO_LARGE_MSG]}},
             )
 
         try:
@@ -2005,34 +2073,52 @@ def assignment_events_partial(request, pk):
         .select_related("user__colleague")
         .order_by("-timestamp")[:20]
     )
-    for event in events:
-        _attach_audit_render_data(event)
+    events = [event for event in events if _attach_audit_render_data(event, assignment, request)]
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
 
 
-def _attach_audit_render_data(event) -> None:
+def _attach_audit_render_data(event, obj, request) -> bool:
+    """Prepare `event` for the timeline. False means the viewer may see nothing
+    of it and it must not be rendered at all."""
     event.render_kind = "text"
     event.diff_entries = None
     event.formatted_old = event.context.get("old_value")
     event.formatted_new = event.context.get("new_value")
 
-    # Delete events are kept for the audit trail (visible in /beheer/database/)
-    # but never rendered here — a deleted opdracht has no panel to open.
+    # Delete events are kept for the audit trail but never rendered here — a
+    # deleted opdracht has no panel to open.
     if event.action != "update":
-        return
+        return True
     model_label = event.object_type.lower()
     editable_set = REGISTRY.get(model_label)
     if editable_set is None:
-        return
+        return True
     spec = editable_set._editables.get(event.context.get("field_name", ""))
     if spec is None:
-        return
+        return True
 
     if isinstance(spec, EditableCollection):
         event.render_kind = "collection"
+        changes = event.context.get("changes", [])
+        if spec.visible_changes is not None:
+            try:
+                visible = spec.visible_changes(obj, request, changes)
+            except AttributeError, TypeError:
+                # A legacy row shape the filter can't read is a row whose names
+                # we can't clear, so show no rows rather than risk a leak.
+                logger.warning(
+                    "Audit visible_changes failed for collection Event id=%s field=%s; hiding its rows",
+                    event.id,
+                    event.context.get("field_name"),
+                    exc_info=True,
+                )
+                return False
+            if changes and not visible:
+                return False
+            changes = visible
         if spec.render_change is not None:
             try:
-                event.diff_entries = [spec.render_change(c) for c in event.context.get("changes", [])]
+                event.diff_entries = [spec.render_change(c) for c in changes]
             except TypeError:
                 logger.warning(
                     "Audit render_change failed for collection Event id=%s field=%s; falling back to raw context",
@@ -2041,7 +2127,7 @@ def _attach_audit_render_data(event) -> None:
                     exc_info=True,
                 )
                 event.diff_entries = None
-        return
+        return True
 
     from django import forms  # noqa: PLC0415
 
@@ -2063,6 +2149,7 @@ def _attach_audit_render_data(event) -> None:
             event.context.get("field_name"),
             exc_info=True,
         )
+    return True
 
 
 def assignment_delete(request, pk):
@@ -2382,8 +2469,13 @@ def search_suggestions(request):
     return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs, "search_term": term.strip()})
 
 
-def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int]:
-    """Return per-org self-counts based on count_mode."""
+def _get_org_counts(count_mode: str, excluded_org_ids: list[int], viewer) -> Counter[int]:
+    """Return per-org self-counts based on count_mode.
+
+    ``viewer`` (the viewing Colleague or None) gates the placements count through
+    ``filter_visible_placements`` so a planned/ended placement never inflates the
+    count shown to someone who may not see it, the same rule the list already applies.
+    """
     if count_mode == "none":
         return Counter()
     if count_mode == "open_assignments":
@@ -2399,12 +2491,12 @@ def _get_org_counts(count_mode: str, excluded_org_ids: list[int]) -> Counter[int
             assignment_qs = assignment_qs.exclude(organizations__id__in=excluded_org_ids)
         org_id_list = assignment_qs.values_list("organizations__id", flat=True)
     else:
-        active_placements = annotate_placement_dates(Placement.objects.all()).filter(
-            actual_end_date__gte=timezone.now().date()
+        visible_placements = filter_visible_placements(
+            annotate_placement_dates(Placement.objects.all()), timezone.now().date(), viewer
         )
         if excluded_org_ids:
-            active_placements = active_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
-        org_id_list = active_placements.values_list("service__assignment__organizations__id", flat=True)
+            visible_placements = visible_placements.exclude(service__assignment__organizations__id__in=excluded_org_ids)
+        org_id_list = visible_placements.values_list("service__assignment__organizations__id", flat=True)
     return Counter(org_id for org_id in org_id_list if org_id is not None)
 
 
@@ -2413,6 +2505,7 @@ def _get_top_org_options(
     excluded_org_ids: list[int],
     selected_org_ids: set[str],
     *,
+    viewer=None,
     selected_self_ids: set[str] | None = None,
     selected_type_labels: set[str] | None = None,
     org_counts: Counter[int] | None = None,
@@ -2443,7 +2536,7 @@ def _get_top_org_options(
     selected_type_labels = selected_type_labels or set()
 
     if org_counts is None:
-        org_counts = _get_org_counts(count_mode, excluded_org_ids)
+        org_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
     selected_ids = {int(x) for x in selected_org_ids if str(x).isdigit()}
     self_ids = {int(x) for x in selected_self_ids if str(x).isdigit()}
 
@@ -2675,7 +2768,8 @@ def client_modal(request):
     excluded_org_ids = get_excluded_org_ids()
     count_mode = request.GET.get("count_mode", "placements")
 
-    org_self_counts = _get_org_counts(count_mode, excluded_org_ids)
+    viewer = getattr(request.user, "colleague", None)
+    org_self_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
     hierarchy = _build_org_hierarchy(org_self_counts, excluded_org_ids, prune_empty=count_mode != "none")
     current_selections = _build_current_selections(request)
 
@@ -2964,6 +3058,15 @@ def _emit_placement_change_on_assignment(placement, before_row: dict, user, requ
     )
 
 
+def _pk_stub(model, pk):
+    """An unsaved model instance carrying only ``pk``. Enough for the denial
+    partial's target/edit_url so a missing object renders byte-identically to a
+    forbidden one, without a second DB round-trip or a real record."""
+    stub = model()
+    stub.pk = pk
+    return stub
+
+
 def inline_edit_view(request, model_label, pk, name):
     """Generic HTMX endpoint. See ``features/inline-editing.md`` for the full contract."""
     editable_set = REGISTRY.get(model_label)
@@ -2973,11 +3076,15 @@ def inline_edit_view(request, model_label, pk, name):
     if spec is None:
         raise Http404("Unknown editable")
 
-    obj = get_object_or_404(editable_set.model, pk=pk)
+    obj = editable_set.model.objects.filter(pk=pk).first()
 
-    # Permission ladder — denial always returns display partial with alert.
-    denial = _permission_denied(editable_set, spec, request.user, obj)
+    # Permission ladder: a missing object and a forbidden one both return the
+    # SAME denial partial, so this endpoint can't be walked as a 404-vs-200
+    # existence oracle over sequential PKs (mirrors how the side panel returns an
+    # identical empty response for not-found and not-visible).
+    denial = _permission_denied(editable_set, spec, request.user, obj) if obj is not None else PERMISSION_DENIED_ALERT
     if denial:
+        display_obj = obj if obj is not None else _pk_stub(editable_set.model, pk)
         editables_for_display: list[Editable] = (
             [] if isinstance(spec, EditableCollection) else resolve_editables(editable_set, spec)
         )
@@ -2986,7 +3093,7 @@ def inline_edit_view(request, model_label, pk, name):
             editable_set,
             spec,
             editables_for_display,
-            obj,
+            display_obj,
             alert=denial,
             user_can_edit=False,
         )

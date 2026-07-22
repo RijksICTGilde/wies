@@ -19,6 +19,12 @@ class User(AbstractUser):
     username = None
     email = models.EmailField()
 
+    # Stable OIDC subject identifier (issuer-unique `sub` claim). Bound on the
+    # user's first successful login and used to identify the account on every
+    # login thereafter. Matching on this instead of the mutable email claim is what
+    # prevents impersonation when the email claim cannot be fully trusted.
+    oidc_sub = models.CharField(max_length=255, unique=True, null=True, blank=True)
+
     # Set once the user has seen (completed or skipped) the first-login
     # onboarding wizard. While None, the wizard is shown on every page.
     onboarding_completed_at = models.DateTimeField(null=True, blank=True)
