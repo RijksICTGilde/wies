@@ -15,11 +15,11 @@
 {% set _extra_errors = extra_errors if extra_errors is defined else [] %}
 {% if formset.non_form_errors() or _extra_errors %}
   <c-alert kind="error" id="diensten-error">
-  {% for error in formset.non_form_errors() %}{{ error }}{% endfor %}
-  {% for error in _extra_errors %}
-    {{ error }}
-    <br>
-  {% endfor %}
+    {% for error in formset.non_form_errors() %}{{ error }}{% endfor %}
+    {% for error in _extra_errors %}
+      {{ error }}
+      <br>
+    {% endfor %}
   </c-alert>
 {% endif %}
 <div id="services-container"
