@@ -293,6 +293,53 @@ class Event(models.Model):
         super().save(*args, **kwargs)
 
 
+class ErrorEvent(models.Model):
+    """A captured production error (unhandled 500 or background task failure).
+
+    Written by the logging handler in `wies.core.monitoring`; runtime-generated,
+    so no seed/dummy data. Inspected by staff on the statistieken page.
+    """
+
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
+    level = models.CharField(max_length=16, blank=True)
+    logger_name = models.CharField(max_length=255, blank=True)
+    message = models.TextField(blank=True)
+    # The raised exception's class name (e.g. "TypeError") and its str(), pulled
+    # from the log record's exc_info. Blank for log records without an exception.
+    exception_type = models.CharField(max_length=255, blank=True)
+    exception_message = models.TextField(blank=True)
+    traceback = models.TextField(blank=True)
+    # request context (only present for request-driven errors, not task failures)
+    method = models.CharField(max_length=8, blank=True)
+    path = models.CharField(max_length=512, blank=True)
+    # user FK for live display; SET_NULL preserves the error on user deletion
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="error_events",
+    )
+    user_email = models.EmailField(max_length=255, blank=True)
+    app_version = models.CharField(max_length=255, blank=True)
+
+    class Meta:
+        ordering = ["-timestamp"]
+        verbose_name = "Foutmelding"
+        verbose_name_plural = "Foutmeldingen"
+        # Supports the monitoring handler's throttle lookup on
+        # (exception_type, path, recent timestamp).
+        indexes = [models.Index(fields=["exception_type", "path", "timestamp"])]
+
+    def __str__(self):
+        return f"{self.level} {self.logger_name}: {self.message[:80]}"
+
+    @property
+    def short_description(self) -> str:
+        """Compact label for the table: the exception type, or the log message."""
+        return self.exception_type or self.message
+
+
 class OrganizationType(models.Model):
     name = models.CharField(max_length=100)
     label = models.CharField(max_length=100)

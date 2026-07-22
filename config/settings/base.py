@@ -37,7 +37,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "wies.core.middleware.SecurityHeadersMiddleware",
+    "wies.core.middleware.ResponseHeadersMiddleware",
     # WhiteNoise is added in production.py only — see prod settings.
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -58,6 +58,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "wies.core.context_processors.onboarding",
             ],
         },
     },
@@ -155,3 +156,14 @@ ENABLE_DESTRUCTIVE_STAFF_ACTIONS = os.environ.get("ENABLE_DESTRUCTIVE_STAFF_ACTI
 # OTYS API settings
 OTYS_API_KEY = os.environ.get("OTYS_API_KEY", "")
 OTYS_URL = os.environ.get("OTYS_URL", "")
+
+# MATTERMOST settings
+MATTERMOST_TOKEN = os.environ.get("MATTERMOST_TOKEN", "")
+MATTERMOST_WIES_OPS_CHANNEL_URL = os.environ.get("MATTERMOST_WIES_OPS_CHANNEL_URL", "")
+
+# SITE_BASE_URL is used if links need to be shared outside (e.g. in mattermost message)
+SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "").rstrip("/")
+
+# Error monitoring throttle: within this window, only the first error per
+# (exception_type, path) is persisted + posted to Mattermost
+ERROR_THROTTLE_MINUTES = 5

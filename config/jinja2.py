@@ -1,5 +1,5 @@
 from datetime import date
-from urllib.parse import urlparse
+from zoneinfo import ZoneInfo
 
 from django.conf import settings
 from django.contrib.messages import get_messages
@@ -23,6 +23,7 @@ from wies.core.inline_edit.jinja import inline_edit
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.permissions import is_staff_member
 from wies.core.services.organizations import get_org_breadcrumb
+from wies.core.services.urls import current_page_path
 from wies.core.services.version import get_app_version
 
 
@@ -52,6 +53,22 @@ def datum_nl(datum, fmt="N Y"):
         except ValueError:
             return datum
     return date_format(datum, fmt)
+
+
+NL_TIMEZONE = ZoneInfo("Europe/Amsterdam")
+
+
+def datetime_nl(dt, fmt="%Y-%m-%d %H:%M:%S"):
+    """Format a timezone-aware datetime in Dutch local time (Europe/Amsterdam).
+
+    The project stores times in UTC (TIME_ZONE=UTC); this converts to the local
+    zone for display, honouring daylight saving.
+    """
+    if dt is None:
+        return ""
+    if timezone.is_aware(dt):
+        dt = dt.astimezone(NL_TIMEZONE)
+    return dt.strftime(fmt)
 
 
 def tijdgeleden(dt):
@@ -129,15 +146,6 @@ def get_sort_state(request, field):
     return None
 
 
-def breadcrumb_base_url(request):
-    hx_url = request.headers.get("HX-Current-URL", "")
-    if hx_url:
-        path = urlparse(hx_url).path
-        if path:
-            return path
-    return request.path
-
-
 def environment(**options):
     env = Environment(**options)  # noqa: S701 - autoescape handled by Django
     env.globals.update(
@@ -155,7 +163,7 @@ def environment(**options):
             "inline_edit": inline_edit,
             "wire_field_errors": wire_field_errors,
             "get_org_breadcrumb": get_org_breadcrumb,
-            "breadcrumb_base_url": breadcrumb_base_url,
+            "current_page_path": current_page_path,
             "has_permission": has_permission,
             "Verb": Verb,
             "AssignmentEditables": AssignmentEditables,
@@ -166,6 +174,7 @@ def environment(**options):
         }
     )
     env.filters["datum_nl"] = datum_nl
+    env.filters["datetime_nl"] = datetime_nl
     env.filters["tijdgeleden"] = tijdgeleden
     env.filters["json_script"] = json_script
     env.filters["parse_message_link"] = parse_message_link

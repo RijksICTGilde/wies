@@ -12,6 +12,9 @@
     <span class="sidebar-footer__title">Over deze site</span>
     <ul class="sidebar-footer__menu">
       <li>
+        <a href="{{ url('faq') }}">Veelgestelde vragen</a>
+      </li>
+      <li>
         <a href="{{ url('privacy') }}">Privacy</a>
       </li>
       <li>
@@ -20,6 +23,13 @@
       <li>
         <a href="{{ url('contact') }}">Contact</a>
       </li>
+      {% if APP_VERSION and '/beheer/' in request.path %}
+        <li>
+          <c-link icon="delta-naar-rechts" iconSize="xs" weight="normal" color="zwart" noUnderline>
+          Versie: {{ APP_VERSION }}
+          </c-link>
+        </li>
+      {% endif %}
     </ul>
   </div>
 </div>

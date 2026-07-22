@@ -104,4 +104,5 @@ CMD ["./docker-entrypoint.sh"]
 # Worker target — runs the background task processor
 #-----------------------------------------------------------------------------------------------------------------------
 FROM django-run AS worker
+ENV DJANGO_SETTINGS_MODULE=config.settings.worker
 CMD ["python", "manage.py", "db_worker"]

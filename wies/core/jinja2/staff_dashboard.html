@@ -31,6 +31,14 @@
       <div class="staff-tile__value">{{ usage.failures_30d }}</div>
       <div class="staff-tile__label">Mislukte logins (30 dagen)</div>
     </div>
+    <c-h2>Recente foutmeldingen</c-h2>
+    <div id="error_table_container"
+         class="rvo-table-container"
+         hx-get="{{ url('error-table') }}"
+         hx-trigger="load"
+         hx-swap="innerHTML">
+      <span class="rvo-text rvo-text--subtle">Foutmeldingen laden...</span>
+    </div>
   </div>
   <h3>Logins per dag (laatste 90 dagen)</h3>
   <div class="staff-chart">

@@ -173,6 +173,22 @@
     </form>
     {% endif %}
   </div>
+  <div class="staff-action-card">
+    <h2>Onboarding resetten</h2>
+    <p>
+      Reset de onboarding-wizard voor je eigen account, zodat je de flow
+      opnieuw kunt doorlopen (handig voor demo's).
+    </p>
+    <form method="post">
+      {{ get_csrf_hidden_input(request) }}
+      <input type="hidden" name="action" value="reset_onboarding" />
+      <nldd-button
+        variant="secondary"
+        type="submit"
+        text="Onboarding resetten"
+      ></nldd-button>
+    </form>
+  </div>
   <div id="task-list">{% include "parts/task_list.html" %}</div>
 </nldd-container>
 {% endblock content %}

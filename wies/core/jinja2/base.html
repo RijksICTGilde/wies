@@ -84,5 +84,15 @@
     </nldd-page-footer>
     {% block panel %}
     {% endblock panel %}
+    {% if show_onboarding %}
+      {% include "parts/onboarding/onboarding_wizard.html" %}
+      {# inline_edit (label pickers) needs these; pages that already load them
+         are unaffected — the browser dedupes by URL. The label picker renders
+         an nldd-token-field (from the NLDD bundle in <head>), so the old
+         multi_select.js is no longer needed here. #}
+      <script src="{{ static('js/dialog.js') }}" defer></script>
+      <script src="{{ static('js/inline_edit.js') }}" defer></script>
+      <script src="{{ static('js/onboarding.js') }}" defer></script>
+    {% endif %}
   </body>
 </html>

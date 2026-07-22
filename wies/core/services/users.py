@@ -1,4 +1,5 @@
 import csv
+import logging
 from io import StringIO
 
 from django.conf import settings
@@ -6,12 +7,15 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.db import DataError, IntegrityError, transaction
 
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import DEFAULT_LABELS, Colleague, Label, LabelCategory
 from wies.core.services.events import create_event
 
 User = get_user_model()
+
+logger = logging.getLogger(__name__)
 
 
 def is_allowed_email_domain(email: str) -> bool:
@@ -256,57 +260,68 @@ def create_users_from_csv(creator, csv_content: str):
     created_labels = []
     label_mapping = {}  # mapping from str to Label, to avoid many DB queries
 
-    merken_category, _ = LabelCategory.objects.get_or_create(
-        name="Merk", defaults={"color": DEFAULT_LABELS["Merk"]["color"]}
-    )
+    try:
+        with transaction.atomic():
+            merken_category, _ = LabelCategory.objects.get_or_create(
+                name="Merk", defaults={"color": DEFAULT_LABELS["Merk"]["color"]}
+            )
 
-    # Get all groups once
-    groups_dict = {
-        "Beheerder": Group.objects.get(name="Beheerder"),
-        "Consultant": Group.objects.get(name="Consultant"),
-        "BDM": Group.objects.get(name="Business Development Manager"),
-    }
+            # Get all groups once
+            groups_dict = {
+                "Beheerder": Group.objects.get(name="Beheerder"),
+                "Consultant": Group.objects.get(name="Consultant"),
+                "BDM": Group.objects.get(name="Business Development Manager"),
+            }
 
-    for row in rows:
-        first_name = row["first_name"].strip()
-        last_name = row["last_name"].strip()
-        email = row["email"].strip()
-        brand_name = row.get("brand", "").strip()
+            for row in rows:
+                first_name = row["first_name"].strip()
+                last_name = row["last_name"].strip()
+                email = row["email"].strip()
+                brand_name = row.get("brand", "").strip()
 
-        # Handle label assignment from brand column
-        labels_to_assign = []
-        if brand_name:
-            if brand_name in label_mapping:
-                label = label_mapping[brand_name]
-            else:
-                label, created = Label.objects.get_or_create(name=brand_name, category=merken_category)
-                label_mapping[brand_name] = label
-                if created:
-                    created_labels.append(brand_name)
-            labels_to_assign.append(label)
+                # Handle label assignment from brand column
+                labels_to_assign = []
+                if brand_name:
+                    if brand_name in label_mapping:
+                        label = label_mapping[brand_name]
+                    else:
+                        label, created = Label.objects.get_or_create(name=brand_name, category=merken_category)
+                        label_mapping[brand_name] = label
+                        if created:
+                            created_labels.append(brand_name)
+                    labels_to_assign.append(label)
 
-        groups_to_assign = []
-        for group_name in ["Beheerder", "Consultant", "BDM"]:
-            if row.get(group_name, "").strip().lower() == "y":
-                group = groups_dict.get(group_name)
-                if group:
-                    groups_to_assign.append(group)
+                groups_to_assign = []
+                for group_name in ["Beheerder", "Consultant", "BDM"]:
+                    if row.get(group_name, "").strip().lower() == "y":
+                        group = groups_dict.get(group_name)
+                        if group:
+                            groups_to_assign.append(group)
 
-        existing_user = User.objects.filter(email__iexact=email).first()
-        if existing_user:
-            # Skip existing users
-            errors.append(f"User with email '{email}' already exists, skipped")
-            continue
+                existing_user = User.objects.filter(email__iexact=email).first()
+                if existing_user:
+                    # Skip existing users
+                    errors.append(f"User with email '{email}' already exists, skipped")
+                    continue
 
-        create_user(
-            creator,
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            labels=labels_to_assign,
-            groups=groups_to_assign,
-        )
-        users_created += 1
+                create_user(
+                    creator,
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email,
+                    labels=labels_to_assign,
+                    groups=groups_to_assign,
+                )
+                users_created += 1
+    except (DataError, IntegrityError) as e:
+        logger.warning("User-CSV import failed with a data error", exc_info=e)
+        return {
+            "success": False,
+            "users_created": 0,
+            "labels_created": 0,
+            "created_labels": [],
+            "errors": ["Er ging iets mis bij het verwerken van het bestand. Controleer de waarden in het CSV-bestand."],
+        }
 
     return {
         "success": True,

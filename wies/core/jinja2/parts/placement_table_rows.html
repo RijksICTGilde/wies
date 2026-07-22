@@ -12,7 +12,7 @@ intercepts the click to open the side panel instead of navigating. #}
   <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
   <nldd-text-cell text="{{ placement.colleague.name }}" supporting-text="{{ placement.service.skill.name if placement.service.skill else '' }}"></nldd-text-cell>
   <nldd-text-cell text="{{ placement.service.assignment.name }}" supporting-text="{{ client_label }}"></nldd-text-cell>
-  <nldd-text-cell text="{{ placement.end_date|datum_nl('j M Y') if placement.end_date else '' }}" color="secondary" horizontal-alignment="right"></nldd-text-cell>
+  <nldd-text-cell text="{{ placement.actual_end_date|datum_nl('j N Y') if placement.actual_end_date else '' }}" color="secondary" horizontal-alignment="right"></nldd-text-cell>
   <nldd-spacer-cell slot="end" size="8"></nldd-spacer-cell>
   <nldd-icon-cell slot="end" size="16">
   <nldd-icon name="chevron-right"></nldd-icon>

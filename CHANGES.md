@@ -23,6 +23,60 @@ This files lists the changes during the lifetime of this project.
 - NLDD: adopt the `nldd-sidebar-section` layout on every page (upgrade @nldd/design-system to 0.8.64) — a sticky sidebar on wide screens that collapses to a sheet on narrow ones; contextual sidebars everywhere (filters, beheer-nav, general nav)
 - NLDD: port the filter "Meer"-modal UX (#402) — each filter group shows its top-3 options plus a "Meer" button that opens the full alphabetical list in a modal with search; the selection applies only on "Filter toepassen"
 - NLDD: merge `main` into the NLDD design-system branch — adopt the opdracht/plaatsing side-panel features (Gegevens/Updates tabs, inline-edit of all fields, opdracht verwijderen, placement periods), the "Dubbele opdrachten samenvoegen" beheertool and the full privacyverklaring, all rebuilt in the NLDD design system; migrate the privacy-html generator to NLDD output
+- 473: fix the opdrachtgever filter counts including planned placements that placement visibility hides from unrelated viewers
+- 473: stop the inline-edit endpoint from revealing whether an object exists to users who may not edit it (a missing and a forbidden object now return the same response)
+- 478: the user and opdracht CSV imports now reject files larger than 50 MB, so an extremely large file cannot exhaust a worker's memory
+- 477: logging out is now only possible via the button (POST), no longer via a bare GET request, so an external page cannot log you out without your knowledge
+- 481: the production container no longer silently falls back to the local development settings (DEBUG on) when DJANGO_SETTINGS_MODULE is missing at startup; the startup script then defaults to the production settings (an explicitly provided value still takes precedence). Local development is unchanged.
+- 486: the opdracht and user CSV imports now show a graceful error message instead of a 500 when a value is too long for its field or the file is not valid CSV.
+- 479: fix the "Wie zit waar?" and Gebruikers overviews returning a 500 error and showing "Wis filters" when the labels filter contained a non-numeric value in the URL; such a value is now ignored, just like the organization and role filters.
+- 491: PR preview environments are now reliably removed when a PR closes, preview images build on every push regardless of merge conflicts or CI status, previews also build when a draft PR is marked ready for review, and a preview can be rebuilt manually from the Actions UI; the weekly registry cleanup of old preview images is fixed
+- 460: (migration)(add env vars) basic error monitoring — unhandled server errors (500) and failed background tasks are stored and shown on the statistics page, with a Mattermost notification.
+- 460: A failing task is marked failed immediately instead of hanging until timeout.
+- 493: (remove env vars) the background worker now runs on its own settings module (config.settings.worker) and no longer requires the OIDC credentials to be set at startup. locally worker now also uses its own dedicate .env file
+
+## 2026-07-20
+
+- 487: login now binds an account to its OIDC subject (`sub`) instead of the email address alone, and rejects a token whose email is already bound to a different `sub`; this prevents account takeover when the token's email claim cannot be fully trusted
+- 487: login now requires the OIDC email to be verified (`email_verified`), rejecting the login otherwise
+- 487: production now refuses to start unless OIDC_DISCOVERY_URL uses https, protecting OIDC signature validation
+
+## 2026-07-17
+
+- 468: fix the opdracht Updates tab revealing colleague names of planned or ended placements, which the Team tab hides from everyone except the placed colleague and the BM-owner
+
+## 2026-07-15
+
+- 456: fix onboarding wizard's Merken picker rendering broken on pages that don't load the filter/side-panel stylesheets
+- 456: fix multiselect dropdown (e.g. Merk in the profile onboarding) being unreachable when the trigger sits low on the screen
+
+## 2026-07-08_3
+
+- 443: add a Veelgestelde vragen (FAQ) page with an accordion, linked from the sidebar footer.
+- 443: compact sidebar footer — FAQ, Privacy, Toegankelijkheid and Contact now sit under one "Over Wies" heading
+- 450: bump Django to 6.0.7 (security release)
+- 449: fix icons/styling occasionally rendering broken after a deploy. fixed by including `Cache-Control: no-store` on HTML responses
+- 449: fix edit-pencil (and other inline-edit) icons rendering grey on pages that don't load `side_panel.css`. Moved inline-edit styling to the global `base.css`.
+
+## 2026-07-08_2
+
+- add css comment to trigger styling errors after deploy
+- 446: the search field now commits on blur — trimming or clearing the text and clicking away updates the URL/results, without needing Enter or the magnifier
+
+## 2026-07-08
+
+- 438: fix assignment owner link in the assignment side panel so it points back to the page the user is on (instead of the `/assignments/` page)
+- 444: staff can reset their own onboarding wizard from the database page (for demos)
+- 430: (migration) first-login onboarding wizard — welcome + explanation of the tabs, fill in your profile with labels, and for placed consultants a step to check their own opdracht. Adds `User.onboarding_completed_at` to remember when the wizard was finished or skipped.
+- 425: add debug page for request metadata to determine appropriate IP gathering in production
+- 439: fix dates showing a capitalized month ("30 Jun 2027") in the "Wie zit waar?"-overzicht ("Tot"-kolom) and the opdracht-zijpaneel teamlijst; they now use the lowercase Dutch abbreviation ("30 jun 2027")
+
+## 2026-07-02
+
+- 402: each filter group now shows its top-3 options plus a "Meer" button that opens a modal with all options (searchable, alphabetical); selected options sort to the top and stay visible even outside the top-3. The modal applies its selection only on "Filter toepassen" (closing without applying discards it), consistent with the opdrachtgever picker
+- 402: search now runs on Enter or the magnifier (not on every keystroke) and keeps its text instead of becoming a chip; org suggestions still load live while typing
+- 402: added a "Wis alle filters" button next to the active filter chips, so the chips and the clear-all action read together above the results
+- 402: fixes — "Toon meer/minder" label now updates; clearing the search no longer leaves a stale term or a missing × button
 - 417: remove `ModelBackend` from `AUTHENTICATION_BACKENDS`; `AuthBackend` now inherits from `ModelBackend` so group permissions keep resolving via a single backend, but there is no second password-login path)
 - 334: Add privacy declaration and beheer document. The in-product privacy page is regenerated via `manage.py generate_privacy_html`
 - 410: fix privacy leak (#383) where non-active plaatsingen were shown to everyone; ended and future (not-yet-started) plaatsingen are now only visible to the placed colleague and the opdracht's Business Manager, each with a privacy note and an "Afgelopen"/"Gepland" chip, consistently across the opdracht team list, the team count, the standalone plaatsing-pagina (`?plaatsing=N`, which was reachable by guessing the URL), the "Wie zit waar?"-overzicht and the profiel-overzicht. The security.txt is now accessible, it was hidden behind the SSO wall.

@@ -124,6 +124,9 @@ def _link_users_to_colleagues():
             defaults={
                 "first_name": colleague.name.split()[0] if colleague.name else "",
                 "last_name": " ".join(colleague.name.split()[1:]) if colleague.name else "",
+                # Back-filled fixture users are placeholders (they reference
+                # events, they don't log in interactively) — skip onboarding.
+                "onboarding_completed_at": timezone.now(),
             },
         )
         colleague.user = user
