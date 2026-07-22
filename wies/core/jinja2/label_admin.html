@@ -10,9 +10,16 @@
 {% block content %}
   <div class="rvo-layout-column rvo-layout-gap--xl">
     <div class="admin-header">
-      <c-h1>Labels</c-h1>
-      <c-button kind="primary" icon="plus" iconPlacement="before" hx-get="{{ url('label-category-create', args=() ) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
-      Categorie toevoegen
+      <c-h1>
+        Labels
+      </c-h1>
+      <c-button kind="primary"
+                icon="plus"
+                iconPlacement="before"
+                hx-get="{{ url('label-category-create', args=()) }}"
+                hx-target="#labelFormModal"
+                hx-swap="innerHTML">
+        Categorie toevoegen
       </c-button>
     </div>
     {# Categories and Labels #}
@@ -21,7 +28,9 @@
         <div id="label_category_{{ category.id }}">{% include "parts/label_category.html" %}</div>
       {% endfor %}
     {% else %}
-      <c-paragraph>Geen categorieën gevonden. Maak een nieuwe categorie aan om te beginnen.</c-paragraph>
+      <c-paragraph>
+        Geen categorieën gevonden. Maak een nieuwe categorie aan om te beginnen.
+      </c-paragraph>
     {% endif %}
     {# Modal container #}
     <div id="labelFormModal"></div>

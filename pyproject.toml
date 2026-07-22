@@ -18,11 +18,11 @@ dependencies = [
 dev = [
   "pre-commit>=4.6.0",
   "ruff>=0.15.15",
-  "djlint>=1.39.0",
-  "pytest>=9.0.3",
+  "djlint>=1.40.8",
+  "pytest>=9.1.1",
   "pytest-django>=4.9",
   "pytest-cov>=6.0",
-  "coverage[toml]>=7.14.1",
+  "coverage[toml]>=7.15.2",
   "markdown-it-py>=4.2.0",
 ]
 
@@ -130,7 +130,8 @@ exclude_lines = [
 profile = "jinja"
 indent = 2
 max_line_length = 120
-ignore = "H006,H021,H030,H031"
+ignore = "H006,H021,H025,H030,H031"
 # H006: img width/height (fix later)
 # H021: inline styles (fix later)
+# H025: orphan tag false-positive around the djlint:off block in header_logo.html (djlint 1.42.2)
 # H030,H031: meta description/keywords not needed for internal tool

@@ -1,30 +1,56 @@
 <c-table id="error_table" class="error-table">
-<c-table-head>
-<c-table-row>
-<c-table-header class="error-table__col-tijd">Tijd</c-table-header>
-<c-table-header class="error-table__col-fout">Fout</c-table-header>
-<c-table-header class="error-table__col-waar">Waar</c-table-header>
-<c-table-header class="error-table__col-gebruiker">Gebruiker</c-table-header>
-<c-table-header class="error-table__actions-col">Acties</c-table-header>
-</c-table-row>
-</c-table-head>
-<c-table-body>
-{% include "parts/error_table_rows.html" %}
-</c-table-body>
+  <c-table-head>
+    <c-table-row>
+      <c-table-header class="error-table__col-tijd">
+        Tijd
+      </c-table-header>
+      <c-table-header class="error-table__col-fout">
+        Fout
+      </c-table-header>
+      <c-table-header class="error-table__col-waar">
+        Waar
+      </c-table-header>
+      <c-table-header class="error-table__col-gebruiker">
+        Gebruiker
+      </c-table-header>
+      <c-table-header class="error-table__actions-col">
+        Acties
+      </c-table-header>
+    </c-table-row>
+  </c-table-head>
+  <c-table-body>
+    {% include "parts/error_table_rows.html" %}
+  </c-table-body>
 </c-table>
 {% if page_obj.paginator.num_pages > 1 %}
   <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--center"
        style="margin-top: 1rem">
     {% if previous_page_url %}
-      <c-button kind="secondary" type="button" hx-get="{{ previous_page_url }}" hx-target="#error_table_container" hx-swap="innerHTML">Vorige</c-button>
+      <c-button kind="secondary"
+                type="button"
+                hx-get="{{ previous_page_url }}"
+                hx-target="#error_table_container"
+                hx-swap="innerHTML">
+        Vorige
+      </c-button>
     {% else %}
-      <c-button kind="secondary" type="button" disabled>Vorige</c-button>
+      <c-button kind="secondary" type="button" disabled>
+        Vorige
+      </c-button>
     {% endif %}
     <span class="rvo-text rvo-text--sm">Pagina {{ page_obj.number }} van {{ page_obj.paginator.num_pages }}</span>
     {% if next_page_url %}
-      <c-button kind="secondary" type="button" hx-get="{{ next_page_url }}" hx-target="#error_table_container" hx-swap="innerHTML">Volgende</c-button>
+      <c-button kind="secondary"
+                type="button"
+                hx-get="{{ next_page_url }}"
+                hx-target="#error_table_container"
+                hx-swap="innerHTML">
+        Volgende
+      </c-button>
     {% else %}
-      <c-button kind="secondary" type="button" disabled>Volgende</c-button>
+      <c-button kind="secondary" type="button" disabled>
+        Volgende
+      </c-button>
     {% endif %}
   </div>
 {% endif %}

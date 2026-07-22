@@ -21,9 +21,16 @@
     <div class="rvo-form">
       <div class="rvo-layout-column rvo-layout-gap--md">
         <div class="rvo-layout-column rvo-layout-gap--sm">
-          <c-link href="{{ url('assignment-list') }}" icon="terug" iconPlacement="before" noUnderline>Terug naar aanvragen</c-link>
+          <c-link href="{{ url('assignment-list') }}"
+                  icon="terug"
+                  iconPlacement="before"
+                  noUnderline>
+            Terug naar aanvragen
+          </c-link>
           <div>
-            <c-h1>Opdracht invoeren</c-h1>
+            <c-h1>
+              Opdracht invoeren
+            </c-h1>
             <p>
               Voer hier de gegevens in van een opdracht. Dit formulier kan gebruikt worden voor nieuwe opdrachten, bestaande opdrachten en aanvragen.
             </p>
@@ -53,8 +60,15 @@
               {% endwith %}
             {% endcall %}
             <div class="utrecht-button-group">
-              <c-button kind="primary" type="submit">Opdracht aanmaken</c-button>
-              <c-button kind="secondary" type="button" id="assignment-cancel-btn" data-cancel-url="{{ url('assignment-list') }}">Annuleren</c-button>
+              <c-button kind="primary" type="submit">
+                Opdracht aanmaken
+              </c-button>
+              <c-button kind="secondary"
+                        type="button"
+                        id="assignment-cancel-btn"
+                        data-cancel-url="{{ url('assignment-list') }}">
+                Annuleren
+              </c-button>
             </div>
           </div>
         </form>
