@@ -57,6 +57,7 @@ from wies.core.views import (
     onboarding_complete,
     organization_admin,
     organization_admin_ndd,
+    placement_edit_view,
     privacy,
     privacy_ndd,
     robots_txt,
@@ -145,6 +146,7 @@ urlpatterns = [
         inline_edit_view,
         name="inline-edit",
     ),
+    path("plaatsing/<int:pk>/bewerken/", placement_edit_view, name="placement-edit"),
 ]
 
 # Custom error handlers

@@ -11,7 +11,9 @@
         data-service-start="{{ obj.service.start_date.isoformat() if obj.service.start_date else '' }}"
         data-service-end="{{ obj.service.end_date.isoformat() if obj.service.end_date else '' }}">
     <div class="nldd-form-fields nldd-form-fields--spaced">
-      {{ form.period_source.as_widget(attrs={"style": "display:none", "data-period-source": ""}) }}
+      {# Verborgen via een ouder met [hidden]: een `display:none` op de select
+         zelf wordt door de bundel-CSS overruled. #}
+      <div hidden>{{ form.period_source.as_widget() }}</div>
       <div class="nldd-form-field">
         <span class="nldd-form-field__label">Periode</span>
         <label class="nldd-checkbox-option">
@@ -25,13 +27,13 @@
       <div class="nldd-form-field">
         <label class="nldd-form-field__label"
                for="{{ form.specific_start_date.id_for_label }}">{{ form.specific_start_date.label }}</label>
-        {{ form.specific_start_date.as_widget(attrs={"data-specific-start": ""}) }}
+        {{ form.specific_start_date.as_widget() }}
         {% for error in form.specific_start_date.errors %}<p class="nldd-form-field__error-text">{{ error }}</p>{% endfor %}
       </div>
       <div class="nldd-form-field">
         <label class="nldd-form-field__label"
                for="{{ form.specific_end_date.id_for_label }}">{{ form.specific_end_date.label }}</label>
-        {{ form.specific_end_date.as_widget(attrs={"data-specific-end": ""}) }}
+        {{ form.specific_end_date.as_widget() }}
         {% for error in form.specific_end_date.errors %}<p class="nldd-form-field__error-text">{{ error }}</p>{% endfor %}
       </div>
     </div>

@@ -6,5 +6,6 @@
 {% if widget.value != None %}value="{{ widget.value }}"{% endif %}
 {% if widget.attrs.required %}required{% endif %}
 {% if widget.attrs.placeholder %}placeholder="{{ widget.attrs.placeholder }}"{% endif %}
+{% if widget.attrs.width %}width="{{ widget.attrs.width }}"{% endif %}
 {% if widget.attrs.invalid %}invalid error-message-ids="{{ widget.attrs['error-message'] }}"{% endif %}
 ></nldd-date-field>

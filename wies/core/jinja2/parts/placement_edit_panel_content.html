@@ -1,0 +1,112 @@
+{# Child sheet van het plaatsingspaneel: één formulier over Service.skill,
+   Service.description en de Placement.period-groep. De terugknop van de
+   top-title-bar vuurt een `back`-event dat side_panel.js afvangt; opslaan
+   rendert het ouderpaneel terug (zie placement_edit_view).
+
+   nldd-form krijgt een eigen <form> als direct child (user-provided form mode),
+   omdat htmx zijn attributen op het echte formulier nodig heeft. #}
+{% set colleague = panel_data.colleague %}
+{% set form = panel_data.form %}
+{% set panel_heading = "Rol bewerken" %}
+{# collapse-anchor: dezelfde titel staat in de bar en verschijnt daar pas zodra
+   de kop in de inhoud eronder wegscrollt. #}
+<nldd-top-title-bar slot="header"
+                    text="{{ panel_heading }}"
+                    collapse-anchor="panel-title"
+                    back-text="{{ colleague.name }}"
+                    dismiss-text="Sluit"></nldd-top-title-bar>
+<nldd-simple-section padding-top="0">
+  <nldd-title size="4">
+    <h3 id="panel-title">{{ panel_heading }}</h3>
+  </nldd-title>
+  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  <nldd-form>
+    <form hx-post="{{ panel_data.edit_url }}"
+          hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+          hx-target="#side-panel-content"
+          hx-swap="innerHTML"
+          data-service-start="{{ panel_data.service.start_date.isoformat() if panel_data.service.start_date else '' }}"
+          data-service-end="{{ panel_data.service.end_date.isoformat() if panel_data.service.end_date else '' }}">
+      <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
+      {% if form.skill %}
+        {# Combobox in plaats van de select-widget: de rollenlijst is lang genoeg
+           om te willen typen. value/text komen uit de gekozen optie. #}
+        {% set skill_value = form.skill.value() | string if form.skill.value() else "" %}
+        <nldd-form-field label="{{ form.skill.label }}">
+          <nldd-combo-box name="skill"
+                          value="{{ skill_value }}"
+                          accessible-label="{{ form.skill.label }}"
+                          {% if form.skill.errors %}invalid{% endif %}>
+            <nldd-menu empty-text="Geen rollen gevonden">
+              {% for value, label in form.skill.field.choices %}
+                {% if value != "" %}<nldd-menu-item text="{{ label }}" value="{{ value }}"></nldd-menu-item>{% endif %}
+              {% endfor %}
+            </nldd-menu>
+          </nldd-combo-box>
+          {% for error in form.skill.errors %}
+            <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+          {% endfor %}
+        </nldd-form-field>
+      {% endif %}
+      {% if form.description %}
+        <nldd-form-field label="{{ form.description.label }}">
+          {{ form.description.as_widget() }}
+          {% for error in form.description.errors %}
+            <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+          {% endfor %}
+        </nldd-form-field>
+      {% endif %}
+      {% if form.period_source %}
+        {# Verborgen via een ouder met [hidden]: een `display:none` op de select
+           zelf wordt door de bundel-CSS overruled. De radiogroep hieronder zet
+           de waarde (zie placement_period_toggle.js). #}
+        <div hidden>{{ form.period_source.as_widget() }}</div>
+        {% set inherits = form.period_source.value() == "SERVICE" %}
+        <nldd-form-field label="Periode">
+          <nldd-segmented-control name="periode-keuze"
+                                  width="full"
+                                  accessible-label="Periode"
+                                  value="{{ 'SERVICE' if inherits else 'PLACEMENT' }}"
+                                  data-period-choice>
+            <nldd-segmented-control-item value="SERVICE" text="Van opdracht"></nldd-segmented-control-item>
+            <nldd-segmented-control-item value="PLACEMENT" text="Anders..."></nldd-segmented-control-item>
+          </nldd-segmented-control>
+          {# Alleen zinvol bij "Van opdracht"; placement_period_toggle.js verbergt
+             hem zodra je een eigen periode kiest. #}
+          <nldd-form-field-help-text data-service-period-help>
+            De periode van de opdracht is
+            {{ panel_data.service.start_date|datum_nl("j F Y") if panel_data.service.start_date else "onbekend" }}
+            t/m
+            {{ panel_data.service.end_date|datum_nl("j F Y") if panel_data.service.end_date else "heden" }}
+          </nldd-form-field-help-text>
+        </nldd-form-field>
+        <nldd-form-field label="{{ form.specific_start_date.label }}">
+          {{ form.specific_start_date.as_widget(attrs={"width": "full"}) }}
+          {% for error in form.specific_start_date.errors %}
+            <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+          {% endfor %}
+        </nldd-form-field>
+        {# Uit betekent: geen einddatum bekend, de plaatsing loopt door. De switch
+           post niet mee; hij stuurt alleen het einddatumveld aan. #}
+        <nldd-form-field>
+          <nldd-switch-field label="Einddatum is bekend"
+                             data-end-date-known
+                             {% if form.specific_end_date.value() or inherits %}checked{% endif %}></nldd-switch-field>
+        </nldd-form-field>
+        <nldd-form-field label="{{ form.specific_end_date.label }}">
+          {{ form.specific_end_date.as_widget(attrs={"width": "full"}) }}
+          {% for error in form.specific_end_date.errors %}
+            <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+          {% endfor %}
+        </nldd-form-field>
+      {% endif %}
+      {% for error in form.non_field_errors() %}
+        <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+      {% endfor %}
+      <nldd-form-actions>
+        <nldd-button type="submit" variant="primary" width="full" text="Opslaan"></nldd-button>
+      </nldd-form-actions>
+    </form>
+  </nldd-form>
+</nldd-simple-section>
+<script src="{{ static('js/placement_period_toggle.js') }}"></script>
