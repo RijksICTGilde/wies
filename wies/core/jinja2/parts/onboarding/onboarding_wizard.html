@@ -10,14 +10,19 @@
         data-onboarding>
   <div class="modal-content">
     <div class="modal-header">
-      <c-h2>Welkom bij Wies</c-h2>
+      <c-h2>
+        Welkom bij Wies
+      </c-h2>
       <form method="post"
             action="{{ url('onboarding-complete') }}"
             hx-post="{{ url('onboarding-complete') }}"
             hx-swap="none">
         {{ get_csrf_hidden_input(request) }}
-        <c-button kind="subtle" type="submit" class="onboarding-skip" aria-label="Onboarding overslaan">
-        Overslaan
+        <c-button kind="subtle"
+                  type="submit"
+                  class="onboarding-skip"
+                  aria-label="Onboarding overslaan">
+          Overslaan
         </c-button>
       </form>
     </div>
@@ -36,24 +41,38 @@
         <div class="onboarding-illustration">
           <c-icon icon="groep-3-personen" size="xl" color="hemelblauw" />
         </div>
-        <c-h3>Hoi {{ (user.first_name or '').strip() or 'collega' }}!</c-h3>
+        <c-h3>
+          Hoi {{ (user.first_name or '').strip() or 'collega' }}!
+        </c-h3>
         <c-paragraph>
-        Wies geeft je inzicht wie je collega's zijn, waar ze werken en wat voor
-        opdrachten ze doen. Boven in het scherm vind je twee tabbladen:
+          Wies geeft je inzicht wie je collega's zijn, waar ze werken en wat voor
+          opdrachten ze doen. Boven in het scherm vind je twee tabbladen:
         </c-paragraph>
         <ul class="onboarding-tabs-explainer">
           <li>
             <c-icon icon="groep-3-personen" size="sm" color="hemelblauw" />
-            <c-span>Bij <c-strong>Wie zit waar?</c-strong> zie je in één oogopslag welke collega's waar geplaatst zijn.</c-span>
+            <c-span>
+              Bij
+              <c-strong>
+                Wie zit waar?
+              </c-strong>
+              zie je in één oogopslag welke collega's waar geplaatst zijn.
+            </c-span>
           </li>
           <li>
             <c-icon icon="document-met-lijnen" size="sm" color="hemelblauw" />
-            <c-span>Bij <c-strong>Aanvragen</c-strong> vind je de opdrachten waarvoor collega's gezocht worden. Spot de nieuwe en kijk waar jij van waarde kunt zijn.</c-span>
+            <c-span>
+              Bij
+              <c-strong>
+                Aanvragen
+              </c-strong>
+              vind je de opdrachten waarvoor collega's gezocht worden. Spot de nieuwe en kijk waar jij van waarde kunt zijn.
+            </c-span>
           </li>
         </ul>
         <div class="onboarding-disclaimer">
           <c-alert kind="info">
-          Let op: Wies bevat op dit moment alleen opdrachten van het Rijks ICT Gilde (RIG) en het Digi Gilde.
+            Let op: Wies bevat op dit moment alleen opdrachten van het Rijks ICT Gilde (RIG) en het Digi Gilde.
           </c-alert>
         </div>
       </section>
@@ -63,22 +82,30 @@
         <div class="onboarding-illustration">
           <c-icon icon="persoon-met-vinkje" size="xl" color="hemelblauw" />
         </div>
-        <c-h3>Vul je profiel aan</c-h3>
+        <c-h3>
+          Vul je profiel aan
+        </c-h3>
         <c-paragraph>
-        Kies de labels die bij je passen, zo vinden collega's je makkelijker
-        terug. Je kunt dit later altijd aanpassen op je profiel.
+          Kies de labels die bij je passen, zo vinden collega's je makkelijker
+          terug. Je kunt dit later altijd aanpassen op je profiel.
         </c-paragraph>
         {% if onboarding_colleague %}
           <c-data-list class="onboarding-labels">
-          {% for category in onboarding_label_categories %}
-            <dt>{{ category.name }}</dt>
-            <dd>
-              {{ inline_edit(onboarding_colleague, "labels_" ~ category.id) }}
-            </dd>
-          {% endfor %}
+            {% for category in onboarding_label_categories %}
+              <dt>{{ category.name }}</dt>
+              <dd>
+                {{ inline_edit(onboarding_colleague, "labels_" ~ category.id) }}
+              </dd>
+            {% endfor %}
           </c-data-list>
         {% else %}
-          <c-paragraph>Je profiel wordt klaargezet. Je kunt labels straks invullen via <c-link href="{{ url('user-profile') }}">Mijn profiel</c-link>.</c-paragraph>
+          <c-paragraph>
+            Je profiel wordt klaargezet. Je kunt labels straks invullen via
+            <c-link href="{{ url('user-profile') }}">
+              Mijn profiel
+            </c-link>
+            .
+          </c-paragraph>
         {% endif %}
       </section>
       {# Opdracht-check step, shown only when placed on ≥1 assignment. What is
@@ -90,67 +117,75 @@
             <c-icon icon="klembord-met-vinkje" size="xl" color="hemelblauw" />
           </div>
           <c-h3>
-          {%- if onboarding_assignments|length > 1 -%}
-            Controleer je opdrachten ({{ onboarding_assignments|length }})
-          {%- else -%}
-            Controleer je opdracht
-          {%- endif -%}
+            {%- if onboarding_assignments|length > 1 -%}
+              Controleer je opdrachten ({{ onboarding_assignments|length }})
+            {%- else -%}
+              Controleer je opdracht
+            {%- endif -%}
           </c-h3>
           <c-paragraph>
-          {% if onboarding_assignments|length > 1 %}
-            Dit zijn de opdrachten waarop je bent geplaatst. Klopt de naam of
-            omschrijving niet, of ontbreekt er iets? Vul het hier direct aan.
-          {% else %}
-            Dit is de opdracht waarop je bent geplaatst. Klopt de naam of
-            omschrijving niet, of ontbreekt er iets? Vul het hier direct aan.
-          {% endif %}
+            {% if onboarding_assignments|length > 1 %}
+              Dit zijn de opdrachten waarop je bent geplaatst. Klopt de naam of
+              omschrijving niet, of ontbreekt er iets? Vul het hier direct aan.
+            {% else %}
+              Dit is de opdracht waarop je bent geplaatst. Klopt de naam of
+              omschrijving niet, of ontbreekt er iets? Vul het hier direct aan.
+            {% endif %}
           </c-paragraph>
           <div class="onboarding-assignments">
             {% for entry in onboarding_assignments %}
               {% set assignment = entry.assignment %}
               <div class="onboarding-assignment">
                 <c-data-list>
-                <dt>Opdracht naam</dt>
-                <dd>
-                  {{ inline_edit(assignment, "name") }}
-                </dd>
-                <dt>Opdrachtomschrijving</dt>
-                <dd>
-                  {{ inline_edit(assignment, "extra_info") }}
-                </dd>
-                <dt>{{ "Opdrachtgevers" if assignment.organization_relations.count() > 1 else "Opdrachtgever" }}</dt>
-                <dd>
-                  {{ inline_edit(assignment, "organizations") }}
-                </dd>
-                <dt>Periode</dt>
-                <dd>
-                  {{ inline_edit(assignment, "period") }}
-                </dd>
-                {% for service in entry.services %}
-                  <dt>{{ "Jouw rol" if entry.services|length == 1 else "Rol" }}</dt>
+                  <dt>Opdracht naam</dt>
                   <dd>
-                    {{ inline_edit(service, "skill") }}
+                    {{ inline_edit(assignment, "name") }}
                   </dd>
-                  <dt>Omschrijving rol</dt>
+                  <dt>Opdrachtomschrijving</dt>
                   <dd>
-                    {{ inline_edit(service, "description") }}
+                    {{ inline_edit(assignment, "extra_info") }}
                   </dd>
-                {% endfor %}
+                  <dt>{{ "Opdrachtgevers" if assignment.organization_relations.count() > 1 else "Opdrachtgever" }}</dt>
+                  <dd>
+                    {{ inline_edit(assignment, "organizations") }}
+                  </dd>
+                  <dt>Periode</dt>
+                  <dd>
+                    {{ inline_edit(assignment, "period") }}
+                  </dd>
+                  {% for service in entry.services %}
+                    <dt>{{ "Jouw rol" if entry.services|length == 1 else "Rol" }}</dt>
+                    <dd>
+                      {{ inline_edit(service, "skill") }}
+                    </dd>
+                    <dt>Omschrijving rol</dt>
+                    <dd>
+                      {{ inline_edit(service, "description") }}
+                    </dd>
+                  {% endfor %}
                 </c-data-list>
                 {# Read-only fields: refer to the Business Manager (name + mailto). #}
                 <div class="onboarding-assignment__bm">
                   {% if assignment.owner %}
                     <c-span class="onboarding-assignment__bm-text">
-                    Klopt er iets niet wat je niet kan aanpassen? Neem contact op
-                    met je Business Manager, <c-strong>{{ assignment.owner.name }}</c-strong>.
+                      Klopt er iets niet wat je niet kan aanpassen? Neem contact op
+                      met je Business Manager,
+                      <c-strong>
+                        {{ assignment.owner.name }}
+                      </c-strong>
+                      .
                     </c-span>
                     {% if entry.owner_mailto %}
-                      <c-link href="{{ entry.owner_mailto }}" class="onboarding-assignment__bm-link">
-                      <c-icon icon="mail" size="sm" /> Mail {{ assignment.owner.name }}
+                      <c-link href="{{ entry.owner_mailto }}"
+                              class="onboarding-assignment__bm-link">
+                        <c-icon icon="mail" size="sm" />
+                        Mail {{ assignment.owner.name }}
                       </c-link>
                     {% endif %}
                   {% else %}
-                    <c-span class="onboarding-assignment__bm-text">Klopt er iets niet wat je niet kan aanpassen? Neem contact op met je Business Manager.</c-span>
+                    <c-span class="onboarding-assignment__bm-text">
+                      Klopt er iets niet wat je niet kan aanpassen? Neem contact op met je Business Manager.
+                    </c-span>
                   {% endif %}
                 </div>
               </div>
@@ -160,12 +195,19 @@
       {% endif %}
     </div>
     <div class="modal-footer onboarding-footer">
-      <c-button kind="subtle" type="button" class="onboarding-back" data-onboarding-back hidden>
-      Vorige
+      <c-button kind="subtle"
+                type="button"
+                class="onboarding-back"
+                data-onboarding-back
+                hidden>
+        Vorige
       </c-button>
       <div class="onboarding-footer-spacer"></div>
-      <c-button kind="primary" type="button" class="onboarding-next" data-onboarding-next>
-      Volgende
+      <c-button kind="primary"
+                type="button"
+                class="onboarding-next"
+                data-onboarding-next>
+        Volgende
       </c-button>
       <form method="post"
             action="{{ url('onboarding-complete') }}"
@@ -174,7 +216,9 @@
             class="onboarding-finish-form"
             hidden>
         {{ get_csrf_hidden_input(request) }}
-        <c-button kind="primary" type="submit">Aan de slag</c-button>
+        <c-button kind="primary" type="submit">
+          Aan de slag
+        </c-button>
       </form>
     </div>
   </div>

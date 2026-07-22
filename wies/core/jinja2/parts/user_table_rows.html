@@ -1,49 +1,55 @@
 {% for user in object_list %}
-  <c-table-row class="clickable-row" hx-get="{{ url('user-edit', args=[user.id]) }}" hx-target="#userFormModal" hx-swap="innerHTML" title="Bewerk {{ user.first_name }} {{ user.last_name }}">
-  <c-table-cell>
-  <div class="user-table-cell">
-    <div class="user-avatar">{{ user.first_name|first|upper if user.first_name else user.email|first|upper }}</div>
-    <div class="user-info">
-      <div class="rvo-text rvo-text--bold">{{ user.first_name }} {{ user.last_name }}</div>
-    </div>
-  </div>
-  </c-table-cell>
-  <c-table-cell>
-  <div style="display: flex;
-              gap: 0.25rem;
-              flex-wrap: wrap;
-              align-items: center;
-              justify-content: space-between">
-    <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
-      {% for group in user.groups.all() %}
-        <c-tag type="info">
-        {% if group.name == 'Business Development Manager' %}
-          BDM
-        {% else %}
-          {{ group.name }}
-        {% endif %}
-        </c-tag>
-      {% else %}
-        <span class="rvo-text rvo-text--sm rvo-text--subtle">-</span>
-      {% endfor %}
-    </div>
-    <c-icon icon="bewerken" size="md" color="hemelblauw" style="flex-shrink: 0" />
-  </div>
-  </c-table-cell>
+  <c-table-row class="clickable-row"
+               hx-get="{{ url('user-edit', args=[user.id]) }}"
+               hx-target="#userFormModal"
+               hx-swap="innerHTML"
+               title="Bewerk {{ user.first_name }} {{ user.last_name }}">
+    <c-table-cell>
+      <div class="user-table-cell">
+        <div class="user-avatar">{{ user.first_name|first|upper if user.first_name else user.email|first|upper }}</div>
+        <div class="user-info">
+          <div class="rvo-text rvo-text--bold">{{ user.first_name }} {{ user.last_name }}</div>
+        </div>
+      </div>
+    </c-table-cell>
+    <c-table-cell>
+      <div style="display: flex;
+                  gap: 0.25rem;
+                  flex-wrap: wrap;
+                  align-items: center;
+                  justify-content: space-between">
+        <div style="display: flex; gap: 0.25rem; flex-wrap: wrap;">
+          {% for group in user.groups.all() %}
+            <c-tag type="info">
+              {% if group.name == 'Business Development Manager' %}
+                BDM
+              {% else %}
+                {{ group.name }}
+              {% endif %}
+            </c-tag>
+          {% else %}
+            <span class="rvo-text rvo-text--sm rvo-text--subtle">-</span>
+          {% endfor %}
+        </div>
+        <c-icon icon="bewerken" size="md" color="hemelblauw" style="flex-shrink: 0" />
+      </div>
+    </c-table-cell>
   </c-table-row>
 {% else %}
   <c-table-row>
-  <c-table-cell colspan="2">
-  <span class="rvo-text--italic">Geen gebruikers gevonden.</span>
-  </c-table-cell>
+    <c-table-cell colspan="2">
+      <span class="rvo-text--italic">Geen gebruikers gevonden.</span>
+    </c-table-cell>
   </c-table-row>
 {% endfor %}
 {% if next_page_url %}
-  <c-table-row hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
-  <c-table-cell colspan="2">
-  <div style="text-align: center; padding: 1rem;">
-    <span class="rvo-text--subtle">Meer laden...</span>
-  </div>
-  </c-table-cell>
+  <c-table-row hx-get="{{ next_page_url }}"
+               hx-trigger="revealed"
+               hx-swap="outerHTML">
+    <c-table-cell colspan="2">
+      <div style="text-align: center; padding: 1rem;">
+        <span class="rvo-text--subtle">Meer laden...</span>
+      </div>
+    </c-table-cell>
   </c-table-row>
 {% endif %}

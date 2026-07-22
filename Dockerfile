@@ -27,11 +27,16 @@ RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
   && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
   && rm -rf /var/lib/apt/lists/*
 
+# Production images exclude all dependency groups so dev/test tooling stays out
+# of the runtime image. Local dev / in-container test runs pass INSTALL_DEV=true
+# (see docker-compose.yml) to add the dev group.
+ARG INSTALL_DEV=false
 RUN --mount=from=uv,source=/uv,target=/bin/uv \
   --mount=type=cache,target=/opt/uv-cache/ \
   --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
   --mount=type=bind,source=uv.lock,target=uv.lock \
-  uv sync --active --frozen
+  uv sync --active --frozen --no-default-groups \
+    $([ "$INSTALL_DEV" = "true" ] && echo "--group dev")
 
 
 #-----------------------------------------------------------------------------------------------------------------------

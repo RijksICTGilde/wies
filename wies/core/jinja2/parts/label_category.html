@@ -1,35 +1,50 @@
 <div class="category-section" id="category-{{ category.name|lower }}">
   <div class="category-header">
-    <c-h2>{{ category.name }}</c-h2>
-    <c-button kind="tertiary" icon="bewerken" iconPlacement="after" hx-get="{{ url('label-category-edit', kwargs={'pk': category.pk}) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
-    Bewerk categorie
+    <c-h2>
+      {{ category.name }}
+    </c-h2>
+    <c-button kind="tertiary"
+              icon="bewerken"
+              iconPlacement="after"
+              hx-get="{{ url('label-category-edit', kwargs={'pk': category.pk}) }}"
+              hx-target="#labelFormModal"
+              hx-swap="innerHTML">
+      Bewerk categorie
     </c-button>
   </div>
 </div>
 {% if category.labels.all() %}
   <c-table>
-  <c-table-head>
-  <c-table-row>
-  <c-table-header>Naam</c-table-header>
-  <c-table-header>Toegepast</c-table-header>
-  </c-table-row>
-  </c-table-head>
-  <c-table-body>
-  {% for label in category.labels.all() %}
-    <c-table-row class="clickable-row" hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}" hx-target="#labelFormModal" hx-swap="innerHTML" title="Bewerk {{ label.name }}">
-    <c-table-cell>
-    <span class="rvo-badge label-badge"
-          style="background-color: {{ label.category.color }}">{{ label.name }}</span>
-    </c-table-cell>
-    <c-table-cell>
-    <div class="table-cell-with-actions">
-      <span>{{ label.usage_count|default(0) }}</span>
-      <c-icon icon="bewerken" size="md" color="hemelblauw" class="edit-icon" />
-    </div>
-    </c-table-cell>
-    </c-table-row>
-  {% endfor %}
-  </c-table-body>
+    <c-table-head>
+      <c-table-row>
+        <c-table-header>
+          Naam
+        </c-table-header>
+        <c-table-header>
+          Toegepast
+        </c-table-header>
+      </c-table-row>
+    </c-table-head>
+    <c-table-body>
+      {% for label in category.labels.all() %}
+        <c-table-row class="clickable-row"
+                     hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}"
+                     hx-target="#labelFormModal"
+                     hx-swap="innerHTML"
+                     title="Bewerk {{ label.name }}">
+          <c-table-cell>
+            <span class="rvo-badge label-badge"
+                  style="background-color: {{ label.category.color }}">{{ label.name }}</span>
+          </c-table-cell>
+          <c-table-cell>
+            <div class="table-cell-with-actions">
+              <span>{{ label.usage_count|default(0) }}</span>
+              <c-icon icon="bewerken" size="md" color="hemelblauw" class="edit-icon" />
+            </div>
+          </c-table-cell>
+        </c-table-row>
+      {% endfor %}
+    </c-table-body>
   </c-table>
   <div class="label-form-container">
     <form class="label-form"
@@ -38,7 +53,7 @@
           hx-target="#label_category_{{ category.id }}">
       <c-input name="name" />
       <c-button kind="secondary" icon="plus" iconPlacement="before" type="submit">
-      Label toevoegen
+        Label toevoegen
       </c-button>
     </form>
     {% if errors and errors.name %}
@@ -46,7 +61,9 @@
     {% endif %}
   </div>
 {% else %}
-  <c-paragraph class="empty-category-message">Geen labels in deze categorie</c-paragraph>
+  <c-paragraph class="empty-category-message">
+    Geen labels in deze categorie
+  </c-paragraph>
   <div class="label-form-container">
     <form class="label-form"
           hx-post="/beheer/labels/categorie/{{ category.id }}/labels/aanmaken/"
@@ -54,7 +71,7 @@
           hx-target="#label_category_{{ category.id }}">
       <c-input name="name" />
       <c-button kind="secondary" icon="plus" iconPlacement="before" type="submit">
-      Label toevoegen
+        Label toevoegen
       </c-button>
     </form>
     {% if errors and errors.name %}
