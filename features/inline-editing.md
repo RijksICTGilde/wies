@@ -126,6 +126,14 @@ period = EditableGroup(
 One URL, one form with both inputs, one cross-field `clean`. The
 display partial's `value` is `{"start_date": ..., "end_date": ...}`.
 
+A group may also set `form_template` to lay its fields out itself
+(see `PlacementEditables.period`). That template is a **body**: it is
+included by `form.html`, which owns the `<form>` element, the
+concurrency token, the non-field errors, the alert and the buttons. So
+render form fields only — no `<form>`, no save/cancel buttons. Anything
+the body needs on the form element (data attributes for JS, say) goes
+on a container `<div>` inside the body instead.
+
 ### 7. Field that doesn't map 1:1 to a model attribute
 
 ```python
@@ -377,6 +385,68 @@ structure.
    fails loudly.
 3. Add per-row rules in `wies/core/permissions.py` if any field
    needs row-level authorization beyond the model-level rule.
+
+## Concurrent edits
+
+Every edit form embeds a `_concurrency_token`: a hash of the values the
+form was rendered from. On save the view re-reads the object under
+`select_for_update()` and recomputes the token. If it differs, someone
+changed the data in the meantime, so instead of overwriting, the bound
+form comes back with a warning and a token for the new state — Opslaan
+then saves anyway, Annuleren shows the changed data.
+
+The token is rendered by `form.html` / `collection_form.html`, never by
+a custom body, so a new editable cannot forget it. A POST without a
+token cannot be checked and therefore counts as a conflict (and is
+logged); the returned form carries a fresh token, so a retry succeeds.
+
+Two consequences when extending the engine:
+
+- An `EditableCollection` needs an `audit_state` — it is the collection's
+  state snapshot. Without one there is nothing to hash and
+  `_concurrency_token` raises `ImproperlyConfigured`.
+- Tests that POST to the endpoint must fetch the form first. Use
+  `post_inline_edit` from `wies/core/tests/inline_edit_helpers.py`.
+
+## Audit events
+
+An `EditableSet` records audit events only when it sets
+`audit_events = True`:
+
+```python
+class AssignmentEditables(EditableSet):
+    audit_events = True
+```
+
+The event's `object_type` defaults to the model's class name. That value
+is persisted on existing events, so set `audit_object_type` to override it
+and keep it stable across a model rename:
+
+```python
+class AssignmentEditables(EditableSet):
+    audit_events = True
+    audit_object_type = "Opdracht"   # only if it must differ from the class name
+```
+
+Today `AssignmentEditables` and `UserEditables` set `audit_events`;
+neither needs an override. Colleague, Service and Placement edits are not
+recorded under their own type — Placement instead mirrors onto its
+assignment, see below.
+
+## Mirroring an edit onto another object's timeline
+
+An `EditableSet` may declare `audit_mirror`, an `(obj, user)` context
+manager wrapped around the save and its audit event:
+
+```python
+class PlacementEditables(EditableSet):
+    audit_mirror = staticmethod(_mirror_edit_onto_assignment)
+```
+
+`PlacementEditables` uses it to record a placement edit as a "Team"
+event on the parent assignment, since a placement has no audit type of
+its own. Put such model-specific behaviour here rather than in the
+generic view.
 
 ## Common pitfalls
 

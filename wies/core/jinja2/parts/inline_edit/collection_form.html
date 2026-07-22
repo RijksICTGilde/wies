@@ -17,10 +17,7 @@
            value="{{ concurrency_token }}">
     {% include editable.form_template %}
     {% if alert %}
-      <div class="rvo-alert rvo-alert--{{ alert.kind }} rvo-margin-block-end--xs"
-           role="{%- if alert.kind == 'error' -%}alert{%- else -%}status{%- endif -%}">
-        <p>{{ alert.message }}</p>
-      </div>
+      <c-alert kind="{{ alert.kind }}" class="rvo-margin-block-start--md rvo-margin-block-end--md">{{ alert.message }}</c-alert>
     {% endif %}
     <div class="field-actions">
       <c-button type="submit" kind="primary">

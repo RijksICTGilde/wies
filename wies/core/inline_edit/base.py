@@ -16,6 +16,7 @@ from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
+    from contextlib import AbstractContextManager
 
     from django import forms
     from django.db.models import Model
@@ -91,8 +92,10 @@ class EditableGroup:
     # Group-level save; takes the whole cleaned_data dict. Use when
     # several fields must persist atomically.
     save: Callable[[Model, dict], None] | None = None
-    # Custom form body template (path relative to jinja2 roots). When set,
-    # the view renders this template instead of the generic form.html.
+    # Custom form body template (path relative to jinja2 roots). Included by
+    # form.html in place of the default field loop; the form element,
+    # concurrency token, non-field errors, alert and buttons stay in form.html,
+    # so the body must render fields only.
     # Template receives the same context as form.html plus ``editable`` (the group).
     form_template: str | None = None
     name: str | None = None
@@ -168,6 +171,28 @@ class EditableSet:
 
     _editables: dict[str, Editable | EditableGroup | EditableCollection]
     model: type[Model]  # Resolved from `Meta.model` by __init_subclass__.
+
+    # Optional ``(obj, user) -> context manager`` wrapped around the save and
+    # its audit event. Lets a model record the edit somewhere else as well —
+    # e.g. a Placement mirroring onto its assignment's timeline — without the
+    # generic view needing to know which model it is holding.
+    audit_mirror: Callable[[Model, Any], AbstractContextManager[None]] | None = None
+
+    # Whether inline edits of this model are recorded as audit events.
+    audit_events: bool = False
+
+    # Overrides the ``object_type`` stored on those events; defaults to the
+    # model's class name. Set it to keep the stored value stable across a model
+    # rename, so it keeps matching the events already written under the old name.
+    audit_object_type: str | None = None
+
+    @classmethod
+    def audit_type(cls) -> str | None:
+        """The ``object_type`` for this model's audit events, or None when it is
+        not audited."""
+        if not cls.audit_events:
+            return None
+        return cls.audit_object_type or cls.model.__name__
 
     @classmethod
     def resolve_dynamic(cls, name: str) -> Editable | EditableGroup | EditableCollection | None:

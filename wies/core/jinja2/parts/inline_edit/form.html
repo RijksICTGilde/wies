@@ -1,7 +1,11 @@
 {# Multi-field forms (EditableGroup) show a label per field and get
    vertical spacing between inputs. Single-field forms render the
    widget bare — the context (panel value next to the pencil, then
-   the input when editing) is enough that a label would just be noise. #}
+   the input when editing) is enough that a label would just be noise.
+
+   A group may replace the field loop with its own body via
+   ``form_template``. The form element, concurrency token, non-field
+   errors, alert and buttons stay here, so no custom body can omit them. #}
 {% set multi = form.fields|length > 1 %}
 <div id="{{ target }}">
   <form hx-post="{{ edit_url }}"
@@ -11,7 +15,10 @@
     <input type="hidden"
            name="_concurrency_token"
            value="{{ concurrency_token }}">
-    <c-layout-flow gap="{%- if multi -%}md{%- else -%}0{%- endif -%}">
+    {% if editable.form_template %}
+      {% include editable.form_template %}
+    {% else %}
+      <c-layout-flow gap="{%- if multi -%}md{%- else -%}0{%- endif -%}">
       {% for bound in form %}
         <div class="rvo-form-field">
           {% if multi and bound.label %}
@@ -21,13 +28,11 @@
           {% for error in bound.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
         </div>
       {% endfor %}
-    </c-layout-flow>
+      </c-layout-flow>
+    {% endif %}
     {% for error in form.non_field_errors() %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
     {% if alert %}
-      <div class="rvo-alert rvo-alert--{{ alert.kind }} rvo-margin-block-end--xs"
-           role="{%- if alert.kind == 'error' -%}alert{%- else -%}status{%- endif -%}">
-        <p>{{ alert.message }}</p>
-      </div>
+      <c-alert kind="{{ alert.kind }}" class="rvo-margin-block-start--md rvo-margin-block-end--md">{{ alert.message }}</c-alert>
     {% endif %}
     <div class="field-actions">
       <c-button type="submit" kind="primary">

@@ -27,7 +27,8 @@ This files lists the changes during the lifetime of this project.
 - 497: the production images (web/worker) no longer contain dev/test tooling, reducing the runtime attack surface
 - 479: fix the "Wie zit waar?" and Gebruikers overviews returning a 500 error and showing "Wis filters" when the labels filter contained a non-numeric value in the URL; such a value is now ignored, just like the organization and role filters.
 - 491: PR preview environments are now reliably removed when a PR closes, preview images build on every push regardless of merge conflicts or CI status, previews also build when a draft PR is marked ready for review, and a preview can be rebuilt manually from the Actions UI; the weekly registry cleanup of old preview images is fixed
-- 483: inline editing now detects concurrent edits instead of silently overwriting: if the data changed since you opened the edit form, the form comes back with a warning and your input kept — Opslaan saves anyway, Annuleren shows the changed data. Applies to individual fields and the team form.
+- 483: inline editing now detects concurrent edits instead of silently overwriting: if the data changed since you opened the edit form, the form comes back with a warning and your input kept — Opslaan saves anyway, Annuleren shows the changed data. Applies to every inline-bewerkbaar veld, inclusief de team- en periodeformulieren.
+- 483: (internal, no behaviour change) the inline-edit view no longer hardcodes per-model behaviour: the edit form and its concurrency token are rendered by one wrapper template so a custom field layout cannot drop them, and whether an edit is audited and how it mirrors onto another object's timeline are now declared on each EditableSet (`audit_events`, `audit_mirror`) instead of matched on the model's class name in the view.
 
 ## 2026-07-20
 

@@ -3,6 +3,7 @@ import json
 import logging
 import urllib.parse
 from collections import Counter
+from contextlib import nullcontext
 from datetime import date, timedelta
 
 from django.conf import settings
@@ -12,7 +13,7 @@ from django.contrib.auth.decorators import login_not_required, permission_requir
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Value, When
@@ -2810,7 +2811,12 @@ def _concurrency_token(editable_set, spec, obj) -> str:
     values changed since the form was rendered, the tokens differ and the save
     is rejected instead of silently overwriting the other change."""
     if isinstance(spec, EditableCollection):
-        state = spec.audit_state(obj) if spec.audit_state else None
+        if spec.audit_state is None:
+            # Every token would otherwise hash the same empty payload, so no
+            # conflict could ever be detected for this collection.
+            message = f"EditableCollection {spec.name!r} needs an audit_state to build a concurrency token"
+            raise ImproperlyConfigured(message)
+        state = spec.audit_state(obj)
     else:
         state = {}
         for e in resolve_editables(editable_set, spec):
@@ -2822,6 +2828,30 @@ def _concurrency_token(editable_set, spec, obj) -> str:
             state[e.field or e.name] = value
     payload = json.dumps(state, sort_keys=True, default=str)
     return hashlib.sha256(payload.encode()).hexdigest()[:16]
+
+
+def _has_concurrency_conflict(request, editable_set, spec, obj) -> bool:
+    """Whether this POST was built on a stale view of ``obj``.
+
+    Call inside the transaction that holds the row lock, so the state read here
+    is the state the save writes over.
+
+    A missing token counts as a conflict. Every form this endpoint renders
+    carries one (form.html and collection_form.html own the field), so its
+    absence means the POST was not built on a form we handed out and its
+    staleness cannot be established. Letting it through would silently disable
+    the check for whichever caller omitted the field.
+    """
+    submitted = request.POST.get("_concurrency_token", "")
+    if not submitted:
+        logger.warning(
+            "Inline edit POST without a concurrency token; treated as a conflict (model=%s, editable=%s, pk=%s)",
+            editable_set.model._meta.model_name,
+            spec.name,
+            obj.pk,
+        )
+        return True
+    return submitted != _concurrency_token(editable_set, spec, obj)
 
 
 def _permission_denied(
@@ -2930,8 +2960,8 @@ def _render_inline_edit_form(
     request, editable_set, spec, editables, obj, form, *, alert: dict | None = None
 ) -> HttpResponse:
     # Edit-mode partial: form + save/cancel. On validation failure, `form` carries inline errors.
-    from wies.core.inline_edit.base import EditableGroup  # noqa: PLC0415
-
+    # form.html always owns the form element and the concurrency token; a group's
+    # ``form_template`` only replaces the field body, so it cannot drop either.
     ctx = {
         **_inline_edit_base_ctx(editable_set, spec, obj),
         "form": form,
@@ -2939,10 +2969,7 @@ def _render_inline_edit_form(
         "concurrency_token": _concurrency_token(editable_set, spec, obj),
         "alert": alert,
     }
-    template = (
-        spec.form_template if isinstance(spec, EditableGroup) and spec.form_template else "parts/inline_edit/form.html"
-    )
-    return render(request, template, ctx)
+    return render(request, "parts/inline_edit/form.html", ctx)
 
 
 def _render_inline_edit_collection_form(
@@ -2970,25 +2997,27 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
     if request.method == "POST":
         formset = spec.formset_factory(data=request.POST)
         if formset.is_valid():
-            submitted_token = request.POST.get("_concurrency_token", "")
+            conflict = False
             try:
                 with transaction.atomic():
                     obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
-                    if submitted_token and submitted_token != _concurrency_token(editable_set, spec, obj):
-                        # Re-render the bound form (user's input kept) with a
-                        # token for the new state: Opslaan saves anyway,
-                        # Annuleren shows the changed data.
-                        return _render_inline_edit_collection_form(
-                            request, editable_set, spec, obj, formset, alert=CONCURRENCY_CONFLICT_ALERT
-                        )
-                    before = spec.audit_state(obj) if spec.audit_state else None
-                    spec.save(obj, formset)
-                    after = spec.audit_state(obj) if spec.audit_state else None
-                    _emit_inline_edit_audit_event(spec, obj, before, after, request.user)
+                    conflict = _has_concurrency_conflict(request, editable_set, spec, obj)
+                    if not conflict:
+                        before = spec.audit_state(obj) if spec.audit_state else None
+                        spec.save(obj, formset)
+                        after = spec.audit_state(obj) if spec.audit_state else None
+                        _emit_inline_edit_audit_event(editable_set, spec, obj, before, after, request.user)
             except ValidationError as exc:
                 for message in exc.messages:
                     _attach_formset_error(formset, message)
                 return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
+            if conflict:
+                # Re-render the bound form (user's input kept) with a token for
+                # the new state: Opslaan saves anyway, Annuleren shows the
+                # changed data. Rendered after the lock is released.
+                return _render_inline_edit_collection_form(
+                    request, editable_set, spec, obj, formset, alert=CONCURRENCY_CONFLICT_ALERT
+                )
             return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj, saved=True)
         return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
 
@@ -2998,9 +3027,6 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
         formset = spec.formset_factory(initial=spec.initial(obj))
         return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
     return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
-
-
-_AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "OrganizationUnit": "OrganizationUnit"}
 
 
 def _record_editable_change(editable, obj, object_type, old_value, new_value, user) -> None:
@@ -3024,8 +3050,8 @@ def _record_editable_change(editable, obj, object_type, old_value, new_value, us
     )
 
 
-def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_editables=None) -> None:
-    object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
+def _emit_inline_edit_audit_event(editable_set, spec, obj, before, after, user, *, child_editables=None) -> None:
+    object_type = editable_set.audit_type()
     if object_type is None:
         return
 
@@ -3069,29 +3095,6 @@ def _diff_collection_state(old_state: list[dict], new_state: list[dict]) -> list
         if old_by_id[sid] != new_by_id[sid]
     )
     return changes
-
-
-def _emit_placement_change_on_assignment(placement, before_row: dict, user) -> None:
-    """Record a placement edit as a "Team" event on its parent assignment,
-    so it renders identically to the Team-bewerken flow (#393)."""
-    from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids circular import
-
-    assignment = placement.service.assignment
-    after_row = placement_audit_row(placement)
-    if before_row == after_row:
-        return
-    create_event(
-        object_type="Assignment",
-        action="update",
-        source="user",
-        object_id=assignment.id,
-        user=user,
-        context={
-            "field_name": "services",
-            "field_label": "Team",
-            "changes": [{"old": before_row, "new": after_row}],
-        },
-    )
 
 
 def _pk_stub(model, pk):
@@ -3150,46 +3153,38 @@ def inline_edit_view(request, model_label, pk, name):
         )
         form = form_cls(request.POST)
         if form.is_valid():
-            # The edit form always carries a token, so honest concurrent edits
-            # are covered; a tokenless (non-form) POST is trusted as before.
-            submitted_token = request.POST.get("_concurrency_token", "")
+            conflict = False
             with transaction.atomic():
                 obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
-                if submitted_token and submitted_token != _concurrency_token(editable_set, spec, obj):
-                    # Re-render the bound form (user's input kept) with a
-                    # token for the new state: Opslaan saves anyway,
-                    # Annuleren shows the changed data.
-                    return _render_inline_edit_form(
-                        request, editable_set, spec, editables, obj, form, alert=CONCURRENCY_CONFLICT_ALERT
-                    )
-                if isinstance(spec, EditableGroup):
-                    before = {e.name: _current_value(obj, e) for e in editables}
-                else:
-                    before = _current_value(obj, spec)
-                # A placement edit (e.g. period via the profile) has no audit
-                # type of its own; mirror it onto the parent assignment's
-                # timeline like the "Team bewerken" flow (#393).
-                placement_before = None
-                if type(obj).__name__ == "Placement":
-                    from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 - circular import
-
-                    placement_before = placement_audit_row(obj)
-                save_spec(spec, editables, form.cleaned_data, obj)
-                if isinstance(spec, EditableGroup):
-                    after = {e.name: _current_value(obj, e) for e in editables}
-                else:
-                    after = _current_value(obj, spec)
-                _emit_inline_edit_audit_event(
-                    spec,
-                    obj,
-                    before,
-                    after,
-                    request.user,
-                    child_editables=editables if isinstance(spec, EditableGroup) else None,
+                conflict = _has_concurrency_conflict(request, editable_set, spec, obj)
+                if not conflict:
+                    if isinstance(spec, EditableGroup):
+                        before = {e.name: _current_value(obj, e) for e in editables}
+                    else:
+                        before = _current_value(obj, spec)
+                    mirror = editable_set.audit_mirror
+                    with mirror(obj, request.user) if mirror else nullcontext():
+                        save_spec(spec, editables, form.cleaned_data, obj)
+                        if isinstance(spec, EditableGroup):
+                            after = {e.name: _current_value(obj, e) for e in editables}
+                        else:
+                            after = _current_value(obj, spec)
+                        _emit_inline_edit_audit_event(
+                            editable_set,
+                            spec,
+                            obj,
+                            before,
+                            after,
+                            request.user,
+                            child_editables=editables if isinstance(spec, EditableGroup) else None,
+                        )
+            if conflict:
+                # Re-render the bound form (user's input kept) with a token for
+                # the new state: Opslaan saves anyway, Annuleren shows the
+                # changed data. Rendered after the lock is released.
+                return _render_inline_edit_form(
+                    request, editable_set, spec, editables, obj, form, alert=CONCURRENCY_CONFLICT_ALERT
                 )
-                if placement_before is not None:
-                    obj.refresh_from_db()
-                    _emit_placement_change_on_assignment(obj, placement_before, request.user)
             return _render_inline_edit_display(
                 request,
                 editable_set,
