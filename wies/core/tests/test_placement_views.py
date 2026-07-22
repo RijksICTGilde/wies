@@ -1,4 +1,6 @@
-from datetime import date
+import json
+import re
+from datetime import date, timedelta
 from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
@@ -8,6 +10,7 @@ from django.db import connection
 from django.test import Client, RequestFactory, TestCase
 from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
+from django.utils import timezone
 
 from wies.core.editables.assignment import _services_display_context, _services_initial
 from wies.core.models import (
@@ -1762,3 +1765,91 @@ class ClientModalCountModeTest(TestCase):
         response = self.client.get(reverse("client-modal"))
         content = response.content.decode()
         assert "Org B" not in content
+
+
+def _modal_org_self_counts(response) -> dict[int, int]:
+    """Extract {org_id: self placement count} from the client-modal json_script blob.
+
+    Each org renders as a node carrying ``nr_of_placements``; a node that also has
+    children emits a ``self: True`` sub-node holding its own (self) count, which is
+    the precise value to compare against."""
+    html = response.content.decode()
+    match = re.search(r'<script id="client-data"[^>]*>(.*?)</script>', html, re.S)
+    assert match, "client-data json_script not found in modal response"
+    counts: dict[int, int] = {}
+
+    def walk(nodes):
+        for node in nodes:
+            oid = node["id"]
+            if node.get("self") or oid not in counts:
+                counts[oid] = node["nr_of_placements"]
+            walk(node.get("children", []))
+
+    walk(json.loads(match.group(1)))
+    return counts
+
+
+class ClientModalPlacementCountVisibilityTest(TestCase):
+    """Modal per-org placement counts must honour placement_visibility.
+
+    A planned (not-yet-started) placement is private; the opdrachtgever
+    (client) filter modal's per-org count must not betray it to an
+    unrelated viewer, while the BM-owner's count still includes it.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.owner_user = User.objects.create_user(email="owner@rijksoverheid.nl", first_name="O", last_name="w")
+        self.placed_user = User.objects.create_user(email="placed@rijksoverheid.nl", first_name="P", last_name="l")
+        self.unrelated_user = User.objects.create_user(email="other@rijksoverheid.nl", first_name="U", last_name="n")
+
+        self.owner_colleague = Colleague.objects.create(
+            user=self.owner_user, name="Owner Colleague", email="owner@rijksoverheid.nl", source="wies"
+        )
+        self.placed_colleague = Colleague.objects.create(
+            user=self.placed_user, name="Placed Colleague", email="placed@rijksoverheid.nl", source="wies"
+        )
+        Colleague.objects.create(
+            user=self.unrelated_user, name="Unrelated Colleague", email="other@rijksoverheid.nl", source="wies"
+        )
+
+        self.org = OrganizationUnit.objects.create(name="ZZZ Geheime Opdrachtgever", label="ZZZ Geheime Opdrachtgever")
+        self.assignment = Assignment.objects.create(name="DTC4NL", owner=self.owner_colleague, source="wies")
+        AssignmentOrganizationUnit.objects.create(assignment=self.assignment, organization=self.org)
+        skill = Skill.objects.create(name="Software Engineer")
+        self.service = Service.objects.create(description="", assignment=self.assignment, skill=skill, source="wies")
+
+    def _place(self, *, start_offset_days, end_offset_days):
+        today = timezone.now().date()
+        return Placement.objects.create(
+            colleague=self.placed_colleague,
+            service=self.service,
+            specific_start_date=today + timedelta(days=start_offset_days),
+            specific_end_date=today + timedelta(days=end_offset_days),
+            period_source=Placement.PLACEMENT,
+            source="wies",
+        )
+
+    def _modal_count_for(self, user) -> int:
+        self.client.force_login(user)
+        response = self.client.get(reverse("client-modal"))
+        assert response.status_code == 200
+        return _modal_org_self_counts(response).get(self.org.id, 0)
+
+    def test_planned_placement_not_counted_for_unrelated_viewer(self):
+        """A not-yet-started placement is private; its org count must not betray it."""
+        self._place(start_offset_days=30, end_offset_days=120)
+
+        assert self._modal_count_for(self.unrelated_user) == 0
+
+    def test_planned_placement_counted_for_bm_owner(self):
+        """The BM-owner may see the planned placement, so their count includes it."""
+        self._place(start_offset_days=30, end_offset_days=120)
+
+        assert self._modal_count_for(self.owner_user) == 1
+
+    def test_active_placement_counted_for_everyone(self):
+        """An active placement is public; the count includes it for any viewer."""
+        self._place(start_offset_days=-10, end_offset_days=10)
+
+        assert self._modal_count_for(self.unrelated_user) == 1

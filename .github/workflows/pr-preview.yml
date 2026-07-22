@@ -1,22 +1,105 @@
 name: PR Preview
 
+# Triggers deliberately avoid the plain pull_request event: GitHub silently
+# drops those when the PR has a merge conflict (no merge ref), leaving the
+# preview stuck on an old image. push always fires, and pull_request_target
+# (base-repo context) covers PR lifecycle moments without needing a merge ref.
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
+  push:
+    branches-ignore: [main]
+  pull_request_target:
+    types: [opened, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: "PR number to rebuild and redeploy"
+        required: true
 
+# Dedupes runs per branch (manual dispatch runs group by PR number instead).
+# On close, PR Cleanup cancels in-flight runs here via the API; the deploy
+# job's PR-open check covers runs it cannot see, such as manual dispatches.
 concurrency:
-  group: pr-preview-${{ github.event.pull_request.number }}
+  group: pr-preview-${{ github.head_ref || inputs.pr_number || github.ref_name }}
   cancel-in-progress: true
 
 env:
   IMAGE_NAME: ghcr.io/rijksictgilde/wies
-  MOVING_TAG: pr-${{ github.event.pull_request.number }}
-  DEPLOYMENT_NAME: pr-${{ github.event.pull_request.number }}
 
 jobs:
-  build:
-    if: github.event.pull_request.user.type != 'Bot' && github.event.pull_request.draft != true
+  context:
+    # pull_request_target runs with secrets in the base-repo context; never
+    # build code from a fork with it.
+    if: github.event_name != 'pull_request_target' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: read
+
+    outputs:
+      proceed: ${{ steps.pr.outputs.proceed }}
+      pr_number: ${{ steps.pr.outputs.pr_number }}
+      head_sha: ${{ steps.pr.outputs.head_sha }}
+
+    steps:
+      - name: Find the open PR for this event
+        id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_PR_NUMBER: ${{ github.event.pull_request.number }}
+          INPUT_PR_NUMBER: ${{ inputs.pr_number }}
+        run: |
+          case "${GITHUB_EVENT_NAME}" in
+            push)
+              NUM=$(gh pr list --repo "$GITHUB_REPOSITORY" --head "$GITHUB_REF_NAME" \
+                --state open --json number --jq '.[0].number // empty')
+              ;;
+            pull_request_target)
+              NUM="$EVENT_PR_NUMBER"
+              ;;
+            workflow_dispatch)
+              NUM="$INPUT_PR_NUMBER"
+              ;;
+          esac
+
+          if [ -z "$NUM" ]; then
+            echo "::notice::No open PR for ${GITHUB_REF_NAME}; skipping preview"
+            echo "proceed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if ! echo "$NUM" | grep -qE '^[0-9]+$'; then
+            echo "::error::Invalid PR number: $NUM"
+            exit 1
+          fi
+
+          PR=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${NUM}")
+          STATE=$(jq -r .state <<<"$PR")
+          DRAFT=$(jq -r .draft <<<"$PR")
+          BOT=$(jq -r '.user.type == "Bot"' <<<"$PR")
+          SHA=$(jq -r .head.sha <<<"$PR")
+
+          PROCEED=true
+          [ "$STATE" != "open" ] && PROCEED=false
+          # A manual dispatch is an explicit request; only event-driven runs
+          # skip drafts and bot PRs.
+          if [ "$GITHUB_EVENT_NAME" != "workflow_dispatch" ]; then
+            [ "$DRAFT" = "true" ] && PROCEED=false
+            [ "$BOT" = "true" ] && PROCEED=false
+          fi
+          if [ "$PROCEED" = "false" ]; then
+            echo "::notice::Skipping preview for PR #${NUM} (state=${STATE}, draft=${DRAFT}, bot=${BOT})"
+          fi
+
+          {
+            echo "proceed=${PROCEED}"
+            echo "pr_number=${NUM}"
+            echo "head_sha=${SHA}"
+          } >> "$GITHUB_OUTPUT"
+
+  build:
+    runs-on: ubuntu-latest
+    needs: context
+    if: needs.context.outputs.proceed == 'true'
 
     permissions:
       contents: read
@@ -28,6 +111,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.context.outputs.head_sha }}
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4
@@ -38,10 +123,12 @@ jobs:
 
       - name: Compute image tag
         id: tag
+        env:
+          PR_NUMBER: ${{ needs.context.outputs.pr_number }}
+          HEAD_SHA: ${{ needs.context.outputs.head_sha }}
         run: |
           TIMESTAMP=$(date -u +%Y%m%d-%H%M%S)
-          SHORT_SHA=$(echo "${{ github.event.pull_request.head.sha }}" | cut -c1-7)
-          IMMUTABLE="pr-${{ github.event.pull_request.number }}-${TIMESTAMP}-${SHORT_SHA}"
+          IMMUTABLE="pr-${PR_NUMBER}-${TIMESTAMP}-${HEAD_SHA:0:7}"
           echo "immutable=${IMMUTABLE}" >> "$GITHUB_OUTPUT"
           echo "Immutable tag: ${IMMUTABLE}"
 
@@ -54,7 +141,7 @@ jobs:
           build-args: |
             APP_VERSION=${{ steps.tag.outputs.immutable }}
           tags: |
-            ${{ env.IMAGE_NAME }}:${{ env.MOVING_TAG }}
+            ${{ env.IMAGE_NAME }}:pr-${{ needs.context.outputs.pr_number }}
             ${{ env.IMAGE_NAME }}:${{ steps.tag.outputs.immutable }}
 
       - name: Build and push worker image
@@ -66,12 +153,12 @@ jobs:
           build-args: |
             APP_VERSION=${{ steps.tag.outputs.immutable }}
           tags: |
-            ${{ env.IMAGE_NAME }}-worker:${{ env.MOVING_TAG }}
+            ${{ env.IMAGE_NAME }}-worker:pr-${{ needs.context.outputs.pr_number }}
             ${{ env.IMAGE_NAME }}-worker:${{ steps.tag.outputs.immutable }}
 
   deploy:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [context, build]
 
     permissions:
       contents: read
@@ -79,21 +166,59 @@ jobs:
       pull-requests: write
 
     environment:
-      name: pr-${{ github.event.pull_request.number }}
+      name: pr-${{ needs.context.outputs.pr_number }}
       url: ${{ steps.deploy.outputs.url }}
 
     steps:
+      # A PR can be merged while this run is in flight; deploying then
+      # would re-create the environment PR Cleanup just deleted.
+      - name: Check PR is still open
+        id: prstate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ needs.context.outputs.pr_number }}
+        run: |
+          STATE=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}" --jq .state)
+          echo "state=${STATE}" >> "$GITHUB_OUTPUT"
+          if [ "${STATE}" != "open" ]; then
+            echo "::notice::PR ${PR_NUMBER} is ${STATE}; skipping deploy"
+          fi
+
       - name: Deploy to ZAD
         id: deploy
+        if: steps.prstate.outputs.state == 'open'
         uses: RijksICTGilde/zad-actions/deploy@v4
         with:
           api-key: ${{ secrets.ZAD_API_KEY }}
           project-id: wies
-          deployment-name: ${{ env.DEPLOYMENT_NAME }}
+          deployment-name: pr-${{ needs.context.outputs.pr_number }}
           clone-from: main
-          comment-on-pr: true
           components: |
             [
               {"name": "frontend", "image": "${{ env.IMAGE_NAME }}:${{ needs.build.outputs.immutable_tag }}"},
               {"name": "worker", "image": "${{ env.IMAGE_NAME }}-worker:${{ needs.build.outputs.immutable_tag }}"}
             ]
+
+      # The zad action only posts the preview comment on pull_request events,
+      # which this workflow no longer uses. The header must stay identical to
+      # the one PR Cleanup deletes ("## 🚀 Preview Deployment").
+      - name: Comment preview URL on PR
+        if: steps.prstate.outputs.state == 'open'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ needs.context.outputs.pr_number }}
+          URLS: ${{ steps.deploy.outputs.urls }}
+          IMMUTABLE_TAG: ${{ needs.build.outputs.immutable_tag }}
+          COMMENT_HEADER: "## 🚀 Preview Deployment"
+        run: |
+          LINKS=$(jq -r 'to_entries[] | "- **\(.key)**: \(.value)"' <<<"$URLS")
+          BODY=$(printf '%s\n\n%s\n\n_build: `%s`_' "$COMMENT_HEADER" "$LINKS" "$IMMUTABLE_TAG")
+          COMMENT_ID=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" \
+            --jq "[.[] | select(.body | startswith(\"${COMMENT_HEADER}\")) | .id][0] // empty")
+          if [ -n "$COMMENT_ID" ]; then
+            gh api -X PATCH "repos/${GITHUB_REPOSITORY}/issues/comments/${COMMENT_ID}" -f body="$BODY" >/dev/null
+            echo "Updated preview comment ${COMMENT_ID}"
+          else
+            gh api "repos/${GITHUB_REPOSITORY}/issues/${PR_NUMBER}/comments" -f body="$BODY" >/dev/null
+            echo "Created preview comment"
+          fi

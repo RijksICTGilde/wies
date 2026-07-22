@@ -49,14 +49,27 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
+        # Persists unhandled 500s + task failures as ErrorEvent rows (and posts to
+        # Mattermost only if MATTERMOST_* are set). Mirrors production so the
+        # feature is testable in dev.
+        "error_reporting": {
+            "class": "wies.core.monitoring.ErrorReportingHandler",
+            "level": "ERROR",
+        },
     },
     "root": {
         "handlers": ["console"],
         "level": "INFO",
     },
     "loggers": {
+        # Unhandled request exceptions (500s) — Django logs these at ERROR.
+        "django.request": {
+            "handlers": ["console", "error_reporting"],
+            "level": "ERROR",
+            "propagate": False,
+        },
         "wies": {
-            "handlers": ["console"],
+            "handlers": ["console", "error_reporting"],
             "level": "INFO",
             "propagate": False,
         },

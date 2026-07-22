@@ -1,10 +1,11 @@
 import csv
 import datetime
+import logging
 from io import StringIO
 
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
-from django.db import transaction
+from django.db import DataError, IntegrityError, transaction
 from django.db.models import Q
 
 from wies.core.models import (
@@ -20,6 +21,8 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.services.events import create_event
+
+logger = logging.getLogger(__name__)
 
 
 def parse_date_dmy(date_str: str) -> datetime.date:
@@ -83,7 +86,13 @@ def create_assignments_from_csv(creator, csv_content: str):
                        If empty or not provided, no brand label is assigned.
     """
 
-    dialect = csv.Sniffer().sniff(csv_content[:1024], delimiters=",;")
+    try:
+        dialect = csv.Sniffer().sniff(csv_content[:1024], delimiters=",;")
+    except csv.Error:
+        return {
+            "success": False,
+            "errors": ["Kon het CSV-formaat niet bepalen. Controleer of het een geldig CSV-bestand is."],
+        }
     csv_reader = csv.DictReader(StringIO(csv_content), delimiter=dialect.delimiter)
 
     required_columns = {
@@ -278,6 +287,12 @@ def create_assignments_from_csv(creator, csv_content: str):
         return {"success": False, "errors": [str(e)]}
     except ValidationError as e:
         return {"success": False, "errors": [str(e)]}
+    except (DataError, IntegrityError, csv.Error) as e:
+        logger.warning("Opdracht-CSV import failed with a data error", exc_info=e)
+        return {
+            "success": False,
+            "errors": ["Er ging iets mis bij het verwerken van het bestand. Controleer de waarden in het CSV-bestand."],
+        }
     else:
         return {
             "success": True,
