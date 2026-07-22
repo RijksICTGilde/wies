@@ -115,7 +115,7 @@ jobs:
           scan-type: image
           image-ref: wies:scan
           severity: HIGH,CRITICAL
-          ignore-unfixed: true
+          ignore-unfixed: false
           # Apply the severity filter to the SARIF too (see filesystem job).
           limit-severities-for-sarif: true
           format: sarif
