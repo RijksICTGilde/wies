@@ -2841,6 +2841,10 @@ def _concurrency_token(editable_set, spec, obj) -> str:
     return _hash_state(_edit_state(editable_set, spec, obj))
 
 
+def _submitted_token(request) -> str:
+    return request.POST.get("_concurrency_token", "")
+
+
 def _has_concurrency_conflict(request, editable_set, spec, obj, *, state=None) -> bool:
     """Whether this POST was built on a stale view of ``obj``.
 
@@ -2856,7 +2860,7 @@ def _has_concurrency_conflict(request, editable_set, spec, obj, *, state=None) -
     ``state`` reuses a snapshot the caller already read, so the collection path
     doesn't query the whole team twice while holding the lock.
     """
-    submitted = request.POST.get("_concurrency_token", "")
+    submitted = _submitted_token(request)
     if not submitted:
         logger.warning(
             "Inline edit POST without a concurrency token; treated as a conflict (model=%s, editable=%s, pk=%s)",
@@ -2973,7 +2977,7 @@ def _render_inline_edit_display(
 
 
 def _render_inline_edit_form(
-    request, editable_set, spec, editables, obj, form, *, alert: dict | None = None
+    request, editable_set, spec, editables, obj, form, *, alert: dict | None = None, token: str | None = None
 ) -> HttpResponse:
     # Edit-mode partial: form + save/cancel. On validation failure, `form` carries inline errors.
     # form.html always owns the form element and the concurrency token; a group's
@@ -2982,20 +2986,20 @@ def _render_inline_edit_form(
         **_inline_edit_base_ctx(editable_set, spec, obj),
         "form": form,
         "editable": spec,
-        "concurrency_token": _concurrency_token(editable_set, spec, obj),
+        "concurrency_token": token if token is not None else _concurrency_token(editable_set, spec, obj),
         "alert": alert,
     }
     return render(request, "parts/inline_edit/form.html", ctx)
 
 
 def _render_inline_edit_collection_form(
-    request, editable_set, spec, obj, formset, *, alert: dict | None = None
+    request, editable_set, spec, obj, formset, *, alert: dict | None = None, token: str | None = None
 ) -> HttpResponse:
     # Inner body from spec.form_template; receives the formset as `formset`.
     ctx = {
         **_inline_edit_base_ctx(editable_set, spec, obj),
         "formset": formset,
-        "concurrency_token": _concurrency_token(editable_set, spec, obj),
+        "concurrency_token": token if token is not None else _concurrency_token(editable_set, spec, obj),
         "alert": alert,
     }
     return render(request, "parts/inline_edit/collection_form.html", ctx)
@@ -3025,10 +3029,17 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
                         spec.save(obj, formset)
                         after = _edit_state(editable_set, spec, obj)
                         _emit_inline_edit_audit_event(editable_set, spec, obj, before, after, request.user)
+            except editable_set.model.DoesNotExist:
+                # Deleted between the permission check and the lock. Same denial
+                # partial as a missing or forbidden object, so this stays
+                # indistinguishable from those.
+                return _render_inline_edit_denial(request, editable_set, spec, obj.pk)
             except ValidationError as exc:
                 for message in exc.messages:
                     _attach_formset_error(formset, message)
-                return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
+                return _render_inline_edit_collection_form(
+                    request, editable_set, spec, obj, formset, token=_submitted_token(request)
+                )
             if conflict:
                 # Re-render the bound form (user's input kept) with a token for
                 # the new state: Opslaan saves anyway, Annuleren shows the
@@ -3037,7 +3048,9 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
                     request, editable_set, spec, obj, formset, alert=CONCURRENCY_CONFLICT_ALERT
                 )
             return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj, saved=True)
-        return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
+        return _render_inline_edit_collection_form(
+            request, editable_set, spec, obj, formset, token=_submitted_token(request)
+        )
 
     if request.GET.get("cancel"):
         return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
@@ -3124,6 +3137,25 @@ def _pk_stub(model, pk):
     return stub
 
 
+def _render_inline_edit_denial(request, editable_set, spec, pk, obj=None, alert=None) -> HttpResponse:
+    """The denial partial for an object the user may not edit or that isn't
+    there (any more). Both render identically, so this endpoint can't be walked
+    as a 404-vs-200 existence oracle over sequential PKs."""
+    display_obj = obj if obj is not None else _pk_stub(editable_set.model, pk)
+    editables_for_display: list[Editable] = (
+        [] if isinstance(spec, EditableCollection) else resolve_editables(editable_set, spec)
+    )
+    return _render_inline_edit_display(
+        request,
+        editable_set,
+        spec,
+        editables_for_display,
+        display_obj,
+        alert=alert or PERMISSION_DENIED_ALERT,
+        user_can_edit=False,
+    )
+
+
 def inline_edit_view(request, model_label, pk, name):
     """Generic HTMX endpoint. See ``features/inline-editing.md`` for the full contract."""
     editable_set = REGISTRY.get(model_label)
@@ -3141,19 +3173,7 @@ def inline_edit_view(request, model_label, pk, name):
     # identical empty response for not-found and not-visible).
     denial = _permission_denied(editable_set, spec, request.user, obj) if obj is not None else PERMISSION_DENIED_ALERT
     if denial:
-        display_obj = obj if obj is not None else _pk_stub(editable_set.model, pk)
-        editables_for_display: list[Editable] = (
-            [] if isinstance(spec, EditableCollection) else resolve_editables(editable_set, spec)
-        )
-        return _render_inline_edit_display(
-            request,
-            editable_set,
-            spec,
-            editables_for_display,
-            display_obj,
-            alert=denial,
-            user_can_edit=False,
-        )
+        return _render_inline_edit_denial(request, editable_set, spec, pk, obj=obj, alert=denial)
 
     if isinstance(spec, EditableCollection):
         return _handle_inline_edit_collection(request, editable_set, spec, obj)
@@ -3172,30 +3192,36 @@ def inline_edit_view(request, model_label, pk, name):
         form = form_cls(request.POST)
         if form.is_valid():
             conflict = False
-            with transaction.atomic():
-                obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
-                conflict = _has_concurrency_conflict(request, editable_set, spec, obj)
-                if not conflict:
-                    if isinstance(spec, EditableGroup):
-                        before = {e.name: _current_value(obj, e) for e in editables}
-                    else:
-                        before = _current_value(obj, spec)
-                    mirror = editable_set.audit_mirror
-                    with mirror(obj, request.user) if mirror else nullcontext():
-                        save_spec(spec, editables, form.cleaned_data, obj)
+            try:
+                with transaction.atomic():
+                    obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
+                    conflict = _has_concurrency_conflict(request, editable_set, spec, obj)
+                    if not conflict:
                         if isinstance(spec, EditableGroup):
-                            after = {e.name: _current_value(obj, e) for e in editables}
+                            before = {e.name: _current_value(obj, e) for e in editables}
                         else:
-                            after = _current_value(obj, spec)
-                        _emit_inline_edit_audit_event(
-                            editable_set,
-                            spec,
-                            obj,
-                            before,
-                            after,
-                            request.user,
-                            child_editables=editables if isinstance(spec, EditableGroup) else None,
-                        )
+                            before = _current_value(obj, spec)
+                        mirror = editable_set.audit_mirror
+                        with mirror(obj, request.user) if mirror else nullcontext():
+                            save_spec(spec, editables, form.cleaned_data, obj)
+                            if isinstance(spec, EditableGroup):
+                                after = {e.name: _current_value(obj, e) for e in editables}
+                            else:
+                                after = _current_value(obj, spec)
+                            _emit_inline_edit_audit_event(
+                                editable_set,
+                                spec,
+                                obj,
+                                before,
+                                after,
+                                request.user,
+                                child_editables=editables if isinstance(spec, EditableGroup) else None,
+                            )
+            except editable_set.model.DoesNotExist:
+                # Deleted between the permission check and the lock. Same denial
+                # partial as a missing or forbidden object, so this stays
+                # indistinguishable from those.
+                return _render_inline_edit_denial(request, editable_set, spec, pk)
             if conflict:
                 # Re-render the bound form (user's input kept) with a token for
                 # the new state: Opslaan saves anyway, Annuleren shows the
@@ -3211,7 +3237,12 @@ def inline_edit_view(request, model_label, pk, name):
                 obj,
                 saved=True,
             )
-        return _render_inline_edit_form(request, editable_set, spec, editables, obj, form)
+        # Keep the token this POST was built on: recomputing it here would adopt
+        # a change made in the meantime, and the corrected resubmit would then
+        # overwrite that change without ever showing the conflict warning.
+        return _render_inline_edit_form(
+            request, editable_set, spec, editables, obj, form, token=_submitted_token(request)
+        )
 
     if request.GET.get("cancel"):
         return _render_inline_edit_display(request, editable_set, spec, editables, obj)

@@ -1,5 +1,6 @@
 import re
 from datetime import timedelta
+from unittest import mock
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -78,6 +79,42 @@ class InlineEditConcurrencyTests(TestCase):
         self.assignment.refresh_from_db()
         assert self.assignment.name == "My Stale Name"
 
+    def test_validation_error_keeps_the_stale_token(self):
+        """A rejected submit must not launder a stale edit into a fresh one.
+        Recomputing the token on the error re-render would adopt the concurrent
+        change, and the corrected resubmit would overwrite it unwarned."""
+        token = self._token_from_form()
+
+        Assignment.objects.filter(pk=self.assignment.pk).update(name="Concurrent Name")
+
+        # Empty name fails validation, so the conflict is never reached.
+        response = self.client.post(self._url(), {"name": "", "_concurrency_token": token})
+        content = response.content.decode()
+        match = re.search(r'name="_concurrency_token"\s+value="([^"]*)"', content)
+        assert match, "the re-rendered form must still embed a _concurrency_token"
+        assert match.group(1) == token
+
+        # Correcting the input now hits the conflict check it was built on.
+        response = self.client.post(self._url(), {"name": "My Corrected Name", "_concurrency_token": match.group(1)})
+
+        self.assertContains(response, "door iemand anders gewijzigd")
+        self.assignment.refresh_from_db()
+        assert self.assignment.name == "Concurrent Name"
+
+    def test_object_deleted_before_the_lock_renders_the_denial_partial(self):
+        """The row can disappear between the permission check and the lock.
+        Only reachable by racing a real deletion, so the lookup is stubbed out;
+        the point is that it renders the denial partial instead of a 500."""
+        token = self._token_from_form()
+
+        with mock.patch.object(Assignment.objects, "select_for_update", return_value=Assignment.objects.none()):
+            response = self.client.post(self._url(), {"name": "New Name", "_concurrency_token": token})
+
+        assert response.status_code == 200
+        self.assertContains(response, "geen rechten")
+        self.assignment.refresh_from_db()
+        assert self.assignment.name == "Original Name"
+
     def test_fresh_edit_still_saves(self):
         token = self._token_from_form()
 
@@ -123,12 +160,8 @@ class InlineEditCollectionConcurrencyTokenTests(TestCase):
 
         assert self._token() != before
 
-    def test_stale_team_save_rerenders_form_with_alert(self):
-        token = self._token()
-
-        Service.objects.filter(pk=self.service.pk).update(description="Changed by someone else")
-
-        data = {
+    def _post_data(self, token, **overrides):
+        return {
             "service-TOTAL_FORMS": "1",
             "service-INITIAL_FORMS": "1",
             "service-MIN_NUM_FORMS": "1",
@@ -139,10 +172,37 @@ class InlineEditCollectionConcurrencyTokenTests(TestCase):
             "service-0-is_filled": "aanvraag",
             "service-0-has_custom_period": "on",
             "_concurrency_token": token,
+            **overrides,
         }
-        response = self.client.post(self.url, data)
+
+    def test_stale_team_save_rerenders_form_with_alert(self):
+        token = self._token()
+
+        Service.objects.filter(pk=self.service.pk).update(description="Changed by someone else")
+
+        response = self.client.post(self.url, self._post_data(token))
 
         assert response.status_code == 200
+        self.assertContains(response, "door iemand anders gewijzigd")
+        self.service.refresh_from_db()
+        assert self.service.description == "Changed by someone else"
+
+    def test_invalid_formset_keeps_the_stale_token(self):
+        """As for a scalar field: a rejected team save must come back with the
+        token it was built on, so correcting it still hits the conflict check."""
+        token = self._token()
+
+        Service.objects.filter(pk=self.service.pk).update(description="Changed by someone else")
+
+        response = self.client.post(self.url, self._post_data(token, **{"service-0-skill": ""}))
+
+        content = response.content.decode()
+        match = re.search(r'name="_concurrency_token"\s+value="([^"]*)"', content)
+        assert match, "the re-rendered team form must still embed a _concurrency_token"
+        assert match.group(1) == token
+
+        response = self.client.post(self.url, self._post_data(match.group(1)))
+
         self.assertContains(response, "door iemand anders gewijzigd")
         self.service.refresh_from_db()
         assert self.service.description == "Changed by someone else"

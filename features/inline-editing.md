@@ -400,6 +400,13 @@ a custom body, so a new editable cannot forget it. A POST without a
 token cannot be checked and therefore counts as a conflict (and is
 logged); the returned form carries a fresh token, so a retry succeeds.
 
+A submit that fails validation never reaches the check, so that
+re-render keeps the token it was posted with rather than a fresh one —
+otherwise correcting the input would adopt whatever changed in the
+meantime and overwrite it unwarned. The object can also be deleted
+between the permission check and the lock; that renders the same denial
+partial as a missing or forbidden object.
+
 Two consequences when extending the engine:
 
 - An `EditableCollection` needs an `audit_state` — it is the collection's
