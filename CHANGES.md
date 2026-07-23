@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ?
+
+## 2026-07-23
+
 - 473: fix the opdrachtgever filter counts including planned placements that placement visibility hides from unrelated viewers
 - 473: stop the inline-edit endpoint from revealing whether an object exists to users who may not edit it (a missing and a forbidden object now return the same response)
 - 478: the user and opdracht CSV imports now reject files larger than 50 MB, so an extremely large file cannot exhaust a worker's memory
@@ -16,8 +20,8 @@ This files lists the changes during the lifetime of this project.
 - 460: A failing task is marked failed immediately instead of hanging until timeout.
 - 493: (remove env vars) the background worker now runs on its own settings module (config.settings.worker) and no longer requires the OIDC credentials to be set at startup. locally worker now also uses its own dedicate .env file
 - 494: add trivy container scanning as recurring action
-- 482: veiligheidsmaatregel: de Content-Security-Policy voor scripts staat geen inline JavaScript meer toe (`script-src 'self'`). Alle scripts en klik-/toetsafhandeling zijn naar externe JS-bestanden verplaatst, zodat eventueel geïnjecteerde inline-JavaScript niet meer kan worden uitgevoerd. Inline stijlen blijven toegestaan.
-- 482: de htmx-geschiedeniscache staat nu op alle pagina's uit in plaats van alleen op het opdrachtenoverzicht en de plaatsingentabel; terugnavigeren haalt een pagina voortaan overal vers op.
+- 482: security measure: the Content-Security-Policy for scripts no longer allows inline JavaScript (`script-src 'self'`). All scripts and click/keyboard handling have been moved to external JS files, so any injected inline JavaScript can no longer be executed. Inline styles remain allowed.
+- 482: the htmx history cache is now disabled on all pages instead of only on the assignments overview and the placements table; navigating back now always fetches a page fresh everywhere.
 - 496: fix the PR preview cleanup never running: its first step called `gh` without `--repo` in a job that has no checkout, so it failed immediately and the ZAD deployment and PR-tagged images of every closed PR were left behind
 - 497: bumped dev/CI dependencies and GitHub Actions
 - 497: the production images (web/worker) no longer contain dev/test tooling, reducing the runtime attack surface
