@@ -13,7 +13,7 @@ from wies.core.editables import AssignmentEditables
 from wies.core.inline_edit.base import EditableCollection
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.tests.inline_edit_helpers import post_inline_edit
-from wies.core.views import _concurrency_token
+from wies.core.views import CONCURRENCY_CONFLICT_ALERT, _concurrency_conflict_alert, _concurrency_token
 
 User = get_user_model()
 
@@ -66,7 +66,7 @@ class InlineEditConcurrencyTests(TestCase):
         response = self.client.post(self._url(), {"name": "My Stale Name", "_concurrency_token": token})
 
         # The form comes back (not the display), still holding the submitted
-        # value, with a token matching the new state — Opslaan saves anyway.
+        # value, with a token matching the new state. Opslaan saves anyway.
         content = response.content.decode()
         match = re.search(r'name="_concurrency_token"\s+value="([^"]*)"', content)
         assert match, "the re-rendered form must embed a fresh _concurrency_token"
@@ -115,25 +115,50 @@ class InlineEditConcurrencyTests(TestCase):
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Original Name"
 
-    def test_conflict_on_a_text_field_names_the_stored_value(self):
-        """Seeing what is stored now is what lets the user decide between
-        overwriting it and keeping it."""
+    def test_conflict_names_the_field_and_the_concurrent_value(self):
+        """Seeing what the other person put there is what lets the user choose;
+        without it, finding out costs them their own input (Annuleren)."""
         token = self._token_from_form()
 
         Assignment.objects.filter(pk=self.assignment.pk).update(name="Concurrent Name")
 
         response = self.client.post(self._url(), {"name": "My Stale Name", "_concurrency_token": token})
 
-        self.assertContains(response, "de opgeslagen waarde is nu &#39;Concurrent Name&#39;")
+        self.assertContains(response, "<strong>Opdracht naam</strong> is ondertussen gewijzigd")
+        self.assertContains(response, "<strong>“Concurrent Name”</strong>")
 
-    def test_conflict_says_the_field_is_empty_when_it_was_cleared(self):
+    def test_conflict_says_geen_when_the_field_was_cleared(self):
         token = self._token_from_form()
 
         Assignment.objects.filter(pk=self.assignment.pk).update(name="")
 
         response = self.client.post(self._url(), {"name": "My Stale Name", "_concurrency_token": token})
 
-        self.assertContains(response, "het veld is nu leeg")
+        self.assertContains(response, "<strong>“geen”</strong>")
+
+    def test_concurrent_value_is_escaped(self):
+        """The value is user content and the message renders as HTML."""
+        token = self._token_from_form()
+
+        Assignment.objects.filter(pk=self.assignment.pk).update(name="<script>alert(1)</script>")
+
+        response = self.client.post(self._url(), {"name": "My Stale Name", "_concurrency_token": token})
+
+        self.assertNotContains(response, "<script>alert(1)</script>")
+        self.assertContains(response, "&lt;script&gt;alert(1)&lt;/script&gt;")
+
+    def test_related_field_is_named_the_way_the_timeline_names_it(self):
+        """``owner`` is a FK. Its ``audit_state`` already renders it for a human,
+        so the warning shows the name instead of "Colleague object (3)"."""
+        alert = _concurrency_conflict_alert(AssignmentEditables, AssignmentEditables.owner, self.assignment)
+
+        assert "<strong>“Owner”</strong>" in alert["message"]
+
+    def test_group_falls_back_to_the_generic_warning(self):
+        """A group has no single value worth naming."""
+        alert = _concurrency_conflict_alert(AssignmentEditables, AssignmentEditables.period, self.assignment)
+
+        assert alert is CONCURRENCY_CONFLICT_ALERT
 
     def test_fresh_edit_still_saves(self):
         token = self._token_from_form()
@@ -341,7 +366,7 @@ class TokenlessPostTests(TestCase):
 
     def test_resubmitting_the_returned_form_saves(self):
         """The conflict response carries a fresh token, so the retry goes through
-        — a caller that omits the token is slowed by one round-trip, not blocked."""
+        A caller that omits the token is slowed by one round-trip, not blocked."""
         self.client.post(self.url, {"name": "No Token"})
 
         response = post_inline_edit(self.client, self.url, {"name": "No Token"})

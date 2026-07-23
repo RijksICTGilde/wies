@@ -23,6 +23,7 @@ from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
@@ -2801,32 +2802,58 @@ PERMISSION_DENIED_ALERT = {
 CONCURRENCY_CONFLICT_ALERT = {
     "kind": "warning",
     "message": "Deze gegevens zijn ondertussen gewijzigd. "
-    "Kies 'Opslaan' om je wijziging toch door te voeren, of 'Annuleren' om de gewijzigde gegevens te zien.",
+    "Kies 'Opslaan' om je wijziging toch door te voeren, of 'Annuleren' om de gewijzigde gegevens over te nemen.",
 }
 
 CONFLICT_VALUE_MAX_LENGTH = 120
 
 
-def _concurrency_conflict_alert(spec, obj) -> dict:
-    """The conflict warning, naming the stored value where that is readable.
-
-    Only for a single text field: a group, a collection or a non-text value
-    (dates, related objects, lists) would need its own formatting per field to
-    read well, so those keep the generic message.
-    """
+def _readable_current_value(obj, spec) -> str | None:
+    """A short, human-readable form of a single field's current value, to name
+    the concurrent change in the conflict warning. A group or a collection has
+    no single value to show, so this returns None and the caller falls back to
+    the generic warning."""
     if not isinstance(spec, Editable):
-        return CONCURRENCY_CONFLICT_ALERT
+        return None
     value = _current_value(obj, spec)
-    if not (value is None or isinstance(value, str)):
+    # The audit timeline already renders this field for a human (owner → the
+    # colleague's name, not "Colleague object (3)"), so reuse that chain.
+    if spec.audit_state:
+        value = spec.audit_state(value)
+    if spec.render_change:
+        text = spec.render_change(value)
+    elif isinstance(value, list):
+        # A list on a scalar Editable is an M2M (e.g. labels); name the members.
+        text = ", ".join(str(v) for v in value)
+    else:
+        text = "" if value is None else str(value)
+    text = str(text).strip()
+    if not text:
+        return "geen"
+    if len(text) > CONFLICT_VALUE_MAX_LENGTH:
+        text = text[:CONFLICT_VALUE_MAX_LENGTH].rstrip() + "…"
+    return text
+
+
+def _concurrency_conflict_alert(editable_set, spec, obj) -> dict:
+    """The conflict warning, naming the field and the concurrent value where we
+    can show one, so the user does not have to press Annuleren, losing their
+    own input, just to find out what changed."""
+    concurrent = _readable_current_value(obj, spec)
+    if concurrent is None:
         return CONCURRENCY_CONFLICT_ALERT
-    current = (value or "").strip()
-    if len(current) > CONFLICT_VALUE_MAX_LENGTH:
-        current = current[:CONFLICT_VALUE_MAX_LENGTH].rstrip() + "…"
-    stored = f"de opgeslagen waarde is nu '{current}'" if current else "het veld is nu leeg"
+    # Bold the field label and the concurrent value so the change stands out.
+    # ``format_html`` escapes both (the value is user content) before marking
+    # the surrounding markup safe; the alert renders its message as HTML.
     return {
         "kind": "warning",
-        "message": f"Dit veld is ondertussen gewijzigd: {stored}. "
-        "Kies 'Opslaan' om je wijziging toch door te voeren, of 'Annuleren' om de gewijzigde waarde te zien.",
+        "message": format_html(
+            "<strong>{}</strong> is ondertussen gewijzigd naar <strong>“{}”</strong>. "
+            "Klik op 'Opslaan' om jouw wijziging alsnog door te voeren, "
+            "of op 'Annuleren' om de wijziging over te nemen.",
+            _spec_label(editable_set, spec),
+            concurrent,
+        ),
     }
 
 
@@ -3047,7 +3074,7 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
                 with transaction.atomic():
                     obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
                     # One snapshot, used both to check the token and as the
-                    # audit event's "before" — the team query is not cheap.
+                    # audit event's "before"; the team query is not cheap.
                     before = _edit_state(editable_set, spec, obj)
                     conflict = _has_concurrency_conflict(request, editable_set, spec, obj, state=before)
                     if not conflict:
@@ -3258,7 +3285,7 @@ def inline_edit_view(request, model_label, pk, name):
                     editables,
                     obj,
                     form,
-                    alert=_concurrency_conflict_alert(spec, obj),
+                    alert=_concurrency_conflict_alert(editable_set, spec, obj),
                 )
             return _render_inline_edit_display(
                 request,

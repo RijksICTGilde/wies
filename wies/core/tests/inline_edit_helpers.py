@@ -3,7 +3,7 @@
 The inline-edit endpoint checks a save against the state the edit form was
 rendered from, so a save must carry the ``_concurrency_token`` of that render.
 A POST without one cannot be checked and is treated as a conflict, so tests
-have to fetch the form first — the same GET-then-POST the browser does.
+have to fetch the form first: the same GET-then-POST the browser does.
 """
 
 import re

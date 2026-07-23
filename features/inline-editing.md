@@ -130,7 +130,7 @@ A group may also set `form_template` to lay its fields out itself
 (see `PlacementEditables.period`). That template is a **body**: it is
 included by `form.html`, which owns the `<form>` element, the
 concurrency token, the non-field errors, the alert and the buttons. So
-render form fields only — no `<form>`, no save/cancel buttons. Anything
+render form fields only: no `<form>`, no save/cancel buttons. Anything
 the body needs on the form element (data attributes for JS, say) goes
 on a container `<div>` inside the body instead.
 
@@ -392,14 +392,16 @@ Every edit form embeds a `_concurrency_token`: a hash of the values the
 form was rendered from. On save the view re-reads the object under
 `select_for_update()` and recomputes the token. If it differs, someone
 changed the data in the meantime, so instead of overwriting, the bound
-form comes back with a warning and a token for the new state — Opslaan
+form comes back with a warning and a token for the new state. Opslaan
 then saves anyway, Annuleren shows the changed data.
 
-For a single `Editable` whose value is text, the warning names the value
-that is stored now (`_concurrency_conflict_alert`), so the user can see
-what Opslaan would overwrite. A group, a collection or a non-text value
-(dates, related objects, lists) keeps the generic message: each would
-need its own formatting to read well.
+For a single `Editable` the warning names the field and the value that
+is stored now (`_concurrency_conflict_alert`), so finding out what
+changed does not cost the user their own input. The value is rendered
+through the field's `audit_state` / `render_change`, the same chain the
+audit timeline uses, and escaped, since it is user content in an HTML
+message. A group or a collection has no single value to name and keeps
+the generic message.
 
 The token is rendered by `form.html` / `collection_form.html`, never by
 a custom body, so a new editable cannot forget it. A POST without a
@@ -407,15 +409,15 @@ token cannot be checked and therefore counts as a conflict (and is
 logged); the returned form carries a fresh token, so a retry succeeds.
 
 A submit that fails validation never reaches the check, so that
-re-render keeps the token it was posted with rather than a fresh one —
-otherwise correcting the input would adopt whatever changed in the
+re-render keeps the token it was posted with rather than a fresh one,
+because otherwise correcting the input would adopt whatever changed in the
 meantime and overwrite it unwarned. The object can also be deleted
 between the permission check and the lock; that renders the same denial
 partial as a missing or forbidden object.
 
 Two consequences when extending the engine:
 
-- An `EditableCollection` needs an `audit_state` — it is the collection's
+- An `EditableCollection` needs an `audit_state`: it is the collection's
   state snapshot. Without one there is nothing to hash and
   `_concurrency_token` raises `ImproperlyConfigured`.
 - Tests that POST to the endpoint must fetch the form first. Use
@@ -441,11 +443,11 @@ class AssignmentEditables(EditableSet):
 
 The event's `object_type` is the model's class name, and it is persisted
 on every event written, so renaming the model orphans the events already
-stored under the old name — migrate them along with the rename.
+stored under the old name, so migrate them along with the rename.
 
 Today `AssignmentEditables` and `UserEditables` set `audit_events`.
 Colleague, Service and Placement edits are not recorded under their own
-type — Placement instead mirrors onto its assignment, see below.
+type; Placement instead mirrors onto its assignment, see below.
 
 ## Mirroring an edit onto another object's timeline
 
