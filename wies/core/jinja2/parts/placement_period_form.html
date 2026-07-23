@@ -1,50 +1,34 @@
-{# Custom form for PlacementEditables.period.
+{# Custom body for PlacementEditables.period, included by
+   parts/inline_edit/form.html, which owns the form element, the
+   concurrency token, the non-field errors, the alert and the buttons.
    Shows/disables the specific date fields based on a checkbox.
    When checked ("Neem opdrachtperiode over"), dates are pre-filled from the
    service and the inputs are disabled.
-   Context: target, edit_url, form, obj (Placement instance). #}
-<div id="{{ target }}">
-  <form hx-post="{{ edit_url }}"
-        hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
-        hx-target="#{{ target }}"
-        hx-swap="outerHTML"
-        data-service-start="{{ obj.service.start_date.isoformat() if obj.service.start_date else '' }}"
-        data-service-end="{{ obj.service.end_date.isoformat() if obj.service.end_date else '' }}">
-    <c-layout-flow gap="md">
-      {{ form.period_source.as_widget(attrs={"style": "display:none", "data-period-source": ""}) }}
-      <div class="rvo-form-field">
-        <span class="rvo-label">Periode</span>
-        <label class="service-period-toggle">
-          <input type="checkbox"
-                 id="placement-inherit-period"
-                 {% if form.period_source.value() == "SERVICE" %}checked{% endif %}>
-          <span>Neem opdrachtperiode over</span>
-        </label>
-      </div>
-      <div class="rvo-form-field">
-        <label class="rvo-label" for="{{ form.specific_start_date.id_for_label }}">{{ form.specific_start_date.label }}</label>
-        {{ form.specific_start_date.as_widget(attrs={"data-specific-start": ""}) }}
-        {% for error in form.specific_start_date.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
-      </div>
-      <div class="rvo-form-field">
-        <label class="rvo-label" for="{{ form.specific_end_date.id_for_label }}">{{ form.specific_end_date.label }}</label>
-        {{ form.specific_end_date.as_widget(attrs={"data-specific-end": ""}) }}
-        {% for error in form.specific_end_date.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
-      </div>
-    </c-layout-flow>
-    {% for error in form.non_field_errors() %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
-    <div class="field-actions">
-      <c-button type="submit" kind="primary">
-        Opslaan
-      </c-button>
-      <c-button type="button"
-                kind="secondary"
-                hx-get="{{ edit_url }}?cancel=true"
-                hx-target="#{{ target }}"
-                hx-swap="outerHTML">
-        Annuleren
-      </c-button>
+   Context: form, obj (Placement instance). #}
+<div data-placement-period
+     data-service-start="{{ obj.service.start_date.isoformat() if obj.service.start_date else '' }}"
+     data-service-end="{{ obj.service.end_date.isoformat() if obj.service.end_date else '' }}">
+  <c-layout-flow gap="md">
+    {{ form.period_source.as_widget(attrs={"style": "display:none", "data-period-source": ""}) }}
+    <div class="rvo-form-field">
+      <span class="rvo-label">Periode</span>
+      <label class="service-period-toggle">
+        <input type="checkbox"
+               id="placement-inherit-period"
+               {% if form.period_source.value() == "SERVICE" %}checked{% endif %}>
+        <span>Neem opdrachtperiode over</span>
+      </label>
     </div>
-  </form>
+    <div class="rvo-form-field">
+      <label class="rvo-label" for="{{ form.specific_start_date.id_for_label }}">{{ form.specific_start_date.label }}</label>
+      {{ form.specific_start_date.as_widget(attrs={"data-specific-start": ""}) }}
+      {% for error in form.specific_start_date.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
+    </div>
+    <div class="rvo-form-field">
+      <label class="rvo-label" for="{{ form.specific_end_date.id_for_label }}">{{ form.specific_end_date.label }}</label>
+      {{ form.specific_end_date.as_widget(attrs={"data-specific-end": ""}) }}
+      {% for error in form.specific_end_date.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
+    </div>
+  </c-layout-flow>
 </div>
 <script src="{{ static('js/placement_period_toggle.js') }}"></script>

@@ -39,6 +39,7 @@ from wies.core.models import (
 )
 from wies.core.permission_engine import Verb, registered_rules, rule
 from wies.core.services.users import create_user
+from wies.core.tests.inline_edit_helpers import post_inline_edit
 from wies.core.widgets import OrgPickerWidget
 
 User = get_user_model()
@@ -171,7 +172,7 @@ class InlineEditInfrastructureTest(TestCase):
         self.assertNotContains(resp, "Opslaan")
 
     def test_post_valid_saves_and_returns_display(self):
-        resp = self.client.post(self.url, {"name": "Updated name"})
+        resp = post_inline_edit(self.client, self.url, {"name": "Updated name"})
         assert resp.status_code == 200
         self.assertContains(resp, "Updated name")
         # Save feedback is a toast triggered client-side via HX-Trigger.
@@ -275,6 +276,9 @@ class InlineEditGroupTest(TestCase):
             _make_set(
                 "PeriodEditables",
                 Assignment,
+                # Stands in for AssignmentEditables, so it records audit events
+                # (object_type defaults to the model's name, "Assignment").
+                audit_events=True,
                 start_date=Editable(),
                 end_date=Editable(),
                 period=EditableGroup(
@@ -297,7 +301,8 @@ class InlineEditGroupTest(TestCase):
         self.assertContains(resp, 'name="end_date"')
 
     def test_group_post_valid_saves_both(self):
-        resp = self.client.post(
+        resp = post_inline_edit(
+            self.client,
             self.url,
             {"start_date": "2026-03-01", "end_date": "2026-06-30"},
         )
@@ -318,7 +323,8 @@ class InlineEditGroupTest(TestCase):
         assert self.assignment.end_date is None
 
     def test_group_post_emits_event_per_changed_field(self):
-        resp = self.client.post(
+        resp = post_inline_edit(
+            self.client,
             self.url,
             {"start_date": "2026-03-01", "end_date": "2026-06-30"},
         )
@@ -330,7 +336,8 @@ class InlineEditGroupTest(TestCase):
     def test_group_post_emits_event_only_for_changed_field(self):
         self.assignment.start_date = "2026-03-01"
         self.assignment.save()
-        resp = self.client.post(
+        resp = post_inline_edit(
+            self.client,
             self.url,
             {"start_date": "2026-03-01", "end_date": "2026-06-30"},
         )
@@ -343,7 +350,8 @@ class InlineEditGroupTest(TestCase):
         self.assignment.start_date = "2026-03-01"
         self.assignment.end_date = "2026-06-30"
         self.assignment.save()
-        resp = self.client.post(
+        resp = post_inline_edit(
+            self.client,
             self.url,
             {"start_date": "2026-03-01", "end_date": "2026-06-30"},
         )
@@ -380,7 +388,7 @@ class InlineEditCustomSaveTest(TestCase):
         REGISTRY.update(self._prev_registry)
 
     def test_custom_save_is_invoked(self):
-        self.client.post(self.url, {"name": "Raw"})
+        post_inline_edit(self.client, self.url, {"name": "Raw"})
         assert self.save_calls == [(self.assignment.pk, "Raw")]
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Custom:Raw"
@@ -515,7 +523,7 @@ class AssignmentEditablesFullTest(TestCase):
         return reverse("inline-edit", args=["assignment", self.assignment.id, name])
 
     def test_start_date_post_saves(self):
-        resp = self.client.post(self._url("start_date"), {"start_date": "2026-05-01"})
+        resp = post_inline_edit(self.client, self._url("start_date"), {"start_date": "2026-05-01"})
         assert resp.status_code == 200
         self.assignment.refresh_from_db()
         assert str(self.assignment.start_date) == "2026-05-01"
@@ -526,7 +534,8 @@ class AssignmentEditablesFullTest(TestCase):
         self.assertContains(resp, 'name="end_date"')
 
     def test_period_group_saves_both_dates(self):
-        resp = self.client.post(
+        resp = post_inline_edit(
+            self.client,
             self._url("period"),
             {"start_date": "2026-03-01", "end_date": "2026-06-30"},
         )
@@ -578,7 +587,7 @@ class AssignmentEditablesFullTest(TestCase):
 
     def test_owner_link_survives_save(self):
         # A successful save re-renders the display; the link must persist (#395).
-        resp = self.client.post(self._url("owner"), {"owner": self.colleague.id})
+        resp = post_inline_edit(self.client, self._url("owner"), {"owner": self.colleague.id})
         assert resp.status_code == 200
         self.assertContains(resp, f"collega={self.colleague.id}")
 
@@ -657,7 +666,7 @@ class PlacementServiceEditablesTest(TestCase):
 
     def test_service_description_inline_edit_saves(self):
         url = reverse("inline-edit", args=["service", self.service.id, "description"])
-        resp = self.client.post(url, {"description": "Nieuwe dienst"})
+        resp = post_inline_edit(self.client, url, {"description": "Nieuwe dienst"})
         assert resp.status_code == 200
         self.service.refresh_from_db()
         assert self.service.description == "Nieuwe dienst"
@@ -681,7 +690,8 @@ class PlacementServiceEditablesTest(TestCase):
         """A period edit on a placement (the profile path) is mirrored as a
         Team event on the parent assignment timeline (#393)."""
         url = reverse("inline-edit", args=["placement", self.placement.id, "period"])
-        resp = self.client.post(
+        resp = post_inline_edit(
+            self.client,
             url,
             {
                 "period_source": Placement.PLACEMENT,
@@ -863,7 +873,7 @@ class AssignmentServicesAuditTest(TestCase):
                 colleague=self.colleague,
             ),
         }
-        resp = self.client.post(self.url, data)
+        resp = post_inline_edit(self.client, self.url, data)
         assert resp.status_code == 200
         events = list(Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update"))
         assert len(events) == 1
@@ -893,7 +903,7 @@ class AssignmentServicesAuditTest(TestCase):
             ),
             **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
         }
-        resp = self.client.post(self.url, data)
+        resp = post_inline_edit(self.client, self.url, data)
         assert resp.status_code == 200
         assert not Event.objects.filter(object_type="Assignment", object_id=self.assignment.id).exists()
 
@@ -913,7 +923,7 @@ class AssignmentServicesAuditTest(TestCase):
             "service-0-placement_end_date": "2026-06-30",
             **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
         }
-        resp = self.client.post(self.url, data)
+        resp = post_inline_edit(self.client, self.url, data)
         assert resp.status_code == 200
         self.placement.refresh_from_db()
         assert self.placement.specific_start_date is not None
@@ -941,7 +951,7 @@ class AssignmentServicesAuditTest(TestCase):
             "service-0-placement_id": str(self.placement.id),
             **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
         }
-        resp = self.client.post(self.url, data)
+        resp = post_inline_edit(self.client, self.url, data)
         assert resp.status_code == 200
         # Placement gone, service kept as an open aanvraag.
         assert not Placement.objects.filter(id=self.placement.id).exists()
@@ -991,7 +1001,7 @@ class AssignmentServicesAuditTest(TestCase):
                 colleague=self.colleague,
             ),
         }
-        resp = self.client.post(self.url, data)
+        resp = post_inline_edit(self.client, self.url, data)
         assert resp.status_code == 200
 
         self.filled_service.refresh_from_db()
@@ -1033,7 +1043,7 @@ class AssignmentServicesAuditTest(TestCase):
                 colleague=self.colleague,
             ),
         }
-        resp = self.client.post(self.url, data)
+        resp = post_inline_edit(self.client, self.url, data)
         assert resp.status_code == 200
         # The removed service must actually be gone from the DB.
         assert not Service.objects.filter(id=original_vacant_id).exists()
@@ -1375,7 +1385,7 @@ class ServiceDescriptionPermissionTest(TestCase):
 
     def test_placed_consultant_edits_own_description(self):
         self.client.force_login(self.placed_user)
-        resp = self.client.post(self._desc_url(self.my_service), {"description": "Nieuwe rol"})
+        resp = post_inline_edit(self.client, self._desc_url(self.my_service), {"description": "Nieuwe rol"})
         assert resp.status_code == 200
         self.my_service.refresh_from_db()
         assert self.my_service.description == "Nieuwe rol"
@@ -1401,7 +1411,7 @@ class ServiceDescriptionPermissionTest(TestCase):
     def test_owner_can_use_inline_pencil(self):
         """BM can edit descriptions inline, consistent with skill and period."""
         self.client.force_login(self.owner_user)
-        resp = self.client.post(self._desc_url(self.my_service), {"description": "BM past aan"})
+        resp = post_inline_edit(self.client, self._desc_url(self.my_service), {"description": "BM past aan"})
         assert resp.status_code == 200
         self.assertNotContains(resp, "geen rechten")
         self.my_service.refresh_from_db()
@@ -1496,7 +1506,8 @@ class InlineOrganizationsEditTest(TestCase):
 
     def test_post_with_two_orgs_persists_through_rows(self):
         url = reverse("inline-edit", args=["assignment", self.assignment.id, "organizations"])
-        self.client.post(
+        post_inline_edit(
+            self.client,
             url,
             {
                 "org-TOTAL_FORMS": "2",
@@ -1595,7 +1606,7 @@ class ColleagueLabelsInlineEditTest(TestCase):
             "inline-edit",
             args=["colleague", self.colleague.id, f"labels_{self.expertise.id}"],
         )
-        resp = self.client.post(url, {"labels": [self.label_cloud.id]})
+        resp = post_inline_edit(self.client, url, {"labels": [self.label_cloud.id]})
         assert resp.status_code == 200
         current = set(self.colleague.labels.values_list("pk", flat=True))
         assert current == {self.label_cloud.id, self.label_weerbaar.id}
@@ -1651,7 +1662,7 @@ class UserProfileColleagueAutoCreateTest(TestCase):
     def test_first_name_save_creates_colleague(self):
         assert not Colleague.objects.filter(user=self.user).exists()
         url = reverse("inline-edit", args=["user", self.user.id, "first_name"])
-        resp = self.client.post(url, {"first_name": "Nieuwe"})
+        resp = post_inline_edit(self.client, url, {"first_name": "Nieuwe"})
         assert resp.status_code == 200
         colleague = Colleague.objects.get(user=self.user)
         # Name reflects combined user.first_name + user.last_name.
@@ -1659,7 +1670,7 @@ class UserProfileColleagueAutoCreateTest(TestCase):
 
     def test_subsequent_last_name_save_updates_colleague_name(self):
         url_last = reverse("inline-edit", args=["user", self.user.id, "last_name"])
-        self.client.post(url_last, {"last_name": "Anders"})
+        post_inline_edit(self.client, url_last, {"last_name": "Anders"})
         colleague = Colleague.objects.get(user=self.user)
         assert colleague.name == "Oud Anders"
 
