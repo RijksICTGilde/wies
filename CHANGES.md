@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 504: the "Wie zit waar?"-overzicht now shows the placements as cards, grouped by Persoon (default) or Opdracht via a view menu, each card opening the matching side panel, with a "Sorteer" dropdown replacing the column-header sorting
 - 483: inline editing now detects concurrent edits instead of silently overwriting: if the data changed since you opened the edit form, the form comes back with a warning and your input kept. Opslaan saves anyway, Annuleren shows the changed data. This covers every inline-editable field, including the team and period forms.
 - 483: the concurrent-edit warning on a single field now names the field and the value someone else put there, so you no longer have to press Annuleren, losing your own input, to find out what changed
 - 483: an inline edit that is submitted without the token the edit form hands out (for example a page left open across a deploy) is no longer saved unverified; the form comes back with the same warning and saving again goes through.

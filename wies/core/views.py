@@ -589,6 +589,39 @@ class PlacementListView(ListView):
     paginate_by = 50
     page_kwarg = "pagina"
 
+    # Maps ?groep= values to the DB field used to make rows in the same group contiguous.
+    GROUPBY_ORDERING = {
+        "person": "colleague__name",
+        "assignment": "service__assignment__name",
+    }
+
+    # Two views: cards per persoon (default) or per opdracht. `label`/`icon` drive the
+    # weergave-menu button + options; `value` becomes ?groep=.
+    GROUPBY_DEFAULT = "person"
+    GROUPBY_OPTIONS = [
+        {"value": "person", "label": "Persoon", "icon": "user"},
+        {"value": "assignment", "label": "Opdracht", "icon": "klembord-met-vinkje"},
+    ]
+
+    # Sort dropdown options per view; `value` becomes ?order= (see order_mapping in
+    # get_queryset). The empty value is each view's default (the first option).
+    # Opdracht sorts on opdrachtnaam; the others on collega-naam.
+    SORT_OPTIONS_BY_VIEW = {
+        "assignment": [
+            {"value": "", "label": "Opdracht (A-Z)"},
+            {"value": "-assignment", "label": "Opdracht (Z-A)"},
+            {"value": "end_date", "label": "Einddatum (oplopend)"},
+            {"value": "-end_date", "label": "Einddatum (aflopend)"},
+        ],
+        "default": [
+            {"value": "", "label": "Naam (A-Z)"},
+            {"value": "-name", "label": "Naam (Z-A)"},
+            {"value": "assignment", "label": "Opdracht (A-Z)"},
+            {"value": "end_date", "label": "Einddatum (oplopend)"},
+            {"value": "-end_date", "label": "Einddatum (aflopend)"},
+        ],
+    }
+
     def _get_base_queryset(self):
         """Base queryset with search, ordering, and date filters applied."""
         excluded_org_ids = get_excluded_org_ids()
@@ -623,20 +656,33 @@ class PlacementListView(ListView):
                 | Q(service__assignment__organizations__label__icontains=search_filter)
             )
 
+        # Allowlist of ?order= values the sort dropdown can produce, mapped to DB fields.
         order_mapping = {
             "name": "colleague__name",
             "assignment": "service__assignment__name",
-            "skill": "service__skill__name",
             "end_date": "service__assignment__end_date",
         }
 
         order_param = self.request.GET.get("order")
+        sort_field = None
         if order_param:
             descending = order_param.startswith("-")
             field_name = order_param.lstrip("-")
             order_by = order_mapping.get(field_name)
             if order_by:
-                qs = qs.order_by(f"-{order_by}" if descending else order_by)
+                sort_field = f"-{order_by}" if descending else order_by
+
+        # No explicit sort -> default per view: opdracht on opdrachtnaam, else name.
+        group_param = self.request.GET.get("groep")
+        group_field = self.GROUPBY_ORDERING.get(group_param) if group_param else None
+        if not sort_field:
+            sort_field = "service__assignment__name" if group_param == "assignment" else "colleague__name"
+
+        # The chosen sort drives the group order, so sort_field comes first; group_field
+        # is a tiebreaker that keeps a group's rows adjacent where the sort allows, so a
+        # group rarely straddles the page boundary (the client dedups the rest, see
+        # toolbar_menu.js).
+        qs = qs.order_by(sort_field, group_field) if group_field else qs.order_by(sort_field)
 
         # Active placements are public; ended ones are hidden from everyone;
         # not-yet-started ones only for the placed colleague and the BM-owner.
@@ -761,23 +807,113 @@ class PlacementListView(ListView):
                 if assignment_id:
                     return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
-                return ["parts/placement_table_rows.html"]
+                return ["parts/placement_cards.html"]
             return ["parts/filter_and_table_container.html"]
         return ["placement_table.html"]
+
+    @staticmethod
+    def _team_members_by_assignment(assignment_ids):
+        """Map each assignment id to its full team as [{name, role}] dicts,
+        one colleague per row (first role seen), ordered by name. Unfiltered:
+        the whole team, regardless of the filters that shaped the placement list."""
+        members: dict[int, list[dict]] = {aid: [] for aid in assignment_ids}
+        if not assignment_ids:
+            return members
+        rows = (
+            Placement.objects.filter(service__assignment_id__in=assignment_ids)
+            .select_related("colleague", "service__skill")
+            .order_by("colleague__name")
+        )
+        seen: set[tuple[int, int]] = set()
+        for placement in rows:
+            aid = placement.service.assignment_id
+            key = (aid, placement.colleague_id)
+            if key in seen:
+                continue
+            seen.add(key)
+            role = placement.service.skill.name if placement.service.skill else ""
+            members[aid].append({"name": placement.colleague.name, "role": role})
+        return members
 
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
         context["render_filter_fields_oob"] = "HX-Request" in self.request.headers
 
-        # Add panel URLs to placement objects
+        # Panel URLs for each "bekijk per X" view: a plaatsing row opens the
+        # placement panel, a persoon row the colleague panel, an opdracht row the
+        # assignment panel. Set on the related objects so the row can link straight.
+        assignment_ids = set()
         for placement in context["object_list"]:
             placement.panel_url = _build_panel_url(self.request, plaatsing=placement.id)
+            placement.colleague.panel_url = _build_panel_url(self.request, collega=placement.colleague.id)
+            assignment = placement.service.assignment
+            assignment.panel_url = _build_panel_url(self.request, opdracht=assignment.id)
+            assignment_ids.add(assignment.id)
+
+        # The opdracht-card shows the assignment's FULL team, not just the placements
+        # that survived the active filters. Fetch it once for all cards on the page.
+        context["team_members_by_assignment"] = self._team_members_by_assignment(assignment_ids)
 
         context["filter_target_url"] = reverse("home")
         context["search_field"] = "zoek"
         context["search_placeholder"] = "Zoek op collega, opdracht of opdrachtgever..."
         context["search_filter"] = self.request.GET.get("zoek")
+
+        group_param = self.request.GET.get("groep") or ""
+        valid_views = {opt["value"] for opt in self.GROUPBY_OPTIONS}
+        active_group = group_param if group_param in valid_views else self.GROUPBY_DEFAULT
+        context["groupby_field"] = active_group
+
+        # URL for a view; the default view drops the param to keep URLs clean.
+        def _groupby_url(value):
+            params = self.request.GET.copy()
+            params.pop("pagina", None)
+            if value == self.GROUPBY_DEFAULT:
+                params.pop("groep", None)
+            else:
+                params["groep"] = value
+            query = params.urlencode()
+            return f"{reverse('home')}?{query}" if query else reverse("home")
+
+        # Weergave-menu options (button + dropdown), each with its URL + active flag.
+        context["groupby_options"] = [
+            {**opt, "url": _groupby_url(opt["value"]), "active": opt["value"] == active_group}
+            for opt in self.GROUPBY_OPTIONS
+        ]
+
+        # The button shows "Weergave: <active label> (<count>)" — label + count of the
+        # active view. Count is distinct over the full filtered set (not the page).
+        active_option = next(o for o in self.GROUPBY_OPTIONS if o["value"] == active_group)
+        context["groupby_active_label"] = active_option["label"]
+        context["groupby_active_icon"] = active_option["icon"]
+        full_qs = self.object_list
+        if active_group == "assignment":
+            context["results_count"] = full_qs.values("service__assignment_id").distinct().count()
+        else:
+            context["results_count"] = full_qs.values("colleague_id").distinct().count()
+
+        # Sort dropdown (right of the search): sets ?order=, preserving view + filters.
+        order_param = self.request.GET.get("order") or ""
+
+        def _sort_url(value):
+            params = self.request.GET.copy()
+            params.pop("pagina", None)
+            if value:
+                params["order"] = value
+            else:
+                params.pop("order", None)
+            query = params.urlencode()
+            return f"{reverse('home')}?{query}" if query else reverse("home")
+
+        sort_options = self.SORT_OPTIONS_BY_VIEW.get(active_group, self.SORT_OPTIONS_BY_VIEW["default"])
+        context["sort_options"] = [
+            {**opt, "url": _sort_url(opt["value"]), "active": opt["value"] == order_param} for opt in sort_options
+        ]
+        active_sort = next((o for o in sort_options if o["value"] == order_param), sort_options[0])
+        context["sort_active_label"] = active_sort["label"]
+        # Non-default order for the hidden input that carries sort through filter changes.
+        context["active_sort"] = active_sort["value"]
 
         active_filters: dict = {}
 

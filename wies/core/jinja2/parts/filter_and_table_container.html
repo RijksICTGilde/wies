@@ -1,23 +1,30 @@
 {# HTMX partial: Updates the main content area when filters change #}
 <div id="filter-and-table-container">
-  <!-- Page Header -->
+  {# Carry the active view + sort through sidebar filter changes (hx-include picks these
+     up). Live here (not in the sidebar) so the menu switch, which only re-swaps this
+     container, keeps them current. The menus themselves navigate via full ?groep=/?order=
+     URLs. #}
+  <input type="hidden"
+         name="groep"
+         value="{{ groupby_field }}"
+         data-filter-input
+         id="active-groupby-input" />
+  {% if active_sort %}
+    <input type="hidden"
+           name="order"
+           value="{{ active_sort }}"
+           data-filter-input
+           id="active-sort-input" />
+  {% endif %}
+  <!-- Page Header: toolbar strip — controls row, then active filter chips row -->
   <div class="layout__main__header">
-    <!-- Row 1: Title + Search -->
-    <div class="header-row header-row--between">
-      <c-h1 noMargins>
-        Wie zit waar?
-      </c-h1>
-      <div class="header-actions">
-        <!-- Mobile filter toggle -->
-        <c-button kind="secondary"
-                  size="md"
-                  icon="trechter"
-                  iconPlacement="before"
-                  type="button"
-                  class="mobile-filter-toggle"
-                  data-toggle-filters>
-          Filters
-        </c-button>
+    <c-h1 noMargins class="sr-only">
+      Wie zit waar?
+    </c-h1>
+    <div class="table-toolbar">
+      <!-- Row 1: view menu (with result count) + search -->
+      <div class="table-toolbar__controls">
+        {% include "parts/toolbar/groupby_menu.html" %}
         <!-- Search Field -->
         <div class="search-field-wrapper">
           <button type="button"
@@ -40,36 +47,29 @@
           <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
           <div id="search-suggestions-container" hx-preserve="true"></div>
         </div>
+        <!-- Sort dropdown, pushed to the right -->
+        {% include "parts/toolbar/sort_menu.html" %}
+        <!-- Mobile filter toggle -->
+        <c-button kind="secondary"
+                  size="md"
+                  icon="trechter"
+                  iconPlacement="before"
+                  type="button"
+                  class="mobile-filter-toggle"
+                  data-toggle-filters>
+          Filters
+        </c-button>
       </div>
-    </div>
-    <!-- Row 2: Result count + Active Filter Chips -->
-    <div class="header-row">
-      <c-paragraph class="results-count">
-        <b>{{ page_obj.paginator.count }}</b> resultaten
-      </c-paragraph>
-      <!-- Active Filter Chips -->
-      {% include "parts/filters/filter_chips.html" %}
+      <!-- Row 2: active filter chips -->
+      {% if active_filter_count %}
+        <div class="table-toolbar__summary">
+          <div class="table-toolbar__chips">{% include "parts/filters/filter_chips.html" %}</div>
+        </div>
+      {% endif %}
     </div>
   </div>
-  <!-- Placement Table -->
-  <c-table id="placement_table" class="placement-table">
-    <c-table-head>
-      <c-table-row>
-        {% with field="name", label="Wie", target="#filter-and-table-container", sort_state=get_sort_state(request, "name") %}
-          {% include "parts/generic_sortable_header.html" %}
-        {% endwith %}
-        {% with field="assignment", label="Wat & waar", target="#filter-and-table-container", sort_state=get_sort_state(request, "assignment") %}
-          {% include "parts/generic_sortable_header.html" %}
-        {% endwith %}
-        {% with field="end_date", label="Tot", target="#filter-and-table-container", sort_state=get_sort_state(request, "end_date") %}
-          {% include "parts/generic_sortable_header.html" %}
-        {% endwith %}
-      </c-table-row>
-    </c-table-head>
-    <c-table-body>
-      {% include "parts/placement_table_rows.html" %}
-    </c-table-body>
-  </c-table>
+  <!-- Card list: opdracht-cards or persoon-cards depending on the active view -->
+  <div class="wzw-card-list wzw-card-list--{{ groupby_field }}">{% include "parts/placement_cards.html" %}</div>
 </div>
 {# OOB swap: update sidebar filter fields (counts, selected states) — only for HTMX requests #}
 {% if render_filter_fields_oob %}

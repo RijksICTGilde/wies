@@ -500,6 +500,194 @@
   font-size: var(--rvo-font-size-md, 1rem);
 }
 
+/* Visually hidden but available to screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Toolbar: a controls row (on a light strip) with a result-count + chips row below it. */
+.table-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Row 1: search + grouping, on their own light strip. */
+.table-toolbar__controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--rvo-space-sm, 0.75rem);
+  padding: 0.5rem 0.6rem;
+  background: var(--rvo-color-grijs-100, #f1f5f9);
+  border-radius: var(--rvo-border-radius-md, 8px);
+}
+
+/* Row 2: the active filter chips — no strip, on the page. */
+.table-toolbar__summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--rvo-space-sm, 0.75rem);
+}
+
+/* Search on the left of the controls row. */
+.table-toolbar .search-field-wrapper {
+  flex: 0 1 20rem;
+  max-width: 100%;
+}
+
+.table-toolbar .search-field-wrapper .utrecht-textbox {
+  height: 2.5rem;
+  background: var(--rvo-color-wit, #fff);
+}
+
+.table-toolbar .mobile-filter-toggle,
+.table-toolbar .groupby-menu {
+  flex: 0 0 auto;
+}
+
+/* Active filter chips beside the result count. */
+.table-toolbar__chips {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Give the plain chips a clear grey fill so they read on the white page. */
+.table-toolbar__chips .filter-chip--default {
+  background-color: var(--rvo-color-grijs-200, #e2e8f0);
+  border-color: var(--rvo-color-grijs-300, #cbd5e1);
+}
+
+/* Keep chips to a single line; long labels ellipsis (full text in the data-tooltip),
+   so the row stays tidy and the remove button is always reachable. */
+.table-toolbar__chips .filter-chip__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  max-width: 16rem;
+}
+
+/* ---- View menu: a button ("Weergave: <b>Persoon</b> (24)") that opens a popover
+   menu (Persoon / Opdracht). Native <select> can't bold just the value or hold an
+   icon in its closed state, hence a custom button + dropdown. ---- */
+.groupby-menu {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* Override the tertiary button's blue/bold/underline defaults to a neutral,
+   outlined toolbar control (grey text + icon, white fill, subtle border). */
+.groupby-menu__trigger.rvo-button {
+  --rvo-button-tertiary-color: var(--rvo-color-grijs-700, #334155);
+  --rvo-button-tertiary-hover-color: var(--rvo-color-grijs-800, #1e293b);
+  --rvo-button-tertiary-focus-color: var(--rvo-color-grijs-800, #1e293b);
+  --rvo-button-tertiary-font-weight: var(--rvo-font-weight-normal, 400);
+  --rvo-button-tertiary-hover-text-decoration: none;
+  gap: 0.4rem;
+  padding-inline: 0.75rem;
+  border: 1px solid var(--rvo-color-grijs-300, #cbd5e1);
+  border-radius: var(--rvo-border-radius-sm, 4px);
+  background: var(--rvo-color-wit, #fff);
+  cursor: pointer;
+}
+
+.groupby-menu__trigger.rvo-button:hover {
+  background: var(--rvo-color-grijs-100, #f1f5f9);
+}
+
+/* Toolbar icons follow the (grey) text colour instead of the button accent. */
+.groupby-menu__trigger .utrecht-icon.rvo-icon {
+  background-color: var(--rvo-color-grijs-700, #334155);
+}
+
+/* Only the value is bold; the button's normal-weight default must not flatten it. */
+.groupby-menu__label b {
+  font-weight: var(--rvo-font-weight-bold, 700);
+}
+
+.groupby-menu__chevron {
+  margin-left: 0.15rem;
+  transition: transform 0.15s ease-in-out;
+}
+
+.groupby-menu__trigger[aria-expanded="true"] .groupby-menu__chevron {
+  transform: rotate(180deg);
+}
+
+/* Sort menu sits at the right end of the controls row. */
+.sort-menu {
+  margin-left: auto;
+}
+
+.groupby-menu__dropdown {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  z-index: 20;
+  min-width: 12rem;
+  padding: 0.25rem;
+  background: var(--rvo-color-wit, #fff);
+  border: 1px solid var(--rvo-color-grijs-300, #cad0d8);
+  border-radius: var(--rvo-border-radius-md, 8px);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 12%);
+}
+
+/* Right-aligned variant (sort menu) so it doesn't overflow the right edge. */
+.groupby-menu__dropdown--right {
+  left: auto;
+  right: 0;
+}
+
+.groupby-menu__option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  color: var(--rvo-color-zwart, #000);
+  text-decoration: none;
+  border-radius: var(--rvo-border-radius-sm, 4px);
+  white-space: nowrap;
+}
+
+.groupby-menu__option:hover,
+.groupby-menu__option:focus-visible {
+  background: var(--rvo-color-grijs-100, #f3f4f5);
+}
+
+.groupby-menu__option--active {
+  font-weight: 700;
+}
+
+/* View icon before the label; grey so it reads as a quiet affordance. */
+.groupby-menu__option-icon.utrecht-icon.rvo-icon {
+  background-color: var(--rvo-color-grijs-700, #334155);
+}
+
+/* Label grows so the checkmark aligns to the right edge of the option. */
+.groupby-menu__option-label {
+  flex: 1 1 auto;
+}
+
+.groupby-menu__check {
+  display: inline-flex;
+  width: 1rem;
+  justify-content: center;
+  color: var(--rvo-color-hemelblauw, #007bc7);
+}
+
 .filter-chips-container {
   display: flex;
   flex-wrap: wrap;
