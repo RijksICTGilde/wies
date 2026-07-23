@@ -547,11 +547,10 @@ class PlacementListView(ListView):
         "assignment": "service__assignment__name",
     }
 
-    # Three views: the flat plaatsingen table (default), or cards per persoon /
-    # per opdracht. `icon`/`singular`/`plural` drive the view menu + count.
-    GROUPBY_DEFAULT = "placement"
+    # Two views: cards per persoon (default) or per opdracht.
+    # `icon`/`singular`/`plural` drive the view menu + count.
+    GROUPBY_DEFAULT = "person"
     GROUPBY_OPTIONS = [
-        {"value": "placement", "label": "Plaatsing", "icon": "menu", "singular": "plaatsing", "plural": "plaatsingen"},
         {"value": "person", "label": "Persoon", "icon": "user", "singular": "persoon", "plural": "personen"},
         {
             "value": "assignment",
@@ -764,29 +763,9 @@ class PlacementListView(ListView):
                 if assignment_id:
                     return ["parts/assignment_panel_content.html"]
             if self.request.GET.get("pagina"):
-                return [self._rows_partial()]
-            return [self._container_partial()]
+                return ["parts/placement_cards.html"]
+            return ["parts/filter_and_table_container.html"]
         return ["placement_table.html"]
-
-    def _ui_variant(self):
-        """Which UI variant to render: 'groups' (PR 462 fold-out table, default) or
-        'cards' (per-persoon / per-opdracht cards). Switch with ?ui=cards / ?ui=groups."""
-        return "cards" if self.request.GET.get("ui") == "cards" else "groups"
-
-    def _container_partial(self):
-        """The container partial for the active UI variant."""
-        if self._ui_variant() == "cards":
-            return "parts/filter_and_table_container.html"
-        return "parts/filter_and_table_container_groups.html"
-
-    def _rows_partial(self):
-        """The rows/cards partial for pagination, per UI variant + active view."""
-        if self._ui_variant() == "groups":
-            return "parts/placement_rows_groups.html"
-        group_param = self.request.GET.get("groep") or ""
-        valid = {opt["value"] for opt in self.GROUPBY_OPTIONS}
-        active = group_param if group_param in valid else self.GROUPBY_DEFAULT
-        return "parts/placement_table_rows.html" if active == "placement" else "parts/placement_cards.html"
 
     @staticmethod
     def _team_members_by_assignment(assignment_ids):
@@ -837,8 +816,6 @@ class PlacementListView(ListView):
         context["search_placeholder"] = "Zoek op collega, opdracht of opdrachtgever..."
         context["search_filter"] = self.request.GET.get("zoek")
 
-        context["ui_variant"] = self._ui_variant()
-
         group_param = self.request.GET.get("groep") or ""
         valid_views = {opt["value"] for opt in self.GROUPBY_OPTIONS}
         active_group = group_param if group_param in valid_views else self.GROUPBY_DEFAULT
@@ -888,15 +865,12 @@ class PlacementListView(ListView):
         context["sort_active_label"] = active_sort["label"]
 
         # Result count beside the menu, following the active view. Distinct count
-        # over the full filtered set (not the page): fewer opdrachten than personen
-        # than plaatsingen.
+        # over the full filtered set (not the page): fewer opdrachten than personen.
         full_qs = self.object_list
         if active_group == "assignment":
             count = full_qs.values("service__assignment_id").distinct().count()
-        elif active_group == "person":
-            count = full_qs.values("colleague_id").distinct().count()
         else:
-            count = full_qs.count()
+            count = full_qs.values("colleague_id").distinct().count()
         context["results_count"] = count
         context["results_label"] = active_option["singular"] if count == 1 else active_option["plural"]
 
