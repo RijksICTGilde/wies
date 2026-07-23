@@ -8,7 +8,9 @@
 {% endblock sidebar %}
 {% block content %}
   <div class="rvo-layout-column rvo-layout-gap--xl">
-    <c-h1>Statistieken</c-h1>
+    <c-h1>
+      Statistieken
+    </c-h1>
     <div class="staff-tiles">
       <div class="staff-tile">
         <div class="staff-tile__value">{{ usage.mau }}</div>
@@ -39,7 +41,9 @@
              style="height: {{ (count / usage.max_daily * 100) if usage.max_daily else 0 }}%"></div>
       {% endfor %}
     </div>
-    <c-h2>Recente foutmeldingen</c-h2>
+    <c-h2>
+      Recente foutmeldingen
+    </c-h2>
     <div id="error_table_container"
          class="rvo-table-container"
          hx-get="{{ url('error-table') }}"

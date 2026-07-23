@@ -1,28 +1,57 @@
 {# Multi-field forms (EditableGroup) show a label per field and get
    vertical spacing between inputs. Single-field forms render the
    widget bare — the context (panel value next to the pencil, then
-   the input when editing) is enough that a label would just be noise. #}
+   the input when editing) is enough that a label would just be noise.
+
+   A group may replace the field loop with its own body via
+   ``form_template``. The form element, concurrency token, non-field
+   errors, alert and buttons stay here, so no custom body can omit them. #}
 {% set multi = form.fields|length > 1 %}
 <div id="{{ target }}">
   <form hx-post="{{ edit_url }}"
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
         hx-target="#{{ target }}"
         hx-swap="outerHTML">
-    <c-layout-flow gap="{%- if multi -%}md{%- else -%}0{%- endif -%}">
-    {% for bound in form %}
-      <div class="rvo-form-field">
-        {% if multi and bound.label %}
-          <label class="rvo-label" for="{{ bound.id_for_label }}">{{ bound.label }}</label>
-        {% endif %}
-        {{ bound.as_widget(attrs={"autofocus": loop.first}) }}
-        {% for error in bound.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
-      </div>
-    {% endfor %}
-    </c-layout-flow>
+    <input type="hidden"
+           name="_concurrency_token"
+           value="{{ concurrency_token }}">
+    {% if editable.form_template %}
+      {% include editable.form_template %}
+    {% else %}
+      <c-layout-flow gap="{%- if multi -%}md{%- else -%}0{%- endif -%}">
+        {% for bound in form %}
+          <div class="rvo-form-field">
+            {% if multi and bound.label %}
+              <label class="rvo-label" for="{{ bound.id_for_label }}">{{ bound.label }}</label>
+            {% endif %}
+            {{ bound.as_widget(attrs={"autofocus": loop.first}) }}
+            {% for error in bound.errors %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
+          </div>
+        {% endfor %}
+      </c-layout-flow>
+    {% endif %}
     {% for error in form.non_field_errors() %}<p class="rvo-form-field__error">{{ error }}</p>{% endfor %}
+    {# role="alert": the form is swapped in by HTMX, so without a live region a
+       screen reader would not announce that the save was held back. #}
+    {% if alert %}
+      <div role="alert">
+        <c-alert kind="{{ alert.kind }}"
+                 class="rvo-margin-block-start--md rvo-margin-block-end--md">
+          {{ alert.message }}
+        </c-alert>
+      </div>
+    {% endif %}
     <div class="field-actions">
-      <c-button type="submit" kind="primary">Opslaan</c-button>
-      <c-button type="button" kind="secondary" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML">Annuleren</c-button>
+      <c-button type="submit" kind="primary">
+        Opslaan
+      </c-button>
+      <c-button type="button"
+                kind="secondary"
+                hx-get="{{ edit_url }}?cancel=true"
+                hx-target="#{{ target }}"
+                hx-swap="outerHTML">
+        Annuleren
+      </c-button>
     </div>
   </form>
 </div>

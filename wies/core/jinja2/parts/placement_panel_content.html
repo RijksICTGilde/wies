@@ -9,10 +9,14 @@
              src="{{ static('img/placeholder-avatar.svg') }}" />
       </div>
       <div class="card__content">
-        <c-h3 noMargins>{{ colleague.name }}</c-h3>
+        <c-h3 noMargins>
+          {{ colleague.name }}
+        </c-h3>
         <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
           <c-icon icon="mail" size="md" color="hemelblauw" />
-          <c-link href="mailto:{{ colleague.email }}">{{ colleague.email }}</c-link>
+          <c-link href="mailto:{{ colleague.email }}">
+            {{ colleague.email }}
+          </c-link>
         </div>
       </div>
     </div>
@@ -21,34 +25,44 @@
   {% if labels %}
     <div class="rvo-layout-row rvo-layout-gap--sm label-badge-list">
       {% for label in labels %}
-        <c-tag type="default" class="label-badge" style="background-color: {{ label.category.color }}">{{ label.name }}</c-tag>
+        <c-tag type="default"
+               class="label-badge"
+               style="background-color: {{ label.category.color }}">
+          {{ label.name }}
+        </c-tag>
       {% endfor %}
     </div>
   {% endif %}
   <section>
-    <c-h2 style="margin-bottom: var(--rvo-space-sm);">Informatie over huidige opdracht</c-h2>
+    <c-h2 style="margin-bottom: var(--rvo-space-sm);">
+      Informatie over huidige opdracht
+    </c-h2>
     {% with assignments=[panel_data.assignment_card], hx_target="#side_panel-content" %}
       {% include "parts/colleague_assignment_cards.html" %}
     {% endwith %}
   </section>
   <section>
     <c-data-list>
-    <dt>Rol van {{ colleague.name.split()[0] }}</dt>
-    <dd>
-      {{ inline_edit(service, "skill") }}
-    </dd>
-    <dt>Omschrijving</dt>
-    <dd>
-      {{ inline_edit(service, "description") }}
-    </dd>
-    <dt>Periode</dt>
-    <dd>
-      {{ inline_edit(placement, "period") }}
-    </dd>
+      <dt>Rol van {{ colleague.name.split()[0] }}</dt>
+      <dd>
+        {{ inline_edit(service, "skill") }}
+      </dd>
+      <dt>Omschrijving</dt>
+      <dd>
+        {{ inline_edit(service, "description") }}
+      </dd>
+      <dt>Periode</dt>
+      <dd>
+        {{ inline_edit(placement, "period") }}
+      </dd>
     </c-data-list>
   </section>
   <section>
     {% set colleague_url = '/opdrachten/?collega=' ~ colleague.id %}
-    <c-link href="{{ colleague_url }}" hx-get="{{ colleague_url }}" hx-target="#side_panel-content">Bekijk alle opdrachten van {{ colleague.name.split()[0] }} ›</c-link>
+    <c-link href="{{ colleague_url }}"
+            hx-get="{{ colleague_url }}"
+            hx-target="#side_panel-content">
+      Bekijk alle opdrachten van {{ colleague.name.split()[0] }} ›
+    </c-link>
   </section>
 </div>

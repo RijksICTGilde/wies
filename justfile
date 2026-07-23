@@ -12,6 +12,7 @@ setup:
   echo "Setup application for local development: install dependencies, setup fresh db"
   uv sync  # to enable exploration in dependencies
   if [ ! -f .env ]; then cp .env.local.example .env; fi
+  if [ ! -f .env.worker ]; then cp .env.worker.example .env.worker; fi
   docker compose down -v
   docker compose build
   docker compose run --rm django python manage.py migrate
@@ -54,7 +55,7 @@ up-production-django:
 # make sure to run up-production-postgres first
 # to check if container runs properly. not directly used in production
 up-production-worker:
-  docker run --rm --env-file .env --network wies-network wies-worker
+  docker run --rm --env-file .env.worker --network wies-network wies-worker
 
 # Rebuild db
 rebuild-db:
@@ -80,11 +81,11 @@ test target="all":
 
 # Run Django tests
 test-django:
-  docker compose run --rm django uv run pytest
+  docker compose run --rm django pytest
 
 # Run JavaScript tests
 test-js:
-  node --test "js_tests/**/*.test.js"
+  node --test js_tests/
 
 # Run linting checks
 lint:

@@ -12,10 +12,31 @@
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
         hx-target="#{{ target }}"
         hx-swap="outerHTML">
+    <input type="hidden"
+           name="_concurrency_token"
+           value="{{ concurrency_token }}">
     {% include editable.form_template %}
+    {# role="alert": the form is swapped in by HTMX, so without a live region a
+       screen reader would not announce that the save was held back. #}
+    {% if alert %}
+      <div role="alert">
+        <c-alert kind="{{ alert.kind }}"
+                 class="rvo-margin-block-start--md rvo-margin-block-end--md">
+          {{ alert.message }}
+        </c-alert>
+      </div>
+    {% endif %}
     <div class="field-actions">
-      <c-button type="submit" kind="primary">Opslaan</c-button>
-      <c-button type="button" kind="secondary" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML">Annuleren</c-button>
+      <c-button type="submit" kind="primary">
+        Opslaan
+      </c-button>
+      <c-button type="button"
+                kind="secondary"
+                hx-get="{{ edit_url }}?cancel=true"
+                hx-target="#{{ target }}"
+                hx-swap="outerHTML">
+        Annuleren
+      </c-button>
     </div>
   </form>
 </div>

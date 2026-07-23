@@ -1,0 +1,6 @@
+# CHANGES.md is append-only: every PR adds a bullet at the end of the same
+# "## unreleased" block, so two PRs in flight always touch adjacent lines and
+# git reports a conflict even though neither changed the other's entry.
+# The union driver keeps both sides' lines instead of asking, which is exactly
+# right for a list. Re-order the block by hand if the result reads oddly.
+CHANGES.md merge=union
