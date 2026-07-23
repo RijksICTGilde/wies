@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -749,6 +751,20 @@ class UserImportTest(TestCase):
         assert response.status_code == 200
         content = response.content.decode()
         assert "Geen bestand geüpload" in content
+
+    @patch("wies.core.views.MAX_CSV_UPLOAD_BYTES", 10)
+    def test_import_rejects_oversized_file(self):
+        """An upload above the size cap is rejected before it is read into
+        memory (cap patched small here to avoid a real large file)."""
+        self.client.force_login(self.auth_user)
+        big = self._create_csv_file("email,first_name,last_name\n" + "x" * 100)
+        before = User.objects.count()
+
+        response = self.client.post(self.import_url, {"csv_file": big})
+
+        assert response.status_code == 200
+        assert "te groot" in response.content.decode()
+        assert User.objects.count() == before
 
     def test_import_validates_csv_file_type(self):
         """Test that import validates file is a CSV"""

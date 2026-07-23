@@ -3,9 +3,9 @@
        tabindex="0"
        role="link"
        aria-label="{{ assignment.name }}"
+       data-keyboard-activate
        hx-get="{{ assignment.panel_url }}"
-       hx-target="#side_panel-container"
-       onkeydown="if(event.key==='Enter')htmx.trigger(this,'click')">
+       hx-target="#side_panel-container">
     <div class="assignment-card__name">
       <strong class="assignment-card__title truncate" title="{{ assignment.name }}">{{ assignment.name }}</strong>
     </div>
@@ -28,10 +28,18 @@
              role="list"
              aria-label="Gezochte rollen">
           {% for service in assignment.services_with_skills[:3] %}
-            <span role="listitem"><c-tag type="info">{{ service.skill.name }}</c-tag></span>
+            <span role="listitem">
+              <c-tag type="info">
+                {{ service.skill.name }}
+              </c-tag>
+            </span>
           {% endfor %}
           {% if assignment.services_with_skills|length > 3 %}
-            <span role="listitem"><c-tag type="info">+{{ assignment.services_with_skills|length - 3 }} meer</c-tag></span>
+            <span role="listitem">
+              <c-tag type="info">
+                +{{ assignment.services_with_skills|length - 3 }} meer
+              </c-tag>
+            </span>
           {% endif %}
         </div>
       {% endif %}

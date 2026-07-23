@@ -9,6 +9,7 @@ from django.urls import reverse
 
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill, Suborganization
 from wies.core.roles import setup_roles
+from wies.core.tests.inline_edit_helpers import post_inline_edit
 
 User = get_user_model()
 
@@ -65,7 +66,9 @@ class SuborganizationInlineEditPermissionTest(TestCase):
 
     def test_colleague_can_edit_own_suborganization(self):
         self.client.force_login(self.owner_user)
-        response = self.client.post(self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.id})
+        response = post_inline_edit(
+            self.client, self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.id}
+        )
         assert response.status_code == 200
         self.own_colleague.refresh_from_db()
         assert self.own_colleague.suborganization == self.suborg_b
@@ -76,7 +79,9 @@ class SuborganizationInlineEditPermissionTest(TestCase):
         perm = Permission.objects.get(codename="change_colleague", content_type__app_label="core")
         self.admin_user.user_permissions.add(perm)
         self.client.force_login(self.admin_user)
-        response = self.client.post(self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.id})
+        response = post_inline_edit(
+            self.client, self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.id}
+        )
         assert response.status_code == 200
         self.own_colleague.refresh_from_db()
         assert self.own_colleague.suborganization == self.suborg_b

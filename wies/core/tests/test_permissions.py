@@ -4,10 +4,13 @@ Covers the engine surface (verb composition, field vs whole-object
 lookup) and the production rules in ``permissions.py``.
 """
 
+from datetime import timedelta
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from django.utils import timezone
 
 from wies.core.editables import (
     AssignmentEditables,
@@ -160,6 +163,53 @@ class PlacementPermissionTest(_Setup):
         self.assertContains(resp, "geen rechten")
         self.placement.refresh_from_db()
         assert self.placement.colleague_id == self.placed.id
+
+
+class InlineEditExistenceOracleTest(_Setup):
+    """The generic inline-edit endpoint must not reveal whether an object
+    exists to a viewer who may not touch it: 'not found' and 'not allowed'
+    must be indistinguishable, so sequential PKs can't be walked as an oracle.
+
+    ``update_placement`` is owner-only, and the placement is made *planned*
+    (future start) so an unrelated consultant can neither edit nor see it.
+    """
+
+    def setUp(self):
+        super().setUp()
+        # _Setup.placement has no dates, so placement_visibility treats it as
+        # active (publicly visible). Push its start into the future so it is
+        # genuinely hidden from the unrelated viewer — the oracle test's premise.
+        today = timezone.now().date()
+        self.placement.specific_start_date = today + timedelta(days=30)
+        self.placement.specific_end_date = today + timedelta(days=120)
+        self.placement.period_source = Placement.PLACEMENT
+        self.placement.save()
+
+    def _get(self, pk):
+        return self.client.get(reverse("inline-edit", args=["placement", pk, "period"]))
+
+    def test_existing_forbidden_and_missing_are_indistinguishable(self):
+        """An unrelated consultant cannot edit this placement (update_placement is
+        owner-only) and cannot see it (it is planned). The response for the real,
+        hidden placement must match the response for a non-existent PK."""
+        self.client.force_login(self.unrelated_user)
+        missing_pk = self.placement.pk + 100_000
+
+        forbidden = self._get(self.placement.pk)
+        missing = self._get(missing_pk)
+
+        assert forbidden.status_code == missing.status_code
+        normalize = lambda resp, pk: resp.content.decode().replace(str(pk), "PK")  # noqa: E731
+        assert normalize(forbidden, self.placement.pk) == normalize(missing, missing_pk)
+
+    def test_forbidden_response_leaks_no_object_data(self):
+        """The denial response must not carry the hidden colleague's name."""
+        self.client.force_login(self.unrelated_user)
+
+        response = self._get(self.placement.pk)
+
+        assert response.status_code == 200
+        self.assertNotContains(response, "P L")
 
 
 class ServiceDescriptionRuleTest(_Setup):

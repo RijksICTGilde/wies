@@ -42,6 +42,8 @@ class UserEditables(EditableSet):
     class Meta:
         model = User
 
+    audit_events = True
+
     first_name = Editable(
         label="Voornaam",
         required=True,

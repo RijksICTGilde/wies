@@ -7,31 +7,43 @@
              src="{{ static('img/placeholder-avatar.svg') }}" />
       </div>
       <div class="card__content">
-        <c-h3 noMargins>{{ colleague.name }}</c-h3>
+        <c-h3 noMargins>
+          {{ colleague.name }}
+        </c-h3>
         <div class="rvo-layout-row rvo-layout-gap--xs rvo-layout-align--center">
           <c-icon icon="mail" size="md" color="hemelblauw" />
-          <c-link href="mailto:{{ colleague.email }}">{{ colleague.email }}</c-link>
+          <c-link href="mailto:{{ colleague.email }}">
+            {{ colleague.email }}
+          </c-link>
         </div>
       </div>
     </div>
   </section>
   {% if colleague.suborganization %}
     <div class="rvo-layout-row rvo-layout-gap--sm label-badge-list">
-      <c-tag type="default" class="label-badge" style="background-color: #DCE3EA">{{ colleague.suborganization.name }}</c-tag>
+      <c-tag type="default" class="label-badge" style="background-color: #DCE3EA">
+        {{ colleague.suborganization.name }}
+      </c-tag>
     </div>
   {% endif %}
   {% set labels = colleague.labels.all() %}
   {% if labels %}
     <div class="rvo-layout-row rvo-layout-gap--sm label-badge-list">
       {% for label in labels %}
-        <c-tag type="default" class="label-badge" style="background-color: {{ label.category.color }}">{{ label.name }}</c-tag>
+        <c-tag type="default"
+               class="label-badge"
+               style="background-color: {{ label.category.color }}">
+          {{ label.name }}
+        </c-tag>
       {% endfor %}
     </div>
   {% else %}
     <span class="rvo-text--italic">Geen labels toegewezen</span>
   {% endif %}
   <section>
-    <c-h2>Opdrachten</c-h2>
+    <c-h2>
+      Opdrachten
+    </c-h2>
     {% with assignments=panel_data.assignments, hx_target="#side_panel-content" %}
       {% include "parts/colleague_assignment_cards.html" %}
     {% endwith %}

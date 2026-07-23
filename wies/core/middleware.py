@@ -16,20 +16,16 @@ class ResponseHeadersMiddleware:
 
         # Content-Security-Policy
         #
-        # Current implementation uses 'unsafe-inline' for scripts and styles.
-        # This is a pragmatic choice that still provides protection against loading
-        # resources from untrusted external domains.
-        #
-        # TODO: Refactor to strict nonce-based CSP which requires:
-        # - Moving inline event handlers (onclick/onsubmit) to external JS files
-        # - Moving inline style attributes to CSS classes
-        # - Adding nonce attributes to all <script> and <style> tags
-        # - Generating unique nonce per request in this middleware
+        # script-src is 'self' only: all JavaScript is served from static files,
+        # with no inline <script> blocks and no on*= handlers (event handling is
+        # delegated from external JS), so scripts need neither 'unsafe-inline' nor
+        # a nonce. style-src still allows 'unsafe-inline' because RVO components and
+        # templates rely on inline style attributes.
         #
         # See: https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
         response["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "script-src 'self' 'unsafe-inline'; "
+            "script-src 'self'; "
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:; "
             "font-src 'self'; "

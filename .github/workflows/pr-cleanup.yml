@@ -13,12 +13,69 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      actions: write
       contents: read
       deployments: write
       packages: write
       pull-requests: write
 
     steps:
+      # Cancel in-flight preview runs before deleting anything, or their deploy
+      # step re-creates the ZAD deployment right after it is removed here. This
+      # is an explicit API cancel rather than a shared concurrency group with
+      # PR Preview: a shared group cancels in both directions, so a push to the
+      # branch right after close would abort this cleanup mid-way. Manual
+      # dispatch runs (started from main) are invisible to the --branch filter;
+      # the deploy job's PR-open check covers those.
+      - name: Cancel in-flight preview runs for this branch
+        # Best-effort, like the cleanup steps below: this step runs first, so
+        # letting it fail hard means nothing is cleaned up at all. The step
+        # already proceeds after a 150s cancel timeout; a transient API error
+        # should not be treated more harshly than that.
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          # Every gh call needs --repo: this job does not check the repository
+          # out, so gh cannot infer it and exits with "failed to determine base
+          # repo". Same reason pr-preview.yml passes --repo/$GITHUB_REPOSITORY.
+
+          # Active runs, both statuses, deduplicated: a run can move from queued
+          # to in_progress between the two queries and come back twice.
+          # gh is deliberately not piped here: in `for ... done | sort` the loop
+          # runs in a subshell, so a failing gh could not fail the function and
+          # a broken API would read as "nothing running".
+          list_active() {
+            ids=""
+            for STATUS in queued in_progress; do
+              out=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow "PR Preview" \
+                --branch "$HEAD_REF" --status "$STATUS" \
+                --json databaseId --jq '.[].databaseId') || return 1
+              ids="${ids}${out}
+          "
+            done
+            printf '%s' "$ids" | sort -u | sed '/^[[:space:]]*$/d'
+          }
+
+          list_active | while read -r RUN_ID; do
+            # run may have just finished on its own
+            gh run cancel --repo "$GITHUB_REPOSITORY" "$RUN_ID" || true
+          done
+
+          # Wait on queued as well as in_progress: a run that is still queued has
+          # not started its deploy step yet, so treating it as drained lets it
+          # start right after the cleanup and re-create what we just removed.
+          for _ in $(seq 1 30); do
+            if ! ACTIVE=$(list_active); then
+              echo "::warning::Could not query preview runs; proceeding with cleanup"
+              exit 0
+            fi
+            [ -z "$ACTIVE" ] && exit 0
+            sleep 5
+          done
+          echo "::warning::Preview runs still cancelling after 150s; proceeding with cleanup"
+
       - name: Cleanup ZAD deployment and moving image tag
         continue-on-error: true
         uses: RijksICTGilde/zad-actions/cleanup@v4

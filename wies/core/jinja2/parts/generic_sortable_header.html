@@ -8,7 +8,21 @@ Gebruik:
 sort_state can be: 'ascending', 'descending', or None
 #}
 {% if sort_state %}
-  <c-table-header sortable activeSort sortDirection="{{ sort_state }}" hx-get="{{ get_toggle_sort_url(request, field) }}" hx-target="{{ target }}" hx-swap="outerHTML" hx-replace-url="true">{{ label }}</c-table-header>
+  <c-table-header sortable
+                  activeSort
+                  sortDirection="{{ sort_state }}"
+                  hx-get="{{ get_toggle_sort_url(request, field) }}"
+                  hx-target="{{ target }}"
+                  hx-swap="outerHTML"
+                  hx-replace-url="true">
+    {{ label }}
+  </c-table-header>
 {% else %}
-  <c-table-header sortable hx-get="{{ get_toggle_sort_url(request, field) }}" hx-target="{{ target }}" hx-swap="outerHTML" hx-replace-url="true">{{ label }}</c-table-header>
+  <c-table-header sortable
+                  hx-get="{{ get_toggle_sort_url(request, field) }}"
+                  hx-target="{{ target }}"
+                  hx-swap="outerHTML"
+                  hx-replace-url="true">
+    {{ label }}
+  </c-table-header>
 {% endif %}

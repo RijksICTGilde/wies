@@ -15,45 +15,53 @@
     {# Profile info #}
     <section class="rvo-layout-column rvo-layout-gap--md">
       <c-grid division="1fr auto" gap="md">
-      <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--center">
-        <img alt="Profielfoto van {{ user.get_full_name() }}"
-             src="{{ static('img/placeholder-avatar.svg') }}"
-             class="profile-avatar" />
-        <c-h1 noMargins>Mijn profiel</c-h1>
-      </div>
-      <form method="post" action="{{ url('logout') }}">
-        {{ get_csrf_hidden_input(request) }}
-        <c-button kind="primary" type="submit">Uitloggen</c-button>
-      </form>
+        <div class="rvo-layout-row rvo-layout-gap--md rvo-layout-align--center">
+          <img alt="Profielfoto van {{ user.get_full_name() }}"
+               src="{{ static('img/placeholder-avatar.svg') }}"
+               class="profile-avatar" />
+          <c-h1 noMargins>
+            Mijn profiel
+          </c-h1>
+        </div>
+        <form method="post" action="{{ url('logout') }}">
+          {{ get_csrf_hidden_input(request) }}
+          <c-button kind="primary" type="submit">
+            Uitloggen
+          </c-button>
+        </form>
       </c-grid>
       <c-data-list class="profile-data-list">
-      <dt>Voornaam</dt>
-      <dd>
-        {{ inline_edit(user, "first_name") }}
-      </dd>
-      <dt>Achternaam</dt>
-      <dd>
-        {{ inline_edit(user, "last_name") }}
-      </dd>
-      <dt>E-mail</dt>
-      <dd>
-        <c-link href="mailto:{{ user.email }}">{{ user.email }}</c-link>
-      </dd>
-      <dt>Merk</dt>
-      <dd>
-        {{ inline_edit(colleague, "suborganization") }}
-      </dd>
-      {% for item in label_categories %}
-        <dt>{{ item.category.name }}</dt>
+        <dt>Voornaam</dt>
         <dd>
-          {{ inline_edit(colleague, "labels_" ~ item.category.id) }}
+          {{ inline_edit(user, "first_name") }}
         </dd>
-      {% endfor %}
+        <dt>Achternaam</dt>
+        <dd>
+          {{ inline_edit(user, "last_name") }}
+        </dd>
+        <dt>E-mail</dt>
+        <dd>
+          <c-link href="mailto:{{ user.email }}">
+            {{ user.email }}
+          </c-link>
+        </dd>
+        <dt>Merk</dt>
+        <dd>
+          {{ inline_edit(colleague, "suborganization") }}
+        </dd>
+        {% for item in label_categories %}
+          <dt>{{ item.category.name }}</dt>
+          <dd>
+            {{ inline_edit(colleague, "labels_" ~ item.category.id) }}
+          </dd>
+        {% endfor %}
       </c-data-list>
     </section>
     {# Assignments section #}
     <section>
-      <c-h2>Opdrachten</c-h2>
+      <c-h2>
+        Opdrachten
+      </c-h2>
       {% with assignments=assignment_list, hx_target="#side_panel-container" %}
         {% include "parts/colleague_assignment_cards.html" %}
       {% endwith %}

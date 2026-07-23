@@ -1,10 +1,14 @@
+import datetime
 import importlib
 
 from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
+from django.db import connection
 from django.test import Client, TestCase, override_settings
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
+from django.utils import timezone
 
 from wies.core.models import (
     Assignment,
@@ -16,6 +20,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.tests.inline_edit_helpers import post_inline_edit
 
 User = get_user_model()
 
@@ -109,8 +114,10 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that user with change_assignment permission can edit"""
         self.client.force_login(self.user_with_permission)
 
-        response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Updated Assignment Name"}
+        response = post_inline_edit(
+            self.client,
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            {"name": "Updated Assignment Name"},
         )
 
         assert response.status_code == 200
@@ -121,8 +128,10 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that assignment owner (BDM) can edit without explicit permission"""
         self.client.force_login(self.owner_user)
 
-        response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Owner Updated Name"}
+        response = post_inline_edit(
+            self.client,
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            {"name": "Owner Updated Name"},
         )
 
         assert response.status_code == 200
@@ -133,7 +142,8 @@ class AssignmentEditAttributeTest(TestCase):
         """A consultant placed on the assignment can edit ``name``."""
         self.client.force_login(self.assigned_user)
 
-        response = self.client.post(
+        response = post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Colleague Updated Name"},
         )
@@ -146,7 +156,8 @@ class AssignmentEditAttributeTest(TestCase):
         """Placed consultants do gain narrow access to ``extra_info`` (description)."""
         self.client.force_login(self.assigned_user)
 
-        response = self.client.post(
+        response = post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "extra_info"]),
             {"extra_info": "Description by colleague"},
         )
@@ -209,7 +220,8 @@ class AssignmentEditAttributeTest(TestCase):
             source="wies",
         )
 
-        response = self.client.post(
+        response = post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "owner"]),
             {"owner": new_bdm.id},
         )
@@ -271,7 +283,8 @@ class AssignmentEditAttributeTest(TestCase):
         )
         self.client.force_login(staff_user)
 
-        response = self.client.post(
+        response = post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "owner"]),
             {"owner": new_bdm.id},
         )
@@ -307,8 +320,10 @@ class AssignmentEditAttributeTest(TestCase):
         """Test successful name edit with valid input"""
         self.client.force_login(self.user_with_permission)
 
-        response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Valid New Name"}
+        response = post_inline_edit(
+            self.client,
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            {"name": "Valid New Name"},
         )
 
         assert response.status_code == 200
@@ -349,8 +364,10 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that POST request with valid data returns display view"""
         self.client.force_login(self.user_with_permission)
 
-        response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Updated Name"}
+        response = post_inline_edit(
+            self.client,
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            {"name": "Updated Name"},
         )
 
         assert response.status_code == 200
@@ -446,13 +463,16 @@ class AssignmentEditAttributeTest(TestCase):
 
         assert response.status_code == 404
 
-    def test_assignment_edit_nonexistent_assignment_returns_404(self):
-        """Test that nonexistent assignment ID returns 404"""
+    def test_assignment_edit_nonexistent_object_indistinguishable_from_forbidden(self):
+        """A nonexistent object PK returns the same denial partial as a forbidden
+        one (HTTP 200 + denial banner), not a 404, so the endpoint can't be walked
+        as a 404-vs-200 existence oracle over sequential PKs."""
         self.client.force_login(self.user_with_permission)
 
         response = self.client.get(reverse("inline-edit", args=["assignment", 99999, "name"]))
 
-        assert response.status_code == 404
+        assert response.status_code == 200
+        self.assertContains(response, "geen rechten")
 
     # ========== Event Logging Tests ==========
 
@@ -460,7 +480,8 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that editing an assignment creates an Assignment.update event"""
         self.client.force_login(self.user_with_permission)
 
-        self.client.post(
+        post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Event Test Name"},
         )
@@ -478,7 +499,8 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that saving the same value does not create an event"""
         self.client.force_login(self.user_with_permission)
 
-        self.client.post(
+        post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Test Assignment"},  # Same as current value
         )
@@ -489,7 +511,8 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that event stores the user FK for live lookups"""
         self.client.force_login(self.owner_user)
 
-        self.client.post(
+        post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Owner Changed Name"},
         )
@@ -778,6 +801,157 @@ class AssignmentEditAttributeTest(TestCase):
         assert response.status_code == 200
         self.assertContains(response, 'id="tab-updates"')
         self.assertContains(response, 'id="tab-panel-updates"')
+
+
+class TimelinePlacementPrivacyTests(TestCase):
+    """The updates tab must honour the placement-visibility rule the team tab
+    applies: a planned or ended placement is private to the placed colleague
+    and the BM-owner, so its colleague name must not surface in a Team event."""
+
+    def setUp(self):
+        self.client = Client()
+        self.owner_user = User.objects.create_user(email="owner@rijksoverheid.nl", first_name="O", last_name="wner")
+        self.hidden_user = User.objects.create_user(email="hidden@rijksoverheid.nl", first_name="H", last_name="idden")
+        self.unrelated_user = User.objects.create_user(email="other@rijksoverheid.nl", first_name="U", last_name="n")
+
+        self.owner_colleague = Colleague.objects.create(
+            user=self.owner_user, name="Owner Colleague", email="owner@rijksoverheid.nl", source="wies"
+        )
+        self.hidden_colleague = Colleague.objects.create(
+            user=self.hidden_user, name="Hidden Colleague", email="hidden@rijksoverheid.nl", source="wies"
+        )
+
+        self.assignment = Assignment.objects.create(name="DTC4NL", owner=self.owner_colleague, source="wies")
+        skill = Skill.objects.create(name="Software Engineer")
+        self.service = Service.objects.create(description="", assignment=self.assignment, skill=skill, source="wies")
+
+        # Not started yet -> "future" -> private to the placed colleague + BM.
+        self.start = timezone.now().date() + datetime.timedelta(days=30)
+        self.placement = Placement.objects.create(
+            colleague=self.hidden_colleague,
+            service=self.service,
+            specific_start_date=self.start,
+            specific_end_date=self.start + datetime.timedelta(days=90),
+            period_source=Placement.PLACEMENT,
+            source="wies",
+        )
+        self.event = self._team_event(
+            [{"old": None, "new": self._row(self.service.id, "Software Engineer", "Hidden Colleague")}]
+        )
+
+    def _row(self, service_id, skill_name, colleague_name):
+        return {
+            "id": service_id,
+            "skill_name": skill_name,
+            "colleague_name": colleague_name,
+            "description": "",
+            "has_custom_period": False,
+            "start_date": self.start.isoformat(),
+            "end_date": (self.start + datetime.timedelta(days=90)).isoformat(),
+        }
+
+    def _team_event(self, changes):
+        return Event.objects.create(
+            user=self.owner_user,
+            user_email=self.owner_user.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={"field_name": "services", "field_label": "Team", "changes": changes},
+        )
+
+    def _get_timeline(self, user):
+        self.client.force_login(user)
+        return self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+
+    def test_hidden_colleague_name_not_leaked_to_unrelated_viewer(self):
+        response = self._get_timeline(self.unrelated_user)
+
+        assert response.status_code == 200
+        self.assertNotContains(response, "Hidden Colleague")
+
+    def test_event_dropped_entirely_when_all_changes_hidden(self):
+        """Dropped whole, so an empty 'wijzigde Team' cannot betray that a
+        hidden placement exists."""
+        response = self._get_timeline(self.unrelated_user)
+
+        self.assertNotContains(response, "Team")
+        self.assertContains(response, "Geen updates")
+
+    def test_bm_owner_still_sees_the_full_history(self):
+        response = self._get_timeline(self.owner_user)
+
+        self.assertContains(response, "Toegevoegd: Software Engineer (Hidden Colleague)")
+
+    def test_placed_colleague_sees_their_own_placement(self):
+        response = self._get_timeline(self.hidden_user)
+
+        self.assertContains(response, "Toegevoegd: Software Engineer (Hidden Colleague)")
+
+    def test_active_placement_name_stays_visible_to_everyone(self):
+        """The rule hides planned/ended placements only; an active one is public."""
+        Placement.objects.filter(pk=self.placement.pk).update(
+            specific_start_date=timezone.now().date() - datetime.timedelta(days=10),
+            specific_end_date=timezone.now().date() + datetime.timedelta(days=10),
+        )
+
+        response = self._get_timeline(self.unrelated_user)
+
+        self.assertContains(response, "Toegevoegd: Software Engineer (Hidden Colleague)")
+
+    def test_vacancy_change_stays_visible(self):
+        """A vacancy names nobody, so it has nothing to hide."""
+        self.event.delete()
+        vacancy_service = Service.objects.create(
+            description="", assignment=self.assignment, skill=Skill.objects.create(name="Communicatie"), source="wies"
+        )
+        self._team_event([{"old": None, "new": self._row(vacancy_service.id, "Communicatie Medewerker", None)}])
+
+        response = self._get_timeline(self.unrelated_user)
+
+        self.assertContains(response, "Toegevoegd: Communicatie Medewerker (open)")
+
+    def test_filter_does_not_query_per_event(self):
+        """The visible-name set is identical for every event in one request, so
+        it must be resolved once. Asserted as "does not grow with the number of
+        events" rather than a fixed count, which would break on any unrelated
+        query change."""
+        self.client.force_login(self.unrelated_user)
+        url = reverse("assignment-events-partial", args=[self.assignment.id])
+
+        with CaptureQueriesContext(connection) as one_event:
+            self.client.get(url)
+        for _ in range(9):
+            self._team_event(
+                [{"old": None, "new": self._row(self.service.id, "Software Engineer", "Hidden Colleague")}]
+            )
+        with CaptureQueriesContext(connection) as ten_events:
+            self.client.get(url)
+
+        assert len(ten_events.captured_queries) == len(one_event.captured_queries)
+
+    def test_non_team_events_are_unaffected(self):
+        """Opdracht-level fields are on the Gegevens tab anyway."""
+        self.event.delete()
+        Event.objects.create(
+            user=self.owner_user,
+            user_email=self.owner_user.email,
+            object_type="Assignment",
+            action="update",
+            source="user",
+            object_id=self.assignment.id,
+            context={
+                "field_name": "name",
+                "field_label": "Opdracht naam",
+                "old_value": "UX / UI advies",
+                "new_value": "DTC4NL",
+            },
+        )
+
+        response = self._get_timeline(self.unrelated_user)
+
+        self.assertContains(response, 'van "UX / UI advies"')
 
 
 class AssignmentDeleteViewTests(TestCase):

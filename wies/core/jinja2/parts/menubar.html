@@ -5,23 +5,25 @@
 ] %}
 {% if user.is_authenticated %}
   {% set menu_items = menu_items + [
-      {"label": user.get_full_name(), "link": url('user-profile'), "icon": "user", "active": '/profiel/' in request.path, "align": "right"},
-    ] %}
+    {"label": user.get_full_name(), "link": url('user-profile'), "icon": "user", "active": '/profiel/' in request.path, "align": "right"},
+  ] %}
 {% endif %}
 {% if user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
   {% set menu_items = menu_items + [
-      {"label": "Beheer", "link": url('admin-users'), "icon": "instellingen", "active": '/beheer/' in request.path, "align": "right"},
-    ] %}
+    {"label": "Beheer", "link": url('admin-users'), "icon": "instellingen", "active": '/beheer/' in request.path, "align": "right"},
+  ] %}
 {% endif %}
 <div class="menubar">
   <div class="menubar__sidebar-section"></div>
   <div class="menubar__nav-section">
     <button type="button"
             class="menubar__mobile-toggle"
-            onclick="this.closest('.menubar').classList.toggle('menubar--mobile-open')"
+            data-action="menu-toggle"
             aria-label="Menu">
       <span class="menubar__mobile-toggle-icon menubar__mobile-toggle-icon--hamburger"></span>
-      <c-icon icon="kruis" size="md" class="menubar__mobile-toggle-icon menubar__mobile-toggle-icon--close" />
+      <c-icon icon="kruis"
+              size="md"
+              class="menubar__mobile-toggle-icon menubar__mobile-toggle-icon--close" />
     </button>
     <div class="menubar__nav-wrapper">
       <c-menubar size="md" linkColor="lintblauw" useIcons :items="menu_items" />
