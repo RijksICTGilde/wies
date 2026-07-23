@@ -6,13 +6,16 @@ depending on the active view. Each card opens the matching side panel. #}
   {% macro member_label(m) %}{{ m.name }}{% if m.role %} · {{ m.role }}{% endif %}{% endmacro %}
   <div class="placement-group-header__avatars">
     {% for m in members[:3] %}
-      <span class="person-chip" data-tooltip="{{ member_label(m) | trim }}">
+      <span class="person-chip"
+            title="{{ member_label(m) | trim }}"
+            data-tooltip="{{ member_label(m) | trim }}">
         <span class="user-avatar user-avatar--sm">{{ m.name|first|upper }}</span>
         <span class="person-chip__name">{{ m.name.split()[0] }}</span>
       </span>
     {% endfor %}
     {% if members|length > 3 %}
       <span class="person-chip person-chip--more"
+            title="{{ members[3:] | map(attribute='name') | join(', ') }}"
             data-tooltip="{{ members[3:] | map(attribute='name') | join(', ') }}">
         <span class="person-chip__name">+{{ members|length - 3 }}</span>
       </span>
@@ -27,6 +30,7 @@ depending on the active view. Each card opens the matching side panel. #}
        tabindex="0"
        role="link"
        aria-label="{{ assignment.name }}"
+       data-group-key="o-{{ assignment.id }}"
        hx-get="{{ assignment.panel_url }}"
        hx-target="#side_panel-container">
     <div class="wzw-card__header">
@@ -50,13 +54,15 @@ depending on the active view. Each card opens the matching side panel. #}
   </div>
 {% endmacro %}
 {# Persoon-card: big avatar, name. With exactly one opdracht, show its name +
-   opdrachtgever; with more, show the count. #}
-{% macro persoon_card(colleague, name, assignments) %}
+   opdrachtgever; with more, show the count. `panel_url` is the plaatsing panel for a
+   single-placement person, else the collega panel. #}
+{% macro persoon_card(colleague, name, assignments, panel_url) %}
   <div class="wzw-card wzw-card--persoon"
        tabindex="0"
        role="link"
        aria-label="{{ name }}"
-       hx-get="{{ colleague.panel_url }}"
+       data-group-key="p-{{ colleague.id }}"
+       hx-get="{{ panel_url }}"
        hx-target="#side_panel-container">
     <div class="user-avatar wzw-card__avatar">{{ name|first|upper }}</div>
     <div class="wzw-card__persoon-info">
@@ -89,7 +95,10 @@ depending on the active view. Each card opens the matching side panel. #}
           {{ assignments.append(placement.service.assignment) or '' }}
         {% endif %}
       {% endfor %}
-      {{ persoon_card(group_rows[0].colleague, group_label, assignments) }}
+      {# One opdracht -> open its plaatsing directly (first, if the opdracht has
+         several placements/roles); more opdrachten -> the collega panel. #}
+      {% set person_panel_url = group_rows[0].panel_url if assignments|length == 1 else group_rows[0].colleague.panel_url %}
+      {{ persoon_card(group_rows[0].colleague, group_label, assignments, person_panel_url) }}
     {% else %}
       {# Full team of the opdracht (from the view), not just the filtered placements. #}
       {% set assignment = group_rows[0].service.assignment %}

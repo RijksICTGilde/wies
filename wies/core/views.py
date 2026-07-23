@@ -591,18 +591,12 @@ class PlacementListView(ListView):
         "assignment": "service__assignment__name",
     }
 
-    # Two views: cards per persoon (default) or per opdracht.
-    # `icon`/`singular`/`plural` drive the view menu + count.
+    # Two views: cards per persoon (default) or per opdracht. `label`/`icon` drive the
+    # weergave-menu button + options; `value` becomes ?groep=.
     GROUPBY_DEFAULT = "person"
     GROUPBY_OPTIONS = [
-        {"value": "person", "label": "Persoon", "icon": "user", "singular": "persoon", "plural": "personen"},
-        {
-            "value": "assignment",
-            "label": "Opdracht",
-            "icon": "klembord-met-vinkje",
-            "singular": "opdracht",
-            "plural": "opdrachten",
-        },
+        {"value": "person", "label": "Persoon", "icon": "user"},
+        {"value": "assignment", "label": "Opdracht", "icon": "klembord-met-vinkje"},
     ]
 
     # Sort dropdown options per view; `value` becomes ?order= (see order_mapping in
@@ -658,10 +652,10 @@ class PlacementListView(ListView):
                 | Q(service__assignment__organizations__label__icontains=search_filter)
             )
 
+        # Allowlist of ?order= values the sort dropdown can produce, mapped to DB fields.
         order_mapping = {
             "name": "colleague__name",
             "assignment": "service__assignment__name",
-            "skill": "service__skill__name",
             "end_date": "service__assignment__end_date",
         }
 
@@ -680,8 +674,10 @@ class PlacementListView(ListView):
         if not sort_field:
             sort_field = "service__assignment__name" if group_param == "assignment" else "colleague__name"
 
-        # For card views the chosen sort drives the group order, so sort_field comes
-        # first; group_field is a tiebreaker to keep a group's rows contiguous.
+        # The chosen sort drives the group order, so sort_field comes first; group_field
+        # is a tiebreaker that keeps a group's rows adjacent where the sort allows, so a
+        # group rarely straddles the page boundary (the client dedups the rest, see
+        # toolbar_menu.js).
         qs = qs.order_by(sort_field, group_field) if group_field else qs.order_by(sort_field)
 
         # Active placements are public; ended ones are hidden from everyone;
@@ -876,16 +872,22 @@ class PlacementListView(ListView):
             query = params.urlencode()
             return f"{reverse('home')}?{query}" if query else reverse("home")
 
-        # Menu options, each with its URL + active flag.
+        # Weergave-menu options (button + dropdown), each with its URL + active flag.
         context["groupby_options"] = [
             {**opt, "url": _groupby_url(opt["value"]), "active": opt["value"] == active_group}
             for opt in self.GROUPBY_OPTIONS
         ]
 
-        # The button mirrors the active view's label + icon.
+        # The button shows "Weergave: <active label> (<count>)" — label + count of the
+        # active view. Count is distinct over the full filtered set (not the page).
         active_option = next(o for o in self.GROUPBY_OPTIONS if o["value"] == active_group)
         context["groupby_active_label"] = active_option["label"]
         context["groupby_active_icon"] = active_option["icon"]
+        full_qs = self.object_list
+        if active_group == "assignment":
+            context["results_count"] = full_qs.values("service__assignment_id").distinct().count()
+        else:
+            context["results_count"] = full_qs.values("colleague_id").distinct().count()
 
         # Sort dropdown (right of the search): sets ?order=, preserving view + filters.
         order_param = self.request.GET.get("order") or ""
@@ -906,16 +908,8 @@ class PlacementListView(ListView):
         ]
         active_sort = next((o for o in sort_options if o["value"] == order_param), sort_options[0])
         context["sort_active_label"] = active_sort["label"]
-
-        # Result count beside the menu, following the active view. Distinct count
-        # over the full filtered set (not the page): fewer opdrachten than personen.
-        full_qs = self.object_list
-        if active_group == "assignment":
-            count = full_qs.values("service__assignment_id").distinct().count()
-        else:
-            count = full_qs.values("colleague_id").distinct().count()
-        context["results_count"] = count
-        context["results_label"] = active_option["singular"] if count == 1 else active_option["plural"]
+        # Non-default order for the hidden input that carries sort through filter changes.
+        context["active_sort"] = active_sort["value"]
 
         active_filters: dict = {}
 

@@ -580,7 +580,9 @@
   max-width: 16rem;
 }
 
-/* ---- View menu: a count chip that opens a popover menu (Persoon / Opdracht) ---- */
+/* ---- View menu: a button ("Weergave: <b>Persoon</b> (24)") that opens a popover
+   menu (Persoon / Opdracht). Native <select> can't bold just the value or hold an
+   icon in its closed state, hence a custom button + dropdown. ---- */
 .groupby-menu {
   position: relative;
   flex: 0 0 auto;
@@ -611,15 +613,9 @@
   background-color: var(--rvo-color-grijs-700, #334155);
 }
 
-/* The view name is bold; the button's normal-weight default must not flatten it. */
+/* Only the value is bold; the button's normal-weight default must not flatten it. */
 .groupby-menu__label b {
   font-weight: var(--rvo-font-weight-bold, 700);
-}
-
-/* View-menu count word gets a capital, to match the menu labels (Plaatsing …).
-   Not on the sort menu, whose label already starts with a capital ("Sorteer:"). */
-.groupby-menu:not(.sort-menu) .groupby-menu__label b::first-letter {
-  text-transform: uppercase;
 }
 
 .groupby-menu__chevron {

@@ -1,12 +1,21 @@
 {# HTMX partial: Updates the main content area when filters change #}
 <div id="filter-and-table-container">
-  {# Carries the active view through sidebar filter changes (hx-include picks it up).
-     Lives here (not in the sidebar) so the view switch, which only re-swaps this container, keeps it current. #}
+  {# Carry the active view + sort through sidebar filter changes (hx-include picks these
+     up). Live here (not in the sidebar) so the menu switch, which only re-swaps this
+     container, keeps them current. The menus themselves navigate via full ?groep=/?order=
+     URLs. #}
   <input type="hidden"
          name="groep"
          value="{{ groupby_field }}"
          data-filter-input
          id="active-groupby-input" />
+  {% if active_sort %}
+    <input type="hidden"
+           name="order"
+           value="{{ active_sort }}"
+           data-filter-input
+           id="active-sort-input" />
+  {% endif %}
   <!-- Page Header: toolbar strip — controls row, then active filter chips row -->
   <div class="layout__main__header">
     <c-h1 noMargins class="sr-only">

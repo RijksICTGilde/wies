@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: the "Wie zit waar?"-overzicht now shows the placements as cards, grouped by Persoon (default) or Opdracht via a view menu, each card opening the matching side panel, with a "Sorteer" dropdown replacing the column-header sorting
+- 504: the "Wie zit waar?"-overzicht now shows the placements as cards, grouped by Persoon (default) or Opdracht via a view menu, each card opening the matching side panel, with a "Sorteer" dropdown replacing the column-header sorting
 
 ## 2026-07-23
 

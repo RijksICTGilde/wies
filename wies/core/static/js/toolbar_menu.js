@@ -28,6 +28,30 @@
     closeAllGroupbyMenus();
   });
 
+  // "Wie zit waar?" pagineert op plaatsingen, maar toont cards per persoon/opdracht.
+  // Een groep die de paginagrens overlapt zou anders twee keer verschijnen (staart
+  // op pagina N, kop op pagina N+1). Na elke "meer laden"-swap gooien we cards weg
+  // waarvan de data-group-key al eerder in de lijst staat; we houden de eerste.
+  // Kanttekening: bij zo'n overlappende groep toont de overgebleven card alleen de
+  // plaatsingen van díé pagina, dus mogelijk incompleet — zeldzaam en zichtbaar acceptabel.
+  document.body.addEventListener("htmx:afterSwap", function () {
+    // outerHTML-swapping the "meer laden"-sentinel leaves no stable event target,
+    // so just re-scan every card list on the page; on a single-page list it's a no-op.
+    document.querySelectorAll(".wzw-card-list").forEach(function (list) {
+      const seen = new Set();
+      list
+        .querySelectorAll(".wzw-card[data-group-key]")
+        .forEach(function (card) {
+          const key = card.getAttribute("data-group-key");
+          if (seen.has(key)) {
+            card.remove();
+          } else {
+            seen.add(key);
+          }
+        });
+    });
+  });
+
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
       closeAllGroupbyMenus();

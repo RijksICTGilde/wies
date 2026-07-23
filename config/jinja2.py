@@ -114,64 +114,30 @@ def get_csrf_hidden_input(request):
     return format_html('<input type="hidden" name="csrfmiddlewaretoken" value="{}">', token)
 
 
-def get_toggle_sort_url(request, field):
-    """
-    Build URL for sortable table headers that toggles sort direction.
-    If field is currently sorted ascending, returns URL for descending sort.
-    If field is sorted descending or not sorted, returns URL for ascending sort.
-    Preserves all other query parameters.
-    """
-    params = request.GET.copy()
-    current_order = params.get("order", "")
-
-    # Toggle: if currently ascending, switch to descending; otherwise ascending
-    if current_order == field:
-        params["order"] = f"-{field}"
-    else:
-        params["order"] = field
-
-    return f"{request.path}?{params.urlencode()}"
-
-
-def get_sort_state(request, field):
-    """
-    Get the current sort state for a field.
-    Returns: 'ascending', 'descending', or None
-    """
-    current_order = request.GET.get("order", "")
-    if current_order == field:
-        return "ascending"
-    if current_order == f"-{field}":
-        return "descending"
-    return None
-
-
-def _placement_group_key(placement, field):
-    """Return (has_value, label) where has_value=0 for real values and 1 for missing — sorts missing last."""
+def _placement_group_label(placement, field: str) -> str:
+    """Display label of the group `placement` falls in, with a fallback for missing data."""
     if field == "person":
-        name = placement.colleague.name
-        return (0, name) if name else (1, "Geen naam")
+        return placement.colleague.name or "Geen naam"
     if field == "assignment":
-        name = placement.service.assignment.name
-        return (0, name) if name else (1, "Geen opdracht")
-    return (0, "")
+        return placement.service.assignment.name or "Geen opdracht"
+    return ""
 
 
-def groupby_placements(placements, field):
+def groupby_placements(placements, field: str | None) -> list[tuple[str | None, list]]:
     """Group an iterable of placements by `field` (person or assignment).
 
     Returns a list of (label, [placements]) tuples in first-seen order, so the
     caller's queryset ordering (the active ?order= sort) drives the group order.
+    Groups by label regardless of row adjacency, so a group's placements need
+    not be contiguous in the input.
     """
     if not field:
         return [(None, list(placements))]
 
-    groups: dict = {}
+    groups: dict[str, list] = {}
     for placement in placements:
-        label = _placement_group_key(placement, field)[1]
-        if label not in groups:
-            groups[label] = []
-        groups[label].append(placement)
+        label = _placement_group_label(placement, field)
+        groups.setdefault(label, []).append(placement)
 
     return list(groups.items())
 
@@ -185,8 +151,6 @@ def environment(**options):
             "url": reverse,
             "get_csrf_token": get_token,
             "get_csrf_hidden_input": get_csrf_hidden_input,
-            "get_toggle_sort_url": get_toggle_sort_url,
-            "get_sort_state": get_sort_state,
             "groupby_placements": groupby_placements,
             "get_messages": get_messages,
             "is_staff_member": is_staff_member,

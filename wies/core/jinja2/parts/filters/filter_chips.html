@@ -7,7 +7,7 @@
          data-filter-name="{{ chip.param_name }}"
          data-filter-type="org"
          data-filter-value="{{ chip.param_value }}">
-      <span class="filter-chip__text">{{ chip.label }}</span>
+      <span class="filter-chip__text" title="{{ chip.label }}">{{ chip.label }}</span>
       <button type="button"
               class="filter-chip-remove"
               aria-label="Verwijder filter"
@@ -29,7 +29,7 @@
                  data-tooltip="{{ option.label }}"
                  data-filter-name="{{ filter_group.name }}"
                  data-filter-type="select">
-              <span class="filter-chip__text">{{ option.label }}</span>
+              <span class="filter-chip__text" title="{{ option.label }}">{{ option.label }}</span>
               <button type="button"
                       class="filter-chip-remove"
                       aria-label="Verwijder filter"
@@ -52,7 +52,7 @@
                    data-filter-value="{{ selected_id }}"
                    data-filter-type="select-multi"
                    {% if option.category_color %}style="background-color: {{ option.category_color }}"{% endif %}>
-                <span class="filter-chip__text">{{ option.label }}</span>
+                <span class="filter-chip__text" title="{{ option.label }}">{{ option.label }}</span>
                 <button type="button"
                         class="filter-chip-remove"
                         aria-label="Verwijder filter"
