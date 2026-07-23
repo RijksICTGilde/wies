@@ -1,6 +1,5 @@
 {# Card list for "Wie zit waar?" — one card per opdracht or per persoon,
-   depending on the active view. Each card opens the matching side panel. #}
-
+depending on the active view. Each card opens the matching side panel. #}
 {# Collega-chips (avatar + first name), max 3 + "+X". The tooltip shows the full
    name + role. `members` is a list of {name, role} dicts. #}
 {% macro colleague_chips(members) %}
@@ -20,7 +19,6 @@
     {% endif %}
   </div>
 {% endmacro %}
-
 {# Opdracht-card: name + opdrachtgever, team-chips, einddatum.
    `members` is a list of {name, role} dicts. #}
 {% macro opdracht_card(assignment, members) %}
@@ -51,7 +49,6 @@
     </div>
   </div>
 {% endmacro %}
-
 {# Persoon-card: big avatar, name. With exactly one opdracht, show its name +
    opdrachtgever; with more, show the count. #}
 {% macro persoon_card(colleague, name, assignments) %}
@@ -79,7 +76,6 @@
     </div>
   </div>
 {% endmacro %}
-
 {% set is_person_group = groupby_field == 'person' %}
 {% if object_list %}
   {% for group_label, group_rows in groupby_placements(object_list, groupby_field) %}
@@ -106,7 +102,10 @@
   </div>
 {% endif %}
 {% if next_page_url %}
-  <div class="wzw-card-list__more" hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
+  <div class="wzw-card-list__more"
+       hx-get="{{ next_page_url }}"
+       hx-trigger="revealed"
+       hx-swap="outerHTML">
     <span class="rvo-text--subtle">Meer laden...</span>
   </div>
 {% endif %}

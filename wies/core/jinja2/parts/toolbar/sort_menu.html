@@ -8,26 +8,26 @@
           aria-label="Sorteren: {{ sort_active_label }}"
           data-groupby-trigger>
     <span class="groupby-menu__label">Sorteer: <b>{{ sort_active_label }}</b></span>
-      <c-icon icon="delta-omlaag" size="xs" class="groupby-menu__chevron" />
-    </button>
-    <div class="groupby-menu__dropdown groupby-menu__dropdown--right"
-         role="menu"
-         aria-label="Sorteren"
-         hidden>
-      {% for option in sort_options %}
-        <a href="{{ option.url }}"
-           class="groupby-menu__option{% if option.active %} groupby-menu__option--active{% endif %}"
-           role="menuitemradio"
-           aria-checked="{{ 'true' if option.active else 'false' }}"
-           hx-get="{{ option.url }}"
-           hx-target="#filter-and-table-container"
-           hx-swap="innerHTML settle:0"
-           hx-replace-url="true">
-          <span class="groupby-menu__option-label">{{ option.label }}</span>
-          <span class="groupby-menu__check" aria-hidden="true">
-            {% if option.active %}<c-icon icon="vinkje" size="xs" />{% endif %}
-          </span>
-        </a>
-      {% endfor %}
-    </div>
+    <c-icon icon="delta-omlaag" size="xs" class="groupby-menu__chevron" />
+  </button>
+  <div class="groupby-menu__dropdown groupby-menu__dropdown--right"
+       role="menu"
+       aria-label="Sorteren"
+       hidden>
+    {% for option in sort_options %}
+      <a href="{{ option.url }}"
+         class="groupby-menu__option{% if option.active %} groupby-menu__option--active{% endif %}"
+         role="menuitemradio"
+         aria-checked="{{ 'true' if option.active else 'false' }}"
+         hx-get="{{ option.url }}"
+         hx-target="#filter-and-table-container"
+         hx-swap="innerHTML settle:0"
+         hx-replace-url="true">
+        <span class="groupby-menu__option-label">{{ option.label }}</span>
+        <span class="groupby-menu__check" aria-hidden="true">
+          {% if option.active %}<c-icon icon="vinkje" size="xs" />{% endif %}
+        </span>
+      </a>
+    {% endfor %}
   </div>
+</div>

@@ -902,8 +902,7 @@ class PlacementListView(ListView):
 
         sort_options = self.SORT_OPTIONS_BY_VIEW.get(active_group, self.SORT_OPTIONS_BY_VIEW["default"])
         context["sort_options"] = [
-            {**opt, "url": _sort_url(opt["value"]), "active": opt["value"] == order_param}
-            for opt in sort_options
+            {**opt, "url": _sort_url(opt["value"]), "active": opt["value"] == order_param} for opt in sort_options
         ]
         active_sort = next((o for o in sort_options if o["value"] == order_param), sort_options[0])
         context["sort_active_label"] = active_sort["label"]

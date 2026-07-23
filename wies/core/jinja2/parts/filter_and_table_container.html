@@ -9,7 +9,9 @@
          id="active-groupby-input" />
   <!-- Page Header: toolbar strip — controls row, then active filter chips row -->
   <div class="layout__main__header">
-    <c-h1 noMargins class="sr-only">Wie zit waar?</c-h1>
+    <c-h1 noMargins class="sr-only">
+      Wie zit waar?
+    </c-h1>
     <div class="table-toolbar">
       <!-- Row 1: view menu (with result count) + search -->
       <div class="table-toolbar__controls">
@@ -39,8 +41,14 @@
         <!-- Sort dropdown, pushed to the right -->
         {% include "parts/toolbar/sort_menu.html" %}
         <!-- Mobile filter toggle -->
-        <c-button kind="secondary" size="md" icon="trechter" iconPlacement="before" type="button" class="mobile-filter-toggle" data-toggle-filters>
-        Filters
+        <c-button kind="secondary"
+                  size="md"
+                  icon="trechter"
+                  iconPlacement="before"
+                  type="button"
+                  class="mobile-filter-toggle"
+                  data-toggle-filters>
+          Filters
         </c-button>
       </div>
       <!-- Row 2: active filter chips -->
@@ -52,9 +60,7 @@
     </div>
   </div>
   <!-- Card list: opdracht-cards or persoon-cards depending on the active view -->
-  <div class="wzw-card-list wzw-card-list--{{ groupby_field }}">
-  {% include "parts/placement_cards.html" %}
-  </div>
+  <div class="wzw-card-list wzw-card-list--{{ groupby_field }}">{% include "parts/placement_cards.html" %}</div>
 </div>
 {# OOB swap: update sidebar filter fields (counts, selected states) — only for HTMX requests #}
 {% if render_filter_fields_oob %}

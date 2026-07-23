@@ -7,29 +7,31 @@
           aria-expanded="false"
           aria-label="Weergave: {{ groupby_active_label }}"
           data-groupby-trigger>
-    <c-icon icon="{{ groupby_active_icon }}" size="md" class="rvo-link__icon--before" />
+    <c-icon icon="{{ groupby_active_icon }}"
+            size="md"
+            class="rvo-link__icon--before" />
     <span class="groupby-menu__label"><b>{{ results_label }}</b> ({{ results_count }})</span>
-      <c-icon icon="delta-omlaag" size="xs" class="groupby-menu__chevron" />
-    </button>
-    <div class="groupby-menu__dropdown"
-         role="menu"
-         aria-label="Weergave"
-         hidden>
-      {% for option in groupby_options %}
-        <a href="{{ option.url }}"
-           class="groupby-menu__option{% if option.active %} groupby-menu__option--active{% endif %}"
-           role="menuitemradio"
-           aria-checked="{{ 'true' if option.active else 'false' }}"
-           hx-get="{{ option.url }}"
-           hx-target="#filter-and-table-container"
-           hx-swap="innerHTML settle:0"
-           hx-replace-url="true">
-          <c-icon icon="{{ option.icon }}" size="md" class="groupby-menu__option-icon" />
-          <span class="groupby-menu__option-label">{{ option.label }}</span>
-          <span class="groupby-menu__check" aria-hidden="true">
-            {% if option.active %}<c-icon icon="vinkje" size="xs" />{% endif %}
-          </span>
-        </a>
-      {% endfor %}
-    </div>
+    <c-icon icon="delta-omlaag" size="xs" class="groupby-menu__chevron" />
+  </button>
+  <div class="groupby-menu__dropdown"
+       role="menu"
+       aria-label="Weergave"
+       hidden>
+    {% for option in groupby_options %}
+      <a href="{{ option.url }}"
+         class="groupby-menu__option{% if option.active %} groupby-menu__option--active{% endif %}"
+         role="menuitemradio"
+         aria-checked="{{ 'true' if option.active else 'false' }}"
+         hx-get="{{ option.url }}"
+         hx-target="#filter-and-table-container"
+         hx-swap="innerHTML settle:0"
+         hx-replace-url="true">
+        <c-icon icon="{{ option.icon }}" size="md" class="groupby-menu__option-icon" />
+        <span class="groupby-menu__option-label">{{ option.label }}</span>
+        <span class="groupby-menu__check" aria-hidden="true">
+          {% if option.active %}<c-icon icon="vinkje" size="xs" />{% endif %}
+        </span>
+      </a>
+    {% endfor %}
   </div>
+</div>
