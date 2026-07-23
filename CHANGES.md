@@ -21,6 +21,7 @@ This files lists the changes during the lifetime of this project.
 - 496: fix the PR preview cleanup never running: its first step called `gh` without `--repo` in a job that has no checkout, so it failed immediately and the ZAD deployment and PR-tagged images of every closed PR were left behind
 - 497: bumped dev/CI dependencies and GitHub Actions
 - 497: the production images (web/worker) no longer contain dev/test tooling, reducing the runtime attack surface
+- 498: harden ci: pin actions on sha, explicit permissions per action stage
 
 ## 2026-07-20
 
