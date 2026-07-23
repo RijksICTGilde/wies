@@ -38,10 +38,15 @@
     </ul>
   {% endmacro %}
   <div class="rvo-layout-column rvo-layout-gap--xl">
-    <c-h1>Opdrachtgevers</c-h1>
+    <c-h1>
+      Opdrachtgevers
+    </c-h1>
     <div class="search-field-wrapper" style="max-width: 400px;">
       <c-icon icon="zoek" color="lintblauw" size="md" class="search-icon" />
-      <c-input id="org-search" placeholder="Zoeken..." aria-label="Zoeken in organisaties" size />
+      <c-input id="org-search"
+               placeholder="Zoeken..."
+               aria-label="Zoeken in organisaties"
+               size />
       <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
     </div>
     <p id="org-search-empty" class="org-tree__empty" style="display: none;">Geen organisaties gevonden.</p>

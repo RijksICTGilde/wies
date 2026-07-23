@@ -18,7 +18,12 @@ Usage:
          aria-labelledby="search-field-label"
          class="search-field-wrapper">
       <c-icon icon="zoek" color="lintblauw" size="md" class="search-icon" />
-      <c-input id="search" name="{{ search_field|default('search') }}" placeholder="{{ search_placeholder|default('Zoeken...') }}" value="{{ search_filter or '' }}" aria-label="{{ search_placeholder|default('Zoeken') }}" size />
+      <c-input id="search"
+               name="{{ search_field|default('search') }}"
+               placeholder="{{ search_placeholder|default('Zoeken...') }}"
+               value="{{ search_filter or '' }}"
+               aria-label="{{ search_placeholder|default('Zoeken') }}"
+               size />
       <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
     </div>
     {# Filters Button with indicator #}
@@ -36,10 +41,7 @@ Usage:
     </div>
     <div>
       {% if primary_button %}
-        <a href="{{ primary_button.attrs.get('href', '#') }}"
-           class="rvo-button rvo-button--primary rvo-button--size-md rvo-button--icon-before"
-           {% for attr_label, attr_value in primary_button.attrs.items() %}{% if attr_label != 'href' %}{{ attr_label }}="{{ attr_value }}"{% endif %}
-           {% endfor %}>
+        <a href="{{ primary_button.attrs.get('href', '#') }}" class="rvo-button rvo-button--primary rvo-button--size-md rvo-button--icon-before" {% for attr_label, attr_value in primary_button.attrs.items() %}{% if attr_label != 'href' %}{{ attr_label }}="{{ attr_value }}"{% endif %} {% endfor %}>
           <c-icon icon="plus" size="md" class="rvo-link__icon--before" />
           {{ primary_button.button_text }}
         </a>
@@ -51,7 +53,9 @@ Usage:
     <div class="modal-content">
       {# Modal Header #}
       <div class="modal-header">
-        <c-h2 noMargins>Filters</c-h2>
+        <c-h2 noMargins>
+          Filters
+        </c-h2>
         <button type="button" class="modal-close">
           <c-icon icon="kruis" size="md" />
         </button>
@@ -60,12 +64,19 @@ Usage:
         <div class="rvo-layout-column rvo-layout-gap--md">
           {% for filter_group in filter_groups %}
             {% if filter_group.type == 'select' %}
-              <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
+              <c-select-field label="{{ filter_group.label }}"
+                              name="{{ filter_group.name }}"
+                              id="filter-{{ filter_group.name }}"
+                              data-filter-input
+                              :options="filter_group.options"
+                              value="{{ filter_group.value }}" />
             {% elif filter_group.type == 'select-multi' %}
               {% set selected_count = filter_group.selected_values|length %}
               <div class="utrecht-form-field rvo-form-field">
                 <div class="rvo-form-field__label">
-                  <c-label id="multiselect-label-{{ filter_group.label|replace(' ', '-') |lower }}">{{ filter_group.label }}</c-label>
+                  <c-label id="multiselect-label-{{ filter_group.label|replace(' ', '-') |lower }}">
+                    {{ filter_group.label }}
+                  </c-label>
                 </div>
                 <div class="multiselect"
                      data-multiselect
@@ -114,8 +125,22 @@ Usage:
               </div>
             {% elif filter_group.type == 'date_range' %}
               <div class="rvo-layout-grid rvo-layout-gap--md rvo-layout-grid-columns--two">
-                <c-date-input-field id="filter-{{ filter_group.name }}-from" label="{{ filter_group.from_label }}" helperText="" data-require-both="{{ filter_group.require_both|lower }}" data-combined-name="{{ filter_group.name }}" data-pair-id="filter-{{ filter_group.name }}-to" size value="{{ active_filters.get(filter_group.name, {}).get('from', '') }}" />
-                <c-date-input-field id="filter-{{ filter_group.name }}-to" label="{{ filter_group.to_label }}" helperText="" data-require-both="{{ filter_group.require_both|lower }}" data-combined-name="{{ filter_group.name }}" data-pair-id="filter-{{ filter_group.name }}-from" size value="{{ active_filters.get(filter_group.name, {}).get('to', '') }}" />
+                <c-date-input-field id="filter-{{ filter_group.name }}-from"
+                                    label="{{ filter_group.from_label }}"
+                                    helperText=""
+                                    data-require-both="{{ filter_group.require_both|lower }}"
+                                    data-combined-name="{{ filter_group.name }}"
+                                    data-pair-id="filter-{{ filter_group.name }}-to"
+                                    size
+                                    value="{{ active_filters.get(filter_group.name, {}).get('from', '') }}" />
+                <c-date-input-field id="filter-{{ filter_group.name }}-to"
+                                    label="{{ filter_group.to_label }}"
+                                    helperText=""
+                                    data-require-both="{{ filter_group.require_both|lower }}"
+                                    data-combined-name="{{ filter_group.name }}"
+                                    data-pair-id="filter-{{ filter_group.name }}-from"
+                                    size
+                                    value="{{ active_filters.get(filter_group.name, {}).get('to', '') }}" />
               </div>
               {% if filter_group.require_both %}
                 {# Hidden input managed by JS - only submitted when both dates are filled #}
@@ -135,10 +160,10 @@ Usage:
       {# Modal Footer #}
       <div class="modal-footer">
         <c-button class="clear-filters-button" kind="warning-subtle">
-        Wis alle filters
+          Wis alle filters
         </c-button>
         <c-button class="close-modal-button" kind="primary">
-        Naar resultaten
+          Naar resultaten
         </c-button>
       </div>
     </div>

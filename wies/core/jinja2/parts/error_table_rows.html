@@ -1,53 +1,53 @@
 {% for error in object_list %}
   <c-table-row>
-  <c-table-cell>
-  <span class="rvo-text rvo-text--sm">{{ error.timestamp|datetime_nl }}</span>
-  </c-table-cell>
-  <c-table-cell>
-  <span class="rvo-text rvo-text--bold rvo-text--sm"
-        title="{{ error.exception_message or error.message }}">{{ error.short_description }}</span>
-  </c-table-cell>
-  <c-table-cell>
-  {% if error.path %}
-    <span class="rvo-text rvo-text--sm"
-          title="{{ error.method }} {{ error.path }}">{{ error.method }} {{ error.path }}</span>
-  {% else %}
-    <span class="rvo-text rvo-text--sm rvo-text--subtle"
-          title="{{ error.logger_name }}">{{ error.logger_name }}</span>
-  {% endif %}
-  </c-table-cell>
-  <c-table-cell>
-  {% if error.user_email %}
-    <span class="rvo-text rvo-text--sm" title="{{ error.user_email }}">{{ error.user_email }}</span>
-  {% else %}
-    <span class="rvo-text rvo-text--sm rvo-text--subtle">-</span>
-  {% endif %}
-  </c-table-cell>
-  <c-table-cell class="error-table__actions-col">
-  <div class="error-table__actions">
-    <a href="{{ url('error-detail', args=[error.id]) }}"
-       class="error-table__icon-btn"
-       title="Details bekijken"
-       aria-label="Details bekijken">
-      <c-icon icon="oog" size="md" color="lintblauw" />
-    </a>
-    <button type="button"
-            class="error-table__icon-btn"
-            title="Foutmelding verwijderen"
-            aria-label="Foutmelding verwijderen"
-            hx-post="{{ url('delete-error', args=[error.id]) }}?pagina={{ page_obj.number }}"
-            hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
-            hx-target="#error_table_container"
-            hx-swap="innerHTML">
-      <c-icon icon="verwijderen" size="md" color="grijs-700" />
-    </button>
-  </div>
-  </c-table-cell>
+    <c-table-cell>
+      <span class="rvo-text rvo-text--sm">{{ error.timestamp|datetime_nl }}</span>
+    </c-table-cell>
+    <c-table-cell>
+      <span class="rvo-text rvo-text--bold rvo-text--sm"
+            title="{{ error.exception_message or error.message }}">{{ error.short_description }}</span>
+    </c-table-cell>
+    <c-table-cell>
+      {% if error.path %}
+        <span class="rvo-text rvo-text--sm"
+              title="{{ error.method }} {{ error.path }}">{{ error.method }} {{ error.path }}</span>
+      {% else %}
+        <span class="rvo-text rvo-text--sm rvo-text--subtle"
+              title="{{ error.logger_name }}">{{ error.logger_name }}</span>
+      {% endif %}
+    </c-table-cell>
+    <c-table-cell>
+      {% if error.user_email %}
+        <span class="rvo-text rvo-text--sm" title="{{ error.user_email }}">{{ error.user_email }}</span>
+      {% else %}
+        <span class="rvo-text rvo-text--sm rvo-text--subtle">-</span>
+      {% endif %}
+    </c-table-cell>
+    <c-table-cell class="error-table__actions-col">
+      <div class="error-table__actions">
+        <a href="{{ url('error-detail', args=[error.id]) }}"
+           class="error-table__icon-btn"
+           title="Details bekijken"
+           aria-label="Details bekijken">
+          <c-icon icon="oog" size="md" color="lintblauw" />
+        </a>
+        <button type="button"
+                class="error-table__icon-btn"
+                title="Foutmelding verwijderen"
+                aria-label="Foutmelding verwijderen"
+                hx-post="{{ url('delete-error', args=[error.id]) }}?pagina={{ page_obj.number }}"
+                hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+                hx-target="#error_table_container"
+                hx-swap="innerHTML">
+          <c-icon icon="verwijderen" size="md" color="grijs-700" />
+        </button>
+      </div>
+    </c-table-cell>
   </c-table-row>
 {% else %}
   <c-table-row>
-  <c-table-cell colspan="5">
-  <span class="rvo-text--italic">Geen foutmeldingen.</span>
-  </c-table-cell>
+    <c-table-cell colspan="5">
+      <span class="rvo-text--italic">Geen foutmeldingen.</span>
+    </c-table-cell>
   </c-table-row>
 {% endfor %}
