@@ -45,6 +45,10 @@
             {{ user.email }}
           </c-link>
         </dd>
+        <dt>Merk</dt>
+        <dd>
+          {{ inline_edit(colleague, "suborganization") }}
+        </dd>
         {% for item in label_categories %}
           <dt>{{ item.category.name }}</dt>
           <dd>

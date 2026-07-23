@@ -24,13 +24,14 @@ class LabelFilteringAndDisplayTest(TestCase):
         view_user_perm = Permission.objects.get(codename="view_user")
         self.auth_user.user_permissions.add(view_user_perm)
 
-        # Create label categories and labels (use get_or_create to avoid conflicts)
-        self.merken_category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
+        # Create label categories and labels (use get_or_create to avoid conflicts).
+        # Merk is no longer a label category, so use neutral test categories here.
+        self.test_category, _ = LabelCategory.objects.get_or_create(name="Testcategorie", defaults={"color": "#0066CC"})
         self.skills_category, _ = LabelCategory.objects.get_or_create(name="Skills", defaults={"color": "#00AA00"})
 
-        self.rig_label, _ = Label.objects.get_or_create(name="Rijks ICT Gilde", category=self.merken_category)
-        self.rc_label, _ = Label.objects.get_or_create(name="Rijksconsultants", category=self.merken_category)
-        self.iir_label, _ = Label.objects.get_or_create(name="I-Interim Rijk", category=self.merken_category)
+        self.rig_label, _ = Label.objects.get_or_create(name="Rijks ICT Gilde", category=self.test_category)
+        self.rc_label, _ = Label.objects.get_or_create(name="Rijksconsultants", category=self.test_category)
+        self.iir_label, _ = Label.objects.get_or_create(name="I-Interim Rijk", category=self.test_category)
 
         self.python_label, _ = Label.objects.get_or_create(name="Python", category=self.skills_category)
         self.django_label, _ = Label.objects.get_or_create(name="Django", category=self.skills_category)

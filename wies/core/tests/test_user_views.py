@@ -6,7 +6,8 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from wies.core.models import Colleague, Event, Label, LabelCategory
+from wies.core.forms import UserForm
+from wies.core.models import Colleague, Event, Label, LabelCategory, Suborganization
 
 User = get_user_model()
 
@@ -43,9 +44,13 @@ class UserViewsTest(TestCase):
         )
 
         # Create test labels
-        self.category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
+        self.category, _ = LabelCategory.objects.get_or_create(name="Testcategorie", defaults={"color": "#0066CC"})
         self.label_a = Label.objects.create(name="Brand A", category=self.category)
         self.label_b = Label.objects.create(name="Brand B", category=self.category)
+
+        # Create test merken (suborganizations)
+        self.merk_a = Suborganization.objects.create(name="Merk A")
+        self.merk_b = Suborganization.objects.create(name="Merk B")
 
         # Create test groups for form testing
         self.admin_group = Group.objects.create(name="Beheerder")
@@ -159,7 +164,7 @@ class UserViewsTest(TestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "email": "newuser@rijksoverheid.nl",
-                "category_Merk": self.label_a.id,
+                "category_Testcategorie": self.label_a.id,
             },
         )
 
@@ -183,6 +188,71 @@ class UserViewsTest(TestCase):
         assert created_event.object_type == "User"
         assert created_event.action == "create"
         assert created_event.context["email"] == "newuser@rijksoverheid.nl"
+
+    def test_user_create_with_merk(self):
+        """Test that the selected merk (suborganization) is assigned to the new user's colleague"""
+        self.client.force_login(self.auth_user)
+
+        response = self.client.post(
+            reverse("user-create"),
+            {
+                "first_name": "Merk",
+                "last_name": "User",
+                "email": "merkuser@rijksoverheid.nl",
+                "suborganization": self.merk_a.id,
+            },
+        )
+
+        assert response.status_code == 302
+        new_user = User.objects.get(email="merkuser@rijksoverheid.nl")
+        assert new_user.colleague.suborganization_id == self.merk_a.id
+
+    def test_user_edit_updates_merk(self):
+        """Test that editing a user changes the colleague's merk"""
+        self.client.force_login(self.auth_user)
+        self.colleague1.suborganization = self.merk_a
+        self.colleague1.save()
+
+        response = self.client.post(
+            reverse("user-edit", args=[self.user1.id]),
+            {
+                "first_name": self.user1.first_name,
+                "last_name": self.user1.last_name,
+                "email": self.user1.email,
+                "suborganization": self.merk_b.id,
+            },
+        )
+
+        assert response.status_code == 302
+        self.colleague1.refresh_from_db()
+        assert self.colleague1.suborganization_id == self.merk_b.id
+
+    def test_user_edit_clears_merk(self):
+        """Test that submitting the edit form with no merk clears the colleague's merk"""
+        self.client.force_login(self.auth_user)
+        self.colleague1.suborganization = self.merk_a
+        self.colleague1.save()
+
+        response = self.client.post(
+            reverse("user-edit", args=[self.user1.id]),
+            {
+                "first_name": self.user1.first_name,
+                "last_name": self.user1.last_name,
+                "email": self.user1.email,
+            },
+        )
+
+        assert response.status_code == 302
+        self.colleague1.refresh_from_db()
+        assert self.colleague1.suborganization_id is None
+
+    def test_user_edit_get_prefills_merk(self):
+        """Test that the edit form pre-selects the colleague's current merk"""
+        self.colleague1.suborganization = self.merk_a
+        self.colleague1.save()
+
+        form = UserForm(instance=self.user1)
+        assert form.fields["suborganization"].initial == self.merk_a.id
 
     def test_user_create_without_labels(self):
         """Test user creation without labels (optional field)"""
@@ -628,9 +698,8 @@ class UserImportTest(TestCase):
         self.consultant_group = Group.objects.create(name="Consultant")
         self.bdm_group = Group.objects.create(name="Business Development Manager")
 
-        # Create test label
-        category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
-        self.existing_label = Label.objects.create(name="Existing Brand", category=category)
+        # Create an existing merk to test brand reuse on import
+        self.existing_suborg = Suborganization.objects.create(name="Existing Brand")
 
         # Create authenticated user with add_user permission
         self.auth_user = User.objects.create_user(
@@ -729,8 +798,9 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         john = User.objects.get(email="john.doe@rijksoverheid.nl")
         assert john.first_name == "John"
         assert john.last_name == "Doe"
-        # Verify label was assigned (Brand A should be created as label)
-        assert john.colleague.labels.filter(name="Brand A").exists()
+        # Verify merk was assigned (Brand A should be created as a merk)
+        assert john.colleague.suborganization is not None
+        assert john.colleague.suborganization.name == "Brand A"
         assert john.groups.filter(name="Beheerder").exists()
         assert not john.groups.filter(name="Consultant").exists()
 
@@ -774,24 +844,24 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         john = User.objects.get(email="john.doe@rijksoverheid.nl")
         assert john.first_name == "John"
 
-    def test_import_reuses_existing_labels(self):
-        """Test that import reuses existing labels instead of creating duplicates"""
+    def test_import_reuses_existing_merken(self):
+        """Test that import reuses an existing merk instead of creating a duplicate"""
         self.client.force_login(self.auth_user)
         csv_content = f"""first_name,last_name,email,brand,Administrator,Consultant,BDM
-John,Doe,john.doe@rijksoverheid.nl,{self.existing_label.name},n,n,n"""
+John,Doe,john.doe@rijksoverheid.nl,{self.existing_suborg.name},n,n,n"""
         csv_file = self._create_csv_file(csv_content)
 
-        label_count_before = Label.objects.count()
+        suborg_count_before = Suborganization.objects.count()
 
         response = self.client.post(self.import_url, {"csv_file": csv_file})
 
         assert response.status_code == 200
         content = response.content.decode()
         assert "Import geslaagd" in content
-        assert Label.objects.count() == label_count_before
+        assert Suborganization.objects.count() == suborg_count_before
 
         john = User.objects.get(email="john.doe@rijksoverheid.nl")
-        assert john.colleague.labels.filter(id=self.existing_label.id).exists()
+        assert john.colleague.suborganization == self.existing_suborg
 
     def test_import_validates_missing_required_columns(self):
         """Test that import validates required columns are present"""
@@ -925,7 +995,7 @@ John,Doe,john@rijksoverheid.nl"""
         assert "Import geslaagd" in content
 
         john = User.objects.get(email="john@rijksoverheid.nl")
-        assert john.colleague.labels.count() == 0
+        assert john.colleague.suborganization is None
         assert john.groups.count() == 0
 
     def test_import_with_multiple_groups(self):
@@ -1007,4 +1077,5 @@ Jane,Smith,invalid-email"""
         john = User.objects.get(email="john@rijksoverheid.nl")
         assert john.first_name == "John"
         assert john.last_name == "Doe"
-        assert john.colleague.labels.filter(name="Brand A").exists()
+        assert john.colleague.suborganization is not None
+        assert john.colleague.suborganization.name == "Brand A"

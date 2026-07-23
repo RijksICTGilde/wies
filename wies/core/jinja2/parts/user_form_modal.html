@@ -42,6 +42,7 @@
                 Labels
               </c-h3>
               <div>
+                {{ content.suborganization.as_field_group() }}
                 {% for field_name in content.fields %}
                   {% if field_name.startswith('category_') %}{{ content[field_name].as_field_group() }}{% endif %}
                 {% endfor %}

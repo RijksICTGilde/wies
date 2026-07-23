@@ -63,3 +63,8 @@ def annotate_usage_counts(queryset):
     labels_with_usage = Label.objects.order_by(Lower("name")).annotate(usage_count=Count("colleagues", distinct=True))
 
     return queryset.prefetch_related(Prefetch("labels", queryset=labels_with_usage))
+
+
+def annotate_suborganization_usage_counts(queryset):
+    """Annotate a Suborganization queryset with the number of colleagues using each merk."""
+    return queryset.annotate(usage_count=Count("colleagues", distinct=True))

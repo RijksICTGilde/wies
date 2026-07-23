@@ -17,7 +17,7 @@ class RvoFormMixinTest(TestCase):
     def setUp(self):
         """Create test data"""
         # Create test labels
-        self.category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
+        self.category, _ = LabelCategory.objects.get_or_create(name="Testcategorie", defaults={"color": "#0066CC"})
         self.label_a = Label.objects.create(name="Brand A", category=self.category)
         self.label_b = Label.objects.create(name="Brand B", category=self.category)
 

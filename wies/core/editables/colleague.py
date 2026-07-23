@@ -1,15 +1,19 @@
-"""Editables for Colleague — one labels field per LabelCategory, built dynamically.
-
-Permissions live in ``wies/core/permission_rules.py``.
+"""Editables for Colleague
+Permissions live in ``wies/core/permissions.py``.
 """
 
 from django.db import transaction
 
 from wies.core.inline_edit import Editable, EditableSet
-from wies.core.models import Colleague, LabelCategory
+from wies.core.models import Colleague, LabelCategory, Suborganization
 from wies.core.widgets import MultiselectDropdown
 
 LABELS_PREFIX = "labels_"
+
+
+def _suborganization_choices():
+    # Callable so the queryset evaluates per request, not at registration time.
+    return Suborganization.objects.all()
 
 
 def _save_labels_for_category(category_id):
@@ -52,6 +56,14 @@ def _build_label_editable(category):
 class ColleagueEditables(EditableSet):
     class Meta:
         model = Colleague
+
+    suborganization = Editable(
+        label="Merk",
+        choices=_suborganization_choices,
+        required=False,
+        empty_label=" ",
+        display="rvo/forms/displays/colleague_merk.html",
+    )
 
     @classmethod
     def resolve_dynamic(cls, name):

@@ -2,7 +2,7 @@ import logging
 
 from django.core.management.base import BaseCommand
 
-from wies.core.models import DEFAULT_LABELS, Label, LabelCategory
+from wies.core.models import DEFAULT_LABELS, DEFAULT_SUBORGANIZATIONS, Label, LabelCategory, Suborganization
 from wies.core.roles import setup_roles
 
 logger = logging.getLogger(__name__)
@@ -22,3 +22,9 @@ class Command(BaseCommand):
                 for label_name in category_vals["labels"]:
                     Label.objects.create(name=label_name, category=category)
                 logger.info("Successfully setup label categories and labels")
+
+        # setting up suborganizations (merken) if completely empty
+        if Suborganization.objects.count() == 0:
+            for suborganization_name in DEFAULT_SUBORGANIZATIONS:
+                Suborganization.objects.create(name=suborganization_name)
+            logger.info("Successfully setup suborganizations")

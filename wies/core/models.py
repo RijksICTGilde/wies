@@ -17,23 +17,23 @@ SOURCE_CHOICES = {
 }
 
 
+DEFAULT_SUBORGANIZATIONS = {
+    "Rijksconsultants",
+    "I-Interim Rijk",
+    "Rijks ICT Gilde",
+    "Rijks I-Traineeship",
+    "Innoveren met Impact",
+    "RADIO",
+    "Leer en ontwikkel campus",
+    "Intercoach",
+    "Mindful Rijk",
+    "Gateway review",
+    "Delta review",
+    "Digi Gilde",
+}
+
+
 DEFAULT_LABELS = {
-    "Merk": {
-        "color": "#DCE3EA",
-        "labels": {
-            "Rijksconsultants",
-            "I-Interim Rijk",
-            "Rijks ICT Gilde",
-            "Rijks I-Traineeship",
-            "Innoveren met Impact",
-            "RADIO",
-            "Leer en ontwikkel campus",
-            "Intercoach",
-            "Mindful Rijk",
-            "Gateway review",
-            "Delta review",
-        },
-    },
     "Expertise": {
         "color": "#B3D7EE",
         "labels": {
@@ -88,6 +88,18 @@ class Label(models.Model):
         return f"{self.name}"
 
 
+class Suborganization(models.Model):
+    """A suborganisation ("merk") a colleague belongs to. Exactly one per colleague."""
+
+    name = models.CharField(max_length=100, unique=True)
+
+    class Meta:
+        ordering = [Lower("name")]
+
+    def __str__(self):
+        return self.name
+
+
 class Skill(models.Model):
     name = models.CharField(max_length=30, unique=True)
 
@@ -106,6 +118,9 @@ class Colleague(models.Model):
     email = models.EmailField()
     skills = models.ManyToManyField("Skill", blank=True)
     labels = models.ManyToManyField("Label", related_name="colleagues", blank=True)
+    suborganization = models.ForeignKey(
+        "Suborganization", on_delete=models.SET_NULL, null=True, blank=True, related_name="colleagues"
+    )
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(blank=True)

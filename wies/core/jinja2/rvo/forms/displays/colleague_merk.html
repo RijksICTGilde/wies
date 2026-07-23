@@ -1,0 +1,15 @@
+{# Display for Colleague.merk (a single Merk instance or None). Context:
+  obj      — Colleague instance
+  value    — the Merk instance, or None
+#}
+<div class="rvo-layout-row rvo-layout-gap--sm" style="flex-wrap: wrap">
+  {% if value %}
+    <span class="rvo-badge"
+          style="background-color: #DCE3EA;
+                 padding: 0.25rem 0.5rem;
+                 border-radius: 3px;
+                 white-space: nowrap">{{ value.name }}</span>
+  {% else %}
+    <span class="rvo-text--italic rvo-text--subtle">Geen merk</span>
+  {% endif %}
+</div>
