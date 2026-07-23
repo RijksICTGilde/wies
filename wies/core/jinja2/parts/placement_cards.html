@@ -30,8 +30,7 @@
        role="link"
        aria-label="{{ assignment.name }}"
        hx-get="{{ assignment.panel_url }}"
-       hx-target="#side_panel-container"
-       onkeydown="if(event.key==='Enter')htmx.trigger(this,'click')">
+       hx-target="#side_panel-container">
     <div class="wzw-card__header">
       <strong class="wzw-card__title truncate" title="{{ assignment.name }}">{{ assignment.name }}</strong>
       {% if clients %}
@@ -61,8 +60,7 @@
        role="link"
        aria-label="{{ name }}"
        hx-get="{{ colleague.panel_url }}"
-       hx-target="#side_panel-container"
-       onkeydown="if(event.key==='Enter')htmx.trigger(this,'click')">
+       hx-target="#side_panel-container">
     <div class="user-avatar wzw-card__avatar">{{ name|first|upper }}</div>
     <div class="wzw-card__persoon-info">
       <strong class="wzw-card__title truncate" title="{{ name }}">{{ name }}</strong>

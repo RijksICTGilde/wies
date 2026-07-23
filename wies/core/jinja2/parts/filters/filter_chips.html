@@ -95,8 +95,14 @@
   {# Clear-all sits with the chips so the two read together. Lives in the
      OOB-swapped content, so no JS visibility toggle is needed. #}
   {% if active_filter_count %}
-    <c-button kind="tertiary" size="sm" icon="kruis" iconPlacement="before" type="button" class="filter-chips__clear" data-clear-all-filters>
-    Wis alle filters
+    <c-button kind="tertiary"
+              size="sm"
+              icon="kruis"
+              iconPlacement="before"
+              type="button"
+              class="filter-chips__clear"
+              data-clear-all-filters>
+      Wis alle filters
     </c-button>
   {% endif %}
 </div>

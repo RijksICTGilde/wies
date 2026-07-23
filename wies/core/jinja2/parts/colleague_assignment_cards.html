@@ -10,7 +10,9 @@
         <div class="assignment-card__name">
           <strong class="assignment-card__title">{{ assignment.name }}</strong>
           {% if assignment.historical %}
-            <c-tag type="default" class="assignment-tag--completed">{{ assignment.period_label or "Afgelopen" }}</c-tag>
+            <c-tag type="default" class="assignment-tag--completed">
+              {{ assignment.period_label or "Afgelopen" }}
+            </c-tag>
           {% elif assignment.show_read_more %}
             <span class="assignment-card__read-more">Lees meer ›</span>
           {% elif assignment.start_date or assignment.end_date %}
@@ -38,7 +40,9 @@
             {% endif %}
             <div class="assignment-card__subtitle">
               {% for tag in assignment.tags %}
-                <c-tag type="default">{{ tag.skill if tag is mapping else tag }}</c-tag>
+                <c-tag type="default">
+                  {{ tag.skill if tag is mapping else tag }}
+                </c-tag>
               {% endfor %}
             </div>
           </div>

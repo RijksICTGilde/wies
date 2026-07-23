@@ -14,7 +14,7 @@ SECRET_KEY = os.environ.get(
 )
 ALLOWED_HOSTS = ["localhost", "0.0.0.0", "127.0.0.1"]  # noqa: S104
 
-# for authlib OIDC connection, if left out, login will not be enforced
+# for authlib OIDC connection
 OIDC_CLIENT_ID = os.environ.get("OIDC_CLIENT_ID", "default-client-id")
 OIDC_CLIENT_SECRET = os.environ.get("OIDC_CLIENT_SECRET", "default-client-secret")
 OIDC_DISCOVERY_URL = os.environ.get("OIDC_DISCOVERY_URL", "https://test.example.com/.well-known/openid-configuration")
@@ -49,14 +49,27 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "verbose",
         },
+        # Persists unhandled 500s + task failures as ErrorEvent rows (and posts to
+        # Mattermost only if MATTERMOST_* are set). Mirrors production so the
+        # feature is testable in dev.
+        "error_reporting": {
+            "class": "wies.core.monitoring.ErrorReportingHandler",
+            "level": "ERROR",
+        },
     },
     "root": {
         "handlers": ["console"],
         "level": "INFO",
     },
     "loggers": {
+        # Unhandled request exceptions (500s) — Django logs these at ERROR.
+        "django.request": {
+            "handlers": ["console", "error_reporting"],
+            "level": "ERROR",
+            "propagate": False,
+        },
         "wies": {
-            "handlers": ["console"],
+            "handlers": ["console", "error_reporting"],
             "level": "INFO",
             "propagate": False,
         },

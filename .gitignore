@@ -135,6 +135,7 @@ celerybeat.pid
 
 # Environments
 .env
+.env.worker
 .envrc
 .venv
 env/
@@ -228,3 +229,6 @@ wies/core/management/commands/debug.py
 
 # Internal review working doc, must not be committed
 REVIEW_CHECKLIST.md
+
+# Stray local uv/virtualenv dir (created by accidental host-side uv run)
+.local/

@@ -22,7 +22,17 @@
                   data-search-submit>
             <c-icon icon="zoek" color="lintblauw" size="md" />
           </button>
-          <c-input id="search" name="zoek" placeholder="Zoeken..." aria-label="Zoeken" size value="{{ search_filter or '' }}" hx-preserve="true" hx-get="{{ url('search-suggestions') }}" hx-trigger="input delay:300ms" hx-target="#search-suggestions-container" hx-swap="innerHTML" />
+          <c-input id="search"
+                   name="zoek"
+                   placeholder="Zoeken..."
+                   aria-label="Zoeken"
+                   size
+                   value="{{ search_filter or '' }}"
+                   hx-preserve="true"
+                   hx-get="{{ url('search-suggestions') }}"
+                   hx-trigger="input delay:300ms"
+                   hx-target="#search-suggestions-container"
+                   hx-swap="innerHTML" />
           <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
           <div id="search-suggestions-container" hx-preserve="true"></div>
         </div>

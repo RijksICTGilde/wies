@@ -11,7 +11,9 @@
                 data-group-id="organisatie">
         <legend class="checkbox-filter__legend-sr-only">{{ filter_group.label }}</legend>
         <button type="button" class="checkbox-filter__header">
-          <c-label>{{ filter_group.label }}</c-label>
+          <c-label>
+            {{ filter_group.label }}
+          </c-label>
           <c-icon icon="delta-omlaag" size="sm" class="checkbox-filter__header-icon" />
         </button>
         <div class="checkbox-filter__body">
@@ -45,20 +47,47 @@
         </div>
       </fieldset>
     {% elif filter_group.type == 'select' %}
-      <c-select-field label="{{ filter_group.label }}" name="{{ filter_group.name }}" id="filter-{{ filter_group.name }}" data-filter-input :options="filter_group.options" value="{{ filter_group.value }}" />
+      <c-select-field label="{{ filter_group.label }}"
+                      name="{{ filter_group.name }}"
+                      id="filter-{{ filter_group.name }}"
+                      data-filter-input
+                      :options="filter_group.options"
+                      value="{{ filter_group.value }}" />
     {% elif filter_group.type == 'select-multi' %}
       {% with name=filter_group.name, label=filter_group.label, group_id=filter_group.group_id, top_options=filter_group.top_options, has_more=filter_group.has_more, selected_values=filter_group.selected_values %}
         {% include "parts/filters/checkbox_filter.html" %}
       {% endwith %}
     {% elif filter_group.type == 'date' %}
-      <c-date-input-field id="filter-{{ filter_group.name }}" label="{{ filter_group.label }}" name="{{ filter_group.name }}" helperText="" data-filter-input size value="{{ active_filters.get(filter_group.name, '') }}" />
+      <c-date-input-field id="filter-{{ filter_group.name }}"
+                          label="{{ filter_group.label }}"
+                          name="{{ filter_group.name }}"
+                          helperText=""
+                          data-filter-input
+                          size
+                          value="{{ active_filters.get(filter_group.name, '') }}" />
     {% elif filter_group.type == 'date_range' %}
       {% set date_range_value = active_filters.get(filter_group.name) %}
       <div class="filter-sidebar-date-range">
-        <c-label>{{ filter_group.label }}</c-label>
+        <c-label>
+          {{ filter_group.label }}
+        </c-label>
         <div class="rvo-layout-column rvo-layout-gap--sm">
-          <c-date-input-field id="filter-{{ filter_group.name }}-from" label="{{ filter_group.from_label }}" helperText="" data-require-both="{{ filter_group.require_both|lower }}" data-combined-name="{{ filter_group.name }}" data-pair-id="filter-{{ filter_group.name }}-to" size value="{{ date_range_value.from.strftime('%Y-%m-%d') if date_range_value else '' }}" />
-          <c-date-input-field id="filter-{{ filter_group.name }}-to" label="{{ filter_group.to_label }}" helperText="" data-require-both="{{ filter_group.require_both|lower }}" data-combined-name="{{ filter_group.name }}" data-pair-id="filter-{{ filter_group.name }}-from" size value="{{ date_range_value.to.strftime('%Y-%m-%d') if date_range_value else '' }}" />
+          <c-date-input-field id="filter-{{ filter_group.name }}-from"
+                              label="{{ filter_group.from_label }}"
+                              helperText=""
+                              data-require-both="{{ filter_group.require_both|lower }}"
+                              data-combined-name="{{ filter_group.name }}"
+                              data-pair-id="filter-{{ filter_group.name }}-to"
+                              size
+                              value="{{ date_range_value.from.strftime('%Y-%m-%d') if date_range_value else '' }}" />
+          <c-date-input-field id="filter-{{ filter_group.name }}-to"
+                              label="{{ filter_group.to_label }}"
+                              helperText=""
+                              data-require-both="{{ filter_group.require_both|lower }}"
+                              data-combined-name="{{ filter_group.name }}"
+                              data-pair-id="filter-{{ filter_group.name }}-from"
+                              size
+                              value="{{ date_range_value.to.strftime('%Y-%m-%d') if date_range_value else '' }}" />
         </div>
       </div>
       {% if filter_group.require_both %}

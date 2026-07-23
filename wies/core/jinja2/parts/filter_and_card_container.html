@@ -4,11 +4,19 @@
   <div class="layout__main__header">
     <!-- Row 1: Title + Search -->
     <div class="header-row header-row--between">
-      <c-h1 noMargins>Aanvragen</c-h1>
+      <c-h1 noMargins>
+        Aanvragen
+      </c-h1>
       <div class="header-actions">
         <!-- Mobile filter toggle -->
-        <c-button kind="secondary" size="md" icon="trechter" iconPlacement="before" type="button" class="mobile-filter-toggle" data-toggle-filters>
-        Filters
+        <c-button kind="secondary"
+                  size="md"
+                  icon="trechter"
+                  iconPlacement="before"
+                  type="button"
+                  class="mobile-filter-toggle"
+                  data-toggle-filters>
+          Filters
         </c-button>
         {% if primary_button %}
           <a href="{{ primary_button.href }}"
@@ -25,7 +33,17 @@
                   data-search-submit>
             <c-icon icon="zoek" color="lintblauw" size="md" />
           </button>
-          <c-input id="search" name="zoek" placeholder="Zoeken..." aria-label="Zoeken" size value="{{ search_filter or '' }}" hx-preserve="true" hx-get="{{ url('search-suggestions') }}" hx-trigger="input delay:300ms" hx-target="#search-suggestions-container" hx-swap="innerHTML" />
+          <c-input id="search"
+                   name="zoek"
+                   placeholder="Zoeken..."
+                   aria-label="Zoeken"
+                   size
+                   value="{{ search_filter or '' }}"
+                   hx-preserve="true"
+                   hx-get="{{ url('search-suggestions') }}"
+                   hx-trigger="input delay:300ms"
+                   hx-target="#search-suggestions-container"
+                   hx-swap="innerHTML" />
           <button type="button" class="search-clear" aria-label="Zoekopdracht wissen">×</button>
           <div id="search-suggestions-container" hx-preserve="true"></div>
         </div>
@@ -34,7 +52,7 @@
     <!-- Row 2: Result count + Active Filter Chips -->
     <div class="header-row">
       <c-paragraph class="results-count">
-      <b>{{ page_obj.paginator.count }}</b> resultaten
+        <b>{{ page_obj.paginator.count }}</b> resultaten
       </c-paragraph>
       <!-- Active Filter Chips -->
       {% include "parts/filters/filter_chips.html" %}

@@ -11,7 +11,9 @@
 {% endblock sidebar %}
 {% block content %}
   <div class="rvo-layout-column rvo-layout-gap--xl">
-    <c-h1>Gebruikers</c-h1>
+    <c-h1>
+      Gebruikers
+    </c-h1>
     {% with url_name="admin-users", target_selector="#user_table", primary_button=primary_button %}
       {% include "parts/filters/filter_bar.html" %}
     {% endwith %}

@@ -24,13 +24,15 @@
           <span class="rvo-tabs__label">Updates</span>
         </button>
       </div>
-    {% endif %}
-    <div id="tab-panel-gegevens"
-         {% if panel_data.show_updates_tab %}class="rvo-tabs__panel" role="tabpanel" aria-labelledby="tab-gegevens" tabindex="0"{% endif %}>
-      <div class="rvo-layout-column rvo-layout-gap--lg">
-        <section>
-          <c-h2>Opdrachtgegevens</c-h2>
-          <c-data-list>
+  {% endif %}
+  <div id="tab-panel-gegevens"
+       {% if panel_data.show_updates_tab %}class="rvo-tabs__panel" role="tabpanel" aria-labelledby="tab-gegevens" tabindex="0"{% endif %}>
+    <div class="rvo-layout-column rvo-layout-gap--lg">
+      <section>
+        <c-h2>
+          Opdrachtgegevens
+        </c-h2>
+        <c-data-list>
           <dt>Opdracht naam</dt>
           <dd>
             {{ inline_edit(panel_data.assignment, "name") }}
@@ -44,8 +46,8 @@
             <dd>
               {% if panel_data.assignment.source_url %}
                 <c-link href="{{ panel_data.assignment.source_url }}" target="_blank">
-                {{ panel_data.assignment.get_source_display() }}
-                <c-icon icon="externe-link" size="xs" />
+                  {{ panel_data.assignment.get_source_display() }}
+                  <c-icon icon="externe-link" size="xs" />
                 </c-link>
               {% else %}
                 {{ panel_data.assignment.get_source_display() }}
@@ -76,38 +78,50 @@
           <dd>
             {{ inline_edit(panel_data.assignment, "owner") }}
           </dd>
-          </c-data-list>
-        </section>
-        <section>
-          <div class="section-header">
-            <c-h2>Team ({{ panel_data.team_count }})</c-h2>
-            {% set a = panel_data.assignment %}
-            {% set ie_target = "inline-edit-assignment-" ~ a.pk ~ "-services" %}
-            {% if has_permission(Verb.UPDATE, a, request.user, AssignmentEditables.services) %}
-              <c-button kind="tertiary" icon="bewerken" iconPlacement="after" hx-get="{{ url('inline-edit', args=[a._meta.model_name, a.pk, 'services']) }}?edit=true" hx-target="#{{ ie_target }}" hx-swap="outerHTML">
+        </c-data-list>
+      </section>
+      <section>
+        <div class="section-header">
+          <c-h2>
+            Team ({{ panel_data.team_count }})
+          </c-h2>
+          {% set a = panel_data.assignment %}
+          {% set ie_target = "inline-edit-assignment-" ~ a.pk ~ "-services" %}
+          {% if has_permission(Verb.UPDATE, a, request.user, AssignmentEditables.services) %}
+            <c-button kind="tertiary"
+                      icon="bewerken"
+                      iconPlacement="after"
+                      hx-get="{{ url('inline-edit', args=[a._meta.model_name, a.pk, 'services']) }}?edit=true"
+                      hx-target="#{{ ie_target }}"
+                      hx-swap="outerHTML">
               Team bewerken
-              </c-button>
-            {% endif %}
-          </div>
-          {{ inline_edit(a, "services") }}
-        </section>
-        {% if has_permission(Verb.DELETE, panel_data.assignment, request.user) %}
-          <section>
-            <c-button kind="warning-subtle" icon="verwijderen" iconPlacement="before" hx-get="{{ url('assignment-delete', args=[panel_data.assignment.id]) }}" hx-target="#assignmentDeleteModal" hx-swap="innerHTML">
-            Verwijder opdracht
             </c-button>
-          </section>
-          <div id="assignmentDeleteModal"></div>
-        {% endif %}
-      </div>
+          {% endif %}
+        </div>
+        {{ inline_edit(a, "services") }}
+      </section>
+      {% if has_permission(Verb.DELETE, panel_data.assignment, request.user) %}
+        <section>
+          <c-button kind="warning-subtle"
+                    icon="verwijderen"
+                    iconPlacement="before"
+                    hx-get="{{ url('assignment-delete', args=[panel_data.assignment.id]) }}"
+                    hx-target="#assignmentDeleteModal"
+                    hx-swap="innerHTML">
+            Verwijder opdracht
+          </c-button>
+        </section>
+        <div id="assignmentDeleteModal"></div>
+      {% endif %}
     </div>
-    {% if panel_data.show_updates_tab %}
-      <div id="tab-panel-updates"
-           class="rvo-tabs__panel"
-           role="tabpanel"
-           aria-labelledby="tab-updates"
-           hidden
-           tabindex="-1"></div>
+  </div>
+  {% if panel_data.show_updates_tab %}
+    <div id="tab-panel-updates"
+         class="rvo-tabs__panel"
+         role="tabpanel"
+         aria-labelledby="tab-updates"
+         hidden
+         tabindex="-1"></div>
     </div>
   {% endif %}
 </div>

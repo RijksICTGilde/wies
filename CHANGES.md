@@ -4,8 +4,37 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?: x
-- ?: explore two "Wie zit waar?" layouts behind a ?ui= switch (default ?ui=groups = the PR 462 fold-out group table; ?ui=cards = Plaatsing/Persoon/Opdracht where Persoon and Opdracht are card grids, each card opening the matching side panel, with a "Sorteer" dropdown replacing the column-header sorting)
+- ?: the "Wie zit waar?"-overzicht now shows the placements as cards, grouped by Persoon (default) or Opdracht via a view menu, each card opening the matching side panel, with a "Sorteer" dropdown replacing the column-header sorting
+
+## 2026-07-23
+
+- 473: fix the opdrachtgever filter counts including planned placements that placement visibility hides from unrelated viewers
+- 473: stop the inline-edit endpoint from revealing whether an object exists to users who may not edit it (a missing and a forbidden object now return the same response)
+- 478: the user and opdracht CSV imports now reject files larger than 50 MB, so an extremely large file cannot exhaust a worker's memory
+- 477: logging out is now only possible via the button (POST), no longer via a bare GET request
+- 481: the production container no longer silently falls back to the local development settings (DEBUG on) when DJANGO_SETTINGS_MODULE is missing at startup; the startup script then defaults to the production settings (an explicitly provided value still takes precedence)
+- 486: the opdracht and user CSV imports now show a graceful error message instead of a 500 when a value is too long for its field or the file is not valid CSV.
+- 479: fix the "Wie zit waar?" and Gebruikers overviews returning a 500 error and showing "Wis filters" when the labels filter contained a non-numeric value in the URL
+- 491: PR preview environments are now reliably removed when a PR closes and a preview can be rebuilt manually from the Actions UI; the weekly registry cleanup of old preview images is fixed
+- 460: (migration)(add env vars) basic error monitoring — unhandled server errors (500) and failed background tasks are stored and shown on the statistics page, with a Mattermost notification.
+- 460: A failing task is marked failed immediately instead of hanging until timeout.
+- 493: (remove env vars) the background worker now runs on its own settings module (config.settings.worker) and no longer requires the OIDC credentials to be set at startup. locally worker now also uses its own dedicate .env file
+- 494: add trivy container scanning as recurring action
+- 482: the Content-Security-Policy for scripts no longer allows inline JavaScript (`script-src 'self'`). All scripts and click/keyboard handling have been moved to external JS files
+- 482: the htmx history cache is now disabled on all pages instead of only on the assignments overview and the placements table; navigating back now always fetches a page fresh everywhere.
+- 496: fix the PR preview cleanup never running: its first step called `gh` without `--repo` in a job that has no checkout, so it failed immediately and the ZAD deployment and PR-tagged images of every closed PR were left behind
+- 497: bumped dev/CI dependencies and GitHub Actions
+- 497: the production images (web/worker) no longer contain dev/test tooling, reducing the runtime attack surface
+
+## 2026-07-20
+
+- 487: login now binds an account to its OIDC subject (`sub`) instead of the email address alone, and rejects a token whose email is already bound to a different `sub`; this prevents account takeover when the token's email claim cannot be fully trusted
+- 487: login now requires the OIDC email to be verified (`email_verified`), rejecting the login otherwise
+- 487: production now refuses to start unless OIDC_DISCOVERY_URL uses https, protecting OIDC signature validation
+
+## 2026-07-17
+
+- 468: fix the opdracht Updates tab revealing colleague names of planned or ended placements, which the Team tab hides from everyone except the placed colleague and the BM-owner
 
 ## 2026-07-15
 

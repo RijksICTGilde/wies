@@ -29,6 +29,18 @@
   });
 
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape") closeAllGroupbyMenus();
+    if (event.key === "Escape") {
+      closeAllGroupbyMenus();
+      return;
+    }
+    // Enter on a keyboard-focused card (role="link" + hx-get) opens the side
+    // panel, mirroring a mouse click. Delegated so it survives HTMX swaps.
+    if (event.key === "Enter") {
+      const card = event.target.closest(".wzw-card[hx-get]");
+      if (card && event.target === card) {
+        event.preventDefault();
+        window.htmx.trigger(card, "click");
+      }
+    }
   });
 })();
