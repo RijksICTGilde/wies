@@ -373,7 +373,9 @@ def _resolve_placement_panel(request, placement_id):
         placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
             id=placement_id
         )
-    except Placement.DoesNotExist:
+    except Placement.DoesNotExist, ValueError:
+        # ValueError: a non-numeric ?plaatsing= param fails PK coercion; treat
+        # it the same as "not found" rather than letting it escape as a 500.
         return None
     assignment = placement.service.assignment
     viewer = getattr(request.user, "colleague", None)
@@ -962,13 +964,13 @@ class PlacementListView(ListView):
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
-            except Colleague.DoesNotExist:
+            except Colleague.DoesNotExist, ValueError:
                 pass
         elif assignment_id:
             try:
                 assignment = Assignment.objects.get(id=assignment_id)
                 context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
-            except Assignment.DoesNotExist:
+            except Assignment.DoesNotExist, ValueError:
                 pass
         return context
 
@@ -1237,13 +1239,13 @@ class AssignmentListView(ListView):
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
-            except Colleague.DoesNotExist:
+            except Colleague.DoesNotExist, ValueError:
                 pass
         elif assignment_id:
             try:
                 assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
                 context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
-            except Assignment.DoesNotExist:
+            except Assignment.DoesNotExist, ValueError:
                 pass
 
         return context
@@ -2239,13 +2241,13 @@ def user_profile(request):
         try:
             assignment = Assignment.objects.get(id=assignment_id)
             panel_data = _build_assignment_panel_data(assignment, request)
-        except Assignment.DoesNotExist:
+        except Assignment.DoesNotExist, ValueError:
             pass
     elif colleague_id:
         try:
             panel_colleague = Colleague.objects.get(id=colleague_id)
             panel_data = _build_colleague_panel_data(panel_colleague, request)
-        except Colleague.DoesNotExist:
+        except Colleague.DoesNotExist, ValueError:
             pass
 
     # HTMX partial responses for panel swaps
@@ -2404,7 +2406,10 @@ def assignment_create(request):
         service_formset = ServiceFormSet(request.POST, prefix="service", form_kwargs={"skill_choices": skill_choices})
 
         # Check if at least one service has a skill selected (works even when formset is invalid)
-        total_forms = min(int(request.POST.get("service-TOTAL_FORMS", 0)), 100)
+        raw_total_forms = request.POST.get("service-TOTAL_FORMS", "0")
+        # A crafted/non-numeric management-form value must not crash the view; treat
+        # it as zero rows, which surfaces the normal "add at least one role" error.
+        total_forms = min(int(raw_total_forms), 100) if raw_total_forms.isdigit() else 0
         has_any_service = any(request.POST.get(f"service-{i}-skill") for i in range(total_forms))
         services_error = "" if has_any_service else "Voeg minimaal één rol toe."
 

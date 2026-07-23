@@ -4,7 +4,8 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?
+- ?: fix the "Wie zit waar?", opdrachten and profiel overviews returning a 500 error when the side-panel `plaatsing`, `collega` or `opdracht` parameter contained a non-numeric value in the URL
+- ?: fix opdracht aanmaken returning a 500 error instead of a validation message when the submitted form data contained a non-numeric service count
 
 ## 2026-07-23
 
