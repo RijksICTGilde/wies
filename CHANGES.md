@@ -4,7 +4,9 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- ?
+- 483: inline editing now detects concurrent edits instead of silently overwriting: if the data changed since you opened the edit form, the form comes back with a warning and your input kept. Opslaan saves anyway, Annuleren shows the changed data. This covers every inline-editable field, including the team and period forms.
+- 483: the concurrent-edit warning on a single field now names the field and the value someone else put there, so you no longer have to press Annuleren, losing your own input, to find out what changed
+- 483: an inline edit that is submitted without the token the edit form hands out (for example a page left open across a deploy) is no longer saved unverified; the form comes back with the same warning and saving again goes through.
 
 ## 2026-07-23
 
@@ -25,6 +27,8 @@ This files lists the changes during the lifetime of this project.
 - 496: fix the PR preview cleanup never running: its first step called `gh` without `--repo` in a job that has no checkout, so it failed immediately and the ZAD deployment and PR-tagged images of every closed PR were left behind
 - 497: bumped dev/CI dependencies and GitHub Actions
 - 497: the production images (web/worker) no longer contain dev/test tooling, reducing the runtime attack surface
+- 479: fix the "Wie zit waar?" and Gebruikers overviews returning a 500 error and showing "Wis filters" when the labels filter contained a non-numeric value in the URL; such a value is now ignored, just like the organization and role filters.
+- 491: PR preview environments are now reliably removed when a PR closes, preview images build on every push regardless of merge conflicts or CI status, previews also build when a draft PR is marked ready for review, and a preview can be rebuilt manually from the Actions UI; the weekly registry cleanup of old preview images is fixed
 
 ## 2026-07-20
 
