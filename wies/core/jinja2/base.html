@@ -35,7 +35,7 @@
   </head>
   <body>
     {% block header %}
-      <nldd-top-navigation-bar logo-title="Rijksorganisatie voor Ontwikkeling," logo-subtitle="Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}">
+      <nldd-top-navigation-bar width="1920px" logo-title="Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}">
       <nldd-menu-bar slot="global" accessible-label="Hoofdnavigatie">
       <nldd-menu-bar-item text="Wie zit waar?" href="{{ url('home') }}"
       {% if request.path == '/' %}current{% endif %}
@@ -46,15 +46,15 @@
       </nldd-menu-bar>
       {% if request.user.is_authenticated %}
         <nldd-menu-bar slot="utility" accessible-label="Gebruikersmenu">
-        <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="person" expandable content-priority="text">
+        <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="account" expandable content-priority="text">
         <nldd-menu>
-        <nldd-menu-item text="Profiel" data-href="{{ url('user-profile') }}"></nldd-menu-item>
+        <nldd-menu-item text="Profiel" icon="person" data-href="{{ url('user-profile') }}"></nldd-menu-item>
         {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
           <nldd-menu-divider></nldd-menu-divider>
-          <nldd-menu-item text="Beheer" data-href="{{ url('admin-users') }}"></nldd-menu-item>
+          <nldd-menu-item text="Beheer" icon="user-admin" data-href="{{ url('admin-users') }}"></nldd-menu-item>
         {% endif %}
         <nldd-menu-divider></nldd-menu-divider>
-        <nldd-menu-item text="Uitloggen" data-href="{{ url('logout') }}"></nldd-menu-item>
+        <nldd-menu-item text="Log uit" icon="logout" data-href="{{ url('logout') }}"></nldd-menu-item>
         </nldd-menu>
         </nldd-menu-bar-item>
         </nldd-menu-bar>
@@ -75,7 +75,7 @@
       {% endblock content %}
     </main>
     </nldd-sidebar-section>
-    <nldd-page-footer>
+    <nldd-page-footer width="1920px">
     <nldd-page-footer-legal-bar slot="legal-bar" accessible-label="Over deze site">
     <nldd-page-footer-legal-bar-item slot="end" href="{{ url('privacy') }}" text="Privacy"></nldd-page-footer-legal-bar-item>
     <nldd-page-footer-legal-bar-item slot="end" href="{{ url('toegankelijkheid') }}" text="Toegankelijkheid"></nldd-page-footer-legal-bar-item>
