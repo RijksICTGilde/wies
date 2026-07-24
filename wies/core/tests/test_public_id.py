@@ -4,10 +4,12 @@ what URLs expose."""
 
 import datetime
 import re
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Permission
 from django.core.management import call_command
+from django.db import IntegrityError
 from django.test import Client, TestCase
 from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
@@ -346,6 +348,47 @@ class LabelAdminRoutePublicIdTests(TestCase):
             except NoReverseMatch:
                 continue
             assert self.client.get(url).status_code == 404, route
+
+
+class PublicIdCollisionRetryTests(TestCase):
+    """PublicIdModel.save() regenerates on the rare public_id clash instead of
+    surfacing a 500, but leaves any other IntegrityError untouched. We force the
+    first value with an explicit public_id (the field default is bound at class
+    definition time, so only the save() retry path reads the patched name)."""
+
+    _ID_A = "AAAAAAAAAAAA"
+    _ID_B = "BBBBBBBBBBBB"
+
+    def test_collision_is_retried_and_resolved(self):
+        LabelCategory.objects.create(name="Cat1", color="#FF0000", public_id=self._ID_A)
+        second = LabelCategory(name="Cat2", color="#00FF00", public_id=self._ID_A)
+        with patch("wies.core.models.generate_public_id", return_value=self._ID_B):
+            second.save()
+
+        assert second.public_id == self._ID_B
+        assert LabelCategory.objects.filter(public_id=self._ID_B).exists()
+
+    def test_persistent_collision_eventually_raises(self):
+        LabelCategory.objects.create(name="Cat1", color="#FF0000", public_id=self._ID_A)
+        second = LabelCategory(name="Cat2", color="#00FF00", public_id=self._ID_A)
+        # Every regenerate returns the same taken id, so retries are exhausted.
+        with (
+            patch("wies.core.models.generate_public_id", return_value=self._ID_A),
+            self.assertRaises(IntegrityError),  # noqa: PT027 — TestCase assertRaises matches the rest of this file
+        ):
+            second.save()
+
+    def test_other_integrity_error_is_not_swallowed_as_a_collision(self):
+        LabelCategory.objects.create(name="Dup", color="#FF0000", public_id=self._ID_A)
+        # Same (unique) name, unique public_id: the clash is the name, not the id,
+        # so it must surface immediately without any regenerate/retry.
+        clashing_name = LabelCategory(name="Dup", color="#00FF00", public_id=self._ID_B)
+        with (
+            patch("wies.core.models.generate_public_id") as gen,
+            self.assertRaises(IntegrityError),  # noqa: PT027 — TestCase assertRaises matches the rest of this file
+        ):
+            clashing_name.save()
+        assert gen.call_count == 0
 
 
 class SkillOrgPublicIdTests(TestCase):
