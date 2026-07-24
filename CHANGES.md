@@ -4,9 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 483: inline editing now detects concurrent edits instead of silently overwriting: if the data changed since you opened the edit form, the form comes back with a warning and your input kept. Opslaan saves anyway, Annuleren shows the changed data. This covers every inline-editable field, including the team and period forms.
-- 483: the concurrent-edit warning on a single field now names the field and the value someone else put there, so you no longer have to press Annuleren, losing your own input, to find out what changed
-- 483: an inline edit that is submitted without the token the edit form hands out (for example a page left open across a deploy) is no longer saved unverified; the form comes back with the same warning and saving again goes through.
+- 483: inline editing now detects concurrent edits instead of silently overwriting. If the data changed since you opened the edit form, the form comes back with a warning that names the field and the value someone else entered, keeping your own input; Opslaan saves anyway, Annuleren shows the changed data. This covers every inline-editable field (including the team and period forms), and an edit submitted without the form's token (for example a page left open across a deploy) is likewise held back with the same warning instead of saved unverified.
 - 480: the OIDC login now uses PKCE (S256) in the authorization-code flow. The government OIDC profile (OIDC-NLGov, sections 4.1 and 4.2.1) requires this for every client: https://gitdocumentatie.logius.nl/publicatie/api/oidc/
 
 ## 2026-07-23
