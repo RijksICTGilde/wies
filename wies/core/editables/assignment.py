@@ -32,11 +32,11 @@ def _owner_display_context(assignment, request) -> dict:
         return {"owner_url": "", "owner_mailto": ""}
 
     base_url = current_page_path(request)
-    owner_url = f"{base_url}?collega={assignment.owner.id}"
+    owner_url = f"{base_url}?collega={assignment.owner.public_id}"
 
     owner_mailto = ""
     if assignment.owner.email:
-        opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.id}")
+        opdracht_url = request.build_absolute_uri(reverse("assignment-list") + f"?opdracht={assignment.public_id}")
         subject = urllib.parse.quote(f"Informatieverzoek over opdracht {assignment.name}")
         body_lines = [
             f"Beste {assignment.owner.name},",

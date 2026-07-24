@@ -17,9 +17,10 @@ Including another URLconf
 
 from django.conf import settings
 from django.contrib.auth.decorators import login_not_required
-from django.urls import path
+from django.urls import path, register_converter
 from django.views.generic import RedirectView
 
+from wies.core.public_id import PublicIdConverter
 from wies.core.views import (
     AssignmentListView,
     PlacementListView,
@@ -64,6 +65,8 @@ from wies.core.views import (
 )
 from wies.rijksauth.views import auth, login, logout
 
+register_converter(PublicIdConverter, "pubid")
+
 urlpatterns = [
     # Well-known paths
     path("favicon.ico", RedirectView.as_view(url=settings.STATIC_URL + "favicon.ico", permanent=False)),
@@ -84,22 +87,22 @@ urlpatterns = [
     path("opdrachten/", AssignmentListView.as_view(), name="assignment-list"),
     path("opdrachten/aanmaken/", assignment_create, name="assignment-create"),
     path("opdrachten/importeren/", assignment_import_csv, name="assignment-import-csv"),
-    path("opdrachten/<int:pk>/events/", assignment_events_partial, name="assignment-events-partial"),
-    path("opdrachten/<int:pk>/verwijderen/", assignment_delete, name="assignment-delete"),
+    path("opdrachten/<pubid:public_id>/events/", assignment_events_partial, name="assignment-events-partial"),
+    path("opdrachten/<pubid:public_id>/verwijderen/", assignment_delete, name="assignment-delete"),
     path("beheer/", RedirectView.as_view(pattern_name="admin-users", permanent=False), name="admin"),
     path("beheer/gebruikers/", UserListView.as_view(), name="admin-users"),
     path("beheer/gebruikers/aanmaken/", user_create, name="user-create"),
-    path("beheer/gebruikers/<int:pk>/bewerken/", user_edit, name="user-edit"),
-    path("beheer/gebruikers/<int:pk>/verwijderen/", user_delete, name="user-delete"),
+    path("beheer/gebruikers/<pubid:public_id>/bewerken/", user_edit, name="user-edit"),
+    path("beheer/gebruikers/<pubid:public_id>/verwijderen/", user_delete, name="user-delete"),
     path("beheer/gebruikers/importeren/", user_import_csv, name="user-import-csv"),
     path("beheer/organisaties/", organization_admin, name="organization-admin"),
     path("beheer/labels/", label_admin, name="label-admin"),
     path("beheer/labels/categorie/aanmaken/", label_category_create, name="label-category-create"),
-    path("beheer/labels/categorie/<int:pk>/bewerken/", label_category_edit, name="label-category-edit"),
-    path("beheer/labels/categorie/<int:pk>/verwijderen/", label_category_delete, name="label-category-delete"),
-    path("beheer/labels/categorie/<int:pk>/labels/aanmaken/", label_create),
-    path("beheer/labels/<int:pk>/bewerken/", label_edit, name="label-edit"),
-    path("beheer/labels/<int:pk>/verwijderen/", label_delete, name="label-delete"),
+    path("beheer/labels/categorie/<pubid:public_id>/bewerken/", label_category_edit, name="label-category-edit"),
+    path("beheer/labels/categorie/<pubid:public_id>/verwijderen/", label_category_delete, name="label-category-delete"),
+    path("beheer/labels/categorie/<pubid:public_id>/labels/aanmaken/", label_create),
+    path("beheer/labels/<pubid:public_id>/bewerken/", label_edit, name="label-edit"),
+    path("beheer/labels/<pubid:public_id>/verwijderen/", label_delete, name="label-delete"),
     path("beheer/statistieken/", staff_dashboard, name="staff-dashboard"),
     path("beheer/statistieken/foutmeldingen/", error_table, name="error-table"),
     path("beheer/statistieken/fout/<int:pk>/", error_detail, name="error-detail"),
@@ -115,7 +118,7 @@ urlpatterns = [
     path("zoek-suggesties/", search_suggestions, name="search-suggestions"),
     path("client-modal/", client_modal, name="client-modal"),
     path(
-        "inline-edit/<slug:model_label>/<int:pk>/<slug:name>/",
+        "inline-edit/<slug:model_label>/<pubid:public_id>/<slug:name>/",
         inline_edit_view,
         name="inline-edit",
     ),

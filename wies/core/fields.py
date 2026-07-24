@@ -23,27 +23,27 @@ class OrganizationsField(forms.Field):
     }
 
     def to_python(self, value):
-        """Resolve raw ``{"organization": "<id>", "role": "..."}`` dicts
-        into ``OrganizationUnit`` instances.
+        """Resolve raw ``{"organization": "<public_id>", "role": "..."}``
+        dicts into ``OrganizationUnit`` instances.
 
-        Uses a single ``in_bulk`` lookup. Raises ``ValidationError``
-        (code ``unknown_org``) when an id can't be parsed as int or
-        doesn't match a row. Unknown role values silently collapse to
-        ``INVOLVED``.
+        Uses a single ``in_bulk`` lookup on ``public_id`` (the client only
+        ever sees public_ids, never pks). Raises ``ValidationError`` (code
+        ``unknown_org``) when a token is malformed or matches no row.
+        Unknown role values silently collapse to ``INVOLVED``.
         """
         if not value:
             return []
         try:
-            ids = [int(v["organization"]) for v in value]
-        except (TypeError, ValueError, KeyError) as exc:
+            public_ids = [v["organization"] for v in value]
+        except (TypeError, KeyError) as exc:
             raise ValidationError(
                 self.error_messages["unknown_org"],
                 code="unknown_org",
             ) from exc
-        resolved_map = OrganizationUnit.objects.in_bulk(ids)
+        resolved_map = OrganizationUnit.objects.in_bulk(public_ids, field_name="public_id")
         out: list[dict] = []
         for v in value:
-            org = resolved_map.get(int(v["organization"]))
+            org = resolved_map.get(v["organization"])
             if org is None:
                 raise ValidationError(
                     self.error_messages["unknown_org"],

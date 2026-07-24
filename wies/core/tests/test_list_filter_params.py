@@ -77,7 +77,7 @@ class ActiveFilterIndicatorTests(TestCase):
         label = Label.objects.create(name="Python", category=category)
         self.client.force_login(self.user)
 
-        response = self.client.get(reverse("home"), {"labels": str(label.id)})
+        response = self.client.get(reverse("home"), {"labels": str(label.public_id)})
 
         assert response.status_code == 200
         assert self.CLEAR_ALL_MARKER in response.content.decode()
@@ -97,7 +97,7 @@ class ActiveFilterIndicatorTests(TestCase):
         self.user.user_permissions.add(Permission.objects.get(codename="view_user"))
         self.client.force_login(self.user)
 
-        response = self.client.get(reverse("admin-users"), {"labels": str(label.id)})
+        response = self.client.get(reverse("admin-users"), {"labels": str(label.public_id)})
 
         assert response.status_code == 200
         assert self.ACTIVE_BADGE_MARKER in response.content.decode()
@@ -114,7 +114,7 @@ class ActiveFilterIndicatorTests(TestCase):
         skill = Skill.objects.create(name="Python")
         self.client.force_login(self.user)
 
-        response = self.client.get(reverse("assignment-list"), {"rol": str(skill.id)})
+        response = self.client.get(reverse("assignment-list"), {"rol": str(skill.public_id)})
 
         assert response.status_code == 200
         assert self.CLEAR_ALL_MARKER in response.content.decode()

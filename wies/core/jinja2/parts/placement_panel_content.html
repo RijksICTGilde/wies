@@ -58,7 +58,7 @@
     </c-data-list>
   </section>
   <section>
-    {% set colleague_url = '/opdrachten/?collega=' ~ colleague.id %}
+    {% set colleague_url = '/opdrachten/?collega=' ~ colleague.public_id %}
     <c-link href="{{ colleague_url }}"
             hx-get="{{ colleague_url }}"
             hx-target="#side_panel-content">

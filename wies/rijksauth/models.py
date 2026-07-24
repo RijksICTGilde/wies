@@ -2,6 +2,8 @@ from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.db import models
 from django.db.models.functions import Lower
 
+from wies.core.public_id import PUBLIC_ID_LENGTH, generate_public_id
+
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -17,6 +19,8 @@ class UserManager(BaseUserManager):
 
 class User(AbstractUser):
     username = None
+    # URL-facing identifier; the integer PK is never exposed in URLs.
+    public_id = models.CharField(max_length=PUBLIC_ID_LENGTH, default=generate_public_id, unique=True, editable=False)
     email = models.EmailField()
 
     # Stable OIDC subject identifier (issuer-unique `sub` claim). Bound on the

@@ -1,6 +1,6 @@
 {% for user in object_list %}
   <c-table-row class="clickable-row"
-               hx-get="{{ url('user-edit', args=[user.id]) }}"
+               hx-get="{{ url('user-edit', args=[user.public_id]) }}"
                hx-target="#userFormModal"
                hx-swap="innerHTML"
                title="Bewerk {{ user.first_name }} {{ user.last_name }}">

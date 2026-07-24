@@ -38,6 +38,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.permission_engine import Verb, registered_rules, rule
+from wies.core.public_id import generate_public_id
 from wies.core.services.users import create_user
 from wies.core.tests.inline_edit_helpers import post_inline_edit
 from wies.core.widgets import OrgPickerWidget
@@ -118,7 +119,7 @@ class InlineEditInfrastructureTest(TestCase):
         self.editables = _make_assignment_editables()
         self.url = reverse(
             "inline-edit",
-            args=["assignment", self.assignment.pk, "name"],
+            args=["assignment", self.assignment.public_id, "name"],
         )
 
     def tearDown(self):
@@ -126,11 +127,11 @@ class InlineEditInfrastructureTest(TestCase):
         REGISTRY.update(self._prev_registry)
 
     def test_unknown_model_returns_404(self):
-        resp = self.client.get(reverse("inline-edit", args=["unknown", 1, "name"]))
+        resp = self.client.get(reverse("inline-edit", args=["unknown", generate_public_id(), "name"]))
         assert resp.status_code == 404
 
     def test_unknown_name_returns_404(self):
-        url = reverse("inline-edit", args=["assignment", self.assignment.pk, "nope"])
+        url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "nope"])
         resp = self.client.get(url)
         assert resp.status_code == 404
 
@@ -220,7 +221,7 @@ class InlineEditPermissionTest(TestCase):
         # No placement, no ownership, no Beheerder perm → whole-object
         # rule update_assignment denies → alert rendered.
         _register(_make_set("ObjectDeniedEditables", Assignment, name=Editable()))
-        url = reverse("inline-edit", args=["assignment", self.assignment.pk, "name"])
+        url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
         resp = self.client.get(url + "?edit=true")
         assert resp.status_code == 200
         self.assertContains(resp, "geen rechten")
@@ -235,7 +236,7 @@ class InlineEditPermissionTest(TestCase):
         # otherwise allow.
         cls = _register(_make_set("FieldDeniedEditables", Assignment, name=Editable()))
         rule(Verb.UPDATE, cls.name)(lambda u, o: False)
-        url = reverse("inline-edit", args=["assignment", self.assignment.pk, "name"])
+        url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
         resp = self.client.get(url + "?edit=true")
         assert resp.status_code == 200
         self.assertContains(resp, "geen rechten")
@@ -243,7 +244,7 @@ class InlineEditPermissionTest(TestCase):
     def test_post_denied_does_not_save(self):
         cls = _register(_make_set("PostDeniedEditables", Assignment, name=Editable()))
         rule(Verb.UPDATE, cls.name)(lambda u, o: False)
-        url = reverse("inline-edit", args=["assignment", self.assignment.pk, "name"])
+        url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
         resp = self.client.post(url, {"name": "hacked"})
         assert resp.status_code == 200
         self.assertContains(resp, "geen rechten")
@@ -288,7 +289,7 @@ class InlineEditGroupTest(TestCase):
                 ),
             )
         )
-        self.url = reverse("inline-edit", args=["assignment", self.assignment.pk, "period"])
+        self.url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "period"])
 
     def tearDown(self):
         REGISTRY.clear()
@@ -381,7 +382,7 @@ class InlineEditCustomSaveTest(TestCase):
             obj.save()
 
         _register(_make_set("CustomSaveEditables", Assignment, name=Editable(save=_custom_save)))
-        self.url = reverse("inline-edit", args=["assignment", self.assignment.pk, "name"])
+        self.url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
 
     def tearDown(self):
         REGISTRY.clear()
@@ -420,7 +421,7 @@ class InlineEditDisplayTest(TestCase):
 
     def test_default_display_shows_current_value(self):
         _register(_make_set("DefaultDisplayEditables", Assignment, name=Editable()))
-        url = reverse("inline-edit", args=["assignment", self.assignment.pk, "name"])
+        url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
         resp = self.client.get(url)
         self.assertContains(resp, "Shown")
 
@@ -432,7 +433,7 @@ class InlineEditDisplayTest(TestCase):
                 name=Editable(display=lambda o: f"[[ {o.name} ]]"),
             )
         )
-        url = reverse("inline-edit", args=["assignment", self.assignment.pk, "name"])
+        url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
         resp = self.client.get(url)
         self.assertContains(resp, "[[ Shown ]]")
 
@@ -460,7 +461,7 @@ class AssignmentPanelRenderTest(TestCase):
     def test_panel_renders_edit_button_for_owner(self):
         """Loading the home page with ?opdracht=<id> renders the panel
         with the inline-edit pencil for name + extra_info."""
-        response = self.client.get(f"/?opdracht={self.assignment.id}")
+        response = self.client.get(f"/?opdracht={self.assignment.public_id}")
         assert response.status_code == 200
         self.assertContains(response, "Panel Assignment")
         # Edit icon present for this authorized user.
@@ -468,7 +469,7 @@ class AssignmentPanelRenderTest(TestCase):
         # Name should be addressable at the new inline-edit URL.
         self.assertContains(
             response,
-            f"/inline-edit/assignment/{self.assignment.id}/name/",
+            f"/inline-edit/assignment/{self.assignment.public_id}/name/",
         )
 
 
@@ -520,7 +521,7 @@ class AssignmentEditablesFullTest(TestCase):
         )
 
     def _url(self, name):
-        return reverse("inline-edit", args=["assignment", self.assignment.id, name])
+        return reverse("inline-edit", args=["assignment", self.assignment.public_id, name])
 
     def test_start_date_post_saves(self):
         resp = post_inline_edit(self.client, self._url("start_date"), {"start_date": "2026-05-01"})
@@ -576,20 +577,20 @@ class AssignmentEditablesFullTest(TestCase):
         # The navigation link to the owner's profile is supplied by the
         # editable's display_context, not a panel-only extra (#395).
         resp = self.client.get(self._url("owner"))
-        self.assertContains(resp, f"collega={self.colleague.id}")
+        self.assertContains(resp, f"collega={self.colleague.public_id}")
 
     def test_owner_link_survives_cancel(self):
         # Edit + cancel must re-render the link, not drop it to plain text (#395).
         resp = self.client.get(self._url("owner") + "?cancel=true")
         assert resp.status_code == 200
-        self.assertContains(resp, f"collega={self.colleague.id}")
+        self.assertContains(resp, f"collega={self.colleague.public_id}")
         self.assertContains(resp, f"mailto:{self.colleague.email}")
 
     def test_owner_link_survives_save(self):
         # A successful save re-renders the display; the link must persist (#395).
         resp = post_inline_edit(self.client, self._url("owner"), {"owner": self.colleague.id})
         assert resp.status_code == 200
-        self.assertContains(resp, f"collega={self.colleague.id}")
+        self.assertContains(resp, f"collega={self.colleague.public_id}")
 
 
 class AssignmentCreateFormIntegrationTest(TestCase):
@@ -665,7 +666,7 @@ class PlacementServiceEditablesTest(TestCase):
         assert hasattr(PlacementEditables, "colleague")
 
     def test_service_description_inline_edit_saves(self):
-        url = reverse("inline-edit", args=["service", self.service.id, "description"])
+        url = reverse("inline-edit", args=["service", self.service.public_id, "description"])
         resp = post_inline_edit(self.client, url, {"description": "Nieuwe dienst"})
         assert resp.status_code == 200
         self.service.refresh_from_db()
@@ -679,7 +680,7 @@ class PlacementServiceEditablesTest(TestCase):
         )
         c = Client()
         c.force_login(unrelated)
-        url = reverse("inline-edit", args=["service", self.service.id, "description"])
+        url = reverse("inline-edit", args=["service", self.service.public_id, "description"])
         resp = c.post(url, {"description": "Gehackt"})
         assert resp.status_code == 200
         self.assertContains(resp, "geen rechten")
@@ -689,7 +690,7 @@ class PlacementServiceEditablesTest(TestCase):
     def test_placement_period_edit_logs_event_on_assignment(self):
         """A period edit on a placement (the profile path) is mirrored as a
         Team event on the parent assignment timeline (#393)."""
-        url = reverse("inline-edit", args=["placement", self.placement.id, "period"])
+        url = reverse("inline-edit", args=["placement", self.placement.public_id, "period"])
         resp = post_inline_edit(
             self.client,
             url,
@@ -747,7 +748,7 @@ class AssignmentServicesDisplayTest(TestCase):
             source="wies",
             status="OPEN",
         )
-        self.url = reverse("inline-edit", args=["assignment", self.assignment.id, "services"])
+        self.url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "services"])
 
     def test_filled_row_is_clickable_to_placement_panel(self):
         resp = self.client.get(self.url + "?cancel=true")
@@ -833,7 +834,7 @@ class AssignmentServicesAuditTest(TestCase):
         self.vacant_service = Service.objects.create(
             description="Vacant", assignment=self.assignment, skill=self.skill_java, source="wies", status="OPEN"
         )
-        self.url = reverse("inline-edit", args=["assignment", self.assignment.id, "services"])
+        self.url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "services"])
 
     def _row(self, idx, *, service, skill, description, is_filled=False, colleague=None):
         data = {
@@ -1149,7 +1150,7 @@ class AssignmentServicesEditFormPeriodTest(TestCase):
             period_source=Placement.SERVICE,
         )
 
-        self.url = reverse("inline-edit", args=["assignment", self.assignment.id, "services"])
+        self.url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "services"])
 
     def test_initial_data_reflects_effective_period_per_row(self):
         """Direct check on ``_services_initial``: every row whose effective
@@ -1381,7 +1382,7 @@ class ServiceDescriptionPermissionTest(TestCase):
         Placement.objects.create(colleague=self.other, service=self.other_service, source="wies")
 
     def _desc_url(self, service):
-        return reverse("inline-edit", args=["service", service.id, "description"])
+        return reverse("inline-edit", args=["service", service.public_id, "description"])
 
     def test_placed_consultant_edits_own_description(self):
         self.client.force_login(self.placed_user)
@@ -1400,7 +1401,7 @@ class ServiceDescriptionPermissionTest(TestCase):
 
     def test_placed_consultant_cannot_edit_skill(self):
         self.client.force_login(self.placed_user)
-        url = reverse("inline-edit", args=["service", self.my_service.id, "skill"])
+        url = reverse("inline-edit", args=["service", self.my_service.public_id, "skill"])
         new_skill = Skill.objects.create(name="Andere rol")
         resp = self.client.post(url, {"skill": new_skill.id})
         assert resp.status_code == 200
@@ -1433,31 +1434,37 @@ class OrgPickerWidgetTest(TestCase):
         w = OrgPickerWidget()
         data = {
             "org-TOTAL_FORMS": "2",
-            "org-0-organization": str(self.org_a.id),
+            "org-0-organization": self.org_a.public_id,
             "org-0-role": "PRIMARY",
-            "org-1-organization": str(self.org_b.id),
+            "org-1-organization": self.org_b.public_id,
             "org-1-role": "INVOLVED",
         }
         parsed = w.value_from_datadict(data, {}, "organizations")
         assert parsed == [
-            {"organization": str(self.org_a.id), "role": "PRIMARY"},
-            {"organization": str(self.org_b.id), "role": "INVOLVED"},
+            {"organization": self.org_a.public_id, "role": "PRIMARY"},
+            {"organization": self.org_b.public_id, "role": "INVOLVED"},
         ]
 
     def test_widget_ignores_missing_total_forms(self):
         assert OrgPickerWidget().value_from_datadict({}, {}, "organizations") == []
 
-    def test_field_resolves_org_ids_to_instances(self):
+    def test_field_resolves_public_ids_to_instances(self):
         f = OrganizationsField(required=True)
         cleaned = f.clean(
             [
-                {"organization": self.org_a.id, "role": "PRIMARY"},
-                {"organization": self.org_b.id, "role": "INVOLVED"},
+                {"organization": self.org_a.public_id, "role": "PRIMARY"},
+                {"organization": self.org_b.public_id, "role": "INVOLVED"},
             ]
         )
         assert cleaned[0]["organization"] == self.org_a
         assert cleaned[0]["role"] == "PRIMARY"
         assert cleaned[1]["organization"] == self.org_b
+
+    def test_field_rejects_pk_posing_as_public_id(self):
+        # The client only ever sees public_ids; a raw pk must not resolve.
+        f = OrganizationsField(required=True)
+        with self.assertRaises(ValidationError):  # noqa: PT027
+            f.clean([{"organization": str(self.org_a.id), "role": "PRIMARY"}])
 
     def test_field_requires_exactly_one_primary(self):
         f = OrganizationsField(required=True)
@@ -1465,8 +1472,8 @@ class OrgPickerWidgetTest(TestCase):
         with self.assertRaises(ValidationError) as exc:  # noqa: PT027
             f.clean(
                 [
-                    {"organization": self.org_a.id, "role": "INVOLVED"},
-                    {"organization": self.org_b.id, "role": "INVOLVED"},
+                    {"organization": self.org_a.public_id, "role": "INVOLVED"},
+                    {"organization": self.org_b.public_id, "role": "INVOLVED"},
                 ]
             )
         assert "primaire" in str(exc.exception).lower()
@@ -1476,10 +1483,10 @@ class OrgPickerWidgetTest(TestCase):
         with self.assertRaises(ValidationError):  # noqa: PT027
             f.clean([])
 
-    def test_field_rejects_unknown_org_id(self):
+    def test_field_rejects_unknown_public_id(self):
         f = OrganizationsField(required=True)
         with self.assertRaises(ValidationError):  # noqa: PT027
-            f.clean([{"organization": 99999, "role": "PRIMARY"}])
+            f.clean([{"organization": generate_public_id(), "role": "PRIMARY"}])
 
 
 class InlineOrganizationsEditTest(TestCase):
@@ -1505,15 +1512,15 @@ class InlineOrganizationsEditTest(TestCase):
         self.org_b = OrganizationUnit.objects.create(name="Org B")
 
     def test_post_with_two_orgs_persists_through_rows(self):
-        url = reverse("inline-edit", args=["assignment", self.assignment.id, "organizations"])
+        url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "organizations"])
         post_inline_edit(
             self.client,
             url,
             {
                 "org-TOTAL_FORMS": "2",
-                "org-0-organization": self.org_a.id,
+                "org-0-organization": self.org_a.public_id,
                 "org-0-role": "PRIMARY",
-                "org-1-organization": self.org_b.id,
+                "org-1-organization": self.org_b.public_id,
                 "org-1-role": "INVOLVED",
             },
         )
@@ -1526,14 +1533,14 @@ class InlineOrganizationsEditTest(TestCase):
         }
 
     def test_post_without_primary_shows_error(self):
-        url = reverse("inline-edit", args=["assignment", self.assignment.id, "organizations"])
+        url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "organizations"])
         resp = self.client.post(
             url,
             {
                 "org-TOTAL_FORMS": "2",
-                "org-0-organization": self.org_a.id,
+                "org-0-organization": self.org_a.public_id,
                 "org-0-role": "INVOLVED",
-                "org-1-organization": self.org_b.id,
+                "org-1-organization": self.org_b.public_id,
                 "org-1-role": "INVOLVED",
             },
         )
@@ -1545,13 +1552,13 @@ class InlineOrganizationsEditTest(TestCase):
         confirms the GET ?edit=true path reads through OrganizationsField."""
         AssignmentOrganizationUnit.objects.create(assignment=self.assignment, organization=self.org_a, role="PRIMARY")
         AssignmentOrganizationUnit.objects.create(assignment=self.assignment, organization=self.org_b, role="INVOLVED")
-        url = reverse("inline-edit", args=["assignment", self.assignment.id, "organizations"])
+        url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "organizations"])
         resp = self.client.get(url + "?edit=true")
         assert resp.status_code == 200
-        # Hidden inputs generated by OrgPickerWidget carry the two
-        # org ids and their roles from the initial payload.
-        self.assertContains(resp, f'data-org-id="{self.org_a.id}"')
-        self.assertContains(resp, f'data-org-id="{self.org_b.id}"')
+        # Hidden inputs generated by OrgPickerWidget carry the two org
+        # public_ids and their roles from the initial payload.
+        self.assertContains(resp, f'data-org-id="{self.org_a.public_id}"')
+        self.assertContains(resp, f'data-org-id="{self.org_b.public_id}"')
         self.assertContains(resp, 'data-org-role="PRIMARY"')
         self.assertContains(resp, 'data-org-role="INVOLVED"')
 
@@ -1563,7 +1570,7 @@ class InlineOrganizationsEditTest(TestCase):
         directorate = OrganizationUnit.objects.create(name="Directie Y", label="DirY", parent=ministry)
         team = OrganizationUnit.objects.create(name="Team Z", label="TeamZ", parent=directorate)
         AssignmentOrganizationUnit.objects.create(assignment=self.assignment, organization=team, role="PRIMARY")
-        url = reverse("inline-edit", args=["assignment", self.assignment.id, "organizations"])
+        url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "organizations"])
         resp = self.client.get(url)
         assert resp.status_code == 200
         content = resp.content.decode()
@@ -1604,7 +1611,7 @@ class ColleagueLabelsInlineEditTest(TestCase):
         within Expertise but leave the Thema label untouched."""
         url = reverse(
             "inline-edit",
-            args=["colleague", self.colleague.id, f"labels_{self.expertise.id}"],
+            args=["colleague", self.colleague.public_id, f"labels_{self.expertise.id}"],
         )
         resp = post_inline_edit(self.client, url, {"labels": [self.label_cloud.id]})
         assert resp.status_code == 200
@@ -1614,7 +1621,7 @@ class ColleagueLabelsInlineEditTest(TestCase):
     def test_get_display_shows_current_category_labels(self):
         url = reverse(
             "inline-edit",
-            args=["colleague", self.colleague.id, f"labels_{self.expertise.id}"],
+            args=["colleague", self.colleague.public_id, f"labels_{self.expertise.id}"],
         )
         resp = self.client.get(url)
         assert resp.status_code == 200
@@ -1626,7 +1633,7 @@ class ColleagueLabelsInlineEditTest(TestCase):
     def test_unknown_category_id_returns_404(self):
         url = reverse(
             "inline-edit",
-            args=["colleague", self.colleague.id, "labels_999999"],
+            args=["colleague", self.colleague.public_id, "labels_999999"],
         )
         resp = self.client.get(url)
         assert resp.status_code == 404
@@ -1634,7 +1641,7 @@ class ColleagueLabelsInlineEditTest(TestCase):
     def test_non_integer_suffix_returns_404(self):
         url = reverse(
             "inline-edit",
-            args=["colleague", self.colleague.id, "labels_abc"],
+            args=["colleague", self.colleague.public_id, "labels_abc"],
         )
         resp = self.client.get(url)
         assert resp.status_code == 404
@@ -1661,7 +1668,7 @@ class UserProfileColleagueAutoCreateTest(TestCase):
 
     def test_first_name_save_creates_colleague(self):
         assert not Colleague.objects.filter(user=self.user).exists()
-        url = reverse("inline-edit", args=["user", self.user.id, "first_name"])
+        url = reverse("inline-edit", args=["user", self.user.public_id, "first_name"])
         resp = post_inline_edit(self.client, url, {"first_name": "Nieuwe"})
         assert resp.status_code == 200
         colleague = Colleague.objects.get(user=self.user)
@@ -1669,7 +1676,7 @@ class UserProfileColleagueAutoCreateTest(TestCase):
         assert colleague.name == "Nieuwe Naam"
 
     def test_subsequent_last_name_save_updates_colleague_name(self):
-        url_last = reverse("inline-edit", args=["user", self.user.id, "last_name"])
+        url_last = reverse("inline-edit", args=["user", self.user.public_id, "last_name"])
         post_inline_edit(self.client, url_last, {"last_name": "Anders"})
         colleague = Colleague.objects.get(user=self.user)
         assert colleague.name == "Oud Anders"

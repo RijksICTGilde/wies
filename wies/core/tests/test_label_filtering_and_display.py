@@ -84,7 +84,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by Rijks ICT Gilde label
-        response = self.client.get(reverse("admin-users"), {"labels": self.rig_label.id})
+        response = self.client.get(reverse("admin-users"), {"labels": self.rig_label.public_id})
         assert response.status_code == 200
 
         # user1 and user3 have RIG label, user2 doesn't
@@ -97,7 +97,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by Rijksconsultants label
-        response = self.client.get(reverse("admin-users"), {"labels": self.rc_label.id})
+        response = self.client.get(reverse("admin-users"), {"labels": self.rc_label.public_id})
         assert response.status_code == 200
 
         # Only user2 has RC label
@@ -134,7 +134,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by Rijks ICT Gilde label
-        response = self.client.get(reverse("home"), {"labels": self.rig_label.id})
+        response = self.client.get(reverse("home"), {"labels": self.rig_label.public_id})
         assert response.status_code == 200
 
         # colleague1 and colleague3 have RIG label, colleague2 doesn't
@@ -147,7 +147,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by I-Interim Rijk label
-        response = self.client.get(reverse("home"), {"labels": self.iir_label.id})
+        response = self.client.get(reverse("home"), {"labels": self.iir_label.public_id})
         assert response.status_code == 200
 
         # Only colleague2 has IIR label
@@ -160,7 +160,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by both label and skill
-        response = self.client.get(reverse("home"), {"labels": self.rig_label.id, "rol": self.skill.id})
+        response = self.client.get(reverse("home"), {"labels": self.rig_label.public_id, "rol": self.skill.public_id})
         assert response.status_code == 200
 
         # Should show placements matching both filters
@@ -203,7 +203,7 @@ class LabelFilteringAndDisplayTest(TestCase):
             colleague.labels.add(self.rig_label)
 
         # Request first page with label filter
-        response = self.client.get(reverse("admin-users"), {"labels": self.rig_label.id, "pagina": 1})
+        response = self.client.get(reverse("admin-users"), {"labels": self.rig_label.public_id, "pagina": 1})
         assert response.status_code == 200
 
         # All users on this page should have the label
@@ -230,7 +230,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Both colleague1 and colleague3 have rig_label
-        response = self.client.get(reverse("home"), {"labels": self.rig_label.id})
+        response = self.client.get(reverse("home"), {"labels": self.rig_label.public_id})
         assert response.status_code == 200
 
         # Both should be in results

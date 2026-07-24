@@ -18,7 +18,7 @@
       {% if row.colleague %}
         {% set pl = row.placement %}
         <div class="rvo-item-list__item rvo-item-list__item--filled{% if pl %} clickable-row{% endif %}"
-             {% if pl %}hx-get="/?plaatsing={{ pl.id }}" hx-target="#side_panel-content" hx-swap="innerHTML"{% endif %}>
+             {% if pl %}hx-get="/?plaatsing={{ pl.public_id }}" hx-target="#side_panel-content" hx-swap="innerHTML"{% endif %}>
           <div class="service-card__name">
             <div class="user-avatar">{{ row.colleague.name|first|upper }}</div>
             <span><strong>{{ row.colleague.name }}</strong> · {{ row.skill_name }}</span>
