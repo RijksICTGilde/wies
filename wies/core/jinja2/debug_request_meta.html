@@ -48,5 +48,34 @@
     <pre>{{ user_agent }}</pre>
     <h2>Server-tijd</h2>
     <pre>{{ server_time }}</pre>
+    <h2>Laatste login-events (jij)</h2>
+    <p>
+      Ter controle dat IP en User-Agent op login-events worden vastgelegd. Toont
+      alleen jouw eigen recente login-events.
+    </p>
+    {% if recent_auth_events %}
+      <table class="rvo-table">
+        <thead class="rvo-table-head">
+          <tr class="rvo-table-row">
+            <th class="rvo-table-header" scope="col">Tijd</th>
+            <th class="rvo-table-header" scope="col">Event</th>
+            <th class="rvo-table-header" scope="col">IP</th>
+            <th class="rvo-table-header" scope="col">User-Agent</th>
+          </tr>
+        </thead>
+        <tbody class="rvo-table-body">
+          {% for event in recent_auth_events %}
+            <tr class="rvo-table-row">
+              <td class="rvo-table-cell">{{ event.timestamp }}</td>
+              <td class="rvo-table-cell">{{ event.name }}</td>
+              <td class="rvo-table-cell">{{ event.ip or "(leeg)" }}</td>
+              <td class="rvo-table-cell">{{ event.user_agent or "(leeg)" }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <pre>(geen login-events gevonden)</pre>
+    {% endif %}
   </div>
 {% endblock content %}

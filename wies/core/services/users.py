@@ -60,9 +60,10 @@ def _find_or_create_colleague_for_user(user, first_name, last_name, email, *, so
     return Colleague.objects.create(user=user, name=name, email=email, source=source)
 
 
-def create_user(creator: User, first_name, last_name, email, labels=None, groups=None):
+def create_user(creator: User, first_name, last_name, email, labels=None, groups=None, request=None):
     """
     :param creator: can be None when user create is triggered from system itself
+    :param request: optional, for logging client IP + User-Agent on the audit event
     """
 
     if groups is None:
@@ -102,15 +103,17 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
         source="user",
         object_id=user.id,
         user=creator,
+        request=request,
         context=context,
     )
 
     return user
 
 
-def update_user(updater, user, first_name, last_name, email, labels=None, groups=None):
+def update_user(updater, user, first_name, last_name, email, labels=None, groups=None, request=None):
     """
     :param updater: user that performs the update action. Can be None if done by system
+    :param request: optional, for logging client IP + User-Agent on the audit event
     """
 
     if groups is None:
@@ -150,6 +153,7 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
         source="user",
         object_id=user.id,
         user=updater,
+        request=request,
         context=context,
     )
     return user

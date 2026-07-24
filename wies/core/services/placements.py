@@ -67,7 +67,7 @@ def filter_visible_placements(queryset, today, viewer):
     return queryset.filter(started | Q(colleague_id=viewer.id) | Q(service__assignment__owner_id=viewer.id))
 
 
-def create_assignments_from_csv(creator, csv_content: str):
+def create_assignments_from_csv(creator, csv_content: str, request=None):
     """
     Create colleagues, assignments, services and placements from csv.
 
@@ -203,6 +203,7 @@ def create_assignments_from_csv(creator, csv_content: str):
                         source="user",
                         object_id=assignment.id,
                         user=creator,
+                        request=request,
                         context={
                             "assignment_name": assignment.name,
                         },

@@ -172,11 +172,12 @@ class EditableSet:
     _editables: dict[str, Editable | EditableGroup | EditableCollection]
     model: type[Model]  # Resolved from `Meta.model` by __init_subclass__.
 
-    # Optional ``(obj, user) -> context manager`` wrapped around the save and
-    # its audit event. Lets a model record the edit somewhere else as well,
-    # e.g. a Placement mirroring onto its assignment's timeline, without the
-    # generic view needing to know which model it is holding.
-    audit_mirror: Callable[[Model, Any], AbstractContextManager[None]] | None = None
+    # Optional ``(obj, user, request) -> context manager`` wrapped around the
+    # save and its audit event. Lets a model record the edit somewhere else as
+    # well, e.g. a Placement mirroring onto its assignment's timeline, without
+    # the generic view needing to know which model it is holding. ``request`` is
+    # threaded through so the mirrored event can log the originating IP.
+    audit_mirror: Callable[[Model, Any, Any], AbstractContextManager[None]] | None = None
 
     # Whether inline edits of this model are recorded as audit events.
     audit_events: bool = False

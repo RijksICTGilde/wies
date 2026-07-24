@@ -45,6 +45,9 @@ class AuthEvent(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     user_email = models.EmailField(max_length=255, blank=True, db_index=True)
     name = models.CharField(max_length=32, db_index=True)
+    # device approximation for BIO: network IP + User-Agent (best-effort)
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=512, blank=True, default="")
     context = models.JSONField(default=dict)
 
     def __str__(self):
