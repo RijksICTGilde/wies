@@ -19,6 +19,7 @@ from wies.core.editables import (
 )
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill
 from wies.core.permission_engine import Verb, has_permission
+from wies.core.public_id import generate_public_id
 
 User = get_user_model()
 
@@ -155,7 +156,7 @@ class PlacementPermissionTest(_Setup):
     def test_placed_consultant_cannot_replace_colleague_via_endpoint(self):
         client = Client()
         client.force_login(self.placed_user)
-        url = reverse("inline-edit", args=["placement", self.placement.id, "colleague"])
+        url = reverse("inline-edit", args=["placement", self.placement.public_id, "colleague"])
         # Try to replace the colleague — should be denied.
         new_colleague = Colleague.objects.create(name="Stolen", email="x@x.nl", source="wies")
         resp = client.post(url, {"colleague": new_colleague.id})
@@ -185,28 +186,28 @@ class InlineEditExistenceOracleTest(_Setup):
         self.placement.period_source = Placement.PLACEMENT
         self.placement.save()
 
-    def _get(self, pk):
-        return self.client.get(reverse("inline-edit", args=["placement", pk, "period"]))
+    def _get(self, public_id):
+        return self.client.get(reverse("inline-edit", args=["placement", public_id, "period"]))
 
     def test_existing_forbidden_and_missing_are_indistinguishable(self):
         """An unrelated consultant cannot edit this placement (update_placement is
         owner-only) and cannot see it (it is planned). The response for the real,
-        hidden placement must match the response for a non-existent PK."""
+        hidden placement must match the response for a non-existent public_id."""
         self.client.force_login(self.unrelated_user)
-        missing_pk = self.placement.pk + 100_000
+        missing_public_id = generate_public_id()
 
-        forbidden = self._get(self.placement.pk)
-        missing = self._get(missing_pk)
+        forbidden = self._get(self.placement.public_id)
+        missing = self._get(missing_public_id)
 
         assert forbidden.status_code == missing.status_code
-        normalize = lambda resp, pk: resp.content.decode().replace(str(pk), "PK")  # noqa: E731
-        assert normalize(forbidden, self.placement.pk) == normalize(missing, missing_pk)
+        normalize = lambda resp, pid: resp.content.decode().replace(str(pid), "ID")  # noqa: E731
+        assert normalize(forbidden, self.placement.public_id) == normalize(missing, missing_public_id)
 
     def test_forbidden_response_leaks_no_object_data(self):
         """The denial response must not carry the hidden colleague's name."""
         self.client.force_login(self.unrelated_user)
 
-        response = self._get(self.placement.pk)
+        response = self._get(self.placement.public_id)
 
         assert response.status_code == 200
         self.assertNotContains(response, "P L")

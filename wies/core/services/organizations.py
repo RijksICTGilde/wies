@@ -566,9 +566,9 @@ def find_orgs_by_abbreviation(search_term: str) -> list[dict]:
         qs = qs.exclude(id__in=excluded_ids)
     term_lower = term.lower()
     results = []
-    for org in qs.values("id", "label", "name", "abbreviations"):
+    for org in qs.values("id", "public_id", "label", "name", "abbreviations"):
         if any(abbr.lower() == term_lower for abbr in (org["abbreviations"] or [])):
-            results.append({"id": org["id"], "label": org["label"], "name": org["name"]})
+            results.append({"public_id": org["public_id"], "label": org["label"], "name": org["name"]})
             if len(results) >= _MAX_ABBREVIATION_RESULTS:
                 break
     return results
@@ -580,12 +580,12 @@ def get_org_breadcrumb(org: OrganizationUnit, base_url: str = "/") -> dict:
     current = org.parent
     while current:
         label = current.abbreviation or current.label or current.name
-        ancestors.append({"label": label, "url": f"{base_url}?org={current.id}"})
+        ancestors.append({"label": label, "url": f"{base_url}?org={current.public_id}"})
         current = current.parent
     ancestors.reverse()
 
     is_self = org.children.filter(assignment_relations__isnull=False).exists()
     label = org.label or org.name
-    url = f"{base_url}?org_self={org.id}" if is_self else f"{base_url}?org={org.id}"
+    url = f"{base_url}?org_self={org.public_id}" if is_self else f"{base_url}?org={org.public_id}"
 
     return {"label": label, "url": url, "ancestors": ancestors}

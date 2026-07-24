@@ -57,7 +57,7 @@ class LabelManagementIntegrationTest(TestCase):
 
         # Step 2: Create a label in that category
         response = self.client.post(
-            f"/beheer/labels/categorie/{category.id}/labels/aanmaken/", {"name": "Test Label"}, follow=True
+            f"/beheer/labels/categorie/{category.public_id}/labels/aanmaken/", {"name": "Test Label"}, follow=True
         )
         assert response.status_code == 200
 
@@ -85,7 +85,9 @@ class LabelManagementIntegrationTest(TestCase):
         self.assertContains(response, "Test Label")
 
         # Step 5: Delete the category (should cascade to label and remove from colleague)
-        response = self.client.post(reverse("label-category-delete", kwargs={"pk": category.id}), follow=True)
+        response = self.client.post(
+            reverse("label-category-delete", kwargs={"public_id": category.public_id}), follow=True
+        )
         assert response.status_code == 200
 
         # Verify category and label are deleted
@@ -116,7 +118,7 @@ class LabelManagementIntegrationTest(TestCase):
 
         # Edit the label
         response = self.client.post(
-            reverse("label-edit", kwargs={"pk": label.id}),
+            reverse("label-edit", kwargs={"public_id": label.public_id}),
             {"name": "Updated Name", "category": category.id},
             follow=True,
         )
@@ -146,7 +148,7 @@ class LabelManagementIntegrationTest(TestCase):
         category = LabelCategory.objects.create(name="Test", color="#111111")
 
         # Attempt to delete as regular user
-        response = self.client.post(reverse("label-category-delete", kwargs={"pk": category.id}))
+        response = self.client.post(reverse("label-category-delete", kwargs={"public_id": category.public_id}))
         assert response.status_code == 403
 
         # Verify category still exists
@@ -176,7 +178,9 @@ class LabelManagementIntegrationTest(TestCase):
         colleague2.labels.add(label2, label3)
 
         # Delete the category
-        response = self.client.post(reverse("label-category-delete", kwargs={"pk": category.id}), follow=True)
+        response = self.client.post(
+            reverse("label-category-delete", kwargs={"public_id": category.public_id}), follow=True
+        )
         assert response.status_code == 200
 
         # Verify all labels are deleted
@@ -197,7 +201,7 @@ class LabelManagementIntegrationTest(TestCase):
         Label.objects.create(name="Duplicate Name", category=category)
 
         # Attempt to create another label with same name in same category
-        self.client.post(f"/beheer/labels/categorie/{category.id}/labels/aanmaken/", {"name": "Duplicate Name"})
+        self.client.post(f"/beheer/labels/categorie/{category.public_id}/labels/aanmaken/", {"name": "Duplicate Name"})
 
         # Should show error or validation failure
         # The exact status depends on form validation - could be 200 with error message
@@ -215,14 +219,14 @@ class LabelManagementIntegrationTest(TestCase):
 
         # Create label with same name in both categories
         response1 = self.client.post(
-            f"/beheer/labels/categorie/{category1.id}/labels/aanmaken/",
+            f"/beheer/labels/categorie/{category1.public_id}/labels/aanmaken/",
             {"name": "Common Name"},
         )
 
         assert response1.status_code == 200
 
         response2 = self.client.post(
-            f"/beheer/labels/categorie/{category2.id}/labels/aanmaken/", {"name": "Common Name"}, follow=True
+            f"/beheer/labels/categorie/{category2.public_id}/labels/aanmaken/", {"name": "Common Name"}, follow=True
         )
         assert response2.status_code == 200
 

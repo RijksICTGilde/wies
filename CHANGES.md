@@ -6,6 +6,7 @@ This files lists the changes during the lifetime of this project.
 
 - 483: inline editing now detects concurrent edits instead of silently overwriting. If the data changed since you opened the edit form, the form comes back with a warning that names the field and the value someone else entered, keeping your own input; Opslaan saves anyway, Annuleren shows the changed data. This covers every inline-editable field (including the team and period forms), and an edit submitted without the form's token (for example a page left open across a deploy) is likewise held back with the same warning instead of saved unverified.
 - 480: the OIDC login now uses PKCE (S256) in the authorization-code flow. The government OIDC profile (OIDC-NLGov, sections 4.1 and 4.2.1) requires this for every client: https://gitdocumentatie.logius.nl/publicatie/api/oidc/
+- 474: (migration) plekken die een object of filter in de URL zetten gebruiken nu een onraadbare identifier (`public_id`, een korte base58-token) in plaats van het volgnummer, zodat records en overzichten niet meer op te sommen zijn door id's op te hogen. Dit dekt opdrachten, collega's, plaatsingen, diensten, gebruikers en labels (paneel- en beheer-URL's + inline bewerken) én de filters op opdrachtgever, rol en label (`?org=`, `?rol=`, `?labels=`, inclusief de organisatie-boom in de modal). Het interne id blijft ongewijzigd en intern in gebruik.
 
 ## 2026-07-23
 

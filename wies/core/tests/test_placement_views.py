@@ -720,21 +720,21 @@ class PlacementPanelVisibilityTest(TestCase):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         pl = self._placement(start=date(2024, 1, 1), end=date(2026, 6, 14), owner=self.colleague_bob)
 
-        assert _resolve_placement_panel(self._request(self.user_unrelated), pl.id) is None
+        assert _resolve_placement_panel(self._request(self.user_unrelated), pl.public_id) is None
 
     @patch("wies.core.views.timezone")
     def test_future_placement_denied_to_unrelated(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         pl = self._placement(start=date(2026, 8, 1), end=date(2026, 12, 1), owner=self.colleague_bob)
 
-        assert _resolve_placement_panel(self._request(self.user_unrelated), pl.id) is None
+        assert _resolve_placement_panel(self._request(self.user_unrelated), pl.public_id) is None
 
     @patch("wies.core.views.timezone")
     def test_ended_placement_shown_to_colleague_with_note(self, mock_tz):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         pl = self._placement(start=date(2024, 1, 1), end=date(2026, 6, 14), owner=self.colleague_bob)
 
-        data = _resolve_placement_panel(self._request(self.user_alice), pl.id)
+        data = _resolve_placement_panel(self._request(self.user_alice), pl.public_id)
 
         assert data is not None
         card = data["assignment_card"]
@@ -747,7 +747,7 @@ class PlacementPanelVisibilityTest(TestCase):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         pl = self._placement(start=date(2026, 8, 1), end=date(2026, 12, 1), owner=self.colleague_bob)
 
-        data = _resolve_placement_panel(self._request(self.user_bob), pl.id)
+        data = _resolve_placement_panel(self._request(self.user_bob), pl.public_id)
 
         assert data is not None
         card = data["assignment_card"]
@@ -759,7 +759,7 @@ class PlacementPanelVisibilityTest(TestCase):
         mock_tz.now.return_value = Mock(date=Mock(return_value=date(2026, 6, 15)))
         pl = self._placement(start=date(2026, 1, 1), end=date(2026, 12, 1), owner=self.colleague_bob)
 
-        data = _resolve_placement_panel(self._request(self.user_unrelated), pl.id)
+        data = _resolve_placement_panel(self._request(self.user_unrelated), pl.public_id)
 
         assert data is not None
         assert data["assignment_card"]["privacy_warning_text"] is None
@@ -1446,6 +1446,22 @@ class PlacementOrganizationFilterTest(TestCase):
         view.request = request
         return view.get_queryset()
 
+    def test_org_filter_rejects_sequential_pk(self):
+        """Anti-enumeration: the org's integer pk is not a usable filter token, so
+        it can't isolate (harvest) that org's placements — only its public_id can."""
+        p_ministry = self._create_placement_for_org(self.ministry)
+        p_other = self._create_placement_for_org(self.other_org)
+
+        # The public_id isolates the ministry's placement...
+        by_public_id = list(self._get_queryset({"org": str(self.ministry.public_id)}).values_list("id", flat=True))
+        assert p_ministry.id in by_public_id
+        assert p_other.id not in by_public_id
+
+        # ...while the raw pk resolves to no org, so it applies no filter at all.
+        by_pk = list(self._get_queryset({"org": str(self.ministry.pk)}).values_list("id", flat=True))
+        assert p_ministry.id in by_pk
+        assert p_other.id in by_pk
+
     def test_no_org_filter_returns_all(self):
         """Without org params, all active placements are returned."""
         p1 = self._create_placement_for_org(self.ministry)
@@ -1462,7 +1478,7 @@ class PlacementOrganizationFilterTest(TestCase):
         p_team = self._create_placement_for_org(self.team)
         p_other = self._create_placement_for_org(self.other_org)
 
-        qs = self._get_queryset({"org": str(self.ministry.id)})
+        qs = self._get_queryset({"org": str(self.ministry.public_id)})
         ids = list(qs.values_list("id", flat=True))
 
         assert p_ministry.id in ids, "Ministry placement should be included"
@@ -1477,7 +1493,7 @@ class PlacementOrganizationFilterTest(TestCase):
         p_team = self._create_placement_for_org(self.team)
         p_other = self._create_placement_for_org(self.other_org)
 
-        qs = self._get_queryset({"org": str(self.dept.id)})
+        qs = self._get_queryset({"org": str(self.dept.public_id)})
         ids = list(qs.values_list("id", flat=True))
 
         assert p_dept.id in ids
@@ -1490,7 +1506,7 @@ class PlacementOrganizationFilterTest(TestCase):
         p_dept = self._create_placement_for_org(self.dept)
         p_team = self._create_placement_for_org(self.team)
 
-        qs = self._get_queryset({"org_self": str(self.ministry.id)})
+        qs = self._get_queryset({"org_self": str(self.ministry.public_id)})
         ids = list(qs.values_list("id", flat=True))
 
         assert p_ministry.id in ids, "Direct ministry placement should be included"
@@ -1502,7 +1518,7 @@ class PlacementOrganizationFilterTest(TestCase):
         p_ministry = self._create_placement_for_org(self.ministry)
         p_dept = self._create_placement_for_org(self.dept)
 
-        qs = self._get_queryset({"org": str(self.ministry.id), "org_self": str(self.ministry.id)})
+        qs = self._get_queryset({"org": str(self.ministry.public_id), "org_self": str(self.ministry.public_id)})
         ids = list(qs.values_list("id", flat=True))
 
         # No duplicates
@@ -1515,7 +1531,7 @@ class PlacementOrganizationFilterTest(TestCase):
         p_ministry = self._create_placement_for_org(self.ministry)
         p_other = self._create_placement_for_org(self.other_org)
 
-        qs = self._get_queryset({"org": [str(self.ministry.id), str(self.other_org.id)]})
+        qs = self._get_queryset({"org": [str(self.ministry.public_id), str(self.other_org.public_id)]})
         ids = list(qs.values_list("id", flat=True))
 
         assert p_ministry.id in ids
@@ -1540,7 +1556,7 @@ class PlacementOrganizationFilterTest(TestCase):
             colleague=colleague2, service=service2, period_source="ASSIGNMENT", source="wies"
         )
 
-        qs = self._get_queryset({"org": str(self.ministry.id), "rol": str(self.skill.id)})
+        qs = self._get_queryset({"org": str(self.ministry.public_id), "rol": str(self.skill.public_id)})
         ids = list(qs.values_list("id", flat=True))
 
         assert p_correct.id in ids, "Placement with correct org and skill should be included"
@@ -1834,7 +1850,7 @@ class ClientModalPlacementCountVisibilityTest(TestCase):
         self.client.force_login(user)
         response = self.client.get(reverse("client-modal"))
         assert response.status_code == 200
-        return _modal_org_self_counts(response).get(self.org.id, 0)
+        return _modal_org_self_counts(response).get(self.org.public_id, 0)
 
     def test_planned_placement_not_counted_for_unrelated_viewer(self):
         """A not-yet-started placement is private; its org count must not betray it."""
