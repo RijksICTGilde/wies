@@ -1663,7 +1663,7 @@ def user_import_csv(request):
                 {"result": {"success": False, "errors": ["Ongeldige bestandscodering. Gebruik UTF-8."]}},
             )
 
-        result = create_users_from_csv(request.user, csv_content)
+        result = create_users_from_csv(request.user, csv_content, request=request)
 
         # Return results in the form
         return render(request, "user_import.html", {"result": result})
