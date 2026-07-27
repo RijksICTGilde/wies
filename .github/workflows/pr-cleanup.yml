@@ -8,10 +8,17 @@ env:
   IMAGE_TAG: pr-${{ github.event.pull_request.number }}
   DEPLOYMENT_NAME: pr-${{ github.event.pull_request.number }}
 
+# Deny by default; the job grants itself the minimum it needs.
+permissions: {}
+
 jobs:
   cleanup:
     runs-on: ubuntu-latest
 
+    # This is `pull_request` (not `pull_request_target`), so for a fork PR the
+    # GITHUB_TOKEN is read-only and these write scopes are inert — cleanup of a
+    # fork PR's resources silently no-ops. Do NOT switch to pull_request_target
+    # to "fix" that: it would hand this write token plus secrets to fork code.
     permissions:
       actions: write
       contents: read
@@ -78,7 +85,7 @@ jobs:
 
       - name: Cleanup ZAD deployment and moving image tag
         continue-on-error: true
-        uses: RijksICTGilde/zad-actions/cleanup@v4
+        uses: RijksICTGilde/zad-actions/cleanup@13434cd415db0cd195a2c5f12bf67645acfcb635 # v4
         with:
           api-key: ${{ secrets.ZAD_API_KEY }}
           project-id: wies
