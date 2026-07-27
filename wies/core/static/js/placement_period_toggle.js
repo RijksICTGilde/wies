@@ -2,12 +2,16 @@
   const checkbox = document.getElementById("placement-inherit-period");
   if (!checkbox) return;
 
-  const form = checkbox.closest("form");
-  const hiddenSelect = form.querySelector("[data-period-source]");
-  const serviceStart = form.dataset.serviceStart || null;
-  const serviceEnd = form.dataset.serviceEnd || null;
-  const startInput = form.querySelector("[data-specific-start]");
-  const endInput = form.querySelector("[data-specific-end]");
+  // Scoped to the period body, not the surrounding form: the form element is
+  // owned by the generic inline-edit wrapper and carries no period data.
+  const root = checkbox.closest("[data-placement-period]");
+  if (!root) return;
+
+  const hiddenSelect = root.querySelector("[data-period-source]");
+  const serviceStart = root.dataset.serviceStart || null;
+  const serviceEnd = root.dataset.serviceEnd || null;
+  const startInput = root.querySelector("[data-specific-start]");
+  const endInput = root.querySelector("[data-specific-end]");
 
   function update() {
     const inherit = checkbox.checked;

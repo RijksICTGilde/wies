@@ -362,6 +362,8 @@ class AssignmentEditables(EditableSet):
     class Meta:
         model = Assignment
 
+    audit_events = True
+
     name = Editable(
         label="Opdracht naam",
         error_messages={"required": "Opdracht naam is verplicht"},
