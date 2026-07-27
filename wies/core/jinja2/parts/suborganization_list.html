@@ -14,7 +14,7 @@
       {% for suborganization in suborganizations %}
         <c-table-row class="clickable-row"
                      hx-get="{{ url('suborganization-edit', kwargs={'pk': suborganization.pk}) }}"
-                     hx-target="#merkFormModal"
+                     hx-target="#suborganizationFormModal"
                      hx-swap="innerHTML"
                      title="Bewerk {{ suborganization.name }}">
           <c-table-cell>
@@ -39,7 +39,7 @@
   <form class="label-form"
         hx-post="{{ url('suborganization-create') }}"
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
-        hx-target="#merk_list">
+        hx-target="#suborganization_list_container">
     <c-input name="name" />
     <c-button kind="secondary" icon="plus" iconPlacement="before" type="submit">
       Merk toevoegen

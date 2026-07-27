@@ -17,7 +17,7 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Value, When
-from django.db.models.functions import Concat, Lower
+from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
 from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
@@ -2146,7 +2146,7 @@ def label_delete(request, pk):
 def suborganization_admin(request):
     """Main merken admin page."""
     suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
-    return render(request, "merk_admin.html", {"suborganizations": suborganizations.order_by(Lower("name"))})
+    return render(request, "suborganization_admin.html", {"suborganizations": suborganizations})
 
 
 @permission_required("core.add_suborganization", raise_exception=True)
@@ -2174,7 +2174,7 @@ def suborganization_edit(request, pk):
     form_post_url = reverse("suborganization-edit", kwargs={"pk": pk})
     modal_title = f"Bewerk merk: {suborganization.name}"
     form_button_label = "Opslaan"
-    element_id = "merkFormModal"
+    element_id = "suborganizationFormModal"
 
     if request.method == "GET":
         form = SuborganizationForm(instance=suborganization)
@@ -2197,7 +2197,7 @@ def suborganization_edit(request, pk):
             form.save()
             suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
             response = render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
-            response["HX-Retarget"] = "#merk_list"
+            response["HX-Retarget"] = "#suborganization_list_container"
             response["HX-Trigger"] = "closeModal"
             return response
         return render(
@@ -2229,8 +2229,8 @@ def suborganization_delete(request, pk):
             {
                 "modal_title": f"Verwijder merk: {suborganization.name}",
                 "warning_modal": True,
-                "modal_element_id": "merkFormModal",
-                "target_element_id": "merk_list",
+                "modal_element_id": "suborganizationFormModal",
+                "target_element_id": "suborganization_list_container",
                 "delete_warning": (
                     f"Weet je zeker dat je dit merk wilt verwijderen? "
                     f"Het wordt gebruikt door {suborganization_use_count} collega('s)."

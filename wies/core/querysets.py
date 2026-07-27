@@ -67,4 +67,4 @@ def annotate_usage_counts(queryset):
 
 def annotate_suborganization_usage_counts(queryset):
     """Annotate a Suborganization queryset with the number of colleagues using each merk."""
-    return queryset.annotate(usage_count=Count("colleagues", distinct=True))
+    return queryset.annotate(usage_count=Count("colleagues", distinct=True)).order_by(Lower("name"))
