@@ -26,7 +26,10 @@ def _get_oidc():
         server_metadata_url=settings.OIDC_DISCOVERY_URL,
         client_id=settings.OIDC_CLIENT_ID,
         client_secret=settings.OIDC_CLIENT_SECRET,
-        client_kwargs={"scope": "openid profile email"},
+        # OIDC-NLGov requires PKCE with S256 for every client, public or
+        # confidential (sections 4.1 and 4.2.1):
+        # https://gitdocumentatie.logius.nl/publicatie/api/oidc/
+        client_kwargs={"scope": "openid profile email", "code_challenge_method": "S256"},
     )
     return oauth.oidc
 
