@@ -1,7 +1,7 @@
 from wies.core.request_meta import get_client_ip, get_user_agent
 from wies.rijksauth.models import AuthEvent
 
-SUPPORTED_AUTH_EVENTS = {"Login.success", "Login.fail"}
+SUPPORTED_AUTH_EVENTS = {"Login.success", "Login.fail", "Logout"}
 
 
 def create_auth_event(user_email, name, context=None, request=None):

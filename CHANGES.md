@@ -8,6 +8,7 @@ This files lists the changes during the lifetime of this project.
 - 480: the OIDC login now uses PKCE (S256) in the authorization-code flow. The government OIDC profile (OIDC-NLGov, sections 4.1 and 4.2.1) requires this for every client: https://gitdocumentatie.logius.nl/publicatie/api/oidc/
 - 453: the statistics pages shows unique logins per day in stead of the total number of logins
 - 426: (migration) log the client IP and User-Agent on audit and login events (BIO device logging)
+- 426: logout events are now logged alongside logins
 
 ## 2026-07-23
 

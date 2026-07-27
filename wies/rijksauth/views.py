@@ -84,7 +84,11 @@ def auth(request):
 def logout(request):
     id_token = request.session.get(settings.OIDC_ID_TOKEN_SESSION_KEY)
     if request.user and request.user.is_authenticated:
+        # Capture the email before auth_logout flushes the session and turns
+        # request.user into AnonymousUser. IP/User-Agent stay on the request.
+        user_email = request.user.email
         auth_logout(request)
+        create_auth_event(user_email, "Logout", request=request)
 
     end_session_url = _build_end_session_url(request, id_token)
     response = redirect(end_session_url) if end_session_url else redirect(reverse("login"))
