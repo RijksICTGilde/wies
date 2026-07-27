@@ -32,8 +32,8 @@ class GetUsageStatsTest(TestCase):
         assert stats["total_logins_90d"] == 0
         assert stats["failures_30d"] == 0
         assert stats["max_daily"] == 0
-        assert len(stats["daily_logins"]) == DAILY_WINDOW_DAYS
-        assert all(count == 0 for _, count in stats["daily_logins"])
+        assert len(stats["daily_active_users"]) == DAILY_WINDOW_DAYS
+        assert all(count == 0 for _, count in stats["daily_active_users"])
 
     def test_distinct_users_for_mau_and_wau(self):
         User.objects.create_user(email="a@rijksoverheid.nl")
@@ -77,28 +77,31 @@ class GetUsageStatsTest(TestCase):
         assert stats["wau"] == 2
         assert stats["total_ever"] == 2
 
-    def test_daily_logins_zero_filled_and_ordered(self):
+    def test_daily_active_users_zero_filled_and_ordered(self):
         User.objects.create_user(email="a@rijksoverheid.nl")
-        # Three logins on the same local day, one on a different day.
+        User.objects.create_user(email="b@rijksoverheid.nl")
+        # a@ logs in three times on the same local day; b@ once on that day.
         same_day = self.now - timedelta(days=2)
         make_event("Login.success", "a@rijksoverheid.nl", same_day)
         make_event("Login.success", "a@rijksoverheid.nl", same_day + timedelta(hours=1))
         make_event("Login.success", "a@rijksoverheid.nl", same_day + timedelta(hours=2))
+        make_event("Login.success", "b@rijksoverheid.nl", same_day + timedelta(hours=3))
+        # a@ on a different day.
         make_event("Login.success", "a@rijksoverheid.nl", self.now - timedelta(days=10))
         # A login outside the 90d window — must not be counted in total_logins_90d.
         make_event("Login.success", "a@rijksoverheid.nl", self.now - timedelta(days=120))
 
         stats = get_usage_stats(now=self.now)
-        daily = stats["daily_logins"]
+        daily = stats["daily_active_users"]
 
         assert len(daily) == DAILY_WINDOW_DAYS
         # Ordered oldest first.
         days = [d for d, _ in daily]
         assert days == sorted(days)
-        # Sum equals total Login.success inside the 90d window.
-        assert sum(c for _, c in daily) == 4
-        assert stats["max_daily"] == 3
-        assert stats["total_logins_90d"] == 4
+        # Bars count distinct users per day: 2 on same_day (a@, b@), 1 ten days ago.
+        assert stats["max_daily"] == 2
+        # total_logins_90d stays a raw event count of all Login.success in the window.
+        assert stats["total_logins_90d"] == 5
 
     def test_daily_bucketing_uses_amsterdam_timezone(self):
         User.objects.create_user(email="a@rijksoverheid.nl")
@@ -108,6 +111,6 @@ class GetUsageStatsTest(TestCase):
         make_event("Login.success", "a@rijksoverheid.nl", local_late_evening)
 
         stats = get_usage_stats(now=self.now)
-        non_zero_days = [(d, c) for d, c in stats["daily_logins"] if c > 0]
+        non_zero_days = [(d, c) for d, c in stats["daily_active_users"] if c > 0]
 
         assert non_zero_days == [(local_late_evening.date(), 1)]
