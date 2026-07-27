@@ -32,6 +32,23 @@ class RBACSetupTest(TestCase):
                 f"Beheerder group missing {codename} permission"
             )
 
+    def test_setup_roles_grants_suborganization_permissions(self):
+        """Test that Beheerder group can manage suborganizations (merken)"""
+        setup_roles()
+
+        admin_group = Group.objects.get(name="Beheerder")
+
+        expected_permissions = [
+            "view_suborganization",
+            "add_suborganization",
+            "change_suborganization",
+            "delete_suborganization",
+        ]
+        for codename in expected_permissions:
+            assert admin_group.permissions.filter(codename=codename).exists(), (
+                f"Beheerder group missing {codename} permission"
+            )
+
     def test_beheerder_group_user_can_access_views(self):
         """Test that a user in Beheerder group can access all user management views"""
         setup_roles()

@@ -1,7 +1,7 @@
 """Editables for Service. The ``assignment`` FK is not editable — a service
 cannot be reparented.
 
-Permissions live in ``wies/core/permission_rules.py``.
+Permissions live in ``wies/core/permissions.py``.
 """
 
 from django import forms

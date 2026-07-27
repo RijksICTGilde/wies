@@ -1,6 +1,6 @@
 """Editables for Assignment. Reused by the inline-edit view and AssignmentCreateForm.
 
-Permissions live in ``wies/core/permission_rules.py``.
+Permissions live in ``wies/core/permissions.py``.
 """
 
 import urllib.parse
