@@ -1,4 +1,4 @@
-from wies.core.request_meta import get_client_ip, get_user_agent
+from wies.core.request_meta import get_request_metadata
 from wies.rijksauth.models import AuthEvent
 
 SUPPORTED_AUTH_EVENTS = {"Login.success", "Login.fail", "Logout"}
@@ -10,12 +10,13 @@ def create_auth_event(user_email, name, context=None, request=None):
     if name not in SUPPORTED_AUTH_EVENTS:
         msg = f"Unsupported auth event: {name}"
         raise ValueError(msg)
-    ip = (get_client_ip(request) or None) if request is not None else None
-    user_agent = get_user_agent(request) if request is not None else ""
+    meta = get_request_metadata(request)
     AuthEvent.objects.create(
         user_email=user_email,
         name=name,
-        ip=ip,
-        user_agent=user_agent,
+        ip=meta["ip"],
+        forwarded_for=meta["forwarded_for"],
+        remote_addr=meta["remote_addr"],
+        user_agent=meta["user_agent"],
         context=context or {},
     )

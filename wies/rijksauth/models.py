@@ -45,8 +45,12 @@ class AuthEvent(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True, db_index=True)
     user_email = models.EmailField(max_length=255, blank=True, db_index=True)
     name = models.CharField(max_length=32, db_index=True)
-    # device approximation for BIO: network IP + User-Agent (best-effort)
+    # device approximation for BIO: request metadata (best-effort).
+    # ip = derived client IP (trusted hop, spoofable); forwarded_for = raw X-Forwarded-For (evidence);
+    # remote_addr = TCP peer, the only non-spoofable element; user_agent = raw header.
     ip = models.GenericIPAddressField(null=True, blank=True)
+    forwarded_for = models.CharField(max_length=512, blank=True, default="")
+    remote_addr = models.GenericIPAddressField(null=True, blank=True)
     user_agent = models.CharField(max_length=512, blank=True, default="")
     context = models.JSONField(default=dict)
 

@@ -16,6 +16,16 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="event",
+            name="forwarded_for",
+            field=models.CharField(blank=True, default="", max_length=512),
+        ),
+        migrations.AddField(
+            model_name="event",
+            name="remote_addr",
+            field=models.GenericIPAddressField(blank=True, null=True),
+        ),
+        migrations.AddField(
+            model_name="event",
             name="user_agent",
             field=models.CharField(blank=True, default="", max_length=512),
         ),

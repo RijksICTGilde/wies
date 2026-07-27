@@ -4,7 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
-- 426: (migration)(post-release actions) log the client IP and User-Agent on audit and login events (BIO device logging). The staff "Debug: request metadata" page, used to determine the proxy hop count, has been removed now that it is set.
+- 426: (migration)(post-release actions) log the client request metadata on audit and login events (BIO device logging). Removed the staff "Debug: request metadata" page
 - 426: logout events are now logged alongside logins
 - 503: fix the "Wie zit waar?", opdrachten and profiel overviews returning a 500 error when the side-panel `plaatsing`, `collega` or `opdracht` parameter contained a non-numeric value in the URL
 - 503: fix opdracht aanmaken returning a 500 error instead of a validation message when the submitted form data contained a non-numeric service count

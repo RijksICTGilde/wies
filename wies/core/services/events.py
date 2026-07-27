@@ -1,7 +1,7 @@
 from django.utils import timezone
 
 from wies.core.models import Event, EventAction, EventSource
-from wies.core.request_meta import get_client_ip, get_user_agent
+from wies.core.request_meta import get_request_metadata
 
 SUPPORTED_OBJECT_TYPES = {
     "User",
@@ -31,8 +31,7 @@ def create_event(*, object_type, action, source, object_id=None, user=None, cont
     if not context:
         context = {}
     user_email = user.email if user else ""
-    ip = (get_client_ip(request) or None) if request is not None else None
-    user_agent = get_user_agent(request) if request is not None else ""
+    meta = get_request_metadata(request)
     Event.objects.create(
         timestamp=timezone.now(),
         user=user,
@@ -41,7 +40,9 @@ def create_event(*, object_type, action, source, object_id=None, user=None, cont
         action=action,
         source=source,
         object_id=object_id,
-        ip=ip,
-        user_agent=user_agent,
+        ip=meta["ip"],
+        forwarded_for=meta["forwarded_for"],
+        remote_addr=meta["remote_addr"],
+        user_agent=meta["user_agent"],
         context=context,
     )
