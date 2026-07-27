@@ -41,7 +41,6 @@ from wies.core.inline_edit.forms import (
 )
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.placement_visibility import LABELS, evaluate
-from wies.rijksauth.models import AuthEvent
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
@@ -447,31 +446,6 @@ def delete_error(request, pk):
     """Delete a single handled error and return the refreshed current page of the table."""
     ErrorEvent.objects.filter(pk=pk).delete()
     return _render_error_table(request, request.GET.get("pagina"))
-
-
-@staff_required
-def debug_request_meta(request):
-
-    xff_raw = request.headers.get("x-forwarded-for", "")
-    xff_entries = [p.strip() for p in xff_raw.split(",")] if xff_raw else []
-    # Own login events only — lets a staff member verify ip/user_agent get logged.
-    recent_auth_events = AuthEvent.objects.filter(user_email__iexact=request.user.email).order_by("-timestamp")[:10]
-    return render(
-        request,
-        "debug_request_meta.html",
-        {
-            "remote_addr": request.META.get("REMOTE_ADDR", ""),
-            "xff_raw": xff_raw,
-            "xff_entries": xff_entries,
-            "xff_from_right": list(enumerate(reversed(xff_entries))),
-            "xfp": request.headers.get("x-forwarded-proto", ""),
-            "xfh": request.headers.get("x-forwarded-host", ""),
-            "x_real_ip": request.headers.get("x-real-ip", ""),
-            "user_agent": request.headers.get("user-agent", ""),
-            "server_time": timezone.now(),
-            "recent_auth_events": recent_auth_events,
-        },
-    )
 
 
 @staff_required
