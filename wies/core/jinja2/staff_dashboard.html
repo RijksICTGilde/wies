@@ -14,11 +14,11 @@
     <div class="staff-tiles">
       <div class="staff-tile">
         <div class="staff-tile__value">{{ usage.mau }}</div>
-        <div class="staff-tile__label">Monthly Active Users (30 dagen)</div>
+        <div class="staff-tile__label">Maandelijks Actieve Gebruikers (30 dagen)</div>
       </div>
       <div class="staff-tile">
         <div class="staff-tile__value">{{ usage.wau }}</div>
-        <div class="staff-tile__label">Weekly Active Users (7 dagen)</div>
+        <div class="staff-tile__label">Wekelijks Actieve Gebruikers (7 dagen)</div>
       </div>
       <div class="staff-tile">
         <div class="staff-tile__value">{{ usage.total_ever }}</div>
@@ -33,9 +33,9 @@
         <div class="staff-tile__label">Mislukte logins (30 dagen)</div>
       </div>
     </div>
-    <h3>Logins per dag (laatste 90 dagen)</h3>
+    <h3>Dagelijks Actieve Gebruikers (laatste 90 dagen)</h3>
     <div class="staff-chart">
-      {% for day, count in usage.daily_logins %}
+      {% for day, count in usage.daily_active_users %}
         <div class="staff-chart__bar"
              title="{{ day }}: {{ count }}"
              style="height: {{ (count / usage.max_daily * 100) if usage.max_daily else 0 }}%"></div>
