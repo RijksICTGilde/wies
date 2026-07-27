@@ -44,9 +44,9 @@ class UserViewsTest(TestCase):
         )
 
         # Create test labels
-        self.category, _ = LabelCategory.objects.get_or_create(name="Testcategorie", defaults={"color": "#0066CC"})
-        self.label_a = Label.objects.create(name="Brand A", category=self.category)
-        self.label_b = Label.objects.create(name="Brand B", category=self.category)
+        self.category, _ = LabelCategory.objects.get_or_create(name="Expertise", defaults={"color": "#0066CC"})
+        self.label_a = Label.objects.create(name="AI", category=self.category)
+        self.label_b = Label.objects.create(name="ICT", category=self.category)
 
         # Create test merken (suborganizations)
         self.merk_a = Suborganization.objects.create(name="Merk A")
@@ -164,7 +164,7 @@ class UserViewsTest(TestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "email": "newuser@rijksoverheid.nl",
-                "category_Testcategorie": self.label_a.id,
+                "category_Expertise": self.label_a.id,
             },
         )
 

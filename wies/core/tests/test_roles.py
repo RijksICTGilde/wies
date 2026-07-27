@@ -74,8 +74,8 @@ class RBACSetupTest(TestCase):
         assert response.status_code == 200
 
         # Test user creation
-        category, _ = LabelCategory.objects.get_or_create(name="Testcategorie", defaults={"color": "#0066CC"})
-        label = Label.objects.create(name="Test Brand", category=category)
+        category, _ = LabelCategory.objects.get_or_create(name="Expertise", defaults={"color": "#0066CC"})
+        label = Label.objects.create(name="AI", category=category)
         response = client.post(
             reverse("user-create"),
             {

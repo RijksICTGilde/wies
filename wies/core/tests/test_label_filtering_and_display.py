@@ -25,13 +25,14 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.auth_user.user_permissions.add(view_user_perm)
 
         # Create label categories and labels (use get_or_create to avoid conflicts).
-        # Merk is no longer a label category, so use neutral test categories here.
-        self.test_category, _ = LabelCategory.objects.get_or_create(name="Testcategorie", defaults={"color": "#0066CC"})
+        self.thema_category, _ = LabelCategory.objects.get_or_create(name="Thema", defaults={"color": "#0066CC"})
         self.skills_category, _ = LabelCategory.objects.get_or_create(name="Skills", defaults={"color": "#00AA00"})
 
-        self.rig_label, _ = Label.objects.get_or_create(name="Rijks ICT Gilde", category=self.test_category)
-        self.rc_label, _ = Label.objects.get_or_create(name="Rijksconsultants", category=self.test_category)
-        self.iir_label, _ = Label.objects.get_or_create(name="I-Interim Rijk", category=self.test_category)
+        self.thema_a_label, _ = Label.objects.get_or_create(name="Digitale weerbaarheid", category=self.thema_category)
+        self.thema_b_label, _ = Label.objects.get_or_create(
+            name="Artificiële intelligentie", category=self.thema_category
+        )
+        self.thema_c_label, _ = Label.objects.get_or_create(name="Netwerksamenwerking", category=self.thema_category)
 
         self.python_label, _ = Label.objects.get_or_create(name="Python", category=self.skills_category)
         self.django_label, _ = Label.objects.get_or_create(name="Django", category=self.skills_category)
@@ -41,35 +42,35 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.user1_colleague = Colleague.objects.create(
             user=self.user1, name="User One", email="user1@rijksoverheid.nl", source="wies"
         )
-        self.user1_colleague.labels.add(self.rig_label, self.python_label)
+        self.user1_colleague.labels.add(self.thema_a_label, self.python_label)
 
         self.user2 = User.objects.create_user(email="user2@rijksoverheid.nl", first_name="User", last_name="Two")
         self.user2_colleague = Colleague.objects.create(
             user=self.user2, name="User Two", email="user2@rijksoverheid.nl", source="wies"
         )
-        self.user2_colleague.labels.add(self.rc_label)
+        self.user2_colleague.labels.add(self.thema_b_label)
 
         self.user3 = User.objects.create_user(email="user3@rijksoverheid.nl", first_name="User", last_name="Three")
         self.user3_colleague = Colleague.objects.create(
             user=self.user3, name="User Three", email="user3@rijksoverheid.nl", source="wies"
         )
-        self.user3_colleague.labels.add(self.rig_label, self.django_label)
+        self.user3_colleague.labels.add(self.thema_a_label, self.django_label)
 
         # Create colleagues (without users) with labels
         self.colleague1 = Colleague.objects.create(
             name="Colleague One", email="colleague1@rijksoverheid.nl", source="wies"
         )
-        self.colleague1.labels.add(self.rig_label)
+        self.colleague1.labels.add(self.thema_a_label)
 
         self.colleague2 = Colleague.objects.create(
             name="Colleague Two", email="colleague2@rijksoverheid.nl", source="wies"
         )
-        self.colleague2.labels.add(self.iir_label)
+        self.colleague2.labels.add(self.thema_c_label)
 
         self.colleague3 = Colleague.objects.create(
             name="Colleague Three", email="colleague3@rijksoverheid.nl", source="wies"
         )
-        self.colleague3.labels.add(self.rig_label)
+        self.colleague3.labels.add(self.thema_a_label)
 
         # Create placements
         self.assignment = Assignment.objects.create(name="Test Assignment", source="wies")
@@ -84,11 +85,11 @@ class LabelFilteringAndDisplayTest(TestCase):
         """Test: Filtering users by label returns only users with that label"""
         self.client.force_login(self.auth_user)
 
-        # Filter by Rijks ICT Gilde label
-        response = self.client.get(reverse("admin-users"), {"labels": self.rig_label.id})
+        # Filter by the "Digitale weerbaarheid" label
+        response = self.client.get(reverse("admin-users"), {"labels": self.thema_a_label.id})
         assert response.status_code == 200
 
-        # user1 and user3 have RIG label, user2 doesn't
+        # user1 and user3 have the thema-A label, user2 doesn't
         self.assertContains(response, "User One")
         self.assertContains(response, "User Three")
         self.assertNotContains(response, "User Two")
@@ -97,11 +98,11 @@ class LabelFilteringAndDisplayTest(TestCase):
         """Test: Filtering by different label returns different users"""
         self.client.force_login(self.auth_user)
 
-        # Filter by Rijksconsultants label
-        response = self.client.get(reverse("admin-users"), {"labels": self.rc_label.id})
+        # Filter by the "Artificiële intelligentie" label
+        response = self.client.get(reverse("admin-users"), {"labels": self.thema_b_label.id})
         assert response.status_code == 200
 
-        # Only user2 has RC label
+        # Only user2 has the thema-B label
         self.assertContains(response, "User Two")
         self.assertNotContains(response, "User One")
         self.assertNotContains(response, "User Three")
@@ -134,24 +135,24 @@ class LabelFilteringAndDisplayTest(TestCase):
         """Test: Filtering placements by colleague label works correctly"""
         self.client.force_login(self.auth_user)
 
-        # Filter by Rijks ICT Gilde label
-        response = self.client.get(reverse("home"), {"labels": self.rig_label.id})
+        # Filter by the "Digitale weerbaarheid" label
+        response = self.client.get(reverse("home"), {"labels": self.thema_a_label.id})
         assert response.status_code == 200
 
-        # colleague1 and colleague3 have RIG label, colleague2 doesn't
+        # colleague1 and colleague3 have the thema-A label, colleague2 doesn't
         self.assertContains(response, "Colleague One")
         self.assertContains(response, "Colleague Three")
         self.assertNotContains(response, "Colleague Two")
 
-    def test_filter_placements_by_iir_label(self):
-        """Test: Filtering placements by I-Interim Rijk label"""
+    def test_filter_placements_by_third_label(self):
+        """Test: Filtering placements by the "Netwerksamenwerking" label"""
         self.client.force_login(self.auth_user)
 
-        # Filter by I-Interim Rijk label
-        response = self.client.get(reverse("home"), {"labels": self.iir_label.id})
+        # Filter by the "Netwerksamenwerking" label
+        response = self.client.get(reverse("home"), {"labels": self.thema_c_label.id})
         assert response.status_code == 200
 
-        # Only colleague2 has IIR label
+        # Only colleague2 has the thema-C label
         self.assertContains(response, "Colleague Two")
         self.assertNotContains(response, "Colleague One")
         self.assertNotContains(response, "Colleague Three")
@@ -161,7 +162,7 @@ class LabelFilteringAndDisplayTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by both label and skill
-        response = self.client.get(reverse("home"), {"labels": self.rig_label.id, "rol": self.skill.id})
+        response = self.client.get(reverse("home"), {"labels": self.thema_a_label.id, "rol": self.skill.id})
         assert response.status_code == 200
 
         # Should show placements matching both filters
@@ -201,15 +202,15 @@ class LabelFilteringAndDisplayTest(TestCase):
             colleague = Colleague.objects.create(
                 user=user, name=f"User {i}", email=f"paginated{i}@rijksoverheid.nl", source="wies"
             )
-            colleague.labels.add(self.rig_label)
+            colleague.labels.add(self.thema_a_label)
 
         # Request first page with label filter
-        response = self.client.get(reverse("admin-users"), {"labels": self.rig_label.id, "pagina": 1})
+        response = self.client.get(reverse("admin-users"), {"labels": self.thema_a_label.id, "pagina": 1})
         assert response.status_code == 200
 
         # All users on this page should have the label
         # None should be from other labels
-        self.assertNotContains(response, "User Two")  # user2 has rc_label
+        self.assertNotContains(response, "User Two")  # user2 has the thema-B label
 
     def test_label_filter_dropdown_in_ui(self):
         """Test: Label filter dropdown appears in filter bar"""
@@ -223,15 +224,15 @@ class LabelFilteringAndDisplayTest(TestCase):
 
         # Should show label names in dropdown format "Category: Label"
         # This depends on implementation of filter_groups in view
-        self.assertContains(response, "Rijks ICT Gilde")
-        self.assertContains(response, "Rijksconsultants")
+        self.assertContains(response, "Digitale weerbaarheid")
+        self.assertContains(response, "Artificiële intelligentie")
 
     def test_multiple_colleagues_same_label_all_shown(self):
         """Test: When multiple colleagues have same label, all placements appear"""
         self.client.force_login(self.auth_user)
 
-        # Both colleague1 and colleague3 have rig_label
-        response = self.client.get(reverse("home"), {"labels": self.rig_label.id})
+        # Both colleague1 and colleague3 have the thema-A label
+        response = self.client.get(reverse("home"), {"labels": self.thema_a_label.id})
         assert response.status_code == 200
 
         # Both should be in results

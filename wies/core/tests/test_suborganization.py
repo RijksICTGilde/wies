@@ -189,18 +189,22 @@ class SuborganizationUserFilterTest(TestCase):
         self.suborg_rc = Suborganization.objects.create(name="Rijksconsultants")
         self.suborg_radio = Suborganization.objects.create(name="RADIO")
 
-        self.user_rig = User.objects.create_user(email="rig@rijksoverheid.nl", first_name="Rig", last_name="Person")
+        self.user_rig = User.objects.create_user(
+            email="rig@rijksoverheid.nl", first_name="Rigbertha", last_name="Gildezel"
+        )
         Colleague.objects.create(
             user=self.user_rig,
-            name="Rig Person",
+            name="Rigbertha Gildezel",
             email="rig@rijksoverheid.nl",
             source="wies",
             suborganization=self.suborg_rig,
         )
-        self.user_rc = User.objects.create_user(email="rc@rijksoverheid.nl", first_name="Rc", last_name="Person")
+        self.user_rc = User.objects.create_user(
+            email="rc@rijksoverheid.nl", first_name="Consultina", last_name="Rijkszwaan"
+        )
         Colleague.objects.create(
             user=self.user_rc,
-            name="Rc Person",
+            name="Consultina Rijkszwaan",
             email="rc@rijksoverheid.nl",
             source="wies",
             suborganization=self.suborg_rc,
@@ -225,15 +229,15 @@ class SuborganizationUserFilterTest(TestCase):
         self.client.force_login(self.auth_user)
         response = self.client.get(reverse("admin-users"), {"merk": self.suborg_rig.id})
         assert response.status_code == 200
-        self.assertContains(response, "Rig")
-        self.assertNotContains(response, "Rc")
+        self.assertContains(response, "Rigbertha")
+        self.assertNotContains(response, "Consultina")
 
     def test_filter_users_multiselect_is_or_within_group(self):
         self.client.force_login(self.auth_user)
         response = self.client.get(reverse("admin-users"), {"merk": [self.suborg_rig.id, self.suborg_rc.id]})
         assert response.status_code == 200
-        self.assertContains(response, "Rig")
-        self.assertContains(response, "Rc")
+        self.assertContains(response, "Rigbertha")
+        self.assertContains(response, "Consultina")
 
     def test_user_merk_filter_group_present_with_counts(self):
         group = self._merk_group()
