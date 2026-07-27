@@ -975,8 +975,8 @@ class PlacementListView(ListView):
                 "options": skill_options,
                 "selected_values": skill_selected_values,
             },
-            *label_filter_groups,
             suborganization_filter_group,
+            *label_filter_groups,
             {
                 "type": "select-multi",
                 "name": "loopt_af",
@@ -2146,7 +2146,7 @@ def label_delete(request, pk):
 def suborganization_admin(request):
     """Main merken admin page."""
     suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
-    return render(request, "merk_admin.html", {"merken": suborganizations})
+    return render(request, "merk_admin.html", {"suborganizations": suborganizations})
 
 
 @permission_required("core.add_suborganization", raise_exception=True)
@@ -2157,10 +2157,12 @@ def suborganization_create(request):
         if form.is_valid():
             form.save()
             suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
-            return render(request, "parts/merk_list.html", {"merken": suborganizations})
+            return render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
         suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
         return render(
-            request, "parts/merk_list.html", {"merken": suborganizations, "errors": dict(form.errors.items())}
+            request,
+            "parts/suborganization_list.html",
+            {"suborganizations": suborganizations, "errors": dict(form.errors.items())},
         )
     return HttpResponse(status=405)
 
@@ -2169,7 +2171,7 @@ def suborganization_create(request):
 def suborganization_edit(request, pk):
     """Edit a suborganization. Returns a partial for use with htmx."""
     suborganization = get_object_or_404(Suborganization, pk=pk)
-    form_post_url = reverse("merk-edit", kwargs={"pk": pk})
+    form_post_url = reverse("suborganization-edit", kwargs={"pk": pk})
     modal_title = f"Bewerk merk: {suborganization.name}"
     form_button_label = "Opslaan"
     element_id = "merkFormModal"
@@ -2186,7 +2188,7 @@ def suborganization_edit(request, pk):
                 "form_button_label": form_button_label,
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
-                **get_delete_context("merk-delete", suborganization.pk, f"merk '{suborganization.name}'"),
+                **get_delete_context("suborganization-delete", suborganization.pk, f"merk '{suborganization.name}'"),
             },
         )
     if request.method == "POST":
@@ -2194,7 +2196,7 @@ def suborganization_edit(request, pk):
         if form.is_valid():
             form.save()
             suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
-            response = render(request, "parts/merk_list.html", {"merken": suborganizations})
+            response = render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
             response["HX-Retarget"] = "#merk_list"
             response["HX-Trigger"] = "closeModal"
             return response
@@ -2208,7 +2210,7 @@ def suborganization_edit(request, pk):
                 "form_button_label": form_button_label,
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
-                **get_delete_context("merk-delete", suborganization.pk, f"merk '{suborganization.name}'"),
+                **get_delete_context("suborganization-delete", suborganization.pk, f"merk '{suborganization.name}'"),
             },
         )
     return None
@@ -2233,14 +2235,14 @@ def suborganization_delete(request, pk):
                     f"Weet je zeker dat je dit merk wilt verwijderen? "
                     f"Het wordt gebruikt door {suborganization_use_count} collega('s)."
                 ),
-                "form_post_url": reverse("merk-delete", kwargs={"pk": pk}),
+                "form_post_url": reverse("suborganization-delete", kwargs={"pk": pk}),
                 "form_button_label": "Verwijderen",
             },
         )
     if request.method == "POST":
         suborganization.delete()
         suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
-        response = render(request, "parts/merk_list.html", {"merken": suborganizations})
+        response = render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
         response["HX-Trigger"] = "closeModal"
         return response
     return HttpResponse(status=405)

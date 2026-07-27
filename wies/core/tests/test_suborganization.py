@@ -135,29 +135,29 @@ class SuborganizationAdminTest(TestCase):
 
     def test_admin_requires_permission(self):
         self.client.force_login(self.plain_user)
-        response = self.client.get(reverse("merk-admin"))
+        response = self.client.get(reverse("suborganization-admin"))
         assert response.status_code == 403
 
     def test_beheerder_can_view_admin(self):
         self.client.force_login(self.admin_user)
-        response = self.client.get(reverse("merk-admin"))
+        response = self.client.get(reverse("suborganization-admin"))
         assert response.status_code == 200
 
     def test_beheerder_can_create_suborganization(self):
         self.client.force_login(self.admin_user)
-        response = self.client.post(reverse("merk-create"), {"name": "Nieuw Merk"})
+        response = self.client.post(reverse("suborganization-create"), {"name": "Nieuw Merk"})
         assert response.status_code == 200
         assert Suborganization.objects.filter(name="Nieuw Merk").exists()
 
     def test_create_duplicate_suborganization_rejected(self):
         Suborganization.objects.create(name="Bestaand")
         self.client.force_login(self.admin_user)
-        self.client.post(reverse("merk-create"), {"name": "Bestaand"})
+        self.client.post(reverse("suborganization-create"), {"name": "Bestaand"})
         assert Suborganization.objects.filter(name="Bestaand").count() == 1
 
     def test_beheerder_can_delete_suborganization(self):
         suborganization = Suborganization.objects.create(name="Weg")
         self.client.force_login(self.admin_user)
-        response = self.client.post(reverse("merk-delete", args=[suborganization.id]))
+        response = self.client.post(reverse("suborganization-delete", args=[suborganization.id]))
         assert response.status_code == 200
         assert not Suborganization.objects.filter(id=suborganization.id).exists()

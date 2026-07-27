@@ -62,7 +62,7 @@ class ColleagueEditables(EditableSet):
         choices=_suborganization_choices,
         required=False,
         empty_label=" ",
-        display="rvo/forms/displays/colleague_merk.html",
+        display="rvo/forms/displays/colleague_suborganization.html",
     )
 
     @classmethod

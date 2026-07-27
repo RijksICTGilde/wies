@@ -1,4 +1,4 @@
-{% if merken %}
+{% if suborganizations %}
   <c-table>
     <c-table-head>
       <c-table-row>
@@ -11,18 +11,18 @@
       </c-table-row>
     </c-table-head>
     <c-table-body>
-      {% for merk in merken %}
+      {% for suborganization in suborganizations %}
         <c-table-row class="clickable-row"
-                     hx-get="{{ url('merk-edit', kwargs={'pk': merk.pk}) }}"
+                     hx-get="{{ url('suborganization-edit', kwargs={'pk': suborganization.pk}) }}"
                      hx-target="#merkFormModal"
                      hx-swap="innerHTML"
-                     title="Bewerk {{ merk.name }}">
+                     title="Bewerk {{ suborganization.name }}">
           <c-table-cell>
-            <span class="rvo-badge label-badge" style="background-color: #DCE3EA">{{ merk.name }}</span>
+            <span class="rvo-badge label-badge" style="background-color: #DCE3EA">{{ suborganization.name }}</span>
           </c-table-cell>
           <c-table-cell>
             <div class="table-cell-with-actions">
-              <span>{{ merk.usage_count|default(0) }}</span>
+              <span>{{ suborganization.usage_count|default(0) }}</span>
               <c-icon icon="bewerken" size="md" color="hemelblauw" class="edit-icon" />
             </div>
           </c-table-cell>
@@ -37,7 +37,7 @@
 {% endif %}
 <div class="label-form-container">
   <form class="label-form"
-        hx-post="{{ url('merk-create') }}"
+        hx-post="{{ url('suborganization-create') }}"
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
         hx-target="#merk_list">
     <c-input name="name" />
