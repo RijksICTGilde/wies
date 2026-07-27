@@ -162,7 +162,7 @@ ENABLE_DESTRUCTIVE_STAFF_ACTIONS = os.environ.get("ENABLE_DESTRUCTIVE_STAFF_ACTI
 # right X-Forwarded-For entry when logging the client IP on audit/auth events.
 # 0 = trust nothing, use REMOTE_ADDR only (safe default for dev/test — no
 # header spoofing honoured). Production overrides this (see production.py).
-TRUSTED_PROXY_HOPS = 0
+TRUSTED_PROXY_HOPS = int(os.environ.get("TRUSTED_PROXY_HOPS", "0"))
 
 # OTYS API settings
 OTYS_API_KEY = os.environ.get("OTYS_API_KEY", "")
