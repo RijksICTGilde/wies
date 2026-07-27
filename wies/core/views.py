@@ -17,7 +17,7 @@ from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Value, When
-from django.db.models.functions import Concat
+from django.db.models.functions import Concat, Lower
 from django.forms.utils import ErrorList
 from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
@@ -2146,7 +2146,7 @@ def label_delete(request, pk):
 def suborganization_admin(request):
     """Main merken admin page."""
     suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
-    return render(request, "merk_admin.html", {"suborganizations": suborganizations})
+    return render(request, "merk_admin.html", {"suborganizations": suborganizations.order_by(Lower("name"))})
 
 
 @permission_required("core.add_suborganization", raise_exception=True)
