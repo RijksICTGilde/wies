@@ -2,68 +2,67 @@
    by the active view (?groep=). Each card is an nldd-card carrying href + hx-get:
    hx_link_guard.js (base.html) blocks the navigation so htmx fills the side panel.
    data-group-key lets placement_toolbar.js dedup a group that straddles the
-   pagination boundary. #}
-
+pagination boundary. #}
 {# Opdracht-card: naam + opdrachtgever, team-avatars, einddatum.
    `members` is a list of {name, role} dicts (the assignment's full team). #}
 {% macro opdracht_card(assignment, members) %}
   {% set clients = assignment.sorted_clients %}
   <nldd-card href="{{ assignment.panel_url }}" accessible-label="{{ assignment.name }}" hx-get="{{ assignment.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" data-group-key="o-{{ assignment.id }}">
   <nldd-container padding="16" gap="4">
-    <strong>{{ assignment.name }}</strong>
-    {% if clients %}
-      <span class="nldd-text-secondary">
-        {{ clients[0].organization.label or clients[0].organization.name }}
-        {% if clients|length > 1 %}(+{{ clients|length - 1 }}){% endif %}
-      </span>
-    {% endif %}
-    {% if members %}
-      <div class="nldd-team-list">
-        {% for member in members[:5] %}
-          <nldd-avatar size="28" name="{{ member.name }}" title="{{ member.name }}{% if member.role %} · {{ member.role }}{% endif %}" decorative></nldd-avatar>
-        {% endfor %}
-        {% if members|length > 5 %}
-          <span class="nldd-text-secondary">+{{ members|length - 5 }}</span>
-        {% endif %}
-      </div>
-    {% endif %}
-    {% if assignment.end_date %}
-      <span class="nldd-placement-card__end">
-        <nldd-icon name="calendar-event" size="16"></nldd-icon>
-        <span class="nldd-text-secondary">tot {{ assignment.end_date|datum_nl("j N Y") }}</span>
-      </span>
-    {% endif %}
+  <strong>{{ assignment.name }}</strong>
+  {% if clients %}
+    <span class="nldd-text-secondary">
+      {{ clients[0].organization.label or clients[0].organization.name }}
+      {% if clients|length > 1 %}(+{{ clients|length - 1 }}){% endif %}
+    </span>
+  {% endif %}
+  {% if members %}
+    <div class="nldd-team-list">
+      {% for member in members[:5] %}
+        <nldd-avatar size="28" name="{{ member.name }}" title="{{ member.name }}
+        {% if member.role %}· {{ member.role }}{% endif %}
+        " decorative></nldd-avatar>
+      {% endfor %}
+      {% if members|length > 5 %}
+        <span class="nldd-text-secondary">+{{ members|length - 5 }}</span>
+      {% endif %}
+    </div>
+  {% endif %}
+  {% if assignment.end_date %}
+    <span class="nldd-placement-card__end">
+      <nldd-icon name="calendar-event" size="16"></nldd-icon>
+      <span class="nldd-text-secondary">tot {{ assignment.end_date|datum_nl("j N Y") }}</span>
+    </span>
+  {% endif %}
   </nldd-container>
   </nldd-card>
 {% endmacro %}
-
 {# Persoon-card: avatar + naam. One opdracht -> opdrachtnaam + opdrachtgever;
    more -> the count. `panel_url` opens the plaatsing (single) or collega panel. #}
 {% macro persoon_card(colleague, name, assignments, panel_url) %}
   <nldd-card href="{{ panel_url }}" accessible-label="{{ name }}" hx-get="{{ panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" data-group-key="p-{{ colleague.id }}">
   <nldd-container padding="16" gap="4">
-    <div class="nldd-placement-card__persoon">
-      <nldd-avatar size="40" name="{{ name }}" decorative></nldd-avatar>
-      <div class="nldd-placement-card__persoon-info">
-        <strong>{{ name }}</strong>
-        {% if assignments|length == 1 %}
-          {% set clients = assignments[0].sorted_clients %}
-          <span class="nldd-text-secondary">{{ assignments[0].name }}</span>
-          {% if clients %}
-            <span class="nldd-text-secondary">
-              {{ clients[0].organization.label or clients[0].organization.name }}
-              {% if clients|length > 1 %}(+{{ clients|length - 1 }}){% endif %}
-            </span>
-          {% endif %}
-        {% else %}
-          <span class="nldd-text-secondary">{{ assignments|length }} opdrachten</span>
+  <div class="nldd-placement-card__persoon">
+    <nldd-avatar size="40" name="{{ name }}" decorative></nldd-avatar>
+    <div class="nldd-placement-card__persoon-info">
+      <strong>{{ name }}</strong>
+      {% if assignments|length == 1 %}
+        {% set clients = assignments[0].sorted_clients %}
+        <span class="nldd-text-secondary">{{ assignments[0].name }}</span>
+        {% if clients %}
+          <span class="nldd-text-secondary">
+            {{ clients[0].organization.label or clients[0].organization.name }}
+            {% if clients|length > 1 %}(+{{ clients|length - 1 }}){% endif %}
+          </span>
         {% endif %}
-      </div>
+      {% else %}
+        <span class="nldd-text-secondary">{{ assignments|length }} opdrachten</span>
+      {% endif %}
     </div>
+  </div>
   </nldd-container>
   </nldd-card>
 {% endmacro %}
-
 {% set is_person_group = groupby_field == 'person' %}
 {% if object_list %}
   {% for group_label, group_rows in groupby_placements(object_list, groupby_field) %}
@@ -91,7 +90,9 @@
   <p class="nldd-text-secondary"><em>Geen inzetten gevonden.</em></p>
 {% endif %}
 {% if next_page_url %}
-  <div hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
+  <div hx-get="{{ next_page_url }}"
+       hx-trigger="revealed"
+       hx-swap="outerHTML">
     <p class="nldd-text-secondary" style="text-align: center;">Meer laden…</p>
   </div>
 {% endif %}

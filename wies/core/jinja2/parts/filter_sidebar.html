@@ -18,10 +18,16 @@ Geen hidden-input spiegeling meer. #}
   {# Weergave (groep) en sortering (order) meesturen zodat een filterwijziging de
      actieve kaartweergave + sortering behoudt. Alleen zetten wanneer niet-default. #}
   {% if groupby_field and groupby_field != 'person' %}
-    <input type="hidden" name="groep" value="{{ groupby_field }}" data-filter-input />
+    <input type="hidden"
+           name="groep"
+           value="{{ groupby_field }}"
+           data-filter-input />
   {% endif %}
   {% if active_sort %}
-    <input type="hidden" name="order" value="{{ active_sort }}" data-filter-input />
+    <input type="hidden"
+           name="order"
+           value="{{ active_sort }}"
+           data-filter-input />
   {% endif %}
   {# Org filter — hidden inputs, beheerd door client modal #}
   <div id="nldd-org-filter-inputs">

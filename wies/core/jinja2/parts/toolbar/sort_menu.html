@@ -6,7 +6,9 @@
 <nldd-menu-bar-item text="Sorteer: {{ sort_active_label }}" icon="sort" expandable content-priority="text">
 <nldd-menu accessible-label="Sorteren">
 {% for option in sort_options %}
-  <nldd-menu-item text="{{ option.label }}" data-href="{{ option.url }}"{% if option.active %} icon="check-mark"{% endif %}></nldd-menu-item>
+  <nldd-menu-item text="{{ option.label }}" data-href="{{ option.url }}"
+  {% if option.active %}icon="check-mark"{% endif %}
+  ></nldd-menu-item>
 {% endfor %}
 </nldd-menu>
 </nldd-menu-bar-item>
