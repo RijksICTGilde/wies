@@ -1,0 +1,13 @@
+{# Sorteermenu, rechts van de weergave-switch. Een expandable nldd-menu-bar-item
+   opent een nldd-menu; elk item draagt data-href, dat de globale click-handler in
+   base.html naar window.location.href stuurt (zelfde patroon als het gebruikersmenu).
+   ?order= blijft zo behouden mét de actieve view + filters. #}
+<nldd-menu-bar class="nldd-sort-menu" accessible-label="Sorteren">
+<nldd-menu-bar-item text="Sorteer: {{ sort_active_label }}" icon="sort" expandable content-priority="text">
+<nldd-menu accessible-label="Sorteren">
+{% for option in sort_options %}
+  <nldd-menu-item text="{{ option.label }}" data-href="{{ option.url }}"{% if option.active %} icon="check-mark"{% endif %}></nldd-menu-item>
+{% endfor %}
+</nldd-menu>
+</nldd-menu-bar-item>
+</nldd-menu-bar>

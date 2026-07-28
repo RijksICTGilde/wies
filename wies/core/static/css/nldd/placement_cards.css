@@ -1,0 +1,72 @@
+/* Wie zit waar — card grid + weergave/sorteer toolbar.
+   .nldd-text-secondary (app.css) and .nldd-team-list (side_panel.css) are reused
+   as-is; only card/toolbar layout lives here. */
+
+#nldd-filter-and-table-container {
+  min-width: 0;
+}
+
+/* Regel 1: Filters-knop + zoekbalk + weergave-switch naast elkaar.
+   De zoekbalk rekt uit; de switch houdt zijn eigen breedte rechts. */
+.nldd-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--primitives-space-12, 12px);
+}
+
+.nldd-groupby-switch {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+/* Regel 2: sorteermenu rechts naast het aantal (chips wrappen ertussen).
+   De auto-margin staat op een gewone wrapper-div (niet op het custom element,
+   dat geen betrouwbare intrinsieke breedte/display heeft) zodat flexbox hem
+   echt naar rechts duwt. */
+.nldd-results-bar .nldd-sort-menu-wrap {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* Cards */
+.nldd-placement-card-list nldd-card {
+  cursor: pointer;
+  min-width: 0;
+}
+
+.nldd-placement-card__persoon {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-12, 12px);
+  min-width: 0;
+}
+
+.nldd-placement-card__persoon-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--primitives-space-2, 2px);
+  min-width: 0;
+}
+
+/* Truncate long names/opdrachten to one line inside the card. Scoped to the card
+   list so it does not clash with the global .nldd-text-secondary helper. */
+.nldd-placement-card-list .nldd-text-secondary,
+.nldd-placement-card-list strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.nldd-placement-card__end {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-6, 6px);
+  margin-top: var(--primitives-space-4, 4px);
+}
+.nldd-placement-card__end > nldd-icon {
+  flex-shrink: 0;
+}

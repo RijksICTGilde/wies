@@ -1,0 +1,15 @@
+{# Weergave-switch (Persoon / Opdracht) as an nldd-segmented-control. The control
+   emits a `change` event with the picked value; placement_toolbar.js reads the
+   matching URL from data-groupby-urls (CSP forbids inline JS) and navigates. #}
+<div class="nldd-groupby-switch">
+  <nldd-segmented-control
+    type="radio"
+    variant="icon-and-text"
+    value="{{ groupby_field }}"
+    data-groupby-switch
+    data-groupby-urls='{% for option in groupby_options %}{{ option.value }}={{ option.url }}{% if not loop.last %};{% endif %}{% endfor %}'>
+    {% for option in groupby_options %}
+      <nldd-segmented-control-item value="{{ option.value }}" text="{{ option.label }}" icon="{{ option.icon }}"{% if option.active %} selected{% endif %}></nldd-segmented-control-item>
+    {% endfor %}
+  </nldd-segmented-control>
+</div>
