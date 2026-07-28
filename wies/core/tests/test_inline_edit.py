@@ -333,6 +333,22 @@ class InlineEditGroupTest(TestCase):
         field_names = sorted(e.context["field_name"] for e in events)
         assert field_names == ["end_date", "start_date"]
 
+    def test_inline_edit_records_client_ip_and_user_agent(self):
+        """End-to-end guard: a real inline-edit POST must thread the request down
+        to the audit event, so Event.ip / user_agent are populated."""
+        resp = post_inline_edit(
+            self.client,
+            self.url,
+            {"start_date": "2026-03-01", "end_date": "2026-06-30"},
+            REMOTE_ADDR="203.0.113.9",
+            HTTP_USER_AGENT="Mozilla/5.0 (inline editor)",
+        )
+        assert resp.status_code == 200
+        event = Event.objects.filter(object_type="Assignment", object_id=self.assignment.id, action="update").first()
+        assert event is not None
+        assert event.ip == "203.0.113.9"
+        assert event.user_agent == "Mozilla/5.0 (inline editor)"
+
     def test_group_post_emits_event_only_for_changed_field(self):
         self.assignment.start_date = "2026-03-01"
         self.assignment.save()

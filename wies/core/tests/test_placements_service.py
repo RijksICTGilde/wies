@@ -278,7 +278,7 @@ Test Assignment,Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,28-02-
         )
 
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
-Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl/1017/Ministerie_van_Binnenlandse_Zaken_en_Koninkrijksrelaties/,01-01-2025,28-02-2025,Python,John,john@test.nl,,"""
+Test Assignment,Description,Owner,owner@minbzk.nl,https://organisaties.overheid.nl/1017/Ministerie_van_Binnenlandse_Zaken_en_Koninkrijksrelaties/,01-01-2025,28-02-2025,Python,John,john@minbzk.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
@@ -291,7 +291,7 @@ Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl
         """Test that a non-matching URL results in no organization linked"""
 
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
-Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl/9999/Nonexistent/,01-01-2025,28-02-2025,Python,John,john@test.nl,,"""
+Test Assignment,Description,Owner,owner@minbzk.nl,https://organisaties.overheid.nl/9999/Nonexistent/,01-01-2025,28-02-2025,Python,John,john@minbzk.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
@@ -319,7 +319,7 @@ Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl
         )
 
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,client_2_url,client_3_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
-Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl/1001/A/,https://organisaties.overheid.nl/1002/B/,https://organisaties.overheid.nl/1003/C/,01-01-2025,28-02-2025,Python,John,john@test.nl,,"""
+Test Assignment,Description,Owner,owner@minbzk.nl,https://organisaties.overheid.nl/1001/A/,https://organisaties.overheid.nl/1002/B/,https://organisaties.overheid.nl/1003/C/,01-01-2025,28-02-2025,Python,John,john@minbzk.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
@@ -347,7 +347,7 @@ Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl
         )
 
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,client_2_url,client_3_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
-Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl/1001/A/,,,01-01-2025,28-02-2025,Python,John,john@test.nl,,"""
+Test Assignment,Description,Owner,owner@minbzk.nl,https://organisaties.overheid.nl/1001/A/,,,01-01-2025,28-02-2025,Python,John,john@minbzk.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
         assert result["success"]
@@ -360,7 +360,7 @@ Test Assignment,Description,Owner,owner@test.nl,https://organisaties.overheid.nl
     def test_no_client_columns(self):
         """Test that CSV without any client columns still works"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
-Test Assignment,Description,Owner,owner@test.nl,01-01-2025,28-02-2025,Python,John,john@test.nl,,"""
+Test Assignment,Description,Owner,owner@minbzk.nl,01-01-2025,28-02-2025,Python,John,john@minbzk.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
         assert result["success"]

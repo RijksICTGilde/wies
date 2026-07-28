@@ -8,6 +8,15 @@ This files lists the changes during the lifetime of this project.
 - 483: inline editing now detects concurrent edits instead of silently overwriting: if the data changed since you opened the edit form, the form comes back with a warning and your input kept. Opslaan saves anyway, Annuleren shows the changed data. This covers every inline-editable field, including the team and period forms.
 - 483: the concurrent-edit warning on a single field now names the field and the value someone else put there, so you no longer have to press Annuleren, losing your own input, to find out what changed
 - 483: an inline edit that is submitted without the token the edit form hands out (for example a page left open across a deploy) is no longer saved unverified; the form comes back with the same warning and saving again goes through.
+- 426: (migration)(post-release actions) log the client request metadata on audit and login events (BIO device logging). Removed the staff "Debug: request metadata" page
+- 426: logout events are now logged alongside logins
+- 503: fix the "Wie zit waar?", opdrachten and profiel overviews returning a 500 error when the side-panel `plaatsing`, `collega` or `opdracht` parameter contained a non-numeric value in the URL
+- 503: fix opdracht aanmaken returning a 500 error instead of a validation message when the submitted form data contained a non-numeric service count
+- 501: de opdracht-CSV-import maakt nieuwe collega's alleen nog aan als hun e-mailadres een toegestaan domein heeft (net als elders in de app); bestaande collega's (bijvoorbeeld uit OTYS) met een ander domein blijven gewoon bruikbaar.
+- 483: inline editing now detects concurrent edits instead of silently overwriting. If the data changed since you opened the edit form, the form comes back with a warning that names the field and the value someone else entered, keeping your own input; Opslaan saves anyway, Annuleren shows the changed data. This covers every inline-editable field (including the team and period forms), and an edit submitted without the form's token (for example a page left open across a deploy) is likewise held back with the same warning instead of saved unverified.
+- 480: the OIDC login now uses PKCE (S256) in the authorization-code flow. The government OIDC profile (OIDC-NLGov, sections 4.1 and 4.2.1) requires this for every client: https://gitdocumentatie.logius.nl/publicatie/api/oidc/
+- 453: the statistics pages shows unique logins per day in stead of the total number of logins
+- 498: harden ci: pin actions on sha, explicit permissions per action stage
 
 ## 2026-07-23
 

@@ -23,7 +23,7 @@ def _validate_placement_period(cleaned):
 
 
 @contextmanager
-def _mirror_edit_onto_assignment(placement, user):
+def _mirror_edit_onto_assignment(placement, user, request=None):
     """Record an inline placement edit as a "Team" event on the parent
     assignment. A placement has no audit type of its own, and this way the
     change renders identically to one made through "Team bewerken"."""
@@ -39,6 +39,7 @@ def _mirror_edit_onto_assignment(placement, user):
         source="user",
         object_id=placement.service.assignment_id,
         user=user,
+        request=request,
         context={
             "field_name": "services",
             "field_label": "Team",

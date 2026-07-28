@@ -21,6 +21,7 @@ from wies.core.models import (
     Skill,
 )
 from wies.core.services.events import create_event
+from wies.core.services.users import validate_email_domain
 
 logger = logging.getLogger(__name__)
 
@@ -67,7 +68,7 @@ def filter_visible_placements(queryset, today, viewer):
     return queryset.filter(started | Q(colleague_id=viewer.id) | Q(service__assignment__owner_id=viewer.id))
 
 
-def create_assignments_from_csv(creator, csv_content: str):
+def create_assignments_from_csv(creator, csv_content: str, request=None):
     """
     Create colleagues, assignments, services and placements from csv.
 
@@ -160,6 +161,7 @@ def create_assignments_from_csv(creator, csv_content: str):
                     validate_email(assignment_owner_email)
                     owner = Colleague.objects.filter(email__iexact=assignment_owner_email).order_by("id").first()
                     if owner is None:
+                        validate_email_domain(assignment_owner_email, user_facing=True)
                         owner = Colleague.objects.create(
                             name=row["assignment_owner"],
                             email=assignment_owner_email,
@@ -203,6 +205,7 @@ def create_assignments_from_csv(creator, csv_content: str):
                         source="user",
                         object_id=assignment.id,
                         user=creator,
+                        request=request,
                         context={
                             "assignment_name": assignment.name,
                         },
@@ -235,6 +238,7 @@ def create_assignments_from_csv(creator, csv_content: str):
                     validate_email(colleague_email)
                     colleague = Colleague.objects.filter(email__iexact=colleague_email).order_by("id").first()
                     if colleague is None:
+                        validate_email_domain(colleague_email, user_facing=True)
                         colleague = Colleague.objects.create(
                             name=row["placement_colleague_name"],
                             email=colleague_email,

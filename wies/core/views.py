@@ -377,7 +377,9 @@ def _resolve_placement_panel(request, placement_id):
         placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
             id=placement_id
         )
-    except Placement.DoesNotExist:
+    except Placement.DoesNotExist, ValueError:
+        # ValueError: a non-numeric ?plaatsing= param fails PK coercion; treat
+        # it the same as "not found" rather than letting it escape as a 500.
         return None
     assignment = placement.service.assignment
     viewer = getattr(request.user, "colleague", None)
@@ -446,27 +448,6 @@ def delete_error(request, pk):
     """Delete a single handled error and return the refreshed current page of the table."""
     ErrorEvent.objects.filter(pk=pk).delete()
     return _render_error_table(request, request.GET.get("pagina"))
-
-
-@staff_required
-def debug_request_meta(request):
-    xff_raw = request.headers.get("x-forwarded-for", "")
-    xff_entries = [p.strip() for p in xff_raw.split(",")] if xff_raw else []
-    return render(
-        request,
-        "debug_request_meta.html",
-        {
-            "remote_addr": request.META.get("REMOTE_ADDR", ""),
-            "xff_raw": xff_raw,
-            "xff_entries": xff_entries,
-            "xff_from_right": list(enumerate(reversed(xff_entries))),
-            "xfp": request.headers.get("x-forwarded-proto", ""),
-            "xfh": request.headers.get("x-forwarded-host", ""),
-            "x_real_ip": request.headers.get("x-real-ip", ""),
-            "user_agent": request.headers.get("user-agent", ""),
-            "server_time": timezone.now(),
-        },
-    )
 
 
 @staff_required
@@ -565,6 +546,7 @@ def staff_database(request):
                             source="user",
                             object_id=target.id,
                             user=request.user,
+                            request=request,
                             context={
                                 "merge": True,
                                 "merged_ids": deleted_ids,
@@ -1102,13 +1084,13 @@ class PlacementListView(ListView):
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
-            except Colleague.DoesNotExist:
+            except Colleague.DoesNotExist, ValueError:
                 pass
         elif assignment_id:
             try:
                 assignment = Assignment.objects.get(id=assignment_id)
                 context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
-            except Assignment.DoesNotExist:
+            except Assignment.DoesNotExist, ValueError:
                 pass
         return context
 
@@ -1377,13 +1359,13 @@ class AssignmentListView(ListView):
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
-            except Colleague.DoesNotExist:
+            except Colleague.DoesNotExist, ValueError:
                 pass
         elif assignment_id:
             try:
                 assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
                 context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
-            except Assignment.DoesNotExist:
+            except Assignment.DoesNotExist, ValueError:
                 pass
 
         return context
@@ -1600,6 +1582,7 @@ def user_create(request):
                 email=form.cleaned_data["email"],
                 labels=form.cleaned_data.get("labels"),
                 groups=form.cleaned_data.get("groups"),
+                request=request,
             )
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect
@@ -1661,6 +1644,7 @@ def user_edit(request, pk):
                 email=form.cleaned_data["email"],
                 labels=form.cleaned_data.get("labels"),
                 groups=form.cleaned_data.get("groups"),
+                request=request,
             )
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect
@@ -1727,6 +1711,7 @@ def user_delete(request, pk):
             source="user",
             object_id=pk,
             user=request.user,
+            request=request,
             context=context,
         )
         response = HttpResponse(status=200)
@@ -1790,7 +1775,7 @@ def user_import_csv(request):
                 {"result": {"success": False, "errors": ["Ongeldige bestandscodering. Gebruik UTF-8."]}},
             )
 
-        result = create_users_from_csv(request.user, csv_content)
+        result = create_users_from_csv(request.user, csv_content, request=request)
 
         # Return results in the form
         return render(request, "user_import.html", {"result": result})
@@ -1851,7 +1836,7 @@ def assignment_import_csv(request):
                 {"result": {"success": False, "errors": ["Invalid CSV file encoding. Please use UTF-8."]}},
             )
 
-        result = create_assignments_from_csv(request.user, csv_content)
+        result = create_assignments_from_csv(request.user, csv_content, request=request)
 
         # Return results in the form
         return render(request, "assignment_import.html", {"result": result})
@@ -2319,6 +2304,7 @@ def assignment_delete(request, pk):
                 source="user",
                 object_id=pk,
                 user=request.user,
+                request=request,
                 context=context,
             )
         messages.success(request, f"Opdracht '{name}' succesvol verwijderd")
@@ -2379,13 +2365,13 @@ def user_profile(request):
         try:
             assignment = Assignment.objects.get(id=assignment_id)
             panel_data = _build_assignment_panel_data(assignment, request)
-        except Assignment.DoesNotExist:
+        except Assignment.DoesNotExist, ValueError:
             pass
     elif colleague_id:
         try:
             panel_colleague = Colleague.objects.get(id=colleague_id)
             panel_data = _build_colleague_panel_data(panel_colleague, request)
-        except Colleague.DoesNotExist:
+        except Colleague.DoesNotExist, ValueError:
             pass
 
     # HTMX partial responses for panel swaps
@@ -2544,7 +2530,10 @@ def assignment_create(request):
         service_formset = ServiceFormSet(request.POST, prefix="service", form_kwargs={"skill_choices": skill_choices})
 
         # Check if at least one service has a skill selected (works even when formset is invalid)
-        total_forms = min(int(request.POST.get("service-TOTAL_FORMS", 0)), 100)
+        raw_total_forms = request.POST.get("service-TOTAL_FORMS", "0")
+        # A crafted/non-numeric management-form value must not crash the view; treat
+        # it as zero rows, which surfaces the normal "add at least one role" error.
+        total_forms = min(int(raw_total_forms), 100) if raw_total_forms.isdigit() else 0
         has_any_service = any(request.POST.get(f"service-{i}-skill") for i in range(total_forms))
         services_error = "" if has_any_service else "Voeg minimaal één rol toe."
 
@@ -2578,6 +2567,7 @@ def assignment_create(request):
             source="user",
             object_id=assignment.id,
             user=request.user,
+            request=request,
             context=_assignment_audit_snapshot(assignment),
         )
 
@@ -3216,7 +3206,9 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
                     if not conflict:
                         spec.save(obj, formset)
                         after = _edit_state(editable_set, spec, obj)
-                        _emit_inline_edit_audit_event(editable_set, spec, obj, before, after, request.user)
+                        _emit_inline_edit_audit_event(
+                            editable_set, spec, obj, before, after, request.user, request=request
+                        )
             except editable_set.model.DoesNotExist:
                 # Deleted between the permission check and the lock. Same denial
                 # partial as a missing or forbidden object, so this stays
@@ -3248,7 +3240,7 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
     return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
 
 
-def _record_editable_change(editable, obj, object_type, old_value, new_value, user) -> None:
+def _record_editable_change(editable, obj, object_type, old_value, new_value, user, request=None) -> None:
     to_state = editable.audit_state or (lambda v: v)
     old_state = to_state(old_value)
     new_state = to_state(new_value)
@@ -3260,6 +3252,7 @@ def _record_editable_change(editable, obj, object_type, old_value, new_value, us
         source="user",
         object_id=obj.id,
         user=user,
+        request=request,
         context={
             "field_name": editable.field or editable.name or "",
             "field_label": editable.label or editable.name or "",
@@ -3269,18 +3262,22 @@ def _record_editable_change(editable, obj, object_type, old_value, new_value, us
     )
 
 
-def _emit_inline_edit_audit_event(editable_set, spec, obj, before, after, user, *, child_editables=None) -> None:
+def _emit_inline_edit_audit_event(
+    editable_set, spec, obj, before, after, user, *, child_editables=None, request=None
+) -> None:
     object_type = editable_set.audit_type()
     if object_type is None:
         return
 
     if isinstance(spec, Editable):
-        _record_editable_change(spec, obj, object_type, before, after, user)
+        _record_editable_change(spec, obj, object_type, before, after, user, request=request)
         return
 
     if isinstance(spec, EditableGroup):
         for child in child_editables or []:
-            _record_editable_change(child, obj, object_type, before.get(child.name), after.get(child.name), user)
+            _record_editable_change(
+                child, obj, object_type, before.get(child.name), after.get(child.name), user, request=request
+            )
         return
 
     if isinstance(spec, EditableCollection):
@@ -3295,6 +3292,7 @@ def _emit_inline_edit_audit_event(editable_set, spec, obj, before, after, user, 
             source="user",
             object_id=obj.id,
             user=user,
+            request=request,
             context={
                 "field_name": spec.name or "",
                 "field_label": spec.label or spec.name or "",
@@ -3390,7 +3388,7 @@ def inline_edit_view(request, model_label, pk, name):
                         else:
                             before = _current_value(obj, spec)
                         mirror = editable_set.audit_mirror
-                        with mirror(obj, request.user) if mirror else nullcontext():
+                        with mirror(obj, request.user, request) if mirror else nullcontext():
                             save_spec(spec, editables, form.cleaned_data, obj)
                             if isinstance(spec, EditableGroup):
                                 after = {e.name: _current_value(obj, e) for e in editables}
@@ -3404,6 +3402,7 @@ def inline_edit_view(request, model_label, pk, name):
                                 after,
                                 request.user,
                                 child_editables=editables if isinstance(spec, EditableGroup) else None,
+                                request=request,
                             )
             except editable_set.model.DoesNotExist:
                 # Deleted between the permission check and the lock. Same denial

@@ -2,9 +2,9 @@ from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 
-from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service
+from wies.core.models import Assignment, Colleague, Event, Label, LabelCategory, Placement, Service
 from wies.core.services.placements import create_assignments_from_csv
 from wies.core.services.sync import sync_all_otys_iir_records
 from wies.core.services.users import create_users_from_csv
@@ -53,6 +53,41 @@ Bob,Johnson,bob@rijksoverheid.nl,Rijks ICT Gilde,n,n,y"""
 
         bob = User.objects.get(email="bob@rijksoverheid.nl")
         assert rig_label in bob.colleague.labels.all()
+
+    def test_csv_user_import_logs_ip_and_user_agent(self):
+        """When a request is passed, each imported user's create event records the
+        client IP + User-Agent (BIO device logging), matching the assignment import."""
+        request = RequestFactory().post(
+            "/",
+            HTTP_USER_AGENT="Mozilla/5.0 (CSV importer)",
+            REMOTE_ADDR="203.0.113.7",
+        )
+
+        csv_content = """first_name,last_name,email,brand
+Ivy,Import,ivy@rijksoverheid.nl,"""
+
+        result = create_users_from_csv(None, csv_content, request=request)
+
+        assert result["success"]
+        assert result["users_created"] == 1
+
+        ivy = User.objects.get(email="ivy@rijksoverheid.nl")
+        event = Event.objects.get(object_type="User", action="create", object_id=ivy.id)
+        assert event.ip == "203.0.113.7"
+        assert event.user_agent == "Mozilla/5.0 (CSV importer)"
+
+    def test_csv_user_import_without_request_leaves_ip_and_user_agent_empty(self):
+        """Without a request, the create event still records but has no IP/User-Agent."""
+        csv_content = """first_name,last_name,email,brand
+Noreq,User,noreq@rijksoverheid.nl,"""
+
+        result = create_users_from_csv(None, csv_content)
+
+        assert result["success"]
+        noreq = User.objects.get(email="noreq@rijksoverheid.nl")
+        event = Event.objects.get(object_type="User", action="create", object_id=noreq.id)
+        assert event.ip is None
+        assert event.user_agent == ""
 
     def test_csv_user_import_without_brand_creates_users_without_labels(self):
         """Test: CSV without brand column or empty brand creates users with no labels"""
@@ -153,7 +188,7 @@ Test Assignment,Test Description,Owner Name,owner@rijksoverheid.nl,,01-01-2025,3
     def test_csv_placement_import_without_brand_no_label(self):
         """Test: CSV placement import without brand columns or empty brands creates colleagues with no labels"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
-Test Assignment,Test Description,Owner Name,owner@test.com,,01-01-2025,31-12-2025,Python,John Doe,john@test.com,,"""
+Test Assignment,Test Description,Owner Name,owner@minbzk.nl,,01-01-2025,31-12-2025,Python,John Doe,john@minbzk.nl,,"""
 
         result = create_assignments_from_csv(None, csv_content)
 
@@ -161,17 +196,17 @@ Test Assignment,Test Description,Owner Name,owner@test.com,,01-01-2025,31-12-202
         assert result["colleagues_created"] > 0
 
         # Verify colleagues have no labels
-        john = Colleague.objects.get(email="john@test.com")
+        john = Colleague.objects.get(email="john@minbzk.nl")
         assert john.labels.count() == 0
 
-        owner = Colleague.objects.get(email="owner@test.com")
+        owner = Colleague.objects.get(email="owner@minbzk.nl")
         assert owner.labels.count() == 0
 
     def test_csv_placement_import_multiple_brands(self):
         """Test: CSV placement import with different brands for owners vs colleagues"""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email,owner_brand,colleague_brand
-Assignment 1,Test,Owner A,ownera@test.com,,01-01-2025,31-12-2025,Python,John Doe,john@test.com,Rijks ICT Gilde,Rijksconsultants
-Assignment 2,Test,Owner B,ownerb@test.com,,01-01-2025,31-12-2025,Java,Jane Smith,jane@test.com,I-Interim Rijk,Rijks ICT Gilde"""
+Assignment 1,Test,Owner A,ownera@minbzk.nl,,01-01-2025,31-12-2025,Python,John Doe,john@minbzk.nl,Rijks ICT Gilde,Rijksconsultants
+Assignment 2,Test,Owner B,ownerb@minbzk.nl,,01-01-2025,31-12-2025,Java,Jane Smith,jane@minbzk.nl,I-Interim Rijk,Rijks ICT Gilde"""
 
         result = create_assignments_from_csv(None, csv_content)
 
@@ -187,20 +222,20 @@ Assignment 2,Test,Owner B,ownerb@test.com,,01-01-2025,31-12-2025,Java,Jane Smith
         iir_label = Label.objects.get(name="I-Interim Rijk", category=merken_category)
 
         # Verify first row: owner has RIG, colleague has RC
-        john = Colleague.objects.get(email="john@test.com")
+        john = Colleague.objects.get(email="john@minbzk.nl")
         assert rc_label in john.labels.all()
         assert rig_label not in john.labels.all()
 
-        owner_a = Colleague.objects.get(email="ownera@test.com")
+        owner_a = Colleague.objects.get(email="ownera@minbzk.nl")
         assert rig_label in owner_a.labels.all()
         assert rc_label not in owner_a.labels.all()
 
         # Verify second row: owner has IIR, colleague has RIG
-        jane = Colleague.objects.get(email="jane@test.com")
+        jane = Colleague.objects.get(email="jane@minbzk.nl")
         assert rig_label in jane.labels.all()
         assert iir_label not in jane.labels.all()
 
-        owner_b = Colleague.objects.get(email="ownerb@test.com")
+        owner_b = Colleague.objects.get(email="ownerb@minbzk.nl")
         assert iir_label in owner_b.labels.all()
         assert rig_label not in owner_b.labels.all()
 
@@ -217,7 +252,7 @@ Assignment 2,Test,Owner B,ownerb@test.com,,01-01-2025,31-12-2025,Java,Jane Smith
 
         # Import placement with existing colleague and same brand
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,client_1_url,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,existing@rijksoverheid.com"""
+New Assignment,Description,,,,01-01-2025,31-12-2025,Django,Existing Colleague,existing@rijksoverheid.nl"""
 
         result = create_assignments_from_csv(None, csv_content)
 
@@ -363,8 +398,8 @@ Test,User,testuser@rijksoverheid.nl,Test Brand"""
     def test_csv_two_rows_same_skill_different_colleagues_create_two_services(self):
         """Test: Two CSV rows with the same skill and different colleagues create two Services."""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Anuj Gupta,anuj@x.com
-JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Jurre Heesbeen,jurre@x.com"""
+JusticeLink,Desc,Owner,owner@rijksoverheid.nl,01-01-2025,31-12-2028,Architect,Anuj Gupta,anuj@rijksoverheid.nl
+JusticeLink,Desc,Owner,owner@rijksoverheid.nl,01-01-2025,31-12-2028,Architect,Jurre Heesbeen,jurre@rijksoverheid.nl"""
 
         result = create_assignments_from_csv(None, csv_content)
 
@@ -382,8 +417,8 @@ JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Jurre Heesbee
     def test_csv_reupload_idempotent(self):
         """Test: Re-uploading the same CSV creates no duplicate Services or Placements."""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Anuj Gupta,anuj@x.com
-JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Jurre Heesbeen,jurre@x.com"""
+JusticeLink,Desc,Owner,owner@rijksoverheid.nl,01-01-2025,31-12-2028,Architect,Anuj Gupta,anuj@rijksoverheid.nl
+JusticeLink,Desc,Owner,owner@rijksoverheid.nl,01-01-2025,31-12-2028,Architect,Jurre Heesbeen,jurre@rijksoverheid.nl"""
 
         first = create_assignments_from_csv(None, csv_content)
         assert first["success"]
@@ -403,8 +438,8 @@ JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Jurre Heesbee
     def test_csv_vacancy_row_dedupes_by_skill(self):
         """Test: A placed row + a vacancy row (empty email) for the same skill create two Services."""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Anuj Gupta,anuj@x.com
-JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,,"""
+JusticeLink,Desc,Owner,owner@rijksoverheid.nl,01-01-2025,31-12-2028,Architect,Anuj Gupta,anuj@rijksoverheid.nl
+JusticeLink,Desc,Owner,owner@rijksoverheid.nl,01-01-2025,31-12-2028,Architect,,"""
 
         result = create_assignments_from_csv(None, csv_content)
 
@@ -432,9 +467,9 @@ JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,,"""
     def test_csv_sourced_services_have_at_most_one_placement(self):
         """Regression invariant: every CSV-sourced Service has at most one Placement."""
         csv_content = """assignment_name,assignment_description,assignment_owner,assignment_owner_email,assignment_start_date,assignment_end_date,service_skill,placement_colleague_name,placement_colleague_email
-JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Anuj Gupta,anuj@x.com
-JusticeLink,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Architect,Jurre Heesbeen,jurre@x.com
-OtherProject,Desc,Owner,owner@x.com,01-01-2025,31-12-2028,Python,Dev One,dev1@x.com"""
+JusticeLink,Desc,Owner,owner@rijksoverheid.nl,01-01-2025,31-12-2028,Architect,Anuj Gupta,anuj@rijksoverheid.nl
+JusticeLink,Desc,Owner,owner@rijksoverheid.nl,01-01-2025,31-12-2028,Architect,Jurre Heesbeen,jurre@rijksoverheid.nl
+OtherProject,Desc,Owner,owner@rijksoverheid.nl,01-01-2025,31-12-2028,Python,Dev One,dev1@rijksoverheid.nl"""
 
         result = create_assignments_from_csv(None, csv_content)
         assert result["success"]

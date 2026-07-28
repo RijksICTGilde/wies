@@ -275,6 +275,29 @@ class AssignmentCreateTest(TestCase):
         assert response.status_code == 200
         assert Assignment.objects.count() == 0
 
+    def test_post_non_numeric_total_forms_does_not_500(self):
+        # A crafted service-TOTAL_FORMS value must not crash the view before the
+        # formset validates. int() on a non-numeric value would raise ValueError.
+        # raise_request_exception=False so an unexpected view crash surfaces as a
+        # 500 response we can assert against, rather than being re-raised.
+        client = Client(raise_request_exception=False)
+        client.force_login(self.bdm_user)
+        response = client.post(
+            reverse("assignment-create"),
+            {
+                "name": "Opdracht Kapotte Formset",
+                **org_formset_data([(self.org, "PRIMARY")]),
+                "service-TOTAL_FORMS": "abc",
+                "service-INITIAL_FORMS": "0",
+                "service-MIN_NUM_FORMS": "1",
+                "service-MAX_NUM_FORMS": "1000",
+            },
+        )
+        # The formset management form is invalid, so the view re-renders the
+        # form (200) rather than crashing with a 500.
+        assert response.status_code == 200
+        assert Assignment.objects.count() == 0
+
     def test_post_creates_new_skill_inline(self):
         self.client.force_login(self.bdm_user)
         response = self.client.post(
