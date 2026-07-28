@@ -60,9 +60,10 @@ def _find_or_create_colleague_for_user(user, first_name, last_name, email, *, so
     return Colleague.objects.create(user=user, name=name, email=email, source=source)
 
 
-def create_user(creator: User, first_name, last_name, email, labels=None, groups=None):
+def create_user(creator: User, first_name, last_name, email, labels=None, groups=None, request=None):
     """
     :param creator: can be None when user create is triggered from system itself
+    :param request: optional, for logging client IP + User-Agent on the audit event
     """
 
     if groups is None:
@@ -102,15 +103,17 @@ def create_user(creator: User, first_name, last_name, email, labels=None, groups
         source="user",
         object_id=user.id,
         user=creator,
+        request=request,
         context=context,
     )
 
     return user
 
 
-def update_user(updater, user, first_name, last_name, email, labels=None, groups=None):
+def update_user(updater, user, first_name, last_name, email, labels=None, groups=None, request=None):
     """
     :param updater: user that performs the update action. Can be None if done by system
+    :param request: optional, for logging client IP + User-Agent on the audit event
     """
 
     if groups is None:
@@ -150,12 +153,13 @@ def update_user(updater, user, first_name, last_name, email, labels=None, groups
         source="user",
         object_id=user.id,
         user=updater,
+        request=request,
         context=context,
     )
     return user
 
 
-def create_users_from_csv(creator, csv_content: str):
+def create_users_from_csv(creator, csv_content: str, request=None):
     """
     Create users from a CSV file.
 
@@ -174,6 +178,9 @@ def create_users_from_csv(creator, csv_content: str):
     - labels_created: Number of new labels created
     - created_labels: List of label names that were created
     - errors: List of validation error messages (empty if success=True)
+
+    Pass `request` (when available) to log the client IP + User-Agent on each
+    created user's audit event for BIO device logging; extraction is best-effort.
     """
 
     try:
@@ -311,6 +318,7 @@ def create_users_from_csv(creator, csv_content: str):
                     email=email,
                     labels=labels_to_assign,
                     groups=groups_to_assign,
+                    request=request,
                 )
                 users_created += 1
     except (DataError, IntegrityError) as e:

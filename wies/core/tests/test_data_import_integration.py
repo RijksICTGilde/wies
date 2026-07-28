@@ -2,9 +2,9 @@ from unittest.mock import Mock, patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
-from django.test import TestCase
+from django.test import RequestFactory, TestCase
 
-from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service
+from wies.core.models import Assignment, Colleague, Event, Label, LabelCategory, Placement, Service
 from wies.core.services.placements import create_assignments_from_csv
 from wies.core.services.sync import sync_all_otys_iir_records
 from wies.core.services.users import create_users_from_csv
@@ -53,6 +53,41 @@ Bob,Johnson,bob@rijksoverheid.nl,Rijks ICT Gilde,n,n,y"""
 
         bob = User.objects.get(email="bob@rijksoverheid.nl")
         assert rig_label in bob.colleague.labels.all()
+
+    def test_csv_user_import_logs_ip_and_user_agent(self):
+        """When a request is passed, each imported user's create event records the
+        client IP + User-Agent (BIO device logging), matching the assignment import."""
+        request = RequestFactory().post(
+            "/",
+            HTTP_USER_AGENT="Mozilla/5.0 (CSV importer)",
+            REMOTE_ADDR="203.0.113.7",
+        )
+
+        csv_content = """first_name,last_name,email,brand
+Ivy,Import,ivy@rijksoverheid.nl,"""
+
+        result = create_users_from_csv(None, csv_content, request=request)
+
+        assert result["success"]
+        assert result["users_created"] == 1
+
+        ivy = User.objects.get(email="ivy@rijksoverheid.nl")
+        event = Event.objects.get(object_type="User", action="create", object_id=ivy.id)
+        assert event.ip == "203.0.113.7"
+        assert event.user_agent == "Mozilla/5.0 (CSV importer)"
+
+    def test_csv_user_import_without_request_leaves_ip_and_user_agent_empty(self):
+        """Without a request, the create event still records but has no IP/User-Agent."""
+        csv_content = """first_name,last_name,email,brand
+Noreq,User,noreq@rijksoverheid.nl,"""
+
+        result = create_users_from_csv(None, csv_content)
+
+        assert result["success"]
+        noreq = User.objects.get(email="noreq@rijksoverheid.nl")
+        event = Event.objects.get(object_type="User", action="create", object_id=noreq.id)
+        assert event.ip is None
+        assert event.user_agent == ""
 
     def test_csv_user_import_without_brand_creates_users_without_labels(self):
         """Test: CSV without brand column or empty brand creates users with no labels"""

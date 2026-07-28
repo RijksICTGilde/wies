@@ -61,7 +61,7 @@ def auth(request):
         # Keep the id_token so logout can end the upstream Keycloak/SSO session.
         request.session[settings.OIDC_ID_TOKEN_SESSION_KEY] = oidc_response.get("id_token")
         logger.info("login successful, access granted")
-        create_auth_event(user.email, "Login.success")
+        create_auth_event(user.email, "Login.success", request=request)
         response = redirect(request.build_absolute_uri(reverse("home")))
     else:
         logger.info("login not successful, access denied")
@@ -84,7 +84,11 @@ def auth(request):
 def logout(request):
     id_token = request.session.get(settings.OIDC_ID_TOKEN_SESSION_KEY)
     if request.user and request.user.is_authenticated:
+        # Capture the email before auth_logout flushes the session and turns
+        # request.user into AnonymousUser. IP/User-Agent stay on the request.
+        user_email = request.user.email
         auth_logout(request)
+        create_auth_event(user_email, "Logout", request=request)
 
     end_session_url = _build_end_session_url(request, id_token)
     response = redirect(end_session_url) if end_session_url else redirect(reverse("login"))
