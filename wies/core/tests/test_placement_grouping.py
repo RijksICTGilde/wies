@@ -122,9 +122,7 @@ class TestPlacementGrouping:
             end_date=today + timedelta(days=30),
             source="wies",
         )
-        service = Service.objects.create(
-            assignment=assignment, description="X", skill=shared_skill, source="wies"
-        )
+        service = Service.objects.create(assignment=assignment, description="X", skill=shared_skill, source="wies")
         bob = Colleague.objects.create(name="Bob", email="bob@test.com", source="wies")
         carol = Colleague.objects.create(name="Carol", email="carol@test.com", source="wies")
         Placement.objects.create(colleague=bob, service=service, source="wies")
