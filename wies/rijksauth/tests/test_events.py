@@ -1,6 +1,6 @@
 """Tests for the create_auth_event service.
 
-Mirrors wies/core/tests/test_request_meta.py::CreateEventRequestMetaTest for the
+Mirrors wies/rijksauth/tests/test_request_meta.py for the
 AuthEvent (login/logout) audit trail: proves the client IP + User-Agent are
 recorded when a request is passed, and left empty when it is not.
 """

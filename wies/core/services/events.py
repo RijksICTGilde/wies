@@ -1,7 +1,7 @@
 from django.utils import timezone
 
 from wies.core.models import Event, EventAction, EventSource
-from wies.core.request_meta import get_request_metadata
+from wies.rijksauth.request_meta import get_request_metadata
 
 SUPPORTED_OBJECT_TYPES = {
     "User",

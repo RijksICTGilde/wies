@@ -1,5 +1,5 @@
-from wies.core.request_meta import get_request_metadata
 from wies.rijksauth.models import AuthEvent
+from wies.rijksauth.request_meta import get_request_metadata
 
 SUPPORTED_AUTH_EVENTS = {"Login.success", "Login.fail", "Logout"}
 
