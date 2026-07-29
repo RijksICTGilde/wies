@@ -47,31 +47,30 @@ class ActiveFilterIndicatorTests(TestCase):
     count as an active filter — otherwise the page shows an "active" indicator for a
     filter that isn't set.
 
-    The chip strip's clear-all button (``data-nldd-clear-all``) is gated on
-    having active filters, on the "Wie zit waar?" (home) and opdrachten
-    (assignment-list) pages. The modal footer holds a second, always-rendered
-    "Wis alle filters" button, so asserting on that raw text would be ambiguous.
+    The chip strip's dismissable filter tokens (``data-wies-dismiss="filter"``)
+    are gated on having active filters, on the "Wie zit waar?" (home) and
+    opdrachten (assignment-list) pages.
 
     The Gebruikers (admin-users) page has no label filter in the NLDD design
     system (only a search field), so it has no active-filter badge to assert on."""
 
-    CLEAR_ALL_MARKER = "data-nldd-clear-all"
+    ACTIVE_FILTER_MARKER = 'data-wies-dismiss="filter"'
 
     def setUp(self):
         self.client = Client()
         self.user = User.objects.create_user(email="viewer@rijksoverheid.nl", first_name="V", last_name="iewer")
 
-    def test_home_non_numeric_label_hides_clear_all(self):
+    def test_home_non_numeric_label_hides_filter_tokens(self):
         self.client.force_login(self.user)
 
         response = self.client.get(reverse("home"), {"labels": "abc"})
 
         assert response.status_code == 200
-        assert self.CLEAR_ALL_MARKER not in response.content.decode()
+        assert self.ACTIVE_FILTER_MARKER not in response.content.decode()
 
-    def test_home_valid_label_shows_clear_all(self):
-        """Positive control: a real label id is an active filter, so the clear-all
-        button must render — proving the negative assertions aren't trivially green."""
+    def test_home_valid_label_shows_filter_tokens(self):
+        """Positive control: a real label id is an active filter, so a filter token
+        must render — proving the negative assertions aren't trivially green."""
         category = LabelCategory.objects.create(name="Cat", color="#FF5733")
         label = Label.objects.create(name="Python", category=category)
         self.client.force_login(self.user)
@@ -79,21 +78,21 @@ class ActiveFilterIndicatorTests(TestCase):
         response = self.client.get(reverse("home"), {"labels": str(label.id)})
 
         assert response.status_code == 200
-        assert self.CLEAR_ALL_MARKER in response.content.decode()
+        assert self.ACTIVE_FILTER_MARKER in response.content.decode()
 
-    def test_assignments_non_numeric_rol_hides_clear_all(self):
+    def test_assignments_non_numeric_rol_hides_filter_tokens(self):
         self.client.force_login(self.user)
 
         response = self.client.get(reverse("assignment-list"), {"rol": "abc"})
 
         assert response.status_code == 200
-        assert self.CLEAR_ALL_MARKER not in response.content.decode()
+        assert self.ACTIVE_FILTER_MARKER not in response.content.decode()
 
-    def test_assignments_valid_rol_shows_clear_all(self):
+    def test_assignments_valid_rol_shows_filter_tokens(self):
         skill = Skill.objects.create(name="Python")
         self.client.force_login(self.user)
 
         response = self.client.get(reverse("assignment-list"), {"rol": str(skill.id)})
 
         assert response.status_code == 200
-        assert self.CLEAR_ALL_MARKER in response.content.decode()
+        assert self.ACTIVE_FILTER_MARKER in response.content.decode()

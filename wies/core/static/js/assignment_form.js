@@ -8,6 +8,11 @@
  * in multi_select.js / dialog.js / filters.js.
  */
 (function () {
+  // The script tag rides along with the team child sheet, so htmx can insert
+  // it more than once per page; a second copy would double every listener.
+  if (window.__wiesAssignmentFormLoaded) return;
+  window.__wiesAssignmentFormLoaded = true;
+
   function initServicesForm() {
     var container = document.querySelector("#services-container");
     if (!container) return;
@@ -76,18 +81,30 @@
         row = sourceRow.cloneNode(true);
         row.dataset.serviceIndex = index;
 
+        // NLDD form-associated hosts (radio/checkbox/date) carry the formset
+        // name on the element itself, so they renumber along with the natives.
         row
-          .querySelectorAll("input, select, textarea")
+          .querySelectorAll(
+            "input, select, textarea, nldd-radio-button, nldd-checkbox, nldd-date-field, nldd-text-field, nldd-multi-line-text-field",
+          )
           .forEach(function (field) {
-            if (field.name)
-              field.name = field.name.replace(/-\d+-/, "-" + index + "-");
-            if (field.id)
-              field.id = field.id.replace(/-\d+-/, "-" + index + "-");
-            if (field.tagName === "SELECT") {
+            ["name", "id"].forEach(function (attr) {
+              var value = field.getAttribute(attr);
+              if (value)
+                field.setAttribute(
+                  attr,
+                  value.replace(/-\d+-/, "-" + index + "-"),
+                );
+            });
+            var tag = field.localName;
+            if (tag === "select") {
               field.selectedIndex = 0;
-            } else if (field.type === "radio") {
-              field.checked = false;
-            } else if (field.type === "checkbox") {
+            } else if (
+              field.type === "radio" ||
+              field.type === "checkbox" ||
+              tag === "nldd-radio-button" ||
+              tag === "nldd-checkbox"
+            ) {
               field.checked = false;
             } else {
               field.value = "";
@@ -105,8 +122,11 @@
         var newSkill = row.querySelector(".service-new-skill");
         if (newSkill) newSkill.style.display = "none";
 
-        // Reset period toggle init so initPeriodToggles picks up the new row.
+        // Reset the init markers: cloneNode copies data-attributes but not
+        // listeners, so both toggles must re-arm on the new row.
         delete row.dataset.periodToggleInit;
+        var clonedToggle = row.querySelector(".service-row__status-toggle");
+        if (clonedToggle) delete clonedToggle.dataset.colleagueToggleInit;
         // Default: inherit assignment period.
         var periodCheckbox = row.querySelector("[name$='-has_custom_period']");
         if (periodCheckbox) periodCheckbox.checked = true;
@@ -117,7 +137,7 @@
         var existingBtn = row.querySelector(".service-row__remove");
         if (existingBtn) existingBtn.remove();
 
-        row.querySelectorAll(".nldd-form-field__error").forEach(function (el) {
+        row.querySelectorAll(".field-errors").forEach(function (el) {
           el.remove();
         });
 
@@ -127,7 +147,7 @@
 
       // Pre-select the chosen status radio.
       var radio = row.querySelector(
-        "input[type='radio'][value='" + status + "']",
+        "nldd-radio-button[value='" + status + "']",
       );
       if (radio) {
         radio.checked = true;
@@ -154,22 +174,25 @@
     }
 
     function initColleagueToggle(row) {
-      var radios = row.querySelectorAll(
-        ".service-row__status-toggle input[type='radio']",
-      );
+      var toggle = row.querySelector(".service-row__status-toggle");
       var colleagueField = row.querySelector(".service-colleague-field");
-      if (!colleagueField) return;
-      radios.forEach(function (radio) {
-        radio.addEventListener("change", function () {
-          var isAanvraag = radio.value === "aanvraag";
-          colleagueField.style.display = isAanvraag ? "none" : "";
-          // Clear the (now hidden) consultant so switching to "aanvraag"
-          // actually frees the placement on save.
-          if (isAanvraag) {
-            var select = colleagueField.querySelector("select");
-            if (select) select.value = "";
-          }
-        });
+      if (!toggle || !colleagueField) return;
+      if (toggle.dataset.colleagueToggleInit === "1") return;
+      toggle.dataset.colleagueToggleInit = "1";
+      // nldd-radio-button keeps its native input in the shadow root, so listen
+      // for the composed change event instead of querying for inputs.
+      toggle.addEventListener("change", function (e) {
+        var value =
+          (e.detail && e.detail.value) || (e.target && e.target.value);
+        if (!value) return;
+        var isAanvraag = value === "aanvraag";
+        colleagueField.style.display = isAanvraag ? "none" : "";
+        // Clear the (now hidden) consultant so switching to "aanvraag"
+        // actually frees the placement on save.
+        if (isAanvraag) {
+          var select = colleagueField.querySelector("select");
+          if (select) select.value = "";
+        }
       });
     }
 

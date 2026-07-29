@@ -16,7 +16,33 @@ def _onboarding_owner_mailto(assignment) -> str:
     return f"mailto:{assignment.owner.email}?subject={subject}"
 
 
-def _onboarding_assignments(colleague):
+def _onboarding_can_edit(entry, user) -> bool:
+    """Mag deze gebruiker iets aan deze opdracht of eigen rol wijzigen?
+
+    Bepaalt of de controlestap een "Wijzigen"-knop toont; de knop opent het
+    bewerkscherm dat op dezelfde specs draait (zie onboarding_assignment_edit).
+    """
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
+    from wies.core.editables.service import ServiceEditables  # noqa: PLC0415
+    from wies.core.permission_engine import Verb, has_permission  # noqa: PLC0415
+
+    assignment = entry["assignment"]
+    assignment_specs = (
+        AssignmentEditables.name,
+        AssignmentEditables.extra_info,
+        AssignmentEditables.organizations,
+        AssignmentEditables.period,
+    )
+    if any(has_permission(Verb.UPDATE, assignment, user, spec) for spec in assignment_specs):
+        return True
+    return any(
+        has_permission(Verb.UPDATE, service, user, spec)
+        for service in entry["services"]
+        for spec in (ServiceEditables.skill, ServiceEditables.description)
+    )
+
+
+def _onboarding_assignments(colleague, user=None):
     """Return the active assignments the user is placed on, for the self-check step."""
     if colleague is None:
         return []
@@ -44,7 +70,10 @@ def _onboarding_assignments(colleague):
         if placement.service not in entry["services"]:
             entry["services"].append(placement.service)
 
-    return list(by_assignment.values())
+    entries = list(by_assignment.values())
+    for entry in entries:
+        entry["user_can_edit"] = _onboarding_can_edit(entry, user) if user is not None else False
+    return entries
 
 
 def onboarding(request):
@@ -61,5 +90,5 @@ def onboarding(request):
         "show_onboarding": True,
         "onboarding_label_categories": list(LabelCategory.objects.all()),
         "onboarding_colleague": colleague,
-        "onboarding_assignments": _onboarding_assignments(colleague),
+        "onboarding_assignments": _onboarding_assignments(colleague, user),
     }

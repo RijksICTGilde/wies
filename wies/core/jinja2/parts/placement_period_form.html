@@ -4,44 +4,45 @@
    service and the inputs are disabled.
    Context: target, edit_url, form, obj (Placement instance). #}
 <div id="{{ target }}">
+  {# nldd-form OM het formulier heen; andersom maakt het component er zelf een
+     <form> in en horen de velden niet meer bij dit formulier. #}
+  <nldd-form>
   <form hx-post="{{ edit_url }}"
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
         hx-target="#{{ target }}"
         hx-swap="outerHTML"
         data-service-start="{{ obj.service.start_date.isoformat() if obj.service.start_date else '' }}"
         data-service-end="{{ obj.service.end_date.isoformat() if obj.service.end_date else '' }}">
-    <div class="nldd-form-fields nldd-form-fields--spaced">
       {# Verborgen via een ouder met [hidden]: een `display:none` op de select
          zelf wordt door de bundel-CSS overruled. #}
       <div hidden>{{ form.period_source.as_widget() }}</div>
-      <div class="nldd-form-field">
-        <span class="nldd-form-field__label">Periode</span>
-        <label class="nldd-checkbox-option">
-          <input type="checkbox"
-                 id="placement-inherit-period"
-                 class="nldd-checkbox"
-                 {% if form.period_source.value() == "SERVICE" %}checked{% endif %}>
-          <span class="nldd-checkbox-option__label">Neem opdrachtperiode over</span>
-        </label>
-      </div>
-      <div class="nldd-form-field">
-        <label class="nldd-form-field__label"
-               for="{{ form.specific_start_date.id_for_label }}">{{ form.specific_start_date.label }}</label>
-        {{ form.specific_start_date.as_widget() }}
-        {% for error in form.specific_start_date.errors %}<p class="nldd-form-field__error-text">{{ error }}</p>{% endfor %}
-      </div>
-      <div class="nldd-form-field">
-        <label class="nldd-form-field__label"
-               for="{{ form.specific_end_date.id_for_label }}">{{ form.specific_end_date.label }}</label>
-        {{ form.specific_end_date.as_widget() }}
-        {% for error in form.specific_end_date.errors %}<p class="nldd-form-field__error-text">{{ error }}</p>{% endfor %}
-      </div>
-    </div>
-    {% for error in form.non_field_errors() %}<p class="nldd-form-field__error-text">{{ error }}</p>{% endfor %}
+      <nldd-form-field label="Periode">
+      <nldd-checkbox-field id="placement-inherit-period"
+                           label="Neem opdrachtperiode over"
+                           {% if form.period_source.value() == "SERVICE" %}checked{% endif %}></nldd-checkbox-field>
+      </nldd-form-field>
+      {% set start_errors = wire_field_errors(form.specific_start_date) %}
+      <nldd-form-field label="{{ form.specific_start_date.label }}">
+      {{ form.specific_start_date.as_widget() }}
+      {% for error in form.specific_start_date.errors %}
+        <nldd-form-field-error-text id="{{ start_errors[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
+      {% endfor %}
+      </nldd-form-field>
+      {% set end_errors = wire_field_errors(form.specific_end_date) %}
+      <nldd-form-field label="{{ form.specific_end_date.label }}">
+      {{ form.specific_end_date.as_widget() }}
+      {% for error in form.specific_end_date.errors %}
+        <nldd-form-field-error-text id="{{ end_errors[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
+      {% endfor %}
+      </nldd-form-field>
+      {% for error in form.non_field_errors() %}
+        <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
+      {% endfor %}
     <div class="field-actions">
       <nldd-button type="submit" variant="primary" text="Opslaan"></nldd-button>
       <nldd-button type="button" variant="secondary" text="Annuleren" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML"></nldd-button>
     </div>
   </form>
+  </nldd-form>
 </div>
 <script src="{{ static('js/placement_period_toggle.js') }}"></script>

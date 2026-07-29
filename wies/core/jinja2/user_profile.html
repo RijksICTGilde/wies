@@ -4,71 +4,70 @@
   profiel — Wies NDD
 {% endblock title %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/nldd/side_panel.css') }}" />
-  <script src="{{ static('js/nldd/side_panel.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ static('css/wies/side_panel.css') }}" />
+  <script src="{{ static('js/wies/side_panel.js') }}" defer></script>
 {% endblock extra_head %}
 {# No sidebar on profile page — base.html auto-hides
 empty sidebar #}
 {% block content %}
-  <nldd-container>
-  <nldd-simple-section>
-  <nldd-rich-text>
-  <nldd-list no-dividers accessible-label="Profiel">
-  <nldd-list-item>
-  <nldd-cell>
-  <nldd-avatar size="48" name="{{ user.get_full_name() or user.email }}" decorative></nldd-avatar>
-  </nldd-cell>
-  <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  <nldd-title-cell size="4" text="Mijn profiel">
-  <span slot="supporting-text">
-    {% if user.email %}
-      <nldd-link href="mailto:{{ user.email }}" text="{{ user.email }}"></nldd-link>
-    {% endif %}
-  </span>
-  </nldd-title-cell>
-  </nldd-list-item>
-  </nldd-list>
-  <nldd-spacer size="24" direction="vertical"></nldd-spacer>
-  <h3>Gegevens</h3>
-  <dl class="nldd-data-list">
-    <dt>Voornaam</dt>
-    <dd>
-      {{ inline_edit(user, "first_name") }}
-    </dd>
-    <dt>Achternaam</dt>
-    <dd>
-      {{ inline_edit(user, "last_name") }}
-    </dd>
-    <dt>E-mail</dt>
-    <dd>
+  {# Profielgegevens links (1/3), opdrachten rechts (2/3); de naam staat boven
+     beide kolommen, met de knop die hem wijzigt in dezelfde regel. Geen eigen
+     breedte: de sectie houdt de standaard paginabreedte aan. #}
+  <nldd-one-third-two-thirds-section>
+  {# Alles over de persoon staat links: kop met naam en wijzigknop, daaronder
+     de labels. In die smalle kolom staat de categorienaam boven zijn labels,
+     niet ernaast. #}
+  <div slot="left">
+    <nldd-list no-dividers accessible-label="Profiel">
+    <nldd-list-item>
+    <nldd-cell>
+    <nldd-avatar size="48" name="{{ user.get_full_name() or user.email }}" decorative></nldd-avatar>
+    </nldd-cell>
+    <nldd-spacer-cell size="12"></nldd-spacer-cell>
+    <nldd-title-cell size="3" text="{{ user.get_full_name() or 'Mijn profiel' }}">
+    <span slot="supporting-text">
       {% if user.email %}
-        <a href="mailto:{{ user.email }}">{{ user.email }}</a>
-      {% else %}
-        —
+        <nldd-link href="mailto:{{ user.email }}" text="{{ user.email }}"></nldd-link>
       {% endif %}
-    </dd>
+    </span>
+    </nldd-title-cell>
+    </nldd-list-item>
+    </nldd-list>
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+    <nldd-button size="sm" start-icon="edit" text="Naam wijzigen" hx-get="{{ url('profile-name-edit') }}" hx-target="#profileNameModal" hx-swap="innerHTML"></nldd-button>
+    <nldd-spacer size="24" direction="vertical"></nldd-spacer>
     {% for item in label_categories %}
-      <dt>{{ item.category.name }}</dt>
-      <dd>
-        {% if item.labels %}
-          <nldd-container layout="wrap" gap="6">
-          {% for label in item.labels %}
-            <nldd-tag color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-tag>
-          {% endfor %}
-          </nldd-container>
-        {% else %}
-          <span class="nldd-text-secondary">—</span>
-        {% endif %}
-      </dd>
+      <nldd-title size="5">
+      <h2>{{ item.category.name }}</h2>
+      </nldd-title>
+      <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+      {% if item.labels %}
+        <nldd-container layout="wrap" gap="6">
+        {% for label in item.labels %}
+          <nldd-tag color="{{ label.category.nldd_color }}">{{ label.name }}</nldd-tag>
+        {% endfor %}
+        </nldd-container>
+      {% else %}
+        <nldd-rich-text>
+        <p>—</p>
+        </nldd-rich-text>
+      {% endif %}
+      {% if not loop.last %}<nldd-spacer size="16" direction="vertical"></nldd-spacer>{% endif %}
     {% endfor %}
-  </dl>
-  <h3>Opdrachten</h3>
-  {% with assignments = assignment_list, hx_target = "#side-panel-content" %}
-    {% include "parts/colleague_assignment_cards.html" %}
-  {% endwith %}
-  </nldd-rich-text>
-  </nldd-simple-section>
-  </nldd-container>
+  </div>
+  <div slot="right">
+    <nldd-title size="4">
+    <h2>Opdrachten</h2>
+    </nldd-title>
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+    {% with assignments = assignment_list, hx_target = "#side-panel-content" %}
+      {% include "parts/colleague_assignment_cards.html" %}
+    {% endwith %}
+  </div>
+  </nldd-one-third-two-thirds-section>
+  {# Mount voor de sheet: buiten de sectie, zodat een lege div geen kolom- of
+     footerruimte opsnoept. #}
+  <div id="profileNameModal"></div>
 {% endblock content %}
 {% block panel %}
   <nldd-sheet id="side-panel" placement="right" width="480px" accessible-label="Detail">

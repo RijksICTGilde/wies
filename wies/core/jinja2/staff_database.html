@@ -8,42 +8,63 @@
   "parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  <nldd-container padding="24">
-  <nldd-rich-text>
+  <nldd-title size="3">
   <h1>Database</h1>
-  </nldd-rich-text>
-  <div class="staff-counts">
-    <span>Opdrachten: <strong>{{ assignment_count }}</strong></span>
-    <span>Collega's: <strong>{{ colleague_count }}</strong></span>
-    <span>Organisaties: <strong>{{ organization_count }}</strong></span>
-  </div>
+  </nldd-title>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-container layout="wrap" gap="6">
+  <nldd-tag>{{ assignment_count }} opdrachten</nldd-tag>
+  <nldd-tag>{{ colleague_count }} collega's</nldd-tag>
+  <nldd-tag>{{ organization_count }} organisaties</nldd-tag>
+  </nldd-container>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% if destructive_actions_enabled %}
-    <div class="staff-action-card">
+    <nldd-box>
+      <nldd-title size="5">
       <h2>Database leegmaken</h2>
+      </nldd-title>
+      <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+      <nldd-rich-text>
       <p>
         Verwijder alle opdrachten, collega's, organisaties en labels. Gebruikers
         blijven behouden.
       </p>
+      </nldd-rich-text>
+      <nldd-spacer size="12" direction="vertical"></nldd-spacer>
       <form method="post"
             onsubmit=" return confirm('Weet je zeker dat je alle data wilt verwijderen?'); ">
         {{ get_csrf_hidden_input(request) }}
         <input type="hidden" name="action" value="clear_data" />
         <nldd-button variant="critical-tinted" type="submit" text="Database leegmaken"></nldd-button>
       </form>
-    </div>
-    <div class="staff-action-card">
+    </nldd-box>
+    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+    <nldd-box>
+      <nldd-title size="5">
       <h2>Dummy data laden</h2>
+      </nldd-title>
+      <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+      <nldd-rich-text>
       <p>Laad de basis dummydataset uit <code>base_dummy_data.json</code>.</p>
+      </nldd-rich-text>
+      <nldd-spacer size="12" direction="vertical"></nldd-spacer>
       <form method="post">
         {{ get_csrf_hidden_input(request) }}
         <input type="hidden" name="action" value="load_base_data" />
         <nldd-button variant="secondary" type="submit" text="Dummy data laden"></nldd-button>
       </form>
-    </div>
+    </nldd-box>
+    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% endif %}
-  <div class="staff-action-card">
+  <nldd-box>
+    <nldd-title size="5">
     <h2>Organisaties synchroniseren</h2>
+    </nldd-title>
+    <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+    <nldd-rich-text>
     <p>Start een achtergrondtaak die organisaties synchroniseert.</p>
+    </nldd-rich-text>
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
     <form method="post"
           hx-post="{{ url('staff-database') }}"
           hx-target="#task-list"
@@ -52,14 +73,21 @@
       <input type="hidden" name="action" value="sync_organizations" />
       <nldd-button variant="secondary" type="submit" text="Organisaties synchroniseren"></nldd-button>
     </form>
-  </div>
-  <div class="staff-action-card">
+  </nldd-box>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-box>
+    <nldd-title size="5">
     <h2>Dubbele opdrachten samenvoegen</h2>
+    </nldd-title>
+    <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+    <nldd-rich-text>
     <p>
       Opdrachten met dezelfde naam en eigenaar worden samengevoegd: diensten en
       plaatsingen worden verplaatst naar de oudste opdracht, duplicaten worden
       verwijderd.
     </p>
+    </nldd-rich-text>
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
     {% if merge_groups is defined and merge_groups %}
       <div class="merge-preview" id="merge-preview">
         <nldd-banner variant="warning" text="{{ merge_groups|length }} groep(en) gevonden. Controleer het overzicht en bevestig."></nldd-banner>
@@ -135,19 +163,27 @@
         <nldd-button variant="secondary" type="submit" text="Controleer op duplicaten"></nldd-button>
       </form>
     {% endif %}
-  </div>
-  <div class="staff-action-card">
+  </nldd-box>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-box>
+    <nldd-title size="5">
     <h2>Onboarding resetten</h2>
+    </nldd-title>
+    <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+    <nldd-rich-text>
     <p>
       Reset de onboarding-wizard voor je eigen account, zodat je de flow
       opnieuw kunt doorlopen (handig voor demo's).
     </p>
+    </nldd-rich-text>
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
     <form method="post">
       {{ get_csrf_hidden_input(request) }}
       <input type="hidden" name="action" value="reset_onboarding" />
       <nldd-button variant="secondary" type="submit" text="Onboarding resetten"></nldd-button>
     </form>
-  </div>
+  </nldd-box>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-spacer size="32" direction="vertical"></nldd-spacer>
   <div id="task-list">{% include "parts/task_list.html" %}</div>
-  </nldd-container>
 {% endblock content %}

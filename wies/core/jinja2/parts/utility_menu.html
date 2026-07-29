@@ -1,0 +1,32 @@
+{# Gebruikersmenu in de utility-slot van de navigatiebalk; ook gebruikt door
+   base_legal.html, dat een eigen balk met terugknop rendert. #}
+{% if request.user.is_authenticated %}
+  <nldd-menu-bar slot="utility" accessible-label="Gebruikersmenu">
+  <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="account" expandable content-priority="text">
+  <nldd-menu>
+  <nldd-menu-item text="Profiel" icon="person" data-href="{{ url('user-profile') }}"></nldd-menu-item>
+  {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
+    <nldd-menu-divider></nldd-menu-divider>
+    {# Submenu-opener: geen data-href op het item zelf, de keuze gebeurt
+       in het submenu (zelfde opties en condities als de beheer-sidebar). #}
+    <nldd-menu-item text="Beheer" icon="user-admin">
+    <nldd-menu>
+    <nldd-menu-item text="Gebruikers" icon="users" data-href="{{ url('admin-users') }}"></nldd-menu-item>
+    {% if DEBUG %}
+      <nldd-menu-item text="Opdrachtgevers" icon="apartment-building" data-href="{{ url('organization-admin') }}"></nldd-menu-item>
+    {% endif %}
+    <nldd-menu-item text="Labels" icon="labels" data-href="{{ url('label-admin') }}"></nldd-menu-item>
+    {% if is_staff_member(request.user) %}
+      <nldd-menu-item text="Statistieken" icon="chart-x-y-axis-line" data-href="{{ url('staff-dashboard') }}"></nldd-menu-item>
+      <nldd-menu-item text="Database" icon="database" data-href="{{ url('staff-database') }}"></nldd-menu-item>
+      <nldd-menu-item text="Debug" icon="bug" data-href="{{ url('debug-request-meta') }}"></nldd-menu-item>
+    {% endif %}
+    </nldd-menu>
+    </nldd-menu-item>
+  {% endif %}
+  <nldd-menu-divider></nldd-menu-divider>
+  <nldd-menu-item text="Log uit" icon="logout" data-href="{{ url('logout') }}"></nldd-menu-item>
+  </nldd-menu>
+  </nldd-menu-bar-item>
+  </nldd-menu-bar>
+{% endif %}

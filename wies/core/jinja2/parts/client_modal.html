@@ -1,40 +1,26 @@
-{# NDD client (organisatie) modal — gebruikt nldd-window component.
-   IDs voor de tree (client-data, client-tree-container, etc.) zijn intern
-   aan deze modal en worden alleen gerenderd als de modal open is. #}
-<nldd-window id="nldd-client-modal" accessible-label="Selecteer opdrachtgever(s)" width="900px" height="600px">
+{# Opdrachtgevers kiezen — left sheet. De ids (client-data, client-tree-container,
+   …) zijn intern aan deze sheet en bestaan alleen zolang hij open is.
+   Annuleren zit in de title bar, niet als knop onderaan: het is dezelfde actie
+   als sluiten, en twee routes naar hetzelfde is er een te veel. #}
+<nldd-sheet id="client-modal" placement="left" width="480px" accessible-label="Opdrachtgevers selecteren">
 <nldd-page sticky-header sticky-footer>
-<nldd-top-title-bar slot="header" text="Selecteer opdrachtgever(s)" dismiss-text="Sluiten"></nldd-top-title-bar>
-<div class="nldd-client-modal__body">
-  <nldd-search-field id="client-search" placeholder="Zoek opdrachtgever…" aria-label="Zoek opdrachtgever">
-  </nldd-search-field>
-  <div class="nldd-client-modal__layout">
-    <div class="nldd-client-modal__tree" id="client-tree-container"></div>
-    <aside class="nldd-client-modal__selection">
-      <header class="nldd-client-modal__selection-header">
-        <span>
-          Geselecteerd
-          <span id="client-selection-count"
-                class="nldd-client-modal__selection-count"
-                style="display:none">0</span>
-        </span>
-        <span id="client-results-count" class="nldd-client-modal__results-count"></span>
-      </header>
-      <ul id="client-selection-list" class="nldd-client-modal__selection-list">
-        <li class="nldd-client-modal__empty-state" hidden></li>
-      </ul>
-    </aside>
-  </div>
-</div>
-<nldd-container slot="footer" padding-inline="16" padding-bottom="16">
-<nldd-button-group orientation="horizontal">
-<nldd-button variant="primary" text="Filter toepassen" id="client-apply-btn"></nldd-button>
-<nldd-button variant="secondary" text="Annuleren" data-nldd-action="client-modal-close"></nldd-button>
-<nldd-button variant="neutral-transparent" text="Filter verwijderen" id="client-clear-btn"></nldd-button>
-</nldd-button-group>
+<nldd-top-title-bar slot="header" text="Opdrachtgevers selecteren" dismiss-text="Annuleer"></nldd-top-title-bar>
+<nldd-simple-section>
+<nldd-search-field id="client-search" placeholder="Opdrachtgever zoeken" accessible-label="Opdrachtgever zoeken">
+</nldd-search-field>
+<nldd-spacer size="16"></nldd-spacer>
+<div id="client-tree-container"></div>
+</nldd-simple-section>
+<nldd-container slot="footer" padding="16">
+<nldd-container id="client-selection-tokens" layout="wrap" gap="8" hidden></nldd-container>
+<nldd-spacer size="12"></nldd-spacer>
+<nldd-button id="client-apply-btn" variant="primary" width="full" text="Pas toe"></nldd-button>
 </nldd-container>
 </nldd-page>
-</nldd-window>
+</nldd-sheet>
 {{ hierarchy|json_script("client-data") }}
 {{ current_selections|json_script("client-current-selections") }}
-<script src="{{ static('js/nldd/tree_state.js') }}"></script>
-<script src="{{ static('js/nldd/client_tree.js') }}"></script>
+{# Order matters: client_tree.js needs both TreeState and WiesOrgTree. #}
+<script src="{{ static('js/wies/tree_state.js') }}"></script>
+<script src="{{ static('js/wies/org_tree.js') }}"></script>
+<script src="{{ static('js/wies/client_tree.js') }}"></script>

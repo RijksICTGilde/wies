@@ -1,0 +1,71 @@
+{# Eén opdracht in de controlestap van de onboarding. Ook los gerenderd door
+   onboarding_assignment_edit na het opslaan, met HX-Retarget op deze wrapper,
+   zodat de bijgewerkte gegevens meteen terugkomen. #}
+{% set assignment = entry.assignment %}
+<div id="onboarding-assignment-{{ assignment.id }}">
+  <nldd-box>
+  <nldd-title size="5">
+  <h4>{{ assignment.name }}</h4>
+  </nldd-title>
+  {% if assignment.extra_info %}
+    <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+    <nldd-rich-text>
+    <p>{{ assignment.extra_info }}</p>
+    </nldd-rich-text>
+  {% endif %}
+  <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+  <nldd-list accessible-label="Gegevens van {{ assignment.name }}">
+  <nldd-list-item>
+  <nldd-text-cell width="120px" text="{{ 'Opdrachtgevers' if assignment.organization_relations.count() > 1 else 'Opdrachtgever' }}"></nldd-text-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-text-cell>{{ inline_edit(assignment, "organizations", hide_edit_button=True, external_source=None, plain=True) }}</nldd-text-cell>
+  </nldd-list-item>
+  <nldd-list-item>
+  <nldd-text-cell width="120px" text="Periode"></nldd-text-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-text-cell>{{ inline_edit(assignment, "period", hide_edit_button=True, external_source=None) }}</nldd-text-cell>
+  </nldd-list-item>
+  {% for service in entry.services %}
+    <nldd-list-item>
+    <nldd-text-cell width="120px" text="{{ 'Jouw rol' if entry.services|length == 1 else 'Rol' }}"></nldd-text-cell>
+    <nldd-spacer-cell size="12"></nldd-spacer-cell>
+    <nldd-text-cell text="{{ service.skill.name if service.skill else '–' }}"
+                    supporting-text="{{ service.description or '' }}"></nldd-text-cell>
+    </nldd-list-item>
+  {% endfor %}
+  </nldd-list>
+  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  <nldd-rich-text>
+  {% if entry.user_can_edit %}
+    <p>
+      Klopt er iets niet? Pas het aan{% if assignment.owner %}, of neem contact op met je Business Manager, {{ assignment.owner.name }}{% endif %}.
+    </p>
+  {% elif assignment.owner %}
+    <p>
+      Klopt er iets niet? Neem contact op met je Business Manager, {{ assignment.owner.name }}. Deze opdracht kun je niet in Wies wijzigen.
+    </p>
+  {% else %}
+    <p>Klopt er iets niet? Neem contact op met je Business Manager. Deze opdracht kun je niet in Wies wijzigen.</p>
+  {% endif %}
+  </nldd-rich-text>
+  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  <nldd-container layout="wrap" gap="8">
+  {% if entry.user_can_edit %}
+    <nldd-button variant="secondary"
+                 size="sm"
+                 start-icon="edit"
+                 text="Wijzigen"
+                 hx-get="{{ url('onboarding-assignment-edit', args=[assignment.id]) }}"
+                 hx-target="#onboarding-detail"
+                 hx-swap="innerHTML"></nldd-button>
+  {% endif %}
+  {% if assignment.owner and entry.owner_mailto %}
+    <nldd-button variant="secondary"
+                 size="sm"
+                 start-icon="envelope"
+                 text="E-mail {{ assignment.owner.name }}"
+                 href="{{ entry.owner_mailto }}"></nldd-button>
+  {% endif %}
+  </nldd-container>
+  </nldd-box>
+</div>

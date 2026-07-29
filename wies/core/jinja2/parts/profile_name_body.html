@@ -1,0 +1,16 @@
+{# Inhoud van de naam-sheet, los van de sheet zelf: bij een validatiefout stuurt
+   de view alleen dit stuk terug, zodat de openstaande sheet blijft staan. #}
+<nldd-form>
+<form method="post"
+      action="{{ form_post_url }}"
+      hx-post="{{ form_post_url }}"
+      hx-target="#profileNameBody"
+      hx-swap="innerHTML">
+  {{ get_csrf_hidden_input(request) }}
+  {{ content.first_name.as_field_group() }}
+  {{ content.last_name.as_field_group() }}
+  <nldd-form-actions>
+  <nldd-button variant="primary" type="submit" width="full" text="Opslaan"></nldd-button>
+  </nldd-form-actions>
+</form>
+</nldd-form>

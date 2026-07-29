@@ -1,6 +1,6 @@
 const { describe, it, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
-const TreeState = require("../wies/core/static/js/tree_state.js");
+const TreeState = require("../wies/core/static/js/wies/tree_state.js");
 
 // ─── Test fixtures ───────────────────────────────────────────
 

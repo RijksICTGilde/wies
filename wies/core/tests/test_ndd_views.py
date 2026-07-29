@@ -52,11 +52,13 @@ class NDDViewRendersTest(TestCase):
     def test_ndd_filter_partial_returns_correct_template(self):
         # Met HX-Request rendert PlacementListNDDView.get_template_names()
         # parts/filter_and_table_container.html — herkenbaar aan de
-        # outer container ID.
+        # resultatenregel (het swap-doel) plus de lijst als out-of-band swap.
         response = self.client.get(reverse("ndd-home"), headers={"hx-request": "true"})
         assert response.status_code == 200
         body = response.content.decode()
-        assert 'id="nldd-filter-and-table-container"' in body
+        assert 'id="results"' in body
+        assert 'id="placement-list"' in body
+        assert 'hx-swap-oob="outerHTML"' in body
         # De volledige page chrome (nldd-app body) hoort niet in de partial.
         assert 'class="nldd-app"' not in body
 
@@ -121,8 +123,8 @@ class NDDClientModalTest(TestCase):
         response = self.client.get("/client-modal/")
         assert response.status_code == 200
         body = response.content.decode()
-        assert 'id="nldd-client-modal"' in body
-        assert "js/nldd/client_tree.js" in body
+        assert 'id="client-modal"' in body
+        assert "js/wies/client_tree.js" in body
 
 
 class NDDIsolationTest(TestCase):

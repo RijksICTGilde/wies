@@ -1,181 +1,143 @@
 {# First-login onboarding wizard, included by base.html when show_onboarding is
-   True (see wies.core.context_processors.onboarding). A self-opening <dialog>;
-   navigation and step count are handled by onboarding.js. "Overslaan" and "Aan
-   de slag" POST to onboarding-complete, which marks the wizard done. #}
+   True (see wies.core.context_processors.onboarding). Een nldd-window met een
+   nldd-page erin: de titelbalk levert "Sluit" (dismiss), de stapindicator
+   en stapnavigatie komen uit onboarding.js. "Sluit" en "Aan de slag" POSTen
+   allebei naar onboarding-complete, dat de wizard afvinkt. #}
 {% set ns = namespace(step=0) %}
-<dialog id="onboardingWizard"
-        class="modal-dialog modal-dialog--wide onboarding-wizard"
-        closedby="none"
-        tabindex="-1"
-        data-onboarding>
-  <div class="modal-content">
-    <div class="modal-header">
-      <c-h2>Welkom bij Wies</c-h2>
-      <form method="post"
-            action="{{ url('onboarding-complete') }}"
-            hx-post="{{ url('onboarding-complete') }}"
-            hx-swap="none">
-        {{ get_csrf_hidden_input(request) }}
-        <c-button kind="subtle" type="submit" class="onboarding-skip" aria-label="Onboarding overslaan">
-        Overslaan
-        </c-button>
-      </form>
-    </div>
-    <div class="modal-body onboarding-body">
-      {# One dot per step: 2 (welcome + profile), or 3 with the opdracht step. #}
-      {% set total_steps = 2 + (1 if onboarding_assignments else 0) %}
-      <ol class="onboarding-steps" aria-hidden="true">
-        {% for dot in range(1, total_steps + 1) %}
-          <li class="onboarding-step-dot{{ ' is-active' if dot == 1 }}"
-              data-dot="{{ dot }}"></li>
-        {% endfor %}
-      </ol>
-      {# Step 1: Welcome + wat vind je waar (tabjes) + RIG-disclaimer #}
-      {% set ns.step = ns.step + 1 %}
-      <section class="onboarding-panel is-active" data-step="{{ ns.step }}">
-        <div class="onboarding-illustration">
-          <c-icon icon="groep-3-personen" size="xl" color="hemelblauw" />
-        </div>
-        <c-h3>Hoi {{ (user.first_name or '').strip() or 'collega' }}!</c-h3>
-        <c-paragraph>
-        Wies geeft je inzicht wie je collega's zijn, waar ze werken en wat voor
-        opdrachten ze doen. Boven in het scherm vind je twee tabbladen:
-        </c-paragraph>
-        <ul class="onboarding-tabs-explainer">
-          <li>
-            <c-icon icon="groep-3-personen" size="sm" color="hemelblauw" />
-            <c-span>Bij <c-strong>Wie zit waar?</c-strong> zie je in één oogopslag welke collega's waar geplaatst zijn.</c-span>
-          </li>
-          <li>
-            <c-icon icon="document-met-lijnen" size="sm" color="hemelblauw" />
-            <c-span>Bij <c-strong>Aanvragen</c-strong> vind je de opdrachten waarvoor collega's gezocht worden. Spot de nieuwe en kijk waar jij van waarde kunt zijn.</c-span>
-          </li>
-        </ul>
-        <div class="onboarding-disclaimer">
-          <c-alert kind="info">
-          Let op: Wies bevat op dit moment alleen opdrachten van het Rijks ICT Gilde (RIG) en het Digi Gilde.
-          </c-alert>
-        </div>
-      </section>
-      {# Step 2: Vul je profiel aan (labels + Rijksprofiel) #}
-      {% set ns.step = ns.step + 1 %}
-      <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
-        <div class="onboarding-illustration">
-          <c-icon icon="persoon-met-vinkje" size="xl" color="hemelblauw" />
-        </div>
-        <c-h3>Vul je profiel aan</c-h3>
-        <c-paragraph>
-        Kies de labels die bij je passen, zo vinden collega's je makkelijker
-        terug. Je kunt dit later altijd aanpassen op je profiel.
-        </c-paragraph>
-        {% if onboarding_colleague %}
-          <c-data-list class="onboarding-labels">
-          {% for category in onboarding_label_categories %}
-            <dt>{{ category.name }}</dt>
-            <dd>
-              {{ inline_edit(onboarding_colleague, "labels_" ~ category.id) }}
-            </dd>
-          {% endfor %}
-          </c-data-list>
-        {% else %}
-          <c-paragraph>Je profiel wordt klaargezet. Je kunt labels straks invullen via <c-link href="{{ url('user-profile') }}">Mijn profiel</c-link>.</c-paragraph>
-        {% endif %}
-      </section>
-      {# Opdracht-check step, shown only when placed on ≥1 assignment. What is
-         editable per field is left to the inline_edit permission rules. #}
-      {% if onboarding_assignments %}
-        {% set ns.step = ns.step + 1 %}
-        <section class="onboarding-panel" data-step="{{ ns.step }}" hidden>
-          <div class="onboarding-illustration">
-            <c-icon icon="klembord-met-vinkje" size="xl" color="hemelblauw" />
-          </div>
-          <c-h3>
-          {%- if onboarding_assignments|length > 1 -%}
-            Controleer je opdrachten ({{ onboarding_assignments|length }})
-          {%- else -%}
-            Controleer je opdracht
-          {%- endif -%}
-          </c-h3>
-          <c-paragraph>
-          {% if onboarding_assignments|length > 1 %}
-            Dit zijn de opdrachten waarop je bent geplaatst. Klopt de naam of
-            omschrijving niet, of ontbreekt er iets? Vul het hier direct aan.
-          {% else %}
-            Dit is de opdracht waarop je bent geplaatst. Klopt de naam of
-            omschrijving niet, of ontbreekt er iets? Vul het hier direct aan.
-          {% endif %}
-          </c-paragraph>
-          <div class="onboarding-assignments">
-            {% for entry in onboarding_assignments %}
-              {% set assignment = entry.assignment %}
-              <div class="onboarding-assignment">
-                <c-data-list>
-                <dt>Opdracht naam</dt>
-                <dd>
-                  {{ inline_edit(assignment, "name") }}
-                </dd>
-                <dt>Opdrachtomschrijving</dt>
-                <dd>
-                  {{ inline_edit(assignment, "extra_info") }}
-                </dd>
-                <dt>{{ "Opdrachtgevers" if assignment.organization_relations.count() > 1 else "Opdrachtgever" }}</dt>
-                <dd>
-                  {{ inline_edit(assignment, "organizations") }}
-                </dd>
-                <dt>Periode</dt>
-                <dd>
-                  {{ inline_edit(assignment, "period") }}
-                </dd>
-                {% for service in entry.services %}
-                  <dt>{{ "Jouw rol" if entry.services|length == 1 else "Rol" }}</dt>
-                  <dd>
-                    {{ inline_edit(service, "skill") }}
-                  </dd>
-                  <dt>Omschrijving rol</dt>
-                  <dd>
-                    {{ inline_edit(service, "description") }}
-                  </dd>
-                {% endfor %}
-                </c-data-list>
-                {# Read-only fields: refer to the Business Manager (name + mailto). #}
-                <div class="onboarding-assignment__bm">
-                  {% if assignment.owner %}
-                    <c-span class="onboarding-assignment__bm-text">
-                    Klopt er iets niet wat je niet kan aanpassen? Neem contact op
-                    met je Business Manager, <c-strong>{{ assignment.owner.name }}</c-strong>.
-                    </c-span>
-                    {% if entry.owner_mailto %}
-                      <c-link href="{{ entry.owner_mailto }}" class="onboarding-assignment__bm-link">
-                      <c-icon icon="mail" size="sm" /> Mail {{ assignment.owner.name }}
-                      </c-link>
-                    {% endif %}
-                  {% else %}
-                    <c-span class="onboarding-assignment__bm-text">Klopt er iets niet wat je niet kan aanpassen? Neem contact op met je Business Manager.</c-span>
-                  {% endif %}
-                </div>
-              </div>
-            {% endfor %}
-          </div>
-        </section>
+{# no-light-dismiss: een klik naast het venster mag de wizard niet afsluiten,
+   daar zit ingevulde informatie in. Sluit en Escape doen dat wel.
+   height: alle stappen even hoog, anders springt het venster bij elke stap. De
+   langste stap (drie opdrachten) scrolt binnen die hoogte. #}
+<nldd-window id="onboardingWizard"
+             centered
+             no-light-dismiss
+             width="768px"
+             height="min(640px, 90vh)"
+             accessible-label="Welkom bij Wies"
+             data-onboarding>
+<nldd-page sticky-header>
+<nldd-top-title-bar slot="header" text="Welkom bij Wies" dismiss-text="Sluit"></nldd-top-title-bar>
+<nldd-container data-onboarding-chrome padding="16">
+<nldd-step-indicator data-onboarding-progress current="1" accessible-label="Voortgang">
+<nldd-step-indicator-item text="Welkom"></nldd-step-indicator-item>
+<nldd-step-indicator-item text="Je profiel"></nldd-step-indicator-item>
+{% if onboarding_assignments %}
+  <nldd-step-indicator-item text="{{ 'Je opdrachten' if onboarding_assignments|length > 1 else 'Je opdracht' }}"></nldd-step-indicator-item>
+{% endif %}
+</nldd-step-indicator>
+</nldd-container>
+<nldd-simple-section data-onboarding-section padding-top="0">
+{# Stap 1: welkom + wat vind je waar + RIG-disclaimer #}
+{% set ns.step = ns.step + 1 %}
+<section data-step="{{ ns.step }}">
+  <nldd-title size="4">
+  <h3 id="onboarding-step-1-title" data-step-title>Hoi {{ (user.first_name or '').strip() or 'collega' }}!</h3>
+  </nldd-title>
+  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  <nldd-rich-text>
+  <p>
+    Wies geeft je inzicht wie je collega's zijn, waar ze werken en wat voor
+    opdrachten ze doen. Boven in het scherm vind je twee tabbladen:
+  </p>
+  <ul>
+    <li>Bij <strong>Wie zit waar?</strong> zie je in één oogopslag welke collega's waar geplaatst zijn.</li>
+    <li>
+      Bij <strong>Aanvragen</strong> vind je de opdrachten waarvoor collega's gezocht worden. Spot de nieuwe en kijk waar jij van waarde kunt zijn.
+    </li>
+  </ul>
+  </nldd-rich-text>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-banner text="Wies bevat op dit moment alleen opdrachten van het Rijks ICT Gilde (RIG) en het Digi Gilde."></nldd-banner>
+</section>
+{# Stap 2: vul je profiel aan (labels + Rijksprofiel) #}
+{% set ns.step = ns.step + 1 %}
+<section data-step="{{ ns.step }}" hidden>
+  <nldd-title size="4">
+  <h3 id="onboarding-step-2-title" data-step-title>Vul je profiel aan</h3>
+  </nldd-title>
+  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  <nldd-rich-text>
+  <p>
+    Kies de labels die bij je passen, zo vinden collega's je makkelijker terug.
+    Je kunt dit later altijd aanpassen op je profiel.
+  </p>
+  </nldd-rich-text>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {% if onboarding_colleague %}
+    {% for category in onboarding_label_categories %}
+      <nldd-form-field label="{{ category.name }}">
+      {{ inline_edit_form(onboarding_colleague, "labels_" ~ category.id) }}
+      </nldd-form-field>
+      {% if not loop.last %}<nldd-spacer size="12" direction="vertical"></nldd-spacer>{% endif %}
+    {% endfor %}
+  {% else %}
+    <nldd-rich-text>
+    <p>
+      Je profiel wordt klaargezet. Je kunt labels straks invullen via <a href="{{ url('user-profile') }}">Mijn profiel</a>.
+    </p>
+    </nldd-rich-text>
+  {% endif %}
+</section>
+{# Opdracht-check step, shown only when placed on ≥1 assignment. What is
+   editable per field is left to the inline_edit permission rules. #}
+{% if onboarding_assignments %}
+  {% set ns.step = ns.step + 1 %}
+  <section data-step="{{ ns.step }}" hidden>
+    <nldd-title size="4">
+    <h3 id="onboarding-step-3-title" data-step-title>
+      {%- if onboarding_assignments|length > 1 -%}
+        Controleer je {{ onboarding_assignments|length }} opdrachten
+      {%- else -%}
+        Controleer je opdracht
+      {%- endif -%}
+    </h3>
+    </nldd-title>
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+    <nldd-rich-text>
+    <p>
+      {% if onboarding_assignments|length > 1 %}
+        Dit zijn de opdrachten waarop je bent geplaatst. Klopt de naam of
+        omschrijving niet, of ontbreekt er iets? Vul het hier direct aan.
+      {% else %}
+        Dit is de opdracht waarop je bent geplaatst. Klopt de naam of
+        omschrijving niet, of ontbreekt er iets? Vul het hier direct aan.
       {% endif %}
-    </div>
-    <div class="modal-footer onboarding-footer">
-      <c-button kind="subtle" type="button" class="onboarding-back" data-onboarding-back hidden>
-      Vorige
-      </c-button>
-      <div class="onboarding-footer-spacer"></div>
-      <c-button kind="primary" type="button" class="onboarding-next" data-onboarding-next>
-      Volgende
-      </c-button>
-      <form method="post"
-            action="{{ url('onboarding-complete') }}"
-            hx-post="{{ url('onboarding-complete') }}"
-            hx-swap="none"
-            class="onboarding-finish-form"
-            hidden>
-        {{ get_csrf_hidden_input(request) }}
-        <c-button kind="primary" type="submit">Aan de slag</c-button>
-      </form>
-    </div>
-  </div>
-</dialog>
+    </p>
+    </nldd-rich-text>
+    {% for entry in onboarding_assignments %}
+      <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+      {% include "parts/onboarding/onboarding_assignment_box.html" %}
+    {% endfor %}
+  </section>
+{% endif %}
+{# Alle knoppen staan na de stappen, dus onder de inhoud van de stap die
+   zichtbaar is; onboarding.js toont er telkens een. Terug ga je met de knop in
+   de titelbalk. #}
+<nldd-container data-onboarding-nav
+                layout="row"
+                horizontal-alignment="right"
+                padding-top="24">
+<nldd-button data-onboarding-next variant="primary" end-icon="chevron-right" text="Volgende"></nldd-button>
+</nldd-container>
+<nldd-container data-onboarding-finish-wrap padding-top="24" hidden>
+<nldd-button data-onboarding-finish variant="primary" width="full" text="Aan de slag"></nldd-button>
+</nldd-container>
+{# Detailscherm binnen het venster: "Wijzigen" swapt hier het opdrachtformulier
+   in en onboarding.js verbergt zolang de stappen en de stapnavigatie. #}
+<div id="onboarding-detail" hidden></div>
+{# Opslaan staat onder het formulier, net als "Aan de slag" onder de laatste
+   stap. De knop staat buiten het formulier, dus onboarding.js dient het in. #}
+<nldd-container data-onboarding-detail-nav padding-top="24" hidden>
+<nldd-button data-onboarding-detail-save variant="primary" width="full" text="Opslaan"></nldd-button>
+</nldd-container>
+</nldd-simple-section>
+</nldd-page>
+</nldd-window>
+{# Sluit en Aan de slag POSTen hetzelfde; onboarding.js dient dit formulier
+   in, zodat de knoppen zelf DS-knoppen kunnen blijven. #}
+<form id="onboardingCompleteForm"
+      method="post"
+      action="{{ url('onboarding-complete') }}"
+      hx-post="{{ url('onboarding-complete') }}"
+      hx-swap="none"
+      hidden>{{ get_csrf_hidden_input(request) }}</form>

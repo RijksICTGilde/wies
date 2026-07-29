@@ -1,13 +1,10 @@
 {% extends "base.html" %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/nldd/filters.css') }}">
-  <link rel="stylesheet" href="{{ static('css/nldd/assignment_cards.css') }}">
-  <link rel="stylesheet" href="{{ static('css/nldd/side_panel.css') }}">
-  <link rel="stylesheet" href="{{ static('css/nldd/client_modal.css') }}">
-  <script src="{{ static('js/nldd/filter_interactions.js') }}" defer></script>
-  <script src="{{ static('js/nldd/sidebar_toggle.js') }}" defer></script>
-  <script src="{{ static('js/nldd/side_panel.js') }}" defer></script>
-  <script src="{{ static('js/nldd/client_modal.js') }}" defer></script>
+  <link rel="stylesheet" href="{{ static('css/wies/side_panel.css') }}">
+  <script src="{{ static('js/wies/filter_interactions.js') }}" defer></script>
+  <script src="{{ static('js/wies/sidebar_toggle.js') }}" defer></script>
+  <script src="{{ static('js/wies/side_panel.js') }}" defer></script>
+  <script src="{{ static('js/wies/client_modal.js') }}" defer></script>
 {% endblock extra_head %}
 {% block sidebar %}
   {% include "parts/filter_sidebar.html" %}
@@ -23,6 +20,6 @@
   {% endif %}
   </nldd-page>
   </nldd-sheet>
-  <div id="nldd-client-modal-container"></div>
-  <div id="nldd-filter-options-modal-container"></div>
+  <div id="client-modal-container"></div>
+  <div id="filter-options-modal-container"></div>
 {% endblock panel %}

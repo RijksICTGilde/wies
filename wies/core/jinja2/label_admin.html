@@ -1,56 +1,40 @@
 {% extends "base.html" %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/nldd/side_panel.css') }}" />
+  <link rel="stylesheet" href="{{ static('css/wies/side_panel.css') }}" />
   <link rel="stylesheet" href="{{ static('css/modals.css') }}" />
-  <script src="{{ static('js/dialog.js') }}" defer></script>
+  <script src="{{ static('js/label_category_manage.js') }}" defer></script>
 {% endblock extra_head %}
 {% block sidebar %}
   {% include
   "parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  <nldd-container padding="16">
-  <div style="display: flex;
-              align-items: center;
-              justify-content: space-between">
-    <nldd-rich-text><strong>Labels</strong></nldd-rich-text>
-    <nldd-button variant="primary" text="Categorie toevoegen" hx-get="{{ url('label-category-create') }}" hx-target="#labelFormModal" hx-swap="innerHTML">
-    </nldd-button>
-  </div>
-  </nldd-container>
-  <div style="padding: var(--primitives-space-16, 16px)">
-    {% if categories %}
-      {% for category in categories %}
-        <div id="label_category_{{ category.id }}"
-             style="margin-bottom: var(--primitives-space-24, 24px)">
-          <div style="display: flex;
-                      align-items: center;
-                      gap: 8px;
-                      margin-bottom: var(--primitives-space-12, 12px)">
-            <h2 style="font-size: 1.125rem; font-weight: 600; margin: 0">{{ category.name }}</h2>
-            <nldd-icon-button icon="pencil" variant="neutral-transparent" size="sm" aria-label="Bewerk {{ category.name }}" hx-get="{{ url('label-category-edit', args=[category.id]) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
-            </nldd-icon-button>
-          </div>
-          {% if category.labels.all() %}
-            <nldd-container layout="wrap" gap="6">
-            {% for label in category.labels.all() %}
-              <nldd-token color="{{ category.nldd_color }}" style="cursor: pointer" hx-get="{{ url('label-edit', args=[label.id]) }}" hx-target="#labelFormModal" hx-swap="innerHTML">
-              {{ label.name }}
-              <span style="color: var(--semantics-content-secondary-color, #666);
-                           font-size: 0.85em;
-                           margin-left: 0.25em">({{ label.usage_count|default(0) }})</span>
-              </nldd-token>
-            {% endfor %}
-            </nldd-container>
-          {% else %}
-            <p style="color: var(--semantics-content-secondary-color, #666);
-                      font-style: italic">Geen labels in deze categorie</p>
-          {% endif %}
-        </div>
-      {% endfor %}
-    {% else %}
-      <p>Geen categorieën gevonden. Maak een nieuwe categorie aan om te beginnen.</p>
-    {% endif %}
-  </div>
+  <nldd-title size="3">
+  <h1>Labels</h1>
+  </nldd-title>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {# Geen zoekveld op deze pagina, dus de knoppen staan links. Categorieën
+     worden in één sheet beheerd; labels hebben één universele toevoegknop. #}
+  <nldd-toolbar label="Labels">
+  <nldd-toolbar-item slot="start">
+  <nldd-button start-icon="plus" text="Nieuw label" hx-get="{{ url('label-form-create') }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+  </nldd-button>
+  </nldd-toolbar-item>
+  <nldd-toolbar-item slot="start">
+  <nldd-button variant="secondary" start-icon="categories" text="Categorieën beheren" hx-get="{{ url('label-category-manage') }}" hx-target="#labelFormModal" hx-swap="innerHTML">
+  </nldd-button>
+  </nldd-toolbar-item>
+  </nldd-toolbar>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {% if categories %}
+    {% for category in categories %}
+      <div id="label_category_{{ category.id }}">
+        {% include "parts/label_category.html" %}
+      </div>
+      {% if not loop.last %}<nldd-spacer size="32" direction="vertical"></nldd-spacer>{% endif %}
+    {% endfor %}
+  {% else %}
+    <p>Geen categorieën gevonden. Maak een nieuwe categorie aan om te beginnen.</p>
+  {% endif %}
   <div id="labelFormModal"></div>
 {% endblock content %}

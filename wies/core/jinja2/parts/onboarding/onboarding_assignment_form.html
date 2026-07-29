@@ -1,0 +1,42 @@
+{# Bewerkscherm binnen het onboardingvenster: één formulier over de opdracht en
+   je eigen rol(len). Per groep een eigen Django-form met prefix, zodat de
+   veldnamen van meerdere rollen niet botsen. Opslaan swapt de bijgewerkte
+   opdrachtbox terug (HX-Retarget in de view) en sluit dit scherm. #}
+{% set assignment = entry.assignment %}
+{# De terugknop staat in de titelbalk van het venster; onboarding.js zet die
+   erbij zodra dit scherm opent. #}
+<nldd-title size="6">
+<p>Opdracht wijzigen</p>
+</nldd-title>
+<nldd-spacer size="2" direction="vertical"></nldd-spacer>
+<nldd-title size="3">
+<h3 id="onboarding-detail-title" data-detail-title>{{ assignment.name }}</h3>
+</nldd-title>
+<nldd-spacer size="16" direction="vertical"></nldd-spacer>
+<nldd-form>
+<form data-onboarding-detail-form
+      hx-post="{{ url('onboarding-assignment-edit', args=[assignment.id]) }}"
+      hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+      hx-target="#onboarding-detail"
+      hx-swap="innerHTML">
+  {% for group in groups %}
+    {% if group.title %}
+      <nldd-title size="5">
+      <h4>{{ group.title }}</h4>
+      </nldd-title>
+    {% endif %}
+    {% for bound in group.form %}
+      {% set error_ids = wire_field_errors(bound) %}
+      <nldd-form-field label="{{ bound.label }}">
+      {{ bound.as_widget(attrs={"autofocus": loop.first and group.form.prefix == "opdracht"}) }}
+      {% for error in bound.errors %}
+        <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
+      {% endfor %}
+      </nldd-form-field>
+    {% endfor %}
+    {% for error in group.form.non_field_errors() %}
+      <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
+    {% endfor %}
+  {% endfor %}
+</form>
+</nldd-form>

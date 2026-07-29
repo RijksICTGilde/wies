@@ -26,19 +26,24 @@ __all__ = [
 ]
 
 
+#: The colours a label category can carry; LabelCategory maps each hex to an
+#: NLDD colour variant for the tags.
+CATEGORY_COLOR_CHOICES = [
+    ("#DCE3EA", "Grijs"),
+    ("#B3D7EE", "Blauw"),
+    ("#FFE9B8", "Geel"),
+    ("#C4DBB7", "Groen"),
+    ("#F9DFDD", "Rood"),
+]
+
+
 class LabelCategoryForm(NlddFormMixin, forms.ModelForm):
     """Form for creating and updating LabelCategory instances"""
 
     name = forms.CharField(label="Naam", required=True)
     color = forms.ChoiceField(
         label="Kleur label",
-        choices=[
-            ("#DCE3EA", "Grijs"),
-            ("#B3D7EE", "Blauw"),
-            ("#FFE9B8", "Geel"),
-            ("#C4DBB7", "Groen"),
-            ("#F9DFDD", "Rood"),
-        ],
+        choices=CATEGORY_COLOR_CHOICES,
         widget=forms.RadioSelect,
     )
 
@@ -47,37 +52,105 @@ class LabelCategoryForm(NlddFormMixin, forms.ModelForm):
         fields = ["name", "color"]
 
 
-class LabelForm(NlddFormMixin, forms.ModelForm):
-    """Form for creating and updating Label instances"""
+class ProfileNameForm(NlddFormMixin, forms.ModelForm):
+    """Voor- en achternaam samen, zoals de sheet op de profielpagina ze toont.
+
+    De veldconfiguratie komt uit UserEditables, zodat labels en meldingen gelijk
+    blijven aan de inline-edit en het beheerformulier.
+    """
+
+    first_name = UserEditables.first_name.form_field()
+    last_name = UserEditables.last_name.form_field()
+
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name"]
+
+
+class LabelCategoryRowForm(NlddFormMixin, forms.ModelForm):
+    """One row in the "Categorieën beheren" sheet: name plus colour.
+
+    The colour lives here because the per-category edit form is gone; the tags
+    on the profile, placement and colleague panels still take their colour from
+    the category.
+    """
 
     name = forms.CharField(label="Naam", required=True)
+    color = forms.ChoiceField(label="Kleur", choices=CATEGORY_COLOR_CHOICES, widget=forms.Select)
+
+    class Meta:
+        model = LabelCategory
+        fields = ["name", "color"]
+
+    def has_changed(self):
+        """Een lege nieuwe rij telt niet mee.
+
+        De kleurkeuze post altijd een waarde, dus zonder deze regel geldt een
+        zojuist toegevoegde maar niet ingevulde rij als gewijzigd en blokkeert
+        haar "naam is verplicht" het opslaan van de rest.
+        """
+        if not self.instance.pk and not (self.data.get(self.add_prefix("name")) or "").strip():
+            return False
+        return super().has_changed()
+
+
+#: Rows can be added client-side, so the formset accepts more rows than it
+#: rendered; unchanged empty rows are skipped on save.
+LabelCategoryFormSet = forms.modelformset_factory(
+    LabelCategory,
+    form=LabelCategoryRowForm,
+    extra=0,
+    can_delete=False,
+)
+
+
+class LabelForm(NlddFormMixin, forms.ModelForm):
+    """Form for creating and updating Label instances.
+
+    Category is part of the form (a combo box), so one sheet serves both
+    "Label toevoegen" and "Label bewerken" — and a label can move to another
+    category without being recreated. `category_id` still seeds the field for
+    callers that open the form from within a category.
+    """
+
+    name = forms.CharField(label="Naam", required=True)
+    category = forms.ModelChoiceField(
+        label="Categorie",
+        queryset=LabelCategory.objects.all(),
+        required=False,
+        empty_label=None,
+        widget=forms.RadioSelect,
+    )
 
     class Meta:
         model = Label
-        fields = ["name"]
+        fields = ["name", "category"]
 
     def __init__(self, *args, **kwargs):
-        self.category_id = kwargs.pop("category_id", None)
+        category_id = kwargs.pop("category_id", None)
         super().__init__(*args, **kwargs)
+        if category_id and not self.initial.get("category"):
+            self.initial["category"] = category_id
+        # Geen keuze is een geldige keuze (het label komt dan onder het
+        # vangnet), maar dat is geen "optioneel veld" om de gebruiker mee lastig
+        # te vallen.
+        self.fields["category"].widget.attrs["hide-optional"] = True
 
-    def clean_name(self):
-        new_name = self.cleaned_data["name"]
-        creating_new_label = self.instance.id is None
-
-        # when creating new one, we need category for validation initiated on form instance
-        # when editing, we already have the instance for this
-        if creating_new_label:
-            if Label.objects.filter(category=self.category_id, name=new_name).exists():
-                msg = "Naam wordt al gebruikt"
-                raise ValidationError(msg)
-            return new_name
-        original_name = self.instance.name
-        if new_name == original_name:
-            return new_name
-        if Label.objects.filter(category=self.instance.category, name=new_name).exists():
-            msg = "Naam wordt al gebruikt"
-            raise ValidationError(msg)
-        return new_name
+    def clean(self):
+        # Names are unique per category, so the check needs both fields — which
+        # is why it lives here and not in clean_name().
+        cleaned = super().clean()
+        name = cleaned.get("name")
+        # Geen keuze gemaakt? Dan onder het vangnet, in plaats van de gebruiker
+        # dwingen iets te kiezen dat achteraf toch verhuist.
+        category = cleaned.get("category") or LabelCategory.fallback()
+        cleaned["category"] = category
+        if not name:
+            return cleaned
+        clash = Label.objects.filter(category=category, name=name).exclude(pk=self.instance.pk)
+        if clash.exists():
+            self.add_error("name", "Naam wordt al gebruikt in deze categorie")
+        return cleaned
 
 
 class UserForm(NlddFormMixin, forms.ModelForm):
@@ -199,7 +272,12 @@ class ServiceForm(NlddFormMixin, forms.Form):
         required=False,
         empty_label=" ",
     )
-    description = forms.CharField(label="Omschrijving rol", max_length=500, required=False)
+    description = forms.CharField(
+        label="Omschrijving rol",
+        max_length=500,
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 2}),
+    )
     new_skill_name = forms.CharField(label="Naam nieuwe rol", max_length=30, required=False)
     is_filled = forms.ChoiceField(
         label="Status",

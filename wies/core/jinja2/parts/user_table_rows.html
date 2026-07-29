@@ -1,15 +1,30 @@
 {% for user in object_list %}
-  {# href renders the interactive anchor
-(hover/focus/keyboard); htmx intercepts the click to open the edit modal instead
-of navigating. #}
-  <nldd-list-item href="{{ url('user-edit', args=[user.id]) }}" hx-get="{{ url('user-edit', args=[user.id]) }}" hx-target="#userFormModal" hx-swap="innerHTML">
-  <nldd-avatar slot="start" size="40" name="{{ user.get_full_name() or user.email }}" decorative></nldd-avatar>
-  <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
-  <nldd-text-cell text="{{ user.first_name }} {{ user.last_name }}" supporting-text="{{ user.email }}"></nldd-text-cell>
-  <nldd-spacer-cell slot="end" size="8"></nldd-spacer-cell>
-  <nldd-icon-cell slot="end" size="16">
-  <nldd-icon name="chevron-right"></nldd-icon>
-  </nldd-icon-cell>
+  {# The row itself is not interactive: bewerken en verwijderen lopen allebei
+     via het more-menu aan het einde van de regel. #}
+  <nldd-list-item>
+  <nldd-cell>
+  <nldd-avatar size="40" name="{{ user.get_full_name() or user.email }}" decorative></nldd-avatar>
+  </nldd-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-text-cell divider-start text="{{ user.first_name }} {{ user.last_name }}" supporting-text="{{ user.email }}"></nldd-text-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-cell>
+  <nldd-icon-button id="user-row-menu-{{ user.id }}" size="sm" icon="more" popup-type="menu" tooltip-timing="never" text="Acties voor {{ user.get_full_name() or user.email }}"></nldd-icon-button>
+  <nldd-menu anchor="user-row-menu-{{ user.id }}" placement="bottom-end">
+  {# Profiel bekijken opent het collegapaneel op de "Wie zit waar?"-lijst; dat
+     bestaat alleen als de gebruiker aan een collega hangt. #}
+  {% if user.colleague %}
+    <nldd-menu-item text="Profiel bekijken" icon="person" hx-get="{{ url('admin-users') }}?collega={{ user.colleague.id }}" hx-target="#side-panel-content" hx-swap="innerHTML"></nldd-menu-item>
+  {% endif %}
+  {% if user.email %}
+    <nldd-menu-item text="E-mailen" icon="envelope" href="mailto:{{ user.email }}"></nldd-menu-item>
+  {% endif %}
+  {% if user.colleague or user.email %}<nldd-menu-divider></nldd-menu-divider>{% endif %}
+  <nldd-menu-item text="Bewerken" icon="edit" hx-get="{{ url('user-edit', args=[user.id]) }}" hx-target="#userFormModal" hx-swap="innerHTML"></nldd-menu-item>
+  <nldd-menu-divider></nldd-menu-divider>
+  <nldd-menu-item text="Verwijderen" icon="delete" destructive hx-get="{{ url('user-delete', args=[user.id]) }}" hx-target="#userFormModal" hx-swap="innerHTML"></nldd-menu-item>
+  </nldd-menu>
+  </nldd-cell>
   </nldd-list-item>
 {% else %}
   <nldd-list-item>

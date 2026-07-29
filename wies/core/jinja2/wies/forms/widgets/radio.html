@@ -1,0 +1,17 @@
+{# Radio group of nldd-radio-button-fields in ONE nldd-radio-button-group: de
+   groep verzorgt toetsenbordnavigatie en zet de andere knoppen uit, en het veld
+   is form-associated sinds design system 0.8.71, dus de keuze bereikt de POST
+   zonder bridge. De groep geeft zijn `name` door aan de velden.
+
+   Let op: bij een platte keuzelijst levert `optgroups` één groep PER OPTIE. De
+   nldd-groep staat daarom om de hele lus heen — anders krijgt elke knop zijn
+   eigen groep en zetten ze elkaar niet uit. #}
+<nldd-radio-button-group name="{{ widget.name }}">
+{% for group_name, group_choices, group_index in widget.optgroups %}
+  {% for option_widget in group_choices %}
+    <nldd-radio-button-field value="{{ option_widget.value }}" label="{{ option_widget.label }}"
+    {% if option_widget.selected %}checked{% endif %}
+    ></nldd-radio-button-field>
+  {% endfor %}
+{% endfor %}
+</nldd-radio-button-group>

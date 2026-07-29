@@ -143,7 +143,7 @@ class UserViewsTest(TestCase):
 
         assert response.status_code == 200
         content = response.content.decode()
-        assert "nldd-window" in content or "modal-content" in content
+        assert "nldd-sheet" in content or "modal-content" in content
         assert "Nieuwe gebruiker" in content
 
     def test_user_create_success(self):
@@ -217,11 +217,12 @@ class UserViewsTest(TestCase):
             },
         )
 
-        # Should return 200 with form errors (re-rendered modal)
+        # Should return 200 with form errors: only the sheet's contents come
+        # back, so the open sheet stays put instead of a second one on top.
         assert response.status_code == 200
         content = response.content.decode()
-        # Modal should be shown with errors
-        assert "nldd-window" in content or "modal-content" in content
+        assert "nldd-sheet" not in content
+        assert "<nldd-form>" in content
 
     def test_user_create_duplicate_email(self):
         """Test that a new user cannot be created with an existing email"""
@@ -239,7 +240,7 @@ class UserViewsTest(TestCase):
 
         assert response.status_code == 200
         content = response.content.decode()
-        assert "nldd-window" in content or "modal-content" in content
+        assert "nldd-sheet" not in content
         assert "Er bestaat al een gebruiker met dit e-mailadres." in content
         assert User.objects.count() == initial_count
         assert User.objects.filter(email="user1@rijksoverheid.nl").count() == 1
@@ -459,7 +460,7 @@ class UserViewsTest(TestCase):
 
         assert response.status_code == 200
         content = response.content.decode()
-        assert "nldd-window" in content or "modal-content" in content
+        assert "nldd-sheet" in content or "modal-content" in content
         assert "Gebruiker bewerken" in content
         # Check that form is pre-populated
         assert self.user1.first_name in content
@@ -511,12 +512,11 @@ class UserViewsTest(TestCase):
             },
         )
 
-        # Should return 200 with form errors (re-rendered modal)
+        # Should return 200 with form errors: only the sheet's contents.
         assert response.status_code == 200
         content = response.content.decode()
-        # Modal should be shown with errors
-        assert "nldd-window" in content or "modal-content" in content
-        assert "Gebruiker bewerken" in content
+        assert "nldd-sheet" not in content
+        assert "<nldd-form>" in content
 
         # User should not be updated
         self.user1.refresh_from_db()
@@ -610,9 +610,9 @@ class UserViewsTest(TestCase):
         assert response.status_code == 200
         content = response.content.decode()
 
-        # Simple integration test - verify NLDD classes are present
-        assert "nldd-form-field__label" in content
+        # Simple integration test - every field renders as an NLDD component
         assert "nldd-form-field" in content
+        assert "nldd-checkbox-field" in content
 
 
 class UserImportTest(TestCase):

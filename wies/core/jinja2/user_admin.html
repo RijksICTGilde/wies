@@ -1,31 +1,50 @@
 {% extends "base.html" %}
 {% block extra_head %}
-  <link rel="stylesheet" href="{{ static('css/nldd/side_panel.css') }}">
+  <link rel="stylesheet" href="{{ static('css/wies/side_panel.css') }}">
   <link rel="stylesheet" href="{{ static('css/modals.css') }}">
-  <script src="{{ static('js/nldd/filter_interactions.js') }}" defer></script>
-  <script src="{{ static('js/nldd/sidebar_toggle.js') }}" defer></script>
-  <script src="{{ static('js/dialog.js') }}" defer></script>
+  <script src="{{ static('js/wies/filter_interactions.js') }}" defer></script>
+  <script src="{{ static('js/wies/sidebar_toggle.js') }}" defer></script>
+  <script src="{{ static('js/wies/side_panel.js') }}" defer></script>
 {% endblock extra_head %}
 {% block sidebar %}
   {% include "parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  <nldd-container padding="16">
-  <div style="display: flex; align-items: center; gap: 12px;">
-    <nldd-search-field id="nldd-search-input" style="flex: 1;" placeholder="Zoek op naam of email..." value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" hx-get="{{ url('admin-users') }}" hx-trigger="input changed delay:300ms" hx-target="#nldd-user-table" hx-swap="outerHTML" name="zoek">
-    </nldd-search-field>
-    <nldd-button variant="primary" text="Gebruiker toevoegen" hx-get="{{ url('user-create') }}" hx-target="#userFormModal" hx-swap="innerHTML">
-    </nldd-button>
-  </div>
-  </nldd-container>
-  <div id="nldd-user-content">
-    <div class="nldd-results-bar">
-      <p class="nldd-results-bar__count">
-        <strong>{{ paginator.count }}</strong>
-        {{ "gebruiker" if paginator.count == 1 else "gebruikers" }}
-      </p>
-    </div>
+  <nldd-title size="3">
+  <h1>Gebruikers</h1>
+  </nldd-title>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-toolbar label="Gebruikers">
+  <nldd-toolbar-item slot="start" width="560px" max-width="560px" min-width="240px">
+  <nldd-search-field id="search-input" placeholder="Op naam of e-mail zoeken" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" hx-get="{{ url('admin-users') }}" hx-trigger="input changed delay:300ms" hx-target="#user-table" hx-swap="outerHTML" name="zoek">
+  </nldd-search-field>
+  </nldd-toolbar-item>
+  <nldd-toolbar-item slot="end">
+  <nldd-button start-icon="plus" text="Nieuwe gebruiker" hx-get="{{ url('user-create') }}" hx-target="#userFormModal" hx-swap="innerHTML">
+  </nldd-button>
+  </nldd-toolbar-item>
+  </nldd-toolbar>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <div id="user-content">
+    {% set count_label = "gebruiker" if paginator.count == 1 else "gebruikers" %}
+    <nldd-rich-text spacing="flat">
+    <p>
+      <strong>{{ paginator.count }}</strong> {{ count_label }}
+    </p>
+    </nldd-rich-text>
+    <nldd-spacer size="12"></nldd-spacer>
     {% include "parts/user_table.html" %}
   </div>
   <div id="userFormModal"></div>
 {% endblock content %}
+{% block panel %}
+  {# Zelfde zijsheet als de lijstpagina's: "Profiel bekijken" in het rijmenu
+     swapt het collegapaneel hierin, zonder de beheerpagina te verlaten. #}
+  <nldd-sheet id="side-panel" placement="right" width="480px" accessible-label="Detail">
+  <nldd-page id="side-panel-content" sticky-header>
+  {% if panel_data %}
+    {% include panel_data.panel_content_template %}
+  {% endif %}
+  </nldd-page>
+  </nldd-sheet>
+{% endblock panel %}

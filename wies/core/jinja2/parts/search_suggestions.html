@@ -1,24 +1,6 @@
-{% if search_term %}
-  <ul class="search-suggestions" role="listbox">
-    {# Primary action: full-text search on the typed term (same as pressing Enter) #}
-    <li>
-      <button type="button"
-              class="search-suggestion search-suggestion--search"
-              data-search-commit>
-        <nldd-icon name="magnifier" class="search-suggestion__icon"></nldd-icon>
-        <span>Zoeken op <strong>"{{ search_term }}"</strong></span>
-      </button>
-    </li>
-    {% if org_suggestions %}
-      <li class="search-suggestions__header">Of filter op opdrachtgever:</li>
-      {% for org in org_suggestions %}
-        <li>
-          <button type="button"
-                  class="search-suggestion"
-                  data-org-id="{{ org.id }}"
-                  data-org-label="{{ org.label or org.name }}">{{ org.label or org.name }}</button>
-        </li>
-      {% endfor %}
-    {% endif %}
-  </ul>
-{% endif %}
+{# Items voor het nldd-menu onder het zoekveld. Alleen organisaties waarvan een
+afkorting exact overeenkomt met de zoekterm: typ "RWS" en filter op
+Rijkswaterstaat. Geen match = geen items, en het menu blijft dicht. #}
+{% for org in org_suggestions %}
+  <nldd-menu-item text="{{ org.label or org.name }}" value="{{ org.id }}" icon="apartment-building" data-org-id="{{ org.id }}" data-org-label="{{ org.label or org.name }}"></nldd-menu-item>
+{% endfor %}

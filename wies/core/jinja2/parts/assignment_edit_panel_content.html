@@ -1,0 +1,47 @@
+{# Child sheet van het opdrachtpaneel: alle opdrachtgegevens in één formulier
+   (naam, omschrijving, opdrachtgevers, periode, business manager). De
+   terugknop van de top-title-bar vuurt een `back`-event dat side_panel.js
+   afvangt; opslaan stuurt via HX-Location terug naar het ouderpaneel
+   (zie assignment_edit_view). Het team heeft zijn eigen child sheet: een
+   formset past niet in dit platte formulier.
+
+   nldd-form krijgt een eigen <form> als direct child (user-provided form
+   mode), omdat htmx zijn attributen op het echte formulier nodig heeft. #}
+{% set form = panel_data.form %}
+{% set panel_heading = "Opdracht bewerken" %}
+<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ panel_data.assignment.name }}" dismiss-text="Sluit"></nldd-top-title-bar>
+<nldd-simple-section padding-top="0">
+<nldd-title size="3">
+<h3 id="panel-title">{{ panel_heading }}</h3>
+</nldd-title>
+<nldd-spacer size="12" direction="vertical"></nldd-spacer>
+<nldd-form>
+<form hx-post="{{ panel_data.edit_url }}"
+      hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+      hx-target="#side-panel-content"
+      hx-swap="innerHTML">
+  {% if form.name %}{{ form.name.as_field_group() }}{% endif %}
+  {% if form.extra_info %}{{ form.extra_info.as_field_group() }}{% endif %}
+  {% if form.organizations %}
+    <nldd-form-field label="{{ form.organizations.label }}">
+    {{ form.organizations.as_widget() }}
+    {% for error in form.organizations.errors %}
+      <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+    {% endfor %}
+    </nldd-form-field>
+  {% endif %}
+  {% if form.start_date %}{{ form.start_date.as_field_group() }}{% endif %}
+  {% if form.end_date %}{{ form.end_date.as_field_group() }}{% endif %}
+  {% if form.owner %}{{ form.owner.as_field_group() }}{% endif %}
+  {% for error in form.non_field_errors() %}
+    <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
+  {# Verborgen velden onderaan: nldd-form zet ruimte tussen alle siblings, dus
+     een hidden input bovenaan duwt het eerste zichtbare veld omlaag. #}
+  <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
+  <nldd-form-actions>
+  <nldd-button type="submit" variant="primary" width="full" text="Opslaan"></nldd-button>
+  </nldd-form-actions>
+</form>
+</nldd-form>
+</nldd-simple-section>

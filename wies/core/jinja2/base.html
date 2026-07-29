@@ -16,14 +16,21 @@
     <link rel="icon" type="image/svg+xml" href="{{ static('favicon.svg') }}">
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="{{ static('vendor/nldd/ndd.styles.css') }}">
-    <link rel="stylesheet" href="{{ static('css/nldd/app.css') }}">
+    <link rel="stylesheet" href="{{ static('css/wies/app.css') }}">
     {% block extra_head %}
     {% endblock extra_head %}
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
     <script defer src="{{ static('vendor/nldd/ndd.bundle.js') }}"></script>
     {# Global: rows carrying href + hx-get exist on several pages and arrive in
        htmx swaps too, so this cannot be opted into per page. #}
-    <script src="{{ static('js/nldd/hx_link_guard.js') }}"></script>
+    <script src="{{ static('js/wies/hx_link_guard.js') }}"></script>
+    {# Global: opent nldd-window/dialog-inhoud die htmx in een mount swapt
+       (verwijder-bevestigingen, formulier-modals) — die swaps gebeuren op
+       elke pagina met een paneel. #}
+    <script src="{{ static('js/dialog.js') }}" defer></script>
+    {# Global for the same reason: opdrachtgevers are inline-editable, so the
+       org-picker widget can be swapped into any page that shows an opdracht. #}
+    <script defer src="{{ static('js/wies/assignment_org_picker.js') }}"></script>
     <script>
       document.addEventListener("click", (e) => {
         const item = e.composedPath().find(
@@ -34,8 +41,13 @@
     </script>
   </head>
   <body>
+    {# nldd-page is de bladspiegel: navigatie in de header-slot, de
+       sidebar-sectie als groeiende main, de footer in de footer-slot. De main
+       groeit tot de footer onderaan staat, dus de oude min-height-hack
+       (calc(100dvh - 120px)) op de sidebar-sectie kan weg. #}
+    <nldd-page>
     {% block header %}
-      <nldd-top-navigation-bar width="1920px" logo-title="Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}">
+      <nldd-top-navigation-bar slot="header" width="1920px" logo-title="Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}">
       <nldd-menu-bar slot="global" accessible-label="Hoofdnavigatie">
       <nldd-menu-bar-item text="Wie zit waar?" href="{{ url('home') }}"
       {% if request.path == '/' %}current{% endif %}
@@ -44,44 +56,38 @@
       {% if '/opdrachten/' in request.path %}current{% endif %}
       ></nldd-menu-bar-item>
       </nldd-menu-bar>
-      {% if request.user.is_authenticated %}
-        <nldd-menu-bar slot="utility" accessible-label="Gebruikersmenu">
-        <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="account" expandable content-priority="text">
-        <nldd-menu>
-        <nldd-menu-item text="Profiel" icon="person" data-href="{{ url('user-profile') }}"></nldd-menu-item>
-        {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
-          <nldd-menu-divider></nldd-menu-divider>
-          <nldd-menu-item text="Beheer" icon="user-admin" data-href="{{ url('admin-users') }}"></nldd-menu-item>
-        {% endif %}
-        <nldd-menu-divider></nldd-menu-divider>
-        <nldd-menu-item text="Log uit" icon="logout" data-href="{{ url('logout') }}"></nldd-menu-item>
-        </nldd-menu>
-        </nldd-menu-bar-item>
-        </nldd-menu-bar>
-      {% endif %}
+      {% include "parts/utility_menu.html" %}
       </nldd-top-navigation-bar>
     {% endblock header %}
     {% set _sidebar_content %}
       {% block sidebar %}
       {% endblock sidebar %}
     {% endset %}
-    <nldd-sidebar-section class="wies-layout" width="1920px" sidebar-label="Zijbalk">
-    {% if _sidebar_content.strip() %}
-      <div slot="sidebar">{{ _sidebar_content }}</div>
-    {% endif %}
-    <main class="wies-layout__main">
+    {% set _main_content %}
       {% include "parts/flash_messages.html" %}
       {% block content %}
       {% endblock content %}
-    </main>
-    </nldd-sidebar-section>
-    <nldd-page-footer width="1920px">
+    {% endset %}
+    {# De zijbalk is hier altijd het filterpaneel; "Klaar" i.p.v. "Sluit" omdat
+       de filters al live toegepast zijn — je verwerpt niets bij het sluiten.
+       Zonder zijbalk komt de sidebar-section er niet omheen: dan is het een
+       lege laag die de breedte van de pagina overneemt. #}
+    {% if _sidebar_content.strip() %}
+      <nldd-sidebar-section width="1920px" sidebar-label="Filter" translations='{"components.sidebar-section.sheet-dismiss-action": "Klaar"}'>
+      {{ _sidebar_content }}
+      {{ _main_content }}
+      </nldd-sidebar-section>
+    {% else %}
+      {{ _main_content }}
+    {% endif %}
+    <nldd-page-footer slot="footer" width="1920px">
     <nldd-page-footer-legal-bar slot="legal-bar" accessible-label="Over deze site">
     <nldd-page-footer-legal-bar-item slot="end" href="{{ url('privacy') }}" text="Privacy"></nldd-page-footer-legal-bar-item>
     <nldd-page-footer-legal-bar-item slot="end" href="{{ url('toegankelijkheid') }}" text="Toegankelijkheid"></nldd-page-footer-legal-bar-item>
     <nldd-page-footer-legal-bar-item slot="end" href="{{ url('contact') }}" text="Contact"></nldd-page-footer-legal-bar-item>
     </nldd-page-footer-legal-bar>
     </nldd-page-footer>
+    </nldd-page>
     {% block panel %}
     {% endblock panel %}
     {% if show_onboarding %}
@@ -90,7 +96,6 @@
          are unaffected — the browser dedupes by URL. The label picker renders
          an nldd-token-field (from the NLDD bundle in <head>), so the old
          multi_select.js is no longer needed here. #}
-      <script src="{{ static('js/dialog.js') }}" defer></script>
       <script src="{{ static('js/inline_edit.js') }}" defer></script>
       <script src="{{ static('js/onboarding.js') }}" defer></script>
     {% endif %}

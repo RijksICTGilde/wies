@@ -18,12 +18,28 @@ class MultiselectDropdown(SelectMultiple):
     the values could not be changed.
     """
 
-    template_name = "nldd/forms/widgets/multiselect.html"
+    template_name = "wies/forms/widgets/multiselect.html"
 
     def id_for_label(self, id_, index=None):
         # Return None so the <label> in field.html gets no "for" attribute: the
         # host is a custom element, not a labelable control. The accessible name
         # travels via accessible-label instead (set in _configure_field).
+        return None
+
+
+class ComboBoxSelect(forms.Select):
+    """Single choice as an NLDD combo box: type to filter, pick to commit.
+
+    Form-associated, so it posts like a native <select> — geen bridge. Gebruik
+    hem waar de lijst lang genoeg is dat scrollen door een dropdown werk wordt
+    (business managers, consultants).
+    """
+
+    template_name = "wies/forms/widgets/combo_box.html"
+
+    def id_for_label(self, id_, index=None):
+        # De host is een custom element, geen labelbaar control; de naam reist
+        # via accessible-label (gezet in _configure_field).
         return None
 
 
@@ -39,7 +55,7 @@ class OrgPickerWidget(forms.Widget):
     (``OrganizationsField``) lives in ``wies/core/fields.py``.
     """
 
-    template_name = "nldd/widgets/org_picker.html"
+    template_name = "wies/widgets/org_picker.html"
     # The JS expects a fixed prefix + element IDs (assignment-org-*).
     # When we need multiple picker instances in the future, this goes
     # on a parameter; for now we have one picker per page, same ID set.

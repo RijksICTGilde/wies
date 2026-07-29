@@ -7,7 +7,7 @@ from datetime import date, timedelta
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import get_user_model
-from django.contrib.auth.decorators import login_not_required, permission_required, user_passes_test
+from django.contrib.auth.decorators import login_not_required, login_required, permission_required, user_passes_test
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
@@ -41,8 +41,11 @@ from wies.core.placement_visibility import LABELS, evaluate
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
+    CATEGORY_COLOR_CHOICES,
     AssignmentCreateForm,
+    ProfileNameForm,
     LabelCategoryForm,
+    LabelCategoryFormSet,
     LabelForm,
     ServiceFormSet,
     UserForm,
@@ -117,7 +120,7 @@ def get_delete_context(delete_url_name, object_pk, object_name):
 
 # Query params that drive the side panel; stripped when (re)building a page URL.
 # ``bewerken`` zet het plaatsingspaneel in de bewerkstand (de child sheet).
-PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken")
+PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid")
 
 
 def _url_drop_params(path, query, names, **overrides):
@@ -144,20 +147,60 @@ def _build_close_url(request):
 
 def _build_assignment_panel_data(assignment, request):
     """Shared helper to build assignment panel context data for both views."""
-    from wies.core.editables.assignment import visible_service_rows  # noqa: PLC0415 — avoids import cycle
+    from wies.core.editables.assignment import (  # noqa: PLC0415
+        AssignmentEditables,
+        _organizations_initial,
+        _owner_display_context,
+        visible_service_rows,
+    )
 
-    # team_count comes from the same viewer-filtered rows the team list renders,
-    # so the header total can't betray a hidden placement.
-    return {
+    team_rows = visible_service_rows(assignment, request)
+    data = {
         "panel_content_template": "parts/assignment_panel_content.html",
         "panel_title": assignment.name,
         "close_url": _build_close_url(request),
         "assignment": assignment,
-        "team_count": len(visible_service_rows(assignment, request)),
-        "user_can_edit": has_permission(Verb.UPDATE, assignment, request.user),
+        "team_rows": team_rows,
+        # Same human label as the "Externe bron" row (get_source_display), so
+        # the intro says "OTYS IIR", not the raw uppercased key "OTYS_IIR".
+        "team_external_source": assignment.get_source_display() if assignment.source not in ("wies", "") else "",
+        # Eén privacyzin boven de lijst in plaats van een noot per rij. De
+        # formulering komt uit placement_visibility en is al op de kijker
+        # toegesneden ("... jou en de Business Manager" / "... jou en de
+        # consultant"), dus alleen de eerste letter hoeft mee te buigen.
+        "team_privacy_note": next(
+            (
+                note[0].lower() + note[1:]
+                for row in team_rows
+                if (note := row.get("privacy_warning_text"))
+            ),
+            "",
+        ),
+        "user_can_edit": bool(_assignment_edit_specs(assignment, request.user)),
+        "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
         "show_updates_tab": assignment.source != "otys_iir",
         "organization_count": assignment.organization_relations.count(),
+        # Read-only weergavecontext: het paneel toont waarden direct (de per-veld
+        # inline edit is vervangen door de bewerk-child-sheet).
+        "organization_rows": _organizations_initial(assignment),
+        "owner_display": _owner_display_context(assignment, request),
+        "edit_panel_url": _build_panel_url(request, opdracht=assignment.id, bewerken=1),
+        "member_add_aanvraag_url": _build_panel_url(request, opdracht=assignment.id, teamlid="nieuw-aanvraag"),
+        "member_add_ingevuld_url": _build_panel_url(request, opdracht=assignment.id, teamlid="nieuw-ingevuld"),
     }
+    # Child sheets: ?bewerken= opent het gecombineerde opdrachtformulier,
+    # ?teamlid= het formulier van één teamlid (of een nieuw lid via
+    # nieuw-aanvraag / nieuw-ingevuld). Zonder rechten valt de parameter terug
+    # op het leespaneel.
+    if request.GET.get("bewerken"):
+        edit_panel = _build_assignment_edit_panel_data(assignment, request)
+        if edit_panel is not None:
+            data.update(edit_panel)
+    elif request.GET.get("teamlid"):
+        member_panel = _build_assignment_member_panel_data(assignment, request)
+        if member_panel is not None:
+            data.update(member_panel)
+    return data
 
 
 def _merge_date_range(existing: dict, start, end):
@@ -355,6 +398,16 @@ def _build_placement_panel_data(placement, request, *, visibility=None):
         "show_read_more": True,
     }
 
+    # De overige opdrachten van deze collega staan in hetzelfde paneel, zodat je
+    # er niet voor hoeft door te klikken naar een tweede sheet. Dezelfde
+    # zichtbaarheidsregels als het collegapaneel, want het is dezelfde bron.
+    viewer = getattr(request.user, "colleague", None)
+    other_assignments = [
+        entry
+        for entry in _get_colleague_assignments(request, colleague, viewer)
+        if entry["id"] != assignment.id
+    ]
+
     return {
         "panel_content_template": "parts/placement_panel_content.html",
         "panel_title": f"{colleague.name} - {assignment.name}",
@@ -363,6 +416,8 @@ def _build_placement_panel_data(placement, request, *, visibility=None):
         "colleague": colleague,
         "service": service,
         "assignment_card": assignment_card,
+        "other_active_assignments": [a for a in other_assignments if not a["historical"]],
+        "past_assignments": [a for a in other_assignments if a["historical"]],
         # Eén "Bewerken"-knop opent de child sheet; hij verschijnt alleen als er
         # ook echt iets te bewerken valt.
         "user_can_edit_details": bool(_placement_edit_specs(placement, request.user)),
@@ -677,8 +732,8 @@ def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> Non
 
     For each ``select-multi`` group:
       - assigns a unique ``group_id`` (the modal opens by this key),
-      - computes ``top_options``: the ``top_n`` options by count (selected ones
-        kept visible), shown inline in the sidebar,
+      - computes ``top_options``: the ``top_n`` options by count, in that order,
+        plus any option selected outside that head appended below it,
       - sets ``has_more`` when there are more options than fit inline.
     The full ``options`` list is kept for the modal. Mutates in place.
     """
@@ -696,13 +751,14 @@ def _finalize_filter_groups(filter_groups: list[dict], *, top_n: int = 3) -> Non
         real_options = [o for o in group["options"] if o.get("value")]
         selected = set(group.get("selected_values", []))
         by_count = sorted(real_options, key=lambda o: o.get("count", 0), reverse=True)
-        # Show all selected first, then pad with the highest-count unselected up
-        # to top_n. Once >= top_n are selected the empty options drop away; the
-        # full list stays in the "Meer" modal.
-        selected_opts = [o for o in by_count if o["value"] in selected]
-        unselected_opts = [o for o in by_count if o["value"] not in selected]
-        fill = max(0, top_n - len(selected_opts))
-        top = selected_opts + unselected_opts[:fill]
+        # The head is the top_n by count and it stays put: kiezen in de "Meer"-
+        # sheet mag de rij eronder niet laten verspringen. Een keuze die buiten
+        # de kop valt komt eronder te staan, dus de lijst wordt langer in plaats
+        # van dat er een optie uit valt. De volledige lijst blijft in de sheet.
+        head = by_count[:top_n]
+        head_values = {o["value"] for o in head}
+        extra_selected = [o for o in by_count[top_n:] if o["value"] in selected and o["value"] not in head_values]
+        top = head + extra_selected
         group["top_options"] = top
         group["has_more"] = len(real_options) > len(top)
 
@@ -1524,9 +1580,19 @@ class UserListView(PermissionRequiredMixin, ListView):
         qs = self._apply_filters(qs)
         return qs.distinct()
 
+    def _panel_colleague(self):
+        """The colleague whose panel is requested via ?collega=, if any."""
+        colleague_id = self.request.GET.get("collega")
+        if not colleague_id or not colleague_id.isdigit():
+            return None
+        return Colleague.objects.filter(id=colleague_id).first()
+
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if "HX-Request" in self.request.headers:
+            # Het profielpaneel wordt in de zijsheet van deze pagina geswapt.
+            if self.request.headers.get("HX-Target") == "side-panel-content":
+                return ["parts/colleague_panel_content.html"]
             # If paginating, return only rows
             if self.request.GET.get("pagina"):
                 return ["parts/user_table_rows.html"]
@@ -1537,6 +1603,14 @@ class UserListView(PermissionRequiredMixin, ListView):
     def get_context_data(self, **kwargs):
         """Add dynamic filter options"""
         context = super().get_context_data(**kwargs)
+
+        # Het profielpaneel hangt aan deze pagina, zodat "Profiel bekijken" in
+        # het rijmenu de sheet hier opent in plaats van naar de lijstpagina te
+        # springen. Bij een directe load rendert het paneel server-side mee.
+        panel_colleague = self._panel_colleague()
+        context["panel_data"] = (
+            _build_colleague_panel_data(panel_colleague, self.request) if panel_colleague else None
+        )
 
         context["search_field"] = "zoek"
         context["search_placeholder"] = "Zoek op naam of email..."
@@ -1645,6 +1719,7 @@ def user_create(request):
     if request.method == "GET":
         # Return modal HTML with empty UserForm
         form = UserForm()
+        form.fields["first_name"].widget.attrs["autofocus"] = True
         return render(
             request,
             "parts/user_form_modal.html",
@@ -1652,7 +1727,7 @@ def user_create(request):
                 "content": form,
                 "form_post_url": form_post_url,
                 "modal_title": modal_title,
-                "form_button_label": "Toevoegen",
+                "form_button_label": "Voeg gebruiker toe",
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
             },
@@ -1683,7 +1758,7 @@ def user_create(request):
                 "content": form,
                 "form_post_url": form_post_url,
                 "modal_title": modal_title,
-                "form_button_label": "Toevoegen",
+                "form_button_label": "Voeg gebruiker toe",
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
             },
@@ -1712,9 +1787,6 @@ def user_edit(request, pk):
                 "form_button_label": "Opslaan",
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
-                **get_delete_context(
-                    "user-delete", edited_user.pk, f"{edited_user.first_name} {edited_user.last_name}"
-                ),
             },
         )
     if request.method == "POST":
@@ -1747,9 +1819,6 @@ def user_edit(request, pk):
                 "form_button_label": "Opslaan",
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
-                **get_delete_context(
-                    "user-delete", edited_user.pk, f"{edited_user.first_name} {edited_user.last_name}"
-                ),
             },
         )
     return HttpResponse(status=405)
@@ -1764,15 +1833,16 @@ def user_delete(request, pk):
         # Show delete confirmation modal
         return render(
             request,
-            "parts/generic_form_modal.html",
+            "parts/confirm_delete_modal.html",
             {
-                "modal_title": f"Verwijder gebruiker: {user.first_name} {user.last_name}",
-                "warning_modal": True,
-                "modal_element_id": "userFormModal",
-                "target_element_id": "user_table",
-                "delete_warning": f"Weet je zeker dat je {user.first_name} {user.last_name} wilt verwijderen?",
+                "dialog_text": "Gebruiker verwijderen?",
+                "dialog_supporting": (
+                    f"Weet je zeker dat je {user.first_name} {user.last_name} wilt verwijderen? "
+                    "Verwijderen is permanent en niet terug te draaien."
+                ),
+                "confirm_label": "Verwijder gebruiker",
+                "cancel_label": "Behoud gebruiker",
                 "form_post_url": reverse("user-delete", kwargs={"pk": pk}),
-                "form_button_label": "Verwijderen",
             },
         )
     if request.method == "POST":
@@ -2156,6 +2226,158 @@ def label_category_edit(request, pk):
     return None
 
 
+@login_required
+def profile_name_edit(request):
+    """Voor- en achternaam van de ingelogde gebruiker, in één sheet.
+
+    Alleen het eigen profiel: de pagina toont ``request.user``, dus er is niets
+    te kiezen. Opslaan loopt via de Editable-save van elk veld, zodat de naam op
+    de gekoppelde Colleague meebeweegt zoals bij de inline-edit.
+    """
+    from wies.core.editables.user import UserEditables  # noqa: PLC0415 — mirrors the other editable imports here
+
+    user = request.user
+
+    if request.method == "POST":
+        form = ProfileNameForm(request.POST, instance=user)
+        if form.is_valid():
+            UserEditables.first_name.save(user, form.cleaned_data["first_name"])
+            UserEditables.last_name.save(user, form.cleaned_data["last_name"])
+            response = HttpResponse(status=200)
+            response["HX-Redirect"] = reverse("ndd-profile")
+            return response
+    else:
+        form = ProfileNameForm(instance=user)
+
+    form.fields["first_name"].widget.attrs["autofocus"] = True
+
+    return render(
+        request,
+        "parts/profile_name_sheet.html",
+        {
+            "content": form,
+            "form_post_url": reverse("profile-name-edit"),
+        },
+    )
+
+
+@permission_required("core.change_labelcategory", raise_exception=True)
+def label_category_manage(request):
+    """Alle categorieën in één sheet: hernoemen, kleur kiezen, rijen toevoegen.
+
+    Hernoemen en nieuwe rijen zijn gestapeld tot "Opslaan"; verwijderen loopt
+    via de bevestigingsdialoog en gaat meteen, omdat het gevolgen heeft voor de
+    labels eronder (die verhuizen naar de vangnetcategorie).
+    """
+    queryset = LabelCategory.objects.all()
+
+    if request.method == "POST":
+        formset = LabelCategoryFormSet(request.POST, queryset=queryset)
+        if formset.is_valid():
+            formset.save()
+            response = HttpResponse(status=200)
+            response["HX-Redirect"] = reverse("ndd-label-admin")
+            return response
+    else:
+        formset = LabelCategoryFormSet(queryset=queryset)
+
+    # De sheet opent met de cursor in het eerste naamveld.
+    if formset.forms:
+        formset.forms[0].fields["name"].widget.attrs["autofocus"] = True
+
+    return render(
+        request,
+        "parts/label_category_manage_sheet.html",
+        {
+            "formset": formset,
+            "color_choices": CATEGORY_COLOR_CHOICES,
+            "form_post_url": reverse("label-category-manage"),
+        },
+    )
+
+
+@permission_required("core.change_label", raise_exception=True)
+def label_form(request, pk=None):
+    """Eén sheet voor toevoegen én bewerken van een label (categorie + naam)."""
+    label = get_object_or_404(Label, pk=pk) if pk else None
+    is_edit = label is not None
+
+    invalid_post = False
+    if request.method == "POST":
+        form = LabelForm(request.POST, instance=label)
+        if form.is_valid():
+            form.save()
+            response = HttpResponse(status=200)
+            response["HX-Redirect"] = reverse("ndd-label-admin")
+            return response
+        invalid_post = True
+    else:
+        form = LabelForm(instance=label, category_id=request.GET.get("categorie"))
+
+    form.fields["name"].widget.attrs["autofocus"] = True
+
+    # Een fout ververst alleen de inhoud: de sheet staat al open, en de hele
+    # sheet opnieuw sturen zou er een tweede overheen zetten.
+    template = "parts/label_form_body.html" if invalid_post else "parts/label_form_sheet.html"
+
+    return render(
+        request,
+        template,
+        {
+            "content": form,
+            "modal_title": "Label bewerken" if is_edit else "Label toevoegen",
+            "form_button_label": "Opslaan" if is_edit else "Voeg label toe",
+            "form_post_url": (
+                reverse("label-form-edit", kwargs={"pk": label.pk}) if is_edit else reverse("label-form-create")
+            ),
+            "modal_element_id": "labelFormModal",
+        },
+    )
+
+
+def _move_labels_to_fallback(category):
+    """Re-home a category's labels before it is deleted.
+
+    Returns the catch-all category, or None when there was nothing to move (or
+    the catch-all itself is being deleted). Labels are unique per category, so a
+    name that already exists in the catch-all is merged: the colleagues of the
+    duplicate move to the surviving label and the duplicate goes.
+    """
+    labels = list(category.labels.all())
+    if not labels:
+        return None
+
+    fallback = LabelCategory.fallback()
+    if fallback.pk == category.pk:
+        return None
+
+    for label in labels:
+        existing = Label.objects.filter(category=fallback, name=label.name).exclude(pk=label.pk).first()
+        if existing is None:
+            label.category = fallback
+            label.save(update_fields=["category"])
+        else:
+            existing.colleagues.add(*label.colleagues.all())
+            label.delete()
+    return fallback
+
+
+def _category_delete_warning(category):
+    """The confirmation text, which differs for the catch-all itself."""
+    count = category.labels.count()
+    if count == 0:
+        return f"Weet je zeker dat je categorie '{category.name}' wilt verwijderen?"
+    if category.name == LabelCategory.FALLBACK_NAME:
+        return (
+            f"Weet je zeker dat je categorie '{category.name}' wilt verwijderen? "
+            f"De {count} labels erin worden verwijderd, ook bij de collega's die ze hebben."
+        )
+    return (
+        f"Weet je zeker dat je categorie '{category.name}' wilt verwijderen? "
+        f"De {count} labels erin verhuizen naar '{LabelCategory.FALLBACK_NAME}'."
+    )
+
+
 @permission_required("core.delete_labelcategory", raise_exception=True)
 def label_category_delete(request, pk):
     """
@@ -2163,59 +2385,42 @@ def label_category_delete(request, pk):
     """
     category = get_object_or_404(LabelCategory, pk=pk)
     if request.method == "GET":
+        # Een dialoog, geen sheet: de vraag komt uit de beheersheet en die moet
+        # zichtbaar blijven staan achter de bevestiging.
+        has_labels = category.labels.exists()
+        is_fallback = category.name == LabelCategory.FALLBACK_NAME
         return render(
             request,
-            "parts/generic_form_modal.html",
+            "parts/confirm_delete_modal.html",
             {
-                "modal_title": f"Verwijder categorie: {category.name}",
-                "warning_modal": True,
-                "modal_element_id": "labelFormModal",
-                "target_element_id": "labelFormModal",
-                "delete_warning": (
-                    f"Weet je zeker dat je deze categorie wilt verwijderen? "
-                    f"Dit verwijdert ook alle {category.labels.count()} labels."
-                ),
+                "dialog_text": "Categorie verwijderen?",
+                "dialog_supporting": _category_delete_warning(category),
+                "confirm_label": "Verwijder categorie",
+                "cancel_label": "Behoud categorie",
                 "form_post_url": reverse("label-category-delete", kwargs={"pk": pk}),
-                "form_button_label": "Verwijderen",
+                # De labels weggooien is een aparte keuze, en alleen zinnig als
+                # er labels zijn die anders zouden verhuizen.
+                "extra_confirm_label": ("Verwijder categorie en de labels" if has_labels and not is_fallback else ""),
+                "extra_confirm_vals": '{"labels_verwijderen": "1"}',
             },
         )
     if request.method == "POST":
         category_name = category.name  # Store name before deleting
+        # Zonder deze vlag verhuizen de labels naar het vangnet; met de vlag
+        # gaan ze mee met de categorie (cascade).
+        drop_labels = request.POST.get("labels_verwijderen") == "1"
+        moved_to = None if drop_labels else _move_labels_to_fallback(category)
         category.delete()
-        messages.success(request, f"Categorie '{category_name}' succesvol verwijderd")
+        if moved_to is not None:
+            messages.success(
+                request,
+                f"Categorie '{category_name}' verwijderd; de labels staan nu onder '{moved_to.name}'",
+            )
+        else:
+            messages.success(request, f"Categorie '{category_name}' succesvol verwijderd")
         response = HttpResponse(status=200)
         response["HX-Redirect"] = reverse("ndd-label-admin")
         return response
-    return HttpResponse(status=405)
-
-
-@permission_required("core.add_label", raise_exception=True)
-def label_create(request, pk):
-    """
-    Returns a partial html page, to be used with htmx
-    """
-
-    if request.method == "POST":
-        category = get_object_or_404(LabelCategory, pk=pk)
-        form = LabelForm(request.POST, category_id=category.id)
-        if form.is_valid():
-            new_instance = form.save(commit=False)
-            new_instance.category = category
-            new_instance.save()
-
-            category_qs = LabelCategory.objects.filter(id=category.id)
-            category = annotate_usage_counts(category_qs).get()
-
-            return render(request, "parts/label_category.html", {"category": category})
-        errors = dict(form.errors.items())
-        return render(
-            request,
-            "parts/label_category.html",
-            {
-                "category": category,
-                "errors": errors,
-            },
-        )
     return HttpResponse(status=405)
 
 
@@ -2331,6 +2536,8 @@ def assignment_events_partial(request, pk):
         .order_by("-timestamp")[:20]
     )
     events = [event for event in events if _attach_audit_render_data(event, assignment, request)]
+    for event in events:
+        _attach_audit_sentence(event)
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
 
 
@@ -2573,6 +2780,75 @@ def user_import_csv_ndd(request):
     return render(request, template, {"result": result})
 
 
+HET_FIELD_LABELS = {"team", "merk", "thema", "budget", "onderwerp", "contract", "tarief"}
+
+
+def _field_phrase(label: str) -> str:
+    """Turn a field label into something that reads as part of a sentence:
+    "Beschrijving" -> "de beschrijving", "Team" -> "het team". A label with an
+    inner capital is a name, not a common noun ("Business Manager", "E-mail
+    (ODI)"), so its casing is left alone."""
+    if not label or label == "een veld":
+        return label or "een veld"
+    noun = label[: -len("(s)")].strip() + "s" if label.endswith("(s)") else label
+    # Judge the casing on the part outside any parenthetical, so "E-mail (ODI)"
+    # is not read as a name because of the acronym.
+    head = noun.split("(")[0]
+    if not any(c.isupper() for c in head[1:]):
+        noun = noun[0].lower() + noun[1:]
+    article = "het" if noun.lower() in HET_FIELD_LABELS else "de"
+    return f"{article} {noun}"
+
+
+def _attach_audit_sentence(event) -> None:
+    """Phrase the event as one running sentence, commit-message style:
+    "Bart van de Biezen heeft AI Consultant (open) toegevoegd en Process
+    Analyst (Anke Jacobs) naar Process Analyst (open) gewijzigd." Long values
+    (textarea's, toelichtingen) stay out of the sentence; the template renders
+    them as Van/Naar blocks underneath. Requires _attach_audit_render_data to
+    have run first (render_kind, formatted_old/new, diff_entries)."""
+    colleague = getattr(event.user, "colleague", None) if event.user else None
+    event.author_name = colleague.name if colleague else ""
+    author = event.author_name or "Onbekende gebruiker"
+    event.type_label = "Aangemaakt" if event.action == "create" else "Gewijzigd"
+    if event.action == "create":
+        event.sentence = f"{author} heeft deze opdracht aangemaakt."
+        return
+    if event.context.get("merge"):
+        ids = event.context.get("merged_ids") or []
+        noun = "dubbele opdracht" if len(ids) == 1 else "dubbele opdrachten"
+        joined_ids = ", ".join(f"#{i}" for i in ids)
+        event.sentence = f"{author} heeft {len(ids)} {noun} samengevoegd ({joined_ids})."
+        return
+    label = _field_phrase(event.context.get("field_label") or "een veld")
+    if event.render_kind == "collection":
+        clauses = [entry["text"] for entry in event.diff_entries or []]
+        if not clauses:
+            event.sentence = f"{author} heeft {label} gewijzigd."
+        elif len(clauses) == 1:
+            event.sentence = f"{author} heeft {clauses[0]}."
+        else:
+            event.sentence = f"{author} heeft {', '.join(clauses[:-1])} en {clauses[-1]}."
+        return
+    old, new = event.formatted_old, event.formatted_new
+    if event.render_kind == "textarea":
+        if not old and new:
+            event.sentence = f"{author} heeft {label} toegevoegd."
+        elif old and not new:
+            event.sentence = f"{author} heeft {label} verwijderd."
+        else:
+            event.sentence = f"{author} heeft {label} gewijzigd."
+        return
+    if old and new:
+        event.sentence = f'{author} heeft {label} van "{old}" naar "{new}" gewijzigd.'
+    elif new:
+        event.sentence = f'{author} heeft {label} naar "{new}" gewijzigd.'
+    elif old:
+        event.sentence = f"{author} heeft {label} leeggemaakt."
+    else:
+        event.sentence = f"{author} heeft {label} gewijzigd."
+
+
 def _attach_audit_render_data(event, obj, request) -> bool:
     """Prepare `event` for the timeline. False means the viewer may see nothing
     of it and it must not be rendered at all."""
@@ -2627,8 +2903,13 @@ def _attach_audit_render_data(event, obj, request) -> bool:
 
     from django import forms  # noqa: PLC0415
 
+    # Een textarea krijgt het Van/Naar-blok, behalve als hij maar één regel hoog
+    # is: dat is een gewoon tekstveld dat alleen mag doorlopen (de opdrachtnaam),
+    # en dan leest de zin "van X naar Y" prettiger dan twee blokken.
     widget = getattr(spec, "widget", None)
-    if isinstance(widget, forms.Textarea) or (isinstance(widget, type) and issubclass(widget, forms.Textarea)):
+    is_textarea = isinstance(widget, forms.Textarea) or (isinstance(widget, type) and issubclass(widget, forms.Textarea))
+    rows = getattr(widget, "attrs", {}).get("rows", 3) if not isinstance(widget, type) else 3
+    if is_textarea and int(rows or 3) > 1:
         event.render_kind = "textarea"
 
     formatter = getattr(spec, "render_change", None) or (lambda v: str(v or ""))
@@ -2656,18 +2937,16 @@ def assignment_delete(request, pk):
     if request.method == "GET":
         return render(
             request,
-            "parts/generic_form_modal.html",
+            "parts/confirm_delete_modal.html",
             {
-                "modal_title": f"Verwijder opdracht: {assignment.name}",
-                "warning_modal": True,
-                "modal_element_id": "assignmentDeleteModal",
-                "target_element_id": "assignmentDeleteModal",
-                "delete_warning": (
+                "dialog_text": "Opdracht verwijderen?",
+                "dialog_supporting": (
                     f"Weet je zeker dat je opdracht '{assignment.name}' wilt verwijderen? "
                     "Verwijderen is permanent en niet terug te draaien."
                 ),
+                "confirm_label": "Verwijder opdracht",
+                "cancel_label": "Behoud opdracht",
                 "form_post_url": reverse("assignment-delete", kwargs={"pk": pk}),
-                "form_button_label": "Verwijderen",
             },
         )
     if request.method == "POST":
@@ -2797,6 +3076,107 @@ def onboarding_complete(request):
         response["HX-Trigger"] = "closeOnboarding"
         return response
     return redirect("home")
+
+
+# --- Onboarding: opdracht wijzigen -------------------------------------------
+#
+# De controlestap toont per opdracht een leesweergave met een "Wijzigen"-knop.
+# Die opent hieronder een bewerkscherm BINNEN het onboardingvenster: één
+# formulier over de opdracht plus je eigen rol(len), opgebouwd uit dezelfde
+# specs als inline edit, zodat save- en auditgedrag identiek blijft.
+
+
+def _onboarding_entry(request, pk):
+    """De onboarding-entry voor deze opdracht, of None als je er niet op staat."""
+    from wies.core.context_processors import _onboarding_assignments  # noqa: PLC0415 — avoids import cycle
+
+    colleague = getattr(request.user, "colleague", None)
+    for entry in _onboarding_assignments(colleague, request.user):
+        if entry["assignment"].id == pk:
+            return entry
+    return None
+
+
+def _onboarding_edit_groups(request, entry, data=None):
+    """Formuliergroepen voor het bewerkscherm: de opdracht en elke eigen rol.
+
+    Elke groep krijgt een prefix, zodat de rolvelden van meerdere diensten niet
+    op dezelfde namen botsen. De Business Manager zit er bewust niet bij: die is
+    hier het aanspreekpunt, niet iets wat je zelf zet.
+    """
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
+    from wies.core.editables.service import ServiceEditables  # noqa: PLC0415
+
+    assignment = entry["assignment"]
+    groups = []
+
+    assignment_specs = [
+        (editable_set, spec, obj)
+        for (editable_set, spec, obj) in _assignment_edit_specs(assignment, request.user)
+        if spec is not AssignmentEditables.owner
+    ]
+    if assignment_specs:
+        form_cls, initial = _combined_edit_form_class(assignment_specs)
+        groups.append(
+            {
+                # Geen kopje: de titel van het scherm noemt de opdracht al.
+                "title": None,
+                "specs": assignment_specs,
+                "form": form_cls(data, initial=initial, prefix="opdracht"),
+            }
+        )
+
+    services = entry["services"]
+    for service in services:
+        service_specs = [
+            (ServiceEditables, spec, service)
+            for spec in (ServiceEditables.skill, ServiceEditables.description)
+            if has_permission(Verb.UPDATE, service, request.user, spec)
+        ]
+        if not service_specs:
+            continue
+        form_cls, initial = _combined_edit_form_class(service_specs)
+        groups.append(
+            {
+                # Alleen een kopje als er meer dan één rol is; anders spreken de
+                # veldlabels (Rol, Omschrijving rol) voor zich.
+                "title": None if len(services) == 1 else f"Rol: {service.skill.name if service.skill else 'onbekend'}",
+                "specs": service_specs,
+                "form": form_cls(data, initial=initial, prefix=f"rol-{service.id}"),
+            }
+        )
+
+    return groups
+
+
+def onboarding_assignment_edit(request, pk):
+    """Bewerkscherm voor één opdracht binnen de onboardingwizard."""
+    entry = _onboarding_entry(request, pk)
+    if entry is None:
+        raise Http404("Unknown assignment")
+
+    groups = _onboarding_edit_groups(request, entry, data=request.POST if request.method == "POST" else None)
+    if not groups:
+        return HttpResponseForbidden()
+
+    if request.method == "POST" and all(group["form"].is_valid() for group in groups):
+        with transaction.atomic():
+            for group in groups:
+                _save_edit_specs(request, group["specs"], group["form"].cleaned_data)
+        # De bijgewerkte box vervangt de oude in de stap; het bewerkscherm sluit
+        # zichzelf op de trigger (zie onboarding.js).
+        entry = _onboarding_entry(request, pk)
+        response = render(request, "parts/onboarding/onboarding_assignment_box.html", {"entry": entry})
+        response["HX-Retarget"] = f"#onboarding-assignment-{pk}"
+        response["HX-Reswap"] = "outerHTML"
+        response["HX-Trigger"] = "onboardingDetailClose"
+        return response
+
+    return render(
+        request,
+        "parts/onboarding/onboarding_assignment_form.html",
+        {"entry": entry, "groups": groups},
+    )
 
 
 def contact(request):
@@ -3267,7 +3647,7 @@ def _render_inline_edit_display(
         "alert": alert,
         **extra,
     }
-    response = render(request, "nldd/parts/inline_edit/display.html", ctx)
+    response = render(request, "wies/parts/inline_edit/display.html", ctx)
     if saved:
         response["HX-Trigger-After-Swap"] = "inline-edit-saved"
     return response
@@ -3281,7 +3661,7 @@ def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) 
     template = (
         spec.form_template
         if isinstance(spec, EditableGroup) and spec.form_template
-        else "nldd/parts/inline_edit/form.html"
+        else "wies/parts/inline_edit/form.html"
     )
     return render(request, template, ctx)
 
@@ -3289,7 +3669,7 @@ def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) 
 def _render_inline_edit_collection_form(request, editable_set, spec, obj, formset) -> HttpResponse:
     # Inner body from spec.form_template; receives the formset as `formset`.
     ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "formset": formset}
-    return render(request, "nldd/parts/inline_edit/collection_form.html", ctx)
+    return render(request, "wies/parts/inline_edit/collection_form.html", ctx)
 
 
 def _attach_formset_error(formset, message: str) -> None:
@@ -3560,7 +3940,7 @@ def _placement_edit_specs(placement, user):
     return [(s, spec, obj) for (s, spec, obj) in candidates if has_permission(Verb.UPDATE, obj, user, spec)]
 
 
-def _placement_edit_form_class(specs, *, bound_obj=None):
+def _combined_edit_form_class(specs, *, bound_obj=None):
     """Eén formulierklasse over alle toegestane specs, plus de initial-waarden.
 
     De veldnamen van de drie specs botsen niet, dus ze kunnen plat in één
@@ -3580,32 +3960,43 @@ def _placement_edit_form_class(specs, *, bound_obj=None):
     return form_cls, initial
 
 
+def _save_edit_specs(request, specs, cleaned_data):
+    """Sla alle specs op met dezelfde audit-events als inline edit.
+
+    Geen eigen transactie: de aanroeper bepaalt de grens, zodat een paneel er
+    zijn eigen nazorg (zoals de plaatsingsspiegel) in dezelfde transactie bij
+    kan leggen.
+    """
+    from wies.core.inline_edit.forms import save_spec  # noqa: PLC0415
+
+    for editable_set, spec, obj in specs:
+        spec_editables = resolve_editables(editable_set, spec)
+        if isinstance(spec, EditableGroup):
+            before = {e.name: _current_value(obj, e) for e in spec_editables}
+        else:
+            before = _current_value(obj, spec)
+        save_spec(spec, spec_editables, cleaned_data, obj)
+        if isinstance(spec, EditableGroup):
+            after = {e.name: _current_value(obj, e) for e in spec_editables}
+        else:
+            after = _current_value(obj, spec)
+        _emit_inline_edit_audit_event(
+            spec,
+            obj,
+            before,
+            after,
+            request.user,
+            child_editables=spec_editables if isinstance(spec, EditableGroup) else None,
+        )
+
+
 def _save_placement_edit(request, placement, specs, cleaned_data):
     """Sla alle specs op in één transactie, met dezelfde audit-events als inline edit."""
     from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids import cycle
-    from wies.core.inline_edit.forms import save_spec  # noqa: PLC0415
 
     placement_before = placement_audit_row(placement)
     with transaction.atomic():
-        for editable_set, spec, obj in specs:
-            spec_editables = resolve_editables(editable_set, spec)
-            if isinstance(spec, EditableGroup):
-                before = {e.name: _current_value(obj, e) for e in spec_editables}
-            else:
-                before = _current_value(obj, spec)
-            save_spec(spec, spec_editables, cleaned_data, obj)
-            if isinstance(spec, EditableGroup):
-                after = {e.name: _current_value(obj, e) for e in spec_editables}
-            else:
-                after = _current_value(obj, spec)
-            _emit_inline_edit_audit_event(
-                spec,
-                obj,
-                before,
-                after,
-                request.user,
-                child_editables=spec_editables if isinstance(spec, EditableGroup) else None,
-            )
+        _save_edit_specs(request, specs, cleaned_data)
         # Een plaatsingswijziging heeft geen eigen audit-type; spiegel hem op de
         # tijdlijn van de opdracht, net als de "Team bewerken"-flow (#393).
         placement.refresh_from_db()
@@ -3651,7 +4042,7 @@ def placement_edit_view(request, pk):
     fallback = _build_panel_url(request, plaatsing=placement.id)
     return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
 
-    form_cls, _ = _placement_edit_form_class(specs)
+    form_cls, _ = _combined_edit_form_class(specs)
     form = form_cls(request.POST)
     if not form.is_valid():
         panel_data = _build_placement_panel_data(placement, request)
@@ -3672,10 +4063,253 @@ def _build_placement_edit_panel_data(placement, request):
     specs = _placement_edit_specs(placement, request.user)
     if not specs:
         return None
-    form_cls, initial = _placement_edit_form_class(specs)
+    form_cls, initial = _combined_edit_form_class(specs)
     return {
         "panel_content_template": "parts/placement_edit_panel_content.html",
         "form": form_cls(initial=initial),
         "parent_url": _url_drop_params(request.path, request.GET, ("bewerken",)),
         "edit_url": reverse("placement-edit", args=[placement.id]),
     }
+
+
+# --- Opdracht bewerken (child sheet) -----------------------------------------
+#
+# Zelfde patroon als de plaatsing hierboven: alle opdrachtgegevens in één
+# formulier, opgebouwd uit de bestaande specs zodat save- en audit-gedrag
+# identiek blijven aan inline edit. Het teamformulier (een formset) heeft een
+# eigen child sheet; een formset past niet in dit platte formulier.
+
+
+def _assignment_edit_specs(assignment, user):
+    """De specs van het gecombineerde opdrachtformulier, gefilterd op rechten."""
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
+
+    candidates = [
+        AssignmentEditables.name,
+        AssignmentEditables.extra_info,
+        AssignmentEditables.organizations,
+        AssignmentEditables.period,
+        AssignmentEditables.owner,
+    ]
+    return [
+        (AssignmentEditables, spec, assignment)
+        for spec in candidates
+        if has_permission(Verb.UPDATE, assignment, user, spec)
+    ]
+
+
+def _build_assignment_edit_panel_data(assignment, request):
+    """Context voor de opdracht-bewerk-child-sheet, of None zonder bewerkrechten."""
+    specs = _assignment_edit_specs(assignment, request.user)
+    if not specs:
+        return None
+    form_cls, initial = _combined_edit_form_class(specs)
+    return {
+        "panel_content_template": "parts/assignment_edit_panel_content.html",
+        "form": form_cls(initial=initial),
+        "parent_url": _url_drop_params(request.path, request.GET, ("bewerken",)),
+        "edit_url": reverse("assignment-edit", args=[assignment.id]),
+    }
+
+
+@require_POST
+def assignment_edit_view(request, pk):
+    """Sla het gecombineerde opdrachtformulier van de child sheet op.
+
+    Zelfde contract als placement_edit_view: bij succes HX-Location terug naar
+    de ouder-URL (die het paneel opnieuw rendert), bij fouten het formulier
+    opnieuw met meldingen. POST-only.
+    """
+    assignment = Assignment.objects.filter(pk=pk).first()
+    if assignment is None:
+        raise Http404("Unknown assignment")
+
+    specs = _assignment_edit_specs(assignment, request.user)
+    if not specs:
+        return HttpResponseForbidden()
+
+    fallback = _build_panel_url(request, opdracht=assignment.id)
+    return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
+
+    form_cls, _ = _combined_edit_form_class(specs)
+    form = form_cls(request.POST)
+    if not form.is_valid():
+        panel_data = _build_assignment_panel_data(assignment, request)
+        panel_data["form"] = form
+        panel_data["parent_url"] = return_path
+        panel_data["edit_url"] = reverse("assignment-edit", args=[assignment.id])
+        return render(request, "parts/assignment_edit_panel_content.html", {"panel_data": panel_data})
+
+    with transaction.atomic():
+        _save_edit_specs(request, specs, form.cleaned_data)
+
+    response = HttpResponse(status=204)
+    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
+    return response
+
+
+# --- Teamlid bewerken (child sheet, per persoon) -----------------------------
+#
+# De teamlijst bewerkt per LID, niet als één formset: elke rij heeft zijn eigen
+# child sheet (bewerken/toevoegen) en verwijderen gaat via een bevestigings-
+# dialoog. Server-side blijft de bestaande sync- en auditmachinerie van de
+# formset gelden: elk endpoint reconstrueert het volledige team en wijzigt
+# alleen de betrokken rij, zodat apply_services_to_assignment (dat op
+# afwezigheid verwijdert) nooit ongewild rijen ziet verdwijnen.
+
+
+def _initial_row_to_services_data(row) -> dict:
+    """Een _services_initial-rij → services_data-dict, voor de rijen die een
+    teamlid-endpoint NIET aanraakt. Spiegelt ServiceForm.clean: de checkbox in
+    de rij betekent "neem opdrachtperiode over", terwijl has_custom_period in
+    apply_services_to_assignment "pin deze datums" betekent."""
+    inherits = row["has_custom_period"]
+    has_dates = bool(row["placement_start_date"] or row["placement_end_date"])
+    return {
+        "id": row["id"],
+        "placement_id": row["placement_id"],
+        "description": row["description"],
+        "skill_id": int(row["skill"]) if row["skill"] else None,
+        "new_skill_name": None,
+        "status": "OPEN",
+        "colleague_id": row["colleague"].id if (row["colleague"] and row["is_filled"] == "ingevuld") else None,
+        "has_custom_period": (not inherits) and has_dates,
+        "placement_start_date": None if inherits else row["placement_start_date"],
+        "placement_end_date": None if inherits else row["placement_end_date"],
+    }
+
+
+def _apply_team_change(request, assignment, services_data):
+    """Team-sync met dezelfde audit-events als de inline-edit-route."""
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
+    from wies.core.services.assignments import apply_services_to_assignment  # noqa: PLC0415
+
+    spec = AssignmentEditables.services
+    before = spec.audit_state(assignment) if spec.audit_state else None
+    with transaction.atomic():
+        apply_services_to_assignment(assignment, services_data)
+        after = spec.audit_state(assignment) if spec.audit_state else None
+        _emit_inline_edit_audit_event(spec, assignment, before, after, request.user)
+
+
+def _build_assignment_member_panel_data(assignment, request):
+    """Context voor de teamlid-child-sheet, of None zonder rechten/onbekend lid.
+
+    ``?teamlid=<service-id>`` bewerkt een bestaand lid; ``?teamlid=nieuw-aanvraag``
+    en ``?teamlid=nieuw-ingevuld`` voegen een rij toe met de status voorgekozen.
+    """
+    from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
+
+    spec = AssignmentEditables.services
+    if not has_permission(Verb.UPDATE, assignment, request.user, spec):
+        return None
+
+    teamlid = request.GET.get("teamlid", "")
+    if teamlid in ("nieuw-aanvraag", "nieuw-ingevuld"):
+        filled = teamlid == "nieuw-ingevuld"
+        initial_row = {"is_filled": "ingevuld" if filled else "aanvraag", "has_custom_period": True}
+        heading = "Geplaatste consultant toevoegen" if filled else "Aanvraag toevoegen"
+    else:
+        try:
+            service_id = int(teamlid)
+        except ValueError:
+            return None
+        initial_row = next((r for r in _services_initial(assignment) if r["id"] == service_id), None)
+        if initial_row is None:
+            return None
+        heading = "Teamlid bewerken"
+
+    return {
+        "panel_content_template": "parts/assignment_member_edit_panel_content.html",
+        "member_formset": spec.formset_factory(initial=[initial_row]),
+        "member_heading": heading,
+        "parent_url": _url_drop_params(request.path, request.GET, ("teamlid",)),
+        "member_edit_url": reverse("assignment-member-edit", args=[assignment.id]),
+    }
+
+
+@require_POST
+def assignment_member_edit_view(request, pk):
+    """Sla één teamlid op uit de child sheet (bewerken of toevoegen).
+
+    Het formulier post één formset-rij; de overige rijen komen uit de database,
+    zodat de sync altijd het volledige team ziet. Zelfde contract als
+    assignment_edit_view: HX-Location terug bij succes, formulier met
+    meldingen bij fouten."""
+    from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
+    from wies.core.services.assignments import extract_services_data  # noqa: PLC0415
+
+    assignment = Assignment.objects.filter(pk=pk).first()
+    if assignment is None:
+        raise Http404("Unknown assignment")
+
+    spec = AssignmentEditables.services
+    if not has_permission(Verb.UPDATE, assignment, request.user, spec):
+        return HttpResponseForbidden()
+
+    fallback = _build_panel_url(request, opdracht=assignment.id)
+    return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
+
+    def rerender(formset):
+        panel_data = _build_assignment_panel_data(assignment, request)
+        panel_data["member_formset"] = formset
+        panel_data["member_heading"] = request.POST.get("member_heading") or "Teamlid bewerken"
+        panel_data["parent_url"] = return_path
+        panel_data["member_edit_url"] = reverse("assignment-member-edit", args=[assignment.id])
+        return render(request, "parts/assignment_member_edit_panel_content.html", {"panel_data": panel_data})
+
+    formset = spec.formset_factory(data=request.POST)
+    if not formset.is_valid():
+        return rerender(formset)
+
+    edited = extract_services_data(formset)
+    if not edited:
+        # Zonder rol slaat extract_services_data de rij over; hier zou dat het
+        # lid stilletjes VERWIJDEREN (sync op afwezigheid), dus blokkeer het.
+        _attach_formset_error(formset, "Kies een rol.")
+        return rerender(formset)
+
+    edited_ids = {int(row["id"]) for row in edited if row.get("id")}
+    others = [
+        _initial_row_to_services_data(row)
+        for row in _services_initial(assignment)
+        if row["id"] not in edited_ids
+    ]
+    try:
+        _apply_team_change(request, assignment, others + edited)
+    except ValidationError as exc:
+        for message in exc.messages:
+            _attach_formset_error(formset, message)
+        return rerender(formset)
+
+    response = HttpResponse(status=204)
+    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
+    return response
+
+
+@require_POST
+def assignment_member_delete_view(request, pk, service_id):
+    """Verwijder één teamlid, na de bevestigingsdialoog in het paneel."""
+    from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
+
+    assignment = Assignment.objects.filter(pk=pk).first()
+    if assignment is None:
+        raise Http404("Unknown assignment")
+
+    spec = AssignmentEditables.services
+    if not has_permission(Verb.UPDATE, assignment, request.user, spec):
+        return HttpResponseForbidden()
+
+    rows = _services_initial(assignment)
+    if not any(row["id"] == service_id for row in rows):
+        raise Http404("Unknown service")
+
+    services_data = [_initial_row_to_services_data(row) for row in rows if row["id"] != service_id]
+    _apply_team_change(request, assignment, services_data)
+
+    return_path = _safe_return_path(
+        request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.id)
+    )
+    response = HttpResponse(status=204)
+    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
+    return response

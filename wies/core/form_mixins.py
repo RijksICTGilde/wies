@@ -25,7 +25,7 @@ class WiesJinja2Renderer(Jinja2):
 class NlddErrorList(ErrorList):
     """Custom ErrorList with NLDD template"""
 
-    template_name = "nldd/forms/errors/list/default.html"
+    template_name = "wies/forms/errors/list/default.html"
 
 
 def wire_field_errors(field) -> list[str]:
@@ -104,6 +104,7 @@ class _BaseFormMixin:
         label_attr = {
             "Select": "aria-label",
             "CheckboxInput": "accessible-label",
+            "ComboBoxSelect": "accessible-label",
             "MultiselectDropdown": "accessible-label",
         }.get(field.widget.__class__.__name__)
         if label_attr and field.label:
@@ -139,19 +140,20 @@ class NlddFormMixin(_BaseFormMixin):
     HTMX and Django form handling keep working without a bridge layer.
     """
 
-    _form_template = "nldd/forms/form.html"
-    _field_template = "nldd/forms/field.html"
+    _form_template = "wies/forms/form.html"
+    _field_template = "wies/forms/field.html"
     _error_class = NlddErrorList
 
     widget_templates = {
-        "TextInput": "nldd/forms/widgets/text.html",
-        "EmailInput": "nldd/forms/widgets/email.html",
-        "Select": "nldd/forms/widgets/select.html",
-        "CheckboxSelectMultiple": "nldd/forms/widgets/checkbox_select.html",
-        "MultiselectDropdown": "nldd/forms/widgets/multiselect.html",
-        "RadioSelect": "nldd/forms/widgets/radio.html",
-        "DateInput": "nldd/forms/widgets/date.html",
-        "Textarea": "nldd/forms/widgets/textarea.html",
-        "CheckboxInput": "nldd/forms/widgets/checkbox.html",
-        "OrgPickerWidget": "nldd/widgets/org_picker.html",
+        "TextInput": "wies/forms/widgets/text.html",
+        "EmailInput": "wies/forms/widgets/email.html",
+        "Select": "wies/forms/widgets/select.html",
+        "ComboBoxSelect": "wies/forms/widgets/combo_box.html",
+        "CheckboxSelectMultiple": "wies/forms/widgets/checkbox_select.html",
+        "MultiselectDropdown": "wies/forms/widgets/multiselect.html",
+        "RadioSelect": "wies/forms/widgets/radio.html",
+        "DateInput": "wies/forms/widgets/date.html",
+        "Textarea": "wies/forms/widgets/textarea.html",
+        "CheckboxInput": "wies/forms/widgets/checkbox.html",
+        "OrgPickerWidget": "wies/widgets/org_picker.html",
     }

@@ -1,74 +1,67 @@
 {# NDD admin sidebar — navigatie voor beheerpagina's. #}
-<p class="nldd-sidebar-heading">Instellingen</p>
-<nldd-list>
+<nldd-container slot="sidebar" padding="16">
+<nldd-title size="5">
+<h2>Beheer</h2>
+</nldd-title>
+<nldd-spacer size="8" direction="vertical"></nldd-spacer>
+<nldd-list type="navigation" accessible-label="Beheer">
 <nldd-list-item href="{{ url('admin-users') }}"
-{% if '/beheer/gebruikers/' in request.path %}current{% endif %}
+{% if '/beheer/gebruikers/' in request.path %}selected{% endif %}
 >
-<nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
-<nldd-icon-cell slot="start" size="20">
-<nldd-icon name="person"></nldd-icon>
+<nldd-icon-cell size="20">
+<nldd-icon name="users"></nldd-icon>
 </nldd-icon-cell>
-<nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
-<nldd-title-cell text="Gebruikers"></nldd-title-cell>
-<nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+<nldd-spacer-cell size="8"></nldd-spacer-cell>
+<nldd-text-cell text="Gebruikers"></nldd-text-cell>
 </nldd-list-item>
 {% if DEBUG %}
   <nldd-list-item href="{{ url('organization-admin') }}"
-  {% if '/organisaties/' in request.path %}current{% endif %}
+  {% if '/organisaties/' in request.path %}selected{% endif %}
   >
-  <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
-  <nldd-icon-cell slot="start" size="20">
+  <nldd-icon-cell size="20">
   <nldd-icon name="apartment-building"></nldd-icon>
   </nldd-icon-cell>
-  <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
-  <nldd-title-cell text="Opdrachtgevers"></nldd-title-cell>
-  <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="Opdrachtgevers"></nldd-text-cell>
   </nldd-list-item>
 {% endif %}
 <nldd-list-item href="{{ url('label-admin') }}"
-{% if '/beheer/labels/' in request.path %}current{% endif %}
+{% if '/beheer/labels/' in request.path %}selected{% endif %}
 >
-<nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
-<nldd-icon-cell slot="start" size="20">
-<nldd-icon name="tag"></nldd-icon>
+<nldd-icon-cell size="20">
+<nldd-icon name="labels"></nldd-icon>
 </nldd-icon-cell>
-<nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
-<nldd-title-cell text="Labels"></nldd-title-cell>
-<nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+<nldd-spacer-cell size="8"></nldd-spacer-cell>
+<nldd-text-cell text="Labels"></nldd-text-cell>
 </nldd-list-item>
 {% if is_staff_member(user) %}
   <nldd-list-item href="{{ url('staff-dashboard') }}"
-  {% if '/statistieken/' in request.path %}current{% endif %}
+  {% if '/statistieken/' in request.path %}selected{% endif %}
   >
-  <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
-  <nldd-icon-cell slot="start" size="20">
+  <nldd-icon-cell size="20">
   <nldd-icon name="chart-x-y-axis-line"></nldd-icon>
   </nldd-icon-cell>
-  <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
-  <nldd-title-cell text="Statistieken"></nldd-title-cell>
-  <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="Statistieken"></nldd-text-cell>
   </nldd-list-item>
   <nldd-list-item href="{{ url('staff-database') }}"
-  {% if '/database/' in request.path %}current{% endif %}
+  {% if '/database/' in request.path %}selected{% endif %}
   >
-  <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
-  <nldd-icon-cell slot="start" size="20">
-  <nldd-icon name="globe-rack-server"></nldd-icon>
+  <nldd-icon-cell size="20">
+  <nldd-icon name="database"></nldd-icon>
   </nldd-icon-cell>
-  <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
-  <nldd-title-cell text="Database"></nldd-title-cell>
-  <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="Database"></nldd-text-cell>
   </nldd-list-item>
   <nldd-list-item href="{{ url('debug-request-meta') }}"
-  {% if '/debug/' in request.path %}current{% endif %}
+  {% if '/debug/' in request.path %}selected{% endif %}
   >
-  <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
-  <nldd-icon-cell slot="start" size="20">
-  <nldd-icon name="gear"></nldd-icon>
+  <nldd-icon-cell size="20">
+  <nldd-icon name="bug"></nldd-icon>
   </nldd-icon-cell>
-  <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
-  <nldd-title-cell text="Debug"></nldd-title-cell>
-  <nldd-spacer-cell slot="end" size="12"></nldd-spacer-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-text-cell text="Debug"></nldd-text-cell>
   </nldd-list-item>
 {% endif %}
 </nldd-list>
+</nldd-container>

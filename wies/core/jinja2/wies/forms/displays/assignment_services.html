@@ -1,0 +1,78 @@
+{# Display partial for the Assignment services EditableCollection. Renders the
+team list from `value` (row dicts produced by _services_initial, viewer-filtered
++ vacancies-first by _services_display_context / visible_service_rows). The
+whole block toggles with edit mode: on edit the inline-edit wrapper is swapped
+for the formset; on save/cancel it swaps back to this display. Historical
+placements are flagged with a privacy note for the placed colleague and
+BM-owner, hidden from unrelated viewers.
+
+De rijen zijn zelf niet klikbaar: alle acties (bewerken, bekijken,
+verwijderen) lopen via het rijmenu in de laatste cel. #}
+{% if value %}
+  <nldd-list variant="box">
+  {% for row in value %}
+    {% if row.colleague %}
+      {% set pl = row.placement %}
+      {% set svc = row.service %}
+      {% set member_name = row.colleague.name %}
+      <nldd-list-item>
+      <nldd-cell>
+      <nldd-avatar size="40" name="{{ row.colleague.name }}" decorative></nldd-avatar>
+      </nldd-cell>
+      <nldd-spacer-cell size="12"></nldd-spacer-cell>
+      <nldd-text-cell divider-start>
+      <span>
+        {{ row.colleague.name }}
+        {% if row.skill_name %}<nldd-tag size="sm" text="{{ row.skill_name }}"></nldd-tag>{% endif %}
+        {% if row.period_label %}<nldd-tag size="sm" text="{{ row.period_label }}"></nldd-tag>{% endif %}
+      </span>
+      {% if pl.start_date or pl.end_date %}
+        <span slot="supporting-text">
+          {% if pl.start_date and pl.end_date %}
+            {{ pl.start_date|datum_nl }} – {{ pl.end_date|datum_nl }}
+          {% elif pl.start_date %}
+            {{ pl.start_date|datum_nl }} – heden
+          {% elif pl.end_date %}
+            t/m {{ pl.end_date|datum_nl }}
+          {% endif %}
+        </span>
+      {% endif %}
+      </nldd-text-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      {% include "wies/forms/displays/assignment_services_row_menu.html" %}
+      </nldd-list-item>
+    {% else %}
+      {% set svc = row.service %}
+      {% set pl = none %}
+      {% set member_name = row.skill_name %}
+      <nldd-list-item>
+      <nldd-cell>
+      {# Geen naam; het text-document-icoon leest als aanvraag, niet als persoon. #}
+      <nldd-avatar size="40" icon="text-document" decorative></nldd-avatar>
+      </nldd-cell>
+      <nldd-spacer-cell size="12"></nldd-spacer-cell>
+      <nldd-text-cell divider-start>
+      {# "Aanvraag: <rol>" leest als één zin; een losse tag ernaast deed dat
+         werk minder duidelijk. #}
+      <span>Aanvraag: {{ row.skill_name }}</span>
+      {% if svc and (svc.start_date or svc.end_date) %}
+        <span slot="supporting-text">
+          {% if svc.start_date and svc.end_date %}
+            {{ svc.start_date|datum_nl }} – {{ svc.end_date|datum_nl }}
+          {% elif svc.start_date %}
+            {{ svc.start_date|datum_nl }} – heden
+          {% elif svc.end_date %}
+            t/m {{ svc.end_date|datum_nl }}
+          {% endif %}
+        </span>
+      {% endif %}
+      </nldd-text-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      {% include "wies/forms/displays/assignment_services_row_menu.html" %}
+      </nldd-list-item>
+    {% endif %}
+  {% endfor %}
+  </nldd-list>
+{% else %}
+  <span class="wies-text-secondary"><em>Geen team gevonden.</em></span>
+{% endif %}

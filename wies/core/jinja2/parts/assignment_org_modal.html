@@ -1,36 +1,26 @@
-<nldd-window id="assignmentOrgPickerModal" accessible-label="Selecteer opdrachtgever(s)" width="900px" height="600px">
+{# Opdrachtgevers kiezen op het opdrachtformulier — dezelfde left sheet als de
+   filter-sheet (parts/client_modal.html), met een andere uitkomst: de selectie
+   gaat naar de formset van het formulier in plaats van naar een filter.
+   Annuleren zit in de title bar, niet als knop onderaan. #}
+<nldd-sheet id="assignment-org-modal" placement="left" width="480px" accessible-label="Opdrachtgevers selecteren">
 <nldd-page sticky-header sticky-footer>
-<nldd-top-title-bar slot="header" text="Selecteer opdrachtgever(s)" dismiss-text="Sluiten"></nldd-top-title-bar>
-<nldd-container>
-<div class="nldd-client-modal__body">
-  <div class="nldd-client-modal__search">
-    <nldd-search-field id="assignment-org-search" placeholder="Zoek opdrachtgever..." aria-label="Zoek opdrachtgever"></nldd-search-field>
-  </div>
-  <div class="nldd-client-modal__layout">
-    <div class="nldd-client-modal__tree" id="assignment-org-tree-container"></div>
-    <div class="nldd-client-modal__selection">
-      <div class="nldd-client-modal__selection-header">
-        <strong>Geselecteerd</strong>
-        <span id="assignment-org-selection-count"
-              class="nldd-client-modal__selection-count"
-              style="display: none">0</span>
-      </div>
-      <ul id="assignment-org-selection-list"
-          class="nldd-client-modal__selection-list">
-        <li class="nldd-client-modal__empty-state" hidden></li>
-      </ul>
-    </div>
-  </div>
-</div>
-</nldd-container>
+<nldd-top-title-bar slot="header" text="Opdrachtgevers selecteren" dismiss-text="Annuleer"></nldd-top-title-bar>
+<nldd-simple-section>
+<nldd-search-field id="assignment-org-search" placeholder="Opdrachtgever zoeken" accessible-label="Opdrachtgever zoeken">
+</nldd-search-field>
+<nldd-spacer size="16"></nldd-spacer>
+<div id="assignment-org-tree-container"></div>
+</nldd-simple-section>
 <nldd-container slot="footer" padding="16">
-<nldd-button-group orientation="horizontal">
-<nldd-button variant="secondary" type="button" text="Annuleren" onclick="this.closest('nldd-window').hide()"></nldd-button>
-<nldd-button variant="neutral-transparent" type="button" id="assignment-org-clear-btn" text="Selectie wissen"></nldd-button>
-<nldd-button variant="primary" type="button" id="assignment-org-apply-btn" text="Toevoegen"></nldd-button>
-</nldd-button-group>
+<nldd-container id="assignment-org-selection-tokens" layout="wrap" gap="8" hidden></nldd-container>
+<nldd-spacer size="12"></nldd-spacer>
+<nldd-button id="assignment-org-apply-btn" variant="primary" width="full" text="Voeg toe"></nldd-button>
 </nldd-container>
 </nldd-page>
+</nldd-sheet>
 {{ hierarchy|json_script("assignment-org-data") }}
 {{ current_selections|json_script("assignment-org-current-selections") }}
-</nldd-window>
+{# Order matters: assignment_org_tree.js needs both TreeState and WiesOrgTree. #}
+<script src="{{ static('js/wies/tree_state.js') }}"></script>
+<script src="{{ static('js/wies/org_tree.js') }}"></script>
+<script src="{{ static('js/wies/assignment_org_tree.js') }}"></script>

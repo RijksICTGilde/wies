@@ -1,0 +1,154 @@
+/* NLDD app-level overrides for Wies */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Minimal layout: nav top, optional sidebar left, scrollable main right.
+   Uses NLDD design tokens for colors/spacing where possible. */
+/* nldd-page is the layout and scroller (height: 100%), so the chain up to the
+   document root must have a definite height for it to resolve against. */
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "RijksSansVF", system-ui, sans-serif;
+  color: var(--semantics-content-color, #1a1a1a);
+  background: var(--semantics-surfaces-base-background-color, #fff);
+}
+
+/* Section heading above a sidebar nav list (e.g. "Instellingen", "Over deze site"). */
+.wies-sidebar-heading {
+  margin: var(--primitives-space-8, 8px) var(--primitives-space-12, 12px)
+    var(--primitives-space-4, 4px);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--semantics-content-secondary-color, #64748b);
+}
+.wies-sidebar-heading:not(:first-child) {
+  margin-top: var(--primitives-space-16, 16px);
+}
+
+/* The "Filter" button only makes sense while the sidebar is a sheet. On lg the
+   sidebar is an always-visible aside, so hide the whole toolbar item — hiding
+   only the button would leave the item's slot taking space in the toolbar. */
+#sidebar-toggle-item {
+  display: none;
+}
+nldd-sidebar-section[collapsed] #sidebar-toggle-item {
+  display: inline-flex;
+}
+
+a {
+  color: var(--semantics-links-color, inherit);
+}
+
+/* Secondary text helper */
+.wies-text-secondary {
+  color: var(--semantics-content-secondary-color, #64748b);
+  font-size: 0.875rem;
+}
+
+/* Form field styling (for NlddFormMixin templates) */
+
+/* Native inputs still rendered by hand: the date widget (nldd-date-field needs
+   a newer design-system than 0.8.66) and a few one-off inputs outside the
+   widget system (user_import, label_category). */
+.wies-input {
+  font: inherit;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--semantics-input-fields-border-color, #cbd5e1);
+  border-radius: 4px;
+  background: var(--semantics-surfaces-base-background-color, #fff);
+  color: inherit;
+  width: 100%;
+}
+.wies-input:focus {
+  outline: 2px solid var(--semantics-content-accent-color, #154273);
+  outline-offset: -1px;
+}
+
+/* Checkbox groups: an nldd-checkbox plus its <label> per option. The label is
+   ours because nldd-checkbox-field's would hide the checkbox in a shadow root,
+   where it no longer submits with the form. */
+
+/* Fieldset (assignment create) */
+.wies-fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+.wies-fieldset__legend {
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+}
+.wies-fieldset__hint {
+  font-weight: 400;
+  font-size: 0.875rem;
+  color: var(--semantics-content-secondary-color, #64748b);
+}
+
+/* Inline edit */
+.editable-field-display {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+.editable-field-display__value {
+  flex: 1;
+  min-width: 0;
+}
+.edit-icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  color: var(--semantics-content-secondary-color, #64748b);
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+}
+.edit-icon-button:hover {
+  color: var(--semantics-content-accent-color, #154273);
+  background: var(--semantics-surfaces-tinted-background-color, #f4f6f9);
+}
+.edit-icon-button__pencil {
+  width: var(--primitives-space-18, 18px);
+  height: var(--primitives-space-18, 18px);
+}
+.field-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+/* Flash messages */
+.flash-messages {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 400px;
+}
+.flash-messages--hiding {
+  animation: flash-fade-out 0.3s ease forwards;
+}
+@keyframes flash-fade-out {
+  to {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}

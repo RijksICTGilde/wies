@@ -675,8 +675,8 @@ class AssignmentServicesFutureAndCountTest(TestCase):
         unrelated = _build_assignment_panel_data(assignment, self._request(self.user_unrelated))
         bm = _build_assignment_panel_data(assignment, self._request(self.user_bob))
 
-        assert unrelated["team_count"] == 1, "hidden ended placement must not be counted"
-        assert bm["team_count"] == 2, "BM sees both"
+        assert len(unrelated["team_rows"]) == 1, "hidden ended placement must not be listed"
+        assert len(bm["team_rows"]) == 2, "BM sees both"
 
 
 class PlacementPanelVisibilityTest(TestCase):
@@ -1750,7 +1750,7 @@ class ClientModalCountModeTest(TestCase):
         response = self.client.get(reverse("client-modal"), {"count_mode": "none"})
         assert response.status_code == 200
         # assignment_org_modal.html has this unique element
-        assert b"assignmentOrgPickerModal" in response.content
+        assert b'id="assignment-org-modal"' in response.content
 
     def test_count_mode_none_includes_orgs_without_placements(self):
         """count_mode=none should not prune orgs with zero placements."""

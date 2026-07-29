@@ -8,19 +8,17 @@
 its interactive anchor wrapper (hover/focus feedback + keyboard); htmx
 intercepts the click to open the side panel instead of navigating. #}
   <nldd-list-item href="{{ placement.panel_url }}" hx-get="{{ placement.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
-  <nldd-avatar slot="start" size="40" name="{{ placement.colleague.name }}" decorative></nldd-avatar>
-  <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
-  <nldd-text-cell text="{{ placement.colleague.name }}" supporting-text="{{ placement.service.skill.name if placement.service.skill else '' }}"></nldd-text-cell>
+  <nldd-cell>
+  <nldd-avatar size="40" name="{{ placement.colleague.name }}" decorative></nldd-avatar>
+  </nldd-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-text-cell divider-start text="{{ placement.colleague.name }}" supporting-text="{{ placement.service.skill.name if placement.service.skill else '' }}"></nldd-text-cell>
   <nldd-text-cell text="{{ placement.service.assignment.name }}" supporting-text="{{ client_label }}"></nldd-text-cell>
-  <nldd-text-cell text="{{ placement.actual_end_date|datum_nl('j N Y') if placement.actual_end_date else '' }}" color="secondary" horizontal-alignment="right"></nldd-text-cell>
-  <nldd-spacer-cell slot="end" size="8"></nldd-spacer-cell>
-  <nldd-icon-cell slot="end" size="16">
+  <nldd-text-cell text="{{ placement.actual_end_date|datum_nl if placement.actual_end_date else '' }}" color="secondary" horizontal-alignment="right"></nldd-text-cell>
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-icon-cell size="16">
   <nldd-icon name="chevron-right"></nldd-icon>
   </nldd-icon-cell>
-  </nldd-list-item>
-{% else %}
-  <nldd-list-item>
-  <nldd-text-cell text="Geen inzetten gevonden."></nldd-text-cell>
   </nldd-list-item>
 {% endfor %}
 {% if next_page_url %}

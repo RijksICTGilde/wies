@@ -12,6 +12,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.fields import OrganizationsField
+from wies.core.widgets import ComboBoxSelect
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
 from wies.core.placement_visibility import LABELS, evaluate
@@ -319,26 +320,29 @@ def _services_visible_changes(assignment, request, changes: list[dict]) -> list[
 
 
 def _services_render_change(change: dict) -> dict:
+    """One clause per change, phrased to slot into the timeline's running
+    sentence ("<auteur> heeft <clause>, <clause> en <clause>."). Toelichting
+    values are quoted inline so the clause stays one natural sentence."""
     old, new = change.get("old"), change.get("new")
     if old is None:
-        return {"text": f"Toegevoegd: {_service_row_label(new)}"}
+        return {"text": f"{_service_row_label(new)} toegevoegd"}
     if new is None:
-        return {"text": f"Verwijderd: {_service_row_label(old)}"}
+        return {"text": f"{_service_row_label(old)} verwijderd"}
     old_label = _service_row_label(old)
     new_label = _service_row_label(new)
     if old_label != new_label:
-        return {"text": f"Gewijzigd: van {old_label} naar {new_label}"}
+        return {"text": f"{old_label} naar {new_label} gewijzigd"}
     old_period = _period_label(old)
     new_period = _period_label(new)
     if old_period != new_period:
-        return {"text": f"Periode gewijzigd van {new_label}", "old": old_period, "new": new_period}
+        return {"text": f"de periode van {new_label} van {old_period} naar {new_period} gewijzigd"}
     old_desc = old.get("description") or ""
     new_desc = new.get("description") or ""
     if not old_desc:
-        return {"text": f"Toelichting toegevoegd voor {new_label}", "new": new_desc}
+        return {"text": f'de toelichting "{new_desc}" voor {new_label} toegevoegd'}
     if not new_desc:
-        return {"text": f"Toelichting verwijderd voor {new_label}", "old": old_desc}
-    return {"text": f"Toelichting gewijzigd voor {new_label}", "old": old_desc, "new": new_desc}
+        return {"text": f'de toelichting "{old_desc}" voor {new_label} verwijderd'}
+    return {"text": f'de toelichting voor {new_label} van "{old_desc}" naar "{new_desc}" gewijzigd'}
 
 
 def _validate_period(cleaned):
@@ -363,14 +367,18 @@ class AssignmentEditables(EditableSet):
         model = Assignment
 
     name = Editable(
-        label="Opdracht naam",
-        error_messages={"required": "Opdracht naam is verplicht"},
+        label="Opdrachtnaam",
+        error_messages={"required": "Opdrachtnaam is verplicht"},
+        # Eén regel hoog als een gewoon tekstveld, maar een lange naam wordt
+        # afgebroken in plaats van weggescrold.
+        widget=forms.Textarea(attrs={"rows": 1}),
     )
 
     extra_info = Editable(
         label="Opdrachtomschrijving",
-        widget=forms.Textarea(attrs={"rows": 4}),
-        display="nldd/forms/displays/textarea.html",
+        # Twee regels hoog; hij groeit vanzelf mee met langere tekst.
+        widget=forms.Textarea(attrs={"rows": 2}),
+        display="wies/forms/displays/textarea.html",
     )
 
     start_date = Editable(label="Startdatum")
@@ -380,11 +388,12 @@ class AssignmentEditables(EditableSet):
     owner = Editable(
         label="Business Manager",
         choices=_bdm_queryset,
+        widget=ComboBoxSelect,
         required=True,
         empty_label=" ",
         error_messages={"required": "Selecteer een business manager."},
         audit_state=lambda c: c.name if c else None,
-        display="nldd/forms/displays/assignment_owner.html",
+        display="wies/forms/displays/assignment_owner.html",
         display_context=_owner_display_context,
     )
 
@@ -393,7 +402,7 @@ class AssignmentEditables(EditableSet):
         fields=[start_date, end_date],
         clean=_validate_period,
         save=_save_period,
-        display="nldd/forms/displays/assignment_period.html",
+        display="wies/forms/displays/assignment_period.html",
     )
 
     organizations = Editable(
@@ -403,7 +412,7 @@ class AssignmentEditables(EditableSet):
         save=_save_organizations,
         audit_state=_organizations_audit_state,
         render_change=_organizations_render_change,
-        display="nldd/forms/displays/organizations.html",
+        display="wies/forms/displays/organizations.html",
     )
 
     services = EditableCollection(
@@ -416,6 +425,6 @@ class AssignmentEditables(EditableSet):
         visible_changes=_services_visible_changes,
         hide_edit_button=True,
         form_template="parts/assignment_services_form.html",
-        display="nldd/forms/displays/assignment_services.html",
+        display="wies/forms/displays/assignment_services.html",
         display_context=_services_display_context,
     )

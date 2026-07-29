@@ -11,14 +11,14 @@
     <p>
       Upload een CSV-bestand met gebruikersgegevens. <a href="{{ static('example_users_import.csv') }}">Download het voorbeeldbestand</a> om het juiste formaat te zien.
     </p>
-    <div class="nldd-form-field" style="margin: 1rem 0;">
-      <label class="nldd-form-field__label" for="csv_file">CSV-bestand</label>
+    <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+    <nldd-form-field label="CSV-bestand">
       <input type="file"
              name="csv_file"
              id="csv_file"
              accept=".csv"
-             class="nldd-input">
-    </div>
+             class="wies-input">
+    </nldd-form-field>
     {% if result and result.success %}
       <nldd-banner variant="success" text="Import geslaagd!" style="margin: 1rem 0;">
       <nldd-rich-text>

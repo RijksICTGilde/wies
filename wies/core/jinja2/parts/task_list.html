@@ -1,30 +1,32 @@
-<nldd-rich-text>
+<nldd-title size="4">
 <h3>Recente taken</h3>
-</nldd-rich-text>
+</nldd-title>
+<nldd-spacer size="12" direction="vertical"></nldd-spacer>
+<nldd-box>
 {% if latest_tasks %}
   <nldd-list>
   {% for task in latest_tasks %}
     <nldd-list-item>
-    <nldd-spacer-cell slot="start" size="12"></nldd-spacer-cell>
-    <nldd-icon-cell slot="start" size="20">
+    <nldd-spacer-cell size="12"></nldd-spacer-cell>
+    <nldd-icon-cell size="20">
     {% if task.status == 'completed' %}
       <nldd-icon name="check-circle-filled" color="success"></nldd-icon>
     {% elif task.status == 'failed' %}
       <nldd-icon name="exclamation-triangle-filled" color="error"></nldd-icon>
     {% elif task.status == 'running' %}
-      <nldd-icon name="arrow-2-counter-clockwise"></nldd-icon>
+      <nldd-icon size="inherit" name="arrow-2-counter-clockwise"></nldd-icon>
     {% else %}
-      <nldd-icon name="clock"></nldd-icon>
+      <nldd-icon size="inherit" name="clock"></nldd-icon>
     {% endif %}
     </nldd-icon-cell>
-    <nldd-spacer-cell slot="start" size="8"></nldd-spacer-cell>
+    <nldd-spacer-cell size="8"></nldd-spacer-cell>
     {# djlint:off T028 #} {% set supporting = task.created_at.strftime("%Y-%m-%d
      %H:%M:%S") %}
     {% if task.created_by %}
       {% set supporting = supporting ~ "
               door " ~ (task.created_by.get_full_name() or task.created_by.username) %} {%
         endif %}
-        <nldd-title-cell text="{{ task.status|capitalize }}" supporting-text="{{ supporting }}"></nldd-title-cell>
+        <nldd-title-cell divider-start text="{{ task.status|capitalize }}" supporting-text="{{ supporting }}"></nldd-title-cell>
         {% if task.result %}
           {% set result_text = "Aangemaakt: " ~
                     task.result.created ~ ", Bijgewerkt: " ~ task.result.updated %}
@@ -37,5 +39,6 @@
       {% endfor %}
       </nldd-list>
     {% else %}
-      <p class="nldd-text-secondary">Geen taken gevonden.</p>
+      <nldd-inline-dialog text="Geen taken" supporting-text="Er staat op dit moment niets voor je open."></nldd-inline-dialog>
     {% endif %}
+</nldd-box>

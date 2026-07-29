@@ -6,44 +6,73 @@
   {% include "parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  <div class="rvo-layout-column rvo-layout-gap--xl">
-    <c-h1>Debug: request metadata</c-h1>
-    <p>
-      Deze pagina toont wat de Django-pod ontvangt van de proxy(s) ervoor.
-      Gebruik dit om <code>TRUSTED_PROXY_HOPS</code> te bepalen:
-    </p>
-    <ol>
-      <li>
-        Zoek je publieke IP op (bijv. via
-        <a href="https://ifconfig.me" target="_blank" rel="noopener">ifconfig.me</a>).
-      </li>
-      <li>Zoek dat IP in de <em>X-Forwarded-For</em> lijst hieronder.</li>
-      <li>
-        <code>TRUSTED_PROXY_HOPS</code> = de positie-van-rechts van jouw IP.
-        Staat je IP op <code>[-1]</code>, dan is de waarde <strong>1</strong>.
-        Staat je IP op <code>[-2]</code>, dan <strong>2</strong>. Etc.
-      </li>
-    </ol>
-    <h2>REMOTE_ADDR</h2>
-    <pre>{{ remote_addr }}</pre>
-    <h2>X-Forwarded-For (raw)</h2>
-    <pre>{{ xff_raw or "(niet aanwezig)" }}</pre>
-    <h2>X-Forwarded-For (gesplitst, van rechts geïndexeerd)</h2>
-    {% if xff_from_right %}
-      <pre>{% for i, entry in xff_from_right %}[-{{ i + 1 }}]  {{ entry }}
-{% endfor %}</pre>
-    {% else %}
-      <pre>(niet aanwezig)</pre>
-    {% endif %}
-    <h2>X-Forwarded-Proto</h2>
-    <pre>{{ xfp or "(niet aanwezig)" }}</pre>
-    <h2>X-Forwarded-Host</h2>
-    <pre>{{ xfh or "(niet aanwezig)" }}</pre>
-    <h2>X-Real-IP</h2>
-    <pre>{{ x_real_ip or "(niet aanwezig)" }}</pre>
-    <h2>User-Agent</h2>
-    <pre>{{ user_agent }}</pre>
-    <h2>Server-tijd</h2>
-    <pre>{{ server_time }}</pre>
-  </div>
+  <nldd-title size="3">
+  <h1>Debug: request metadata</h1>
+  </nldd-title>
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-rich-text>
+  <p>
+    Deze pagina toont wat de Django-pod ontvangt van de proxy(s) ervoor.
+    Gebruik dit om <code>TRUSTED_PROXY_HOPS</code> te bepalen:
+  </p>
+  <ol>
+    <li>
+      Zoek je publieke IP op (bijv. via
+      <a href="https://ifconfig.me" target="_blank" rel="noopener">ifconfig.me</a>).
+    </li>
+    <li>Zoek dat IP in de <em>X-Forwarded-For</em> lijst hieronder.</li>
+    <li>
+      <code>TRUSTED_PROXY_HOPS</code> = de positie-van-rechts van jouw IP.
+      Staat je IP op <code>[-1]</code>, dan is de waarde <strong>1</strong>.
+      Staat je IP op <code>[-2]</code>, dan <strong>2</strong>. Etc.
+    </li>
+  </ol>
+  </nldd-rich-text>
+  <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+  {# Naam en waarde als twee text-cells per regel; de naamkolom schaalt mee met
+     de rij (verhouding, geen vaste breedte). De van-rechts geïndexeerde
+     X-Forwarded-For krijgt een regel per hop, met de index in de naam. #}
+  <nldd-list variant="box" accessible-label="Request metadata">
+  <nldd-list-item>
+  <nldd-text-cell width="35%" text="REMOTE_ADDR"></nldd-text-cell>
+  <nldd-text-cell text="{{ remote_addr }}"></nldd-text-cell>
+  </nldd-list-item>
+  <nldd-list-item>
+  <nldd-text-cell width="35%" text="X-Forwarded-For (raw)"></nldd-text-cell>
+  <nldd-text-cell text="{{ xff_raw or '(niet aanwezig)' }}"></nldd-text-cell>
+  </nldd-list-item>
+  {% if xff_from_right %}
+    {% for i, entry in xff_from_right %}
+      <nldd-list-item>
+      <nldd-text-cell width="35%" text="X-Forwarded-For [-{{ i + 1 }}]"></nldd-text-cell>
+      <nldd-text-cell text="{{ entry }}"></nldd-text-cell>
+      </nldd-list-item>
+    {% endfor %}
+  {% else %}
+    <nldd-list-item>
+    <nldd-text-cell width="35%" text="X-Forwarded-For (van rechts)"></nldd-text-cell>
+    <nldd-text-cell text="(niet aanwezig)"></nldd-text-cell>
+    </nldd-list-item>
+  {% endif %}
+  <nldd-list-item>
+  <nldd-text-cell width="35%" text="X-Forwarded-Proto"></nldd-text-cell>
+  <nldd-text-cell text="{{ xfp or '(niet aanwezig)' }}"></nldd-text-cell>
+  </nldd-list-item>
+  <nldd-list-item>
+  <nldd-text-cell width="35%" text="X-Forwarded-Host"></nldd-text-cell>
+  <nldd-text-cell text="{{ xfh or '(niet aanwezig)' }}"></nldd-text-cell>
+  </nldd-list-item>
+  <nldd-list-item>
+  <nldd-text-cell width="35%" text="X-Real-IP"></nldd-text-cell>
+  <nldd-text-cell text="{{ x_real_ip or '(niet aanwezig)' }}"></nldd-text-cell>
+  </nldd-list-item>
+  <nldd-list-item>
+  <nldd-text-cell width="35%" text="User-Agent"></nldd-text-cell>
+  <nldd-text-cell text="{{ user_agent }}"></nldd-text-cell>
+  </nldd-list-item>
+  <nldd-list-item>
+  <nldd-text-cell width="35%" text="Server-tijd"></nldd-text-cell>
+  <nldd-text-cell text="{{ server_time }}"></nldd-text-cell>
+  </nldd-list-item>
+  </nldd-list>
 {% endblock content %}

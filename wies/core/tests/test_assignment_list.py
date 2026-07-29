@@ -115,7 +115,11 @@ class AssignmentListViewTest(TestCase):
         response = self.client.get(self.list_url, headers={"hx-request": "true"})
         assert response.status_code == 200
         content = response.content.decode()
-        assert 'id="nldd-filter-and-table-container"' in content
+        # De partial levert de resultatenregel (het swap-doel) plus de card grid
+        # als out-of-band swap.
+        assert 'id="results"' in content
+        assert 'id="assignment-card-grid"' in content
+        assert 'hx-swap-oob="outerHTML"' in content
 
     def test_htmx_pagina_returns_card_rows(self):
         self.client.force_login(self.auth_user)

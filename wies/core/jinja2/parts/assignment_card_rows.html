@@ -1,39 +1,46 @@
 {% for assignment in object_list %}
-  <nldd-card accessible-label="{{ assignment.name }}" class="nldd-vacancy-card" hx-get="{{ assignment.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" tabindex="0" role="button">
+  <nldd-card accessible-label="{{ assignment.name }}" button hx-get="{{ assignment.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
   <nldd-container padding="16">
+  <nldd-title size="5">
+  <h3>{{ assignment.name }}</h3>
+  </nldd-title>
   {% if assignment.services_with_skills %}
-    <div class="nldd-vacancy-card__tags">
-      {% for service in assignment.services_with_skills[:3] %}<nldd-token>{{ service.skill.name }}</nldd-token>{% endfor %}
-      {% if assignment.services_with_skills|length > 3 %}
-        <nldd-token>+{{ assignment.services_with_skills|length - 3 }} meer</nldd-token>
-      {% endif %}
-    </div>
-  {% endif %}
-  <nldd-rich-text spacing="flat"><strong>{{ assignment.name }}</strong></nldd-rich-text>
-  <nldd-spacer size="4"></nldd-spacer>
-  {% if assignment.org_breadcrumb %}
-    <div class="nldd-vacancy-card__meta">
-      <nldd-icon name="apartment-building"></nldd-icon>
-      <span>{{ assignment.org_breadcrumb.label }}</span>
-    </div>
-  {% endif %}
-  {% if assignment.start_date or assignment.end_date %}
-    <div class="nldd-vacancy-card__meta nldd-vacancy-card__meta--secondary">
-      <nldd-icon name="calendar-event"></nldd-icon>
-      <span>
-        {{ assignment.start_date|datum_nl("N Y") if assignment.start_date else "" }}
-        {% if assignment.end_date %}– {{ assignment.end_date|datum_nl("N Y") }}{% endif %}
-      </span>
-    </div>
+    <nldd-spacer size="8"></nldd-spacer>
+    <nldd-container layout="wrap" gap="6">
+    {% for service in assignment.services_with_skills[:3] %}
+      <nldd-tag size="sm" text="{{ service.skill.name }}"></nldd-tag>
+    {% endfor %}
+    {% if assignment.services_with_skills|length > 3 %}
+      <nldd-tag size="sm" text="+{{ assignment.services_with_skills|length - 3 }} meer"></nldd-tag>
+    {% endif %}
+    </nldd-container>
   {% endif %}
   </nldd-container>
+  {# In de footer-slot, zodat opdrachtgever en periode in elke kaart van een
+  rij op dezelfde hoogte staan, hoe lang de titel erboven ook is. #}
+  {% if assignment.org_breadcrumb or assignment.start_date or assignment.end_date %}
+    <nldd-container slot="footer" padding-inline="16" padding-bottom="10">
+    <nldd-list variant="simple" no-dividers accessible-label="Opdrachtgegevens">
+    {% if assignment.org_breadcrumb %}
+      <nldd-list-item size="sm">
+      <nldd-icon-cell size="16" icon="apartment-building"></nldd-icon-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      <nldd-text-cell size="sm" text="{{ assignment.org_breadcrumb.label }}"></nldd-text-cell>
+      </nldd-list-item>
+    {% endif %}
+    {% if assignment.start_date or assignment.end_date %}
+      <nldd-list-item size="sm">
+      <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
+      <nldd-spacer-cell size="8"></nldd-spacer-cell>
+      <nldd-text-cell size="sm" text="{{ assignment.start_date|datum_nl("b Y") if assignment.start_date else '' }}
+      {% if assignment.end_date %} – {{ assignment.end_date|datum_nl("b Y") }}{% endif %}
+      "></nldd-text-cell>
+      </nldd-list-item>
+    {% endif %}
+    </nldd-list>
+    </nldd-container>
+  {% endif %}
   </nldd-card>
-{% else %}
-  <nldd-rich-text>
-  <p>
-    <em>Geen vacatures gevonden.</em>
-  </p>
-  </nldd-rich-text>
 {% endfor %}
 {% if next_page_url %}
   <div hx-get="{{ next_page_url }}"

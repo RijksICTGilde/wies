@@ -1,8 +1,8 @@
 // Koppelt de periodekeuze aan de datumvelden.
 //
 // Twee vormen, beide ondersteund:
-//   - nldd-segmented-control[data-period-choice] (bewerkpaneel van de plaatsing)
-//   - checkbox #placement-inherit-period         (generieke inline-edit form)
+//   - nldd-segmented-control[data-period-choice]  (bewerkpaneel van de plaatsing)
+//   - nldd-checkbox-field #placement-inherit-period (generieke inline-edit form)
 //
 // Bij "van opdracht" verdwijnen de datumvelden en krijgen ze de periode van de
 // opdracht; de verborgen period_source-select houdt de waarde bij die het
@@ -84,7 +84,11 @@
       update(value ? value === "SERVICE" : inheritsFromService());
     });
   } else {
-    checkbox.addEventListener("change", () => update(checkbox.checked));
+    // nldd-checkbox-field bubbelt een change met detail.checked; de property
+    // is dan al bijgewerkt, dus beide lezen hetzelfde.
+    checkbox.addEventListener("change", (e) =>
+      update(e.detail ? e.detail.checked : checkbox.checked),
+    );
   }
 
   if (endKnownSwitch) {

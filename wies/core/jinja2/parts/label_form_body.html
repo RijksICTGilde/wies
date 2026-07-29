@@ -1,0 +1,17 @@
+{# De inhoud van de labelsheet, los van de sheet zelf: bij een validatiefout
+   rendert de view alléén dit stuk, zodat de openstaande sheet blijft staan en
+   alleen het formulier ververst. #}
+<nldd-form>
+<form method="post"
+      action="{{ form_post_url }}"
+      hx-post="{{ form_post_url }}"
+      hx-target="#labelFormBody"
+      hx-swap="innerHTML">
+  {{ get_csrf_hidden_input(request) }}
+  {{ content.name.as_field_group() }}
+  {{ content.category.as_field_group() }}
+  <nldd-form-actions>
+  <nldd-button variant="primary" type="submit" width="full" text="{{ form_button_label }}"></nldd-button>
+  </nldd-form-actions>
+</form>
+</nldd-form>

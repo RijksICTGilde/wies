@@ -1,0 +1,26 @@
+{# Every field renders inside nldd-form-field: the label, the optional badge and
+   the error wiring all come from the component, so no hand-rolled label or
+   spacing is left anywhere in the form.
+
+   nldd-form-field only reveals an error text when the input reflects `invalid`
+   and points at it by id via `error-message` — without that wiring the messages
+   render at height 0 and screen readers never announce them. Alleen echte
+   invoervelden koppelen dat terug; een radiogroep, checkboxgroep of dropdown
+   niet, dus daar zetten we `invalid` zelf op de foutmelding.
+
+   Een veld dat technisch optioneel is maar dat de gebruiker niet als keuze
+   ervaart (er is een zinnige standaard) kan de Optioneel-badge onderdrukken met
+   `hide-optional` in widget.attrs. #}
+{% set error_ids = wire_field_errors(field) %}
+{% set reflecting_widgets = ["TextInput", "EmailInput", "PasswordInput", "NumberInput", "Textarea", "DateInput"] %}
+{% set reflects_invalid = field.field.widget.__class__.__name__ in reflecting_widgets %}
+<nldd-form-field
+{% if field.label %}label="{{ field.label }}"{% endif %}
+{% if not field.field.required and not field.field.widget.attrs.get("hide-optional") %}optional{% endif %}
+>
+{{ field }}
+{% for error in field.errors %}
+  <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}"
+                              {% if not reflects_invalid %}invalid{% endif %}>{{ error }}</nldd-form-field-error-text>
+{% endfor %}
+</nldd-form-field>

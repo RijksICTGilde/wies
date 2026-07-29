@@ -1,0 +1,42 @@
+{% set multi = form.fields|length > 1 %}
+{# nldd-form staat OM het echte formulier heen (user-provided form mode). Andersom
+   maakt nldd-form er zelf een <form> in, en dan zitten de velden in een formulier
+   ín een formulier: ze horen dan niet meer bij het htmx-formulier en worden bij
+   opslaan niet meegestuurd — een form-associated veld (nldd-token-field) raakt
+   zo zijn waarde kwijt. #}
+<div id="{{ target }}">
+  <nldd-form>
+  <form {% if bare %}data-inline-edit-form{% endif %}
+        hx-post="{{ edit_url }}"
+        hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+        hx-target="#{{ target }}"
+        {# In bare-modus blijft het veld open staan: de omliggende flow (de
+           onboarding) dient het formulier in bij het verlaten van de stap, en
+           wie terugbladert hoort zijn velden terug te zien zoals hij ze
+           achterliet -- niet als leesweergave. #}
+        hx-swap="{{ 'none' if bare else 'outerHTML' }}">
+    {# Eén veld inline bewerken heeft geen label nodig — de waarde stond er net
+       nog; bij meerdere velden wel, want dan is de kolom niet meer duidelijk. #}
+    {% for bound in form %}
+      {% set error_ids = wire_field_errors(bound) %}
+      <nldd-form-field {% if multi and bound.label %}label="{{ bound.label }}"{% endif %}>
+      {{ bound.as_widget(attrs={"autofocus": loop.first}) }}
+      {% for error in bound.errors %}
+        <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
+      {% endfor %}
+      </nldd-form-field>
+    {% endfor %}
+    {% for error in form.non_field_errors() %}
+      <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
+    {% endfor %}
+    {# In bare-modus (zie inline_edit_form) hoort het opslaan bij de omliggende
+       flow, dus dan geen eigen knoppen. #}
+    {% if not bare %}
+      <div class="field-actions">
+        <nldd-button type="submit" variant="primary" text="Opslaan"></nldd-button>
+        <nldd-button type="button" variant="secondary" text="Annuleren" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML"></nldd-button>
+      </div>
+    {% endif %}
+  </form>
+  </nldd-form>
+</div>

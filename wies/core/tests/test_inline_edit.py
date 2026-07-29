@@ -184,7 +184,7 @@ class InlineEditInfrastructureTest(TestCase):
         # non-null + has no blank=True).
         resp = self.client.post(self.url, {"name": ""})
         assert resp.status_code == 200
-        self.assertContains(resp, "nldd-form-field__error-text")
+        self.assertContains(resp, "nldd-form-field-error-text")
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Original name"
 
@@ -443,6 +443,11 @@ class AssignmentPanelRenderTest(TestCase):
         )
         self.client.force_login(self.user)
         self.colleague = Colleague.objects.get(user=self.user)
+        # The owner field only offers BDM colleagues, so the combined edit form
+        # needs the owner to be a valid choice for itself.
+        bdm_group, _ = Group.objects.get_or_create(name="Business Development Manager")
+        self.user.groups.add(bdm_group)
+        self.organization = OrganizationUnit.objects.create(name="PanelOrg", label="Panel Org")
         self.assignment = Assignment.objects.create(
             name="Panel Assignment",
             owner=self.colleague,  # user is owner → can edit
@@ -450,18 +455,157 @@ class AssignmentPanelRenderTest(TestCase):
         )
 
     def test_panel_renders_edit_button_for_owner(self):
-        """Loading the home page with ?opdracht=<id> renders the panel
-        with the inline-edit pencil for name + extra_info."""
+        """Loading the home page with ?opdracht=<id> renders the panel with the
+        edit buttons that open the child sheets (per-field inline edit has been
+        replaced by one combined form)."""
         response = self.client.get(f"/?opdracht={self.assignment.id}")
         assert response.status_code == 200
         self.assertContains(response, "Panel Assignment")
-        # Edit icon present for this authorized user.
-        self.assertContains(response, "edit-icon-button__pencil")
-        # Name should be addressable at the new inline-edit URL.
-        self.assertContains(
-            response,
-            f"/inline-edit/assignment/{self.assignment.id}/name/",
+        self.assertContains(response, f"opdracht={self.assignment.id}&amp;bewerken=1")
+        self.assertContains(response, f"opdracht={self.assignment.id}&amp;teamlid=nieuw-aanvraag")
+        self.assertContains(response, f"opdracht={self.assignment.id}&amp;teamlid=nieuw-ingevuld")
+
+    def test_edit_param_renders_combined_form(self):
+        """?opdracht=<id>&bewerken=1 renders the child sheet with one form over
+        all assignment fields, posting to the assignment-edit endpoint."""
+        response = self.client.get(f"/?opdracht={self.assignment.id}&bewerken=1")
+        assert response.status_code == 200
+        self.assertContains(response, "Opdracht bewerken")
+        self.assertContains(response, f"/opdracht/{self.assignment.id}/bewerken/")
+        for field in ("name", "extra_info", "owner", "start_date", "end_date"):
+            self.assertContains(response, f'name="{field}"')
+
+    def test_teamlid_nieuw_renders_member_form(self):
+        """?opdracht=<id>&teamlid=nieuw-aanvraag renders the member child sheet
+        with one preset formset row, posting to the member endpoint."""
+        response = self.client.get(f"/?opdracht={self.assignment.id}&teamlid=nieuw-aanvraag")
+        assert response.status_code == 200
+        self.assertContains(response, "Aanvraag toevoegen")
+        self.assertContains(response, f"/opdracht/{self.assignment.id}/teamlid/")
+        self.assertContains(response, "service-TOTAL_FORMS")
+        # The status radios post on their own (nldd-radio-button-field is
+        # form-associated), so the group carries the field name and there is no
+        # hidden-input bridge left to keep in sync.
+        self.assertContains(response, '<nldd-radio-button-group name="service-0-is_filled"')
+        self.assertNotContains(response, "data-status-input")
+
+    def test_teamlid_edit_renders_existing_member(self):
+        """?teamlid=<service-id> renders the row of that one member."""
+        skill = Skill.objects.create(name="Ontwerper")
+        service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
+        response = self.client.get(f"/?opdracht={self.assignment.id}&teamlid={service.id}")
+        assert response.status_code == 200
+        self.assertContains(response, "Teamlid bewerken")
+        self.assertContains(response, 'name="service-0-id"')
+
+    def test_member_post_adds_a_service_and_keeps_others(self):
+        """A member POST only touches its own row: existing services survive."""
+        skill = Skill.objects.create(name="Ontwerper")
+        existing = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
+        response = self.client.post(
+            f"/opdracht/{self.assignment.id}/teamlid/",
+            {
+                "service-TOTAL_FORMS": "1",
+                "service-INITIAL_FORMS": "0",
+                "service-MIN_NUM_FORMS": "0",
+                "service-MAX_NUM_FORMS": "1000",
+                "service-0-id": "",
+                "service-0-placement_id": "",
+                "service-0-is_filled": "aanvraag",
+                "service-0-skill": str(skill.id),
+                "service-0-has_custom_period": "on",
+                "terug_url": f"/?opdracht={self.assignment.id}",
+            },
         )
+        assert response.status_code == 204
+        services = list(self.assignment.services.all())
+        assert len(services) == 2
+        assert existing.id in [s.id for s in services]
+
+    def test_member_post_without_skill_blocks_instead_of_deleting(self):
+        """An empty role would drop the row from the sync (= silent delete);
+        the endpoint re-renders with an error instead."""
+        skill = Skill.objects.create(name="Ontwerper")
+        service = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
+        response = self.client.post(
+            f"/opdracht/{self.assignment.id}/teamlid/",
+            {
+                "service-TOTAL_FORMS": "1",
+                "service-INITIAL_FORMS": "0",
+                "service-MIN_NUM_FORMS": "0",
+                "service-MAX_NUM_FORMS": "1000",
+                "service-0-id": str(service.id),
+                "service-0-placement_id": "",
+                "service-0-is_filled": "aanvraag",
+                "service-0-skill": "",
+                "service-0-has_custom_period": "on",
+            },
+        )
+        assert response.status_code == 200
+        self.assertContains(response, "Kies een rol.")
+        assert self.assignment.services.filter(id=service.id).exists()
+
+    def test_member_delete_removes_only_that_service(self):
+        skill = Skill.objects.create(name="Ontwerper")
+        keep = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
+        gone = Service.objects.create(assignment=self.assignment, skill=skill, source="wies")
+        response = self.client.post(
+            f"/opdracht/{self.assignment.id}/teamlid/{gone.id}/verwijderen/",
+            {"terug_url": f"/?opdracht={self.assignment.id}"},
+        )
+        assert response.status_code == 204
+        assert "HX-Location" in response
+        ids = set(self.assignment.services.values_list("id", flat=True))
+        assert keep.id in ids
+        assert gone.id not in ids
+
+    def test_edit_post_saves_and_redirects_back(self):
+        """A valid POST saves every field and sends the client back to the
+        parent panel via HX-Location."""
+        response = self.client.post(
+            f"/opdracht/{self.assignment.id}/bewerken/",
+            {
+                "name": "Hernoemd",
+                "extra_info": "Toelichting",
+                "owner": str(self.colleague.id),
+                "start_date": "2026-01-01",
+                "end_date": "2026-12-31",
+                "org-TOTAL_FORMS": "1",
+                "org-INITIAL_FORMS": "0",
+                "org-MIN_NUM_FORMS": "1",
+                "org-MAX_NUM_FORMS": "1000",
+                "org-0-organization": str(self.organization.id),
+                "org-0-role": "PRIMARY",
+                "terug_url": f"/?opdracht={self.assignment.id}",
+            },
+        )
+        assert response.status_code == 204
+        assert "HX-Location" in response
+        self.assignment.refresh_from_db()
+        assert self.assignment.name == "Hernoemd"
+        assert self.assignment.extra_info == "Toelichting"
+        assert str(self.assignment.start_date) == "2026-01-01"
+
+    def test_edit_post_with_errors_rerenders_form(self):
+        """An invalid POST (missing required name) re-renders the child sheet
+        with the error instead of saving."""
+        response = self.client.post(
+            f"/opdracht/{self.assignment.id}/bewerken/",
+            {
+                "name": "",
+                "owner": str(self.colleague.id),
+                "org-TOTAL_FORMS": "1",
+                "org-INITIAL_FORMS": "0",
+                "org-MIN_NUM_FORMS": "1",
+                "org-MAX_NUM_FORMS": "1000",
+                "org-0-organization": str(self.organization.id),
+                "org-0-role": "PRIMARY",
+            },
+        )
+        assert response.status_code == 200
+        self.assertContains(response, "Opdrachtnaam is verplicht")
+        self.assignment.refresh_from_db()
+        assert self.assignment.name == "Panel Assignment"
 
 
 class ProfilePageRenderTest(TestCase):
@@ -482,10 +626,9 @@ class ProfilePageRenderTest(TestCase):
     def test_profile_page_renders(self):
         response = self.client.get("/profiel/")
         assert response.status_code == 200
-        # Editable name field is present.
-        self.assertContains(response, "inline-edit-user-")
-        # Edit pencil for own profile.
-        self.assertContains(response, "edit-icon-button__pencil")
+        # De naam staat in de kop, met de knop die de wijzig-sheet opent.
+        self.assertContains(response, "Prof Tester")
+        self.assertContains(response, reverse("profile-name-edit"))
 
 
 class AssignmentEditablesFullTest(TestCase):
@@ -767,10 +910,14 @@ class AssignmentServicesDisplayTest(TestCase):
         resp = self.client.get(self.url + "?cancel=true")
         assert resp.status_code == 200
         self.assertContains(resp, "Aanvraag")
-        # A vacancy has nothing to link to — only filled rows open a panel.
+        # A vacancy has nothing to link to — only filled rows open a panel. The
+        # ROW must stay non-interactive; the row menu (with its own hx-gets)
+        # sits in slot="end", outside the row action, so check the open tag.
         vacant_row = self._row_containing(resp, "Aanvraag")
-        assert "hx-get" not in vacant_row
-        assert "href=" not in vacant_row
+        open_tag = vacant_row.split(">", 1)[0]
+        assert "hx-get" not in open_tag
+        assert "href=" not in open_tag
+        assert "Bekijk teamlid" not in vacant_row
 
     def test_vacant_row_renders_before_filled_row(self):
         """Vacancies-first ordering (issue #331) — even though the filled
@@ -1263,20 +1410,20 @@ class ServicesRenderChangeUnitTests(TestCase):
 
     def test_added(self):
         change = {"old": None, "new": self._row(2, "Java", None)}
-        assert _services_render_change(change) == {"text": "Toegevoegd: Java (open)"}
+        assert _services_render_change(change) == {"text": "Java (open) toegevoegd"}
 
     def test_removed(self):
         change = {"old": self._row(2, "Java", None), "new": None}
-        assert _services_render_change(change) == {"text": "Verwijderd: Java (open)"}
+        assert _services_render_change(change) == {"text": "Java (open) verwijderd"}
 
     def test_colleague_filled(self):
         change = {"old": self._row(1, "Java", None), "new": self._row(1, "Java", "Anna")}
-        assert _services_render_change(change) == {"text": "Gewijzigd: van Java (open) naar Java (Anna)"}
+        assert _services_render_change(change) == {"text": "Java (open) naar Java (Anna) gewijzigd"}
 
     def test_skill_changed(self):
         change = {"old": self._row(1, "Python", "Jan"), "new": self._row(1, "TypeScript", "Jan")}
         assert _services_render_change(change) == {
-            "text": "Gewijzigd: van Python (Jan) naar TypeScript (Jan)",
+            "text": "Python (Jan) naar TypeScript (Jan) gewijzigd",
         }
 
     def test_description_changed(self):
@@ -1285,9 +1432,7 @@ class ServicesRenderChangeUnitTests(TestCase):
             "new": self._row(1, "Python", "Jan", description="nieuw"),
         }
         assert _services_render_change(change) == {
-            "text": "Toelichting gewijzigd voor Python (Jan)",
-            "old": "oud",
-            "new": "nieuw",
+            "text": 'de toelichting voor Python (Jan) van "oud" naar "nieuw" gewijzigd',
         }
 
     def test_description_added_from_empty(self):
@@ -1296,8 +1441,7 @@ class ServicesRenderChangeUnitTests(TestCase):
             "new": self._row(1, "Python", "Jan", description="nieuw"),
         }
         assert _services_render_change(change) == {
-            "text": "Toelichting toegevoegd voor Python (Jan)",
-            "new": "nieuw",
+            "text": 'de toelichting "nieuw" voor Python (Jan) toegevoegd',
         }
 
     def test_description_removed_to_empty(self):
@@ -1306,8 +1450,7 @@ class ServicesRenderChangeUnitTests(TestCase):
             "new": self._row(1, "Python", "Jan", description=""),
         }
         assert _services_render_change(change) == {
-            "text": "Toelichting verwijderd voor Python (Jan)",
-            "old": "oud",
+            "text": 'de toelichting "oud" voor Python (Jan) verwijderd',
         }
 
     def test_period_custom_set(self):
@@ -1323,9 +1466,10 @@ class ServicesRenderChangeUnitTests(TestCase):
             ),
         }
         assert _services_render_change(change) == {
-            "text": "Periode gewijzigd van Python (Jan)",
-            "old": "01-01-2026 t/m 30-06-2026 (volgt opdracht)",
-            "new": "01-01-2026 t/m 30-06-2026",
+            "text": (
+                "de periode van Python (Jan) van 01-01-2026 t/m 30-06-2026"
+                " (volgt opdracht) naar 01-01-2026 t/m 30-06-2026 gewijzigd"
+            ),
         }
 
     def test_period_dates_changed(self):
@@ -1338,9 +1482,10 @@ class ServicesRenderChangeUnitTests(TestCase):
             ),
         }
         assert _services_render_change(change) == {
-            "text": "Periode gewijzigd van Python (Jan)",
-            "old": "01-01-2026 t/m 30-06-2026",
-            "new": "01-02-2026 t/m 30-06-2026",
+            "text": (
+                "de periode van Python (Jan) van 01-01-2026 t/m 30-06-2026"
+                " naar 01-02-2026 t/m 30-06-2026 gewijzigd"
+            ),
         }
 
 
@@ -1567,8 +1712,8 @@ class InlineOrganizationsEditTest(TestCase):
         assert resp.status_code == 200
         content = resp.content.decode()
         assert content.index("MinX") < content.index("DirY") < content.index("TeamZ")
-        self.assertContains(resp, 'class="org-breadcrumb__ancestor"')
-        self.assertContains(resp, 'class="org-breadcrumb__separator"')
+        self.assertContains(resp, "<nldd-link")
+        self.assertContains(resp, "\u203a")
 
 
 class ColleagueLabelsInlineEditTest(TestCase):

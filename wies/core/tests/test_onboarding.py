@@ -136,23 +136,62 @@ class OnboardingAssignmentStepTest(TestCase):
         assert [e["assignment"].id for e in ctx["onboarding_assignments"]] == [assignment.id]
 
     def test_wizard_renders_opdracht_step_and_bm_contact(self):
-        self._place_on(name="Datateam MinBZK", description="Data engineering")
+        assignment = self._place_on(name="Datateam MinBZK", description="Data engineering")
         self.client.force_login(self.user)
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
         self.assertContains(response, "Controleer je opdracht")
         self.assertContains(response, "Datateam MinBZK")
-        # Placed consultant may edit name/omschrijving inline (pencil affordance).
-        self.assertContains(response, "extra_info")
+        # De stap toont de gegevens; wijzigen gebeurt in het bewerkscherm.
+        self.assertContains(response, "Wijzigen")
+        self.assertContains(response, reverse("onboarding-assignment-edit", args=[assignment.id]))
         # The consultant's own rol + rolomschrijving are shown.
         self.assertContains(response, "Jouw rol")
-        self.assertContains(response, "Omschrijving rol")
         self.assertContains(response, "Data engineering")
         # BM is named and mailable.
         self.assertContains(response, "Bea Manager")
         self.assertContains(response, "mailto:bm@rijksoverheid.nl")
         # Welcome + profile + opdracht = three steps.
         self.assertContains(response, 'data-step="3"')
+
+    def test_assignment_edit_screen_renders_and_saves(self):
+        assignment = self._place_on(name="Datateam MinBZK", description="Data engineering")
+        self.client.force_login(self.user)
+        url = reverse("onboarding-assignment-edit", args=[assignment.id])
+
+        response = self.client.get(url)
+        assert response.status_code == 200
+        self.assertContains(response, "Opdracht wijzigen")
+        self.assertContains(response, "Datateam MinBZK")
+        # Opdrachtvelden en de eigen rol staan in één formulier, elk met prefix.
+        self.assertContains(response, "opdracht-name")
+        self.assertContains(response, "Opdrachtomschrijving")
+
+        service = assignment.services.first()
+        response = self.client.post(
+            url,
+            {
+                "opdracht-name": "Datateam BZK",
+                "opdracht-extra_info": "Nieuwe omschrijving",
+                f"rol-{service.id}-description": "Data engineering plus",
+            },
+        )
+        assert response.status_code == 200
+        # De bijgewerkte box gaat terug naar de stap; het scherm sluit zichzelf.
+        assert response["HX-Retarget"] == f"#onboarding-assignment-{assignment.id}"
+        assert response["HX-Trigger"] == "onboardingDetailClose"
+        assignment.refresh_from_db()
+        service.refresh_from_db()
+        assert assignment.name == "Datateam BZK"
+        assert assignment.extra_info == "Nieuwe omschrijving"
+        assert service.description == "Data engineering plus"
+
+    def test_assignment_edit_screen_rejects_other_assignment(self):
+        # Een opdracht waar je niet op staat hoort niet bewerkbaar te zijn.
+        other = Assignment.objects.create(name="Niet van mij", owner=self.bm, source="wies")
+        self.client.force_login(self.user)
+        response = self.client.get(reverse("onboarding-assignment-edit", args=[other.id]))
+        assert response.status_code == 404
 
     def test_wizard_skips_opdracht_step_when_not_placed(self):
         self.client.force_login(self.user)

@@ -1,10 +1,14 @@
-{# NDD filter sidebar — gebruikt echte NDD componenten. Checkboxes dragen name +
-data-filter-input, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist).
-Geen hidden-input spiegeling meer. #}
-<form class="nldd-filter-form"
-      id="nldd-filter-form"
+{# NDD filter sidebar — elke groep is een nldd-title plus een nldd-list van
+checkbox-rijen. De rij zelf is de checkbox (nldd-list-item[checkbox]); de
+nldd-checkbox erin is puur visueel. De waarden die het formulier submit staan
+als verborgen inputs achter de lijst — filter_interactions.js spiegelt de rij
+daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
+<nldd-container id="filter-panel" slot="sidebar" padding="16"
+{% if filter_form_oob %}hx-swap-oob="outerHTML"{% endif %}
+>
+<form id="filter-form"
       hx-get="{{ filter_target_url }}"
-      hx-target="#nldd-filter-and-table-container"
+      hx-target="#results"
       hx-swap="outerHTML settle:0"
       hx-replace-url="true"
       hx-trigger="change from:[data-filter-input], input delay:500ms from:[data-filter-input]"
@@ -12,11 +16,11 @@ Geen hidden-input spiegeling meer. #}
   {# Search filter (verborgen, bijgewerkt door nldd-search-field via bridge) #}
   <input type="hidden"
          name="zoek"
-         id="nldd-search-hidden"
+         id="search-hidden"
          value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}"
          data-filter-input />
   {# Org filter — hidden inputs, beheerd door client modal #}
-  <div id="nldd-org-filter-inputs">
+  <div id="org-filter-inputs">
     {% for chip in org_chip_data %}
       <input type="hidden"
              name="{{ chip.param_name }}"
@@ -25,116 +29,125 @@ Geen hidden-input spiegeling meer. #}
              data-label="{{ chip.label }}" />
     {% endfor %}
   </div>
+  {# Scheider vóór elke groep in plaats van erna, zodat de laatste groep geen
+  loze ruimte onderaan achterlaat. Een groep kan niets renderen (geen opties),
+  dus loop.first/loop.last klopt hier niet — bijhouden wat er echt uit kwam. #}
+  {% set ns = namespace(rendered=false) %}
   {% for filter_group in filter_groups %}
     {% if filter_group.type == 'modal' %}
-      {# Opdrachtgever: top-3 quick checkboxes (each with its own param: org /
-  org_self / org_type) + a "Meer" button that opens the client hierarchy tree
-  modal. Mirrors the select-multi groups. #}
-      <fieldset class="nldd-filter-group nldd-checkbox-filter" data-org-quick-group>
-        <legend class="nldd-checkbox-filter__label">{{ filter_group.label }}</legend>
-        <div class="nldd-checkbox-filter__body">
-          {% if filter_group.top_options %}
-            <div class="nldd-checkbox-filter__options" data-org-quick>
-              {% for option in filter_group.top_options %}
-                <label class="nldd-filter-option" data-tooltip="{{ option.label }}">
-                  <input
-                    type="checkbox"
-                    class="nldd-filter-option__checkbox org-filter-quick__checkbox"
-                    value="{{ option.value }}"
-                    data-org-param="{{ option.param }}"
-                    data-org-label="{{ option.label }}"
-                    {%
-                    if
-                    option.selected
-                    %}checked{%
-                    endif
-                    %}
-                    />
-                    <span class="nldd-filter-option__label">{{ option.label }}</span>
-                    {% if option.param == 'org' %}<span class="nldd-filter-option__count">{{ option.count }}</span>{% endif %}
-                  </label>
-                {% endfor %}
-              </div>
-            {% endif %}
-            <button type="button"
-                    class="nldd-checkbox-filter__more"
-                    hx-get="/client-modal/?count_mode={{ client_modal_count_mode }}&ndd=1"
-                    hx-target="#nldd-client-modal-container"
-                    hx-swap="innerHTML"
-                    hx-push-url="false"
-                    hx-include="#nldd-org-filter-inputs">
-              <nldd-icon name="magnifier" class="nldd-checkbox-filter__more-icon"></nldd-icon>
-              <span class="nldd-checkbox-filter__more-text">Meer</span>
-            </button>
-          </div>
-        </fieldset>
-      {% elif filter_group.type == 'select-multi' %}
-        {% set top_options = filter_group.top_options if filter_group.top_options is defined else
-                filter_group.options|selectattr('value')|list %}
-        {% if top_options %}
-          <fieldset class="nldd-filter-group nldd-checkbox-filter"
-                    data-nldd-fieldset
-                    data-name="{{ filter_group.name }}"
-                    data-group-id="{{ filter_group.group_id }}">
-            <legend class="nldd-checkbox-filter__label">{{ filter_group.label }}</legend>
-            <div class="nldd-checkbox-filter__body">
-              <div class="nldd-checkbox-filter__options">
-                {% for option in top_options %}
-                  <label class="nldd-filter-option">
-                    <input
-                      type="checkbox"
-                      class="nldd-filter-option__checkbox"
-                      name="{{ filter_group.name }}"
-                      data-filter-input
-                      value="{{ option.value }}"
-                      {%
-                      if
-                      option.value
-                      in
-                      filter_group.selected_values
-                      %}checked{%
-                      endif
-                      %}
-                      />
-                      <span class="nldd-filter-option__label">{{ option.label }}</span>
-                      {% if option.count is defined %}<span class="nldd-filter-option__count">{{ option.count }}</span>{% endif %}
-                    </label>
-                  {% endfor %}
-                </div>
-                {% if filter_group.has_more %}
-                  <button type="button"
-                          class="nldd-checkbox-filter__more"
-                          hx-get="{{ filter_target_url }}?filter_modal={{ filter_group.group_id }}"
-                          hx-target="#nldd-filter-options-modal-container"
-                          hx-swap="innerHTML"
-                          hx-push-url="false"
-                          hx-include="[data-filter-input]">
-                    <nldd-icon name="magnifier" class="nldd-checkbox-filter__more-icon"></nldd-icon>
-                    <span class="nldd-checkbox-filter__more-text">Meer</span>
-                  </button>
-                {% endif %}
-              </div>
-              {# Overflow slot: selected values picked via the "Meer" modal that have no
-    inline checkbox in the top-N. The modal (filter_interactions.js) rewrites this slot
-on apply; here we seed it for page reloads. #} {% set inline_values = top_options|map(attribute='value')|list %}
-              <span data-hidden-inputs hidden>
-                {% for v in filter_group.selected_values %}
-                  {% if v not in inline_values
-                    %}
-                    <input type="hidden"
-                           name="{{ filter_group.name }}"
-                           value="{{ v }}"
-                           data-filter-input />
-                  {% endif %}
-                {% endfor %}
-              </span>
-            </fieldset>
+      {% if ns.rendered %}
+        <nldd-spacer size="24"></nldd-spacer>
+      {% endif %}
+      {# Opdrachtgever: top-3 quick opties (elk met een eigen param: org /
+  org_self / org_type) plus een "Meer" knop die de opdrachtgever-boom opent. #}
+      <nldd-title size="6">
+      <h3>{{ filter_group.label }}</h3>
+      </nldd-title>
+      <nldd-spacer size="4"></nldd-spacer>
+      {% if filter_group.top_options %}
+        <nldd-list variant="simple" accessible-label="{{ filter_group.label }}" data-org-quick>
+        {% for option in filter_group.top_options %}
+          <nldd-list-item checkbox
+          {% if option.selected %}checked{% endif %}
+          data-org-param="{{ option.param }}" data-org-label="{{ option.label }}" data-value="{{ option.value }}">
+          <nldd-cell>
+          <nldd-checkbox aria-hidden="true" tabindex="-1"
+          {% if option.selected %}checked{% endif %}
+          ></nldd-checkbox>
+          </nldd-cell>
+          <nldd-spacer-cell size="8"></nldd-spacer-cell>
+          <nldd-text-cell text="{{ option.label }}"></nldd-text-cell>
+          <nldd-spacer-cell size="8"></nldd-spacer-cell>
+          {% if option.param == 'org' %}
+            <nldd-text-cell width="fit-content" horizontal-alignment="right" color="secondary" text="{{ option.count }}"></nldd-text-cell>
           {% endif %}
-        {% elif filter_group.type == 'date' %}
-          <div class="nldd-filter-group">
-            <nldd-text-field type="date" label="{{ filter_group.label }}" data-nldd-input name="{{ filter_group.name }}" value="{%- if active_filters.get(filter_group.name) -%}{{ active_filters.get(filter_group.name) }}{%- endif -%}">
-            </nldd-text-field>
-          </div>
+          </nldd-list-item>
+        {% endfor %}
+        {# De "Meer" actie hoort bij de lijst, dus hij is een rij en geen losse
+        knop eronder: hij deelt de rijhoogte, de hover en de uitlijning. #}
+        <nldd-list-item button hx-get="/client-modal/?count_mode={{ client_modal_count_mode }}&ndd=1" hx-target="#client-modal-container" hx-swap="innerHTML" hx-push-url="false" hx-include="#org-filter-inputs">
+        {# 24 voor de breedte van de checkbox-cel, 8 voor de spacer erachter:
+        zo begint "Meer..." op dezelfde x als de labels erboven. #}
+        <nldd-spacer-cell size="24"></nldd-spacer-cell>
+        <nldd-spacer-cell size="8"></nldd-spacer-cell>
+        <nldd-text-cell vertical-alignment="center" color="accent" text="Meer..."></nldd-text-cell>
+        </nldd-list-item>
+        </nldd-list>
+      {% endif %}
+      {% set ns.rendered = true %}
+    {% elif filter_group.type == 'select-multi' %}
+      {% set top_options = filter_group.top_options if filter_group.top_options is defined else
+            filter_group.options|selectattr('value')|list %}
+      {% if top_options %}
+        {% if ns.rendered %}
+          <nldd-spacer size="24"></nldd-spacer>
         {% endif %}
-      {% endfor %}
-    </form>
+        {% set ns.rendered = true %}
+        <nldd-title size="6">
+        <h3>{{ filter_group.label }}</h3>
+        </nldd-title>
+        <nldd-spacer size="4"></nldd-spacer>
+        <nldd-list variant="simple" accessible-label="{{ filter_group.label }}" data-wies-fieldset data-name="{{ filter_group.name }}" data-group-id="{{ filter_group.group_id }}">
+        {% for option in top_options %}
+          <nldd-list-item checkbox
+          {% if option.value in filter_group.selected_values %}checked{% endif %}
+          data-value="{{ option.value }}">
+          <nldd-cell>
+          <nldd-checkbox aria-hidden="true" tabindex="-1"
+          {% if option.value in filter_group.selected_values %}checked{% endif %}
+          ></nldd-checkbox>
+          </nldd-cell>
+          <nldd-spacer-cell size="8"></nldd-spacer-cell>
+          <nldd-text-cell text="{{ option.label }}"></nldd-text-cell>
+          <nldd-spacer-cell size="8"></nldd-spacer-cell>
+          {% if option.count is defined %}
+            <nldd-text-cell width="fit-content" horizontal-alignment="right" color="secondary" text="{{ option.count }}"></nldd-text-cell>
+          {% endif %}
+          </nldd-list-item>
+        {% endfor %}
+        {% if filter_group.has_more %}
+          <nldd-list-item button hx-get="{{ filter_target_url }}?filter_modal={{ filter_group.group_id }}" hx-target="#filter-options-modal-container" hx-swap="innerHTML" hx-push-url="false" hx-include="[data-filter-input]">
+          <nldd-spacer-cell size="24"></nldd-spacer-cell>
+          <nldd-spacer-cell size="8"></nldd-spacer-cell>
+          <nldd-text-cell vertical-alignment="center" color="accent" text="Meer..."></nldd-text-cell>
+          </nldd-list-item>
+        {% endif %}
+        </nldd-list>
+        {# De waarden die daadwerkelijk submitten. Eén per zichtbare optie plus de
+    via "Meer" gekozen waarden die geen rij hebben; filter_interactions.js zet
+    checked bij een rij-toggle. #}
+        {% set inline_values = top_options|map(attribute='value')|list %}
+        <span data-hidden-inputs="{{ filter_group.group_id }}" hidden>
+          {% for option in top_options %}
+            <input type="checkbox"
+                   name="{{ filter_group.name }}"
+                   value="{{ option.value }}"
+                   data-filter-input
+                   {% if option.value in filter_group.selected_values %}checked{% endif %} />
+          {% endfor %}
+          {% for v in filter_group.selected_values %}
+            {% if v not in inline_values %}
+              <input type="checkbox"
+                     name="{{ filter_group.name }}"
+                     value="{{ v }}"
+                     data-filter-input
+                     checked />
+            {% endif %}
+          {% endfor %}
+        </span>
+      {% endif %}
+    {% elif filter_group.type == 'date' %}
+      {% if ns.rendered %}
+        <nldd-spacer size="24"></nldd-spacer>
+      {% endif %}
+      {% set ns.rendered = true %}
+      <nldd-title size="6">
+      <h3>{{ filter_group.label }}</h3>
+      </nldd-title>
+      <nldd-spacer size="4"></nldd-spacer>
+      <nldd-date-field width="full" data-wies-input name="{{ filter_group.name }}" accessible-label="{{ filter_group.label }}" value="{%- if active_filters.get(filter_group.name) -%}{{ active_filters.get(filter_group.name) }}{%- endif -%}">
+      </nldd-date-field>
+    {% endif %}
+  {% endfor %}
+</form>
+</nldd-container>

@@ -1,6 +1,8 @@
 {# Single service row within the formset.
    .service-row__details is hidden until the user picks a status (Aanvraag/Geplaatste consultant).
    For existing rows (with data) the details are shown immediately via data-has-choice.
+   The class hooks (.service-row__*, .service-colleague-field, .service-new-skill,
+   .service-period-section) are what assignment_form.js drives — keep them.
 #}
 {% set _has_choice = svc_form.is_bound or (svc_form.initial and svc_form.initial.get('is_filled') is not none) %}
 <div class="service-row"
@@ -13,55 +15,29 @@
   <input type="hidden"
          name="{{ svc_form.placement_id.html_name }}"
          value="{{ svc_form.placement_id.value() or '' }}">
+  <nldd-form-field label="{{ svc_form.is_filled.label }}">
   <div class="service-row__status-toggle">{{ svc_form.is_filled.as_widget() }}</div>
+  </nldd-form-field>
   <div class="service-row__details"
        {% if not _has_choice %}style="display:none"{% endif %}>
     {% set _is_aanvraag = svc_form.is_filled.value() == "aanvraag" %}
     <div class="service-colleague-field"
-         {% if _is_aanvraag %}style="display:none"{% endif %}>
-      <div class="nldd-form-field">
-        <label class="nldd-form-field__label"
-               for="{{ svc_form.colleague.id_for_label }}">{{ svc_form.colleague.label }}</label>
-        {{ svc_form.colleague }}
-      </div>
-    </div>
+         {% if _is_aanvraag %}style="display:none"{% endif %}>{{ svc_form.colleague.as_field_group() }}</div>
     {{ svc_form.skill.as_field_group() }}
     <div class="service-new-skill" style="display: none">{{ svc_form.new_skill_name.as_field_group() }}</div>
     <div class="service-period-section">
-      <div class="nldd-form-field__label">Periode</div>
+      <nldd-form-field label="Periode">
       <label class="service-period-toggle">
         {{ svc_form.has_custom_period.as_widget() }}
         <span>Neem opdrachtperiode over</span>
       </label>
+      </nldd-form-field>
       <div class="assignment-form-row">
-        <div class="nldd-form-field">
-          <label class="nldd-form-field__label"
-                 for="{{ svc_form.placement_start_date.id_for_label }}">Startdatum</label>
-          {{ svc_form.placement_start_date.as_widget() }}
-        </div>
-        <div class="nldd-form-field">
-          <label class="nldd-form-field__label"
-                 for="{{ svc_form.placement_end_date.id_for_label }}">Einddatum</label>
-          {{ svc_form.placement_end_date.as_widget() }}
-        </div>
+        {{ svc_form.placement_start_date.as_field_group() }}
+        {{ svc_form.placement_end_date.as_field_group() }}
       </div>
-      {% if svc_form.placement_start_date.errors %}
-        {% for error in svc_form.placement_start_date.errors %}
-          <p class="nldd-form-field__error-text">{{ error }}</p>
-        {% endfor %}
-      {% endif %}
     </div>
     {{ svc_form.description.as_field_group() }}
-    {% if svc_form.placement_end_date.errors %}
-      {% for error in svc_form.placement_end_date.errors %}
-        <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
-      {% endfor %}
-    {% endif %}
-    {% if svc_form.colleague.errors %}
-      {% for error in svc_form.colleague.errors %}
-        <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
-      {% endfor %}
-    {% endif %}
     {% if svc_form.non_field_errors() %}
       {% for error in svc_form.non_field_errors() %}
         <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>

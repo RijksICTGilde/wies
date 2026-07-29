@@ -16,7 +16,7 @@
                     back-text="{{ colleague.name }}"
                     dismiss-text="Sluit"></nldd-top-title-bar>
 <nldd-simple-section padding-top="0">
-  <nldd-title size="4">
+  <nldd-title size="3">
     <h3 id="panel-title">{{ panel_heading }}</h3>
   </nldd-title>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
@@ -27,7 +27,6 @@
           hx-swap="innerHTML"
           data-service-start="{{ panel_data.service.start_date.isoformat() if panel_data.service.start_date else '' }}"
           data-service-end="{{ panel_data.service.end_date.isoformat() if panel_data.service.end_date else '' }}">
-      <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
       {% if form.skill %}
         {# Combobox in plaats van de select-widget: de rollenlijst is lang genoeg
            om te willen typen. value/text komen uit de gekozen optie. #}
@@ -75,9 +74,9 @@
              hem zodra je een eigen periode kiest. #}
           <nldd-form-field-help-text data-service-period-help>
             De periode van de opdracht is
-            {{ panel_data.service.start_date|datum_nl("j F Y") if panel_data.service.start_date else "onbekend" }}
+            {{ panel_data.service.start_date|datum_nl if panel_data.service.start_date else "onbekend" }}
             t/m
-            {{ panel_data.service.end_date|datum_nl("j F Y") if panel_data.service.end_date else "heden" }}
+            {{ panel_data.service.end_date|datum_nl if panel_data.service.end_date else "heden" }}
           </nldd-form-field-help-text>
         </nldd-form-field>
         <nldd-form-field label="{{ form.specific_start_date.label }}">
@@ -103,6 +102,9 @@
       {% for error in form.non_field_errors() %}
         <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
       {% endfor %}
+      {# Verborgen velden onderaan: nldd-form zet ruimte tussen alle siblings,
+         dus een hidden input bovenaan duwt het eerste zichtbare veld omlaag. #}
+      <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
       <nldd-form-actions>
         <nldd-button type="submit" variant="primary" width="full" text="Opslaan"></nldd-button>
       </nldd-form-actions>

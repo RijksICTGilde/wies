@@ -328,7 +328,7 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         assert response.status_code == 200
-        self.assertContains(response, "Opdracht naam is verplicht")  # Error message
+        self.assertContains(response, "Opdrachtnaam is verplicht")  # Error message
         self.assignment.refresh_from_db()
         assert self.assignment.name == "Test Assignment"  # Should not change
 
@@ -388,7 +388,7 @@ class AssignmentEditAttributeTest(TestCase):
         # Should return form template
         self.assertContains(response, "<form")
         # Should contain error message
-        self.assertContains(response, "Opdracht naam is verplicht")
+        self.assertContains(response, "Opdrachtnaam is verplicht")
 
     # ========== Extra Info Client-Side Toggle Tests ==========
 
@@ -477,7 +477,7 @@ class AssignmentEditAttributeTest(TestCase):
         assert event.user == self.user_with_permission
         assert event.user_email == "perm@rijksoverheid.nl"
         assert event.context["field_name"] == "name"
-        assert event.context["field_label"] == "Opdracht naam"
+        assert event.context["field_label"] == "Opdrachtnaam"
         assert event.context["old_value"] == "Test Assignment"
         assert event.context["new_value"] == "Event Test Name"
 
@@ -530,7 +530,7 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
 
         assert response.status_code == 200
-        self.assertContains(response, "Opdrachtomschrijving")
+        self.assertContains(response, "heeft de opdrachtomschrijving gewijzigd.")
         self.assertContains(response, "truncated-text")
         self.assertContains(response, "show-more-toggle")
         self.assertContains(response, "Toon meer")
@@ -589,11 +589,8 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
 
         assert response.status_code == 200
-        self.assertContains(response, "Team")
-        self.assertContains(response, "Toegevoegd: Java (open)")
-        # Collection changes render as a bulleted list.
-        self.assertContains(response, "<ul")
-        self.assertContains(response, "<li>")
+        # Collection changes render as one running sentence.
+        self.assertContains(response, "heeft Java (open) toegevoegd.")
 
     def test_timeline_renders_text_change_inline(self):
         """Text field changes render inline as 'van X naar Y'"""
@@ -607,7 +604,7 @@ class AssignmentEditAttributeTest(TestCase):
             object_id=self.assignment.id,
             context={
                 "field_name": "name",
-                "field_label": "Opdracht naam",
+                "field_label": "Opdrachtnaam",
                 "old_value": "Old Name",
                 "new_value": "New Name",
             },
@@ -616,8 +613,8 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
 
         assert response.status_code == 200
-        self.assertContains(response, 'van "Old Name"')
-        self.assertContains(response, 'naar "New Name"')
+        self.assertContains(response, "van &#34;Old Name&#34;")
+        self.assertContains(response, "naar &#34;New Name&#34;")
         self.assertNotContains(response, "show-more-toggle")
 
     def test_timeline_legacy_event_without_field_type_renders_inline(self):
@@ -632,7 +629,7 @@ class AssignmentEditAttributeTest(TestCase):
             object_id=self.assignment.id,
             context={
                 "field_name": "name",
-                "field_label": "Opdracht naam",
+                "field_label": "Opdrachtnaam",
                 "old_value": "Legacy Old",
                 "new_value": "Legacy New",
             },
@@ -641,8 +638,8 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
 
         assert response.status_code == 200
-        self.assertContains(response, 'van "Legacy Old"')
-        self.assertContains(response, 'naar "Legacy New"')
+        self.assertContains(response, "van &#34;Legacy Old&#34;")
+        self.assertContains(response, "naar &#34;Legacy New&#34;")
 
     def test_timeline_renders_legacy_organizations_string_event(self):
         """Regression: `organizations` events created in the PR #341 release
@@ -687,7 +684,7 @@ class AssignmentEditAttributeTest(TestCase):
             response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
 
         assert response.status_code == 200
-        self.assertContains(response, "Opdrachtgever(s)")
+        self.assertContains(response, "heeft de opdrachtgevers")
         # Operator can audit production logs for the event id + field name.
         assert any(f"id={event.id}" in m and "field=organizations" in m for m in log_ctx.output), log_ctx.output
 
@@ -735,7 +732,7 @@ class AssignmentEditAttributeTest(TestCase):
             object_id=self.assignment.id,
             context={
                 "field_name": "name",
-                "field_label": "Opdracht naam",
+                "field_label": "Opdrachtnaam",
                 "old_value": "Oud",
                 "new_value": "Nieuw",
             },
@@ -868,12 +865,12 @@ class TimelinePlacementPrivacyTests(TestCase):
     def test_bm_owner_still_sees_the_full_history(self):
         response = self._get_timeline(self.owner_user)
 
-        self.assertContains(response, "Toegevoegd: Software Engineer (Hidden Colleague)")
+        self.assertContains(response, "Software Engineer (Hidden Colleague) toegevoegd")
 
     def test_placed_colleague_sees_their_own_placement(self):
         response = self._get_timeline(self.hidden_user)
 
-        self.assertContains(response, "Toegevoegd: Software Engineer (Hidden Colleague)")
+        self.assertContains(response, "Software Engineer (Hidden Colleague) toegevoegd")
 
     def test_active_placement_name_stays_visible_to_everyone(self):
         """The rule hides planned/ended placements only; an active one is public."""
@@ -884,7 +881,7 @@ class TimelinePlacementPrivacyTests(TestCase):
 
         response = self._get_timeline(self.unrelated_user)
 
-        self.assertContains(response, "Toegevoegd: Software Engineer (Hidden Colleague)")
+        self.assertContains(response, "Software Engineer (Hidden Colleague) toegevoegd")
 
     def test_vacancy_change_stays_visible(self):
         """A vacancy names nobody, so it has nothing to hide."""
@@ -896,7 +893,7 @@ class TimelinePlacementPrivacyTests(TestCase):
 
         response = self._get_timeline(self.unrelated_user)
 
-        self.assertContains(response, "Toegevoegd: Communicatie Medewerker (open)")
+        self.assertContains(response, "Communicatie Medewerker (open) toegevoegd")
 
     def test_filter_does_not_query_per_event(self):
         """The visible-name set is identical for every event in one request, so
@@ -929,7 +926,7 @@ class TimelinePlacementPrivacyTests(TestCase):
             object_id=self.assignment.id,
             context={
                 "field_name": "name",
-                "field_label": "Opdracht naam",
+                "field_label": "Opdrachtnaam",
                 "old_value": "UX / UI advies",
                 "new_value": "DTC4NL",
             },
@@ -937,7 +934,7 @@ class TimelinePlacementPrivacyTests(TestCase):
 
         response = self._get_timeline(self.unrelated_user)
 
-        self.assertContains(response, 'van "UX / UI advies"')
+        self.assertContains(response, "van &#34;UX / UI advies&#34;")
 
 
 class AssignmentDeleteViewTests(TestCase):
@@ -1057,8 +1054,10 @@ class AssignmentDeleteViewTests(TestCase):
         assert response.status_code == 200
         self.assertContains(response, "Weet je zeker dat je opdracht &#39;Te verwijderen&#39; wilt verwijderen?")
         self.assertContains(response, "Verwijderen is permanent en niet terug te draaien.")
-        self.assertContains(response, f'action="{self.url}"')
-        self.assertContains(response, "Verwijderen")
+        self.assertContains(response, "<nldd-modal-dialog")
+        self.assertContains(response, f'hx-post="{self.url}"')
+        self.assertContains(response, "Verwijder opdracht")
+        self.assertContains(response, "Behoud opdracht")
 
     def test_owner_cannot_delete_otys_iir_assignment(self):
         self.client.force_login(self.owner_user)

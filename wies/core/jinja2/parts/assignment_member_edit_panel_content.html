@@ -1,0 +1,146 @@
+{# Child sheet van het opdrachtpaneel: één teamlid (bewerken of toevoegen).
+   Opgezet zoals de "Rol bewerken"-sheet van de plaatsing: alleen
+   nldd-componenten, combo-box voor de rol en de periode als segmented
+   control met "Einddatum is bekend"-switch (member_form.js stuurt het
+   gedrag). Het formulier post nog steeds één formset-rij; de server vult de
+   overige teamrijen zelf aan, dus deze POST kan nooit ongewild andere leden
+   raken (zie assignment_member_edit_view). #}
+{% set formset = panel_data.member_formset %}
+{% set svc_form = formset.forms[0] %}
+{% set obj = panel_data.assignment %}
+{% set panel_heading = panel_data.member_heading %}
+<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ obj.name }}" dismiss-text="Sluit"></nldd-top-title-bar>
+<nldd-simple-section padding-top="0">
+<nldd-title size="3">
+<h3 id="panel-title">{{ panel_heading }}</h3>
+</nldd-title>
+<nldd-spacer size="12" direction="vertical"></nldd-spacer>
+<nldd-form>
+<form data-member-form
+      hx-post="{{ panel_data.member_edit_url }}"
+      hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+      hx-target="#side-panel-content"
+      hx-swap="innerHTML"
+      data-assignment-start="{{ obj.start_date.isoformat() if obj.start_date else '' }}"
+      data-assignment-end="{{ obj.end_date.isoformat() if obj.end_date else '' }}">
+  {{ formset.management_form }}
+  {% for error in formset.non_form_errors() %}
+    <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
+  {% endfor %}
+  {% for error in svc_form.non_field_errors() %}
+    <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
+  {% endfor %}
+  {# Round-trip PKs so apply_services_to_assignment can update in place. #}
+  <input type="hidden" name="{{ svc_form.id.html_name }}" value="{{ svc_form.id.value() or '' }}">
+  <input type="hidden" name="{{ svc_form.placement_id.html_name }}" value="{{ svc_form.placement_id.value() or '' }}">
+  {% set status_value = svc_form.is_filled.value() or "aanvraag" %}
+  <nldd-form-field label="{{ svc_form.is_filled.label }}">
+  <nldd-radio-button-group name="{{ svc_form.is_filled.html_name }}" data-status-choice>
+  <nldd-radio-button-field value="aanvraag" label="Aanvraag" {% if status_value == "aanvraag" %}checked{% endif %}></nldd-radio-button-field>
+  <nldd-radio-button-field value="ingevuld" label="Geplaatste consultant" {% if status_value == "ingevuld" %}checked{% endif %}></nldd-radio-button-field>
+  </nldd-radio-button-group>
+  {% for error in svc_form.is_filled.errors %}
+    <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
+  </nldd-form-field>
+  {# Ook een combobox: de consultantlijst is net zo lang als de rollenlijst. #}
+  {% set colleague_value = svc_form.colleague.value() | string if svc_form.colleague.value() else "" %}
+  <div data-colleague-field {% if status_value != "ingevuld" %}hidden{% endif %}>
+    <nldd-form-field label="{{ svc_form.colleague.label }}">
+    <nldd-combo-box name="{{ svc_form.colleague.html_name }}"
+                    value="{{ colleague_value }}"
+                    accessible-label="{{ svc_form.colleague.label }}"
+                    {% if svc_form.colleague.errors %}invalid{% endif %}>
+    <nldd-menu empty-text="Geen consultants gevonden">
+    {% for value, label in svc_form.colleague.field.choices %}
+      {% if value != "" %}<nldd-menu-item text="{{ label }}" value="{{ value }}"></nldd-menu-item>{% endif %}
+    {% endfor %}
+    </nldd-menu>
+    </nldd-combo-box>
+    {% for error in svc_form.colleague.errors %}
+      <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+    {% endfor %}
+    </nldd-form-field>
+  </div>
+  {# Combobox met allow-custom: een getypte naam die geen bestaande rol is,
+     wordt een nieuwe rol. De combobox post zelf niets; member_form.js vult de
+     hidden inputs volgens het bestaande contract (id in skill, of
+     skill=__new__ met de naam in new_skill_name). #}
+  {% set skill_value = svc_form.skill.value() | string if svc_form.skill.value() else "" %}
+  {% set new_skill_value = svc_form.new_skill_name.value() or "" %}
+  <input type="hidden" name="{{ svc_form.skill.html_name }}" value="{{ skill_value }}" data-skill-input>
+  <input type="hidden" name="{{ svc_form.new_skill_name.html_name }}" value="{{ new_skill_value }}" data-new-skill-input>
+  <nldd-form-field label="{{ svc_form.skill.label }}">
+  <nldd-combo-box allow-custom
+                  accessible-label="{{ svc_form.skill.label }}"
+                  data-skill-choice
+                  {% if skill_value == "__new__" %}value="{{ new_skill_value }}" text="{{ new_skill_value }}"{% else %}value="{{ skill_value }}"{% endif %}
+                  {% if svc_form.skill.errors or svc_form.new_skill_name.errors %}invalid{% endif %}>
+  <nldd-menu empty-text="Geen rollen gevonden">
+  {% for value, label in svc_form.skill.field.choices %}
+    {% if value not in ("", "__new__") %}<nldd-menu-item text="{{ label }}" value="{{ value }}"></nldd-menu-item>{% endif %}
+  {% endfor %}
+  </nldd-menu>
+  </nldd-combo-box>
+  <nldd-form-field-help-text>Kies een bestaande rol of typ de naam van een nieuwe rol.</nldd-form-field-help-text>
+  {% for error in svc_form.skill.errors %}
+    <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
+  {% for error in svc_form.new_skill_name.errors %}
+    <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
+  </nldd-form-field>
+  {{ svc_form.description.as_field_group() }}
+  {# has_custom_period is omgekeerd: aangevinkt = opdrachtperiode overnemen.
+     De segmented control post niet zelf; de hidden input hieronder draagt de
+     keuze ("on" = overnemen, leeg = eigen periode). #}
+  {% set inherits = svc_form.has_custom_period.value() %}
+  <nldd-form-field label="Periode">
+  <nldd-segmented-control name="periode-keuze"
+                          width="full"
+                          accessible-label="Periode"
+                          value="{{ 'SERVICE' if inherits else 'PLACEMENT' }}"
+                          data-period-choice>
+  <nldd-segmented-control-item value="SERVICE" text="Van opdracht"></nldd-segmented-control-item>
+  <nldd-segmented-control-item value="PLACEMENT" text="Anders..."></nldd-segmented-control-item>
+  </nldd-segmented-control>
+  {# Alleen zinvol bij "Van opdracht"; member_form.js verbergt hem zodra je
+     een eigen periode kiest. #}
+  <nldd-form-field-help-text data-assignment-period-help>
+    De periode van de opdracht is
+    {{ obj.start_date|datum_nl if obj.start_date else "onbekend" }}
+    t/m
+    {{ obj.end_date|datum_nl if obj.end_date else "heden" }}
+  </nldd-form-field-help-text>
+  </nldd-form-field>
+  <input type="hidden" name="{{ svc_form.has_custom_period.html_name }}" value="{{ 'on' if inherits else '' }}" data-inherit-input>
+  <nldd-form-field label="{{ svc_form.placement_start_date.label }}">
+  {{ svc_form.placement_start_date.as_widget(attrs={"width": "full"}) }}
+  {% for error in svc_form.placement_start_date.errors %}
+    <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
+  </nldd-form-field>
+  {# Uit betekent: geen einddatum bekend, de plaatsing loopt door. De switch
+     post niet mee; hij stuurt alleen het einddatumveld aan. #}
+  <nldd-form-field>
+  <nldd-switch-field label="Einddatum is bekend"
+                     data-end-date-known
+                     {% if svc_form.placement_end_date.value() or inherits %}checked{% endif %}></nldd-switch-field>
+  </nldd-form-field>
+  <nldd-form-field label="{{ svc_form.placement_end_date.label }}">
+  {{ svc_form.placement_end_date.as_widget(attrs={"width": "full"}) }}
+  {% for error in svc_form.placement_end_date.errors %}
+    <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
+  </nldd-form-field>
+  {# Verborgen velden onderaan: nldd-form zet ruimte tussen alle siblings, dus
+     een hidden input bovenaan duwt het eerste zichtbare veld omlaag. #}
+  <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
+  <input type="hidden" name="member_heading" value="{{ panel_heading }}">
+  <nldd-form-actions>
+  <nldd-button type="submit" variant="primary" width="full" text="Opslaan"></nldd-button>
+  </nldd-form-actions>
+</form>
+</nldd-form>
+</nldd-simple-section>
+<script src="{{ static('js/member_form.js') }}"></script>

@@ -19,7 +19,7 @@ from wies.core.editables import (
     UserEditables,
 )
 from wies.core.form_mixins import wire_field_errors
-from wies.core.inline_edit.jinja import inline_edit
+from wies.core.inline_edit.jinja import inline_edit, inline_edit_form
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.permissions import is_staff_member
 from wies.core.services.organizations import get_org_breadcrumb
@@ -43,8 +43,13 @@ def parse_message_link(extra_tags: str) -> dict | None:
     return None
 
 
-def datum_nl(datum, fmt="N Y"):
-    """Format a date using Django's localization (nl-nl)"""
+def datum_nl(datum, fmt="j b Y"):
+    """THE date display for Wies, via Django's nl-nl localization.
+
+    House style: months are always three letters, lowercase ('b' → "11 nov
+    2024"). Callers only choose which parts to show (e.g. "b Y" for month +
+    year on cards); they don't restyle the month.
+    """
     if datum is None:
         return "?"
     if isinstance(datum, str):
@@ -161,6 +166,7 @@ def environment(**options):
             "DEBUG": settings.DEBUG,
             "APP_VERSION": get_app_version(),
             "inline_edit": inline_edit,
+            "inline_edit_form": inline_edit_form,
             "wire_field_errors": wire_field_errors,
             "get_org_breadcrumb": get_org_breadcrumb,
             "current_page_path": current_page_path,

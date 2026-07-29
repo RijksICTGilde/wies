@@ -1,0 +1,17 @@
+{# Eén sheet voor toevoegen én bewerken van een label: naam en categorie. Zelfde
+   opzet als de andere beheer-sheets: "Annuleer" rechtsboven, dialog.js opent
+   hem na de htmx-swap via data-auto-show.
+
+   De inhoud staat in een eigen partial: bij een validatiefout vervangt htmx
+   alleen #labelFormBody, zodat deze sheet blijft staan in plaats van dat er een
+   tweede overheen opent. #}
+<nldd-sheet id="{{ modal_element_id }}" data-auto-show placement="right" width="480px" accessible-label="{{ modal_title }}">
+<nldd-page sticky-header>
+<nldd-top-title-bar slot="header" text="{{ modal_title }}" dismiss-text="Annuleer"></nldd-top-title-bar>
+<nldd-simple-section padding-top="0">
+<div id="labelFormBody">
+  {% include "parts/label_form_body.html" %}
+</div>
+</nldd-simple-section>
+</nldd-page>
+</nldd-sheet>
