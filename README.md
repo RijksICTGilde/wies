@@ -16,7 +16,7 @@ Internal tool for managing colleague placements within the Dutch government. Wie
 - [Docker](https://www.docker.com/)
 - [just](https://github.com/casey/just)
 - [uv](https://docs.astral.sh/uv/)
-- [Node.js](https://nodejs.org/) (for JavaScript tests)
+- [Node.js](https://nodejs.org/) (for JavaScript tests, >= v22)
 - [pre-commit](https://pre-commit.com/)
 
 ## Quick Start

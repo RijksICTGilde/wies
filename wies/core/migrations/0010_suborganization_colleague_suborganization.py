@@ -25,6 +25,7 @@ def backfill_suborganization(apps, schema_editor):
     backfill is verified in production.
     """
     colleague_model = apps.get_model("core", "Colleague")
+    label_model = apps.get_model("core", "Label")
     label_category_model = apps.get_model("core", "LabelCategory")
     suborganization_model = apps.get_model("core", "Suborganization")
 
@@ -33,12 +34,11 @@ def backfill_suborganization(apps, schema_editor):
         # Fresh install without the legacy category — nothing to backfill.
         return
 
-    suborganization_cache = {}
-
-    def get_or_create_suborganization(name):
-        if name not in suborganization_cache:
-            suborganization_cache[name], _ = suborganization_model.objects.get_or_create(name=name)
-        return suborganization_cache[name]
+    # Every merk label becomes a Suborganization, keyed by name for assignment below.
+    suborganizations = {
+        label.name: suborganization_model.objects.create(name=label.name)
+        for label in label_model.objects.filter(category=category)
+    }
 
     ambiguous = []  # colleagues with >1 merk label
     backfilled = 0
@@ -47,7 +47,7 @@ def backfill_suborganization(apps, schema_editor):
         merk_labels = list(colleague.labels.filter(category=category))
         if len(merk_labels) == 1:
             with transaction.atomic():
-                colleague.suborganization = get_or_create_suborganization(merk_labels[0].name)
+                colleague.suborganization = suborganizations[merk_labels[0].name]
                 colleague.save(update_fields=["suborganization"])
             backfilled += 1
         elif len(merk_labels) > 1:

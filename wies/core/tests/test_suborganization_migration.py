@@ -62,6 +62,23 @@ class SuborganizationBackfillMigrationTest(TransactionTestCase):
         assert migrated.suborganization.name == "Rijks ICT Gilde"
         assert Suborganization.objects.filter(name="Rijks ICT Gilde").count() == 1
 
+    def test_backfill_creates_suborganization_for_unused_merk_label(self):
+        # A Merk label that no colleague carries must still become a Suborganization.
+        category = self.LabelCategory.objects.create(name="Merk", color="#DCE3EA")
+        rig = self.Label.objects.create(name="Rijks ICT Gilde", category=category)  # used below
+        self.Label.objects.create(name="Ongebruikt Merk", category=category)  # zero colleagues
+        used = self._make_colleague("User", "user@rijksoverheid.nl")
+        used.labels.add(rig)
+
+        self._migrate(MIGRATE_TO)
+
+        new_apps = self._apps_at(MIGRATE_TO)
+        Suborganization = new_apps.get_model(APP, "Suborganization")
+        # Every merk label -> a Suborganization row, even the unused one.
+        assert Suborganization.objects.filter(name="Ongebruikt Merk").exists()
+        assert Suborganization.objects.filter(name="Rijks ICT Gilde").exists()
+        assert Suborganization.objects.count() == 2
+
     def test_backfill_zero_labels_leaves_null(self):
         # Category exists (so the migration runs), but this colleague has no merk label.
         self.LabelCategory.objects.create(name="Merk", color="#DCE3EA")
@@ -87,9 +104,11 @@ class SuborganizationBackfillMigrationTest(TransactionTestCase):
         Suborganization = new_apps.get_model(APP, "Suborganization")
 
         migrated = Colleague.objects.get(pk=colleague.pk)
+        # The ambiguous colleague itself is left unassigned...
         assert migrated.suborganization_id is None
-        # An ambiguous colleague must not silently create a suborganization.
-        assert not Suborganization.objects.filter(name__in=["Rijks ICT Gilde", "Rijksconsultants"]).exists()
+        # ...but every merk label still becomes a Suborganization (all merken are migrated).
+        assert Suborganization.objects.filter(name="Rijks ICT Gilde").exists()
+        assert Suborganization.objects.filter(name="Rijksconsultants").exists()
 
     def test_backfill_dedupes_suborganization_across_colleagues(self):
         category = self.LabelCategory.objects.create(name="Merk", color="#DCE3EA")
