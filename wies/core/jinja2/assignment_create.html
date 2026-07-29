@@ -21,37 +21,37 @@
         action="{{ url('assignment-create') }}"
         id="assignment-create-form">
     {{ get_csrf_hidden_input(request) }}
-      <fieldset class="wies-fieldset">
-        <legend class="wies-fieldset__legend">Opdrachtgegevens</legend>
-          {{ form.name.as_field_group() }}
-          {{ form.extra_info.as_field_group() }}
-          <div class="assignment-form-row">
-            {{ form.start_date.as_field_group() }}
-            {{ form.end_date.as_field_group() }}
-          </div>
-          {{ form.owner.as_field_group() }}
-      </fieldset>
-      <fieldset class="wies-fieldset">
-        <legend class="wies-fieldset__legend">
-          Opdrachtgever(s) <span class="wies-fieldset__hint">(voeg minimaal 1 opdrachtgever toe)</span>
-        </legend>
-        {% for error in form.organizations.errors %}
-          <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
-        {% endfor %}
-        {{ form.organizations.as_widget() }}
-      </fieldset>
-      <fieldset class="wies-fieldset" id="diensten">
-        <legend class="wies-fieldset__legend">
-          Team <span class="wies-fieldset__hint">(voeg minimaal 1 aanvraag of plaatsing toe)</span>
-        </legend>
-        {% with formset=service_formset, extra_errors=form.non_field_errors() %}
-          {% include "parts/assignment_services_form.html" %}
-        {% endwith %}
-      </fieldset>
-      <div style="display: flex; gap: 0.5rem;">
-        <nldd-button variant="primary" type="submit" text="Opdracht aanmaken"></nldd-button>
-        <nldd-button variant="secondary" type="button" id="assignment-cancel-btn" text="Annuleren" data-cancel-url="{{ url('assignment-list') }}"></nldd-button>
+    <fieldset class="wies-fieldset">
+      <legend class="wies-fieldset__legend">Opdrachtgegevens</legend>
+      {{ form.name.as_field_group() }}
+      {{ form.extra_info.as_field_group() }}
+      <div class="assignment-form-row">
+        {{ form.start_date.as_field_group() }}
+        {{ form.end_date.as_field_group() }}
       </div>
+      {{ form.owner.as_field_group() }}
+    </fieldset>
+    <fieldset class="wies-fieldset">
+      <legend class="wies-fieldset__legend">
+        Opdrachtgever(s) <span class="wies-fieldset__hint">(voeg minimaal 1 opdrachtgever toe)</span>
+      </legend>
+      {% for error in form.organizations.errors %}
+        <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
+      {% endfor %}
+      {{ form.organizations.as_widget() }}
+    </fieldset>
+    <fieldset class="wies-fieldset" id="diensten">
+      <legend class="wies-fieldset__legend">
+        Team <span class="wies-fieldset__hint">(voeg minimaal 1 aanvraag of plaatsing toe)</span>
+      </legend>
+      {% with formset=service_formset, extra_errors=form.non_field_errors() %}
+        {% include "parts/assignment_services_form.html" %}
+      {% endwith %}
+    </fieldset>
+    <div style="display: flex; gap: 0.5rem;">
+      <nldd-button variant="primary" type="submit" text="Opdracht aanmaken"></nldd-button>
+      <nldd-button variant="secondary" type="button" id="assignment-cancel-btn" text="Annuleren" data-cancel-url="{{ url('assignment-list') }}"></nldd-button>
+    </div>
   </form>
   </nldd-form>
   </nldd-container>

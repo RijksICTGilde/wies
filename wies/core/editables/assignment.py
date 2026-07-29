@@ -12,12 +12,12 @@ from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.fields import OrganizationsField
-from wies.core.widgets import ComboBoxSelect
 from wies.core.inline_edit import Editable, EditableCollection, EditableGroup, EditableSet
 from wies.core.models import Assignment, AssignmentOrganizationUnit, Colleague, Skill
 from wies.core.placement_visibility import LABELS, evaluate
 from wies.core.services.assignments import apply_services_to_assignment, extract_services_data
 from wies.core.services.urls import current_page_path
+from wies.core.widgets import ComboBoxSelect
 
 
 def _bdm_queryset():

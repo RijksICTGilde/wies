@@ -11,12 +11,12 @@
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% set _tiles = [
-        (usage.mau, "Maandelijks Actieve Gebruikers (30 dagen)"),
-        (usage.wau, "Wekelijks Actieve Gebruikers (7 dagen)"),
-        (usage.total_ever, "Ooit ingelogd"),
-        (usage.total_logins_90d, "Totaal logins (90 dagen)"),
-        (usage.failures_30d, "Mislukte logins (30 dagen)"),
-      ] %}
+    (usage.mau, "Maandelijks Actieve Gebruikers (30 dagen)"),
+    (usage.wau, "Wekelijks Actieve Gebruikers (7 dagen)"),
+    (usage.total_ever, "Ooit ingelogd"),
+    (usage.total_logins_90d, "Totaal logins (90 dagen)"),
+    (usage.failures_30d, "Mislukte logins (30 dagen)"),
+  ] %}
   <nldd-collection layout="grid">
   {% for value, label in _tiles %}
     <nldd-card accessible-label="{{ label }}: {{ value }}">

@@ -10,10 +10,7 @@
     {% endif %}
   {% endfor %}
 {% endfor %}
-<nldd-token-field name="{{ widget.name }}" values="{{ selected|join(',') }}" placeholder="{{ widget.attrs.placeholder|default('Toevoegen…') }}"
-{% if widget.attrs['accessible-label'] %}accessible-label="{{ widget.attrs['accessible-label'] }}"{% endif %}
-{% if widget.attrs.required %}required{% endif %}
->
+<nldd-token-field name="{{ widget.name }}" values="{{ selected|join(',') }}" placeholder="{{ widget.attrs.placeholder|default('Toevoegen…') }}" {% if widget.attrs['accessible-label'] %}accessible-label="{{ widget.attrs['accessible-label'] }}"{% endif %} {% if widget.attrs.required %}required{% endif %}>
 <nldd-menu variant="listbox">
 {% for group_name, group_choices, group_index in widget.optgroups %}
   {% for option in group_choices %}

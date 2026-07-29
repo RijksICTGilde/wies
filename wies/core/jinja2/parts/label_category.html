@@ -1,10 +1,7 @@
 {# De toevoegrij onderaan elke categorie: opent dezelfde sheet als de knop in
    de toolbar, met deze categorie al gekozen. #}
 {% macro add_label_row(category) %}
-  <nldd-list-item button
-                  hx-get="{{ url('label-form-create') }}?categorie={{ category.pk }}"
-                  hx-target="#labelFormModal"
-                  hx-swap="innerHTML">
+  <nldd-list-item button hx-get="{{ url('label-form-create') }}?categorie={{ category.pk }}" hx-target="#labelFormModal" hx-swap="innerHTML">
   <nldd-text-cell text="Label aan {{ category.name }} toevoegen…" color="accent"></nldd-text-cell>
   </nldd-list-item>
 {% endmacro %}

@@ -5,7 +5,9 @@
         hx-swap="outerHTML">
     {# Concurrency-token (#483): meegestuurd zodat de view bij opslaan kan zien
        of de rijen ondertussen door iemand anders zijn gewijzigd. #}
-    <input type="hidden" name="_concurrency_token" value="{{ concurrency_token }}">
+    <input type="hidden"
+           name="_concurrency_token"
+           value="{{ concurrency_token }}">
     {% include editable.form_template %}
     {# role="alert": HTMX swapt dit formulier in; zonder live region kondigt een
        screenreader de vastgehouden opslag (#483) niet aan. #}

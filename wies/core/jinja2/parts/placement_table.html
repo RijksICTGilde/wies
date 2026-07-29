@@ -5,13 +5,9 @@ request the list rides along as an out-of-band swap. #}
 {# Leeg is een boodschap, geen lege lijst. Beide takken dragen hetzelfde id,
 zodat de OOB-swap ze in beide richtingen kan verwisselen. #}
 {% if paginator.count %}
-  <nldd-list id="placement-list" variant="simple" accessible-label="Wie zit waar"
-  {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}
-  >
+  <nldd-list id="placement-list" variant="simple" accessible-label="Wie zit waar" {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/placement_table_rows.html" %}
   </nldd-list>
 {% else %}
-  <nldd-inline-dialog id="placement-list" icon="magnifier" text="Geen personen gevonden" supporting-text="Pas de filters of zoekopdracht aan."
-  {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}
-  ></nldd-inline-dialog>
+  <nldd-inline-dialog id="placement-list" icon="magnifier" text="Geen personen gevonden" supporting-text="Pas de filters of zoekopdracht aan." {% if request.headers.get("HX-Request") %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
 {% endif %}

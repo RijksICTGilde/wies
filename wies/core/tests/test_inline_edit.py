@@ -1509,8 +1509,7 @@ class ServicesRenderChangeUnitTests(TestCase):
         }
         assert _services_render_change(change) == {
             "text": (
-                "de periode van Python (Jan) van 01-01-2026 t/m 30-06-2026"
-                " naar 01-02-2026 t/m 30-06-2026 gewijzigd"
+                "de periode van Python (Jan) van 01-01-2026 t/m 30-06-2026 naar 01-02-2026 t/m 30-06-2026 gewijzigd"
             ),
         }
 

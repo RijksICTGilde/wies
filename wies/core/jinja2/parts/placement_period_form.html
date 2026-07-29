@@ -14,22 +14,20 @@
      wordt door de bundel-CSS overruled. De checkbox hieronder zet de waarde. #}
   <div hidden>{{ form.period_source.as_widget() }}</div>
   <nldd-form-field label="Periode">
-    <nldd-checkbox-field id="placement-inherit-period"
-                         label="Neem opdrachtperiode over"
-                         {% if form.period_source.value() == "SERVICE" %}checked{% endif %}></nldd-checkbox-field>
+  <nldd-checkbox-field id="placement-inherit-period" label="Neem opdrachtperiode over" {% if form.period_source.value() == "SERVICE" %}checked{% endif %}></nldd-checkbox-field>
   </nldd-form-field>
   {% set start_errors = wire_field_errors(form.specific_start_date) %}
   <nldd-form-field label="{{ form.specific_start_date.label }}">
-    {{ form.specific_start_date.as_widget() }}
-    {% for error in form.specific_start_date.errors %}
-      <nldd-form-field-error-text id="{{ start_errors[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
-    {% endfor %}
+  {{ form.specific_start_date.as_widget() }}
+  {% for error in form.specific_start_date.errors %}
+    <nldd-form-field-error-text id="{{ start_errors[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
   </nldd-form-field>
   {% set end_errors = wire_field_errors(form.specific_end_date) %}
   <nldd-form-field label="{{ form.specific_end_date.label }}">
-    {{ form.specific_end_date.as_widget() }}
-    {% for error in form.specific_end_date.errors %}
-      <nldd-form-field-error-text id="{{ end_errors[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
-    {% endfor %}
+  {{ form.specific_end_date.as_widget() }}
+  {% for error in form.specific_end_date.errors %}
+    <nldd-form-field-error-text id="{{ end_errors[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
+  {% endfor %}
   </nldd-form-field>
 </div>

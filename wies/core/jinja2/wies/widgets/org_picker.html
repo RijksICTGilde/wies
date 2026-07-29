@@ -10,7 +10,7 @@
   {# Eerst de gekozen opdrachtgevers, dan pas de knop om er een toe te voegen. #}
   <div id="assignment-org-selections"></div>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-  <nldd-button id="assignment-org-trigger-btn" variant="secondary" start-icon="plus" text="Opdrachtgever toevoegen" hx-get="{{ url("client-modal") }}?count_mode=none" hx-target="#assignment-org-modal-container" hx-swap="innerHTML" hx-params="none" hx-push-url="false"></nldd-button>
+  <nldd-button id="assignment-org-trigger-btn" variant="secondary" start-icon="plus" text="Opdrachtgever toevoegen" hx-get="{{ url('client-modal') }}?count_mode=none" hx-target="#assignment-org-modal-container" hx-swap="innerHTML" hx-params="none" hx-push-url="false"></nldd-button>
   <div id="assignment-org-inputs">
     {% if selections %}
       <input type="hidden"

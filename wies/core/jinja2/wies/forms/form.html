@@ -3,6 +3,6 @@
    nesten die twee — dat mag: de binnenste bepaalt de afstand tussen de velden,
    de buitenste die tot de knoppen. #}
 <nldd-form>
-  {% for field, field_errors in fields %}{{ field.as_field_group() }}{% endfor %}
-  {% for field in hidden_fields %}{{ field }}{% endfor %}
+{% for field, field_errors in fields %}{{ field.as_field_group() }}{% endfor %}
+{% for field in hidden_fields %}{{ field }}{% endfor %}
 </nldd-form>

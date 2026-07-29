@@ -2,7 +2,7 @@
   {% set clients = placement.service.assignment.sorted_clients %} {% set client_label = clients[0].organization.label or clients[0].organization.name if clients else "" %}
   {% if clients|length > 1 %}
     {% set client_label = client_label ~ " (+" ~
-        (clients|length - 1) ~ ")" %}
+    (clients|length - 1) ~ ")" %}
   {% endif %}
   {# href makes nldd-list-item render
 its interactive anchor wrapper (hover/focus feedback + keyboard); htmx

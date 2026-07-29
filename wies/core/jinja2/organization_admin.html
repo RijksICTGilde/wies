@@ -11,10 +11,7 @@
      data-label/-abbr voeden admin_org_search.js. #}
   {% macro render_row(node, depth) %}
     {# Geen expanded-attribuut = ingeklapt; admin_org_search.js zet hem om. #}
-    <nldd-list-item slot="children"
-                    {% if node.tree_children %}button{% endif %}
-                    data-label="{{ (node.label or node.name)|lower }}"
-                    {% if node.abbreviations %}data-abbr="{{ node.abbreviations|join(',')|lower }}"{% endif %}>
+    <nldd-list-item slot="children" {% if node.tree_children %}button{% endif %} data-label="{{ (node.label or node.name)|lower }}" {% if node.abbreviations %}data-abbr="{{ node.abbreviations|join(',') |lower }}"{% endif %}>
     {% for _ in range(depth) %}<nldd-spacer-cell size="16"></nldd-spacer-cell>{% endfor %}
     {% if node.tree_children %}
       <nldd-icon-cell disclosure size="20">
@@ -38,7 +35,10 @@
   </nldd-toolbar-item>
   </nldd-toolbar>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  <p id="org-search-empty" class="wies-text-secondary" style="display: none;" hidden>Geen organisaties gevonden.</p>
+  <p id="org-search-empty"
+     class="wies-text-secondary"
+     style="display: none"
+     hidden>Geen organisaties gevonden.</p>
   <nldd-list id="org-tree-root" type="tree" accessible-label="Organisaties">
   {% for type_name, units in type_groups %}
     <nldd-list-item button expanded data-label="{{ type_name|lower }}" data-org-group>

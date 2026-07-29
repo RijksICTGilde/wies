@@ -9,9 +9,7 @@
 <nldd-radio-button-group name="{{ widget.name }}">
 {% for group_name, group_choices, group_index in widget.optgroups %}
   {% for option_widget in group_choices %}
-    <nldd-radio-button-field value="{{ option_widget.value }}" label="{{ option_widget.label }}"
-    {% if option_widget.selected %}checked{% endif %}
-    ></nldd-radio-button-field>
+    <nldd-radio-button-field value="{{ option_widget.value }}" label="{{ option_widget.label }}" {% if option_widget.selected %}checked{% endif %}></nldd-radio-button-field>
   {% endfor %}
 {% endfor %}
 </nldd-radio-button-group>

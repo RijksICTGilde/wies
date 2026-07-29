@@ -14,13 +14,9 @@
 {% set error_ids = wire_field_errors(field) %}
 {% set reflecting_widgets = ["TextInput", "EmailInput", "PasswordInput", "NumberInput", "Textarea", "DateInput"] %}
 {% set reflects_invalid = field.field.widget.__class__.__name__ in reflecting_widgets %}
-<nldd-form-field
-{% if field.label %}label="{{ field.label }}"{% endif %}
-{% if not field.field.required and not field.field.widget.attrs.get("hide-optional") %}optional{% endif %}
->
+<nldd-form-field {% if field.label %}label="{{ field.label }}"{% endif %} {% if not field.field.required and not field.field.widget.attrs.get("hide-optional") %}optional{% endif %}>
 {{ field }}
 {% for error in field.errors %}
-  <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}"
-                              {% if not reflects_invalid %}invalid{% endif %}>{{ error }}</nldd-form-field-error-text>
+  <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}" {% if not reflects_invalid %}invalid{% endif %}>{{ error }}</nldd-form-field-error-text>
 {% endfor %}
 </nldd-form-field>

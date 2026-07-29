@@ -29,8 +29,7 @@
     <nldd-list-item>
     <nldd-text-cell width="120px" text="{{ 'Jouw rol' if entry.services|length == 1 else 'Rol' }}"></nldd-text-cell>
     <nldd-spacer-cell size="12"></nldd-spacer-cell>
-    <nldd-text-cell text="{{ service.skill.name if service.skill else '–' }}"
-                    supporting-text="{{ service.description or '' }}"></nldd-text-cell>
+    <nldd-text-cell text="{{ service.skill.name if service.skill else '–' }}" supporting-text="{{ service.description or '' }}"></nldd-text-cell>
     </nldd-list-item>
   {% endfor %}
   </nldd-list>
@@ -51,20 +50,10 @@
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   <nldd-container layout="wrap" gap="8">
   {% if entry.user_can_edit %}
-    <nldd-button variant="secondary"
-                 size="sm"
-                 start-icon="edit"
-                 text="Wijzigen"
-                 hx-get="{{ url('onboarding-assignment-edit', args=[assignment.id]) }}"
-                 hx-target="#onboarding-detail"
-                 hx-swap="innerHTML"></nldd-button>
+    <nldd-button variant="secondary" size="sm" start-icon="edit" text="Wijzigen" hx-get="{{ url('onboarding-assignment-edit', args=[assignment.id]) }}" hx-target="#onboarding-detail" hx-swap="innerHTML"></nldd-button>
   {% endif %}
   {% if assignment.owner and entry.owner_mailto %}
-    <nldd-button variant="secondary"
-                 size="sm"
-                 start-icon="envelope"
-                 text="E-mail {{ assignment.owner.name }}"
-                 href="{{ entry.owner_mailto }}"></nldd-button>
+    <nldd-button variant="secondary" size="sm" start-icon="envelope" text="E-mail {{ assignment.owner.name }}" href="{{ entry.owner_mailto }}"></nldd-button>
   {% endif %}
   </nldd-container>
   </nldd-box>

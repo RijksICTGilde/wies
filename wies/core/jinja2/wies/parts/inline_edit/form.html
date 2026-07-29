@@ -10,15 +10,14 @@
         hx-post="{{ edit_url }}"
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
         hx-target="#{{ target }}"
-        {# In bare-modus blijft het veld open staan: de omliggende flow (de
-           onboarding) dient het formulier in bij het verlaten van de stap, en
-           wie terugbladert hoort zijn velden terug te zien zoals hij ze
-           achterliet -- niet als leesweergave. #}
+        {# In bare-modus blijft het veld open staan: de omliggende flow (de onboarding) dient het formulier in bij het verlaten van de stap, en wie terugbladert hoort zijn velden terug te zien zoals hij ze achterliet -- niet als leesweergave. #}
         hx-swap="{{ 'none' if bare else 'outerHTML' }}">
     {# Concurrency-token (#483): bij opslaan leest de view dit terug en vergelijkt
        het met de huidige waarden onder select_for_update. Ontbreekt het, dan telt
        de POST als conflict — vandaar dat elk inline-formulier het meestuurt. #}
-    <input type="hidden" name="_concurrency_token" value="{{ concurrency_token }}">
+    <input type="hidden"
+           name="_concurrency_token"
+           value="{{ concurrency_token }}">
     {# Een group mag de veldenloop vervangen via form_template; het form-element,
        token, errors, alert en knoppen blijven hier (zie #483). #}
     {% if editable.form_template %}

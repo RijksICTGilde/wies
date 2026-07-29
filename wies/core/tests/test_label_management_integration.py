@@ -212,14 +212,10 @@ class LabelManagementIntegrationTest(TestCase):
         duplicate = Label.objects.create(name="Python", category=doomed_category)
 
         user = User.objects.create_user(email="dup@rijksoverheid.nl", first_name="Dup", last_name="User")
-        colleague = Colleague.objects.create(
-            user=user, name="Dup User", email="dup@rijksoverheid.nl", source="wies"
-        )
+        colleague = Colleague.objects.create(user=user, name="Dup User", email="dup@rijksoverheid.nl", source="wies")
         colleague.labels.add(duplicate)
 
-        response = self.client.post(
-            reverse("label-category-delete", kwargs={"pk": doomed_category.id}), follow=True
-        )
+        response = self.client.post(reverse("label-category-delete", kwargs={"pk": doomed_category.id}), follow=True)
         assert response.status_code == 200
 
         assert not Label.objects.filter(pk=duplicate.pk).exists()

@@ -27,9 +27,7 @@
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% if categories %}
     {% for category in categories %}
-      <div id="label_category_{{ category.id }}">
-        {% include "parts/label_category.html" %}
-      </div>
+      <div id="label_category_{{ category.id }}">{% include "parts/label_category.html" %}</div>
       {% if not loop.last %}<nldd-spacer size="32" direction="vertical"></nldd-spacer>{% endif %}
     {% endfor %}
   {% else %}

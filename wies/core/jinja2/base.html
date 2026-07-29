@@ -42,12 +42,8 @@
     {% block header %}
       <nldd-top-navigation-bar slot="header" width="1920px" logo-title="Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}">
       <nldd-menu-bar slot="global" accessible-label="Hoofdnavigatie">
-      <nldd-menu-bar-item text="Wie zit waar?" href="{{ url('home') }}"
-      {% if request.path == '/' %}current{% endif %}
-      ></nldd-menu-bar-item>
-      <nldd-menu-bar-item text="Aanvragen" href="{{ url('assignment-list') }}"
-      {% if '/opdrachten/' in request.path %}current{% endif %}
-      ></nldd-menu-bar-item>
+      <nldd-menu-bar-item text="Wie zit waar?" href="{{ url('home') }}" {% if request.path == '/' %}current{% endif %}></nldd-menu-bar-item>
+      <nldd-menu-bar-item text="Aanvragen" href="{{ url('assignment-list') }}" {% if '/opdrachten/' in request.path %}current{% endif %}></nldd-menu-bar-item>
       </nldd-menu-bar>
       {% include "parts/utility_menu.html" %}
       </nldd-top-navigation-bar>

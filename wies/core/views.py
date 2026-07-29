@@ -46,10 +46,10 @@ from wies.rijksauth.services.usage import get_usage_stats
 from .forms import (
     CATEGORY_COLOR_CHOICES,
     AssignmentCreateForm,
-    ProfileNameForm,
     LabelCategoryForm,
     LabelCategoryFormSet,
     LabelForm,
+    ProfileNameForm,
     ServiceFormSet,
     UserForm,
 )
@@ -172,11 +172,7 @@ def _build_assignment_panel_data(assignment, request):
         # toegesneden ("... jou en de Business Manager" / "... jou en de
         # consultant"), dus alleen de eerste letter hoeft mee te buigen.
         "team_privacy_note": next(
-            (
-                note[0].lower() + note[1:]
-                for row in team_rows
-                if (note := row.get("privacy_warning_text"))
-            ),
+            (note[0].lower() + note[1:] for row in team_rows if (note := row.get("privacy_warning_text"))),
             "",
         ),
         "user_can_edit": bool(_assignment_edit_specs(assignment, request.user)),
@@ -406,9 +402,7 @@ def _build_placement_panel_data(placement, request, *, visibility=None):
     # zichtbaarheidsregels als het collegapaneel, want het is dezelfde bron.
     viewer = getattr(request.user, "colleague", None)
     other_assignments = [
-        entry
-        for entry in _get_colleague_assignments(request, colleague, viewer)
-        if entry["id"] != assignment.id
+        entry for entry in _get_colleague_assignments(request, colleague, viewer) if entry["id"] != assignment.id
     ]
 
     return {
@@ -1593,9 +1587,7 @@ class UserListView(PermissionRequiredMixin, ListView):
         # het rijmenu de sheet hier opent in plaats van naar de lijstpagina te
         # springen. Bij een directe load rendert het paneel server-side mee.
         panel_colleague = self._panel_colleague()
-        context["panel_data"] = (
-            _build_colleague_panel_data(panel_colleague, self.request) if panel_colleague else None
-        )
+        context["panel_data"] = _build_colleague_panel_data(panel_colleague, self.request) if panel_colleague else None
 
         context["search_field"] = "zoek"
         context["search_placeholder"] = "Zoek op naam of email..."
@@ -2895,7 +2887,9 @@ def _attach_audit_render_data(event, obj, request) -> bool:
     # is: dat is een gewoon tekstveld dat alleen mag doorlopen (de opdrachtnaam),
     # en dan leest de zin "van X naar Y" prettiger dan twee blokken.
     widget = getattr(spec, "widget", None)
-    is_textarea = isinstance(widget, forms.Textarea) or (isinstance(widget, type) and issubclass(widget, forms.Textarea))
+    is_textarea = isinstance(widget, forms.Textarea) or (
+        isinstance(widget, type) and issubclass(widget, forms.Textarea)
+    )
     rows = getattr(widget, "attrs", {}).get("rows", 3) if not isinstance(widget, type) else 3
     if is_textarea and int(rows or 3) > 1:
         event.render_kind = "textarea"
@@ -4352,7 +4346,9 @@ def _apply_team_change(request, assignment, services_data):
     with transaction.atomic():
         apply_services_to_assignment(assignment, services_data)
         after = spec.audit_state(assignment) if spec.audit_state else None
-        _emit_inline_edit_audit_event(AssignmentEditables, spec, assignment, before, after, request.user, request=request)
+        _emit_inline_edit_audit_event(
+            AssignmentEditables, spec, assignment, before, after, request.user, request=request
+        )
 
 
 def _build_assignment_member_panel_data(assignment, request):
@@ -4434,9 +4430,7 @@ def assignment_member_edit_view(request, pk):
 
     edited_ids = {int(row["id"]) for row in edited if row.get("id")}
     others = [
-        _initial_row_to_services_data(row)
-        for row in _services_initial(assignment)
-        if row["id"] not in edited_ids
+        _initial_row_to_services_data(row) for row in _services_initial(assignment) if row["id"] not in edited_ids
     ]
     try:
         _apply_team_change(request, assignment, others + edited)
@@ -4470,9 +4464,7 @@ def assignment_member_delete_view(request, pk, service_id):
     services_data = [_initial_row_to_services_data(row) for row in rows if row["id"] != service_id]
     _apply_team_change(request, assignment, services_data)
 
-    return_path = _safe_return_path(
-        request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.id)
-    )
+    return_path = _safe_return_path(request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.id))
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
     return response

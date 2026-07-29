@@ -68,15 +68,11 @@ page flow. HTMX swaps the results line (#results) and OOB-swaps the grid. #}
 {# Leeg is een boodschap, geen lege grid. Beide takken dragen hetzelfde id,
 zodat de OOB-swap ze in beide richtingen kan verwisselen. #}
 {% if paginator.count %}
-  <nldd-collection id="assignment-card-grid" layout="grid"
-  {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}
-  >
+  <nldd-collection id="assignment-card-grid" layout="grid" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/assignment_card_rows.html" %}
   </nldd-collection>
 {% else %}
-  <nldd-inline-dialog id="assignment-card-grid" icon="magnifier" text="Geen opdrachten gevonden" supporting-text="Pas de filters of zoekopdracht aan."
-  {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}
-  ></nldd-inline-dialog>
+  <nldd-inline-dialog id="assignment-card-grid" icon="magnifier" text="Geen opdrachten gevonden" supporting-text="Pas de filters of zoekopdracht aan." {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}></nldd-inline-dialog>
 {% endif %}
 {% if render_filter_fields_oob %}
   {# The form carries the oob attribute itself: a wrapping div would replace the

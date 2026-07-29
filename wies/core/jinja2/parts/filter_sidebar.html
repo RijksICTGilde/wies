@@ -3,9 +3,7 @@ checkbox-rijen. De rij zelf is de checkbox (nldd-list-item[checkbox]); de
 nldd-checkbox erin is puur visueel. De waarden die het formulier submit staan
 als verborgen inputs achter de lijst — filter_interactions.js spiegelt de rij
 daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
-<nldd-container id="filter-panel" slot="sidebar" padding="16"
-{% if filter_form_oob %}hx-swap-oob="outerHTML"{% endif %}
->
+<nldd-container id="filter-panel" slot="sidebar" padding="16" {% if filter_form_oob %}hx-swap-oob="outerHTML"{% endif %}>
 <form id="filter-form"
       hx-get="{{ filter_target_url }}"
       hx-target="#results"
@@ -47,13 +45,9 @@ daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
       {% if filter_group.top_options %}
         <nldd-list variant="simple" accessible-label="{{ filter_group.label }}" data-org-quick>
         {% for option in filter_group.top_options %}
-          <nldd-list-item checkbox
-          {% if option.selected %}checked{% endif %}
-          data-org-param="{{ option.param }}" data-org-label="{{ option.label }}" data-value="{{ option.value }}">
+          <nldd-list-item checkbox {% if option.selected %}checked{% endif %} data-org-param="{{ option.param }}" data-org-label="{{ option.label }}" data-value="{{ option.value }}">
           <nldd-cell>
-          <nldd-checkbox aria-hidden="true" tabindex="-1"
-          {% if option.selected %}checked{% endif %}
-          ></nldd-checkbox>
+          <nldd-checkbox aria-hidden="true" tabindex="-1" {% if option.selected %}checked{% endif %}></nldd-checkbox>
           </nldd-cell>
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-text-cell text="{{ option.label }}"></nldd-text-cell>
@@ -77,7 +71,7 @@ daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
       {% set ns.rendered = true %}
     {% elif filter_group.type == 'select-multi' %}
       {% set top_options = filter_group.top_options if filter_group.top_options is defined else
-            filter_group.options|selectattr('value')|list %}
+      filter_group.options|selectattr('value')|list %}
       {% if top_options %}
         {% if ns.rendered %}
           <nldd-spacer size="24"></nldd-spacer>
@@ -89,13 +83,9 @@ daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
         <nldd-spacer size="4"></nldd-spacer>
         <nldd-list variant="simple" accessible-label="{{ filter_group.label }}" data-wies-fieldset data-name="{{ filter_group.name }}" data-group-id="{{ filter_group.group_id }}">
         {% for option in top_options %}
-          <nldd-list-item checkbox
-          {% if option.value in filter_group.selected_values %}checked{% endif %}
-          data-value="{{ option.value }}">
+          <nldd-list-item checkbox {% if option.value in filter_group.selected_values %}checked{% endif %} data-value="{{ option.value }}">
           <nldd-cell>
-          <nldd-checkbox aria-hidden="true" tabindex="-1"
-          {% if option.value in filter_group.selected_values %}checked{% endif %}
-          ></nldd-checkbox>
+          <nldd-checkbox aria-hidden="true" tabindex="-1" {% if option.value in filter_group.selected_values %}checked{% endif %}></nldd-checkbox>
           </nldd-cell>
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-text-cell text="{{ option.label }}"></nldd-text-cell>

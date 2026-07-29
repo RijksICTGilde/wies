@@ -32,9 +32,7 @@
       <nldd-list-item size="sm">
       <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      <nldd-text-cell size="sm" text="{{ assignment.start_date|datum_nl("b Y") if assignment.start_date else '' }}
-      {% if assignment.end_date %} – {{ assignment.end_date|datum_nl("b Y") }}{% endif %}
-      "></nldd-text-cell>
+      <nldd-text-cell size="sm" text="{{ assignment.start_date|datum_nl('b Y') if assignment.start_date else '' }} {% if assignment.end_date %} – {{ assignment.end_date|datum_nl("b Y") }}{% endif %} "></nldd-text-cell>
       </nldd-list-item>
     {% endif %}
     </nldd-list>

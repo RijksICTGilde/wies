@@ -136,7 +136,9 @@ document.addEventListener("click", function (e) {
     .composedPath()
     .find(
       (el) =>
-        el instanceof Element && el.matches && el.matches("[data-dismiss-modal]"),
+        el instanceof Element &&
+        el.matches &&
+        el.matches("[data-dismiss-modal]"),
     );
   if (!btn) return;
   const dialog = btn.closest("nldd-modal-dialog");

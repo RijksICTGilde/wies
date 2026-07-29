@@ -3,8 +3,14 @@
 // zit in een shadow root) en navigeren. Extern bestand i.p.v. inline <script>,
 // zodat de CSP script-src 'self' kan blijven (geen 'unsafe-inline').
 document.addEventListener("click", (e) => {
-  const item = e.composedPath().find(
-    (el) => el instanceof Element && el.localName === "nldd-menu-item" && el.dataset && el.dataset.href,
-  );
+  const item = e
+    .composedPath()
+    .find(
+      (el) =>
+        el instanceof Element &&
+        el.localName === "nldd-menu-item" &&
+        el.dataset &&
+        el.dataset.href,
+    );
   if (item) window.location.href = item.dataset.href;
 });

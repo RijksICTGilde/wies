@@ -8,13 +8,7 @@
    daar zit ingevulde informatie in. Sluit en Escape doen dat wel.
    height: alle stappen even hoog, anders springt het venster bij elke stap. De
    langste stap (drie opdrachten) scrolt binnen die hoogte. #}
-<nldd-window id="onboardingWizard"
-             centered
-             no-light-dismiss
-             width="768px"
-             height="min(640px, 90vh)"
-             accessible-label="Welkom bij Wies"
-             data-onboarding>
+<nldd-window id="onboardingWizard" centered no-light-dismiss width="768px" height="min(640px, 90vh)" accessible-label="Welkom bij Wies" data-onboarding>
 <nldd-page sticky-header>
 <nldd-top-title-bar slot="header" text="Welkom bij Wies" dismiss-text="Sluit"></nldd-top-title-bar>
 <nldd-container data-onboarding-chrome padding="16">
@@ -113,10 +107,7 @@
 {# Alle knoppen staan na de stappen, dus onder de inhoud van de stap die
    zichtbaar is; onboarding.js toont er telkens een. Terug ga je met de knop in
    de titelbalk. #}
-<nldd-container data-onboarding-nav
-                layout="row"
-                horizontal-alignment="right"
-                padding-top="24">
+<nldd-container data-onboarding-nav layout="row" horizontal-alignment="right" padding-top="24">
 <nldd-button data-onboarding-next variant="primary" end-icon="chevron-right" text="Volgende"></nldd-button>
 </nldd-container>
 <nldd-container data-onboarding-finish-wrap padding-top="24" hidden>
@@ -140,4 +131,6 @@
       action="{{ url('onboarding-complete') }}"
       hx-post="{{ url('onboarding-complete') }}"
       hx-swap="none"
-      hidden>{{ get_csrf_hidden_input(request) }}</form>
+      hidden>
+  {{ get_csrf_hidden_input(request) }}
+</form>

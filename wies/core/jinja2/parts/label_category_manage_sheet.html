@@ -17,14 +17,24 @@
   {{ get_csrf_hidden_input(request) }}
   {# Handgeschreven management form: Django's eigen hidden-widget template is
      een DTL-template en die kent deze Jinja2-renderer niet. #}
-  <input type="hidden" name="{{ formset.management_form.TOTAL_FORMS.html_name }}" value="{{ formset.total_form_count() }}">
-  <input type="hidden" name="{{ formset.management_form.INITIAL_FORMS.html_name }}" value="{{ formset.initial_form_count() }}">
-  <input type="hidden" name="{{ formset.management_form.MIN_NUM_FORMS.html_name }}" value="0">
-  <input type="hidden" name="{{ formset.management_form.MAX_NUM_FORMS.html_name }}" value="1000">
+  <input type="hidden"
+         name="{{ formset.management_form.TOTAL_FORMS.html_name }}"
+         value="{{ formset.total_form_count() }}">
+  <input type="hidden"
+         name="{{ formset.management_form.INITIAL_FORMS.html_name }}"
+         value="{{ formset.initial_form_count() }}">
+  <input type="hidden"
+         name="{{ formset.management_form.MIN_NUM_FORMS.html_name }}"
+         value="0">
+  <input type="hidden"
+         name="{{ formset.management_form.MAX_NUM_FORMS.html_name }}"
+         value="1000">
   <nldd-list accessible-label="Categorieën">
   {% for form in formset %}
     <nldd-list-item data-category-row>
-    <input type="hidden" name="{{ form.add_prefix('id') }}" value="{{ form.instance.pk or '' }}">
+    <input type="hidden"
+           name="{{ form.add_prefix('id') }}"
+           value="{{ form.instance.pk or '' }}">
     <nldd-cell width="full">{{ form.name }}</nldd-cell>
     <nldd-spacer-cell size="12"></nldd-spacer-cell>
     {# Vaste kolombreedte: "Blauw"/"Groen" zijn de langste woorden, met wat
@@ -32,12 +42,7 @@
     <nldd-cell width="112px">{{ form.color }}</nldd-cell>
     <nldd-spacer-cell size="12"></nldd-spacer-cell>
     <nldd-cell width="fit-content">
-    <nldd-icon-button variant="destructive"
-                      icon="delete"
-                      text="Categorie {{ form.instance.name }} verwijderen"
-                      hx-get="{{ url('label-category-delete', kwargs={'pk': form.instance.pk}) }}"
-                      hx-target="#categoryDeleteModal"
-                      hx-swap="innerHTML"></nldd-icon-button>
+    <nldd-icon-button variant="destructive" icon="delete" text="Categorie {{ form.instance.name }} verwijderen" hx-get="{{ url('label-category-delete', kwargs={'pk': form.instance.pk}) }}" hx-target="#categoryDeleteModal" hx-swap="innerHTML"></nldd-icon-button>
     </nldd-cell>
     </nldd-list-item>
   {% endfor %}

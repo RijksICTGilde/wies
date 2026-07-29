@@ -4,13 +4,7 @@
    simple-section zodat de regellengte leesbaar blijft. #}
 {% extends "base.html" %}
 {% block header %}
-  <nldd-top-navigation-bar slot="header"
-                           width="1920px"
-                           logo-title="Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie"
-                           website-title="Wies"
-                           website-href="{{ url('home') }}"
-                           back-href="{{ url('home') }}"
-                           back-text="Terug naar Wies">
+  <nldd-top-navigation-bar slot="header" width="1920px" logo-title="Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}" back-href="{{ url('home') }}" back-text="Terug naar Wies">
   {% include "parts/utility_menu.html" %}
   </nldd-top-navigation-bar>
 {% endblock header %}

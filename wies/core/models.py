@@ -99,7 +99,7 @@ class LabelCategory(models.Model):
         return self._NLDD_COLOR_BY_HEX.get(self.color, "neutral")
 
     @classmethod
-    def fallback(cls) -> "LabelCategory":
+    def fallback(cls) -> LabelCategory:
         """De vangnetcategorie, aangemaakt zodra er voor het eerst om gevraagd wordt."""
         category, _created = cls.objects.get_or_create(
             name=cls.FALLBACK_NAME,

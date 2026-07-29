@@ -56,12 +56,12 @@
     {% set _base_url = current_page_path(request) %}
     <nldd-list variant="box" accessible-label="Opdrachtgegevens">
     {% set _rows = [
-          ("Externe bron", "source"),
-          ("Opdrachtgevers" if panel_data.organization_count > 1 else "Opdrachtgever", "organizations"),
-          ("Periode", "period"),
-          ("Plaatsingsdatum", "created_at"),
-          ("Business Manager", "owner"),
-        ] %}
+      ("Externe bron", "source"),
+      ("Opdrachtgevers" if panel_data.organization_count > 1 else "Opdrachtgever", "organizations"),
+      ("Periode", "period"),
+      ("Plaatsingsdatum", "created_at"),
+      ("Business Manager", "owner"),
+    ] %}
     {% for row_label, row_kind in _rows %}
       {% if row_kind == "source" and panel_data.assignment.source in ("wies", "") %}
       {% elif row_kind == "created_at" and not panel_data.assignment.created_at %}
@@ -170,25 +170,25 @@
       </nldd-menu>
     {% endif %}
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
-        {% set value = panel_data.team_rows %}
-        {% set user_can_edit = panel_data.user_can_edit_team %}
-        {% include "wies/forms/displays/assignment_services.html" %}
-        {% if panel_data.user_can_edit_team %}
-          {# Bevestiging voor "Verwijderen" in het rijmenu; side_panel.js vult de
+    {% set value = panel_data.team_rows %}
+    {% set user_can_edit = panel_data.user_can_edit_team %}
+    {% include "wies/forms/displays/assignment_services.html" %}
+    {% if panel_data.user_can_edit_team %}
+      {# Bevestiging voor "Verwijderen" in het rijmenu; side_panel.js vult de
       naam en de actie-URL vanaf het gekozen menu-item en opent dit venster. #}
-          {# supporting-text wordt door side_panel.js gevuld met naam + team zodra
+      {# supporting-text wordt door side_panel.js gevuld met naam + team zodra
       het rijmenu de dialoog opent. #}
-          <nldd-modal-dialog id="team-member-delete-dialog" text="Uit het team verwijderen?" data-csrf="{{ get_csrf_token(request) }}" data-assignment-name="{{ panel_data.assignment.name }}">
-          <nldd-button slot="actions" variant="primary" text="Behoud in team" data-wies-action="team-member-delete-cancel"></nldd-button>
-          <nldd-button slot="actions" variant="destructive" text="Verwijder uit team" data-wies-action="team-member-delete-confirm"></nldd-button>
-          </nldd-modal-dialog>
-        {% endif %}
-        {% if _can_delete %}
-          <div id="assignmentDeleteModal"></div>
-        {% endif %}
-      </div>
-      {% if panel_data.show_updates_tab %}
-        <div id="tab-panel-updates" hidden></div>
-      {% endif %}
-      </nldd-simple-section>
+      <nldd-modal-dialog id="team-member-delete-dialog" text="Uit het team verwijderen?" data-csrf="{{ get_csrf_token(request) }}" data-assignment-name="{{ panel_data.assignment.name }}">
+      <nldd-button slot="actions" variant="primary" text="Behoud in team" data-wies-action="team-member-delete-cancel"></nldd-button>
+      <nldd-button slot="actions" variant="destructive" text="Verwijder uit team" data-wies-action="team-member-delete-confirm"></nldd-button>
+      </nldd-modal-dialog>
     {% endif %}
+    {% if _can_delete %}
+      <div id="assignmentDeleteModal"></div>
+    {% endif %}
+  </div>
+  {% if panel_data.show_updates_tab %}
+    <div id="tab-panel-updates" hidden></div>
+  {% endif %}
+  </nldd-simple-section>
+{% endif %}
