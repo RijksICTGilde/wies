@@ -13,12 +13,12 @@ from django.db.migrations.executor import MigrationExecutor
 from django.test import TransactionTestCase
 
 APP = "core"
-MIGRATE_FROM = "0009_errorevent"
-MIGRATE_TO = "0010_suborganization_colleague_suborganization"
+MIGRATE_FROM = "0010_event_ip_event_user_agent"
+MIGRATE_TO = "0011_suborganization_colleague_suborganization"
 
 
 class SuborganizationBackfillMigrationTest(TransactionTestCase):
-    """Drive the 0010 backfill through the real migration executor."""
+    """Drive the 0011 backfill through the real migration executor."""
 
     def _migrate(self, target):
         executor = MigrationExecutor(connection)

@@ -6,6 +6,8 @@ This files lists the changes during the lifetime of this project.
 
 - 463: (migration)(post-release actions) change "merk" to be a single select. "merk" now has its own table (`suborganization`).
 - 463: make test actions more robust (work with newer versions of node and other location of djlint)
+- 426: (migration)(post-release actions) log the client request metadata on audit and login events (BIO device logging). Removed the staff "Debug: request metadata" page
+- 426: logout events are now logged alongside logins
 - 503: fix the "Wie zit waar?", opdrachten and profiel overviews returning a 500 error when the side-panel `plaatsing`, `collega` or `opdracht` parameter contained a non-numeric value in the URL
 - 503: fix opdracht aanmaken returning a 500 error instead of a validation message when the submitted form data contained a non-numeric service count
 - 501: de opdracht-CSV-import maakt nieuwe collega's alleen nog aan als hun e-mailadres een toegestaan domein heeft (net als elders in de app); bestaande collega's (bijvoorbeeld uit OTYS) met een ander domein blijven gewoon bruikbaar.

@@ -274,6 +274,13 @@ class Event(models.Model):
     action = models.CharField(max_length=16, choices=EventAction)
     source = models.CharField(max_length=16, choices=EventSource)
     object_id = models.IntegerField(null=True, blank=True)
+    # device approximation for BIO: request metadata (best-effort, null/empty for system/sync events).
+    # ip = derived client IP (trusted hop, spoofable); forwarded_for = raw X-Forwarded-For (evidence);
+    # remote_addr = TCP peer, the only non-spoofable element; user_agent = raw header.
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    forwarded_for = models.CharField(max_length=512, blank=True, default="")
+    remote_addr = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.CharField(max_length=512, blank=True, default="")
     context = models.JSONField(default=dict, encoder=DjangoJSONEncoder)
 
     class Meta:

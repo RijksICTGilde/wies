@@ -65,7 +65,7 @@ def backfill_suborganization(apps, schema_editor):
 
 class Migration(migrations.Migration):
     dependencies = [
-        ("core", "0009_errorevent"),
+        ("core", "0010_event_ip_event_user_agent"),
     ]
 
     operations = [

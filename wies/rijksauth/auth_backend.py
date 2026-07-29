@@ -23,7 +23,7 @@ class AuthBackend(ModelBackend):
         # A token whose email is not verified upstream is never trusted, on any path.
         if not email_verified:
             logger.info("User not authenticated, email not verified.")
-            create_auth_event(email, "Login.fail", {"reason": "Email not verified"})
+            create_auth_event(email, "Login.fail", {"reason": "Email not verified"}, request=request)
             return None
 
         oidc_sub = username
@@ -54,6 +54,7 @@ class AuthBackend(ModelBackend):
             {
                 "reason": "Unknown user or email already bound to another account",
             },
+            request=request,
         )
         return None
 

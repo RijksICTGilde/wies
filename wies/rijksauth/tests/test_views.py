@@ -5,6 +5,8 @@ from django.http import HttpResponse
 from django.test import Client, TestCase
 from django.urls import reverse
 
+from wies.rijksauth.models import AuthEvent
+
 User = get_user_model()
 
 
@@ -108,19 +110,35 @@ class AuthViewsTest(TestCase):
         assert protected_response.status_code == 302
         assert protected_response.url.startswith("/inloggen/")
 
+    def test_logout_logs_auth_event(self):
+        """A logged-in user logging out records a Logout AuthEvent with their email."""
+        self.client.force_login(self.colleague)
+
+        self.client.post(reverse("logout"))
+
+        events = AuthEvent.objects.filter(name="Logout")
+        assert events.count() == 1
+        assert events.first().user_email == self.colleague.email
+
     def test_logout_when_not_logged_in(self):
         """Test logout works gracefully when user is not logged in"""
         response = self.client.post(reverse("logout"))
 
         assert response.status_code == 302
         assert response.url == "/inloggen/"
+        # No user was logged in, so nothing to log.
+        assert not AuthEvent.objects.filter(name="Logout").exists()
 
     def test_logout_rejects_get(self):
         """Logout must be POST-only: a GET (e.g. a cross-site <img src> pointing
         at the logout URL) must not be able to log the user out."""
+        self.client.force_login(self.colleague)
+
         response = self.client.get(reverse("logout"))
 
         assert response.status_code == 405
+        # A rejected GET must not log the user out, so no Logout event either.
+        assert not AuthEvent.objects.filter(name="Logout").exists()
 
     @patch("wies.rijksauth.views._get_oidc")
     def test_logout_redirects_to_keycloak_end_session(self, mock_get_oidc):
