@@ -45,6 +45,7 @@ from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
     AssignmentCreateForm,
+    ContractPeriodFormSet,
     LabelCategoryForm,
     LabelForm,
     ServiceFormSet,
@@ -1429,6 +1430,7 @@ def user_create(request):
             "parts/user_form_modal.html",
             {
                 "content": form,
+                "contract_formset": None,
                 "form_post_url": form_post_url,
                 "modal_title": modal_title,
                 "form_button_label": "Toevoegen",
@@ -1461,6 +1463,7 @@ def user_create(request):
             "parts/user_form_modal.html",
             {
                 "content": form,
+                "contract_formset": None,
                 "form_post_url": form_post_url,
                 "modal_title": modal_title,
                 "form_button_label": "Toevoegen",
@@ -1479,14 +1482,17 @@ def user_edit(request, pk):
     modal_title = "Gebruiker bewerken"
     element_id = "userFormModal"
 
-    if request.method == "GET":
-        # Return modal HTML with UserForm populated with user data
-        form = UserForm(instance=edited_user)
+    # Contract periods (exploratory BM-feature) are edited via an inline
+    # formset bound to the user's colleague, when one exists.
+    colleague = getattr(edited_user, "colleague", None)
+
+    def render_modal(form, contract_formset):
         return render(
             request,
             "parts/user_form_modal.html",
             {
                 "content": form,
+                "contract_formset": contract_formset,
                 "form_post_url": form_post_url,
                 "modal_title": modal_title,
                 "form_button_label": "Opslaan",
@@ -1497,9 +1503,22 @@ def user_edit(request, pk):
                 ),
             },
         )
+
+    if request.method == "GET":
+        # Return modal HTML with UserForm populated with user data
+        form = UserForm(instance=edited_user)
+        contract_formset = ContractPeriodFormSet(instance=colleague) if colleague else None
+        return render_modal(form, contract_formset)
     if request.method == "POST":
         form = UserForm(request.POST, instance=edited_user)
-        if form.is_valid():
+        # Only handle the formset when the modal actually submitted it; a POST
+        # without its management form (e.g. another caller) must not be blocked.
+        has_contract_data = f"{ContractPeriodFormSet().prefix}-TOTAL_FORMS" in request.POST
+        contract_formset = (
+            ContractPeriodFormSet(request.POST, instance=colleague) if (colleague and has_contract_data) else None
+        )
+        contract_valid = contract_formset.is_valid() if contract_formset else True
+        if form.is_valid() and contract_valid:
             update_user(
                 updater=request.user,
                 user=edited_user,
@@ -1510,6 +1529,8 @@ def user_edit(request, pk):
                 groups=form.cleaned_data.get("groups"),
                 request=request,
             )
+            if contract_formset:
+                contract_formset.save()
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect
             if "HX-Request" in request.headers:
@@ -1518,21 +1539,7 @@ def user_edit(request, pk):
                 return response
             return redirect("admin-users")
         # Re-render form with errors (stays in modal with HTMX)
-        return render(
-            request,
-            "parts/user_form_modal.html",
-            {
-                "content": form,
-                "form_post_url": form_post_url,
-                "modal_title": modal_title,
-                "form_button_label": "Opslaan",
-                "modal_element_id": element_id,
-                "target_element_id": element_id,
-                **get_delete_context(
-                    "user-delete", edited_user.pk, f"{edited_user.first_name} {edited_user.last_name}"
-                ),
-            },
-        )
+        return render_modal(form, contract_formset)
     return HttpResponse(status=405)
 
 

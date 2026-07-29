@@ -48,6 +48,34 @@
               </div>
             </div>
           </div>
+          {% if contract_formset is not none %}
+            {# Contracturen (exploratieve BM-functie): historie van contracturen per week #}
+            <div class="user-form-contract">
+              <c-h3>
+                Contracturen
+              </c-h3>
+              <c-paragraph>
+                Uren per week die deze collega contractueel werkt. Sluit een lopende periode af met een einddatum
+                en voeg een nieuwe rij toe bij een wijziging.
+              </c-paragraph>
+              {{ contract_formset.management_form }}
+              {% for subform in contract_formset %}
+                <div class="contract-period-row">
+                  {# Round-trip the row PK; render raw so it skips the Jinja2 form renderer
+                     (which has no template for Django's default hidden widget). #}
+                  <input type="hidden"
+                         name="{{ subform.id.html_name }}"
+                         value="{{ subform.id.value() or '' }}">
+                  {{ subform.hours_per_week.as_field_group() }}
+                  {{ subform.start_date.as_field_group() }}
+                  {{ subform.end_date.as_field_group() }}
+                  {% if subform.instance.pk %}
+                    <div class="contract-period-delete">{{ subform.DELETE.as_field_group() }}</div>
+                  {% endif %}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
         {% endif %}
       </div>
       <div class="modal-footer">

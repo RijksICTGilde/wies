@@ -9,7 +9,7 @@ from wies.core.editables.assignment import AssignmentEditables
 from wies.core.editables.user import UserEditables
 
 from .form_mixins import RvoErrorList, RvoFormMixin, RvoJinja2Renderer
-from .models import Colleague, Label, LabelCategory, Skill
+from .models import Colleague, ContractPeriod, Label, LabelCategory, Skill
 from .services.users import validate_email_domain
 from .widgets import MultiselectDropdown
 
@@ -19,6 +19,7 @@ User = get_user_model()
 
 __all__ = [
     "AssignmentCreateForm",
+    "ContractPeriodFormSet",
     "LabelCategoryForm",
     "LabelForm",
     "RvoErrorList",
@@ -159,6 +160,64 @@ class UserForm(RvoFormMixin, forms.ModelForm):
         return cleaned_data
 
 
+class ContractPeriodForm(RvoFormMixin, forms.ModelForm):
+    """One row in the contract-hours history of a colleague.
+
+    Exploratory BM-feature (branch ``explore-bm-views``); rendered as an
+    inline formset inside the edit-user modal.
+    """
+
+    class Meta:
+        model = ContractPeriod
+        fields = ["hours_per_week", "start_date", "end_date"]
+        widgets = {
+            "hours_per_week": forms.Select(choices=[("", "---")] + [(h, f"{h} uur") for h in range(1, 41)]),
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "end_date": forms.DateInput(attrs={"type": "date"}),
+        }
+
+    def clean(self):
+        cleaned = super().clean()
+        start = cleaned.get("start_date")
+        end = cleaned.get("end_date")
+        if start and end and end < start:
+            raise ValidationError({"end_date": "Einddatum moet na startdatum liggen."})
+        return cleaned
+
+
+class BaseContractPeriodFormSet(forms.models.BaseInlineFormSet):
+    """Renders contract periods in insertion order and styles the DELETE field.
+
+    The model's default ordering is ``-start_date`` (newest first, handy for
+    "current hours" lookups), but in the edit modal that makes rows jump around
+    on every save. Pin insertion order (by pk) here so a row keeps its place
+    after saving.
+    """
+
+    def get_queryset(self):
+        return super().get_queryset().order_by("id")
+
+    def add_fields(self, form, index):
+        super().add_fields(form, index)
+        if "DELETE" in form.fields:
+            form.fields["DELETE"].label = "Verwijderen"
+            # `form` is our own RvoFormMixin form; the DELETE field is added by the
+            # formset after form __init__, so this is the only hook to style it.
+            form._configure_field_for_rvo("DELETE")  # noqa: SLF001 (private member access) — see comment above
+
+
+# Inline formset binding contract periods to a colleague. Built against
+# ``instance=colleague`` in the edit-user view.
+ContractPeriodFormSet = forms.models.inlineformset_factory(
+    Colleague,
+    ContractPeriod,
+    form=ContractPeriodForm,
+    formset=BaseContractPeriodFormSet,
+    extra=1,
+    can_delete=True,
+)
+
+
 class AssignmentCreateForm(RvoFormMixin, forms.Form):
     """Full-page form for creating a new Assignment.
 
@@ -220,6 +279,14 @@ class ServiceForm(RvoFormMixin, forms.Form):
     has_custom_period = forms.BooleanField(label="Neem opdrachtperiode over", required=False, initial=True)
     placement_start_date = forms.DateField(label="Startdatum", required=False)
     placement_end_date = forms.DateField(label="Einddatum", required=False)
+    # Hours belong to the Placement; only meaningful for a placed consultant.
+    assignment_hours_per_week = forms.TypedChoiceField(
+        label="Uren per week",
+        choices=[("", "---")] + [(h, f"{h} uur") for h in range(1, 41)],
+        coerce=int,
+        empty_value=None,
+        required=False,
+    )
 
     def __init__(self, *args, skill_choices=None, **kwargs):
         super().__init__(*args, **kwargs)

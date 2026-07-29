@@ -13,6 +13,7 @@ from django.conf import settings
 
 from wies.core.editables import (
     AssignmentEditables,
+    PlacementEditables,
     ServiceEditables,
     UserEditables,
 )
@@ -150,6 +151,14 @@ def update_service_description(user, s):
     return _is_wies_sourced(s.assignment) and (
         has_permission(UPDATE, s.assignment, user) or _is_placed_on_service(user, s)
     )
+
+
+@rule(UPDATE, PlacementEditables.assignment_hours_per_week)
+def update_placement_hours(user, p):
+    """Exploratory BM-feature (branch ``explore-bm-views``): open to every
+    authenticated user so it can be demoed without permission modelling.
+    Tighten to the RIG BM-owner before this ever ships."""
+    return True
 
 
 @rule(UPDATE, UserEditables.email)

@@ -141,6 +141,7 @@ def _services_initial(assignment):
                 "has_custom_period": inherits_assignment_period,
                 "placement_start_date": effective_start,
                 "placement_end_date": effective_end,
+                "assignment_hours_per_week": placement.assignment_hours_per_week if placement else None,
                 "placement": placement,
                 "service": service,
             }
@@ -219,6 +220,8 @@ def _service_audit_row(row: dict) -> dict:
         "has_custom_period": row["has_custom_period"],
         "start_date": _fmt_date(row["placement_start_date"]),
         "end_date": _fmt_date(row["placement_end_date"]),
+        # Hours included so an hours-only edit registers as a change too.
+        "assignment_hours_per_week": row.get("assignment_hours_per_week"),
     }
 
 
@@ -243,6 +246,7 @@ def placement_audit_row(placement) -> dict:
             "has_custom_period": placement.period_source != Placement.PLACEMENT,
             "placement_start_date": placement.start_date,
             "placement_end_date": placement.end_date,
+            "assignment_hours_per_week": placement.assignment_hours_per_week,
         }
     )
 

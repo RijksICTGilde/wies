@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
-from django.core.validators import RegexValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 from django.db.models.functions import Lower
 from django.utils import timezone
@@ -120,6 +120,29 @@ class Colleague(models.Model):
         return self.name
 
 
+class ContractPeriod(models.Model):
+    """Contractuur-periode per collega, met historie.
+
+    Een collega heeft een opeenvolging van periodes zodat een wijziging
+    (bv. van 32 naar 36 uur) traceerbaar blijft. Een lege einddatum betekent
+    een lopende periode.
+    """
+
+    colleague = models.ForeignKey("Colleague", models.CASCADE, related_name="contract_periods")
+    hours_per_week = models.PositiveSmallIntegerField(
+        validators=[MinValueValidator(1), MaxValueValidator(40)],
+        verbose_name="Uren per week",
+    )
+    start_date = models.DateField(verbose_name="Startdatum")
+    end_date = models.DateField(null=True, blank=True, verbose_name="Einddatum")  # leeg = lopend
+
+    class Meta:
+        ordering = ["-start_date"]
+
+    def __str__(self):
+        return f"{self.colleague.name}: {self.hours_per_week}u ({self.start_date} - {self.end_date or 'heden'})"
+
+
 # Create your models here.
 class Assignment(models.Model):
     name = models.CharField(max_length=200)
@@ -171,6 +194,12 @@ class Placement(models.Model):
     source = models.CharField(max_length=10, choices=SOURCE_CHOICES)
     source_id = models.CharField(blank=True)
     source_url = models.URLField(blank=True)  # only for non wies
+    assignment_hours_per_week = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(1), MaxValueValidator(40)],
+        verbose_name="Uren per week op plaatsing",
+    )
 
     def __str__(self):
         return f"{self.colleague.name} - {self.service.description}"
