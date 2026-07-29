@@ -698,8 +698,10 @@ class UserImportTest(TestCase):
         self.consultant_group = Group.objects.create(name="Consultant")
         self.bdm_group = Group.objects.create(name="Business Development Manager")
 
-        # Create an existing merk to test brand reuse on import
+        # Brands referenced by import CSVs must already exist (imports never create merken).
         self.existing_suborg = Suborganization.objects.create(name="Existing Brand")
+        Suborganization.objects.create(name="Brand A")
+        Suborganization.objects.create(name="Brand B")
 
         # Create authenticated user with add_user permission
         self.auth_user = User.objects.create_user(
@@ -791,14 +793,12 @@ Jane,Smith,jane.smith@rijksoverheid.nl,Brand B,n,y,n"""
         content = response.content.decode()
         assert "Import geslaagd" in content
         assert "2" in content  # 2 users created
-        assert "Brand A" in content
-        assert "Brand B" in content
 
         # Verify users were created
         john = User.objects.get(email="john.doe@rijksoverheid.nl")
         assert john.first_name == "John"
         assert john.last_name == "Doe"
-        # Verify merk was assigned (Brand A should be created as a merk)
+        # Verify the existing merk was assigned (looked up, not created)
         assert john.colleague.suborganization is not None
         assert john.colleague.suborganization.name == "Brand A"
         assert john.groups.filter(name="Beheerder").exists()

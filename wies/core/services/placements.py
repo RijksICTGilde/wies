@@ -16,9 +16,9 @@ from wies.core.models import (
     Placement,
     Service,
     Skill,
-    Suborganization,
 )
 from wies.core.services.events import create_event
+from wies.core.services.suborganizations import get_suborganization_by_name
 from wies.core.services.users import validate_email_domain
 
 logger = logging.getLogger(__name__)
@@ -123,7 +123,7 @@ def create_assignments_from_csv(creator, csv_content: str):
                 if not brand_name:
                     return None
                 if brand_name not in suborg_mapping:
-                    suborg_mapping[brand_name], _ = Suborganization.objects.get_or_create(name=brand_name)
+                    suborg_mapping[brand_name] = get_suborganization_by_name(brand_name)
                 return suborg_mapping[brand_name]
 
             colleagues_created = 0

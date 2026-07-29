@@ -29,14 +29,6 @@
             <p class="rvo-text">
               <strong>{{ result.users_created }}</strong> gebruiker(s) geïmporteerd
             </p>
-            {% if result.suborganizations_created > 0 %}
-              <p class="rvo-text">
-                <strong>{{ result.suborganizations_created }}</strong> nieuw(e) merk(en) aangemaakt:
-              </p>
-              <ul class="rvo-list">
-                {% for suborganization_name in result.created_suborganizations %}<li>{{ suborganization_name }}</li>{% endfor %}
-              </ul>
-            {% endif %}
           </div>
           {# Warnings if any #}
           {% if result.errors and result.errors|length > 0 %}

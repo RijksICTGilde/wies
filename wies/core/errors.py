@@ -10,6 +10,14 @@ class EmailNotAvailableError(Exception):
         super().__init__(f"{email} already in use")
 
 
+class SuborganizationNotFoundError(ValueError):
+    """Raised when a brand name from imported/synced data has no matching Suborganization."""
+
+    def __init__(self, name: str):
+        self.name = name
+        super().__init__(f"Onbekend merk: '{name}'. Voeg het merk eerst toe voordat je importeert.")
+
+
 class InvalidEmailDomainError(ValidationError):
     """Raised when an email has a non-allowed domain."""
 

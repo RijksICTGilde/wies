@@ -7,9 +7,11 @@ from django.db import IntegrityError, transaction
 from django.test import Client, RequestFactory, TestCase
 from django.urls import reverse
 
+from wies.core.errors import SuborganizationNotFoundError
 from wies.core.forms import SuborganizationForm
 from wies.core.models import Assignment, Colleague, Placement, Service, Skill, Suborganization
 from wies.core.roles import setup_roles
+from wies.core.services.suborganizations import get_suborganization_by_name
 from wies.core.tests.inline_edit_helpers import post_inline_edit
 from wies.core.views import PlacementListView, UserListView
 
@@ -38,6 +40,31 @@ class SuborganizationModelTest(TestCase):
         suborganization.delete()
         colleague.refresh_from_db()
         assert colleague.suborganization is None
+
+
+class GetSuborganizationByNameTest(TestCase):
+    """The shared resolver used by CSV imports and OTYS sync: look up, never create."""
+
+    def test_exact_match(self):
+        suborg = Suborganization.objects.create(name="Rijks ICT Gilde")
+        assert get_suborganization_by_name("Rijks ICT Gilde") == suborg
+
+    def test_case_insensitive_match(self):
+        suborg = Suborganization.objects.create(name="I-Interim Rijk")
+        assert get_suborganization_by_name("i-interim rijk") == suborg
+
+    def test_strips_surrounding_whitespace(self):
+        suborg = Suborganization.objects.create(name="Rijksconsultants")
+        assert get_suborganization_by_name("  Rijksconsultants  ") == suborg
+
+    def test_unknown_name_raises(self):
+        with pytest.raises(SuborganizationNotFoundError):
+            get_suborganization_by_name("Onbekend Merk")
+
+    def test_never_creates(self):
+        with pytest.raises(SuborganizationNotFoundError):
+            get_suborganization_by_name("Onbekend Merk")
+        assert Suborganization.objects.count() == 0
 
 
 class SuborganizationInlineEditPermissionTest(TestCase):

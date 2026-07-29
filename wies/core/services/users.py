@@ -12,6 +12,7 @@ from django.db import DataError, IntegrityError, transaction
 from wies.core.errors import EmailNotAvailableError, InvalidEmailDomainError
 from wies.core.models import Colleague, Suborganization
 from wies.core.services.events import create_event
+from wies.core.services.suborganizations import get_suborganization_by_name
 
 User = get_user_model()
 
@@ -171,7 +172,7 @@ def create_users_from_csv(creator, csv_content: str):
     - first_name (required)
     - last_name (required)
     - email (required)
-    - brand (optional, merk name - assigned as the colleague's merk, auto-created if needed)
+    - brand (optional, merk name - assigned as the colleague's merk; must already exist)
     - Beheerder (optional, "y" or "n")
     - Consultant (optional, "y" or "n")
     - BDM (optional, "y" or "n")
@@ -179,8 +180,6 @@ def create_users_from_csv(creator, csv_content: str):
     Returns a dictionary with:
     - success: True if all users imported, False if validation errors
     - users_created: Number of users created
-    - suborganizations_created: Number of new suborganizations created
-    - created_suborganizations: List of suborganization names that were created
     - errors: List of validation error messages (empty if success=True)
     """
 
@@ -199,8 +198,6 @@ def create_users_from_csv(creator, csv_content: str):
         return {
             "success": False,
             "users_created": 0,
-            "suborganizations_created": 0,
-            "created_suborganizations": [],
             "errors": ["CSV file is empty or has no headers."],
         }
 
@@ -211,8 +208,6 @@ def create_users_from_csv(creator, csv_content: str):
         return {
             "success": False,
             "users_created": 0,
-            "suborganizations_created": 0,
-            "created_suborganizations": [],
             "errors": [f"Missing required columns: {', '.join(sorted(missing_columns))}"],
         }
 
@@ -249,6 +244,10 @@ def create_users_from_csv(creator, csv_content: str):
                 if value not in {"y", "n", ""}:
                     row_errors.append(f"Row {row_num}: {group_name} must be 'y' or 'n', got '{row[group_name]}'")
 
+        brand_name = row.get("brand", "").strip()
+        if brand_name and not Suborganization.objects.filter(name__iexact=brand_name).exists():
+            row_errors.append(f"Rij {row_num}: onbekend merk '{brand_name}'")
+
         if email:
             email_key = email.lower()
             if email_key in emails_found:
@@ -265,13 +264,10 @@ def create_users_from_csv(creator, csv_content: str):
         return {
             "success": False,
             "users_created": 0,
-            "suborganizations_created": 0,
-            "created_suborganizations": [],
             "errors": errors,
         }
 
     users_created = 0
-    created_suborganizations = []
     suborg_mapping = {}  # mapping from str to Suborganization, to avoid many DB queries
 
     try:
@@ -289,16 +285,13 @@ def create_users_from_csv(creator, csv_content: str):
                 email = row["email"].strip()
                 brand_name = row.get("brand", "").strip()
 
-                # Resolve the colleague's suborganization from the brand column (auto-created if new)
+                # Resolve the colleague's suborganization from the brand column.
+                # Brands are validated to exist above; look up case-insensitively, never create.
                 suborganization = None
                 if brand_name:
-                    if brand_name in suborg_mapping:
-                        suborganization = suborg_mapping[brand_name]
-                    else:
-                        suborganization, created = Suborganization.objects.get_or_create(name=brand_name)
-                        suborg_mapping[brand_name] = suborganization
-                        if created:
-                            created_suborganizations.append(brand_name)
+                    if brand_name not in suborg_mapping:
+                        suborg_mapping[brand_name] = get_suborganization_by_name(brand_name)
+                    suborganization = suborg_mapping[brand_name]
 
                 groups_to_assign = []
                 for group_name in ["Beheerder", "Consultant", "BDM"]:
@@ -327,15 +320,11 @@ def create_users_from_csv(creator, csv_content: str):
         return {
             "success": False,
             "users_created": 0,
-            "suborganizations_created": 0,
-            "created_suborganizations": [],
             "errors": ["Er ging iets mis bij het verwerken van het bestand. Controleer de waarden in het CSV-bestand."],
         }
 
     return {
         "success": True,
         "users_created": users_created,
-        "suborganizations_created": len(created_suborganizations),
-        "created_suborganizations": created_suborganizations,
         "errors": errors,  # May contain warnings when success is True
     }

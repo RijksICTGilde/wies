@@ -4,7 +4,8 @@ import time
 from django.conf import settings
 from django.db import transaction
 
-from wies.core.models import Assignment, Colleague, Placement, Service, Suborganization
+from wies.core.models import Assignment, Colleague, Placement, Service
+from wies.core.services.suborganizations import get_suborganization_by_name
 
 from .otys import OTYSAPI
 
@@ -43,8 +44,9 @@ def sync_all_otys_iir_records():
                 vacancy_procedures[vacancy_uid] = []
 
     with transaction.atomic():
-        # All OTYS-synced colleagues belong to the 'I-Interim Rijk' suborganization
-        i_interim_rijk_suborg, _ = Suborganization.objects.get_or_create(name="I-Interim Rijk")
+        # All OTYS-synced colleagues belong to the 'I-Interim Rijk' suborganization.
+        # It must already exist (seeded via DEFAULT_SUBORGANIZATIONS); never created here.
+        i_interim_rijk_suborg = get_suborganization_by_name("I-Interim Rijk")
 
         placements_synced = 0
 
