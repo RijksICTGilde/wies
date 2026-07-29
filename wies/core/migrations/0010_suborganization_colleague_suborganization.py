@@ -4,7 +4,7 @@ import logging
 
 import django.db.models.deletion
 import django.db.models.functions.text
-from django.db import migrations, models, transaction
+from django.db import migrations, models
 
 logger = logging.getLogger(__name__)
 
@@ -46,9 +46,8 @@ def backfill_suborganization(apps, schema_editor):
     for colleague in colleague_model.objects.all():
         merk_labels = list(colleague.labels.filter(category=category))
         if len(merk_labels) == 1:
-            with transaction.atomic():
-                colleague.suborganization = suborganizations[merk_labels[0].name]
-                colleague.save(update_fields=["suborganization"])
+            colleague.suborganization = suborganizations[merk_labels[0].name]
+            colleague.save(update_fields=["suborganization"])
             backfilled += 1
         elif len(merk_labels) > 1:
             ambiguous.append((colleague.name, colleague.email, [label.name for label in merk_labels]))
