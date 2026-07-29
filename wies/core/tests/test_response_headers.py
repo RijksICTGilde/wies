@@ -53,6 +53,16 @@ class SecurityHeaderTest(ResponseHeadersTestBase):
         assert "https://" not in csp
         assert "http://" not in csp
 
+    def test_script_src_is_self_only_no_inline(self):
+        """Scripts are external-only: script-src is 'self' with no 'unsafe-inline'
+        (and no nonce), so an injected inline <script> or on*= handler cannot run.
+        style-src still allows inline styles, which RVO components rely on."""
+        response = self._process(HttpResponse("<html></html>", content_type="text/html"))
+        csp = response["Content-Security-Policy"]
+        assert "script-src 'self';" in csp
+        assert "script-src 'self' 'unsafe-inline'" not in csp
+        assert "style-src 'self' 'unsafe-inline'" in csp
+
     def test_security_headers_set_on_non_html_responses_too(self):
         response = self._process(HttpResponse("{}", content_type="application/json"))
         assert response.has_header("Permissions-Policy")

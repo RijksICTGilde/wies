@@ -7,12 +7,14 @@
   <nldd-rich-text>
   <h1>Geen toegang</h1>
   {% if is_allowed_domain %}
+    {# Scenario: ODI e-mail maar nog geen toegang #}
     <p>
       Je bent ingelogd met <strong>{{ email }}</strong>, maar je hebt nog geen toegang tot Wies. Als je werkt voor de
       Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie, stuur dan een e-mail naar
       <a href="mailto:wies-odi@rijksoverheid.nl?subject=Aanvraag%20toegang%20Wies">wies-odi@rijksoverheid.nl</a> om toegang aan te vragen.
     </p>
   {% else %}
+    {# Scenario: Verkeerd account (niet ODI) #}
     <p>
       {% if email %}Je bent ingelogd met <strong>{{ email }}</strong>.{% endif %}
       Je krijgt alleen toegang tot Wies met je ODI / BZK e-mailadres (@rijksoverheid.nl of @minbzk.nl). Als je hulp nodig hebt,

@@ -22,9 +22,15 @@
 
   // Op name, niet op data-attributen: de widget-templates geven willekeurige
   // data-* niet door aan de NLDD-velden, dus die hooks komen nooit in de DOM.
+  // Het form-element is sinds #483 van de generieke inline-edit-wrapper, maar
+  // dat omvat deze body, dus closest("form") vindt nog steeds het juiste form.
   const hiddenSelect = form.querySelector("[name=period_source]");
-  const serviceStart = form.dataset.serviceStart || null;
-  const serviceEnd = form.dataset.serviceEnd || null;
+  // De opdrachtperiode staat op het paneelform (data-period-choice-pad) of, bij
+  // de generieke inline-edit, op de body-wrapper [data-placement-period] — het
+  // form is daar van de wrapper en draagt de service-data niet.
+  const periodRoot = form.querySelector("[data-placement-period]") || form;
+  const serviceStart = periodRoot.dataset.serviceStart || null;
+  const serviceEnd = periodRoot.dataset.serviceEnd || null;
   const startInput = form.querySelector("[name=specific_start_date]");
   const endInput = form.querySelector("[name=specific_end_date]");
   const endKnownSwitch = form.querySelector("[data-end-date-known]");

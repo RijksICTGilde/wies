@@ -3,7 +3,17 @@
         hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
         hx-target="#{{ target }}"
         hx-swap="outerHTML">
+    {# Concurrency-token (#483): meegestuurd zodat de view bij opslaan kan zien
+       of de rijen ondertussen door iemand anders zijn gewijzigd. #}
+    <input type="hidden" name="_concurrency_token" value="{{ concurrency_token }}">
     {% include editable.form_template %}
+    {# role="alert": HTMX swapt dit formulier in; zonder live region kondigt een
+       screenreader de vastgehouden opslag (#483) niet aan. #}
+    {% if alert %}
+      <div role="alert">
+        <nldd-banner variant="{{ alert.kind }}" text="{{ alert.message }}"></nldd-banner>
+      </div>
+    {% endif %}
     <div class="field-actions">
       <nldd-button type="submit" variant="primary" text="Opslaan"></nldd-button>
       <nldd-button type="button" variant="secondary" text="Annuleren" hx-get="{{ edit_url }}?cancel=true" hx-target="#{{ target }}" hx-swap="outerHTML"></nldd-button>

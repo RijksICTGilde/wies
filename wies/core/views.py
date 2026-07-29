@@ -1,7 +1,9 @@
+import hashlib
 import json
 import logging
 import urllib.parse
 from collections import Counter
+from contextlib import nullcontext
 from datetime import date, timedelta
 
 from django.conf import settings
@@ -11,16 +13,17 @@ from django.contrib.auth.decorators import login_not_required, login_required, p
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.contrib.auth.models import Group
 from django.core import management
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Case, Exists, F, OuterRef, Prefetch, Q, Value, When
+from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
 from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
@@ -434,7 +437,9 @@ def _resolve_placement_panel(request, placement_id):
         placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
             id=placement_id
         )
-    except Placement.DoesNotExist:
+    except Placement.DoesNotExist, ValueError:
+        # ValueError: a non-numeric ?plaatsing= param fails PK coercion; treat
+        # it the same as "not found" rather than letting it escape as a 500.
         return None
     assignment = placement.service.assignment
     viewer = getattr(request.user, "colleague", None)
@@ -510,27 +515,6 @@ def delete_error(request, pk):
     """Delete a single handled error and return the refreshed current page of the table."""
     ErrorEvent.objects.filter(pk=pk).delete()
     return _render_error_table(request, request.GET.get("pagina"))
-
-
-@staff_required
-def debug_request_meta(request):
-    xff_raw = request.headers.get("x-forwarded-for", "")
-    xff_entries = [p.strip() for p in xff_raw.split(",")] if xff_raw else []
-    return render(
-        request,
-        "debug_request_meta.html",
-        {
-            "remote_addr": request.META.get("REMOTE_ADDR", ""),
-            "xff_raw": xff_raw,
-            "xff_entries": xff_entries,
-            "xff_from_right": list(enumerate(reversed(xff_entries))),
-            "xfp": request.headers.get("x-forwarded-proto", ""),
-            "xfh": request.headers.get("x-forwarded-host", ""),
-            "x_real_ip": request.headers.get("x-real-ip", ""),
-            "user_agent": request.headers.get("user-agent", ""),
-            "server_time": timezone.now(),
-        },
-    )
 
 
 @staff_required
@@ -629,6 +613,7 @@ def staff_database(request):
                             source="user",
                             object_id=target.id,
                             user=request.user,
+                            request=request,
                             context={
                                 "merge": True,
                                 "merged_ids": deleted_ids,
@@ -1141,13 +1126,13 @@ class PlacementListView(ListView):
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
-            except Colleague.DoesNotExist:
+            except Colleague.DoesNotExist, ValueError:
                 pass
         elif assignment_id:
             try:
                 assignment = Assignment.objects.get(id=assignment_id)
                 context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
-            except Assignment.DoesNotExist:
+            except Assignment.DoesNotExist, ValueError:
                 pass
         # get_context_data draait vóór get_template_names, dus die kan hier het
         # paneelsjabloon uit aflezen in plaats van het opnieuw af te leiden.
@@ -1427,13 +1412,13 @@ class AssignmentListView(ListView):
             try:
                 colleague = Colleague.objects.get(id=colleague_id)
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
-            except Colleague.DoesNotExist:
+            except Colleague.DoesNotExist, ValueError:
                 pass
         elif assignment_id:
             try:
                 assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
                 context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
-            except Assignment.DoesNotExist:
+            except Assignment.DoesNotExist, ValueError:
                 pass
 
         # Zie PlacementListView.get_context_data: get_template_names leest dit.
@@ -1742,6 +1727,7 @@ def user_create(request):
                 email=form.cleaned_data["email"],
                 labels=form.cleaned_data.get("labels"),
                 groups=form.cleaned_data.get("groups"),
+                request=request,
             )
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect
@@ -1800,6 +1786,7 @@ def user_edit(request, pk):
                 email=form.cleaned_data["email"],
                 labels=form.cleaned_data.get("labels"),
                 groups=form.cleaned_data.get("groups"),
+                request=request,
             )
             # For HTMX requests, use HX-Redirect header to force full page redirect
             # For standard form posts, use normal redirect
@@ -1864,6 +1851,7 @@ def user_delete(request, pk):
             source="user",
             object_id=pk,
             user=request.user,
+            request=request,
             context=context,
         )
         response = HttpResponse(status=200)
@@ -1927,7 +1915,7 @@ def user_import_csv(request):
                 {"result": {"success": False, "errors": ["Ongeldige bestandscodering. Gebruik UTF-8."]}},
             )
 
-        result = create_users_from_csv(request.user, csv_content)
+        result = create_users_from_csv(request.user, csv_content, request=request)
 
         # Return results in the form
         return render(request, "user_import.html", {"result": result})
@@ -1988,7 +1976,7 @@ def assignment_import_csv(request):
                 {"result": {"success": False, "errors": ["Invalid CSV file encoding. Please use UTF-8."]}},
             )
 
-        result = create_assignments_from_csv(request.user, csv_content)
+        result = create_assignments_from_csv(request.user, csv_content, request=request)
 
         # Return results in the form
         return render(request, "assignment_import.html", {"result": result})
@@ -2963,6 +2951,7 @@ def assignment_delete(request, pk):
                 source="user",
                 object_id=pk,
                 user=request.user,
+                request=request,
                 context=context,
             )
         messages.success(request, f"Opdracht '{name}' succesvol verwijderd")
@@ -3023,13 +3012,13 @@ def user_profile(request):
         try:
             assignment = Assignment.objects.get(id=assignment_id)
             panel_data = _build_assignment_panel_data(assignment, request)
-        except Assignment.DoesNotExist:
+        except Assignment.DoesNotExist, ValueError:
             pass
     elif colleague_id:
         try:
             panel_colleague = Colleague.objects.get(id=colleague_id)
             panel_data = _build_colleague_panel_data(panel_colleague, request)
-        except Colleague.DoesNotExist:
+        except Colleague.DoesNotExist, ValueError:
             pass
 
     # HTMX partial responses for panel swaps
@@ -3287,7 +3276,10 @@ def assignment_create(request):
         service_formset = ServiceFormSet(request.POST, prefix="service", form_kwargs={"skill_choices": skill_choices})
 
         # Check if at least one service has a skill selected (works even when formset is invalid)
-        total_forms = min(int(request.POST.get("service-TOTAL_FORMS", 0)), 100)
+        raw_total_forms = request.POST.get("service-TOTAL_FORMS", "0")
+        # A crafted/non-numeric management-form value must not crash the view; treat
+        # it as zero rows, which surfaces the normal "add at least one role" error.
+        total_forms = min(int(raw_total_forms), 100) if raw_total_forms.isdigit() else 0
         has_any_service = any(request.POST.get(f"service-{i}-skill") for i in range(total_forms))
         services_error = "" if has_any_service else "Voeg minimaal één rol toe."
 
@@ -3321,6 +3313,7 @@ def assignment_create(request):
             source="user",
             object_id=assignment.id,
             user=request.user,
+            request=request,
             context=_assignment_audit_snapshot(assignment),
         )
 
@@ -3550,6 +3543,132 @@ PERMISSION_DENIED_ALERT = {
     "message": "Je hebt geen rechten om dit veld te bewerken.",
 }
 
+CONCURRENCY_CONFLICT_ALERT = {
+    "kind": "warning",
+    "message": "Deze gegevens zijn ondertussen gewijzigd. "
+    "Kies 'Opslaan' om je wijziging toch door te voeren, of 'Annuleren' om de gewijzigde gegevens over te nemen.",
+}
+
+CONFLICT_VALUE_MAX_LENGTH = 120
+
+
+def _readable_current_value(obj, spec) -> str | None:
+    """A short, human-readable form of a single field's current value, to name
+    the concurrent change in the conflict warning. A group or a collection has
+    no single value to show, so this returns None and the caller falls back to
+    the generic warning."""
+    if not isinstance(spec, Editable):
+        return None
+    value = _current_value(obj, spec)
+    # The audit timeline already renders this field for a human (owner → the
+    # colleague's name, not "Colleague object (3)"), so reuse that chain.
+    if spec.audit_state:
+        value = spec.audit_state(value)
+    if spec.render_change:
+        text = spec.render_change(value)
+    elif isinstance(value, list):
+        # A list on a scalar Editable is an M2M (e.g. labels); name the members.
+        text = ", ".join(str(v) for v in value)
+    else:
+        text = "" if value is None else str(value)
+    text = str(text).strip()
+    if not text:
+        return "geen"
+    if len(text) > CONFLICT_VALUE_MAX_LENGTH:
+        text = text[:CONFLICT_VALUE_MAX_LENGTH].rstrip() + "…"
+    return text
+
+
+def _concurrency_conflict_alert(editable_set, spec, obj) -> dict:
+    """The conflict warning, naming the field and the concurrent value where we
+    can show one, so the user does not have to press Annuleren, losing their
+    own input, just to find out what changed."""
+    concurrent = _readable_current_value(obj, spec)
+    if concurrent is None:
+        return CONCURRENCY_CONFLICT_ALERT
+    # Bold the field label and the concurrent value so the change stands out.
+    # ``format_html`` escapes both (the value is user content) before marking
+    # the surrounding markup safe; the alert renders its message as HTML.
+    return {
+        "kind": "warning",
+        "message": format_html(
+            "<strong>{}</strong> is ondertussen gewijzigd naar <strong>“{}”</strong>. "
+            "Klik op 'Opslaan' om jouw wijziging alsnog door te voeren, "
+            "of op 'Annuleren' om de wijziging over te nemen.",
+            _spec_label(editable_set, spec),
+            concurrent,
+        ),
+    }
+
+
+def _edit_state(editable_set, spec, obj):
+    """The values this edit is based on, in a JSON-serialisable shape."""
+    if isinstance(spec, EditableCollection):
+        if spec.audit_state is None:
+            # Every token would otherwise hash the same empty payload, so no
+            # conflict could ever be detected for this collection.
+            message = f"EditableCollection {spec.name!r} needs an audit_state to build a concurrency token"
+            raise ImproperlyConfigured(message)
+        return spec.audit_state(obj)
+    state = {}
+    for e in resolve_editables(editable_set, spec):
+        value = _current_value(obj, e)
+        if isinstance(value, list):
+            # Rows carry their own shape (dicts for organizations, models for
+            # M2M), so let audit_state flatten them where it exists rather than
+            # leaning on repr; order-independent either way.
+            value = e.audit_state(value) if e.audit_state else sorted(str(getattr(i, "pk", i)) for i in value)
+        elif isinstance(value, Model):
+            value = value.pk
+        state[e.field or e.name] = value
+    return state
+
+
+def _hash_state(state) -> str:
+    payload = json.dumps(state, sort_keys=True, default=str)
+    return hashlib.sha256(payload.encode()).hexdigest()[:16]
+
+
+def _concurrency_token(editable_set, spec, obj) -> str:
+    """A short hash of the values this edit is based on, embedded in the edit
+    form and re-checked (under a row lock) at save time. If the underlying
+    values changed since the form was rendered, the tokens differ and the save
+    is rejected instead of silently overwriting the other change."""
+    return _hash_state(_edit_state(editable_set, spec, obj))
+
+
+def _submitted_token(request) -> str:
+    return request.POST.get("_concurrency_token", "")
+
+
+def _has_concurrency_conflict(request, editable_set, spec, obj, *, state=None) -> bool:
+    """Whether this POST was built on a stale view of ``obj``.
+
+    Call inside the transaction that holds the row lock, so the state read here
+    is the state the save writes over.
+
+    A missing token counts as a conflict. Every form this endpoint renders
+    carries one (form.html and collection_form.html own the field), so its
+    absence means the POST was not built on a form we handed out and its
+    staleness cannot be established. Letting it through would silently disable
+    the check for whichever caller omitted the field.
+
+    ``state`` reuses a snapshot the caller already read, so the collection path
+    doesn't query the whole team twice while holding the lock.
+    """
+    submitted = _submitted_token(request)
+    if not submitted:
+        logger.warning(
+            "Inline edit POST without a concurrency token; treated as a conflict (model=%s, editable=%s, pk=%s)",
+            editable_set.model._meta.model_name,
+            spec.name,
+            obj.pk,
+        )
+        return True
+    if state is None:
+        state = _edit_state(editable_set, spec, obj)
+    return submitted != _hash_state(state)
+
 
 def _permission_denied(
     editable_set: type[EditableSet],
@@ -3653,22 +3772,32 @@ def _render_inline_edit_display(
     return response
 
 
-def _render_inline_edit_form(request, editable_set, spec, editables, obj, form) -> HttpResponse:
+def _render_inline_edit_form(
+    request, editable_set, spec, editables, obj, form, *, alert: dict | None = None, token: str | None = None
+) -> HttpResponse:
     # Edit-mode partial: form + save/cancel. On validation failure, `form` carries inline errors.
-    from wies.core.inline_edit.base import EditableGroup  # noqa: PLC0415
+    # form.html always owns the form element and the concurrency token; a group's
+    # ``form_template`` only replaces the field body, so it cannot drop either.
+    ctx = {
+        **_inline_edit_base_ctx(editable_set, spec, obj),
+        "form": form,
+        "editable": spec,
+        "concurrency_token": token if token is not None else _concurrency_token(editable_set, spec, obj),
+        "alert": alert,
+    }
+    return render(request, "wies/parts/inline_edit/form.html", ctx)
 
-    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "form": form, "editable": spec}
-    template = (
-        spec.form_template
-        if isinstance(spec, EditableGroup) and spec.form_template
-        else "wies/parts/inline_edit/form.html"
-    )
-    return render(request, template, ctx)
 
-
-def _render_inline_edit_collection_form(request, editable_set, spec, obj, formset) -> HttpResponse:
+def _render_inline_edit_collection_form(
+    request, editable_set, spec, obj, formset, *, alert: dict | None = None, token: str | None = None
+) -> HttpResponse:
     # Inner body from spec.form_template; receives the formset as `formset`.
-    ctx = {**_inline_edit_base_ctx(editable_set, spec, obj), "formset": formset}
+    ctx = {
+        **_inline_edit_base_ctx(editable_set, spec, obj),
+        "formset": formset,
+        "concurrency_token": token if token is not None else _concurrency_token(editable_set, spec, obj),
+        "alert": alert,
+    }
     return render(request, "wies/parts/inline_edit/collection_form.html", ctx)
 
 
@@ -3684,18 +3813,42 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
     if request.method == "POST":
         formset = spec.formset_factory(data=request.POST)
         if formset.is_valid():
-            before = spec.audit_state(obj) if spec.audit_state else None
+            conflict = False
             try:
                 with transaction.atomic():
-                    spec.save(obj, formset)
-                    after = spec.audit_state(obj) if spec.audit_state else None
-                    _emit_inline_edit_audit_event(spec, obj, before, after, request.user)
+                    obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
+                    # One snapshot, used both to check the token and as the
+                    # audit event's "before"; the team query is not cheap.
+                    before = _edit_state(editable_set, spec, obj)
+                    conflict = _has_concurrency_conflict(request, editable_set, spec, obj, state=before)
+                    if not conflict:
+                        spec.save(obj, formset)
+                        after = _edit_state(editable_set, spec, obj)
+                        _emit_inline_edit_audit_event(
+                            editable_set, spec, obj, before, after, request.user, request=request
+                        )
+            except editable_set.model.DoesNotExist:
+                # Deleted between the permission check and the lock. Same denial
+                # partial as a missing or forbidden object, so this stays
+                # indistinguishable from those.
+                return _render_inline_edit_denial(request, editable_set, spec, obj.pk)
             except ValidationError as exc:
                 for message in exc.messages:
                     _attach_formset_error(formset, message)
-                return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
+                return _render_inline_edit_collection_form(
+                    request, editable_set, spec, obj, formset, token=_submitted_token(request)
+                )
+            if conflict:
+                # Re-render the bound form (user's input kept) with a token for
+                # the new state: Opslaan saves anyway, Annuleren shows the
+                # changed data. Rendered after the lock is released.
+                return _render_inline_edit_collection_form(
+                    request, editable_set, spec, obj, formset, alert=CONCURRENCY_CONFLICT_ALERT
+                )
             return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj, saved=True)
-        return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
+        return _render_inline_edit_collection_form(
+            request, editable_set, spec, obj, formset, token=_submitted_token(request)
+        )
 
     if request.GET.get("cancel"):
         return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
@@ -3705,10 +3858,7 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
     return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
 
 
-_AUDIT_OBJECT_TYPES = {"Assignment": "Assignment", "User": "User", "OrganizationUnit": "OrganizationUnit"}
-
-
-def _record_editable_change(editable, obj, object_type, old_value, new_value, user) -> None:
+def _record_editable_change(editable, obj, object_type, old_value, new_value, user, request=None) -> None:
     to_state = editable.audit_state or (lambda v: v)
     old_state = to_state(old_value)
     new_state = to_state(new_value)
@@ -3720,6 +3870,7 @@ def _record_editable_change(editable, obj, object_type, old_value, new_value, us
         source="user",
         object_id=obj.id,
         user=user,
+        request=request,
         context={
             "field_name": editable.field or editable.name or "",
             "field_label": editable.label or editable.name or "",
@@ -3729,18 +3880,22 @@ def _record_editable_change(editable, obj, object_type, old_value, new_value, us
     )
 
 
-def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_editables=None) -> None:
-    object_type = _AUDIT_OBJECT_TYPES.get(type(obj).__name__)
+def _emit_inline_edit_audit_event(
+    editable_set, spec, obj, before, after, user, *, child_editables=None, request=None
+) -> None:
+    object_type = editable_set.audit_type()
     if object_type is None:
         return
 
     if isinstance(spec, Editable):
-        _record_editable_change(spec, obj, object_type, before, after, user)
+        _record_editable_change(spec, obj, object_type, before, after, user, request=request)
         return
 
     if isinstance(spec, EditableGroup):
         for child in child_editables or []:
-            _record_editable_change(child, obj, object_type, before.get(child.name), after.get(child.name), user)
+            _record_editable_change(
+                child, obj, object_type, before.get(child.name), after.get(child.name), user, request=request
+            )
         return
 
     if isinstance(spec, EditableCollection):
@@ -3755,6 +3910,7 @@ def _emit_inline_edit_audit_event(spec, obj, before, after, user, *, child_edita
             source="user",
             object_id=obj.id,
             user=user,
+            request=request,
             context={
                 "field_name": spec.name or "",
                 "field_label": spec.label or spec.name or "",
@@ -3776,29 +3932,6 @@ def _diff_collection_state(old_state: list[dict], new_state: list[dict]) -> list
     return changes
 
 
-def _emit_placement_change_on_assignment(placement, before_row: dict, user) -> None:
-    """Record a placement edit as a "Team" event on its parent assignment,
-    so it renders identically to the Team-bewerken flow (#393)."""
-    from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids circular import
-
-    assignment = placement.service.assignment
-    after_row = placement_audit_row(placement)
-    if before_row == after_row:
-        return
-    create_event(
-        object_type="Assignment",
-        action="update",
-        source="user",
-        object_id=assignment.id,
-        user=user,
-        context={
-            "field_name": "services",
-            "field_label": "Team",
-            "changes": [{"old": before_row, "new": after_row}],
-        },
-    )
-
-
 def _pk_stub(model, pk):
     """An unsaved model instance carrying only ``pk``. Enough for the denial
     partial's target/edit_url so a missing object renders byte-identically to a
@@ -3806,6 +3939,25 @@ def _pk_stub(model, pk):
     stub = model()
     stub.pk = pk
     return stub
+
+
+def _render_inline_edit_denial(request, editable_set, spec, pk, obj=None, alert=None) -> HttpResponse:
+    """The denial partial for an object the user may not edit or that isn't
+    there (any more). Both render identically, so this endpoint can't be walked
+    as a 404-vs-200 existence oracle over sequential PKs."""
+    display_obj = obj if obj is not None else _pk_stub(editable_set.model, pk)
+    editables_for_display: list[Editable] = (
+        [] if isinstance(spec, EditableCollection) else resolve_editables(editable_set, spec)
+    )
+    return _render_inline_edit_display(
+        request,
+        editable_set,
+        spec,
+        editables_for_display,
+        display_obj,
+        alert=alert or PERMISSION_DENIED_ALERT,
+        user_can_edit=False,
+    )
 
 
 def inline_edit_view(request, model_label, pk, name):
@@ -3825,19 +3977,7 @@ def inline_edit_view(request, model_label, pk, name):
     # identical empty response for not-found and not-visible).
     denial = _permission_denied(editable_set, spec, request.user, obj) if obj is not None else PERMISSION_DENIED_ALERT
     if denial:
-        display_obj = obj if obj is not None else _pk_stub(editable_set.model, pk)
-        editables_for_display: list[Editable] = (
-            [] if isinstance(spec, EditableCollection) else resolve_editables(editable_set, spec)
-        )
-        return _render_inline_edit_display(
-            request,
-            editable_set,
-            spec,
-            editables_for_display,
-            display_obj,
-            alert=denial,
-            user_can_edit=False,
-        )
+        return _render_inline_edit_denial(request, editable_set, spec, pk, obj=obj, alert=denial)
 
     if isinstance(spec, EditableCollection):
         return _handle_inline_edit_collection(request, editable_set, spec, obj)
@@ -3855,35 +3995,51 @@ def inline_edit_view(request, model_label, pk, name):
         )
         form = form_cls(request.POST)
         if form.is_valid():
-            if isinstance(spec, EditableGroup):
-                before = {e.name: _current_value(obj, e) for e in editables}
-            else:
-                before = _current_value(obj, spec)
-            # A placement edit (e.g. period via the profile) has no audit
-            # type of its own; mirror it onto the parent assignment's
-            # timeline like the "Team bewerken" flow (#393).
-            placement_before = None
-            if type(obj).__name__ == "Placement":
-                from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids circular import
-
-                placement_before = placement_audit_row(obj)
-            with transaction.atomic():
-                save_spec(spec, editables, form.cleaned_data, obj)
-                if isinstance(spec, EditableGroup):
-                    after = {e.name: _current_value(obj, e) for e in editables}
-                else:
-                    after = _current_value(obj, spec)
-                _emit_inline_edit_audit_event(
+            conflict = False
+            try:
+                with transaction.atomic():
+                    obj = editable_set.model.objects.select_for_update().get(pk=obj.pk)
+                    conflict = _has_concurrency_conflict(request, editable_set, spec, obj)
+                    if not conflict:
+                        if isinstance(spec, EditableGroup):
+                            before = {e.name: _current_value(obj, e) for e in editables}
+                        else:
+                            before = _current_value(obj, spec)
+                        mirror = editable_set.audit_mirror
+                        with mirror(obj, request.user, request) if mirror else nullcontext():
+                            save_spec(spec, editables, form.cleaned_data, obj)
+                            if isinstance(spec, EditableGroup):
+                                after = {e.name: _current_value(obj, e) for e in editables}
+                            else:
+                                after = _current_value(obj, spec)
+                            _emit_inline_edit_audit_event(
+                                editable_set,
+                                spec,
+                                obj,
+                                before,
+                                after,
+                                request.user,
+                                child_editables=editables if isinstance(spec, EditableGroup) else None,
+                                request=request,
+                            )
+            except editable_set.model.DoesNotExist:
+                # Deleted between the permission check and the lock. Same denial
+                # partial as a missing or forbidden object, so this stays
+                # indistinguishable from those.
+                return _render_inline_edit_denial(request, editable_set, spec, pk)
+            if conflict:
+                # Re-render the bound form (user's input kept) with a token for
+                # the new state: Opslaan saves anyway, Annuleren shows the
+                # changed data. Rendered after the lock is released.
+                return _render_inline_edit_form(
+                    request,
+                    editable_set,
                     spec,
+                    editables,
                     obj,
-                    before,
-                    after,
-                    request.user,
-                    child_editables=editables if isinstance(spec, EditableGroup) else None,
+                    form,
+                    alert=_concurrency_conflict_alert(editable_set, spec, obj),
                 )
-                if placement_before is not None:
-                    obj.refresh_from_db()
-                    _emit_placement_change_on_assignment(obj, placement_before, request.user)
             return _render_inline_edit_display(
                 request,
                 editable_set,
@@ -3892,7 +4048,12 @@ def inline_edit_view(request, model_label, pk, name):
                 obj,
                 saved=True,
             )
-        return _render_inline_edit_form(request, editable_set, spec, editables, obj, form)
+        # Keep the token this POST was built on: recomputing it here would adopt
+        # a change made in the meantime, and the corrected resubmit would then
+        # overwrite that change without ever showing the conflict warning.
+        return _render_inline_edit_form(
+            request, editable_set, spec, editables, obj, form, token=_submitted_token(request)
+        )
 
     if request.GET.get("cancel"):
         return _render_inline_edit_display(request, editable_set, spec, editables, obj)
@@ -3981,12 +4142,14 @@ def _save_edit_specs(request, specs, cleaned_data):
         else:
             after = _current_value(obj, spec)
         _emit_inline_edit_audit_event(
+            editable_set,
             spec,
             obj,
             before,
             after,
             request.user,
             child_editables=spec_editables if isinstance(spec, EditableGroup) else None,
+            request=request,
         )
 
 
@@ -4189,7 +4352,7 @@ def _apply_team_change(request, assignment, services_data):
     with transaction.atomic():
         apply_services_to_assignment(assignment, services_data)
         after = spec.audit_state(assignment) if spec.audit_state else None
-        _emit_inline_edit_audit_event(spec, assignment, before, after, request.user)
+        _emit_inline_edit_audit_event(AssignmentEditables, spec, assignment, before, after, request.user, request=request)
 
 
 def _build_assignment_member_panel_data(assignment, request):

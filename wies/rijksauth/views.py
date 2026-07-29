@@ -26,7 +26,10 @@ def _get_oidc():
         server_metadata_url=settings.OIDC_DISCOVERY_URL,
         client_id=settings.OIDC_CLIENT_ID,
         client_secret=settings.OIDC_CLIENT_SECRET,
-        client_kwargs={"scope": "openid profile email"},
+        # OIDC-NLGov requires PKCE with S256 for every client, public or
+        # confidential (sections 4.1 and 4.2.1):
+        # https://gitdocumentatie.logius.nl/publicatie/api/oidc/
+        client_kwargs={"scope": "openid profile email", "code_challenge_method": "S256"},
     )
     return oauth.oidc
 
@@ -58,7 +61,7 @@ def auth(request):
         # Keep the id_token so logout can end the upstream Keycloak/SSO session.
         request.session[settings.OIDC_ID_TOKEN_SESSION_KEY] = oidc_response.get("id_token")
         logger.info("login successful, access granted")
-        create_auth_event(user.email, "Login.success")
+        create_auth_event(user.email, "Login.success", request=request)
         response = redirect(request.build_absolute_uri(reverse("home")))
     else:
         logger.info("login not successful, access denied")
@@ -81,7 +84,11 @@ def auth(request):
 def logout(request):
     id_token = request.session.get(settings.OIDC_ID_TOKEN_SESSION_KEY)
     if request.user and request.user.is_authenticated:
+        # Capture the email before auth_logout flushes the session and turns
+        # request.user into AnonymousUser. IP/User-Agent stay on the request.
+        user_email = request.user.email
         auth_logout(request)
+        create_auth_event(user_email, "Logout", request=request)
 
     end_session_url = _build_end_session_url(request, id_token)
     response = redirect(end_session_url) if end_session_url else redirect(reverse("login"))

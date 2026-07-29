@@ -22,18 +22,36 @@ This files lists the changes during the lifetime of this project.
 - NLDD: bring the filter/search UX to parity with `main`/#402 — a "Wis alle filters" button next to the active chips (also clears the search), the opdrachtgever filter's inline top-3 quick checkboxes (`org`/`org_self`/`org_type`) alongside the "Meer" tree modal, a magnifier icon on the "Meer" buttons, and a full search experience (Enter-to-commit, live suggestions dropdown with a "Zoeken op …" action and opdrachtgever suggestions). Also fixes individual filter chips not being dismissable (a `data-nldd-dismiss` dataset-key mismatch) and a dead `updateOrgFilterButtonText()` call that aborted the client-modal apply.
 - NLDD: adopt the `nldd-sidebar-section` layout on every page (upgrade @nldd/design-system to 0.8.64) — a sticky sidebar on wide screens that collapses to a sheet on narrow ones; contextual sidebars everywhere (filters, beheer-nav, general nav)
 - NLDD: port the filter "Meer"-modal UX (#402) — each filter group shows its top-3 options plus a "Meer" button that opens the full alphabetical list in a modal with search; the selection applies only on "Filter toepassen"
-- NLDD: merge `main` into the NLDD design-system branch — adopt the opdracht/plaatsing side-panel features (Gegevens/Updates tabs, inline-edit of all fields, opdracht verwijderen, placement periods), the "Dubbele opdrachten samenvoegen" beheertool and the full privacyverklaring, all rebuilt in the NLDD design system; migrate the privacy-html generator to NLDD output
+- NLDD: merge `main` into the NLDD design-system branch — adopt the opdracht/plaatsing side-panel features (Gegevens/Updates tabs, inline-edit of all fields, opdracht verwijderen, placement periods), the "Dubbele opdrachten samenvoegen" beheertool and the full privacyverklaring, all rebuilt in the NLDD design system; migrate the privacy-html generator to NLDD output- 426: (migration)(post-release actions) log the client request metadata on audit and login events (BIO device logging). Removed the staff "Debug: request metadata" page
+- 426: logout events are now logged alongside logins
+- 503: fix the "Wie zit waar?", opdrachten and profiel overviews returning a 500 error when the side-panel `plaatsing`, `collega` or `opdracht` parameter contained a non-numeric value in the URL
+- 503: fix opdracht aanmaken returning a 500 error instead of a validation message when the submitted form data contained a non-numeric service count
+- 501: de opdracht-CSV-import maakt nieuwe collega's alleen nog aan als hun e-mailadres een toegestaan domein heeft (net als elders in de app); bestaande collega's (bijvoorbeeld uit OTYS) met een ander domein blijven gewoon bruikbaar.
+- 483: inline editing now detects concurrent edits instead of silently overwriting. If the data changed since you opened the edit form, the form comes back with a warning that names the field and the value someone else entered, keeping your own input; Opslaan saves anyway, Annuleren shows the changed data. This covers every inline-editable field (including the team and period forms), and an edit submitted without the form's token (for example a page left open across a deploy) is likewise held back with the same warning instead of saved unverified.
+- 480: the OIDC login now uses PKCE (S256) in the authorization-code flow. The government OIDC profile (OIDC-NLGov, sections 4.1 and 4.2.1) requires this for every client: https://gitdocumentatie.logius.nl/publicatie/api/oidc/
+- 453: the statistics pages shows unique logins per day in stead of the total number of logins
+- 498: harden ci: pin actions on sha, explicit permissions per action stage
+
+## 2026-07-23
 - 473: fix the opdrachtgever filter counts including planned placements that placement visibility hides from unrelated viewers
 - 473: stop the inline-edit endpoint from revealing whether an object exists to users who may not edit it (a missing and a forbidden object now return the same response)
 - 478: the user and opdracht CSV imports now reject files larger than 50 MB, so an extremely large file cannot exhaust a worker's memory
-- 477: logging out is now only possible via the button (POST), no longer via a bare GET request, so an external page cannot log you out without your knowledge
-- 481: the production container no longer silently falls back to the local development settings (DEBUG on) when DJANGO_SETTINGS_MODULE is missing at startup; the startup script then defaults to the production settings (an explicitly provided value still takes precedence). Local development is unchanged.
+- 477: logging out is now only possible via the button (POST), no longer via a bare GET request
+- 481: the production container no longer silently falls back to the local development settings (DEBUG on) when DJANGO_SETTINGS_MODULE is missing at startup; the startup script then defaults to the production settings (an explicitly provided value still takes precedence)
 - 486: the opdracht and user CSV imports now show a graceful error message instead of a 500 when a value is too long for its field or the file is not valid CSV.
-- 479: fix the "Wie zit waar?" and Gebruikers overviews returning a 500 error and showing "Wis filters" when the labels filter contained a non-numeric value in the URL; such a value is now ignored, just like the organization and role filters.
-- 491: PR preview environments are now reliably removed when a PR closes, preview images build on every push regardless of merge conflicts or CI status, previews also build when a draft PR is marked ready for review, and a preview can be rebuilt manually from the Actions UI; the weekly registry cleanup of old preview images is fixed
+- 479: fix the "Wie zit waar?" and Gebruikers overviews returning a 500 error and showing "Wis filters" when the labels filter contained a non-numeric value in the URL
+- 491: PR preview environments are now reliably removed when a PR closes and a preview can be rebuilt manually from the Actions UI; the weekly registry cleanup of old preview images is fixed
 - 460: (migration)(add env vars) basic error monitoring — unhandled server errors (500) and failed background tasks are stored and shown on the statistics page, with a Mattermost notification.
 - 460: A failing task is marked failed immediately instead of hanging until timeout.
 - 493: (remove env vars) the background worker now runs on its own settings module (config.settings.worker) and no longer requires the OIDC credentials to be set at startup. locally worker now also uses its own dedicate .env file
+- 494: add trivy container scanning as recurring action
+- 482: the Content-Security-Policy for scripts no longer allows inline JavaScript (`script-src 'self'`). All scripts and click/keyboard handling have been moved to external JS files
+- 482: the htmx history cache is now disabled on all pages instead of only on the assignments overview and the placements table; navigating back now always fetches a page fresh everywhere.
+- 496: fix the PR preview cleanup never running: its first step called `gh` without `--repo` in a job that has no checkout, so it failed immediately and the ZAD deployment and PR-tagged images of every closed PR were left behind
+- 497: bumped dev/CI dependencies and GitHub Actions
+- 497: the production images (web/worker) no longer contain dev/test tooling, reducing the runtime attack surface
+- 479: fix the "Wie zit waar?" and Gebruikers overviews returning a 500 error and showing "Wis filters" when the labels filter contained a non-numeric value in the URL; such a value is now ignored, just like the organization and role filters.
+- 491: PR preview environments are now reliably removed when a PR closes, preview images build on every push regardless of merge conflicts or CI status, previews also build when a draft PR is marked ready for review, and a preview can be rebuilt manually from the Actions UI; the weekly registry cleanup of old preview images is fixed
 
 ## 2026-07-20
 

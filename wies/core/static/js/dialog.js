@@ -127,6 +127,22 @@ document.addEventListener("keydown", function (e) {
   }
 });
 
+// Delegated dismiss: een knop met [data-dismiss-modal] sluit de omvattende
+// nldd-modal-dialog. Vervangt een inline onclick-handler, zodat de CSP
+// script-src 'self' kan blijven (geen 'unsafe-inline'). composedPath omdat de
+// knop in de shadow root van het dialog kan zitten.
+document.addEventListener("click", function (e) {
+  const btn = e
+    .composedPath()
+    .find(
+      (el) =>
+        el instanceof Element && el.matches && el.matches("[data-dismiss-modal]"),
+    );
+  if (!btn) return;
+  const dialog = btn.closest("nldd-modal-dialog");
+  if (dialog && typeof dialog.hide === "function") dialog.hide();
+});
+
 // Listen for closeModal trigger from server
 document.addEventListener("closeModal", function () {
   // Close any open modal dialogs

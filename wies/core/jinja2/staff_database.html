@@ -32,7 +32,7 @@
       </nldd-rich-text>
       <nldd-spacer size="12" direction="vertical"></nldd-spacer>
       <form method="post"
-            onsubmit=" return confirm('Weet je zeker dat je alle data wilt verwijderen?'); ">
+            data-confirm="Weet je zeker dat je alle data wilt verwijderen?">
         {{ get_csrf_hidden_input(request) }}
         <input type="hidden" name="action" value="clear_data" />
         <nldd-button variant="critical-tinted" type="submit" text="Database leegmaken"></nldd-button>
@@ -150,7 +150,7 @@
           </div>
         {% endfor %}
         <form method="post"
-              onsubmit=" return confirm( 'Weet je zeker dat je deze opdrachten wilt samenvoegen? Dit kan niet ongedaan worden gemaakt.', ); ">
+              data-confirm="Weet je zeker dat je deze opdrachten wilt samenvoegen? Dit kan niet ongedaan worden gemaakt.">
           {{ get_csrf_hidden_input(request) }}
           <input type="hidden" name="action" value="merge_duplicates_apply" />
           <nldd-button variant="primary" type="submit" text="Samenvoegen bevestigen"></nldd-button>

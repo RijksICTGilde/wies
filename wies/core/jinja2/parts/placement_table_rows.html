@@ -20,6 +20,10 @@ intercepts the click to open the side panel instead of navigating. #}
   <nldd-icon name="chevron-right"></nldd-icon>
   </nldd-icon-cell>
   </nldd-list-item>
+{% else %}
+  <nldd-list-item>
+  <nldd-text-cell text="Geen inzetten gevonden."></nldd-text-cell>
+  </nldd-list-item>
 {% endfor %}
 {% if next_page_url %}
   <nldd-list-item hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">

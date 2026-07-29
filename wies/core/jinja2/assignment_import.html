@@ -14,7 +14,7 @@
     {{ get_csrf_hidden_input(request) }}
     <nldd-rich-text>
     <p>
-      Upload een CSV-bestand met plaatsingsgegevens. <a href="{{ static('example_assignment_import.csv') }}">Download het voorbeeldbestand</a>
+      Upload een CSV-bestand met plaatsingsgegevens. <a href="{{ static('example_assignment_import.csv') }}">Download het voorbeeldbestand</a> om het juiste formaat te zien.
     </p>
     </nldd-rich-text>
     <br>
@@ -63,7 +63,7 @@
       <p style="color: var(--nldd-color-error, red);">
         <strong>Import mislukt</strong>
       </p>
-      {% if result.errors|length > 0 %}
+      {% if result.errors and result.errors|length > 0 %}
         <p>De volgende fouten zijn gevonden:</p>
         <ul>
           {% for error in result.errors %}<li>{{ error }}</li>{% endfor %}

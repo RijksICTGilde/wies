@@ -15,20 +15,37 @@
            wie terugbladert hoort zijn velden terug te zien zoals hij ze
            achterliet -- niet als leesweergave. #}
         hx-swap="{{ 'none' if bare else 'outerHTML' }}">
-    {# Eén veld inline bewerken heeft geen label nodig — de waarde stond er net
-       nog; bij meerdere velden wel, want dan is de kolom niet meer duidelijk. #}
-    {% for bound in form %}
-      {% set error_ids = wire_field_errors(bound) %}
-      <nldd-form-field {% if multi and bound.label %}label="{{ bound.label }}"{% endif %}>
-      {{ bound.as_widget(attrs={"autofocus": loop.first}) }}
-      {% for error in bound.errors %}
-        <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
+    {# Concurrency-token (#483): bij opslaan leest de view dit terug en vergelijkt
+       het met de huidige waarden onder select_for_update. Ontbreekt het, dan telt
+       de POST als conflict — vandaar dat elk inline-formulier het meestuurt. #}
+    <input type="hidden" name="_concurrency_token" value="{{ concurrency_token }}">
+    {# Een group mag de veldenloop vervangen via form_template; het form-element,
+       token, errors, alert en knoppen blijven hier (zie #483). #}
+    {% if editable.form_template %}
+      {% include editable.form_template %}
+    {% else %}
+      {# Eén veld inline bewerken heeft geen label nodig — de waarde stond er net
+         nog; bij meerdere velden wel, want dan is de kolom niet meer duidelijk. #}
+      {% for bound in form %}
+        {% set error_ids = wire_field_errors(bound) %}
+        <nldd-form-field {% if multi and bound.label %}label="{{ bound.label }}"{% endif %}>
+        {{ bound.as_widget(attrs={"autofocus": loop.first}) }}
+        {% for error in bound.errors %}
+          <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}">{{ error }}</nldd-form-field-error-text>
+        {% endfor %}
+        </nldd-form-field>
       {% endfor %}
-      </nldd-form-field>
-    {% endfor %}
+    {% endif %}
     {% for error in form.non_field_errors() %}
       <nldd-banner variant="critical" text="{{ error }}"></nldd-banner>
     {% endfor %}
+    {# role="alert": het formulier wordt door HTMX ingeswapt, dus zonder live
+       region kondigt een screenreader de vastgehouden opslag (#483) niet aan. #}
+    {% if alert %}
+      <div role="alert">
+        <nldd-banner variant="{{ alert.kind }}" text="{{ alert.message }}"></nldd-banner>
+      </div>
+    {% endif %}
     {# In bare-modus (zie inline_edit_form) hoort het opslaan bij de omliggende
        flow, dus dan geen eigen knoppen. #}
     {% if not bare %}

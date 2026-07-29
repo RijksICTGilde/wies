@@ -31,14 +31,7 @@
     {# Global for the same reason: opdrachtgevers are inline-editable, so the
        org-picker widget can be swapped into any page that shows an opdracht. #}
     <script defer src="{{ static('js/wies/assignment_org_picker.js') }}"></script>
-    <script>
-      document.addEventListener("click", (e) => {
-        const item = e.composedPath().find(
-          (el) => el instanceof Element && el.localName === "nldd-menu-item" && el.dataset && el.dataset.href
-        );
-        if (item) window.location.href = item.dataset.href;
-      });
-    </script>
+    <script src="{{ static('js/wies/menu_nav.js') }}" defer></script>
   </head>
   <body>
     {# nldd-page is de bladspiegel: navigatie in de header-slot, de

@@ -12,7 +12,7 @@
      extra_confirm_label (optional): tweede destructieve knop
      extra_confirm_vals  (optional): JSON met wat die knop extra post #}
 <nldd-modal-dialog data-auto-show text="{{ dialog_text }}" supporting-text="{{ dialog_supporting }}">
-<nldd-button slot="actions" variant="primary" text="{{ cancel_label }}" onclick="this.closest('nldd-modal-dialog').hide()"></nldd-button>
+<nldd-button slot="actions" variant="primary" text="{{ cancel_label }}" data-dismiss-modal></nldd-button>
 <nldd-button slot="actions"
              variant="destructive"
              text="{{ confirm_label }}"

@@ -19,7 +19,6 @@
     {% if is_staff_member(request.user) %}
       <nldd-menu-item text="Statistieken" icon="chart-x-y-axis-line" data-href="{{ url('staff-dashboard') }}"></nldd-menu-item>
       <nldd-menu-item text="Database" icon="database" data-href="{{ url('staff-database') }}"></nldd-menu-item>
-      <nldd-menu-item text="Debug" icon="bug" data-href="{{ url('debug-request-meta') }}"></nldd-menu-item>
     {% endif %}
     </nldd-menu>
     </nldd-menu-item>

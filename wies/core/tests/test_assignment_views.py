@@ -20,6 +20,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.tests.inline_edit_helpers import post_inline_edit
 
 User = get_user_model()
 
@@ -113,8 +114,10 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that user with change_assignment permission can edit"""
         self.client.force_login(self.user_with_permission)
 
-        response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Updated Assignment Name"}
+        response = post_inline_edit(
+            self.client,
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            {"name": "Updated Assignment Name"},
         )
 
         assert response.status_code == 200
@@ -125,8 +128,10 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that assignment owner (BDM) can edit without explicit permission"""
         self.client.force_login(self.owner_user)
 
-        response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Owner Updated Name"}
+        response = post_inline_edit(
+            self.client,
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            {"name": "Owner Updated Name"},
         )
 
         assert response.status_code == 200
@@ -137,7 +142,8 @@ class AssignmentEditAttributeTest(TestCase):
         """A consultant placed on the assignment can edit ``name``."""
         self.client.force_login(self.assigned_user)
 
-        response = self.client.post(
+        response = post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Colleague Updated Name"},
         )
@@ -150,7 +156,8 @@ class AssignmentEditAttributeTest(TestCase):
         """Placed consultants do gain narrow access to ``extra_info`` (description)."""
         self.client.force_login(self.assigned_user)
 
-        response = self.client.post(
+        response = post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "extra_info"]),
             {"extra_info": "Description by colleague"},
         )
@@ -213,7 +220,8 @@ class AssignmentEditAttributeTest(TestCase):
             source="wies",
         )
 
-        response = self.client.post(
+        response = post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "owner"]),
             {"owner": new_bdm.id},
         )
@@ -275,7 +283,8 @@ class AssignmentEditAttributeTest(TestCase):
         )
         self.client.force_login(staff_user)
 
-        response = self.client.post(
+        response = post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "owner"]),
             {"owner": new_bdm.id},
         )
@@ -311,8 +320,10 @@ class AssignmentEditAttributeTest(TestCase):
         """Test successful name edit with valid input"""
         self.client.force_login(self.user_with_permission)
 
-        response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Valid New Name"}
+        response = post_inline_edit(
+            self.client,
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            {"name": "Valid New Name"},
         )
 
         assert response.status_code == 200
@@ -353,8 +364,10 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that POST request with valid data returns display view"""
         self.client.force_login(self.user_with_permission)
 
-        response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Updated Name"}
+        response = post_inline_edit(
+            self.client,
+            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            {"name": "Updated Name"},
         )
 
         assert response.status_code == 200
@@ -467,7 +480,8 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that editing an assignment creates an Assignment.update event"""
         self.client.force_login(self.user_with_permission)
 
-        self.client.post(
+        post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Event Test Name"},
         )
@@ -485,7 +499,8 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that saving the same value does not create an event"""
         self.client.force_login(self.user_with_permission)
 
-        self.client.post(
+        post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Test Assignment"},  # Same as current value
         )
@@ -496,7 +511,8 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that event stores the user FK for live lookups"""
         self.client.force_login(self.owner_user)
 
-        self.client.post(
+        post_inline_edit(
+            self.client,
             reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
             {"name": "Owner Changed Name"},
         )

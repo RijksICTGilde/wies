@@ -4,10 +4,14 @@ reparenting a placement is a team re-shape, not an edit.
 Permissions live in ``wies/core/permission_rules.py``.
 """
 
+from contextlib import contextmanager
+
 from django.core.exceptions import ValidationError
 
+from wies.core.editables.assignment import placement_audit_row
 from wies.core.inline_edit import Editable, EditableGroup, EditableSet
 from wies.core.models import Placement
+from wies.core.services.events import create_event
 
 
 def _validate_placement_period(cleaned):
@@ -18,9 +22,37 @@ def _validate_placement_period(cleaned):
     return cleaned
 
 
+@contextmanager
+def _mirror_edit_onto_assignment(placement, user, request=None):
+    """Record an inline placement edit as a "Team" event on the parent
+    assignment. A placement has no audit type of its own, and this way the
+    change renders identically to one made through "Team bewerken"."""
+    before_row = placement_audit_row(placement)
+    yield
+    placement.refresh_from_db()
+    after_row = placement_audit_row(placement)
+    if before_row == after_row:
+        return
+    create_event(
+        object_type="Assignment",
+        action="update",
+        source="user",
+        object_id=placement.service.assignment_id,
+        user=user,
+        request=request,
+        context={
+            "field_name": "services",
+            "field_label": "Team",
+            "changes": [{"old": before_row, "new": after_row}],
+        },
+    )
+
+
 class PlacementEditables(EditableSet):
     class Meta:
         model = Placement
+
+    audit_mirror = staticmethod(_mirror_edit_onto_assignment)
 
     colleague = Editable(label="Collega")
     period_source = Editable(label="Periode")

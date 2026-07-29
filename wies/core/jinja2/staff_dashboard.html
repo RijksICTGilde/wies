@@ -11,8 +11,8 @@
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% set _tiles = [
-        (usage.mau, "Monthly Active Users (30 dagen)"),
-        (usage.wau, "Weekly Active Users (7 dagen)"),
+        (usage.mau, "Maandelijks Actieve Gebruikers (30 dagen)"),
+        (usage.wau, "Wekelijks Actieve Gebruikers (7 dagen)"),
         (usage.total_ever, "Ooit ingelogd"),
         (usage.total_logins_90d, "Totaal logins (90 dagen)"),
         (usage.failures_30d, "Mislukte logins (30 dagen)"),
@@ -42,9 +42,9 @@
        hx-swap="innerHTML">
     <span class="wies-text-secondary">Foutmeldingen laden...</span>
   </div>
-  <h3>Logins per dag (laatste 90 dagen)</h3>
+  <h3>Dagelijks Actieve Gebruikers (laatste 90 dagen)</h3>
   <div class="staff-chart">
-    {% for day, count in usage.daily_logins %}
+    {% for day, count in usage.daily_active_users %}
       <div class="staff-chart__bar"
            title="{{ day }}: {{ count }}"
            style="height: {{ (count / usage.max_daily * 100) if usage.max_daily else 0 }}%"></div>
