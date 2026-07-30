@@ -4,7 +4,12 @@
    as_widget(). The aria-label sits on the <select> because nldd-form-field's
    label wiring only reaches its first child — the nldd-dropdown host — and that
    never forwards a name inward; NlddFormMixin._configure_field supplies it. #}
-<nldd-dropdown>
+{# nldd-form-field._findInput() geeft de nldd-dropdown host terug, niet de inner
+   <select>, en leest daar `invalid`/`error-message` van af. nldd-dropdown
+   reflecteert `invalid` (rode rand + icoon) en de foutmelding wordt zichtbaar en
+   via aria-describedby aangekondigd. Daarom hoort de wiring op de host. #}
+<nldd-dropdown
+{% if widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}>
 <select name="{{ widget.name }}"
         {% include "wies/forms/widgets/attrs.html" %}>
   {% for group_name, group_choices, group_index in widget.optgroups %}

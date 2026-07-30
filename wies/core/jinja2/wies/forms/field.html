@@ -4,19 +4,25 @@
 
    nldd-form-field only reveals an error text when the input reflects `invalid`
    and points at it by id via `error-message` — without that wiring the messages
-   render at height 0 and screen readers never announce them. Alleen echte
-   invoervelden koppelen dat terug; een radiogroep, checkboxgroep of dropdown
-   niet, dus daar zetten we `invalid` zelf op de foutmelding.
+   render at height 0 and screen readers never announce them. Elke widget zet die
+   wiring nu zelf op het element dat _findInput() teruggeeft (zie de widget-
+   templates), dus het component toont de melding zodra het upgradet.
+
+   We zetten `invalid` daarnaast alvast op de foutmelding als no-JS/pre-upgrade
+   fallback: een error-text bestaat alleen als er een fout is, dus dit is altijd
+   correct. _syncErrorText overschrijft het onvoorwaardelijk zodra het component
+   upgradet, maar met dezelfde waarde (invalid=true), dus het blijft consistent.
 
    Een veld dat technisch optioneel is maar dat de gebruiker niet als keuze
    ervaart (er is een zinnige standaard) kan de Optioneel-badge onderdrukken met
    `hide-optional` in widget.attrs. #}
 {% set error_ids = wire_field_errors(field) %}
-{% set reflecting_widgets = ["TextInput", "EmailInput", "PasswordInput", "NumberInput", "Textarea", "DateInput"] %}
-{% set reflects_invalid = field.field.widget.__class__.__name__ in reflecting_widgets %}
-<nldd-form-field {% if field.label %}label="{{ field.label }}"{% endif %} {% if not field.field.required and not field.field.widget.attrs.get("hide-optional") %}optional{% endif %}>
+<nldd-form-field
+{% if field.label %}label="{{ field.label }}"{% endif %}
+{% if not field.field.required and not field.field.widget.attrs.get("hide-optional") %}optional{% endif %}
+>
 {{ field }}
 {% for error in field.errors %}
-  <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}" {% if not reflects_invalid %}invalid{% endif %}>{{ error }}</nldd-form-field-error-text>
+  <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>
 {% endfor %}
 </nldd-form-field>

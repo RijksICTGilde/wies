@@ -6,8 +6,9 @@ from django.contrib.auth.models import Group
 from django.test import TestCase
 
 from wies.core.form_mixins import NlddFormMixin
-from wies.core.forms import UserForm
+from wies.core.forms import LabelCategoryForm, UserForm
 from wies.core.models import Label, LabelCategory
+from wies.core.widgets import MultiselectDropdown
 
 User = get_user_model()
 
@@ -112,6 +113,95 @@ class NlddUserFormRenderingTest(TestCase):
         assert "FileInput" in log.output[0]
         assert "document" in log.output[0]
         assert "not in widget_templates mapping" in log.output[0]
+
+
+class NlddChoiceWidgetErrorWiringTest(TestCase):
+    """Validation errors on choice widgets must reach the element nldd-form-field
+    inspects (_findInput() = first non-helper child), otherwise the message stays
+    hidden and no screen reader announces it.
+
+    nldd-form-field reads `invalid`/`error-message` from that element; the widget
+    templates forward them to the host that _findInput() returns. test_forms.py
+    already covers text/date widgets — these cover the choice widgets.
+    """
+
+    def _first_error_id(self, rendered):
+        ids = re.findall(r'<nldd-form-field-error-text id="([^"]+)"', rendered)
+        assert ids, "no error text rendered with an id"
+        return ids
+
+    def test_radioselect_error_wired_to_group(self):
+        """RadioSelect: nldd-radio-button-group carries invalid + error-message."""
+        form = LabelCategoryForm(data={"name": ""})  # both name and color missing
+        assert not form.is_valid()
+        assert "color" in form.errors
+
+        rendered = str(form)
+        error_ids = self._first_error_id(rendered)
+        # The colour field's error id must be named on the radio group host.
+        assert any(
+            re.search(
+                rf'<nldd-radio-button-group[^>]*invalid[^>]*error-message="[^"]*{re.escape(eid)}',
+                rendered,
+                re.DOTALL,
+            )
+            for eid in error_ids
+        ), "radio group is not wired to its error text"
+
+    def _make_choice_form(self, **kwargs):
+        class ChoiceForm(NlddFormMixin, forms.Form):
+            single = forms.ChoiceField(
+                label="Enkel", choices=[("a", "A"), ("b", "B")], widget=forms.Select, required=True
+            )
+            multi = forms.MultipleChoiceField(
+                label="Meer", choices=[("a", "A"), ("b", "B")], widget=MultiselectDropdown, required=True
+            )
+            boxes = forms.MultipleChoiceField(
+                label="Vinkjes", choices=[("a", "A"), ("b", "B")], widget=forms.CheckboxSelectMultiple, required=True
+            )
+
+        return ChoiceForm(**kwargs)
+
+    def test_select_error_wired_to_dropdown(self):
+        """Select: nldd-dropdown host carries invalid + error-message."""
+        form = self._make_choice_form(data={})
+        assert not form.is_valid()
+        rendered = str(form)
+
+        assert re.search(
+            r"<nldd-dropdown[^>]*invalid[^>]*error-message=\"[^\"]+\"",
+            rendered,
+            re.DOTALL,
+        ), "nldd-dropdown is not wired to its error text"
+
+    def test_multiselect_error_wired_to_token_field(self):
+        """SelectMultiple: nldd-token-field host carries invalid + error-message."""
+        form = self._make_choice_form(data={})
+        assert not form.is_valid()
+        rendered = str(form)
+
+        assert re.search(
+            r"<nldd-token-field[^>]*invalid[^>]*error-message=\"[^\"]+\"",
+            rendered,
+            re.DOTALL,
+        ), "nldd-token-field is not wired to its error text"
+
+    def test_checkbox_select_error_wired_to_first_field(self):
+        """CheckboxSelectMultiple: the first nldd-checkbox-field carries the wiring.
+
+        There is no wrapping group, so _findInput() returns the first field; the
+        component reflects no `invalid` styling but still shows and announces the
+        message via the raw attributes.
+        """
+        form = self._make_choice_form(data={})
+        assert not form.is_valid()
+        rendered = str(form)
+
+        assert re.search(
+            r"<nldd-checkbox-field[^>]*invalid[^>]*error-message=\"[^\"]+\"",
+            rendered,
+            re.DOTALL,
+        ), "first nldd-checkbox-field is not wired to its error text"
 
 
 class UserFormEmailDomainValidationTest(TestCase):

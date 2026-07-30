@@ -32,6 +32,11 @@
        org-picker widget can be swapped into any page that shows an opdracht. #}
     <script defer src="{{ static('js/wies/assignment_org_picker.js') }}"></script>
     <script src="{{ static('js/wies/menu_nav.js') }}" defer></script>
+    {# Global: data-confirm (destructieve beheeracties) + data-action="show-more"
+       (event-tijdlijn) worden via delegatie op document afgehandeld, en de
+       tijdlijn arriveert ook via htmx-swaps — dus overal nodig. #}
+    <script src="{{ static('js/show_more.js') }}" defer></script>
+    <script src="{{ static('js/ui_handlers.js') }}" defer></script>
   </head>
   <body>
     {# nldd-page is de bladspiegel: navigatie in de header-slot, de

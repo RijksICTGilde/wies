@@ -10,7 +10,13 @@
     {% endif %}
   {% endfor %}
 {% endfor %}
-<nldd-token-field name="{{ widget.name }}" values="{{ selected|join(',') }}" placeholder="{{ widget.attrs.placeholder|default('Toevoegen…') }}" {% if widget.attrs['accessible-label'] %}accessible-label="{{ widget.attrs['accessible-label'] }}"{% endif %} {% if widget.attrs.required %}required{% endif %}>
+<nldd-token-field name="{{ widget.name }}" values="{{ selected|join(',') }}" placeholder="{{ widget.attrs.placeholder|default('Toevoegen…') }}"
+{% if widget.attrs['accessible-label'] %}accessible-label="{{ widget.attrs['accessible-label'] }}"{% endif %}
+{% if widget.attrs.required %}required{% endif %}
+{# _findInput() geeft deze host terug; nldd-token-field reflecteert `invalid` en
+   toont daarmee de foutmelding en zet aria-describedby. #}
+{% if widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}
+>
 <nldd-menu variant="listbox">
 {% for group_name, group_choices, group_index in widget.optgroups %}
   {% for option in group_choices %}

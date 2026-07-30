@@ -1,53 +1,32 @@
 {% for error in object_list %}
-  <c-table-row>
-    <c-table-cell>
-      <span class="rvo-text rvo-text--sm">{{ error.timestamp|datetime_nl }}</span>
-    </c-table-cell>
-    <c-table-cell>
-      <span class="rvo-text rvo-text--bold rvo-text--sm"
-            title="{{ error.exception_message or error.message }}">{{ error.short_description }}</span>
-    </c-table-cell>
-    <c-table-cell>
-      {% if error.path %}
-        <span class="rvo-text rvo-text--sm"
-              title="{{ error.method }} {{ error.path }}">{{ error.method }} {{ error.path }}</span>
-      {% else %}
-        <span class="rvo-text rvo-text--sm rvo-text--subtle"
-              title="{{ error.logger_name }}">{{ error.logger_name }}</span>
-      {% endif %}
-    </c-table-cell>
-    <c-table-cell>
-      {% if error.user_email %}
-        <span class="rvo-text rvo-text--sm" title="{{ error.user_email }}">{{ error.user_email }}</span>
-      {% else %}
-        <span class="rvo-text rvo-text--sm rvo-text--subtle">-</span>
-      {% endif %}
-    </c-table-cell>
-    <c-table-cell class="error-table__actions-col">
-      <div class="error-table__actions">
-        <a href="{{ url('error-detail', args=[error.id]) }}"
-           class="error-table__icon-btn"
-           title="Details bekijken"
-           aria-label="Details bekijken">
-          <c-icon icon="oog" size="md" color="lintblauw" />
-        </a>
-        <button type="button"
-                class="error-table__icon-btn"
-                title="Foutmelding verwijderen"
-                aria-label="Foutmelding verwijderen"
-                hx-post="{{ url('delete-error', args=[error.id]) }}?pagina={{ page_obj.number }}"
-                hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
-                hx-target="#error_table_container"
-                hx-swap="innerHTML">
-          <c-icon icon="verwijderen" size="md" color="grijs-700" />
-        </button>
-      </div>
-    </c-table-cell>
-  </c-table-row>
+  <nldd-list-item>
+  <nldd-text-cell width="180px" size="sm" color="secondary" text="{{ error.timestamp|datetime_nl }}"></nldd-text-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-text-cell divider-start text="{{ error.short_description }}" supporting-text="{{ error.exception_message or error.message }}"></nldd-text-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  {% if error.path %}
+    <nldd-text-cell size="sm" text="{{ error.method }} {{ error.path }}"></nldd-text-cell>
+  {% else %}
+    <nldd-text-cell size="sm" color="secondary" text="{{ error.logger_name }}"></nldd-text-cell>
+  {% endif %}
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  {% if error.user_email %}
+    <nldd-text-cell size="sm" text="{{ error.user_email }}"></nldd-text-cell>
+  {% else %}
+    <nldd-text-cell size="sm" color="secondary" text="-"></nldd-text-cell>
+  {% endif %}
+  <nldd-spacer-cell size="8"></nldd-spacer-cell>
+  <nldd-cell>
+  <nldd-icon-button size="sm" icon="eye" tooltip-timing="never" text="Details bekijken" href="{{ url('error-detail', args=[error.id]) }}"></nldd-icon-button>
+  <nldd-icon-button size="sm" icon="trash" tooltip-timing="never" text="Foutmelding verwijderen"
+                    hx-post="{{ url('delete-error', args=[error.id]) }}?pagina={{ page_obj.number }}"
+                    hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+                    hx-target="#error_table_container"
+                    hx-swap="innerHTML"></nldd-icon-button>
+  </nldd-cell>
+  </nldd-list-item>
 {% else %}
-  <c-table-row>
-    <c-table-cell colspan="5">
-      <span class="rvo-text--italic">Geen foutmeldingen.</span>
-    </c-table-cell>
-  </c-table-row>
+  <nldd-list-item>
+  <nldd-text-cell text="Geen foutmeldingen."></nldd-text-cell>
+  </nldd-list-item>
 {% endfor %}
