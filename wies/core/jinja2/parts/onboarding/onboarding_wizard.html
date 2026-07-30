@@ -104,24 +104,27 @@
     {% endfor %}
   </section>
 {% endif %}
-{# Alle knoppen staan na de stappen, dus onder de inhoud van de stap die
-   zichtbaar is; onboarding.js toont er telkens een. Terug ga je met de knop in
-   de titelbalk. #}
-<nldd-container data-onboarding-nav layout="row" horizontal-alignment="right" padding-top="24">
-<nldd-button data-onboarding-next variant="primary" end-icon="chevron-right" text="Volgende"></nldd-button>
-</nldd-container>
-<nldd-container data-onboarding-finish-wrap padding-top="24" hidden>
-<nldd-button data-onboarding-finish variant="primary" width="full" text="Aan de slag"></nldd-button>
-</nldd-container>
 {# Detailscherm binnen het venster: "Wijzigen" swapt hier het opdrachtformulier
    in en onboarding.js verbergt zolang de stappen en de stapnavigatie. #}
 <div id="onboarding-detail" hidden></div>
-{# Opslaan staat onder het formulier, net als "Aan de slag" onder de laatste
-   stap. De knop staat buiten het formulier, dus onboarding.js dient het in. #}
-<nldd-container data-onboarding-detail-nav padding-top="24" hidden>
+</nldd-simple-section>
+{# Alle knoppen staan in de footer van de page, dus op één plek onder de
+   stappen in plaats van binnen de sectie; onboarding.js toont er telkens een.
+   Niet sticky: de knop hoort na de inhoud van de stap te komen, niet erover.
+   Terug ga je met de knop in de titelbalk. #}
+<nldd-container slot="footer" padding="16">
+<nldd-container data-onboarding-nav layout="row" horizontal-alignment="right">
+<nldd-button data-onboarding-next variant="primary" end-icon="chevron-right" text="Volgende"></nldd-button>
+</nldd-container>
+<nldd-container data-onboarding-finish-wrap hidden>
+<nldd-button data-onboarding-finish variant="primary" width="full" text="Aan de slag"></nldd-button>
+</nldd-container>
+{# Opslaan staat op dezelfde plek als "Aan de slag". De knop staat buiten het
+   formulier, dus onboarding.js dient het in. #}
+<nldd-container data-onboarding-detail-nav hidden>
 <nldd-button data-onboarding-detail-save variant="primary" width="full" text="Opslaan"></nldd-button>
 </nldd-container>
-</nldd-simple-section>
+</nldd-container>
 </nldd-page>
 </nldd-window>
 {# Sluit en Aan de slag POSTen hetzelfde; onboarding.js dient dit formulier
