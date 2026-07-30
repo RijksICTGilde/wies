@@ -41,6 +41,7 @@ from wies.core.inline_edit.forms import (
 )
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.placement_visibility import LABELS, evaluate
+from wies.core.public_id import parse_public_ids
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
@@ -146,6 +147,34 @@ def _build_close_url(request):
     return _url_drop_params(request.path, request.GET, PANEL_PARAMS)
 
 
+def _is_side_panel_request(request):
+    """True for the HTMX requests that render a panel partial (which dereference
+    ``panel_data``). Lets a view 404 an unresolved panel target instead of
+    rendering a template with no data; a full-page load stays graceful and shows
+    the page without a panel."""
+    return request.headers.get("HX-Target") in ("side_panel-content", "side_panel-container")
+
+
+def _resolve_panel_object(request, model, public_id, *, select_related=()):
+    """Look up a side-panel object (Assignment, Colleague, ...) by its public_id.
+
+    Like get_object_or_404 but tuned for the side panel: a miss (including an
+    unknown or malformed public_id, which simply matches no row) raises Http404
+    only for the HTMX panel request, so HTMX does not swap a broken panel. A
+    full-page load gets None and simply renders without a panel.
+
+    Only for models whose panel has no per-object visibility rule; Placement,
+    which does, keeps its own resolver (``_resolve_placement_panel``).
+    """
+    qs = model.objects.select_related(*select_related) if select_related else model.objects.all()
+    try:
+        return qs.get(public_id=public_id)
+    except model.DoesNotExist, ValidationError, ValueError:
+        if _is_side_panel_request(request):
+            raise Http404 from None
+        return None
+
+
 def _build_assignment_panel_data(assignment, request):
     """Shared helper to build assignment panel context data for both views."""
     from wies.core.editables.assignment import visible_service_rows  # noqa: PLC0415 — avoids import cycle
@@ -172,9 +201,15 @@ def _merge_date_range(existing: dict, start, end):
         existing["end_date"] = end
 
 
-def _make_assignment_entry(name, aid, request, start_date=None, end_date=None, placement_id=None, **extra):
+def _make_assignment_entry(
+    name, aid, request, public_id=None, start_date=None, end_date=None, placement_id=None, **extra
+):
     """Build a standard assignment dict for panel display."""
-    url = _build_panel_url(request, plaatsing=placement_id) if placement_id else _build_panel_url(request, opdracht=aid)
+    url = (
+        _build_panel_url(request, plaatsing=placement_id)
+        if placement_id
+        else _build_panel_url(request, opdracht=public_id)
+    )
     return {
         "name": name,
         "id": aid,
@@ -202,6 +237,7 @@ def _get_colleague_assignments(request, colleague, viewer):
         .select_related("service__assignment", "service__skill")
         .values(
             "id",
+            "public_id",
             "service__assignment__id",
             "service__assignment__name",
             "service__assignment__start_date",
@@ -236,7 +272,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                 historical=result.timing != "active",
                 privacy_warning_text=result.privacy_note,
                 period_label=LABELS.get(result.timing),
-                placement_id=placement["id"],
+                placement_id=placement["public_id"],
             )
         else:
             _merge_date_range(bucket[assignment_id], start, end)
@@ -245,8 +281,10 @@ def _get_colleague_assignments(request, colleague, viewer):
             bucket[assignment_id]["tags"][skill_name] = placement["service__description"]
 
     # BM roles (active and ended)
-    bm_assignments = Assignment.objects.filter(owner=colleague).values_list("id", "name", "start_date", "end_date")
-    for assignment_id, name, start_date, end_date in bm_assignments:
+    bm_assignments = Assignment.objects.filter(owner=colleague).values_list(
+        "id", "public_id", "name", "start_date", "end_date"
+    )
+    for assignment_id, public_id, name, start_date, end_date in bm_assignments:
         assignment_is_active = end_date is None or today <= end_date
 
         if assignment_is_active:
@@ -255,6 +293,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     name,
                     assignment_id,
                     request,
+                    public_id=public_id,
                     start_date=start_date,
                     end_date=end_date,
                 )
@@ -267,6 +306,7 @@ def _get_colleague_assignments(request, colleague, viewer):
                     name,
                     assignment_id,
                     request,
+                    public_id=public_id,
                     start_date=start_date,
                     end_date=end_date,
                     tags={"Business Manager": None},
@@ -347,7 +387,7 @@ def _build_placement_panel_data(placement, request, *, visibility=None):
     assignment_card = {
         "name": assignment.name,
         "id": assignment.id,
-        "assignment_url": _build_panel_url(request, opdracht=assignment.id),
+        "assignment_url": _build_panel_url(request, opdracht=assignment.public_id),
         "start_date": None,
         "end_date": None,
         "organization": primary_org,
@@ -370,26 +410,38 @@ def _build_placement_panel_data(placement, request, *, visibility=None):
     }
 
 
-def _resolve_placement_panel(request, placement_id):
-    """Fetch a placement for the side panel, enforcing the same rule as the team
-    list: ended or not-yet-started placements are only shown to the placed
-    colleague and the assignment's BM-owner. Returns panel data, or None when
-    the placement does not exist or the viewer may not see it."""
+def _resolve_placement_panel(request, public_id):
+    """Fetch a placement for the side panel by its public_id, enforcing the same
+    rule as the team list: ended or not-yet-started placements are only shown to
+    the placed colleague and the assignment's BM-owner.
+
+    Not-found, malformed and not-visible are indistinguishable: all raise Http404
+    for the HTMX panel request (so a hidden placement's existence is never
+    revealed) and return None for a full-page load (renders without a panel)."""
     try:
         placement = Placement.objects.select_related("colleague", "service__assignment", "service__skill").get(
-            id=placement_id
+            public_id=public_id
         )
-    except Placement.DoesNotExist, ValueError:
-        # ValueError: a non-numeric ?plaatsing= param fails PK coercion; treat
-        # it the same as "not found" rather than letting it escape as a 500.
-        return None
-    assignment = placement.service.assignment
-    viewer = getattr(request.user, "colleague", None)
-    viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
-    result = evaluate(
-        placement.start_date, placement.end_date, placement.colleague_id, viewer, viewer_is_bm, timezone.now().date()
-    )
-    if not result.visible:
+    except Placement.DoesNotExist, ValidationError, ValueError:
+        # A non-UUID / unknown ?plaatsing= fails the lookup; treat it the same as
+        # "not found" (anti-oracle below) rather than letting it escape as a 500.
+        placement = None
+    result = None
+    if placement is not None:
+        assignment = placement.service.assignment
+        viewer = getattr(request.user, "colleague", None)
+        viewer_is_bm = viewer is not None and assignment.owner_id == viewer.id
+        result = evaluate(
+            placement.start_date,
+            placement.end_date,
+            placement.colleague_id,
+            viewer,
+            viewer_is_bm,
+            timezone.now().date(),
+        )
+    if result is None or not result.visible:
+        if _is_side_panel_request(request):
+            raise Http404 from None
         return None
     return _build_placement_panel_data(placement, request, visibility=result)
 
@@ -629,12 +681,12 @@ class PlacementListView(ListView):
         return filter_visible_placements(qs, timezone.now().date(), viewer)
 
     def _get_labels_by_category(self):
-        """Parse selected label IDs grouped by category."""
-        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid.isdigit()]
-        if not label_ids:
+        """Parse selected label public_ids grouped by category (keyed by internal id)."""
+        label_public_ids = self.request.GET.getlist("labels")
+        if not label_public_ids:
             return {}
         labels_by_category = {}
-        for label in Label.objects.filter(id__in=label_ids).values("id", "category_id"):
+        for label in Label.objects.filter(public_id__in=parse_public_ids(label_public_ids)).values("id", "category_id"):
             labels_by_category.setdefault(label["category_id"], []).append(label["id"])
         return labels_by_category
 
@@ -663,13 +715,13 @@ class PlacementListView(ListView):
         exclude_filter can be: "rol", "org", "loopt_af", or a category_id (int) for labels.
         """
         if exclude_filter != "rol":
-            rol_filter = [x for x in self.request.GET.getlist("rol") if x.isdigit()]
-            if rol_filter:
-                qs = qs.filter(service__skill__id__in=rol_filter)
+            rol_public_ids = self.request.GET.getlist("rol")
+            if rol_public_ids:
+                qs = qs.filter(service__skill__public_id__in=parse_public_ids(rol_public_ids))
 
         if exclude_filter != "org":
-            org_ids = [int(x) for x in self.request.GET.getlist("org") if x.isdigit()]
-            org_self_ids = [int(x) for x in self.request.GET.getlist("org_self") if x.isdigit()]
+            org_ids = _ids_for_public_ids(OrganizationUnit, self.request.GET.getlist("org"))
+            org_self_ids = _ids_for_public_ids(OrganizationUnit, self.request.GET.getlist("org_self"))
             org_type_labels = [x for x in self.request.GET.getlist("org_type") if x]
 
             if org_ids or org_self_ids or org_type_labels:
@@ -695,9 +747,9 @@ class PlacementListView(ListView):
 
         # Merk filter: OR within the merk group (one merk per colleague)
         if exclude_filter != "merk":
-            suborganization_ids = [int(x) for x in self.request.GET.getlist("merk") if x.isdigit()]
-            if suborganization_ids:
-                qs = qs.filter(colleague__suborganization_id__in=suborganization_ids)
+            suborganization_public_ids = parse_public_ids(self.request.GET.getlist("merk"))
+            if suborganization_public_ids:
+                qs = qs.filter(colleague__suborganization__public_id__in=suborganization_public_ids)
 
         # Filter by assignment end date (preset period)
         if exclude_filter != "loopt_af":
@@ -726,8 +778,8 @@ class PlacementListView(ListView):
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
         qs = self._get_base_queryset()
-        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid.isdigit()]
-        if label_ids and not self._get_labels_by_category():
+        label_public_ids = self.request.GET.getlist("labels")
+        if label_public_ids and not self._get_labels_by_category():
             return Placement.objects.none()
         qs = self._apply_filters(qs)
         return qs.distinct()
@@ -762,7 +814,7 @@ class PlacementListView(ListView):
 
         # Add panel URLs to placement objects
         for placement in context["object_list"]:
-            placement.panel_url = _build_panel_url(self.request, plaatsing=placement.id)
+            placement.panel_url = _build_panel_url(self.request, plaatsing=placement.public_id)
 
         context["filter_target_url"] = reverse("home")
         context["search_field"] = "zoek"
@@ -775,30 +827,24 @@ class PlacementListView(ListView):
         if loopt_af_values:
             active_filters["loopt_af"] = loopt_af_values
 
-        # rol filter supports multi-select
-        rol_filter = set()
-        for rol_id in self.request.GET.getlist("rol"):
-            if rol_id.isdigit():
-                rol_filter.add(rol_id)
+        # rol filter supports multi-select (values are skill public_ids)
+        rol_filter = _existing_public_ids(Skill, self.request.GET.getlist("rol"))
         if len(rol_filter) > 0:
             active_filters["rol"] = rol_filter
 
-        # label filter supports multi-select
-        label_filter = set()
-        for label_id in self.request.GET.getlist("labels"):
-            if label_id.isdigit():
-                label_filter.add(label_id)
+        # label filter supports multi-select (values are label public_ids)
+        label_filter = _existing_public_ids(Label, self.request.GET.getlist("labels"))
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
 
-        # merk filter supports multi-select
-        suborganization_filter = {v for v in self.request.GET.getlist("merk") if v.isdigit()}
+        # merk filter supports multi-select (values are suborganization public_ids)
+        suborganization_filter = _existing_public_ids(Suborganization, self.request.GET.getlist("merk"))
         if suborganization_filter:
             active_filters["merk"] = suborganization_filter
 
-        # Organization filter (multi-select via modal)
-        org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
-        org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
+        # Organization filter (multi-select via modal; values are org public_ids)
+        org_filter = sorted(_existing_public_ids(OrganizationUnit, self.request.GET.getlist("org")))
+        org_self_filter = sorted(_existing_public_ids(OrganizationUnit, self.request.GET.getlist("org_self")))
         org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
         if org_filter:
             active_filters["org"] = org_filter
@@ -807,30 +853,36 @@ class PlacementListView(ListView):
         if org_type_filter:
             active_filters["org_type"] = org_type_filter
 
-        # Build chip display data for org filters
+        # Build chip display data for org filters (values are org public_ids)
         org_chip_data: list[dict] = []
         if org_filter:
-            org_labels = dict(
-                OrganizationUnit.objects.filter(id__in=[int(x) for x in org_filter]).values_list("id", "label")
-            )
+            org_labels = {
+                str(pid): label
+                for pid, label in OrganizationUnit.objects.filter(public_id__in=org_filter).values_list(
+                    "public_id", "label"
+                )
+            }
             org_chip_data.extend(
                 {
                     "param_name": "org",
-                    "param_value": org_id,
-                    "label": org_labels.get(int(org_id), f"Organisatie {org_id}"),
+                    "param_value": org_pid,
+                    "label": org_labels.get(org_pid, f"Organisatie {org_pid}"),
                 }
-                for org_id in org_filter
+                for org_pid in org_filter
             )
         if org_self_filter:
-            org_self_labels = dict(
-                OrganizationUnit.objects.filter(id__in=[int(x) for x in org_self_filter]).values_list("id", "label")
-            )
-            for org_id in org_self_filter:
-                base_label = org_self_labels.get(int(org_id), f"Organisatie {org_id}")
+            org_self_labels = {
+                str(pid): label
+                for pid, label in OrganizationUnit.objects.filter(public_id__in=org_self_filter).values_list(
+                    "public_id", "label"
+                )
+            }
+            for org_pid in org_self_filter:
+                base_label = org_self_labels.get(org_pid, f"Organisatie {org_pid}")
                 org_chip_data.append(
                     {
                         "param_name": "org_self",
-                        "param_value": org_id,
+                        "param_value": org_pid,
                         "label": f"{base_label} (direct)",
                     }
                 )
@@ -859,15 +911,15 @@ class PlacementListView(ListView):
             for label in Label.objects.filter(category=category):
                 options.append(
                     {
-                        "value": str(label.id),
+                        "value": str(label.public_id),
                         "label": f"{label.name}",
                         "category_color": category.color,
                         "count": cat_label_counts.get(label.id, 0),
                     }
                 )
-                if str(label.id) in active_filters.get("labels", set()):
+                if str(label.public_id) in active_filters.get("labels", set()):
                     options[-1]["selected"] = True
-                    selected_values.append(str(label.id))
+                    selected_values.append(str(label.public_id))
 
             label_filter_groups.append(
                 {
@@ -890,14 +942,14 @@ class PlacementListView(ListView):
         for suborganization in Suborganization.objects.all():
             suborganization_options.append(
                 {
-                    "value": str(suborganization.id),
+                    "value": str(suborganization.public_id),
                     "label": suborganization.name,
                     "count": suborg_counts.get(suborganization.id, 0),
                 }
             )
-            if str(suborganization.id) in active_filters.get("merk", set()):
+            if str(suborganization.public_id) in active_filters.get("merk", set()):
                 suborganization_options[-1]["selected"] = True
-                suborganization_selected_values.append(str(suborganization.id))
+                suborganization_selected_values.append(str(suborganization.public_id))
 
         suborganization_filter_group = {
             "type": "select-multi",
@@ -923,10 +975,10 @@ class PlacementListView(ListView):
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
         for skill in Skill.objects.order_by("name"):
-            option = {"value": str(skill.id), "label": skill.name, "count": skill_counts.get(skill.id, 0)}
-            if str(skill.id) in active_filters.get("rol", set()):
+            option = {"value": str(skill.public_id), "label": skill.name, "count": skill_counts.get(skill.id, 0)}
+            if str(skill.public_id) in active_filters.get("rol", set()):
                 option["selected"] = True
-                skill_selected_values.append(str(skill.id))
+                skill_selected_values.append(str(skill.public_id))
             skill_options.append(option)
 
         context["active_filters"] = active_filters
@@ -987,17 +1039,13 @@ class PlacementListView(ListView):
             if panel_data is not None:
                 context["panel_data"] = panel_data
         elif colleague_id and not assignment_id:
-            try:
-                colleague = Colleague.objects.get(id=colleague_id)
+            colleague = _resolve_panel_object(self.request, Colleague, colleague_id)
+            if colleague is not None:
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
-            except Colleague.DoesNotExist, ValueError:
-                pass
         elif assignment_id:
-            try:
-                assignment = Assignment.objects.get(id=assignment_id)
+            assignment = _resolve_panel_object(self.request, Assignment, assignment_id)
+            if assignment is not None:
                 context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
-            except Assignment.DoesNotExist, ValueError:
-                pass
         return context
 
 
@@ -1038,17 +1086,17 @@ class AssignmentListView(ListView):
 
     def _apply_filters(self, qs, *, exclude_filter=None):
         if exclude_filter != "rol":
-            rol_filter = [x for x in self.request.GET.getlist("rol") if x.isdigit()]
-            if rol_filter:
+            rol_public_ids = self.request.GET.getlist("rol")
+            if rol_public_ids:
                 qs = qs.filter(
-                    services__skill__id__in=rol_filter,
+                    services__skill__public_id__in=parse_public_ids(rol_public_ids),
                     services__status="OPEN",
                     services__placements__isnull=True,
                 )
 
         if exclude_filter != "org":
-            org_ids = [int(x) for x in self.request.GET.getlist("org") if x.isdigit()]
-            org_self_ids = [int(x) for x in self.request.GET.getlist("org_self") if x.isdigit()]
+            org_ids = _ids_for_public_ids(OrganizationUnit, self.request.GET.getlist("org"))
+            org_self_ids = _ids_for_public_ids(OrganizationUnit, self.request.GET.getlist("org_self"))
             org_type_labels = [x for x in self.request.GET.getlist("org_type") if x]
             if org_ids or org_self_ids or org_type_labels:
                 matching_ids: set[int] = set()
@@ -1108,7 +1156,7 @@ class AssignmentListView(ListView):
 
         base_url = reverse("assignment-list")
         for assignment in context["object_list"]:
-            assignment.panel_url = _build_panel_url(self.request, opdracht=assignment.id)
+            assignment.panel_url = _build_panel_url(self.request, opdracht=assignment.public_id)
             first_org = assignment.organizations.select_related("parent__parent__parent__parent").first()
             assignment.org_breadcrumb = get_org_breadcrumb(first_org, base_url) if first_org else None
 
@@ -1125,11 +1173,8 @@ class AssignmentListView(ListView):
             except ValueError:
                 active_filters["beschikbaar_vanaf"] = beschikbaar_vanaf
 
-        # rol filter supports multi-select
-        rol_filter = set()
-        for rol_id in self.request.GET.getlist("rol"):
-            if rol_id.isdigit():
-                rol_filter.add(rol_id)
+        # rol filter supports multi-select (values are skill public_ids)
+        rol_filter = _existing_public_ids(Skill, self.request.GET.getlist("rol"))
         if len(rol_filter) > 0:
             active_filters["rol"] = rol_filter
 
@@ -1149,15 +1194,15 @@ class AssignmentListView(ListView):
         skill_options = [{"value": "", "label": ""}]
         skill_selected_values = []
         for skill in Skill.objects.order_by("name"):
-            option = {"value": str(skill.id), "label": skill.name, "count": skill_counts.get(skill.id, 0)}
-            if str(skill.id) in active_filters.get("rol", set()):
+            option = {"value": str(skill.public_id), "label": skill.name, "count": skill_counts.get(skill.id, 0)}
+            if str(skill.public_id) in active_filters.get("rol", set()):
                 option["selected"] = True
-                skill_selected_values.append(str(skill.id))
+                skill_selected_values.append(str(skill.public_id))
             skill_options.append(option)
 
-        # Organization filter (multi-select via modal)
-        org_filter = [x for x in self.request.GET.getlist("org") if x.isdigit()]
-        org_self_filter = [x for x in self.request.GET.getlist("org_self") if x.isdigit()]
+        # Organization filter (multi-select via modal; values are org public_ids)
+        org_filter = sorted(_existing_public_ids(OrganizationUnit, self.request.GET.getlist("org")))
+        org_self_filter = sorted(_existing_public_ids(OrganizationUnit, self.request.GET.getlist("org_self")))
         org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
         if org_filter:
             active_filters["org"] = org_filter
@@ -1166,30 +1211,36 @@ class AssignmentListView(ListView):
         if org_type_filter:
             active_filters["org_type"] = org_type_filter
 
-        # Build chip display data for org filters
+        # Build chip display data for org filters (values are org public_ids)
         org_chip_data: list[dict] = []
         if org_filter:
-            org_labels = dict(
-                OrganizationUnit.objects.filter(id__in=[int(x) for x in org_filter]).values_list("id", "label")
-            )
+            org_labels = {
+                str(pid): label
+                for pid, label in OrganizationUnit.objects.filter(public_id__in=org_filter).values_list(
+                    "public_id", "label"
+                )
+            }
             org_chip_data.extend(
                 {
                     "param_name": "org",
-                    "param_value": org_id,
-                    "label": org_labels.get(int(org_id), f"Organisatie {org_id}"),
+                    "param_value": org_pid,
+                    "label": org_labels.get(org_pid, f"Organisatie {org_pid}"),
                 }
-                for org_id in org_filter
+                for org_pid in org_filter
             )
         if org_self_filter:
-            org_self_labels = dict(
-                OrganizationUnit.objects.filter(id__in=[int(x) for x in org_self_filter]).values_list("id", "label")
-            )
-            for org_id in org_self_filter:
-                base_label = org_self_labels.get(int(org_id), f"Organisatie {org_id}")
+            org_self_labels = {
+                str(pid): label
+                for pid, label in OrganizationUnit.objects.filter(public_id__in=org_self_filter).values_list(
+                    "public_id", "label"
+                )
+            }
+            for org_pid in org_self_filter:
+                base_label = org_self_labels.get(org_pid, f"Organisatie {org_pid}")
                 org_chip_data.append(
                     {
                         "param_name": "org_self",
-                        "param_value": org_id,
+                        "param_value": org_pid,
                         "label": f"{base_label} (direct)",
                     }
                 )
@@ -1262,17 +1313,13 @@ class AssignmentListView(ListView):
             if panel_data is not None:
                 context["panel_data"] = panel_data
         elif colleague_id and not assignment_id:
-            try:
-                colleague = Colleague.objects.get(id=colleague_id)
+            colleague = _resolve_panel_object(self.request, Colleague, colleague_id)
+            if colleague is not None:
                 context["panel_data"] = _build_colleague_panel_data(colleague, self.request)
-            except Colleague.DoesNotExist, ValueError:
-                pass
         elif assignment_id:
-            try:
-                assignment = Assignment.objects.select_related("owner").get(id=assignment_id)
+            assignment = _resolve_panel_object(self.request, Assignment, assignment_id, select_related=("owner",))
+            if assignment is not None:
                 context["panel_data"] = _build_assignment_panel_data(assignment, self.request)
-            except Assignment.DoesNotExist, ValueError:
-                pass
 
         return context
 
@@ -1308,12 +1355,12 @@ class UserListView(PermissionRequiredMixin, ListView):
         return qs
 
     def _get_labels_by_category(self):
-        """Parse selected label IDs grouped by category."""
-        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid.isdigit()]
-        if not label_ids:
+        """Parse selected label public_ids grouped by category (keyed by internal id)."""
+        label_public_ids = self.request.GET.getlist("labels")
+        if not label_public_ids:
             return {}
         labels_by_category = {}
-        for label in Label.objects.filter(id__in=label_ids).values("id", "category_id"):
+        for label in Label.objects.filter(public_id__in=parse_public_ids(label_public_ids)).values("id", "category_id"):
             labels_by_category.setdefault(label["category_id"], []).append(label["id"])
         return labels_by_category
 
@@ -1330,9 +1377,9 @@ class UserListView(PermissionRequiredMixin, ListView):
 
         # Merk filter: OR within the merk group (one merk per colleague)
         if exclude_filter != "merk":
-            suborganization_ids = [int(x) for x in self.request.GET.getlist("merk") if x.isdigit()]
-            if suborganization_ids:
-                qs = qs.filter(colleague__suborganization_id__in=suborganization_ids)
+            suborganization_public_ids = parse_public_ids(self.request.GET.getlist("merk"))
+            if suborganization_public_ids:
+                qs = qs.filter(colleague__suborganization__public_id__in=suborganization_public_ids)
 
         # Role filter
         if exclude_filter != "rol":
@@ -1345,8 +1392,8 @@ class UserListView(PermissionRequiredMixin, ListView):
     def get_queryset(self):
         """Apply filters to users queryset - exclude superusers"""
         qs = self._get_base_queryset()
-        label_ids = [int(lid) for lid in self.request.GET.getlist("labels") if lid.isdigit()]
-        if label_ids and not self._get_labels_by_category():
+        label_public_ids = self.request.GET.getlist("labels")
+        if label_public_ids and not self._get_labels_by_category():
             return User.objects.none()
         qs = self._apply_filters(qs)
         return qs.distinct()
@@ -1371,16 +1418,13 @@ class UserListView(PermissionRequiredMixin, ListView):
 
         active_filters = {}
 
-        # label filter supports multi-select
-        label_filter = set()
-        for label_id in self.request.GET.getlist("labels"):
-            if label_id.isdigit():
-                label_filter.add(label_id)
+        # label filter supports multi-select (values are label public_ids)
+        label_filter = _existing_public_ids(Label, self.request.GET.getlist("labels"))
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
 
         # merk filter supports multi-select
-        suborganization_filter = {v for v in self.request.GET.getlist("merk") if v.isdigit()}
+        suborganization_filter = _existing_public_ids(Suborganization, self.request.GET.getlist("merk"))
         if suborganization_filter:
             active_filters["merk"] = suborganization_filter
 
@@ -1403,14 +1447,14 @@ class UserListView(PermissionRequiredMixin, ListView):
             for label in Label.objects.filter(category=category):
                 options.append(
                     {
-                        "value": str(label.id),
+                        "value": str(label.public_id),
                         "label": f"{label.name}",
                         "count": cat_label_counts.get(label.id, 0),
                     }
                 )
-                if str(label.id) in active_filters.get("labels", set()):
+                if str(label.public_id) in active_filters.get("labels", set()):
                     options[-1]["selected"] = True
-                    selected_values.append(str(label.id))
+                    selected_values.append(str(label.public_id))
 
             label_filter_groups.append(
                 {
@@ -1433,14 +1477,14 @@ class UserListView(PermissionRequiredMixin, ListView):
         for suborganization in Suborganization.objects.all():
             suborganization_options.append(
                 {
-                    "value": str(suborganization.id),
+                    "value": str(suborganization.public_id),
                     "label": suborganization.name,
                     "count": suborg_counts.get(suborganization.id, 0),
                 }
             )
-            if str(suborganization.id) in active_filters.get("merk", set()):
+            if str(suborganization.public_id) in active_filters.get("merk", set()):
                 suborganization_options[-1]["selected"] = True
-                suborganization_selected_values.append(str(suborganization.id))
+                suborganization_selected_values.append(str(suborganization.public_id))
 
         suborganization_filter_group = {
             "type": "select-multi",
@@ -1555,10 +1599,10 @@ def user_create(request):
 
 
 @permission_required("rijksauth.change_user", raise_exception=True)
-def user_edit(request, pk):
+def user_edit(request, public_id):
     """Handle user editing - GET returns form modal with user data, POST processes update"""
-    edited_user = get_object_or_404(User, pk=pk, is_superuser=False)
-    form_post_url = reverse("user-edit", args=[edited_user.id])
+    edited_user = get_object_or_404(User, public_id=public_id, is_superuser=False)
+    form_post_url = reverse("user-edit", args=[edited_user.public_id])
     modal_title = "Gebruiker bewerken"
     element_id = "userFormModal"
 
@@ -1576,7 +1620,7 @@ def user_edit(request, pk):
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
                 **get_delete_context(
-                    "user-delete", edited_user.pk, f"{edited_user.first_name} {edited_user.last_name}"
+                    "user-delete", edited_user.public_id, f"{edited_user.first_name} {edited_user.last_name}"
                 ),
             },
         )
@@ -1613,7 +1657,7 @@ def user_edit(request, pk):
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
                 **get_delete_context(
-                    "user-delete", edited_user.pk, f"{edited_user.first_name} {edited_user.last_name}"
+                    "user-delete", edited_user.public_id, f"{edited_user.first_name} {edited_user.last_name}"
                 ),
             },
         )
@@ -1621,9 +1665,9 @@ def user_edit(request, pk):
 
 
 @permission_required("rijksauth.delete_user", raise_exception=True)
-def user_delete(request, pk):
+def user_delete(request, public_id):
     """Handle user deletion"""
-    user = get_object_or_404(User, pk=pk, is_superuser=False)
+    user = get_object_or_404(User, public_id=public_id, is_superuser=False)
 
     if request.method == "GET":
         # Show delete confirmation modal
@@ -1636,7 +1680,7 @@ def user_delete(request, pk):
                 "modal_element_id": "userFormModal",
                 "target_element_id": "user_table",
                 "delete_warning": f"Weet je zeker dat je {user.first_name} {user.last_name} wilt verwijderen?",
-                "form_post_url": reverse("user-delete", kwargs={"pk": pk}),
+                "form_post_url": reverse("user-delete", kwargs={"public_id": public_id}),
                 "form_button_label": "Verwijderen",
             },
         )
@@ -1652,12 +1696,15 @@ def user_delete(request, pk):
             "label_names": label_names,
             "group_names": [g.name for g in user.groups.all()],
         }
+        # Capture the int PK before delete() nulls it; Event.object_id keeps
+        # referencing the internal id, not the public_id.
+        user_pk = user.id
         user.delete()
         create_event(
             object_type="User",
             action="delete",
             source="user",
-            object_id=pk,
+            object_id=user_pk,
             user=request.user,
             request=request,
             context=context,
@@ -1912,14 +1959,14 @@ def label_category_create(request):
 
 
 @permission_required("core.change_labelcategory", raise_exception=True)
-def label_category_edit(request, pk):
+def label_category_edit(request, public_id):
     """
     Edit a label category
     Returns a partial html page, to be used with htmx
     """
 
-    category = get_object_or_404(LabelCategory, pk=pk)
-    form_post_url = reverse("label-category-edit", kwargs={"pk": pk})
+    category = get_object_or_404(LabelCategory, public_id=public_id)
+    form_post_url = reverse("label-category-edit", kwargs={"public_id": public_id})
     modal_title = f"Bewerk categorie: {category.name}"
     form_button_label = "Opslaan"
     element_id = "labelFormModal"
@@ -1936,7 +1983,7 @@ def label_category_edit(request, pk):
                 "form_button_label": form_button_label,
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
-                **get_delete_context("label-category-delete", category.pk, f"categorie '{category.name}'"),
+                **get_delete_context("label-category-delete", category.public_id, f"categorie '{category.name}'"),
             },
         )
     if request.method == "POST":
@@ -1957,18 +2004,18 @@ def label_category_edit(request, pk):
                 "form_button_label": form_button_label,
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
-                **get_delete_context("label-category-delete", category.pk, f"categorie '{category.name}'"),
+                **get_delete_context("label-category-delete", category.public_id, f"categorie '{category.name}'"),
             },
         )
     return None
 
 
 @permission_required("core.delete_labelcategory", raise_exception=True)
-def label_category_delete(request, pk):
+def label_category_delete(request, public_id):
     """
     To be used with htmx
     """
-    category = get_object_or_404(LabelCategory, pk=pk)
+    category = get_object_or_404(LabelCategory, public_id=public_id)
     if request.method == "GET":
         return render(
             request,
@@ -1982,7 +2029,7 @@ def label_category_delete(request, pk):
                     f"Weet je zeker dat je deze categorie wilt verwijderen? "
                     f"Dit verwijdert ook alle {category.labels.count()} labels."
                 ),
-                "form_post_url": reverse("label-category-delete", kwargs={"pk": pk}),
+                "form_post_url": reverse("label-category-delete", kwargs={"public_id": public_id}),
                 "form_button_label": "Verwijderen",
             },
         )
@@ -1997,13 +2044,13 @@ def label_category_delete(request, pk):
 
 
 @permission_required("core.add_label", raise_exception=True)
-def label_create(request, pk):
+def label_create(request, public_id):
     """
     Returns a partial html page, to be used with htmx
     """
 
     if request.method == "POST":
-        category = get_object_or_404(LabelCategory, pk=pk)
+        category = get_object_or_404(LabelCategory, public_id=public_id)
         form = LabelForm(request.POST, category_id=category.id)
         if form.is_valid():
             new_instance = form.save(commit=False)
@@ -2027,13 +2074,13 @@ def label_create(request, pk):
 
 
 @permission_required("core.change_label", raise_exception=True)
-def label_edit(request, pk):
+def label_edit(request, public_id):
     """
     Returns a partial html page, to be used with htmx
     """
-    label = get_object_or_404(Label, pk=pk)
+    label = get_object_or_404(Label, public_id=public_id)
     category = label.category
-    form_post_url = reverse("label-edit", kwargs={"pk": pk})
+    form_post_url = reverse("label-edit", kwargs={"public_id": public_id})
     modal_title = f"Bewerk label: {label.name}"
     form_button_label = "Opslaan"
     element_id = "labelFormModal"
@@ -2050,7 +2097,7 @@ def label_edit(request, pk):
                 "form_button_label": form_button_label,
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
-                **get_delete_context("label-delete", label.pk, f"label '{label.name}'"),
+                **get_delete_context("label-delete", label.public_id, f"label '{label.name}'"),
             },
         )
     if request.method == "POST":
@@ -2075,19 +2122,19 @@ def label_edit(request, pk):
                 "form_button_label": form_button_label,
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
-                **get_delete_context("label-delete", label.pk, f"label '{label.name}'"),
+                **get_delete_context("label-delete", label.public_id, f"label '{label.name}'"),
             },
         )
     return None
 
 
 @permission_required("core.delete_label", raise_exception=True)
-def label_delete(request, pk):
+def label_delete(request, public_id):
     """
     To be used with htmx
     """
 
-    label = get_object_or_404(Label, pk=pk)
+    label = get_object_or_404(Label, public_id=public_id)
     category = label.category
 
     label_use_count = label.colleagues.count()
@@ -2104,7 +2151,7 @@ def label_delete(request, pk):
                 "delete_warning": (
                     f"Weet je zeker dat je dit label wilt verwijderen? Het wordt gebruikt op {label_use_count} plekken."
                 ),
-                "form_post_url": reverse("label-delete", kwargs={"pk": pk}),
+                "form_post_url": reverse("label-delete", kwargs={"public_id": public_id}),
                 "form_button_label": "Verwijderen",
             },
         )
@@ -2153,10 +2200,10 @@ def suborganization_create(request):
 
 
 @permission_required("core.change_suborganization", raise_exception=True)
-def suborganization_edit(request, pk):
+def suborganization_edit(request, public_id):
     """Edit a suborganization. Returns a partial for use with htmx."""
-    suborganization = get_object_or_404(Suborganization, pk=pk)
-    form_post_url = reverse("suborganization-edit", kwargs={"pk": pk})
+    suborganization = get_object_or_404(Suborganization, public_id=public_id)
+    form_post_url = reverse("suborganization-edit", kwargs={"public_id": public_id})
     modal_title = f"Bewerk merk: {suborganization.name}"
     form_button_label = "Opslaan"
     element_id = "suborganizationFormModal"
@@ -2173,7 +2220,9 @@ def suborganization_edit(request, pk):
                 "form_button_label": form_button_label,
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
-                **get_delete_context("suborganization-delete", suborganization.pk, f"merk '{suborganization.name}'"),
+                **get_delete_context(
+                    "suborganization-delete", suborganization.public_id, f"merk '{suborganization.name}'"
+                ),
             },
         )
     if request.method == "POST":
@@ -2195,16 +2244,18 @@ def suborganization_edit(request, pk):
                 "form_button_label": form_button_label,
                 "modal_element_id": element_id,
                 "target_element_id": element_id,
-                **get_delete_context("suborganization-delete", suborganization.pk, f"merk '{suborganization.name}'"),
+                **get_delete_context(
+                    "suborganization-delete", suborganization.public_id, f"merk '{suborganization.name}'"
+                ),
             },
         )
     return None
 
 
 @permission_required("core.delete_suborganization", raise_exception=True)
-def suborganization_delete(request, pk):
+def suborganization_delete(request, public_id):
     """Delete a suborganization. For use with htmx."""
-    suborganization = get_object_or_404(Suborganization, pk=pk)
+    suborganization = get_object_or_404(Suborganization, public_id=public_id)
     suborganization_use_count = suborganization.colleagues.count()
 
     if request.method == "GET":
@@ -2220,7 +2271,7 @@ def suborganization_delete(request, pk):
                     f"Weet je zeker dat je dit merk wilt verwijderen? "
                     f"Het wordt gebruikt door {suborganization_use_count} collega('s)."
                 ),
-                "form_post_url": reverse("suborganization-delete", kwargs={"pk": pk}),
+                "form_post_url": reverse("suborganization-delete", kwargs={"public_id": public_id}),
                 "form_button_label": "Verwijderen",
             },
         )
@@ -2233,8 +2284,8 @@ def suborganization_delete(request, pk):
     return HttpResponse(status=405)
 
 
-def assignment_events_partial(request, pk):
-    assignment = get_object_or_404(Assignment, pk=pk)
+def assignment_events_partial(request, public_id):
+    assignment = get_object_or_404(Assignment, public_id=public_id)
     events = list(
         Event.objects.filter(
             object_type="Assignment",
@@ -2322,8 +2373,8 @@ def _attach_audit_render_data(event, obj, request) -> bool:
     return True
 
 
-def assignment_delete(request, pk):
-    assignment = get_object_or_404(Assignment, pk=pk)
+def assignment_delete(request, public_id):
+    assignment = get_object_or_404(Assignment, public_id=public_id)
     if not has_permission(Verb.DELETE, assignment, request.user):
         return HttpResponseForbidden()
 
@@ -2340,12 +2391,15 @@ def assignment_delete(request, pk):
                     f"Weet je zeker dat je opdracht '{assignment.name}' wilt verwijderen? "
                     "Verwijderen is permanent en niet terug te draaien."
                 ),
-                "form_post_url": reverse("assignment-delete", kwargs={"pk": pk}),
+                "form_post_url": reverse("assignment-delete", kwargs={"public_id": public_id}),
                 "form_button_label": "Verwijderen",
             },
         )
     if request.method == "POST":
         name = assignment.name
+        # Capture the int PK before delete() nulls it; Event.object_id keeps
+        # referencing the internal id, not the public_id.
+        assignment_pk = assignment.id
         # Snapshot related rows before they cascade away.
         context = _assignment_audit_snapshot(assignment)
         # Atomic so a failed audit insert rolls back the delete — losing
@@ -2356,7 +2410,7 @@ def assignment_delete(request, pk):
                 object_type="Assignment",
                 action="delete",
                 source="user",
-                object_id=pk,
+                object_id=assignment_pk,
                 user=request.user,
                 request=request,
                 context=context,
@@ -2416,17 +2470,13 @@ def user_profile(request):
     if placement_id:
         panel_data = _resolve_placement_panel(request, placement_id)
     elif assignment_id:
-        try:
-            assignment = Assignment.objects.get(id=assignment_id)
+        assignment = _resolve_panel_object(request, Assignment, assignment_id)
+        if assignment is not None:
             panel_data = _build_assignment_panel_data(assignment, request)
-        except Assignment.DoesNotExist, ValueError:
-            pass
     elif colleague_id:
-        try:
-            panel_colleague = Colleague.objects.get(id=colleague_id)
+        panel_colleague = _resolve_panel_object(request, Colleague, colleague_id)
+        if panel_colleague is not None:
             panel_data = _build_colleague_panel_data(panel_colleague, request)
-        except Colleague.DoesNotExist, ValueError:
-            pass
 
     # HTMX partial responses for panel swaps
     if "HX-Request" in request.headers:
@@ -2625,7 +2675,7 @@ def assignment_create(request):
             context=_assignment_audit_snapshot(assignment),
         )
 
-        link_url = f"{reverse('assignment-list')}?opdracht={assignment.id}"
+        link_url = f"{reverse('assignment-list')}?opdracht={assignment.public_id}"
         messages.success(
             request,
             f'Opdracht "{assignment.name}" is aangemaakt.',
@@ -2640,6 +2690,26 @@ def search_suggestions(request):
     term = request.GET.get("zoek", "")
     orgs = find_orgs_by_abbreviation(term)
     return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs, "search_term": term.strip()})
+
+
+def _ids_for_public_ids(model, public_ids) -> list[int]:
+    """Map URL-facing public_id tokens to internal PKs, silently dropping unknown
+    or malformed ones. Filter facets expose public_ids; the tree/count logic stays
+    on PKs."""
+    uuids = parse_public_ids(public_ids)
+    if not uuids:
+        return []
+    return list(model.objects.filter(public_id__in=uuids).values_list("id", flat=True))
+
+
+def _existing_public_ids(model, public_ids) -> set[str]:
+    """The subset of the given tokens that map to a real row. A filter value that
+    matches nothing (unknown or malformed) is not an active filter (and never gets
+    a chip/badge)."""
+    uuids = parse_public_ids(public_ids)
+    if not uuids:
+        return set()
+    return {str(pid) for pid in model.objects.filter(public_id__in=uuids).values_list("public_id", flat=True)}
 
 
 def _get_org_counts(count_mode: str, excluded_org_ids: list[int], viewer) -> Counter[int]:
@@ -2710,8 +2780,10 @@ def _get_top_org_options(
 
     if org_counts is None:
         org_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
-    selected_ids = {int(x) for x in selected_org_ids if str(x).isdigit()}
-    self_ids = {int(x) for x in selected_self_ids if str(x).isdigit()}
+    # selected_org_ids / selected_self_ids arrive as public_id tokens; resolve to
+    # internal ids so the count/tree logic below stays on ids.
+    selected_ids = set(_ids_for_public_ids(OrganizationUnit, selected_org_ids))
+    self_ids = set(_ids_for_public_ids(OrganizationUnit, selected_self_ids))
 
     total_selected = len(selected_ids) + len(self_ids) + len(selected_type_labels)
     # Pad the ``org`` group with the highest-count unselected orgs up to ``limit``
@@ -2724,11 +2796,13 @@ def _get_top_org_options(
     options: list[dict] = []
 
     if org_wanted:
-        labels = dict(OrganizationUnit.objects.filter(id__in=org_wanted).values_list("id", "label"))
+        rows = list(OrganizationUnit.objects.filter(id__in=org_wanted).values_list("id", "label", "public_id"))
+        labels = {oid: label for oid, label, _ in rows}
+        org_public_ids = {oid: pid for oid, _, pid in rows}
         options.extend(
             {
                 "param": "org",
-                "value": str(org_id),
+                "value": str(org_public_ids.get(org_id)),
                 "label": labels.get(org_id) or f"Organisatie {org_id}",
                 "count": org_counts.get(org_id, 0),
                 "selected": org_id in selected_ids,
@@ -2737,11 +2811,13 @@ def _get_top_org_options(
         )
 
     if self_ids:
-        self_labels = dict(OrganizationUnit.objects.filter(id__in=self_ids).values_list("id", "label"))
+        rows = list(OrganizationUnit.objects.filter(id__in=self_ids).values_list("id", "label", "public_id"))
+        self_labels = {oid: label for oid, label, _ in rows}
+        self_public_ids = {oid: pid for oid, _, pid in rows}
         options.extend(
             {
                 "param": "org_self",
-                "value": str(org_id),
+                "value": str(self_public_ids.get(org_id)),
                 "label": f"{self_labels.get(org_id) or f'Organisatie {org_id}'} (direct)",
                 "count": org_counts.get(org_id, 0),
                 "selected": True,
@@ -2811,7 +2887,7 @@ def _build_org_hierarchy(
     """Build the grouped org tree hierarchy for the client modal."""
     all_orgs = list(
         OrganizationUnit.objects.exclude(id__in=excluded_org_ids).values(
-            "id", "parent_id", "name", "label", "abbreviations"
+            "id", "public_id", "parent_id", "name", "label", "abbreviations"
         )
     )
 
@@ -2861,7 +2937,7 @@ def _build_org_hierarchy(
         if node["self_count"] > 0 and has_children_with_placements:
             children_json.append(
                 {
-                    "id": f"self-{node['id']}",
+                    "id": f"self-{node['public_id']}",  # UUID -> str via f-string
                     "label": node["label"] or node["name"],
                     "abbreviations": node["abbreviations"] or [],
                     "self": True,
@@ -2870,7 +2946,7 @@ def _build_org_hierarchy(
             )
         children_json.extend(to_json(child) for child in children_data)
         result: dict = {
-            "id": node["id"],
+            "id": str(node["public_id"]),
             "label": node["label"] or node["name"],
             "abbreviations": node["abbreviations"] or [],
             "nr_of_placements": node["total_count"],
@@ -2921,13 +2997,17 @@ def _build_current_selections(request) -> dict[str, str]:
     """Build current selections dict from request params for state restoration."""
     current_selections: dict[str, str] = {}
 
-    org_ids = [org_id for org_id in request.GET.getlist("org") if org_id.isdigit()]
-    for org in OrganizationUnit.objects.filter(id__in=org_ids).values("id", "label"):
-        current_selections[org["id"]] = org["label"]
+    org_public_ids = request.GET.getlist("org")
+    for org in OrganizationUnit.objects.filter(public_id__in=parse_public_ids(org_public_ids)).values(
+        "public_id", "label"
+    ):
+        current_selections[str(org["public_id"])] = org["label"]
 
-    self_org_ids = [org_id for org_id in request.GET.getlist("org_self") if org_id.isdigit()]
-    for org in OrganizationUnit.objects.filter(id__in=self_org_ids).values("id", "label"):
-        current_selections[f"self-{org['id']}"] = f'Direct onder "{org["label"]}"'
+    self_org_public_ids = request.GET.getlist("org_self")
+    for org in OrganizationUnit.objects.filter(public_id__in=parse_public_ids(self_org_public_ids)).values(
+        "public_id", "label"
+    ):
+        current_selections[f"self-{org['public_id']}"] = f'Direct onder "{org["label"]}"'
 
     for type_label in request.GET.getlist("org_type"):
         if type_label:
@@ -3153,8 +3233,8 @@ def _inline_edit_base_ctx(editable_set, spec, obj) -> dict:
     # Shared context for display/form/collection-form renders — target id, URL, label, obj, spec.
     model_label = editable_set.model._meta.model_name
     return {
-        "target": f"inline-edit-{model_label}-{obj.pk}-{spec.name}",
-        "edit_url": reverse("inline-edit", args=[model_label, obj.pk, spec.name]),
+        "target": f"inline-edit-{model_label}-{obj.public_id}-{spec.name}",
+        "edit_url": reverse("inline-edit", args=[model_label, obj.public_id, spec.name]),
         "label": _spec_label(editable_set, spec),
         "obj": obj,
         "editable": spec,
@@ -3267,7 +3347,7 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
                 # Deleted between the permission check and the lock. Same denial
                 # partial as a missing or forbidden object, so this stays
                 # indistinguishable from those.
-                return _render_inline_edit_denial(request, editable_set, spec, obj.pk)
+                return _render_inline_edit_denial(request, editable_set, spec, obj.public_id)
             except ValidationError as exc:
                 for message in exc.messages:
                     _attach_formset_error(formset, message)
@@ -3368,20 +3448,20 @@ def _diff_collection_state(old_state: list[dict], new_state: list[dict]) -> list
     return changes
 
 
-def _pk_stub(model, pk):
-    """An unsaved model instance carrying only ``pk``. Enough for the denial
-    partial's target/edit_url so a missing object renders byte-identically to a
-    forbidden one, without a second DB round-trip or a real record."""
+def _public_id_stub(model, public_id):
+    """An unsaved model instance carrying only ``public_id``. Enough for the
+    denial partial's target/edit_url so a missing object renders byte-identically
+    to a forbidden one, without a second DB round-trip or a real record."""
     stub = model()
-    stub.pk = pk
+    stub.public_id = public_id
     return stub
 
 
-def _render_inline_edit_denial(request, editable_set, spec, pk, obj=None, alert=None) -> HttpResponse:
+def _render_inline_edit_denial(request, editable_set, spec, public_id, obj=None, alert=None) -> HttpResponse:
     """The denial partial for an object the user may not edit or that isn't
     there (any more). Both render identically, so this endpoint can't be walked
-    as a 404-vs-200 existence oracle over sequential PKs."""
-    display_obj = obj if obj is not None else _pk_stub(editable_set.model, pk)
+    as a 404-vs-200 existence oracle over public_ids."""
+    display_obj = obj if obj is not None else _public_id_stub(editable_set.model, public_id)
     editables_for_display: list[Editable] = (
         [] if isinstance(spec, EditableCollection) else resolve_editables(editable_set, spec)
     )
@@ -3396,7 +3476,7 @@ def _render_inline_edit_denial(request, editable_set, spec, pk, obj=None, alert=
     )
 
 
-def inline_edit_view(request, model_label, pk, name):
+def inline_edit_view(request, model_label, public_id, name):
     """Generic HTMX endpoint. See ``features/inline-editing.md`` for the full contract."""
     editable_set = REGISTRY.get(model_label)
     if editable_set is None:
@@ -3405,7 +3485,7 @@ def inline_edit_view(request, model_label, pk, name):
     if spec is None:
         raise Http404("Unknown editable")
 
-    obj = editable_set.model.objects.filter(pk=pk).first()
+    obj = editable_set.model.objects.filter(public_id=public_id).first()
 
     # Permission ladder: a missing object and a forbidden one both return the
     # SAME denial partial, so this endpoint can't be walked as a 404-vs-200
@@ -3413,7 +3493,7 @@ def inline_edit_view(request, model_label, pk, name):
     # identical empty response for not-found and not-visible).
     denial = _permission_denied(editable_set, spec, request.user, obj) if obj is not None else PERMISSION_DENIED_ALERT
     if denial:
-        return _render_inline_edit_denial(request, editable_set, spec, pk, obj=obj, alert=denial)
+        return _render_inline_edit_denial(request, editable_set, spec, public_id, obj=obj, alert=denial)
 
     if isinstance(spec, EditableCollection):
         return _handle_inline_edit_collection(request, editable_set, spec, obj)
@@ -3462,7 +3542,7 @@ def inline_edit_view(request, model_label, pk, name):
                 # Deleted between the permission check and the lock. Same denial
                 # partial as a missing or forbidden object, so this stays
                 # indistinguishable from those.
-                return _render_inline_edit_denial(request, editable_set, spec, pk)
+                return _render_inline_edit_denial(request, editable_set, spec, public_id)
             if conflict:
                 # Re-render the bound form (user's input kept) with a token for
                 # the new state: Opslaan saves anyway, Annuleren shows the

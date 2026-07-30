@@ -40,7 +40,7 @@ def org_formset_data(orgs):
         "org-MAX_NUM_FORMS": "1000",
     }
     for i, (org, role) in enumerate(orgs):
-        data[f"org-{i}-organization"] = org.id
+        data[f"org-{i}-organization"] = org.public_id
         data[f"org-{i}-role"] = role
     return data
 

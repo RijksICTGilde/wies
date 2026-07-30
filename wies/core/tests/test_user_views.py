@@ -8,6 +8,7 @@ from django.urls import reverse
 
 from wies.core.forms import UserForm
 from wies.core.models import Colleague, Event, Label, LabelCategory, Suborganization
+from wies.core.public_id import generate_public_id
 
 User = get_user_model()
 
@@ -107,7 +108,7 @@ class UserViewsTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filter by label A
-        response = self.client.get(reverse("admin-users"), {"labels": self.label_a.id})
+        response = self.client.get(reverse("admin-users"), {"labels": self.label_a.public_id})
         content = response.content.decode()
 
         # user1 should be in results
@@ -214,7 +215,7 @@ class UserViewsTest(TestCase):
         self.colleague1.save()
 
         response = self.client.post(
-            reverse("user-edit", args=[self.user1.id]),
+            reverse("user-edit", args=[self.user1.public_id]),
             {
                 "first_name": self.user1.first_name,
                 "last_name": self.user1.last_name,
@@ -234,7 +235,7 @@ class UserViewsTest(TestCase):
         self.colleague1.save()
 
         response = self.client.post(
-            reverse("user-edit", args=[self.user1.id]),
+            reverse("user-edit", args=[self.user1.public_id]),
             {
                 "first_name": self.user1.first_name,
                 "last_name": self.user1.last_name,
@@ -338,7 +339,7 @@ class UserViewsTest(TestCase):
         self.client.force_login(self.auth_user)
 
         response = self.client.post(
-            reverse("user-edit", args=[self.user1.id]),
+            reverse("user-edit", args=[self.user1.public_id]),
             {
                 "first_name": "Johnny",
                 "last_name": "Doe",
@@ -356,7 +357,7 @@ class UserViewsTest(TestCase):
         self.client.force_login(self.auth_user)
 
         response = self.client.post(
-            reverse("user-edit", args=[self.user1.id]),
+            reverse("user-edit", args=[self.user1.public_id]),
             {
                 "first_name": self.user1.first_name,
                 "last_name": self.user1.last_name,
@@ -392,7 +393,7 @@ class UserViewsTest(TestCase):
         initial_event_count = Event.objects.count()
 
         user_id = self.user1.id
-        response = self.client.post(reverse("user-delete", args=[user_id]))
+        response = self.client.post(reverse("user-delete", args=[self.user1.public_id]))
 
         # Should return updated table (HTMX response)
         assert response.status_code == 200
@@ -412,7 +413,7 @@ class UserViewsTest(TestCase):
         """Test that superusers cannot be deleted via this endpoint"""
         self.client.force_login(self.auth_user)
 
-        response = self.client.post(reverse("user-delete", args=[self.superuser.id]))
+        response = self.client.post(reverse("user-delete", args=[self.superuser.public_id]))
 
         # Should return 404 (get_object_or_404 with is_superuser=False)
         assert response.status_code == 404
@@ -424,12 +425,12 @@ class UserViewsTest(TestCase):
         """Test deletion of non-existent user returns 404"""
         self.client.force_login(self.auth_user)
 
-        response = self.client.post(reverse("user-delete", args=[99999]))
+        response = self.client.post(reverse("user-delete", args=[generate_public_id()]))
         assert response.status_code == 404
 
     def test_user_delete_requires_login(self):
         """Test that user deletion requires authentication"""
-        response = self.client.post(reverse("user-delete", args=[self.user1.id]))
+        response = self.client.post(reverse("user-delete", args=[self.user1.public_id]))
 
         assert response.status_code == 302
         assert response.url.startswith("/inloggen/")
@@ -515,7 +516,7 @@ class UserViewsTest(TestCase):
         initial_count = User.objects.count()
 
         # Try to delete user
-        response = self.client.post(reverse("user-delete", args=[self.user1.id]))
+        response = self.client.post(reverse("user-delete", args=[self.user1.public_id]))
         assert response.status_code == 403
 
         # User should not be deleted
@@ -525,7 +526,7 @@ class UserViewsTest(TestCase):
     def test_user_edit_get_returns_form_with_data(self):
         """Test that GET to user-edit returns the form modal with user data"""
         self.client.force_login(self.auth_user)
-        response = self.client.get(reverse("user-edit", args=[self.user1.id]))
+        response = self.client.get(reverse("user-edit", args=[self.user1.public_id]))
 
         assert response.status_code == 200
         content = response.content.decode()
@@ -543,7 +544,7 @@ class UserViewsTest(TestCase):
         initial_count_events = Event.objects.count()
 
         response = self.client.post(
-            reverse("user-edit", args=[self.user1.id]),
+            reverse("user-edit", args=[self.user1.public_id]),
             {
                 "first_name": "Updated",
                 "last_name": "Name",
@@ -574,7 +575,7 @@ class UserViewsTest(TestCase):
 
         # Missing required field
         response = self.client.post(
-            reverse("user-edit", args=[self.user1.id]),
+            reverse("user-edit", args=[self.user1.public_id]),
             {
                 "first_name": "Updated",
                 # Missing last_name and email
@@ -597,7 +598,7 @@ class UserViewsTest(TestCase):
         self.client.force_login(self.auth_user)
 
         response = self.client.post(
-            reverse("user-edit", args=[self.superuser.id]),
+            reverse("user-edit", args=[self.superuser.public_id]),
             {
                 "first_name": "Hacked",
                 "last_name": "Admin",
@@ -616,13 +617,13 @@ class UserViewsTest(TestCase):
         """Test editing of non-existent user returns 404"""
         self.client.force_login(self.auth_user)
 
-        response = self.client.get(reverse("user-edit", args=[99999]))
+        response = self.client.get(reverse("user-edit", args=[generate_public_id()]))
         assert response.status_code == 404
 
     def test_user_edit_requires_login(self):
         """Test that user editing requires authentication"""
         response = self.client.post(
-            reverse("user-edit", args=[self.user1.id]),
+            reverse("user-edit", args=[self.user1.public_id]),
             {
                 "first_name": "Test",
                 "last_name": "User",
@@ -647,7 +648,7 @@ class UserViewsTest(TestCase):
 
         # Try to edit user
         response = self.client.post(
-            reverse("user-edit", args=[self.user1.id]),
+            reverse("user-edit", args=[self.user1.public_id]),
             {
                 "first_name": "Unauthorized",
                 "last_name": "Edit",
@@ -669,7 +670,7 @@ class UserViewsTest(TestCase):
         )
         self.client.force_login(user_no_change)
 
-        response = self.client.get(reverse("user-edit", args=[self.user1.id]))
+        response = self.client.get(reverse("user-edit", args=[self.user1.public_id]))
         assert response.status_code == 403
 
     def test_user_create_uses_rvo_styling(self):

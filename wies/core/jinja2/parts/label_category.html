@@ -6,7 +6,7 @@
     <c-button kind="tertiary"
               icon="bewerken"
               iconPlacement="after"
-              hx-get="{{ url('label-category-edit', kwargs={'pk': category.pk}) }}"
+              hx-get="{{ url('label-category-edit', kwargs={'public_id': category.public_id}) }}"
               hx-target="#labelFormModal"
               hx-swap="innerHTML">
       Bewerk categorie
@@ -28,7 +28,7 @@
     <c-table-body>
       {% for label in category.labels.all() %}
         <c-table-row class="clickable-row"
-                     hx-get="{{ url('label-edit', kwargs={'pk': label.pk}) }}"
+                     hx-get="{{ url('label-edit', kwargs={'public_id': label.public_id}) }}"
                      hx-target="#labelFormModal"
                      hx-swap="innerHTML"
                      title="Bewerk {{ label.name }}">
@@ -48,7 +48,7 @@
   </c-table>
   <div class="label-form-container">
     <form class="label-form"
-          hx-post="/beheer/labels/categorie/{{ category.id }}/labels/aanmaken/"
+          hx-post="/beheer/labels/categorie/{{ category.public_id }}/labels/aanmaken/"
           hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
           hx-target="#label_category_{{ category.id }}">
       <c-input name="name" />
@@ -66,7 +66,7 @@
   </c-paragraph>
   <div class="label-form-container">
     <form class="label-form"
-          hx-post="/beheer/labels/categorie/{{ category.id }}/labels/aanmaken/"
+          hx-post="/beheer/labels/categorie/{{ category.public_id }}/labels/aanmaken/"
           hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
           hx-target="#label_category_{{ category.id }}">
       <c-input name="name" />

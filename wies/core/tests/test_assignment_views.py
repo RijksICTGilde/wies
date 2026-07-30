@@ -20,6 +20,7 @@ from wies.core.models import (
     Service,
     Skill,
 )
+from wies.core.public_id import generate_public_id
 from wies.core.tests.inline_edit_helpers import post_inline_edit
 
 User = get_user_model()
@@ -106,7 +107,7 @@ class AssignmentEditAttributeTest(TestCase):
 
     def test_assignment_edit_requires_login(self):
         """Test that unauthenticated users cannot edit assignments"""
-        response = self.client.get(reverse("inline-edit", args=["assignment", self.assignment.id, "name"]))
+        response = self.client.get(reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]))
         # Should redirect to login or return 403
         assert response.status_code in [302, 403]
 
@@ -116,7 +117,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         response = post_inline_edit(
             self.client,
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]),
             {"name": "Updated Assignment Name"},
         )
 
@@ -130,7 +131,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         response = post_inline_edit(
             self.client,
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]),
             {"name": "Owner Updated Name"},
         )
 
@@ -144,7 +145,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         response = post_inline_edit(
             self.client,
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]),
             {"name": "Colleague Updated Name"},
         )
 
@@ -158,7 +159,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         response = post_inline_edit(
             self.client,
-            reverse("inline-edit", args=["assignment", self.assignment.id, "extra_info"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "extra_info"]),
             {"extra_info": "Description by colleague"},
         )
 
@@ -178,7 +179,7 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "owner"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "owner"]),
             {"owner": other_colleague.id},
         )
 
@@ -192,7 +193,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.assigned_user)
 
         response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "period"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "period"]),
             {"start_date": "2026-01-01", "end_date": "2026-12-31"},
         )
 
@@ -222,7 +223,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         response = post_inline_edit(
             self.client,
-            reverse("inline-edit", args=["assignment", self.assignment.id, "owner"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "owner"]),
             {"owner": new_bdm.id},
         )
 
@@ -236,7 +237,8 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.unrelated_user)
 
         response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": "Unauthorized Update"}
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]),
+            {"name": "Unauthorized Update"},
         )
 
         assert response.status_code == 200
@@ -250,7 +252,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.external_assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.external_assignment.public_id, "name"]),
             {"name": "Attempted Update"},
         )
 
@@ -285,7 +287,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         response = post_inline_edit(
             self.client,
-            reverse("inline-edit", args=["assignment", self.assignment.id, "owner"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "owner"]),
             {"owner": new_bdm.id},
         )
 
@@ -305,7 +307,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(staff_user)
 
         response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.external_assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.external_assignment.public_id, "name"]),
             {"name": "Attempted Update"},
         )
 
@@ -322,7 +324,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         response = post_inline_edit(
             self.client,
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]),
             {"name": "Valid New Name"},
         )
 
@@ -335,7 +337,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]), {"name": ""}
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]), {"name": ""}
         )
 
         assert response.status_code == 200
@@ -352,7 +354,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         response = self.client.get(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]) + "?edit=true"
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]) + "?edit=true"
         )
 
         assert response.status_code == 200
@@ -366,7 +368,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         response = post_inline_edit(
             self.client,
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]),
             {"name": "Updated Name"},
         )
 
@@ -380,7 +382,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         response = self.client.get(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]) + "?cancel=true"
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]) + "?cancel=true"
         )
 
         assert response.status_code == 200
@@ -393,7 +395,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         response = self.client.post(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]),
             {"name": ""},  # Empty (invalid)
         )
 
@@ -410,7 +412,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.user_with_permission)
 
         response = self.client.get(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "extra_info"]) + "?cancel=true"
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "extra_info"]) + "?cancel=true"
         )
 
         assert response.status_code == 200
@@ -438,7 +440,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.assignment.save()
 
         response = self.client.get(
-            reverse("inline-edit", args=["assignment", self.assignment.id, "extra_info"]) + "?cancel=true"
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "extra_info"]) + "?cancel=true"
         )
 
         assert response.status_code == 200
@@ -459,7 +461,9 @@ class AssignmentEditAttributeTest(TestCase):
         """Test that invalid attribute name returns 404"""
         self.client.force_login(self.user_with_permission)
 
-        response = self.client.get(reverse("inline-edit", args=["assignment", self.assignment.id, "invalid_field"]))
+        response = self.client.get(
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "invalid_field"])
+        )
 
         assert response.status_code == 404
 
@@ -469,7 +473,7 @@ class AssignmentEditAttributeTest(TestCase):
         as a 404-vs-200 existence oracle over sequential PKs."""
         self.client.force_login(self.user_with_permission)
 
-        response = self.client.get(reverse("inline-edit", args=["assignment", 99999, "name"]))
+        response = self.client.get(reverse("inline-edit", args=["assignment", generate_public_id(), "name"]))
 
         assert response.status_code == 200
         self.assertContains(response, "geen rechten")
@@ -482,7 +486,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         post_inline_edit(
             self.client,
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]),
             {"name": "Event Test Name"},
         )
 
@@ -501,7 +505,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         post_inline_edit(
             self.client,
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]),
             {"name": "Test Assignment"},  # Same as current value
         )
 
@@ -513,7 +517,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         post_inline_edit(
             self.client,
-            reverse("inline-edit", args=["assignment", self.assignment.id, "name"]),
+            reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"]),
             {"name": "Owner Changed Name"},
         )
 
@@ -543,7 +547,7 @@ class AssignmentEditAttributeTest(TestCase):
             },
         )
 
-        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
         self.assertContains(response, "Opdrachtomschrijving")
@@ -571,7 +575,7 @@ class AssignmentEditAttributeTest(TestCase):
             },
         )
 
-        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
         self.assertContains(response, "short old")
@@ -602,7 +606,7 @@ class AssignmentEditAttributeTest(TestCase):
             },
         )
 
-        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
         self.assertContains(response, "Team")
@@ -627,7 +631,7 @@ class AssignmentEditAttributeTest(TestCase):
             },
         )
 
-        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
         self.assertContains(response, 'van "Old Name"')
@@ -652,7 +656,7 @@ class AssignmentEditAttributeTest(TestCase):
             },
         )
 
-        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
         self.assertContains(response, 'van "Legacy Old"')
@@ -698,7 +702,7 @@ class AssignmentEditAttributeTest(TestCase):
         )
 
         with self.assertLogs("wies.core.views", level="WARNING") as log_ctx:
-            response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+            response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
         self.assertContains(response, "Opdrachtgever(s)")
@@ -772,7 +776,7 @@ class AssignmentEditAttributeTest(TestCase):
         """Any authenticated user can open the updates tab, not just BDM/placed colleagues."""
         self.client.force_login(self.unrelated_user)
 
-        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+        response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
 
         assert response.status_code == 200
 
@@ -781,7 +785,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.owner_user)
 
         response = self.client.get(
-            reverse("home") + f"?opdracht={self.external_assignment.id}",
+            reverse("home") + f"?opdracht={self.external_assignment.public_id}",
             headers={"HX-Request": "true", "HX-Target": "side_panel-content"},
         )
 
@@ -794,7 +798,7 @@ class AssignmentEditAttributeTest(TestCase):
         self.client.force_login(self.owner_user)
 
         response = self.client.get(
-            reverse("home") + f"?opdracht={self.assignment.id}",
+            reverse("home") + f"?opdracht={self.assignment.public_id}",
             headers={"HX-Request": "true", "HX-Target": "side_panel-content"},
         )
 
@@ -863,7 +867,7 @@ class TimelinePlacementPrivacyTests(TestCase):
 
     def _get_timeline(self, user):
         self.client.force_login(user)
-        return self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
+        return self.client.get(reverse("assignment-events-partial", args=[self.assignment.public_id]))
 
     def test_hidden_colleague_name_not_leaked_to_unrelated_viewer(self):
         response = self._get_timeline(self.unrelated_user)
@@ -918,7 +922,7 @@ class TimelinePlacementPrivacyTests(TestCase):
         events" rather than a fixed count, which would break on any unrelated
         query change."""
         self.client.force_login(self.unrelated_user)
-        url = reverse("assignment-events-partial", args=[self.assignment.id])
+        url = reverse("assignment-events-partial", args=[self.assignment.public_id])
 
         with CaptureQueriesContext(connection) as one_event:
             self.client.get(url)
@@ -993,8 +997,8 @@ class AssignmentDeleteViewTests(TestCase):
             name="Otys opdracht", owner=self.owner_colleague, source="otys_iir"
         )
 
-        self.url = reverse("assignment-delete", args=[self.assignment.id])
-        self.external_url = reverse("assignment-delete", args=[self.external_assignment.id])
+        self.url = reverse("assignment-delete", args=[self.assignment.public_id])
+        self.external_url = reverse("assignment-delete", args=[self.external_assignment.public_id])
 
     def test_owner_can_delete_wies_assignment(self):
         self.client.force_login(self.owner_user)
@@ -1042,7 +1046,7 @@ class AssignmentDeleteViewTests(TestCase):
         empty = Assignment.objects.create(name="Lege opdracht", owner=self.owner_colleague, source="wies")
         empty_id = empty.id
 
-        self.client.post(reverse("assignment-delete", args=[empty_id]))
+        self.client.post(reverse("assignment-delete", args=[empty.public_id]))
 
         event = Event.objects.get(object_type="Assignment", action="delete", object_id=empty_id)
         assert event.context == {"name": "Lege opdracht"}

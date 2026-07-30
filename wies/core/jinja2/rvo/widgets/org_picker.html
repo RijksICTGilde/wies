@@ -31,7 +31,7 @@
       <input type="hidden" name="{{ prefix }}-MIN_NUM_FORMS" value="1">
       <input type="hidden" name="{{ prefix }}-MAX_NUM_FORMS" value="1000">
       {% for row in selections %}
-        {% set org_id = row.organization.id if row.organization.id is defined else row.organization %}
+        {% set org_id = row.organization.public_id if row.organization.public_id is defined else row.organization %}
         {% set org_name = row.organization.name if row.organization.name is defined else '' %}
         <input type="hidden"
                name="{{ prefix }}-{{ loop.index0 }}-organization"

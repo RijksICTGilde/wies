@@ -92,21 +92,21 @@ class AssignmentListViewTest(TestCase):
 
     def test_filter_by_rol(self):
         self.client.force_login(self.auth_user)
-        response = self.client.get(self.list_url, {"rol": str(self.skill.id)})
+        response = self.client.get(self.list_url, {"rol": str(self.skill.public_id)})
         content = response.content.decode()
         assert "Open Aanvraag" in content
 
-        response = self.client.get(self.list_url, {"rol": str(self.skill2.id)})
+        response = self.client.get(self.list_url, {"rol": str(self.skill2.public_id)})
         content = response.content.decode()
         assert "Open Aanvraag" not in content
 
     def test_filter_by_org(self):
         self.client.force_login(self.auth_user)
-        response = self.client.get(self.list_url, {"org_self": str(self.org.id)})
+        response = self.client.get(self.list_url, {"org_self": str(self.org.public_id)})
         content = response.content.decode()
         assert "Open Aanvraag" in content
 
-        response = self.client.get(self.list_url, {"org_self": str(self.org2.id)})
+        response = self.client.get(self.list_url, {"org_self": str(self.org2.public_id)})
         content = response.content.decode()
         assert "Open Aanvraag" not in content
 
@@ -189,11 +189,11 @@ class AssignmentListViewTest(TestCase):
         self.client.force_login(self.auth_user)
 
         # Filtering by skill2 (unfilled) should show Mix Opdracht
-        response = self.client.get(self.list_url, {"rol": str(self.skill2.id)})
+        response = self.client.get(self.list_url, {"rol": str(self.skill2.public_id)})
         content = response.content.decode()
         assert "Mix Opdracht" in content
 
         # Filtering by skill (filled) should NOT show Mix Opdracht
-        response = self.client.get(self.list_url, {"rol": str(self.skill.id)})
+        response = self.client.get(self.list_url, {"rol": str(self.skill.public_id)})
         content = response.content.decode()
         assert "Mix Opdracht" not in content

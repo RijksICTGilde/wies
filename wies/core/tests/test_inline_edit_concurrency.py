@@ -34,7 +34,7 @@ class InlineEditConcurrencyTests(TestCase):
         self.client.force_login(self.owner_user)
 
     def _url(self):
-        return reverse("inline-edit", args=["assignment", self.assignment.id, "name"])
+        return reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
 
     def _token_from_form(self):
         response = self.client.get(self._url(), {"edit": "true"})
@@ -187,7 +187,7 @@ class InlineEditCollectionConcurrencyTokenTests(TestCase):
         self.service = Service.objects.create(
             description="Original", assignment=self.assignment, skill=Skill.objects.create(name="Python"), source="wies"
         )
-        self.url = reverse("inline-edit", args=["assignment", self.assignment.id, "services"])
+        self.url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "services"])
 
     def _token(self):
         response = self.client.get(self.url, {"edit": "true"})
@@ -284,7 +284,7 @@ class InlineEditGroupCustomTemplateConcurrencyTests(TestCase):
             source="wies",
         )
         self.client.force_login(self.owner_user)
-        self.url = reverse("inline-edit", args=["placement", self.placement.id, "period"])
+        self.url = reverse("inline-edit", args=["placement", self.placement.public_id, "period"])
 
     def _token(self):
         response = self.client.get(self.url, {"edit": "true"})
@@ -352,7 +352,7 @@ class TokenlessPostTests(TestCase):
         )
         self.assignment = Assignment.objects.create(name="Original", owner=self.owner, source="wies")
         self.client.force_login(self.user)
-        self.url = reverse("inline-edit", args=["assignment", self.assignment.id, "name"])
+        self.url = reverse("inline-edit", args=["assignment", self.assignment.public_id, "name"])
 
     def test_tokenless_post_does_not_save_and_warns(self):
         with self.assertLogs("wies.core.views", level="WARNING") as logs:

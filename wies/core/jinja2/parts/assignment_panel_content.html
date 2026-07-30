@@ -18,7 +18,7 @@
                 aria-selected="false"
                 aria-controls="tab-panel-updates"
                 tabindex="-1"
-                hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.id]) }}"
+                hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.public_id]) }}"
                 hx-target="#tab-panel-updates"
                 hx-swap="innerHTML">
           <span class="rvo-tabs__label">Updates</span>
@@ -86,12 +86,12 @@
             Team ({{ panel_data.team_count }})
           </c-h2>
           {% set a = panel_data.assignment %}
-          {% set ie_target = "inline-edit-assignment-" ~ a.pk ~ "-services" %}
+          {% set ie_target = "inline-edit-assignment-" ~ a.public_id ~ "-services" %}
           {% if has_permission(Verb.UPDATE, a, request.user, AssignmentEditables.services) %}
             <c-button kind="tertiary"
                       icon="bewerken"
                       iconPlacement="after"
-                      hx-get="{{ url('inline-edit', args=[a._meta.model_name, a.pk, 'services']) }}?edit=true"
+                      hx-get="{{ url('inline-edit', args=[a._meta.model_name, a.public_id, 'services']) }}?edit=true"
                       hx-target="#{{ ie_target }}"
                       hx-swap="outerHTML">
               Team bewerken
@@ -105,7 +105,7 @@
           <c-button kind="warning-subtle"
                     icon="verwijderen"
                     iconPlacement="before"
-                    hx-get="{{ url('assignment-delete', args=[panel_data.assignment.id]) }}"
+                    hx-get="{{ url('assignment-delete', args=[panel_data.assignment.public_id]) }}"
                     hx-target="#assignmentDeleteModal"
                     hx-swap="innerHTML">
             Verwijder opdracht
