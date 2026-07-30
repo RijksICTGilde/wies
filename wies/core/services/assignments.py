@@ -337,3 +337,39 @@ def merge_group(assignments):
 
         dupe.organization_relations.all().delete()
         dupe.delete()
+
+
+def initial_row_to_services_data(row) -> dict:
+    """Een _services_initial-rij → services_data-dict, voor de rijen die een
+    teamlid-endpoint NIET aanraakt. Spiegelt ServiceForm.clean: de checkbox in
+    de rij betekent "neem opdrachtperiode over", terwijl has_custom_period in
+    apply_services_to_assignment "pin deze datums" betekent."""
+    inherits = row["has_custom_period"]
+    has_dates = bool(row["placement_start_date"] or row["placement_end_date"])
+    return {
+        "id": row["id"],
+        "placement_id": row["placement_id"],
+        "description": row["description"],
+        "skill_id": int(row["skill"]) if row["skill"] else None,
+        "new_skill_name": None,
+        "status": "OPEN",
+        "colleague_id": row["colleague"].id if (row["colleague"] and row["is_filled"] == "ingevuld") else None,
+        "has_custom_period": (not inherits) and has_dates,
+        "placement_start_date": None if inherits else row["placement_start_date"],
+        "placement_end_date": None if inherits else row["placement_end_date"],
+    }
+
+
+def apply_team_change(request, assignment, services_data):
+    """Team-sync met dezelfde audit-events als de inline-edit-route."""
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
+    from wies.core.inline_edit.audit import emit_inline_edit_audit_event  # noqa: PLC0415 — avoids import cycle
+
+    spec = AssignmentEditables.services
+    before = spec.audit_state(assignment) if spec.audit_state else None
+    with transaction.atomic():
+        apply_services_to_assignment(assignment, services_data)
+        after = spec.audit_state(assignment) if spec.audit_state else None
+        emit_inline_edit_audit_event(
+            AssignmentEditables, spec, assignment, before, after, request.user, request=request
+        )

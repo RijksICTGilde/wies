@@ -28,6 +28,7 @@ from django.views.decorators.http import require_POST
 from django.views.generic.list import ListView
 
 from wies.core.editables import REGISTRY
+from wies.core.inline_edit.audit import emit_inline_edit_audit_event
 from wies.core.inline_edit.base import (
     Editable,
     EditableCollection,
@@ -69,8 +70,14 @@ from .models import (
 )
 from .permissions import is_staff_member
 from .querysets import annotate_placement_dates, annotate_usage_counts
-from .services.assignments import create_assignment_from_form, extract_services_data
+from .services.assignments import (
+    apply_team_change,
+    create_assignment_from_form,
+    extract_services_data,
+    initial_row_to_services_data,
+)
 from .services.events import create_event
+from .services.inline_edit_save import save_edit_specs
 from .services.organizations import (
     find_orgs_by_abbreviation,
     get_excluded_org_ids,
@@ -80,6 +87,7 @@ from .services.organizations import (
 from .services.placements import (
     create_assignments_from_csv,
     filter_visible_placements,
+    save_placement_edit,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
 from .services.users import create_user, create_users_from_csv, is_allowed_email_domain, update_user
@@ -172,7 +180,11 @@ def _build_assignment_panel_data(assignment, request):
         # toegesneden ("... jou en de Business Manager" / "... jou en de
         # consultant"), dus alleen de eerste letter hoeft mee te buigen.
         "team_privacy_note": next(
-            (note[0].lower() + note[1:] for row in team_rows if (note := row.get("privacy_warning_text"))),
+            (
+                note[0].lower() + note[1:]
+                for row in team_rows
+                if (note := row.get("privacy_warning_text"))
+            ),
             "",
         ),
         "user_can_edit": bool(_assignment_edit_specs(assignment, request.user)),
@@ -402,7 +414,9 @@ def _build_placement_panel_data(placement, request, *, visibility=None):
     # zichtbaarheidsregels als het collegapaneel, want het is dezelfde bron.
     viewer = getattr(request.user, "colleague", None)
     other_assignments = [
-        entry for entry in _get_colleague_assignments(request, colleague, viewer) if entry["id"] != assignment.id
+        entry
+        for entry in _get_colleague_assignments(request, colleague, viewer)
+        if entry["id"] != assignment.id
     ]
 
     return {
@@ -1502,7 +1516,9 @@ class UserListView(PermissionRequiredMixin, ListView):
         # het rijmenu de sheet hier opent in plaats van naar de lijstpagina te
         # springen. Bij een directe load rendert het paneel server-side mee.
         panel_colleague = self._panel_colleague()
-        context["panel_data"] = _build_colleague_panel_data(panel_colleague, self.request) if panel_colleague else None
+        context["panel_data"] = (
+            _build_colleague_panel_data(panel_colleague, self.request) if panel_colleague else None
+        )
 
         context["search_field"] = "zoek"
         context["search_placeholder"] = "Zoek op naam of email..."
@@ -2502,9 +2518,7 @@ def _attach_audit_render_data(event, obj, request) -> bool:
     # is: dat is een gewoon tekstveld dat alleen mag doorlopen (de opdrachtnaam),
     # en dan leest de zin "van X naar Y" prettiger dan twee blokken.
     widget = getattr(spec, "widget", None)
-    is_textarea = isinstance(widget, forms.Textarea) or (
-        isinstance(widget, type) and issubclass(widget, forms.Textarea)
-    )
+    is_textarea = isinstance(widget, forms.Textarea) or (isinstance(widget, type) and issubclass(widget, forms.Textarea))
     rows = getattr(widget, "attrs", {}).get("rows", 3) if not isinstance(widget, type) else 3
     if is_textarea and int(rows or 3) > 1:
         event.render_kind = "textarea"
@@ -2760,7 +2774,7 @@ def onboarding_assignment_edit(request, pk):
     if request.method == "POST" and all(group["form"].is_valid() for group in groups):
         with transaction.atomic():
             for group in groups:
-                _save_edit_specs(request, group["specs"], group["form"].cleaned_data)
+                save_edit_specs(request, group["specs"], group["form"].cleaned_data)
         # De bijgewerkte box vervangt de oude in de stap; het bewerkscherm sluit
         # zichzelf op de trigger (zie onboarding.js).
         entry = _onboarding_entry(request, pk)
@@ -3433,7 +3447,7 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
                     if not conflict:
                         spec.save(obj, formset)
                         after = _edit_state(editable_set, spec, obj)
-                        _emit_inline_edit_audit_event(
+                        emit_inline_edit_audit_event(
                             editable_set, spec, obj, before, after, request.user, request=request
                         )
             except editable_set.model.DoesNotExist:
@@ -3465,80 +3479,6 @@ def _handle_inline_edit_collection(request, editable_set, spec: EditableCollecti
         formset = spec.formset_factory(initial=spec.initial(obj))
         return _render_inline_edit_collection_form(request, editable_set, spec, obj, formset)
     return _render_inline_edit_display(request, editable_set, spec, editables=[], obj=obj)
-
-
-def _record_editable_change(editable, obj, object_type, old_value, new_value, user, request=None) -> None:
-    to_state = editable.audit_state or (lambda v: v)
-    old_state = to_state(old_value)
-    new_state = to_state(new_value)
-    if old_state == new_state:
-        return
-    create_event(
-        object_type=object_type,
-        action="update",
-        source="user",
-        object_id=obj.id,
-        user=user,
-        request=request,
-        context={
-            "field_name": editable.field or editable.name or "",
-            "field_label": editable.label or editable.name or "",
-            "old_value": old_state,
-            "new_value": new_state,
-        },
-    )
-
-
-def _emit_inline_edit_audit_event(
-    editable_set, spec, obj, before, after, user, *, child_editables=None, request=None
-) -> None:
-    object_type = editable_set.audit_type()
-    if object_type is None:
-        return
-
-    if isinstance(spec, Editable):
-        _record_editable_change(spec, obj, object_type, before, after, user, request=request)
-        return
-
-    if isinstance(spec, EditableGroup):
-        for child in child_editables or []:
-            _record_editable_change(
-                child, obj, object_type, before.get(child.name), after.get(child.name), user, request=request
-            )
-        return
-
-    if isinstance(spec, EditableCollection):
-        if spec.audit_state is None:
-            return
-        changes = _diff_collection_state(before, after)
-        if not changes:
-            return
-        create_event(
-            object_type=object_type,
-            action="update",
-            source="user",
-            object_id=obj.id,
-            user=user,
-            request=request,
-            context={
-                "field_name": spec.name or "",
-                "field_label": spec.label or spec.name or "",
-                "changes": changes,
-            },
-        )
-
-
-def _diff_collection_state(old_state: list[dict], new_state: list[dict]) -> list[dict]:
-    old_by_id = {r["id"]: r for r in old_state}
-    new_by_id = {r["id"]: r for r in new_state}
-    changes: list[dict] = [{"old": None, "new": r} for r in new_state if r["id"] not in old_by_id]
-    changes.extend({"old": r, "new": None} for r in old_state if r["id"] not in new_by_id)
-    changes.extend(
-        {"old": old_by_id[sid], "new": new_by_id[sid]}
-        for sid in old_by_id.keys() & new_by_id.keys()
-        if old_by_id[sid] != new_by_id[sid]
-    )
-    return changes
 
 
 def _pk_stub(model, pk):
@@ -3621,7 +3561,7 @@ def inline_edit_view(request, model_label, pk, name):
                                 after = {e.name: _current_value(obj, e) for e in editables}
                             else:
                                 after = _current_value(obj, spec)
-                            _emit_inline_edit_audit_event(
+                            emit_inline_edit_audit_event(
                                 editable_set,
                                 spec,
                                 obj,
@@ -3730,50 +3670,6 @@ def _combined_edit_form_class(specs, *, bound_obj=None):
     return form_cls, initial
 
 
-def _save_edit_specs(request, specs, cleaned_data):
-    """Sla alle specs op met dezelfde audit-events als inline edit.
-
-    Geen eigen transactie: de aanroeper bepaalt de grens, zodat een paneel er
-    zijn eigen nazorg (zoals de plaatsingsspiegel) in dezelfde transactie bij
-    kan leggen.
-    """
-    from wies.core.inline_edit.forms import save_spec  # noqa: PLC0415
-
-    for editable_set, spec, obj in specs:
-        spec_editables = resolve_editables(editable_set, spec)
-        if isinstance(spec, EditableGroup):
-            before = {e.name: _current_value(obj, e) for e in spec_editables}
-        else:
-            before = _current_value(obj, spec)
-        save_spec(spec, spec_editables, cleaned_data, obj)
-        if isinstance(spec, EditableGroup):
-            after = {e.name: _current_value(obj, e) for e in spec_editables}
-        else:
-            after = _current_value(obj, spec)
-        _emit_inline_edit_audit_event(
-            editable_set,
-            spec,
-            obj,
-            before,
-            after,
-            request.user,
-            child_editables=spec_editables if isinstance(spec, EditableGroup) else None,
-            request=request,
-        )
-
-
-def _save_placement_edit(request, placement, specs, cleaned_data):
-    """Sla alle specs op in één transactie, met dezelfde audit-events als inline edit."""
-    from wies.core.editables.placement import PlacementEditables  # noqa: PLC0415 — avoids import cycle
-
-    # Een plaatsingswijziging heeft geen eigen audit-type; PlacementEditables.audit_mirror
-    # spiegelt hem als "Team"-event op de tijdlijn van de opdracht, net als de inline-edit-
-    # en "Team bewerken"-flow (#393). De mirror is een context-manager rond de save.
-    mirror = PlacementEditables.audit_mirror
-    with transaction.atomic(), mirror(placement, request.user, request) if mirror else nullcontext():
-        _save_edit_specs(request, specs, cleaned_data)
-
-
 def _safe_return_path(raw: str | None, fallback: str) -> str:
     """Alleen een pad op deze site; anders de fallback.
 
@@ -3822,7 +3718,7 @@ def placement_edit_view(request, pk):
         panel_data["edit_url"] = reverse("placement-edit", args=[placement.id])
         return render(request, "parts/placement_edit_panel_content.html", {"panel_data": panel_data})
 
-    _save_placement_edit(request, placement, specs, form.cleaned_data)
+    save_placement_edit(request, placement, specs, form.cleaned_data)
 
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
@@ -3912,7 +3808,7 @@ def assignment_edit_view(request, pk):
         return render(request, "parts/assignment_edit_panel_content.html", {"panel_data": panel_data})
 
     with transaction.atomic():
-        _save_edit_specs(request, specs, form.cleaned_data)
+        save_edit_specs(request, specs, form.cleaned_data)
 
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
@@ -3927,42 +3823,6 @@ def assignment_edit_view(request, pk):
 # formset gelden: elk endpoint reconstrueert het volledige team en wijzigt
 # alleen de betrokken rij, zodat apply_services_to_assignment (dat op
 # afwezigheid verwijdert) nooit ongewild rijen ziet verdwijnen.
-
-
-def _initial_row_to_services_data(row) -> dict:
-    """Een _services_initial-rij → services_data-dict, voor de rijen die een
-    teamlid-endpoint NIET aanraakt. Spiegelt ServiceForm.clean: de checkbox in
-    de rij betekent "neem opdrachtperiode over", terwijl has_custom_period in
-    apply_services_to_assignment "pin deze datums" betekent."""
-    inherits = row["has_custom_period"]
-    has_dates = bool(row["placement_start_date"] or row["placement_end_date"])
-    return {
-        "id": row["id"],
-        "placement_id": row["placement_id"],
-        "description": row["description"],
-        "skill_id": int(row["skill"]) if row["skill"] else None,
-        "new_skill_name": None,
-        "status": "OPEN",
-        "colleague_id": row["colleague"].id if (row["colleague"] and row["is_filled"] == "ingevuld") else None,
-        "has_custom_period": (not inherits) and has_dates,
-        "placement_start_date": None if inherits else row["placement_start_date"],
-        "placement_end_date": None if inherits else row["placement_end_date"],
-    }
-
-
-def _apply_team_change(request, assignment, services_data):
-    """Team-sync met dezelfde audit-events als de inline-edit-route."""
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
-    from wies.core.services.assignments import apply_services_to_assignment  # noqa: PLC0415
-
-    spec = AssignmentEditables.services
-    before = spec.audit_state(assignment) if spec.audit_state else None
-    with transaction.atomic():
-        apply_services_to_assignment(assignment, services_data)
-        after = spec.audit_state(assignment) if spec.audit_state else None
-        _emit_inline_edit_audit_event(
-            AssignmentEditables, spec, assignment, before, after, request.user, request=request
-        )
 
 
 def _build_assignment_member_panel_data(assignment, request):
@@ -4044,10 +3904,12 @@ def assignment_member_edit_view(request, pk):
 
     edited_ids = {int(row["id"]) for row in edited if row.get("id")}
     others = [
-        _initial_row_to_services_data(row) for row in _services_initial(assignment) if row["id"] not in edited_ids
+        initial_row_to_services_data(row)
+        for row in _services_initial(assignment)
+        if row["id"] not in edited_ids
     ]
     try:
-        _apply_team_change(request, assignment, others + edited)
+        apply_team_change(request, assignment, others + edited)
     except ValidationError as exc:
         for message in exc.messages:
             _attach_formset_error(formset, message)
@@ -4075,10 +3937,12 @@ def assignment_member_delete_view(request, pk, service_id):
     if not any(row["id"] == service_id for row in rows):
         raise Http404("Unknown service")
 
-    services_data = [_initial_row_to_services_data(row) for row in rows if row["id"] != service_id]
-    _apply_team_change(request, assignment, services_data)
+    services_data = [initial_row_to_services_data(row) for row in rows if row["id"] != service_id]
+    apply_team_change(request, assignment, services_data)
 
-    return_path = _safe_return_path(request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.id))
+    return_path = _safe_return_path(
+        request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.id)
+    )
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
     return response

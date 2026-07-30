@@ -308,3 +308,18 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
             "placements_created": placements_created,
             "errors": [],
         }
+
+
+def save_placement_edit(request, placement, specs, cleaned_data):
+    """Sla alle specs op in één transactie, met dezelfde audit-events als inline edit."""
+    from contextlib import nullcontext  # noqa: PLC0415 — lokaal, alleen deze functie
+
+    from wies.core.editables.placement import PlacementEditables  # noqa: PLC0415 — avoids import cycle
+    from wies.core.services.inline_edit_save import save_edit_specs  # noqa: PLC0415 — avoids import cycle
+
+    # Een plaatsingswijziging heeft geen eigen audit-type; PlacementEditables.audit_mirror
+    # spiegelt hem als "Team"-event op de tijdlijn van de opdracht, net als de inline-edit-
+    # en "Team bewerken"-flow (#393). De mirror is een context-manager rond de save.
+    mirror = PlacementEditables.audit_mirror
+    with transaction.atomic(), mirror(placement, request.user, request) if mirror else nullcontext():
+        save_edit_specs(request, specs, cleaned_data)
