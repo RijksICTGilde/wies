@@ -8,9 +8,7 @@
 {% endblock sidebar %}
 {% block content %}
   <nldd-simple-section>
-  <nldd-link href="{{ url('staff-dashboard') }}"
-             start-icon="arrow-left"
-             text="Terug naar statistieken"></nldd-link>
+  <nldd-link href="{{ url('staff-dashboard') }}" start-icon="arrow-left" text="Terug naar statistieken"></nldd-link>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <nldd-title size="2">
   <h1>Foutmelding</h1>
@@ -18,7 +16,9 @@
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <dl class="error-detail__meta">
     <dt>Tijd</dt>
-    <dd>{{ error.timestamp|datetime_nl }}</dd>
+    <dd>
+      {{ error.timestamp|datetime_nl }}
+    </dd>
     <dt>Waar</dt>
     <dd>
       {% if error.path %}
@@ -28,9 +28,13 @@
       {% endif %}
     </dd>
     <dt>Gebruiker</dt>
-    <dd>{{ error.user_email or "-" }}</dd>
+    <dd>
+      {{ error.user_email or "-" }}
+    </dd>
     <dt>Versie</dt>
-    <dd>{{ error.app_version or "-" }}</dd>
+    <dd>
+      {{ error.app_version or "-" }}
+    </dd>
   </dl>
   {% if error.exception_type %}
     <p><strong>{{ error.exception_type }}: {{ error.exception_message }}</strong></p>

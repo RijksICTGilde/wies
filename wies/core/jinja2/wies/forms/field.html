@@ -17,10 +17,7 @@
    ervaart (er is een zinnige standaard) kan de Optioneel-badge onderdrukken met
    `hide-optional` in widget.attrs. #}
 {% set error_ids = wire_field_errors(field) %}
-<nldd-form-field
-{% if field.label %}label="{{ field.label }}"{% endif %}
-{% if not field.field.required and not field.field.widget.attrs.get("hide-optional") %}optional{% endif %}
->
+<nldd-form-field {% if field.label %}label="{{ field.label }}"{% endif %} {% if not field.field.required and not field.field.widget.attrs.get("hide-optional") %}optional{% endif %}>
 {{ field }}
 {% for error in field.errors %}
   <nldd-form-field-error-text id="{{ error_ids[loop.index0] }}" invalid>{{ error }}</nldd-form-field-error-text>

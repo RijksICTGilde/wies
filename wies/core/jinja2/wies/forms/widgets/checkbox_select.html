@@ -11,15 +11,6 @@
    wiring alleen op het eerste veld (loop.first van de eerste groep). #}
 {% for group, options, index in widget.optgroups %}
   {% for option_widget in options %}
-    <nldd-checkbox-field name="{{ option_widget.name }}" value="{{ option_widget.value }}" label="{{ option_widget.label }}"
-    {% if option_widget.selected %}checked{% endif %}
-    {% if loop.first and index == 0 and widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}
-    {% for name, value in option_widget.attrs.items() %}
-      {% if value is not sameas False and name not in ('id', 'autocomplete') %}
-        {{ name }}
-        {% if value is not sameas True %}="{{ value }}"{% endif %}
-      {% endif %}
-    {% endfor %}
-    ></nldd-checkbox-field>
+    <nldd-checkbox-field name="{{ option_widget.name }}" value="{{ option_widget.value }}" label="{{ option_widget.label }}" {% if option_widget.selected %}checked{% endif %} {% if loop.first and index == 0 and widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %} {% for name, value in option_widget.attrs.items() %} {% if value is not sameas False and name not in ('id', 'autocomplete') %} {{ name }} {% if value is not sameas True %}="{{ value }}"{% endif %} {% endif %} {% endfor %}></nldd-checkbox-field>
   {% endfor %}
 {% endfor %}

@@ -13,8 +13,7 @@
    reflecteert geen `invalid`-styling (staat niet in custom-elements.json), dus
    de groep kleurt niet rood; de foutmelding wordt wél zichtbaar en aangekondigd,
    wat de toegankelijke minimumeis is. #}
-<nldd-radio-button-group name="{{ widget.name }}"
-{% if widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}>
+<nldd-radio-button-group name="{{ widget.name }}" {% if widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}>
 {% for group_name, group_choices, group_index in widget.optgroups %}
   {% for option_widget in group_choices %}
     <nldd-radio-button-field value="{{ option_widget.value }}" label="{{ option_widget.label }}" {% if option_widget.selected %}checked{% endif %}></nldd-radio-button-field>

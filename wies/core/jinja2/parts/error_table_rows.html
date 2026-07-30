@@ -18,11 +18,7 @@
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
   <nldd-cell>
   <nldd-icon-button size="sm" icon="eye" tooltip-timing="never" text="Details bekijken" href="{{ url('error-detail', args=[error.id]) }}"></nldd-icon-button>
-  <nldd-icon-button size="sm" icon="trash" tooltip-timing="never" text="Foutmelding verwijderen"
-                    hx-post="{{ url('delete-error', args=[error.id]) }}?pagina={{ page_obj.number }}"
-                    hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
-                    hx-target="#error_table_container"
-                    hx-swap="innerHTML"></nldd-icon-button>
+  <nldd-icon-button size="sm" icon="trash" tooltip-timing="never" text="Foutmelding verwijderen" hx-post="{{ url('delete-error', args=[error.id]) }}?pagina={{ page_obj.number }}" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#error_table_container" hx-swap="innerHTML"></nldd-icon-button>
   </nldd-cell>
   </nldd-list-item>
 {% else %}

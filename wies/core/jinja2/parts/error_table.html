@@ -7,28 +7,16 @@
 {% if page_obj.paginator.num_pages > 1 %}
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <div style="display: flex; gap: 1rem; align-items: center">
-  {% if previous_page_url %}
-    <nldd-button variant="secondary"
-                 type="button"
-                 text="Vorige"
-                 start-icon="chevron-left"
-                 hx-get="{{ previous_page_url }}"
-                 hx-target="#error_table_container"
-                 hx-swap="innerHTML"></nldd-button>
-  {% else %}
-    <nldd-button variant="secondary" type="button" text="Vorige" start-icon="chevron-left" disabled></nldd-button>
-  {% endif %}
-  <span class="wies-text-secondary">Pagina {{ page_obj.number }} van {{ page_obj.paginator.num_pages }}</span>
-  {% if next_page_url %}
-    <nldd-button variant="secondary"
-                 type="button"
-                 text="Volgende"
-                 end-icon="chevron-right"
-                 hx-get="{{ next_page_url }}"
-                 hx-target="#error_table_container"
-                 hx-swap="innerHTML"></nldd-button>
-  {% else %}
-    <nldd-button variant="secondary" type="button" text="Volgende" end-icon="chevron-right" disabled></nldd-button>
-  {% endif %}
+    {% if previous_page_url %}
+      <nldd-button variant="secondary" type="button" text="Vorige" start-icon="chevron-left" hx-get="{{ previous_page_url }}" hx-target="#error_table_container" hx-swap="innerHTML"></nldd-button>
+    {% else %}
+      <nldd-button variant="secondary" type="button" text="Vorige" start-icon="chevron-left" disabled></nldd-button>
+    {% endif %}
+    <span class="wies-text-secondary">Pagina {{ page_obj.number }} van {{ page_obj.paginator.num_pages }}</span>
+    {% if next_page_url %}
+      <nldd-button variant="secondary" type="button" text="Volgende" end-icon="chevron-right" hx-get="{{ next_page_url }}" hx-target="#error_table_container" hx-swap="innerHTML"></nldd-button>
+    {% else %}
+      <nldd-button variant="secondary" type="button" text="Volgende" end-icon="chevron-right" disabled></nldd-button>
+    {% endif %}
   </div>
 {% endif %}
