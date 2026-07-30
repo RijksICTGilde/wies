@@ -6,7 +6,7 @@
     "build-nldd": "node scripts/build-nldd.mjs"
   },
   "dependencies": {
-    "@nldd/design-system": "^0.8.72"
+    "@nldd/design-system": "^0.8.73"
   },
   "devDependencies": {
     "esbuild": "^0.28.0"
