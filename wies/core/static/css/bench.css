@@ -34,12 +34,25 @@
   color: #4b4b4b;
 }
 
+.bench-stat--hours {
+  background: #d52b1e;
+  color: #fff;
+}
+
+.bench-stat--hours .bench-stat__label {
+  color: #fbe4e2;
+}
+
 .bench-stat--bench {
   background: #fce8e6;
 }
 
 .bench-stat--partial {
   background: #fff4e5;
+}
+
+.bench-stat--full {
+  background: #e6efe9;
 }
 
 .bench-stat--soon {

@@ -2,7 +2,7 @@
 {% set menu_items = [
   {"label": "Wie zit waar?", "link": url('home'), "active": request.path == '/'},
   {"label": "Aanvragen", "link": url('assignment-list'), "active": '/opdrachten/' in request.path},
-  {"label": "Bezetting", "link": url('bench-overview'), "active": '/bezetting/' in request.path},
+  {"label": "Business management", "link": url('business-management'), "active": '/business-management/' in request.path},
 ] %}
 {% if user.is_authenticated %}
   {% set menu_items = menu_items + [

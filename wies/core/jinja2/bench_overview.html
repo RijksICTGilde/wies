@@ -1,12 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Bezetting{% endblock title %}
 {% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
   <link rel="stylesheet" href="{{ static('css/bench.css') }}">
   <link rel="stylesheet" href="{{ static('css/side_panel.css') }}">
   <script src="{{ static('js/dialog.js') }}"></script>
   <script src="{{ static('js/side_panel.js') }}"></script>
   <script src="{{ static('js/inline_edit.js') }}" defer></script>
 {% endblock extra_head %}
+{% block sidebar %}
+  {% include "parts/business_management_sidebar.html" %}
+{% endblock sidebar %}
 {% block content %}
   <div class="rvo-layout-column rvo-layout-gap--md bench-page">
     <c-h1>
@@ -14,11 +18,15 @@
     </c-h1>
     <c-paragraph>
       Wie heeft werk nodig? Collega's staan op volgorde van urgentie: eerst wie op de bank zit,
-      dan wie deels vrij is (de meeste vrije uren bovenaan), en tot slot wie volledig is ingezet —
-      met de opdrachten die het eerst aflopen bovenaan.
+      dan wie deels vrij is (de meeste vrije uren bovenaan), en tot slot wie volledig is ingezet.
+      De opdrachten die het eerst aflopen bovenaan.
     </c-paragraph>
     {# Legenda + samenvatting #}
     <div class="bench-summary">
+      <div class="bench-stat bench-stat--hours">
+        <span class="bench-stat__value">{{ total_unfilled_hours }}</span>
+        <span class="bench-stat__label">uur per week onbezet</span>
+      </div>
       <div class="bench-stat bench-stat--bench">
         <span class="bench-stat__value">{{ bench_count }}</span>
         <span class="bench-stat__label">op de bank</span>
@@ -26,6 +34,10 @@
       <div class="bench-stat bench-stat--partial">
         <span class="bench-stat__value">{{ partial_count }}</span>
         <span class="bench-stat__label">deels vrij</span>
+      </div>
+      <div class="bench-stat bench-stat--full">
+        <span class="bench-stat__value">{{ full_count }}</span>
+        <span class="bench-stat__label">volledig ingezet</span>
       </div>
       <div class="bench-stat bench-stat--soon">
         <span class="bench-stat__value">{{ ends_soon_count }}</span>

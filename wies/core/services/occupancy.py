@@ -16,7 +16,7 @@ from datetime import date, timedelta
 
 from django.db.models import Q
 
-from wies.core.models import Colleague, Placement
+from wies.core.models import Colleague, ContractPeriod, Placement
 from wies.core.querysets import annotate_placement_dates
 
 # Timeline horizon and "pressing" thresholds.
@@ -215,3 +215,62 @@ def colleague_occupancy(today: date) -> list[OccupancyRow]:
 
     rows.sort(key=lambda r: (_BUCKET_RANK[r.bucket], -r.unfilled_hours, r.earliest_active_end or far_future))
     return rows
+
+
+def _covers(start: date | None, end: date | None, d: date) -> bool:
+    """True if the [start, end] interval covers date ``d`` (null = open bound)."""
+    return (start is None or start <= d) and (end is None or end >= d)
+
+
+def capacity_forecast(today: date) -> dict:
+    """Weekly capacity vs. planned hours across the horizon, for the Prognose chart.
+
+    For each week in [today - HORIZON_BACK_DAYS, today + HORIZON_AHEAD_DAYS]:
+      - capacity = Σ contract hours of every ContractPeriod covering that week,
+      - planned  = Σ active placement hours at that week.
+
+    Two queries total (contract periods + annotated placements); the per-week
+    aggregation runs in Python. Returns JSON-ready lists.
+    """
+    horizon_start = today - timedelta(days=HORIZON_BACK_DAYS)
+    horizon_end = today + timedelta(days=HORIZON_AHEAD_DAYS)
+
+    # Weekly sample points: Mondays from the first Monday on/before the horizon
+    # start through the horizon end.
+    first_monday = horizon_start - timedelta(days=horizon_start.weekday())
+    weeks: list[date] = []
+    cursor = first_monday
+    while cursor <= horizon_end:
+        weeks.append(cursor)
+        cursor += timedelta(days=7)
+
+    contract_periods = list(ContractPeriod.objects.all())
+    placements = list(
+        annotate_placement_dates(Placement.objects.all()).values(
+            "actual_start_date", "actual_end_date", "assignment_hours_per_week"
+        )
+    )
+
+    capacity: list[int] = []
+    planned: list[int] = []
+    for week in weeks:
+        cap = sum(cp.hours_per_week for cp in contract_periods if _covers(cp.start_date, cp.end_date, week))
+        plan = sum(
+            (p["assignment_hours_per_week"] or 0)
+            for p in placements
+            if _covers(p["actual_start_date"], p["actual_end_date"], week)
+        )
+        capacity.append(cap)
+        planned.append(plan)
+
+    # Index of the week the "today" marker sits in (the last week start <= today).
+    today_index = max((i for i, w in enumerate(weeks) if w <= today), default=0)
+
+    return {
+        "weeks": [w.isoformat() for w in weeks],
+        "capacity": capacity,
+        "planned": planned,
+        "unfilled": [c - p for c, p in zip(capacity, planned, strict=True)],
+        "today_index": today_index,
+        "today": today.isoformat(),
+    }

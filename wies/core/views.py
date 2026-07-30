@@ -69,7 +69,7 @@ from .permissions import is_staff_member
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .services.assignments import create_assignment_from_form, extract_services_data
 from .services.events import create_event
-from .services.occupancy import colleague_occupancy
+from .services.occupancy import capacity_forecast, colleague_occupancy
 from .services.organizations import (
     find_orgs_by_abbreviation,
     get_excluded_org_ids,
@@ -509,10 +509,21 @@ def bench_overview(request):
         "panel_data": panel_data,
         "bench_count": sum(1 for r in rows if r.bucket == "bench"),
         "partial_count": sum(1 for r in rows if r.bucket == "partial"),
+        "full_count": sum(1 for r in rows if r.bucket == "full"),
         "unknown_count": sum(1 for r in rows if r.bucket == "unknown"),
         "ends_soon_count": sum(1 for r in rows if r.ends_soon),
+        # Total contract hours per week not currently filled by an active placement.
+        # Only bench + partial count — "unknown" colleagues ARE working (their hours
+        # are merely unrecorded), so their contract shouldn't read as a gap.
+        "total_unfilled_hours": sum(r.unfilled_hours for r in rows if r.bucket in ("bench", "partial")),
     }
     return render(request, "bench_overview.html", context)
+
+
+def bm_prognose(request):
+    """Business-management "Prognose" — capacity vs. planned hours over the horizon."""
+    forecast = capacity_forecast(timezone.now().date())
+    return render(request, "bm_prognose.html", {"forecast_json": json.dumps(forecast)})
 
 
 def _bench_today_pct():

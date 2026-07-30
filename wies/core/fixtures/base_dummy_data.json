@@ -1921,7 +1921,7 @@
       "colleague": 54,
       "hours_per_week": 28,
       "start_date": "2024-08-11",
-      "end_date": null
+      "end_date": "2026-09-20"
     }
   },
   {
@@ -1961,7 +1961,7 @@
       "colleague": 57,
       "hours_per_week": 32,
       "start_date": "2023-11-18",
-      "end_date": null
+      "end_date": "2026-11-08"
     }
   },
   {
@@ -1990,7 +1990,7 @@
     "fields": {
       "colleague": 60,
       "hours_per_week": 40,
-      "start_date": "2024-05-11",
+      "start_date": "2026-06-12",
       "end_date": null
     }
   },
@@ -2021,7 +2021,7 @@
       "colleague": 63,
       "hours_per_week": 36,
       "start_date": "2025-04-04",
-      "end_date": null
+      "end_date": "2026-09-26"
     }
   },
   {
@@ -2061,7 +2061,7 @@
       "colleague": 66,
       "hours_per_week": 40,
       "start_date": "2026-05-05",
-      "end_date": null
+      "end_date": "2026-06-29"
     }
   },
   {
@@ -2131,7 +2131,7 @@
       "colleague": 70,
       "hours_per_week": 20,
       "start_date": "2026-05-21",
-      "end_date": null
+      "end_date": "2026-09-24"
     }
   },
   {
@@ -2161,7 +2161,7 @@
       "colleague": 72,
       "hours_per_week": 36,
       "start_date": "2026-04-27",
-      "end_date": null
+      "end_date": "2026-05-22"
     }
   },
   {
@@ -2171,7 +2171,7 @@
       "colleague": 73,
       "hours_per_week": 28,
       "start_date": "2026-05-19",
-      "end_date": null
+      "end_date": "2027-05-17"
     }
   },
   {
@@ -2230,7 +2230,7 @@
     "fields": {
       "colleague": 77,
       "hours_per_week": 24,
-      "start_date": "2024-09-30",
+      "start_date": "2026-06-14",
       "end_date": null
     }
   },
@@ -2271,7 +2271,7 @@
       "colleague": 80,
       "hours_per_week": 40,
       "start_date": "2025-02-17",
-      "end_date": null
+      "end_date": "2026-06-03"
     }
   },
   {
@@ -2290,7 +2290,7 @@
     "fields": {
       "colleague": 82,
       "hours_per_week": 36,
-      "start_date": "2026-04-06",
+      "start_date": "2026-05-29",
       "end_date": null
     }
   },
@@ -2350,7 +2350,7 @@
     "fields": {
       "colleague": 86,
       "hours_per_week": 36,
-      "start_date": "2024-12-23",
+      "start_date": "2026-05-07",
       "end_date": null
     }
   },
@@ -2391,7 +2391,7 @@
       "colleague": 89,
       "hours_per_week": 28,
       "start_date": "2026-01-03",
-      "end_date": null
+      "end_date": "2027-01-13"
     }
   },
   {
@@ -2511,7 +2511,7 @@
       "colleague": 98,
       "hours_per_week": 36,
       "start_date": "2024-02-09",
-      "end_date": null
+      "end_date": "2026-09-20"
     }
   },
   {
@@ -2521,7 +2521,7 @@
       "colleague": 99,
       "hours_per_week": 36,
       "start_date": "2024-07-09",
-      "end_date": null
+      "end_date": "2026-08-29"
     }
   },
   {
@@ -2540,7 +2540,7 @@
     "fields": {
       "colleague": 100,
       "hours_per_week": 28,
-      "start_date": "2025-01-31",
+      "start_date": "2026-05-11",
       "end_date": null
     }
   },
@@ -2560,7 +2560,7 @@
     "fields": {
       "colleague": 101,
       "hours_per_week": 36,
-      "start_date": "2025-06-15",
+      "start_date": "2026-07-22",
       "end_date": null
     }
   },
@@ -2610,7 +2610,7 @@
     "fields": {
       "colleague": 104,
       "hours_per_week": 36,
-      "start_date": "2025-10-13",
+      "start_date": "2026-06-30",
       "end_date": null
     }
   },
@@ -2621,7 +2621,7 @@
       "colleague": 105,
       "hours_per_week": 36,
       "start_date": "2025-10-14",
-      "end_date": null
+      "end_date": "2027-01-21"
     }
   },
   {
@@ -2641,7 +2641,7 @@
       "colleague": 107,
       "hours_per_week": 36,
       "start_date": "2023-11-11",
-      "end_date": null
+      "end_date": "2027-04-18"
     }
   },
   {
@@ -2681,7 +2681,7 @@
       "colleague": 109,
       "hours_per_week": 20,
       "start_date": "2023-09-26",
-      "end_date": null
+      "end_date": "2026-10-07"
     }
   },
   {
@@ -2711,7 +2711,7 @@
       "colleague": 111,
       "hours_per_week": 40,
       "start_date": "2025-03-24",
-      "end_date": null
+      "end_date": "2026-09-10"
     }
   },
   {
@@ -2740,7 +2740,7 @@
     "fields": {
       "colleague": 114,
       "hours_per_week": 36,
-      "start_date": "2025-12-08",
+      "start_date": "2026-06-09",
       "end_date": null
     }
   },
@@ -2800,7 +2800,7 @@
     "fields": {
       "colleague": 117,
       "hours_per_week": 36,
-      "start_date": "2024-11-10",
+      "start_date": "2026-07-06",
       "end_date": null
     }
   },
@@ -2821,7 +2821,7 @@
       "colleague": 118,
       "hours_per_week": 36,
       "start_date": "2023-12-13",
-      "end_date": null
+      "end_date": "2027-04-05"
     }
   },
   {
@@ -2830,7 +2830,7 @@
     "fields": {
       "colleague": 119,
       "hours_per_week": 40,
-      "start_date": "2025-05-20",
+      "start_date": "2026-07-07",
       "end_date": null
     }
   },
@@ -2841,7 +2841,7 @@
       "colleague": 120,
       "hours_per_week": 36,
       "start_date": "2025-08-28",
-      "end_date": null
+      "end_date": "2026-09-16"
     }
   },
   {
@@ -2890,7 +2890,7 @@
     "fields": {
       "colleague": 124,
       "hours_per_week": 40,
-      "start_date": "2023-09-09",
+      "start_date": "2026-05-22",
       "end_date": null
     }
   },
@@ -2951,7 +2951,7 @@
       "colleague": 129,
       "hours_per_week": 40,
       "start_date": "2025-07-06",
-      "end_date": null
+      "end_date": "2027-04-24"
     }
   },
   {
@@ -3001,7 +3001,7 @@
       "colleague": 133,
       "hours_per_week": 40,
       "start_date": "2024-08-23",
-      "end_date": null
+      "end_date": "2026-08-20"
     }
   },
   {
@@ -3031,7 +3031,7 @@
       "colleague": 135,
       "hours_per_week": 36,
       "start_date": "2023-12-11",
-      "end_date": null
+      "end_date": "2026-05-24"
     }
   },
   {
@@ -3081,7 +3081,7 @@
       "colleague": 139,
       "hours_per_week": 36,
       "start_date": "2024-01-06",
-      "end_date": null
+      "end_date": "2027-01-17"
     }
   },
   {
@@ -3091,7 +3091,7 @@
       "colleague": 140,
       "hours_per_week": 28,
       "start_date": "2025-10-04",
-      "end_date": null
+      "end_date": "2026-09-17"
     }
   },
   {
@@ -3140,7 +3140,7 @@
     "fields": {
       "colleague": 144,
       "hours_per_week": 24,
-      "start_date": "2025-08-18",
+      "start_date": "2026-05-17",
       "end_date": null
     }
   },
@@ -3180,7 +3180,7 @@
     "fields": {
       "colleague": 148,
       "hours_per_week": 40,
-      "start_date": "2023-08-24",
+      "start_date": "2026-05-26",
       "end_date": null
     }
   },
@@ -3200,7 +3200,7 @@
     "fields": {
       "colleague": 149,
       "hours_per_week": 24,
-      "start_date": "2026-02-07",
+      "start_date": "2026-07-07",
       "end_date": null
     }
   },
@@ -3210,7 +3210,127 @@
     "fields": {
       "colleague": 150,
       "hours_per_week": 40,
-      "start_date": "2024-12-29",
+      "start_date": "2026-07-22",
+      "end_date": null
+    }
+  },
+  {
+    "model": "core.contractperiod",
+    "pk": 135,
+    "fields": {
+      "colleague": 54,
+      "hours_per_week": 24,
+      "start_date": "2026-09-21",
+      "end_date": null
+    }
+  },
+  {
+    "model": "core.contractperiod",
+    "pk": 136,
+    "fields": {
+      "colleague": 63,
+      "hours_per_week": 28,
+      "start_date": "2026-09-27",
+      "end_date": null
+    }
+  },
+  {
+    "model": "core.contractperiod",
+    "pk": 137,
+    "fields": {
+      "colleague": 66,
+      "hours_per_week": 16,
+      "start_date": "2026-06-30",
+      "end_date": null
+    }
+  },
+  {
+    "model": "core.contractperiod",
+    "pk": 138,
+    "fields": {
+      "colleague": 70,
+      "hours_per_week": 16,
+      "start_date": "2026-09-25",
+      "end_date": null
+    }
+  },
+  {
+    "model": "core.contractperiod",
+    "pk": 139,
+    "fields": {
+      "colleague": 72,
+      "hours_per_week": 32,
+      "start_date": "2026-05-23",
+      "end_date": null
+    }
+  },
+  {
+    "model": "core.contractperiod",
+    "pk": 140,
+    "fields": {
+      "colleague": 80,
+      "hours_per_week": 32,
+      "start_date": "2026-06-04",
+      "end_date": null
+    }
+  },
+  {
+    "model": "core.contractperiod",
+    "pk": 141,
+    "fields": {
+      "colleague": 89,
+      "hours_per_week": 36,
+      "start_date": "2027-01-14",
+      "end_date": null
+    }
+  },
+  {
+    "model": "core.contractperiod",
+    "pk": 142,
+    "fields": {
+      "colleague": 99,
+      "hours_per_week": 32,
+      "start_date": "2026-08-30",
+      "end_date": null
+    }
+  },
+  {
+    "model": "core.contractperiod",
+    "pk": 143,
+    "fields": {
+      "colleague": 105,
+      "hours_per_week": 20,
+      "start_date": "2027-01-22",
+      "end_date": null
+    }
+  },
+  {
+    "model": "core.contractperiod",
+    "pk": 144,
+    "fields": {
+      "colleague": 111,
+      "hours_per_week": 28,
+      "start_date": "2026-09-11",
+      "end_date": null
+    }
+  },
+  {
+    "model": "core.contractperiod",
+    "pk": 145,
+    "fields": {
+      "colleague": 120,
+      "hours_per_week": 32,
+      "start_date": "2026-09-17",
+      "end_date": null
+    }
+  },
+  {
+    "model": "core.contractperiod",
+    "pk": 146,
+    "fields": {
+      "colleague": 135,
+      "hours_per_week": 24,
+      "start_date": "2026-05-25",
       "end_date": null
     }
   },
@@ -3219,7 +3339,7 @@
     "pk": 33,
     "fields": {
       "name": "Zorgdata API-platform",
-      "start_date": "2026-06-22",
+      "start_date": "2025-08-17",
       "end_date": "2027-01-27",
       "owner": 70,
       "extra_info": "",
@@ -3234,7 +3354,7 @@
     "pk": 34,
     "fields": {
       "name": "Evaluatie Informatiehuishouding",
-      "start_date": "2026-05-19",
+      "start_date": "2026-05-14",
       "end_date": "2027-06-02",
       "owner": 92,
       "extra_info": "",
@@ -3249,7 +3369,7 @@
     "pk": 35,
     "fields": {
       "name": "Transitie Data Platform Subsidieregister",
-      "start_date": "2026-05-16",
+      "start_date": "2026-06-28",
       "end_date": "2027-03-12",
       "owner": 146,
       "extra_info": "",
@@ -3264,7 +3384,7 @@
     "pk": 36,
     "fields": {
       "name": "Herziening Data Platform Informatiebeveiliging",
-      "start_date": "2026-06-09",
+      "start_date": "2025-06-26",
       "end_date": "2027-07-27",
       "owner": 115,
       "extra_info": "",
@@ -3279,7 +3399,7 @@
     "pk": 37,
     "fields": {
       "name": "Informatiehuishouding Basisregistratie",
-      "start_date": "2026-06-02",
+      "start_date": "2026-02-20",
       "end_date": "2026-10-18",
       "owner": 52,
       "extra_info": "",
@@ -3294,7 +3414,7 @@
     "pk": 38,
     "fields": {
       "name": "Proof of Concept Subsidieregister",
-      "start_date": "2026-07-09",
+      "start_date": "2026-03-07",
       "end_date": "2026-10-05",
       "owner": 130,
       "extra_info": "",
@@ -3309,7 +3429,7 @@
     "pk": 39,
     "fields": {
       "name": "Integratie Veiligheid",
-      "start_date": "2026-06-16",
+      "start_date": "2026-03-18",
       "end_date": "2027-05-28",
       "owner": 142,
       "extra_info": "",
@@ -3324,7 +3444,7 @@
     "pk": 40,
     "fields": {
       "name": "Opzet Architectuur Wetgevingskalender",
-      "start_date": "2026-07-24",
+      "start_date": "2026-04-30",
       "end_date": "2027-07-10",
       "owner": 146,
       "extra_info": "",
@@ -3339,7 +3459,7 @@
     "pk": 41,
     "fields": {
       "name": "Vernieuwing Wonen",
-      "start_date": "2026-05-08",
+      "start_date": "2025-06-28",
       "end_date": "2026-10-18",
       "owner": 89,
       "extra_info": "",
@@ -3354,7 +3474,7 @@
     "pk": 42,
     "fields": {
       "name": "Doorontwikkeling Handhaving",
-      "start_date": "2026-07-21",
+      "start_date": "2026-05-19",
       "end_date": "2027-01-25",
       "owner": 69,
       "extra_info": "",
@@ -3369,7 +3489,7 @@
     "pk": 43,
     "fields": {
       "name": "Migratie Managementinformatie Onderwijs",
-      "start_date": "2026-07-05",
+      "start_date": "2025-07-29",
       "end_date": "2026-11-23",
       "owner": 138,
       "extra_info": "",
@@ -3384,7 +3504,7 @@
     "pk": 44,
     "fields": {
       "name": "Begrotingscyclus Basisregistratie",
-      "start_date": "2026-06-29",
+      "start_date": "2025-06-26",
       "end_date": "2027-04-21",
       "owner": 83,
       "extra_info": "",
@@ -3399,7 +3519,7 @@
     "pk": 45,
     "fields": {
       "name": "Migratie Basisregistratie Vergunningen",
-      "start_date": "2026-06-22",
+      "start_date": "2025-10-04",
       "end_date": "2027-06-03",
       "owner": 126,
       "extra_info": "",
@@ -3414,7 +3534,7 @@
     "pk": 46,
     "fields": {
       "name": "Ontwikkeling Burgerzaken",
-      "start_date": "2026-06-26",
+      "start_date": "2026-05-27",
       "end_date": "2027-04-18",
       "owner": 112,
       "extra_info": "",
@@ -3429,7 +3549,7 @@
     "pk": 47,
     "fields": {
       "name": "Personeelsplanning Identiteitsplatform",
-      "start_date": "2026-05-16",
+      "start_date": "2025-09-11",
       "end_date": "2027-01-26",
       "owner": 135,
       "extra_info": "",
@@ -3444,7 +3564,7 @@
     "pk": 48,
     "fields": {
       "name": "Infrastructuur API-platform",
-      "start_date": "2026-05-02",
+      "start_date": "2025-12-06",
       "end_date": "2026-09-22",
       "owner": 87,
       "extra_info": "",
@@ -3459,7 +3579,7 @@
     "pk": 49,
     "fields": {
       "name": "Algoritmeregister Cloudinfrastructuur",
-      "start_date": "2026-06-13",
+      "start_date": "2026-06-24",
       "end_date": "2026-12-18",
       "owner": 137,
       "extra_info": "",
@@ -3474,7 +3594,7 @@
     "pk": 50,
     "fields": {
       "name": "Implementatie Architectuur Inkoop en Aanbesteding",
-      "start_date": "2026-07-11",
+      "start_date": "2026-06-25",
       "end_date": "2027-07-15",
       "owner": 107,
       "extra_info": "",
@@ -3489,7 +3609,7 @@
     "pk": 51,
     "fields": {
       "name": "Transitie Digitale Toegankelijkheid",
-      "start_date": "2026-07-17",
+      "start_date": "2026-05-24",
       "end_date": "2027-01-26",
       "owner": 76,
       "extra_info": "",
@@ -3504,7 +3624,7 @@
     "pk": 52,
     "fields": {
       "name": "Vernieuwing Begrotingscyclus",
-      "start_date": "2026-05-22",
+      "start_date": "2026-03-21",
       "end_date": "2027-05-11",
       "owner": 112,
       "extra_info": "",
@@ -3519,7 +3639,7 @@
     "pk": 53,
     "fields": {
       "name": "Migratie Informatiebeveiliging",
-      "start_date": "2026-06-15",
+      "start_date": "2026-03-13",
       "end_date": "2026-10-25",
       "owner": 147,
       "extra_info": "",
@@ -3534,7 +3654,7 @@
     "pk": 54,
     "fields": {
       "name": "Vergunningen Informatiesysteem",
-      "start_date": "2026-05-03",
+      "start_date": "2025-10-25",
       "end_date": "2027-03-19",
       "owner": 101,
       "extra_info": "",
@@ -3549,7 +3669,7 @@
     "pk": 55,
     "fields": {
       "name": "Burgerzaken Analysesysteem",
-      "start_date": "2026-06-11",
+      "start_date": "2025-09-05",
       "end_date": "2027-01-09",
       "owner": 64,
       "extra_info": "",
@@ -3564,7 +3684,7 @@
     "pk": 56,
     "fields": {
       "name": "Wetgevingskalender Informatiesysteem",
-      "start_date": "2026-05-18",
+      "start_date": "2026-06-27",
       "end_date": "2027-02-11",
       "owner": 132,
       "extra_info": "",
@@ -3579,7 +3699,7 @@
     "pk": 57,
     "fields": {
       "name": "Modernisering Data Platform AI",
-      "start_date": "2026-05-06",
+      "start_date": "2025-09-26",
       "end_date": "2027-03-25",
       "owner": 89,
       "extra_info": "",
@@ -3594,7 +3714,7 @@
     "pk": 58,
     "fields": {
       "name": "Evaluatie Vergunningen",
-      "start_date": "2026-05-21",
+      "start_date": "2026-03-31",
       "end_date": "2026-11-05",
       "owner": 136,
       "extra_info": "",
@@ -3609,7 +3729,7 @@
     "pk": 59,
     "fields": {
       "name": "Infrastructuur Portaal",
-      "start_date": "2026-06-05",
+      "start_date": "2025-07-09",
       "end_date": "2027-06-24",
       "owner": 104,
       "extra_info": "",
@@ -3624,7 +3744,7 @@
     "pk": 60,
     "fields": {
       "name": "Doorontwikkeling Registratie Klimaatadaptatie",
-      "start_date": "2026-06-06",
+      "start_date": "2025-08-12",
       "end_date": "2027-01-18",
       "owner": 107,
       "extra_info": "",
@@ -3639,7 +3759,7 @@
     "pk": 61,
     "fields": {
       "name": "Digitale Overheid Analysesysteem",
-      "start_date": "2026-05-02",
+      "start_date": "2025-07-16",
       "end_date": "2027-03-04",
       "owner": 58,
       "extra_info": "",
@@ -3654,7 +3774,7 @@
     "pk": 62,
     "fields": {
       "name": "Algoritmeregister Identiteitsplatform",
-      "start_date": "2026-05-31",
+      "start_date": "2025-10-04",
       "end_date": "2026-10-13",
       "owner": 57,
       "extra_info": "",
@@ -3669,7 +3789,7 @@
     "pk": 63,
     "fields": {
       "name": "Ontwikkeling Registratie Financieel Beheer",
-      "start_date": "2026-05-17",
+      "start_date": "2025-12-08",
       "end_date": "2026-12-11",
       "owner": 80,
       "extra_info": "",
@@ -3684,7 +3804,7 @@
     "pk": 64,
     "fields": {
       "name": "Modernisering Informatiebeveiliging",
-      "start_date": "2026-05-13",
+      "start_date": "2026-03-20",
       "end_date": "2026-08-29",
       "owner": 120,
       "extra_info": "",
@@ -3699,7 +3819,7 @@
     "pk": 65,
     "fields": {
       "name": "Doorontwikkeling Werkplek Zorgdata",
-      "start_date": "2026-07-25",
+      "start_date": "2025-11-23",
       "end_date": "2026-11-03",
       "owner": 92,
       "extra_info": "",
@@ -3714,7 +3834,7 @@
     "pk": 66,
     "fields": {
       "name": "Migratie API-platform Klimaatadaptatie",
-      "start_date": "2026-06-05",
+      "start_date": "2025-09-12",
       "end_date": "2027-05-24",
       "owner": 150,
       "extra_info": "",
@@ -3729,7 +3849,7 @@
     "pk": 67,
     "fields": {
       "name": "AI Meldingensysteem",
-      "start_date": "2026-05-25",
+      "start_date": "2026-02-18",
       "end_date": "2026-12-19",
       "owner": 89,
       "extra_info": "",
@@ -3744,7 +3864,7 @@
     "pk": 68,
     "fields": {
       "name": "Optimalisatie Energietransitie",
-      "start_date": "2026-05-28",
+      "start_date": "2026-07-07",
       "end_date": "2027-03-21",
       "owner": 142,
       "extra_info": "",
@@ -3759,7 +3879,7 @@
     "pk": 69,
     "fields": {
       "name": "Migratie Portaal Begrotingscyclus",
-      "start_date": "2026-06-17",
+      "start_date": "2026-04-20",
       "end_date": "2027-07-05",
       "owner": 130,
       "extra_info": "",
@@ -3774,7 +3894,7 @@
     "pk": 70,
     "fields": {
       "name": "Personeelsplanning Basisregistratie",
-      "start_date": "2026-06-10",
+      "start_date": "2025-07-18",
       "end_date": "2027-06-29",
       "owner": 115,
       "extra_info": "",
@@ -3789,7 +3909,7 @@
     "pk": 71,
     "fields": {
       "name": "Digitale Overheid Registratie",
-      "start_date": "2026-07-14",
+      "start_date": "2025-12-06",
       "end_date": "2027-07-29",
       "owner": 106,
       "extra_info": "",
@@ -3804,7 +3924,7 @@
     "pk": 72,
     "fields": {
       "name": "Optimalisatie Subsidieregister",
-      "start_date": "2026-05-31",
+      "start_date": "2026-01-17",
       "end_date": "2027-03-20",
       "owner": 105,
       "extra_info": "",
@@ -3819,7 +3939,7 @@
     "pk": 73,
     "fields": {
       "name": "Migratie Informatiesysteem Open Data",
-      "start_date": "2026-05-02",
+      "start_date": "2026-02-18",
       "end_date": "2027-04-27",
       "owner": 106,
       "extra_info": "",
@@ -3834,7 +3954,7 @@
     "pk": 74,
     "fields": {
       "name": "Integratie Zaaksysteem Handhaving",
-      "start_date": "2026-07-12",
+      "start_date": "2026-04-22",
       "end_date": "2027-06-08",
       "owner": 96,
       "extra_info": "",
@@ -3849,7 +3969,7 @@
     "pk": 75,
     "fields": {
       "name": "Personeelsplanning Analysesysteem",
-      "start_date": "2026-07-22",
+      "start_date": "2026-03-22",
       "end_date": "2027-01-22",
       "owner": 64,
       "extra_info": "",
@@ -3864,7 +3984,7 @@
     "pk": 76,
     "fields": {
       "name": "Doorontwikkeling Analysesysteem Privacy",
-      "start_date": "2026-05-28",
+      "start_date": "2026-01-19",
       "end_date": "2026-12-20",
       "owner": 148,
       "extra_info": "",
@@ -3879,7 +3999,7 @@
     "pk": 77,
     "fields": {
       "name": "Migratie Identiteitsplatform",
-      "start_date": "2026-05-18",
+      "start_date": "2026-05-19",
       "end_date": "2027-07-12",
       "owner": 128,
       "extra_info": "",
@@ -3894,7 +4014,7 @@
     "pk": 78,
     "fields": {
       "name": "Uitrol Informatiehuishouding",
-      "start_date": "2026-07-25",
+      "start_date": "2026-05-24",
       "end_date": "2026-11-28",
       "owner": 94,
       "extra_info": "",
@@ -3909,7 +4029,7 @@
     "pk": 79,
     "fields": {
       "name": "Modernisering Identiteitsplatform Open Data",
-      "start_date": "2026-05-17",
+      "start_date": "2025-12-28",
       "end_date": "2027-03-21",
       "owner": 146,
       "extra_info": "",
@@ -3924,7 +4044,7 @@
     "pk": 80,
     "fields": {
       "name": "Uitrol Infrastructuur",
-      "start_date": "2026-06-15",
+      "start_date": "2026-05-22",
       "end_date": "2026-11-16",
       "owner": 92,
       "extra_info": "",
@@ -3939,7 +4059,7 @@
     "pk": 81,
     "fields": {
       "name": "Implementatie Informatiesysteem Begrotingscyclus",
-      "start_date": "2026-07-22",
+      "start_date": "2026-01-08",
       "end_date": "2026-11-15",
       "owner": 107,
       "extra_info": "",
@@ -3954,7 +4074,7 @@
     "pk": 82,
     "fields": {
       "name": "Optimalisatie Analysesysteem Handhaving",
-      "start_date": "2026-06-05",
+      "start_date": "2026-01-15",
       "end_date": "2027-01-14",
       "owner": 65,
       "extra_info": "",
@@ -3969,7 +4089,7 @@
     "pk": 83,
     "fields": {
       "name": "Opzet Managementinformatie Onderwijs",
-      "start_date": "2026-05-22",
+      "start_date": "2025-09-04",
       "end_date": "2027-02-01",
       "owner": 58,
       "extra_info": "",
@@ -3984,7 +4104,7 @@
     "pk": 84,
     "fields": {
       "name": "Integratie Privacy",
-      "start_date": "2026-07-11",
+      "start_date": "2026-02-25",
       "end_date": "2027-01-05",
       "owner": 51,
       "extra_info": "",
@@ -3999,7 +4119,7 @@
     "pk": 85,
     "fields": {
       "name": "Wetgevingskalender Meldingensysteem",
-      "start_date": "2026-06-10",
+      "start_date": "2026-06-18",
       "end_date": "2027-05-27",
       "owner": 122,
       "extra_info": "",
@@ -4014,7 +4134,7 @@
     "pk": 86,
     "fields": {
       "name": "Herontwerp Klimaatadaptatie",
-      "start_date": "2026-06-08",
+      "start_date": "2025-07-02",
       "end_date": "2026-09-18",
       "owner": 60,
       "extra_info": "",
@@ -4029,7 +4149,7 @@
     "pk": 87,
     "fields": {
       "name": "Uitrol Privacy",
-      "start_date": "2026-06-07",
+      "start_date": "2025-11-17",
       "end_date": "2027-07-21",
       "owner": 102,
       "extra_info": "",
@@ -4044,7 +4164,7 @@
     "pk": 88,
     "fields": {
       "name": "Informatiehuishouding Analysesysteem",
-      "start_date": "2026-05-10",
+      "start_date": "2025-10-09",
       "end_date": "2027-04-20",
       "owner": 62,
       "extra_info": "",
@@ -4059,7 +4179,7 @@
     "pk": 89,
     "fields": {
       "name": "Open Data Managementinformatie",
-      "start_date": "2026-05-14",
+      "start_date": "2026-05-08",
       "end_date": "2027-03-21",
       "owner": 90,
       "extra_info": "",
@@ -4074,7 +4194,7 @@
     "pk": 90,
     "fields": {
       "name": "Veiligheid Zaaksysteem",
-      "start_date": "2026-07-07",
+      "start_date": "2025-12-29",
       "end_date": "2026-10-06",
       "owner": 118,
       "extra_info": "",
@@ -4089,7 +4209,7 @@
     "pk": 91,
     "fields": {
       "name": "Opzet Zaaksysteem Informatiebeveiliging",
-      "start_date": "2026-06-14",
+      "start_date": "2026-05-31",
       "end_date": "2027-07-24",
       "owner": 83,
       "extra_info": "",
@@ -4104,7 +4224,7 @@
     "pk": 92,
     "fields": {
       "name": "Herziening Basisregistratie Landbouw",
-      "start_date": "2026-05-06",
+      "start_date": "2025-10-01",
       "end_date": "2026-10-05",
       "owner": 123,
       "extra_info": "",
@@ -4119,7 +4239,7 @@
     "pk": 93,
     "fields": {
       "name": "Onderwijs Dienstverleningsportaal",
-      "start_date": "2026-05-17",
+      "start_date": "2026-02-10",
       "end_date": "2027-07-23",
       "owner": 131,
       "extra_info": "",
@@ -4134,7 +4254,7 @@
     "pk": 94,
     "fields": {
       "name": "Proof of Concept Zorgdata",
-      "start_date": "2026-06-02",
+      "start_date": "2025-08-23",
       "end_date": "2027-07-17",
       "owner": 58,
       "extra_info": "",
@@ -4149,7 +4269,7 @@
     "pk": 95,
     "fields": {
       "name": "Doorontwikkeling Architectuur Open Data",
-      "start_date": "2026-06-01",
+      "start_date": "2025-08-28",
       "end_date": "2026-09-16",
       "owner": 133,
       "extra_info": "",
@@ -4164,7 +4284,7 @@
     "pk": 96,
     "fields": {
       "name": "Evaluatie Zorgdata",
-      "start_date": "2026-05-13",
+      "start_date": "2026-01-06",
       "end_date": "2027-05-14",
       "owner": 121,
       "extra_info": "",
@@ -4179,7 +4299,7 @@
     "pk": 97,
     "fields": {
       "name": "Algoritmeregister Dienstverleningsportaal",
-      "start_date": "2026-06-01",
+      "start_date": "2025-09-18",
       "end_date": "2027-06-16",
       "owner": 128,
       "extra_info": "",
@@ -4194,7 +4314,7 @@
     "pk": 98,
     "fields": {
       "name": "Migratie Circulaire Economie",
-      "start_date": "2026-06-01",
+      "start_date": "2026-04-03",
       "end_date": "2026-10-19",
       "owner": 133,
       "extra_info": "",
@@ -4209,7 +4329,7 @@
     "pk": 99,
     "fields": {
       "name": "Onderwijs Dashboard",
-      "start_date": "2026-06-02",
+      "start_date": "2025-07-15",
       "end_date": "2027-05-23",
       "owner": 97,
       "extra_info": "",
@@ -4224,7 +4344,7 @@
     "pk": 100,
     "fields": {
       "name": "Integratie Informatiesysteem Subsidieregister",
-      "start_date": "2026-06-15",
+      "start_date": "2026-06-05",
       "end_date": "2027-06-30",
       "owner": 63,
       "extra_info": "",
@@ -4239,7 +4359,7 @@
     "pk": 101,
     "fields": {
       "name": "Integratie Informatiesysteem Zorgdata",
-      "start_date": "2026-05-05",
+      "start_date": "2026-06-17",
       "end_date": "2027-07-02",
       "owner": 135,
       "extra_info": "",
@@ -4254,7 +4374,7 @@
     "pk": 102,
     "fields": {
       "name": "Migratie Architectuur Arbeidsmarkt",
-      "start_date": "2026-04-30",
+      "start_date": "2025-08-06",
       "end_date": "2027-03-16",
       "owner": 99,
       "extra_info": "",
@@ -4269,7 +4389,7 @@
     "pk": 103,
     "fields": {
       "name": "Transitie Meldingensysteem Vergunningen",
-      "start_date": "2026-05-04",
+      "start_date": "2026-03-16",
       "end_date": "2027-05-24",
       "owner": 53,
       "extra_info": "",
@@ -4284,7 +4404,7 @@
     "pk": 104,
     "fields": {
       "name": "Opzet Portaal Informatiebeveiliging",
-      "start_date": "2026-06-15",
+      "start_date": "2026-02-12",
       "end_date": "2027-05-03",
       "owner": 60,
       "extra_info": "",
@@ -4299,7 +4419,7 @@
     "pk": 105,
     "fields": {
       "name": "Integratie Portaal Onderwijs",
-      "start_date": "2026-05-20",
+      "start_date": "2026-05-31",
       "end_date": "2027-05-24",
       "owner": 99,
       "extra_info": "",
@@ -4314,7 +4434,7 @@
     "pk": 106,
     "fields": {
       "name": "Klimaatadaptatie Data Platform",
-      "start_date": "2026-05-10",
+      "start_date": "2026-03-13",
       "end_date": "2026-11-20",
       "owner": 103,
       "extra_info": "",
@@ -4329,7 +4449,7 @@
     "pk": 107,
     "fields": {
       "name": "Inkoop en Aanbesteding Basisregistratie",
-      "start_date": "2026-05-11",
+      "start_date": "2026-05-20",
       "end_date": "2027-01-20",
       "owner": 80,
       "extra_info": "",
@@ -4344,7 +4464,7 @@
     "pk": 108,
     "fields": {
       "name": "Evaluatie Klimaatadaptatie",
-      "start_date": "2026-05-29",
+      "start_date": "2025-12-28",
       "end_date": "2026-12-05",
       "owner": 149,
       "extra_info": "",
@@ -4359,7 +4479,7 @@
     "pk": 109,
     "fields": {
       "name": "Modernisering Cloudinfrastructuur AI",
-      "start_date": "2026-06-05",
+      "start_date": "2026-02-18",
       "end_date": "2026-11-18",
       "owner": 133,
       "extra_info": "",
@@ -4374,7 +4494,7 @@
     "pk": 110,
     "fields": {
       "name": "Uitrol Informatiesysteem Landbouw",
-      "start_date": "2026-07-15",
+      "start_date": "2025-11-20",
       "end_date": "2027-05-19",
       "owner": 71,
       "extra_info": "",
@@ -4389,7 +4509,7 @@
     "pk": 111,
     "fields": {
       "name": "Evaluatie Analysesysteem Informatiehuishouding",
-      "start_date": "2026-06-03",
+      "start_date": "2025-08-19",
       "end_date": "2026-10-13",
       "owner": 54,
       "extra_info": "",
@@ -4404,7 +4524,7 @@
     "pk": 112,
     "fields": {
       "name": "Doorontwikkeling Werkplek Cybersecurity",
-      "start_date": "2026-06-28",
+      "start_date": "2026-01-05",
       "end_date": "2027-03-13",
       "owner": 91,
       "extra_info": "",
@@ -4419,7 +4539,7 @@
     "pk": 113,
     "fields": {
       "name": "Implementatie Architectuur Informatiehuishouding",
-      "start_date": "2026-06-16",
+      "start_date": "2026-04-18",
       "end_date": "2026-11-10",
       "owner": 111,
       "extra_info": "",
@@ -4434,7 +4554,7 @@
     "pk": 114,
     "fields": {
       "name": "Cybersecurity Informatiesysteem",
-      "start_date": "2026-05-29",
+      "start_date": "2026-01-02",
       "end_date": "2027-04-14",
       "owner": 53,
       "extra_info": "",
@@ -4449,7 +4569,7 @@
     "pk": 115,
     "fields": {
       "name": "Optimalisatie Landbouw",
-      "start_date": "2026-05-12",
+      "start_date": "2026-01-10",
       "end_date": "2027-05-25",
       "owner": 87,
       "extra_info": "",
@@ -4464,7 +4584,7 @@
     "pk": 116,
     "fields": {
       "name": "Klimaatadaptatie Informatiesysteem",
-      "start_date": "2026-06-05",
+      "start_date": "2026-03-25",
       "end_date": "2027-07-21",
       "owner": 65,
       "extra_info": "",
@@ -4479,7 +4599,7 @@
     "pk": 117,
     "fields": {
       "name": "Zorgdata Werkplek",
-      "start_date": "2026-07-26",
+      "start_date": "2025-08-01",
       "end_date": "2027-07-17",
       "owner": 142,
       "extra_info": "",
@@ -4494,7 +4614,7 @@
     "pk": 118,
     "fields": {
       "name": "Handhaving Dashboard",
-      "start_date": "2026-06-13",
+      "start_date": "2026-02-24",
       "end_date": "2026-12-29",
       "owner": 136,
       "extra_info": "",
@@ -4509,7 +4629,7 @@
     "pk": 119,
     "fields": {
       "name": "Circulaire Economie Meldingensysteem",
-      "start_date": "2026-07-20",
+      "start_date": "2025-07-16",
       "end_date": "2027-05-24",
       "owner": 121,
       "extra_info": "",
@@ -4524,7 +4644,7 @@
     "pk": 120,
     "fields": {
       "name": "Proof of Concept Infrastructuur",
-      "start_date": "2026-05-08",
+      "start_date": "2025-07-26",
       "end_date": "2027-03-14",
       "owner": 53,
       "extra_info": "",
@@ -4539,7 +4659,7 @@
     "pk": 121,
     "fields": {
       "name": "Integratie Portaal AI",
-      "start_date": "2026-05-05",
+      "start_date": "2025-08-13",
       "end_date": "2027-07-15",
       "owner": 96,
       "extra_info": "",
@@ -4554,7 +4674,7 @@
     "pk": 122,
     "fields": {
       "name": "Energietransitie Dashboard",
-      "start_date": "2026-05-02",
+      "start_date": "2026-06-04",
       "end_date": "2027-04-22",
       "owner": 68,
       "extra_info": "",
@@ -4569,7 +4689,7 @@
     "pk": 123,
     "fields": {
       "name": "Implementatie Registratie Digitale Overheid",
-      "start_date": "2026-07-24",
+      "start_date": "2025-09-02",
       "end_date": "2027-01-25",
       "owner": 56,
       "extra_info": "",
@@ -4584,7 +4704,7 @@
     "pk": 124,
     "fields": {
       "name": "Implementatie Landbouw",
-      "start_date": "2026-05-20",
+      "start_date": "2025-08-19",
       "end_date": "2027-04-27",
       "owner": 133,
       "extra_info": "",
@@ -4599,7 +4719,7 @@
     "pk": 125,
     "fields": {
       "name": "Proof of Concept Privacy",
-      "start_date": "2026-07-22",
+      "start_date": "2026-04-14",
       "end_date": "2027-07-29",
       "owner": 98,
       "extra_info": "",
@@ -4614,7 +4734,7 @@
     "pk": 126,
     "fields": {
       "name": "Herziening API-platform Vergunningen",
-      "start_date": "2026-06-09",
+      "start_date": "2025-10-10",
       "end_date": "2027-02-17",
       "owner": 117,
       "extra_info": "",
@@ -4629,7 +4749,7 @@
     "pk": 127,
     "fields": {
       "name": "Financieel Beheer Dashboard",
-      "start_date": "2026-07-18",
+      "start_date": "2025-07-02",
       "end_date": "2027-04-05",
       "owner": 120,
       "extra_info": "",
@@ -4644,7 +4764,7 @@
     "pk": 128,
     "fields": {
       "name": "Evaluatie Onderwijs",
-      "start_date": "2026-05-05",
+      "start_date": "2026-03-07",
       "end_date": "2027-01-26",
       "owner": 142,
       "extra_info": "",
@@ -4659,7 +4779,7 @@
     "pk": 129,
     "fields": {
       "name": "Bedrijfsvoering Analysesysteem",
-      "start_date": "2026-06-01",
+      "start_date": "2026-04-18",
       "end_date": "2026-09-18",
       "owner": 129,
       "extra_info": "",
@@ -4674,7 +4794,7 @@
     "pk": 130,
     "fields": {
       "name": "Veiligheid Managementinformatie",
-      "start_date": "2026-07-21",
+      "start_date": "2025-11-16",
       "end_date": "2026-10-05",
       "owner": 97,
       "extra_info": "",
@@ -4689,7 +4809,7 @@
     "pk": 131,
     "fields": {
       "name": "Migratie Basisregistratie",
-      "start_date": "2026-07-25",
+      "start_date": "2025-12-28",
       "end_date": "2026-11-09",
       "owner": 55,
       "extra_info": "",
@@ -4704,7 +4824,7 @@
     "pk": 132,
     "fields": {
       "name": "Implementatie Onderwijs",
-      "start_date": "2026-06-12",
+      "start_date": "2026-02-22",
       "end_date": "2027-03-01",
       "owner": 70,
       "extra_info": "",
@@ -4719,7 +4839,7 @@
     "pk": 133,
     "fields": {
       "name": "Informatiebeveiliging Meldingensysteem",
-      "start_date": "2026-06-02",
+      "start_date": "2025-08-17",
       "end_date": "2026-10-06",
       "owner": 97,
       "extra_info": "",
@@ -4734,7 +4854,7 @@
     "pk": 134,
     "fields": {
       "name": "Digitale Toegankelijkheid API-platform",
-      "start_date": "2026-07-14",
+      "start_date": "2025-07-23",
       "end_date": "2026-09-10",
       "owner": 117,
       "extra_info": "",
@@ -4749,7 +4869,7 @@
     "pk": 135,
     "fields": {
       "name": "Uitrol API-platform Algoritmeregister",
-      "start_date": "2026-06-25",
+      "start_date": "2025-09-28",
       "end_date": "2027-04-13",
       "owner": 66,
       "extra_info": "",
@@ -4764,7 +4884,7 @@
     "pk": 136,
     "fields": {
       "name": "Bedrijfsvoering Dienstverleningsportaal",
-      "start_date": "2026-06-02",
+      "start_date": "2026-03-20",
       "end_date": "2026-10-11",
       "owner": 136,
       "extra_info": "",
@@ -4779,7 +4899,7 @@
     "pk": 137,
     "fields": {
       "name": "Vernieuwing Analysesysteem Circulaire Economie",
-      "start_date": "2026-06-21",
+      "start_date": "2025-07-25",
       "end_date": "2027-01-28",
       "owner": 79,
       "extra_info": "",
@@ -4794,7 +4914,7 @@
     "pk": 138,
     "fields": {
       "name": "Doorontwikkeling Analysesysteem Klimaatadaptatie",
-      "start_date": "2026-06-28",
+      "start_date": "2026-01-25",
       "end_date": "2027-05-07",
       "owner": 121,
       "extra_info": "",
@@ -4809,7 +4929,7 @@
     "pk": 139,
     "fields": {
       "name": "Infrastructuur API-platform",
-      "start_date": "2026-06-19",
+      "start_date": "2026-06-12",
       "end_date": "2027-03-19",
       "owner": 118,
       "extra_info": "",
@@ -4824,7 +4944,7 @@
     "pk": 140,
     "fields": {
       "name": "Migratie Klimaatadaptatie",
-      "start_date": "2026-07-19",
+      "start_date": "2026-03-15",
       "end_date": "2026-10-31",
       "owner": 110,
       "extra_info": "",
@@ -4839,7 +4959,7 @@
     "pk": 141,
     "fields": {
       "name": "Digitale Toegankelijkheid Portaal",
-      "start_date": "2026-05-19",
+      "start_date": "2026-06-24",
       "end_date": "2027-07-21",
       "owner": 106,
       "extra_info": "",
@@ -4854,7 +4974,7 @@
     "pk": 142,
     "fields": {
       "name": "Uitrol Dashboard Digitale Toegankelijkheid",
-      "start_date": "2026-07-13",
+      "start_date": "2026-01-30",
       "end_date": "2027-05-20",
       "owner": 92,
       "extra_info": "",
@@ -4869,7 +4989,7 @@
     "pk": 143,
     "fields": {
       "name": "Ontwikkeling Veiligheid",
-      "start_date": "2026-06-22",
+      "start_date": "2025-12-17",
       "end_date": "2026-10-07",
       "owner": 121,
       "extra_info": "",
@@ -4884,7 +5004,7 @@
     "pk": 144,
     "fields": {
       "name": "Veiligheid Dashboard",
-      "start_date": "2026-05-21",
+      "start_date": "2026-02-23",
       "end_date": "2026-10-14",
       "owner": 126,
       "extra_info": "",
@@ -4899,7 +5019,7 @@
     "pk": 145,
     "fields": {
       "name": "Implementatie Financieel Beheer",
-      "start_date": "2026-05-10",
+      "start_date": "2026-06-07",
       "end_date": "2027-07-03",
       "owner": 54,
       "extra_info": "",
@@ -4914,7 +5034,7 @@
     "pk": 146,
     "fields": {
       "name": "Algoritmeregister Ketenintegratie",
-      "start_date": "2026-05-16",
+      "start_date": "2026-03-24",
       "end_date": "2027-01-10",
       "owner": 130,
       "extra_info": "",
@@ -4929,7 +5049,7 @@
     "pk": 147,
     "fields": {
       "name": "Personeelsplanning API-platform",
-      "start_date": "2026-05-20",
+      "start_date": "2025-09-23",
       "end_date": "2027-01-23",
       "owner": 82,
       "extra_info": "",
@@ -4944,7 +5064,7 @@
     "pk": 148,
     "fields": {
       "name": "AI Dashboard",
-      "start_date": "2026-05-31",
+      "start_date": "2025-07-08",
       "end_date": "2026-10-04",
       "owner": 107,
       "extra_info": "",
@@ -4959,7 +5079,7 @@
     "pk": 149,
     "fields": {
       "name": "Integratie Infrastructuur",
-      "start_date": "2026-05-12",
+      "start_date": "2026-01-30",
       "end_date": "2026-11-09",
       "owner": 95,
       "extra_info": "",
@@ -4974,7 +5094,7 @@
     "pk": 150,
     "fields": {
       "name": "Integratie Werkplek Klimaatadaptatie",
-      "start_date": "2026-05-24",
+      "start_date": "2026-03-24",
       "end_date": "2027-06-11",
       "owner": 66,
       "extra_info": "",
@@ -4989,7 +5109,7 @@
     "pk": 151,
     "fields": {
       "name": "Transitie Wetgevingskalender",
-      "start_date": "2026-07-22",
+      "start_date": "2025-08-09",
       "end_date": "2027-01-23",
       "owner": 71,
       "extra_info": "",
@@ -5004,7 +5124,7 @@
     "pk": 152,
     "fields": {
       "name": "Herziening Meldingensysteem Klimaatadaptatie",
-      "start_date": "2026-06-18",
+      "start_date": "2025-10-28",
       "end_date": "2026-12-03",
       "owner": 114,
       "extra_info": "",
@@ -5019,7 +5139,7 @@
     "pk": 153,
     "fields": {
       "name": "Opzet Algoritmeregister",
-      "start_date": "2026-06-08",
+      "start_date": "2025-12-20",
       "end_date": "2027-05-13",
       "owner": 125,
       "extra_info": "",
@@ -5034,7 +5154,7 @@
     "pk": 154,
     "fields": {
       "name": "Energietransitie Architectuur",
-      "start_date": "2026-05-13",
+      "start_date": "2025-08-15",
       "end_date": "2027-07-28",
       "owner": 119,
       "extra_info": "",
@@ -5049,7 +5169,7 @@
     "pk": 155,
     "fields": {
       "name": "Doorontwikkeling AI",
-      "start_date": "2026-06-25",
+      "start_date": "2025-11-18",
       "end_date": "2027-03-03",
       "owner": 102,
       "extra_info": "",
@@ -5064,7 +5184,7 @@
     "pk": 156,
     "fields": {
       "name": "Inrichting Meldingensysteem Klimaatadaptatie",
-      "start_date": "2026-05-19",
+      "start_date": "2026-04-28",
       "end_date": "2027-01-22",
       "owner": 148,
       "extra_info": "",
@@ -5079,7 +5199,7 @@
     "pk": 157,
     "fields": {
       "name": "Modernisering Zaaksysteem Burgerzaken",
-      "start_date": "2026-05-02",
+      "start_date": "2026-02-25",
       "end_date": "2027-07-06",
       "owner": 98,
       "extra_info": "",
@@ -5094,7 +5214,7 @@
     "pk": 158,
     "fields": {
       "name": "Circulaire Economie Managementinformatie",
-      "start_date": "2026-07-10",
+      "start_date": "2026-04-30",
       "end_date": "2026-12-07",
       "owner": 115,
       "extra_info": "",
@@ -5109,7 +5229,7 @@
     "pk": 159,
     "fields": {
       "name": "Klimaatadaptatie Portaal",
-      "start_date": "2026-06-16",
+      "start_date": "2026-03-06",
       "end_date": "2027-04-27",
       "owner": 128,
       "extra_info": "",
@@ -5124,7 +5244,7 @@
     "pk": 160,
     "fields": {
       "name": "Inrichting Architectuur Zorgdata",
-      "start_date": "2026-05-11",
+      "start_date": "2025-09-26",
       "end_date": "2027-02-07",
       "owner": 94,
       "extra_info": "",
@@ -5139,7 +5259,7 @@
     "pk": 161,
     "fields": {
       "name": "Herontwerp Vergunningen",
-      "start_date": "2026-05-17",
+      "start_date": "2025-10-08",
       "end_date": "2027-01-28",
       "owner": 93,
       "extra_info": "",
@@ -5154,7 +5274,7 @@
     "pk": 162,
     "fields": {
       "name": "Herziening Cloudinfrastructuur Veiligheid",
-      "start_date": "2026-06-19",
+      "start_date": "2026-02-26",
       "end_date": "2027-07-16",
       "owner": 150,
       "extra_info": "",
