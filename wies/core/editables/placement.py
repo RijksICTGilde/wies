@@ -58,6 +58,7 @@ class PlacementEditables(EditableSet):
     period_source = Editable(label="Periode")
     specific_start_date = Editable(label="Startdatum")
     specific_end_date = Editable(label="Einddatum")
+    assignment_hours_per_week = Editable(label="Uren per week")
 
     period = EditableGroup(
         label="Periode",

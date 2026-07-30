@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Prognose{% endblock title %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
+  <link rel="stylesheet" href="{{ static('vendor/uplot/uPlot.min.css') }}">
+  <link rel="stylesheet" href="{{ static('css/prognose.css') }}">
+  <script defer src="{{ static('vendor/uplot/uPlot.iife.min.js') }}"></script>
+  <script defer src="{{ static('js/bm_prognose.js') }}"></script>
+{% endblock extra_head %}
+{% block sidebar %}
+  {% include "parts/business_management_sidebar.html" %}
+{% endblock sidebar %}
+{% block content %}
+  <div class="rvo-layout-column rvo-layout-gap--md prognose-page">
+    <c-h1>
+      Prognose
+    </c-h1>
+    <c-paragraph>
+      Hoeveel capaciteit is er, en hoeveel daarvan is al ingepland? De grijze band is de
+      beschikbare capaciteit (som van de contracturen), het groene vlak de ingeplande uren.
+    </c-paragraph>
+    <div class="prognose-legend">
+      <span class="prognose-legend__item"><span class="prognose-swatch prognose-swatch--capacity"></span>Beschikbare capaciteit</span>
+      <span class="prognose-legend__item"><span class="prognose-swatch prognose-swatch--planned"></span>Ingepland</span>
+    </div>
+    {# Data reaches the chart via a data-attribute (never an inline script block),
+       so the script-src 'self' CSP and the inline-JS guard are both satisfied. #}
+    <div id="prognose-chart" data-forecast="{{ forecast_json }}"></div>
+  </div>
+{% endblock content %}

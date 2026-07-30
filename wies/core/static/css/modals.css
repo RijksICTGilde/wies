@@ -74,6 +74,30 @@
   align-self: stretch;
 }
 
+/* Contracturen (exploratory BM-feature): each period on one compact row */
+.user-form-contract {
+  margin-top: 1.5rem;
+}
+
+.contract-period-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid #e6e6e6;
+}
+
+.contract-period-row > .utrecht-form-field {
+  flex: 1;
+  min-width: 8rem;
+}
+
+/* The delete checkbox stays narrow and doesn't stretch like the inputs. */
+.contract-period-row > .contract-period-delete {
+  flex: 0 0 auto;
+}
+
 /* Mobile: Full screen modals */
 @media (max-width: 800px) {
   .modal-dialog {

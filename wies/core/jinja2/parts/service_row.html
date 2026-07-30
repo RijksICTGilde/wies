@@ -59,6 +59,11 @@
       {% endif %}
     </div>
     {{ svc_form.description.as_field_group() }}
+    {# Uren per week hangt aan de plaatsing: alleen zinvol bij een geplaatste consultant. #}
+    <div class="service-hours-field"
+         {% if svc_form.is_filled.value() == "aanvraag" %}style="display:none"{% endif %}>
+      {{ svc_form.assignment_hours_per_week.as_field_group() }}
+    </div>
     {% if svc_form.placement_end_date.errors %}
       {% for error in svc_form.placement_end_date.errors %}<c-alert kind="error">{{ error }}</c-alert>{% endfor %}
     {% endif %}

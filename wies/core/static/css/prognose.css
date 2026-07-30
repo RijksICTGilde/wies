@@ -1,0 +1,62 @@
+/* "Prognose" — capacity vs. planned area chart (exploratory demo). */
+
+.prognose-page {
+  max-width: 1200px;
+}
+
+.prognose-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  font-size: 0.85rem;
+  color: #4b4b4b;
+}
+
+.prognose-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.prognose-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+}
+
+.prognose-swatch--capacity {
+  background: #e6e6e6;
+  border: 1px solid #b8b8b8;
+}
+
+.prognose-swatch--planned {
+  background: rgba(31, 122, 77, 0.55);
+  border: 1px solid #1f7a4d;
+}
+
+#prognose-chart {
+  position: relative;
+  width: 100%;
+}
+
+/* Hover tooltip */
+.prognose-tooltip {
+  position: absolute;
+  z-index: 5;
+  pointer-events: none;
+  transform: translateX(-50%);
+  background: #fff;
+  border: 1px solid #d0d0d0;
+  border-radius: 6px;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  white-space: nowrap;
+}
+
+.prognose-tooltip strong {
+  display: block;
+  margin-bottom: 0.15rem;
+}

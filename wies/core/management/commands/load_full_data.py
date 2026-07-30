@@ -19,6 +19,7 @@ from wies.core.models import (
     Assignment,
     AssignmentOrganizationUnit,
     Colleague,
+    ContractPeriod,
     LabelCategory,
     OrganizationType,
     OrganizationUnit,
@@ -44,6 +45,18 @@ SINGLE_PLACEMENT_THRESHOLD = 0.80
 DOUBLE_PLACEMENT_THRESHOLD = 0.95
 MULTI_LABEL_PROBABILITY = 0.3
 MAX_LABELS_PER_CATEGORY = 2
+
+# ── Contract hours ─────────────────────────────────────────────────────────────
+CONTRACT_HOURS_CHOICES = [24, 28, 32, 36, 40]
+CONTRACT_HAS_HISTORY_PROBABILITY = 0.3  # some colleagues have a previous, closed period
+PLACEMENT_HOURS_FILLED_PROBABILITY = 0.8  # most placements have hours filled in
+
+# ── Hours-feature demo distribution (used by generate_demo_data) ───────────────
+# 36u is the most common government contract; some part-timers, a few 40u.
+CONTRACT_HOURS_WEIGHTS = {16: 1, 20: 1, 24: 2, 28: 2, 32: 4, 36: 6, 40: 5}
+SECOND_CONTRACT_PERIOD_PROBABILITY = 0.28  # most colleagues one period, some two
+# Per-colleague occupancy scenario for the demo dataset.
+SCENARIO_WEIGHTS = {"full": 60, "split": 20, "bench": 15, "edge": 5}
 
 # ── Skills ───────────────────────────────────────────────────────────────────
 SKILLS = [
@@ -565,6 +578,41 @@ def historic_dates(rng: random.Random, ref: date) -> tuple[date, date]:
     return start, end
 
 
+def active_today_dates(rng: random.Random, ref: date) -> tuple[date, date]:
+    """Dates guaranteed to make an assignment active *today* (start ≤ ref ≤ end).
+
+    Unlike ``active_dates`` (which may start in the future → planned), this always
+    yields a currently-running period, so a placement inheriting it is on-assignment now.
+    """
+    start = ref - timedelta(days=rng.randint(1, 365))
+    end = ref + timedelta(days=rng.randint(30, 540))
+    return start, end
+
+
+def planned_dates(rng: random.Random, ref: date) -> tuple[date, date]:
+    """Dates that start in the future → assignment phase "planned"."""
+    start = ref + timedelta(days=rng.randint(15, 180))
+    end = start + timedelta(days=rng.randint(90, 540))
+    return start, end
+
+
+def split_hours(rng: random.Random, total: int, n: int) -> list[int]:
+    """Split ``total`` into ``n`` positive ints that sum exactly to ``total``.
+
+    Used to divide a colleague's contract hours across concurrent placements.
+    """
+    if n <= 1 or total <= n:
+        return [total]
+    # Pick n-1 distinct cut points in [1, total-1] to make n parts, each ≥ 1.
+    cuts = sorted(rng.sample(range(1, total), n - 1))
+    parts = []
+    prev = 0
+    for c in [*cuts, total]:
+        parts.append(c - prev)
+        prev = c
+    return parts
+
+
 def classify_orgs_from_db() -> tuple[list[int], list[int]]:
     """Split org PKs into (rijksoverheid_non_root, other) using DB data."""
     ministry_type = OrganizationType.objects.filter(name="Ministerie").first()
@@ -596,6 +644,7 @@ class Command(BaseCommand):
         Placement.objects.all().delete()
         Service.objects.all().delete()
         Assignment.objects.all().delete()
+        ContractPeriod.objects.all().delete()
         Colleague.objects.all().delete()
         OrganizationUnit.objects.update(parent=None)
         OrganizationUnit.objects.all().delete()
@@ -659,6 +708,35 @@ class Command(BaseCommand):
                     colleague_labels.extend(rng.sample(labels, n))
                 colleague.labels.set(colleague_labels)
             self.stdout.write("Colleague labels assigned")
+
+        # ── 4c. Contract periods ─────────────────────────────────────────
+        contract_periods = []
+        for colleague in colleagues:
+            current_hours = rng.choice(CONTRACT_HOURS_CHOICES)
+            current_start = today + timedelta(days=rng.randint(-1095, -30))
+            if rng.random() < CONTRACT_HAS_HISTORY_PROBABILITY:
+                # A previous, closed period ending just before the current one starts.
+                prev_end = current_start - timedelta(days=1)
+                prev_start = prev_end - timedelta(days=rng.randint(180, 730))
+                prev_hours = rng.choice([h for h in CONTRACT_HOURS_CHOICES if h != current_hours])
+                contract_periods.append(
+                    ContractPeriod(
+                        colleague=colleague,
+                        hours_per_week=prev_hours,
+                        start_date=prev_start,
+                        end_date=prev_end,
+                    )
+                )
+            contract_periods.append(
+                ContractPeriod(
+                    colleague=colleague,
+                    hours_per_week=current_hours,
+                    start_date=current_start,
+                    end_date=None,  # lopend
+                )
+            )
+        ContractPeriod.objects.bulk_create(contract_periods)
+        self.stdout.write(f"Contract periods: {len(contract_periods)}")
 
         # ── 5. Assignments ───────────────────────────────────────────────
         assignments = []
@@ -757,6 +835,11 @@ class Command(BaseCommand):
                 service = placeable_services[service_idx]
                 service_idx += 1
 
+                # Most placements have hours filled in; some are left empty.
+                hours = (
+                    rng.choice(CONTRACT_HOURS_CHOICES) if rng.random() < PLACEMENT_HOURS_FILLED_PROBABILITY else None
+                )
+
                 Placement.objects.create(
                     colleague=colleague,
                     service=service,
@@ -765,6 +848,7 @@ class Command(BaseCommand):
                     specific_end_date=None,
                     source=weighted_choice(rng, SOURCE_WEIGHTS),
                     source_id="",
+                    assignment_hours_per_week=hours,
                 )
                 placement_count += 1
 

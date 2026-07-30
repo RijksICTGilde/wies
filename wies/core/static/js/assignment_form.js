@@ -158,15 +158,25 @@
       );
       var colleagueField = row.querySelector(".service-colleague-field");
       if (!colleagueField) return;
+      var hoursField = row.querySelector(".service-hours-field");
       radios.forEach(function (radio) {
         radio.addEventListener("change", function () {
           var isAanvraag = radio.value === "aanvraag";
           colleagueField.style.display = isAanvraag ? "none" : "";
+          // Hours hang on the placement, so they only apply to a placed
+          // consultant — hide and clear them for an "aanvraag".
+          if (hoursField) {
+            hoursField.style.display = isAanvraag ? "none" : "";
+          }
           // Clear the (now hidden) consultant so switching to "aanvraag"
           // actually frees the placement on save.
           if (isAanvraag) {
             var select = colleagueField.querySelector("select");
             if (select) select.value = "";
+            if (hoursField) {
+              var hoursSelect = hoursField.querySelector("select");
+              if (hoursSelect) hoursSelect.value = "";
+            }
           }
         });
       });

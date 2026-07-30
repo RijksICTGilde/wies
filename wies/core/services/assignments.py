@@ -51,6 +51,7 @@ def extract_services_data(service_formset) -> list[dict]:
                 "has_custom_period": cd.get("has_custom_period", False),
                 "placement_start_date": cd.get("placement_start_date"),
                 "placement_end_date": cd.get("placement_end_date"),
+                "assignment_hours_per_week": cd.get("assignment_hours_per_week"),
             }
         )
     return services_data
@@ -182,6 +183,11 @@ def apply_services_to_assignment(assignment: Assignment, services_data: list[dic
                     placement.specific_end_date = new_end
                     update_fields.append("specific_end_date")
 
+                new_hours = svc.get("assignment_hours_per_week")
+                if placement.assignment_hours_per_week != new_hours:
+                    placement.assignment_hours_per_week = new_hours
+                    update_fields.append("assignment_hours_per_week")
+
                 if update_fields:
                     placement.save(update_fields=update_fields)
             else:
@@ -191,6 +197,7 @@ def apply_services_to_assignment(assignment: Assignment, services_data: list[dic
                 "colleague_id": int(colleague_id),
                 "service": service,
                 "source": "wies",
+                "assignment_hours_per_week": svc.get("assignment_hours_per_week"),
             }
             if svc.get("has_custom_period"):
                 create_kwargs["period_source"] = Placement.PLACEMENT

@@ -47,6 +47,9 @@ class RvoFormMixin:
     # Widget type to template mapping (only includes widgets with existing templates)
     widget_templates = {
         "TextInput": "rvo/forms/widgets/text.html",
+        # text.html renders <input type="{{ widget.type }}">, so NumberInput
+        # reuses it and comes out as <input type="number">.
+        "NumberInput": "rvo/forms/widgets/text.html",
         "EmailInput": "rvo/forms/widgets/email.html",
         "Select": "rvo/forms/widgets/select.html",
         "CheckboxSelectMultiple": "rvo/forms/widgets/checkbox_select.html",
