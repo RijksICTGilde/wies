@@ -3764,15 +3764,14 @@ def _save_edit_specs(request, specs, cleaned_data):
 
 def _save_placement_edit(request, placement, specs, cleaned_data):
     """Sla alle specs op in één transactie, met dezelfde audit-events als inline edit."""
-    from wies.core.editables.assignment import placement_audit_row  # noqa: PLC0415 — avoids import cycle
+    from wies.core.editables.placement import PlacementEditables  # noqa: PLC0415 — avoids import cycle
 
-    placement_before = placement_audit_row(placement)
-    with transaction.atomic():
+    # Een plaatsingswijziging heeft geen eigen audit-type; PlacementEditables.audit_mirror
+    # spiegelt hem als "Team"-event op de tijdlijn van de opdracht, net als de inline-edit-
+    # en "Team bewerken"-flow (#393). De mirror is een context-manager rond de save.
+    mirror = PlacementEditables.audit_mirror
+    with transaction.atomic(), mirror(placement, request.user, request) if mirror else nullcontext():
         _save_edit_specs(request, specs, cleaned_data)
-        # Een plaatsingswijziging heeft geen eigen audit-type; spiegel hem op de
-        # tijdlijn van de opdracht, net als de "Team bewerken"-flow (#393).
-        placement.refresh_from_db()
-        _emit_placement_change_on_assignment(placement, placement_before, request.user)
 
 
 def _safe_return_path(raw: str | None, fallback: str) -> str:

@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 427: NLDD: fix dat het opslaan van een gewijzigde plaatsing (rol/periode) in het zijpaneel een 500 gaf — de opslag riep een niet-bestaande functie aan; de plaatsingswijziging wordt nu net als voorheen als "Team"-gebeurtenis op de tijdlijn van de opdracht gespiegeld
 - 427: NLDD: verwijder de parallelle `/ndd/`-PoC-laag nu de hoofdroutes op het NLDD Design System draaien; de beheer-opslagacties (gebruiker/label/profiel) verwijzen niet langer stiekem naar die laag maar naar de gewone routes
 - 427: NLDD: date- en keuzevelden tonen hun validatiefout weer zichtbaar (het datumveld koppelde de fout via het verkeerde attribuut, waardoor de melding op hoogte 0 stond)
 - 427: NLDD: fix modals never opening (Beheer > Labels: "Categorie toevoegen" and the pencil icons did nothing). `nldd-window.show()` reads the native `<dialog>` out of its shadow root and returns silently when it isn't there yet — right after an htmx swap the element is upgraded but Lit has not rendered, so `dialog.js` opened nothing. It now awaits `updateComplete` first
