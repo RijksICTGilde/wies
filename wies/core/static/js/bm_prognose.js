@@ -45,10 +45,10 @@
     const unfilled = data.unfilled;
     const todaySec = Date.parse(data.today) / 1000;
 
-    // Vertical "vandaag" line, drawn under the series each redraw.
+    // Vertical "vandaag" line, drawn on top of the series each redraw.
     const todayLine = {
       hooks: {
-        drawClear: [
+        draw: [
           (u) => {
             const cx = Math.round(u.valToPos(todaySec, "x", true));
             const ctx = u.ctx;
