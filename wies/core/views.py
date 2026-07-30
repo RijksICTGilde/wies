@@ -1134,20 +1134,6 @@ class PlacementListView(ListView):
         return context
 
 
-class PlacementListNDDView(PlacementListView):
-    """PoC view: inzettenlijst met NDD Design System (MinBZK)."""
-
-    template_name = "placements.html"
-
-    # get_template_names komt van PlacementListView: die kiest het paneelsjabloon
-    # al uit panel_data, dus deze klasse hoefde dat niet te herhalen.
-
-    def get_context_data(self, **kwargs: object) -> dict:
-        context = super().get_context_data(**kwargs)
-        context["filter_target_url"] = reverse("ndd-home")
-        return context
-
-
 class AssignmentListView(ListView):
     """View for vacancy assignments displayed as cards with infinite scroll pagination"""
 
@@ -1420,77 +1406,6 @@ class AssignmentListView(ListView):
         return context
 
 
-class AssignmentListNDDView(AssignmentListView):
-    """PoC view: vacaturelijst met NDD Design System (MinBZK)."""
-
-    template_name = "assignments.html"
-
-    def get_template_names(self) -> list[str]:
-        if "HX-Request" in self.request.headers:
-            if self.request.GET.get("filter_modal"):
-                return ["parts/filter_options_modal.html"]
-            if self.request.headers.get("HX-Target") == "side-panel-content":
-                return super().get_template_names()
-            if self.request.GET.get("pagina"):
-                return ["parts/assignment_card_rows.html"]
-            return ["parts/filter_and_card_container_assignments.html"]
-        return ["assignments.html"]
-
-    def get_context_data(self, **kwargs: object) -> dict:
-        context = super().get_context_data(**kwargs)
-        context["filter_target_url"] = reverse("ndd-assignments")
-        return context
-
-
-class UserListNDDView(PermissionRequiredMixin, ListView):
-    """PoC view: gebruikerslijst met NDD Design System."""
-
-    model = User
-    template_name = "user_admin.html"
-    paginate_by = 50
-    page_kwarg = "pagina"
-    permission_required = "rijksauth.view_user"
-
-    def _get_base_queryset(self):
-        qs = (
-            User.objects.prefetch_related("groups", "colleague__labels__category")
-            .filter(is_superuser=False)
-            .order_by("last_name", "first_name")
-        )
-        search_filter = self.request.GET.get("zoek")
-        if search_filter:
-            qs = qs.annotate(
-                full_name=Concat("first_name", Value(" "), "last_name"),
-            ).filter(
-                Q(full_name__icontains=search_filter)
-                | Q(first_name__icontains=search_filter)
-                | Q(last_name__icontains=search_filter)
-                | Q(email__icontains=search_filter)
-            )
-        return qs
-
-    def get_queryset(self):
-        return self._get_base_queryset().distinct()
-
-    def get_template_names(self):
-        if "HX-Request" in self.request.headers:
-            if self.request.GET.get("pagina"):
-                return ["parts/user_table_rows.html"]
-            return ["parts/user_table.html"]
-        return ["user_admin.html"]
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["search_filter"] = self.request.GET.get("zoek")
-        if context.get("page_obj") and context["page_obj"].has_next():
-            params = self.request.GET.copy()
-            params["pagina"] = context["page_obj"].next_page_number()
-            context["next_page_url"] = f"?{params.urlencode()}"
-        else:
-            context["next_page_url"] = None
-        return context
-
-
 class UserListView(PermissionRequiredMixin, ListView):
     """View for user list with filtering and infinite scroll pagination"""
 
@@ -1725,9 +1640,9 @@ def user_create(request):
             # For standard form posts, use normal redirect
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
-                response["HX-Redirect"] = reverse("ndd-admin-users")
+                response["HX-Redirect"] = reverse("admin-users")
                 return response
-            return redirect(reverse("ndd-admin-users"))
+            return redirect(reverse("admin-users"))
         # Re-render form with errors (stays in modal with HTMX)
         return render(
             request,
@@ -1784,9 +1699,9 @@ def user_edit(request, pk):
             # For standard form posts, use normal redirect
             if "HX-Request" in request.headers:
                 response = HttpResponse(status=200)
-                response["HX-Redirect"] = reverse("ndd-admin-users")
+                response["HX-Redirect"] = reverse("admin-users")
                 return response
-            return redirect(reverse("ndd-admin-users"))
+            return redirect(reverse("admin-users"))
         # Re-render form with errors (stays in modal with HTMX)
         return render(
             request,
@@ -1847,7 +1762,7 @@ def user_delete(request, pk):
             context=context,
         )
         response = HttpResponse(status=200)
-        response["HX-Redirect"] = reverse("ndd-admin-users")
+        response["HX-Redirect"] = reverse("admin-users")
         return response
     return HttpResponse(status=405)
 
@@ -1975,60 +1890,6 @@ def assignment_import_csv(request):
     return HttpResponse(status=405)
 
 
-@permission_required(
-    [
-        "core.add_assignment",
-        "core.add_service",
-        "core.add_placement",
-        "core.add_colleague",
-    ],
-    raise_exception=True,
-)
-def assignment_import_csv_ndd(request):
-    """
-    NDD variant of assignment CSV import.
-
-    GET: Display the import form (NDD design system)
-    POST: Process the uploaded CSV file and create assignments
-          (with related services, placements, colleagues, and skills)
-
-    For expected CSV format, see create_assignment_from_csv function
-    """
-    if request.method == "GET":
-        return render(request, "assignment_import.html")
-    if request.method == "POST":
-        if "csv_file" not in request.FILES:
-            return render(
-                request,
-                "assignment_import.html",
-                {"result": {"success": False, "errors": ["Geen bestand geüpload. Upload een CSV-bestand."]}},
-            )
-
-        csv_file = request.FILES["csv_file"]
-
-        if not csv_file.name.endswith(".csv"):
-            return render(
-                request,
-                "assignment_import.html",
-                {"result": {"success": False, "errors": ["Ongeldig bestandstype. Upload een CSV-bestand."]}},
-            )
-
-        try:
-            csv_content = csv_file.read().decode("utf-8")
-        except UnicodeDecodeError:
-            return render(
-                request,
-                "assignment_import.html",
-                {"result": {"success": False, "errors": ["Invalid CSV file encoding. Please use UTF-8."]}},
-            )
-
-        result = create_assignments_from_csv(csv_content)
-
-        # Return results in the form
-        return render(request, "assignment_import.html", {"result": result})
-    return HttpResponse(status=405)
-
-
 @permission_required("core.view_organizationunit", raise_exception=True)
 def organization_admin(request):
     """Show all organization units in a collapsible tree, grouped by type. Only available in DEBUG mode."""
@@ -2098,13 +1959,6 @@ def label_admin(request):
     return render(request, "label_admin.html", {"categories": categories})
 
 
-@permission_required("core.view_labelcategory", raise_exception=True)
-def label_admin_ndd(request):
-    """PoC view: label admin met NDD Design System."""
-    categories = annotate_usage_counts(LabelCategory.objects.all())
-    return render(request, "label_admin.html", {"categories": categories})
-
-
 @permission_required("core.change_labelcategory", raise_exception=True)
 def label_category_create(request):
     """
@@ -2137,7 +1991,7 @@ def label_category_create(request):
             form.save()
             messages.success(request, f"Categorie '{form.cleaned_data['name']}' succesvol aangemaakt")
             response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("ndd-label-admin")
+            response["HX-Redirect"] = reverse("label-admin")
             return response
         return render(
             request,
@@ -2187,7 +2041,7 @@ def label_category_edit(request, pk):
         if form.is_valid():
             form.save()
             response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("ndd-label-admin")
+            response["HX-Redirect"] = reverse("label-admin")
             return response
 
         return render(
@@ -2224,7 +2078,7 @@ def profile_name_edit(request):
             UserEditables.first_name.save(user, form.cleaned_data["first_name"])
             UserEditables.last_name.save(user, form.cleaned_data["last_name"])
             response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("ndd-profile")
+            response["HX-Redirect"] = reverse("user-profile")
             return response
     else:
         form = ProfileNameForm(instance=user)
@@ -2256,7 +2110,7 @@ def label_category_manage(request):
         if formset.is_valid():
             formset.save()
             response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("ndd-label-admin")
+            response["HX-Redirect"] = reverse("label-admin")
             return response
     else:
         formset = LabelCategoryFormSet(queryset=queryset)
@@ -2288,7 +2142,7 @@ def label_form(request, pk=None):
         if form.is_valid():
             form.save()
             response = HttpResponse(status=200)
-            response["HX-Redirect"] = reverse("ndd-label-admin")
+            response["HX-Redirect"] = reverse("label-admin")
             return response
         invalid_post = True
     else:
@@ -2399,7 +2253,7 @@ def label_category_delete(request, pk):
         else:
             messages.success(request, f"Categorie '{category_name}' succesvol verwijderd")
         response = HttpResponse(status=200)
-        response["HX-Redirect"] = reverse("ndd-label-admin")
+        response["HX-Redirect"] = reverse("label-admin")
         return response
     return HttpResponse(status=405)
 
@@ -2519,245 +2373,6 @@ def assignment_events_partial(request, pk):
     for event in events:
         _attach_audit_sentence(event)
     return render(request, "parts/assignment_events_timeline.html", {"events": events})
-
-
-def user_profile_ndd(request):
-    """NDD Design System variant of the user profile page."""
-    user = request.user
-    colleague = getattr(user, "colleague", None)
-
-    # Side panel handling
-    colleague_id = request.GET.get("collega")
-    assignment_id = request.GET.get("opdracht")
-    panel_data = None
-
-    if assignment_id:
-        try:
-            assignment = Assignment.objects.get(id=assignment_id)
-            panel_data = _build_assignment_panel_data(assignment, request, reverse("ndd-profile"))
-        except Assignment.DoesNotExist:
-            pass
-    elif colleague_id:
-        try:
-            panel_colleague = Colleague.objects.get(id=colleague_id)
-            panel_data = _build_colleague_panel_data(panel_colleague, request)
-        except Colleague.DoesNotExist:
-            pass
-
-    # HTMX partial responses for panel swaps
-    if "HX-Request" in request.headers:
-        hx_target = request.headers.get("HX-Target")
-        if hx_target == "side-panel-content" and panel_data:
-            return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
-
-    # Build label data per category for the data list rows
-    label_categories = []
-    for category in LabelCategory.objects.order_by("name"):
-        selected = list(colleague.labels.filter(category=category).order_by("name")) if colleague else []
-        label_categories.append({"category": category, "labels": selected})
-
-    assignment_list = _get_colleague_assignments(request, colleague, viewer=colleague) if colleague else []
-
-    return render(
-        request,
-        "user_profile.html",
-        {
-            "colleague": colleague,
-            "label_categories": label_categories,
-            "assignment_list": assignment_list,
-            "panel_data": panel_data,
-        },
-    )
-
-
-def contact_ndd(request):
-    return render(request, "contact.html")
-
-
-def privacy_ndd(request):
-    return render(request, "privacy.html")
-
-
-def toegankelijkheid_ndd(request):
-    return render(request, "toegankelijkheid.html")
-
-
-@staff_required
-def staff_dashboard_ndd(request):
-    return render(request, "staff_dashboard.html", {"usage": get_usage_stats()})
-
-
-@staff_required
-def staff_database_ndd(request):
-    context = {
-        "assignment_count": Assignment.objects.count(),
-        "colleague_count": Colleague.objects.count(),
-        "organization_count": OrganizationUnit.objects.count(),
-        "latest_tasks": get_latest_tasks(limit=3),
-        "destructive_actions_enabled": settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS,
-    }
-    if request.method == "POST":
-        action = request.POST.get("action")
-        if action == "clear_data":
-            if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
-                return HttpResponse(status=405)
-            Assignment.objects.all().delete()
-            Colleague.objects.all().delete()
-            Skill.objects.all().delete()
-            Placement.objects.all().delete()
-            Service.objects.all().delete()
-            LabelCategory.objects.all().delete()
-            Label.objects.all().delete()
-            OrganizationUnit.objects.update(parent=None)
-            OrganizationUnit.objects.all().delete()
-            OrganizationType.objects.all().delete()
-        elif action == "load_base_data":
-            if not settings.ENABLE_DESTRUCTIVE_STAFF_ACTIONS:
-                return HttpResponse(status=405)
-            management.call_command("loaddata", "base_dummy_data.json")
-            messages.success(request, "Data geladen uit base_dummy_data.json")
-        elif action == "reset_onboarding":
-            request.user.onboarding_completed_at = None
-            request.user.save(update_fields=["onboarding_completed_at"])
-            messages.success(
-                request,
-                "Onboarding is gereset. De wizard verschijnt weer bij de volgende paginalading.",
-            )
-        elif action == "sync_organizations":
-            if has_active_task("sync_organizations"):
-                messages.error(request, "Er is al een sync_organizations taak actief. Wacht tot deze is afgerond.")
-            else:
-                create_task(command="sync_organizations", created_by=request.user, timeout_minutes=5)
-                messages.success(request, "Organisatiesynchronisatie is gestart")
-            if request.headers.get("HX-Request"):
-                context["latest_tasks"] = get_latest_tasks(limit=3)
-                return render(request, "parts/task_list.html", context)
-        elif action == "merge_duplicates_preview":
-            from wies.core.services.assignments import find_duplicate_groups  # noqa: PLC0415
-
-            groups = find_duplicate_groups()
-            if not groups:
-                messages.info(request, "Geen dubbele opdrachten gevonden.")
-            else:
-                context["merge_groups"] = [
-                    {
-                        "name": group[0].name,
-                        "owner": str(group[0].owner),
-                        "count": len(group),
-                        "target": group[0],
-                        "duplicates": group[1:],
-                    }
-                    for group in groups
-                ]
-            return render(request, "staff_database.html", context)
-        elif action == "merge_duplicates_apply":
-            from wies.core.services.assignments import (  # noqa: PLC0415 — conditional import for rare admin action
-                find_duplicate_groups,
-                merge_group,
-            )
-
-            groups = find_duplicate_groups()
-            if not groups:
-                messages.info(request, "Geen dubbele opdrachten gevonden.")
-            else:
-                with transaction.atomic():
-                    total = sum(len(g) - 1 for g in groups)
-                    for group in groups:
-                        target = group[0]
-                        deleted_ids = [a.id for a in group[1:]]
-                        merge_group(group)
-                        create_event(
-                            object_type="Assignment",
-                            action="update",
-                            source="user",
-                            object_id=target.id,
-                            user=request.user,
-                            context={
-                                "merge": True,
-                                "merged_ids": deleted_ids,
-                                "name": target.name,
-                            },
-                        )
-                    messages.success(
-                        request,
-                        f"{total} dubbele opdracht(en) samengevoegd in {len(groups)} groep(en).",
-                    )
-        return redirect("ndd-staff-database")
-    return render(request, "staff_database.html", context)
-
-
-def organization_admin_ndd(request):
-    """NDD variant of organization admin. Same logic as organization_admin()."""
-    if not settings.DEBUG:
-        raise Http404
-    rows = OrganizationUnit.objects.values("id", "parent_id", "name", "label", "abbreviations", "end_date")
-    today = timezone.now().date()
-    units_by_id: dict[int, dict] = {}
-    for row in rows:
-        row["is_inactive"] = row["end_date"] is not None and row["end_date"] <= today
-        row["tree_children"] = []
-        units_by_id[row["id"]] = row
-
-    roots: list[dict] = []
-    for unit in units_by_id.values():
-        parent_id = unit["parent_id"]
-        if parent_id and parent_id in units_by_id:
-            units_by_id[parent_id]["tree_children"].append(unit)
-        else:
-            roots.append(unit)
-
-    def sort_key(u):
-        return u["label"] or u["name"]
-
-    for unit in units_by_id.values():
-        unit["tree_children"].sort(key=sort_key)
-    roots.sort(key=sort_key)
-
-    root_ids = {u["id"] for u in roots}
-    type_links = (
-        OrganizationUnit.organization_types.through.objects.filter(organizationunit_id__in=root_ids)
-        .select_related("organizationtype")
-        .values_list("organizationunit_id", "organizationtype__label")
-    )
-    root_types: dict[int, list[str]] = {}
-    for unit_id, type_label in type_links:
-        root_types.setdefault(unit_id, []).append(type_label)
-
-    grouped: dict[str, list[dict]] = {}
-    ungrouped: list[dict] = []
-    for unit in roots:
-        type_labels = root_types.get(unit["id"], [])
-        if type_labels:
-            for type_label in type_labels:
-                grouped.setdefault(type_label, []).append(unit)
-        else:
-            ungrouped.append(unit)
-
-    type_groups = [(ORG_TYPE_PLURAL.get(name, name), units) for name, units in sorted(grouped.items())]
-    if ungrouped:
-        type_groups.append(("Overig", ungrouped))
-
-    return render(request, "organization_admin.html", {"type_groups": type_groups})
-
-
-def user_import_csv_ndd(request):
-    """NDD variant of user CSV import. Same logic, NDD template."""
-    template = "user_import.html"
-    if request.method == "GET":
-        return render(request, template)
-    if request.method != "POST":
-        return HttpResponse(status=405)
-    if "csv_file" not in request.FILES:
-        return render(request, template, {"result": {"success": False, "errors": ["Geen bestand geüpload."]}})
-    csv_file = request.FILES["csv_file"]
-    if not csv_file.name.endswith(".csv"):
-        return render(request, template, {"result": {"success": False, "errors": ["Ongeldig bestandstype."]}})
-    try:
-        csv_content = csv_file.read().decode("utf-8-sig")
-    except UnicodeDecodeError:
-        return render(request, template, {"result": {"success": False, "errors": ["Ongeldige bestandscodering."]}})
-    result = create_users_from_csv(request.user, csv_content)
-    return render(request, template, {"result": result})
 
 
 HET_FIELD_LABELS = {"team", "merk", "thema", "budget", "onderwerp", "contract", "tarief"}
