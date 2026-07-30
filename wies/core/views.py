@@ -643,14 +643,13 @@ def _get_top_org_options(
     org_counts: Counter[int] | None = None,
     limit: int = 3,
 ) -> list[dict]:
-    """Return opdrachtgever quick checkbox options: selected first, then top-N by count.
+    """Return opdrachtgever quick checkbox options: the top-N by count, then any selection below it.
 
     Each option carries its own ``param`` (``org``, ``org_self`` or
     ``org_type``) so the sidebar quick row stays in sync with whatever was
     picked in the modal — including a "direct onder…" self-node (``org_self``)
-    or an org-type group (``org_type``). The ``org`` group also pads up to
-    ``limit`` with the highest-count unselected orgs; self/type only appear
-    when actually selected (they have no top-N baseline).
+    or an org-type group (``org_type``). Self/type only appear when actually
+    selected (they have no top-N baseline).
 
     ``org_counts`` lets the caller pass filter-aware per-org counts (computed
     like rol/labels, excluding the org filter) so the numbers reflect the other
@@ -665,25 +664,30 @@ def _get_top_org_options(
     selected_ids = {int(x) for x in selected_org_ids if str(x).isdigit()}
     self_ids = {int(x) for x in selected_self_ids if str(x).isdigit()}
 
-    total_selected = len(selected_ids) + len(self_ids) + len(selected_type_labels)
-    fill = max(0, limit - total_selected)
-    top_unselected = [oid for oid, _ in org_counts.most_common() if oid not in selected_ids][:fill]
-    org_wanted = selected_ids | set(top_unselected)
+    # The head is the top-N by count and it stays put: aanvinken mag de rijen
+    # eronder niet laten verspringen en mag er ook geen uit duwen. Een keuze die
+    # buiten de kop valt komt eronder te staan, dus de lijst wordt langer.
+    # Zelfde regel als _finalize_filter_groups voor de andere filtergroepen.
+    labels = dict(OrganizationUnit.objects.filter(id__in=set(org_counts) | selected_ids).values_list("id", "label"))
+
+    def _rank(org_id: int) -> tuple[int, str]:
+        return (-org_counts.get(org_id, 0), labels.get(org_id) or f"Organisatie {org_id}")
+
+    head_ids = sorted(org_counts, key=_rank)[:limit]
+    org_wanted = head_ids + sorted(selected_ids - set(head_ids), key=_rank)
 
     options: list[dict] = []
 
-    if org_wanted:
-        labels = dict(OrganizationUnit.objects.filter(id__in=org_wanted).values_list("id", "label"))
-        options.extend(
-            {
-                "param": "org",
-                "value": str(org_id),
-                "label": labels.get(org_id) or f"Organisatie {org_id}",
-                "count": org_counts.get(org_id, 0),
-                "selected": org_id in selected_ids,
-            }
-            for org_id in org_wanted
-        )
+    options.extend(
+        {
+            "param": "org",
+            "value": str(org_id),
+            "label": labels.get(org_id) or f"Organisatie {org_id}",
+            "count": org_counts.get(org_id, 0),
+            "selected": org_id in selected_ids,
+        }
+        for org_id in org_wanted
+    )
 
     if self_ids:
         self_labels = dict(OrganizationUnit.objects.filter(id__in=self_ids).values_list("id", "label"))
@@ -698,19 +702,27 @@ def _get_top_org_options(
             for org_id in self_ids
         )
 
-    options.extend(
-        {
-            "param": "org_type",
-            "value": type_label,
-            "label": ORG_TYPE_PLURAL.get(type_label, type_label),
-            "count": 0,
-            "selected": True,
+    if selected_type_labels:
+        # A type row covers whole roots, so its number is the subtree total the
+        # modal shows for that group, not a per-org self-count. Building the tree
+        # is only worth it when such a row is actually there, which is why this
+        # sits behind the check.
+        group_totals = {
+            node["id"]: node["nr_of_placements"]
+            for node in _build_org_hierarchy(org_counts, excluded_org_ids, prune_empty=True)
+            if node.get("group")
         }
-        for type_label in selected_type_labels
-    )
+        options.extend(
+            {
+                "param": "org_type",
+                "value": type_label,
+                "label": ORG_TYPE_PLURAL.get(type_label, type_label),
+                "count": group_totals.get(f"group-{type_label}", 0),
+                "selected": True,
+            }
+            for type_label in selected_type_labels
+        )
 
-    # Selected first, then by descending count, then by label for a stable order.
-    options.sort(key=lambda o: (not o["selected"], -o["count"], o["label"]))
     return options
 
 

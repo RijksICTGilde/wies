@@ -52,9 +52,7 @@ daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-text-cell text="{{ option.label }}"></nldd-text-cell>
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
-          {% if option.param == 'org' %}
-            <nldd-text-cell width="fit-content" horizontal-alignment="right" color="secondary" text="{{ option.count }}"></nldd-text-cell>
-          {% endif %}
+          <nldd-text-cell width="fit-content" horizontal-alignment="right" color="secondary" text="{{ option.count }}"></nldd-text-cell>
           </nldd-list-item>
         {% endfor %}
         {# De "Meer" actie hoort bij de lijst, dus hij is een rij en geen losse
