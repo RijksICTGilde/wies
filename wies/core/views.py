@@ -69,6 +69,7 @@ from .permissions import is_staff_member
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .services.assignments import create_assignment_from_form, extract_services_data
 from .services.events import create_event
+from .services.occupancy import colleague_occupancy
 from .services.organizations import (
     find_orgs_by_abbreviation,
     get_excluded_org_ids,
@@ -449,6 +450,103 @@ def delete_error(request, pk):
     """Delete a single handled error and return the refreshed current page of the table."""
     ErrorEvent.objects.filter(pk=pk).delete()
     return _render_error_table(request, request.GET.get("pagina"))
+
+
+def _resolve_bench_panel_data(request):
+    """Resolve side-panel data from the plaatsing/collega/opdracht params.
+
+    Mirrors ``PlacementListView`` so the colleague panel's nested links (open an
+    opdracht or a plaatsing) work identically on the Bezetting page.
+    """
+    placement_id = request.GET.get("plaatsing")
+    colleague_id = request.GET.get("collega")
+    assignment_id = request.GET.get("opdracht")
+
+    if placement_id:
+        return _resolve_placement_panel(request, placement_id)
+    if colleague_id and not assignment_id:
+        try:
+            return _build_colleague_panel_data(Colleague.objects.get(id=colleague_id), request)
+        except Colleague.DoesNotExist, ValueError:
+            return None
+    if assignment_id:
+        try:
+            return _build_assignment_panel_data(Assignment.objects.get(id=assignment_id), request)
+        except Assignment.DoesNotExist, ValueError:
+            return None
+    return None
+
+
+def bench_overview(request):
+    """ "Bezetting" — the BM occupancy timeline (exploratory demo, no permission gate).
+
+    Rows are colleagues, sorted most-pressing first (bench → partial → full). A row
+    click opens the existing colleague side panel via the shared ``collega`` param
+    machinery, exactly like the "Wie zit waar?" table — including the panel's own
+    links to open an opdracht or plaatsing.
+    """
+    today = timezone.now().date()
+
+    panel_data = _resolve_bench_panel_data(request)
+
+    # HTMX panel requests return just the panel chrome / content, like WZW.
+    if "HX-Request" in request.headers and panel_data is not None:
+        target = request.headers.get("HX-Target")
+        if target == "side_panel-container":
+            return render(request, "parts/side_panel.html", {"panel_data": panel_data})
+        if target == "side_panel-content":
+            return render(request, panel_data["panel_content_template"], {"panel_data": panel_data})
+
+    rows = colleague_occupancy(today)
+    for row in rows:
+        row.colleague.panel_url = _build_panel_url(request, collega=row.colleague.id)
+
+    context = {
+        "rows": rows,
+        "today": today,
+        "today_pct": _bench_today_pct(),
+        "month_ticks": _bench_month_ticks(today),
+        "panel_data": panel_data,
+        "bench_count": sum(1 for r in rows if r.bucket == "bench"),
+        "partial_count": sum(1 for r in rows if r.bucket == "partial"),
+        "unknown_count": sum(1 for r in rows if r.bucket == "unknown"),
+        "ends_soon_count": sum(1 for r in rows if r.ends_soon),
+    }
+    return render(request, "bench_overview.html", context)
+
+
+def _bench_today_pct():
+    """Horizontal position of the 'today' marker within the timeline horizon."""
+    from wies.core.services.occupancy import HORIZON_AHEAD_DAYS, HORIZON_BACK_DAYS  # noqa: PLC0415 — avoids cycle
+
+    return round(HORIZON_BACK_DAYS / (HORIZON_BACK_DAYS + HORIZON_AHEAD_DAYS) * 100, 2)
+
+
+def _bench_month_ticks(today):
+    """First-of-month gridline labels across the horizon, as (label, left%)."""
+    from wies.core.services.occupancy import HORIZON_AHEAD_DAYS, HORIZON_BACK_DAYS  # noqa: PLC0415 — avoids cycle
+
+    horizon_start = today - timedelta(days=HORIZON_BACK_DAYS)
+    horizon_end = today + timedelta(days=HORIZON_AHEAD_DAYS)
+    span = (horizon_end - horizon_start).days or 1
+    ticks = []
+    year, month = horizon_start.year, horizon_start.month
+    # Advance to the first month boundary on or after the horizon start.
+    if horizon_start.day != 1:
+        month += 1
+        if month > 12:  # noqa: PLR2004 (12 = months per year)
+            month = 1
+            year += 1
+    cursor = date(year, month, 1)
+    while cursor <= horizon_end:
+        left = (cursor - horizon_start).days / span * 100
+        ticks.append({"label": cursor.strftime("%b"), "month": cursor.month, "left": round(left, 2)})
+        month += 1
+        if month > 12:  # noqa: PLR2004 (12 = months per year)
+            month = 1
+            year += 1
+        cursor = date(year, month, 1)
+    return ticks
 
 
 @staff_required

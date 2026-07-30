@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Bezetting{% endblock title %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/bench.css') }}">
+  <link rel="stylesheet" href="{{ static('css/side_panel.css') }}">
+  <script src="{{ static('js/dialog.js') }}"></script>
+  <script src="{{ static('js/side_panel.js') }}"></script>
+  <script src="{{ static('js/inline_edit.js') }}" defer></script>
+{% endblock extra_head %}
+{% block content %}
+  <div class="rvo-layout-column rvo-layout-gap--md bench-page">
+    <c-h1>
+      Bezetting
+    </c-h1>
+    <c-paragraph>
+      Wie heeft werk nodig? Collega's staan op volgorde van urgentie: eerst wie op de bank zit,
+      dan wie deels vrij is (de meeste vrije uren bovenaan), en tot slot wie volledig is ingezet —
+      met de opdrachten die het eerst aflopen bovenaan.
+    </c-paragraph>
+    {# Legenda + samenvatting #}
+    <div class="bench-summary">
+      <div class="bench-stat bench-stat--bench">
+        <span class="bench-stat__value">{{ bench_count }}</span>
+        <span class="bench-stat__label">op de bank</span>
+      </div>
+      <div class="bench-stat bench-stat--partial">
+        <span class="bench-stat__value">{{ partial_count }}</span>
+        <span class="bench-stat__label">deels vrij</span>
+      </div>
+      <div class="bench-stat bench-stat--soon">
+        <span class="bench-stat__value">{{ ends_soon_count }}</span>
+        <span class="bench-stat__label">eindigt binnen 60 dagen</span>
+      </div>
+      <div class="bench-legend">
+        <span class="bench-legend__item"><span class="bench-swatch bench-swatch--active"></span>Actief</span>
+        <span class="bench-legend__item"><span class="bench-swatch bench-swatch--planned"></span>Gepland</span>
+        <span class="bench-legend__item"><span class="bench-swatch bench-swatch--completed"></span>Afgerond</span>
+      </div>
+    </div>
+    {# Tijdlijn-koptekst: maandmarkeringen + 'vandaag' #}
+    <div class="bench-timeline-head">
+      <div class="bench-row__side bench-row__side--head">Collega</div>
+      <div class="bench-track bench-track--head">
+        {% for tick in month_ticks %}
+          <div class="bench-tick {% if tick.month == 1 %}bench-tick--year{% endif %}"
+               style="left: {{ tick.left }}%">
+            <span class="bench-tick__label">{{ tick.label }}</span>
+          </div>
+        {% endfor %}
+        <div class="bench-today" style="left: {{ today_pct }}%">
+          <span class="bench-today__label">vandaag</span>
+        </div>
+      </div>
+    </div>
+    {# Rijen #}
+    <div class="bench-rows">
+      {% for row in rows %}
+        <div class="bench-row clickable-row bench-row--{{ row.bucket }}"
+             hx-get="{{ row.colleague.panel_url }}"
+             hx-target="#side_panel-container">
+          <div class="bench-row__side">
+            <div class="user-table-cell">
+              <div class="user-avatar">{{ row.colleague.name|first|upper }}</div>
+              <div class="user-info">
+                <strong>{{ row.colleague.name }}</strong>
+                <span class="bench-hours-summary">{{ row.active_hours }} / {{ row.contract_hours }} uur</span>
+              </div>
+            </div>
+            <div class="bench-status">
+              {% if row.bucket == 'bench' %}
+                <span class="bench-chip bench-chip--bench">Op de bank · {{ row.contract_hours }} u vrij</span>
+              {% elif row.bucket == 'partial' %}
+                <span class="bench-chip bench-chip--partial">{{ row.unfilled_hours }} u vrij</span>
+              {% elif row.bucket == 'unknown' %}
+                <span class="bench-chip bench-chip--unknown">Ingezet · uren onbekend</span>
+              {% else %}
+                <span class="bench-chip bench-chip--full">Volledig ingezet</span>
+              {% endif %}
+              {% if row.ends_soon %}
+                <span class="bench-chip bench-chip--soon">
+                  <c-icon icon="kalender" size="sm" color="wit" />
+                  Eindigt {{ row.earliest_active_end|datum_nl("j N") }}
+                </span>
+              {% endif %}
+            </div>
+            {# Compacte uren-balk: ingevuld vs vrij #}
+            <div class="bench-hours-bar"
+                 title="{{ row.active_hours }} van {{ row.contract_hours }} uur ingevuld">
+              <div class="bench-hours-bar__fill" style="width: {{ row.filled_pct }}%"></div>
+            </div>
+          </div>
+          <div class="bench-track">
+            {% for tick in month_ticks %}
+              <div class="bench-gridline {% if tick.month == 1 %}bench-gridline--year{% endif %}"
+                   style="left: {{ tick.left }}%"></div>
+            {% endfor %}
+            <div class="bench-today-line" style="left: {{ today_pct }}%"></div>
+            {# Lane stack, vertically centred so a single bar sits mid-row. #}
+            <div class="bench-lanes" style="--bench-lanes: {{ row.lane_count }}">
+              {% for seg in row.segments %}
+                <div class="bench-seg bench-seg--{{ seg.phase }}"
+                     style="left: {{ seg.left_pct }}%;
+                            width: {{ seg.width_pct }}%;
+                            top: calc({{ seg.lane }} * (var(--bench-lane-height) + var(--bench-lane-gap)))"
+                     title="{{ seg.assignment_name }} · {{ seg.hours }} u/wk">
+                  <span class="bench-seg__label">{{ seg.assignment_name }}{% if seg.hours %} · {{ seg.hours }}u{% endif %}</span>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        </div>
+      {% else %}
+        <c-paragraph>
+          Geen collega's gevonden.
+        </c-paragraph>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock content %}
+{% block panel %}
+  <div id="side_panel-container">
+    {% if panel_data %}
+      {% include "parts/side_panel.html" %}
+    {% endif %}
+  </div>
+{% endblock panel %}

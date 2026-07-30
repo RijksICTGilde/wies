@@ -1,0 +1,338 @@
+/* "Bezetting" — BM occupancy timeline (exploratory demo, branch explore-bm-views). */
+
+.bench-page {
+  max-width: 1400px;
+}
+
+/* ── Summary + legend ─────────────────────────────────────────────────────── */
+.bench-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 2rem;
+  padding: 1rem 0;
+}
+
+.bench-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: #f3f3f3;
+}
+
+.bench-stat__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.bench-stat__label {
+  font-size: 0.8rem;
+  color: #4b4b4b;
+}
+
+.bench-stat--bench {
+  background: #fce8e6;
+}
+
+.bench-stat--partial {
+  background: #fff4e5;
+}
+
+.bench-stat--soon {
+  background: #fde7d3;
+}
+
+.bench-legend {
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: #4b4b4b;
+}
+
+.bench-legend__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.bench-swatch {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+}
+
+/* Phase colours — shared by legend swatches and timeline bars. */
+.bench-swatch--active,
+.bench-seg--active {
+  background: #1f7a4d;
+}
+
+.bench-swatch--planned,
+.bench-seg--planned {
+  background: #7aa7d8;
+}
+
+.bench-swatch--completed,
+.bench-seg--completed {
+  background: #b8b8b8;
+}
+
+/* ── Timeline layout ──────────────────────────────────────────────────────── */
+:root {
+  --bench-side-width: 320px;
+  --bench-row-height: 56px;
+  --bench-lane-height: 24px;
+  --bench-lane-gap: 4px;
+}
+
+.bench-timeline-head,
+.bench-row {
+  display: grid;
+  grid-template-columns: var(--bench-side-width) 1fr;
+  align-items: stretch;
+}
+
+.bench-timeline-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: #fff;
+  border-bottom: 2px solid #ddd;
+}
+
+.bench-row__side--head {
+  display: flex;
+  align-items: flex-end;
+  padding: 0 0 0.5rem 0.25rem;
+  font-weight: 700;
+}
+
+.bench-track {
+  position: relative;
+  min-height: var(--bench-row-height);
+  border-left: 1px solid #e0e0e0;
+}
+
+/* Lane stack: as tall as its lanes, vertically centred within the track so a
+   single bar sits mid-row and multiple bars stack symmetrically. */
+.bench-lanes {
+  --bench-lanes: 1;
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  transform: translateY(-50%);
+  height: calc(
+    var(--bench-lanes) * var(--bench-lane-height) + (var(--bench-lanes) - 1) *
+      var(--bench-lane-gap)
+  );
+}
+
+.bench-track--head {
+  min-height: 2rem;
+}
+
+/* Month gridlines + labels */
+.bench-gridline {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: #eee;
+}
+
+.bench-gridline--year {
+  background: #cfcfcf;
+}
+
+.bench-tick {
+  position: absolute;
+  bottom: 0;
+  border-left: 1px solid #e0e0e0;
+  height: 0.6rem;
+}
+
+.bench-tick--year {
+  border-left-color: #b0b0b0;
+  height: 1rem;
+}
+
+.bench-tick__label {
+  position: absolute;
+  bottom: 0.7rem;
+  left: 2px;
+  font-size: 0.7rem;
+  color: #6b6b6b;
+  white-space: nowrap;
+}
+
+/* "Today" marker */
+.bench-today,
+.bench-today-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #d52b1e;
+  z-index: 2;
+}
+
+.bench-today__label {
+  position: absolute;
+  top: -0.1rem;
+  left: 4px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #d52b1e;
+  white-space: nowrap;
+}
+
+/* ── Rows ─────────────────────────────────────────────────────────────────── */
+.bench-rows {
+  border-top: 1px solid #eee;
+}
+
+.bench-row {
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+}
+
+.bench-row:hover {
+  background: #f6f9fc;
+}
+
+.bench-row__side {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0.75rem 0.5rem 0.25rem;
+  border-right: 1px solid #eee;
+}
+
+.bench-hours-summary {
+  font-size: 0.8rem;
+  color: #6b6b6b;
+}
+
+.bench-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.bench-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.bench-chip--bench {
+  background: #d52b1e;
+  color: #fff;
+}
+
+.bench-chip--partial {
+  background: #f0a500;
+  color: #1a1a1a;
+}
+
+.bench-chip--full {
+  background: #e6efe9;
+  color: #1f7a4d;
+}
+
+.bench-chip--soon {
+  background: #b5651d;
+  color: #fff;
+}
+
+.bench-chip--unknown {
+  background: #e5e5e5;
+  color: #555;
+}
+
+/* Compact filled-vs-free hours bar */
+.bench-hours-bar {
+  position: relative;
+  height: 8px;
+  border-radius: 4px;
+  background: #e9c3bf; /* free (bench) part shows through */
+  overflow: hidden;
+}
+
+.bench-hours-bar__fill {
+  height: 100%;
+  background: #1f7a4d;
+  border-radius: 4px 0 0 4px;
+}
+
+/* Timeline bars */
+.bench-seg {
+  position: absolute;
+  height: var(--bench-lane-height);
+  min-width: 3px;
+  border-radius: 4px;
+  color: #fff;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.bench-seg--completed {
+  color: #333;
+}
+
+.bench-seg__label {
+  display: block;
+  padding: 0 0.4rem;
+  line-height: var(--bench-lane-height);
+  font-size: 0.72rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Emphasise the most-pressing rows with a left accent. */
+.bench-row--bench .bench-row__side {
+  box-shadow: inset 4px 0 0 #d52b1e;
+}
+
+.bench-row--partial .bench-row__side {
+  box-shadow: inset 4px 0 0 #f0a500;
+}
+
+/* "Hours unknown": assigned but no hours recorded — neutral, not a bench signal. */
+.bench-row--unknown .bench-hours-bar {
+  background: repeating-linear-gradient(
+    45deg,
+    #e0e0e0,
+    #e0e0e0 4px,
+    #efefef 4px,
+    #efefef 8px
+  );
+}
+
+.bench-row--unknown .bench-hours-bar__fill {
+  display: none;
+}
+
+@media (max-width: 800px) {
+  :root {
+    --bench-side-width: 200px;
+  }
+
+  .bench-legend {
+    margin-left: 0;
+    width: 100%;
+  }
+}
