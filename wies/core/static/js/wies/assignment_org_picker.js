@@ -127,17 +127,17 @@
       item.appendChild(cell("nldd-spacer-cell", { size: "8" }));
 
       var menuCell = cell("nldd-cell", {});
-      var menuId = "org-row-menu-" + index;
       var trigger = cell("nldd-icon-button", {
-        id: menuId,
         icon: "more",
         size: "sm",
         "popup-type": "menu",
         "tooltip-timing": "never",
         text: "Acties voor " + row.label,
       });
+      // Slotted into the button rather than anchored by id: the button then
+      // owns the anchoring and the open/close toggle itself.
       var menu = cell("nldd-menu", {
-        anchor: menuId,
+        slot: "popup",
         placement: "bottom-end",
       });
       if (!isPrimary) {
@@ -167,8 +167,8 @@
         );
       });
       menu.appendChild(remove);
+      trigger.appendChild(menu);
       menuCell.appendChild(trigger);
-      menuCell.appendChild(menu);
       item.appendChild(menuCell);
 
       list.appendChild(item);

@@ -107,27 +107,29 @@
           {% set _primary_breadcrumb = get_org_breadcrumb(panel_data.organization_rows[0].organization, _base_url) %}
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-cell>
-          <nldd-icon-button id="assignment-row-menu-organizations" size="sm" icon="more" popup-type="menu" tooltip-timing="never" text="Acties voor opdrachtgever"></nldd-icon-button>
-          <nldd-menu anchor="assignment-row-menu-organizations" placement="bottom-end">
+          <nldd-icon-button size="sm" icon="more" popup-type="menu" tooltip-timing="never" text="Acties voor opdrachtgever">
+          <nldd-menu slot="popup" placement="bottom-end">
           {% if panel_data.user_can_edit %}
             <nldd-menu-item text="Opdrachtgever wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
           {% endif %}
           <nldd-menu-item text="Bekijk alle opdrachten" icon="stack" data-href="{{ _primary_breadcrumb.url }}"></nldd-menu-item>
           </nldd-menu>
+          </nldd-icon-button>
           </nldd-cell>
         {% elif row_kind == "period" and panel_data.user_can_edit %}
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-cell>
-          <nldd-icon-button id="assignment-row-menu-period" size="sm" icon="more" popup-type="menu" tooltip-timing="never" text="Acties voor periode"></nldd-icon-button>
-          <nldd-menu anchor="assignment-row-menu-period" placement="bottom-end">
+          <nldd-icon-button size="sm" icon="more" popup-type="menu" tooltip-timing="never" text="Acties voor periode">
+          <nldd-menu slot="popup" placement="bottom-end">
           <nldd-menu-item text="Periode wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
           </nldd-menu>
+          </nldd-icon-button>
           </nldd-cell>
         {% elif row_kind == "owner" and panel_data.assignment.owner %}
           <nldd-spacer-cell size="8"></nldd-spacer-cell>
           <nldd-cell>
-          <nldd-icon-button id="assignment-row-menu-owner" size="sm" icon="more" popup-type="menu" tooltip-timing="never" text="Acties voor Business Manager"></nldd-icon-button>
-          <nldd-menu anchor="assignment-row-menu-owner" placement="bottom-end">
+          <nldd-icon-button size="sm" icon="more" popup-type="menu" tooltip-timing="never" text="Acties voor Business Manager">
+          <nldd-menu slot="popup" placement="bottom-end">
           {% if panel_data.user_can_edit %}
             <nldd-menu-item text="Business Manager wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
           {% endif %}
@@ -138,6 +140,7 @@
             <nldd-menu-item text="E-mailen" icon="email" data-href="{{ panel_data.owner_display.owner_mailto or ('mailto:' ~ panel_data.assignment.owner.email) }}"></nldd-menu-item>
           {% endif %}
           </nldd-menu>
+          </nldd-icon-button>
           </nldd-cell>
         {% endif %}
         </nldd-list-item>
@@ -161,13 +164,14 @@
       <nldd-spacer size="8" direction="vertical"></nldd-spacer>
       <nldd-toolbar label="Team" size="sm">
       <nldd-toolbar-item slot="start">
-      <nldd-button id="team-add-btn" text="Toevoegen" start-icon="plus" expandable popup-type="menu" accessible-label="Teamlid toevoegen"></nldd-button>
-      </nldd-toolbar-item>
-      </nldd-toolbar>
-      <nldd-menu anchor="team-add-btn" placement="bottom-start">
+      <nldd-button text="Toevoegen" start-icon="plus" expandable popup-type="menu" accessible-label="Teamlid toevoegen">
+      <nldd-menu slot="popup" placement="bottom-start">
       <nldd-menu-item text="Aanvraag toevoegen" icon="add-text-document" hx-get="{{ panel_data.member_add_aanvraag_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
       <nldd-menu-item text="Geplaatste consultant toevoegen" icon="add-user" hx-get="{{ panel_data.member_add_ingevuld_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
       </nldd-menu>
+      </nldd-button>
+      </nldd-toolbar-item>
+      </nldd-toolbar>
     {% endif %}
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
     {% set value = panel_data.team_rows %}
