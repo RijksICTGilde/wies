@@ -56,9 +56,7 @@ page flow. HTMX swaps the results line (#results) and OOB-swaps the grid. #}
 {% if paginator.count %}
   {% set count_label = "opdracht" if paginator.count == 1 else "opdrachten" %}
   <nldd-rich-text spacing="flat">
-  <p>
-    {{ paginator.count }} {{ count_label }}
-  </p>
+  <p>{{ paginator.count }} {{ count_label }}</p>
   </nldd-rich-text>
 {% endif %}
 </nldd-container>
