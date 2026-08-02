@@ -10,7 +10,7 @@
      zijpaneel valt hetzelfde grid vanzelf terug op één kolom. #}
   <nldd-collection layout="grid" item-width="280px">
   {% for assignment in assignments %}
-    <nldd-card href="{{ assignment.assignment_url }}" accessible-label="{{ assignment.name }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML" {% if assignment.historical %}class="wies-assignment-card--historical"{% endif %}>
+    <nldd-card href="{{ assignment.assignment_url }}" accessible-label="{{ assignment.name }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML">
     <nldd-container padding="16">
     <nldd-title size="5">
     <h3>{{ assignment.name }}</h3>
@@ -48,7 +48,7 @@
       <nldd-list-item size="sm">
       <nldd-icon-cell size="16" icon="calendar-event"></nldd-icon-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      <nldd-text-cell size="sm" color="secondary" text="{{ assignment.period_label or 'Afgelopen' }}"></nldd-text-cell>
+      <nldd-text-cell size="sm" text="{{ assignment.period_label or 'Afgelopen' }}"></nldd-text-cell>
       </nldd-list-item>
     {% elif assignment.start_date or assignment.end_date %}
       <nldd-list-item size="sm">
@@ -61,7 +61,7 @@
       <nldd-list-item size="sm">
       <nldd-icon-cell size="16" icon="lock-closed"></nldd-icon-cell>
       <nldd-spacer-cell size="8"></nldd-spacer-cell>
-      <nldd-text-cell size="sm" color="secondary" text="{{ assignment.privacy_warning_text }}"></nldd-text-cell>
+      <nldd-text-cell size="sm" text="{{ assignment.privacy_warning_text }}"></nldd-text-cell>
       </nldd-list-item>
     {% endif %}
     </nldd-list>

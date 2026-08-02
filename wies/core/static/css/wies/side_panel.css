@@ -28,9 +28,6 @@
   gap: var(--primitives-space-8, 8px);
   flex-wrap: wrap;
 }
-.wies-assignment-card--historical {
-  opacity: 0.75;
-}
 .wies-assignment-card__tags,
 .wies-assignment-card__privacy {
   margin-top: var(--primitives-space-4, 4px);
