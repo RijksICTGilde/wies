@@ -58,7 +58,7 @@ stay in sync without a wrapper element. #}
   {% set count_label = "persoon" if paginator.count == 1 else "personen" %}
   <nldd-rich-text spacing="flat">
   <p>
-    <strong>{{ paginator.count }}</strong> {{ count_label }}
+    {{ paginator.count }} {{ count_label }}
   </p>
   </nldd-rich-text>
 {% endif %}

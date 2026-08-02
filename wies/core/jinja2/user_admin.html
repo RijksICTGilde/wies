@@ -19,7 +19,7 @@
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <nldd-toolbar label="Gebruikers">
   <nldd-toolbar-item slot="start" width="560px" max-width="560px" min-width="240px">
-  <nldd-search-field id="search-input" placeholder="Op naam of e-mail zoeken" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" hx-get="{{ url('admin-users') }}" hx-trigger="input changed delay:300ms" hx-target="#user-table" hx-swap="outerHTML" name="zoek">
+  <nldd-search-field id="search-input" placeholder="Naam of e-mail zoeken" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" hx-get="{{ url('admin-users') }}" hx-trigger="input changed delay:300ms" hx-target="#user-table" hx-swap="outerHTML" name="zoek">
   </nldd-search-field>
   </nldd-toolbar-item>
   <nldd-toolbar-item slot="end">
@@ -32,7 +32,7 @@
     {% set count_label = "gebruiker" if paginator.count == 1 else "gebruikers" %}
     <nldd-rich-text spacing="flat">
     <p>
-      <strong>{{ paginator.count }}</strong> {{ count_label }}
+      {{ paginator.count }} {{ count_label }}
     </p>
     </nldd-rich-text>
     <nldd-spacer size="12"></nldd-spacer>
