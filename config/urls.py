@@ -56,6 +56,7 @@ from wies.core.views import (
     organization_admin,
     placement_edit_view,
     privacy,
+    profile_labels_edit,
     profile_name_edit,
     robots_txt,
     search_suggestions,
@@ -67,6 +68,7 @@ from wies.core.views import (
     user_edit,
     user_import_csv,
     user_profile,
+    user_theme,
 )
 from wies.rijksauth.views import auth, login, logout
 
@@ -115,6 +117,8 @@ urlpatterns = [
     path("beheer/database/", staff_database, name="staff-database"),
     path("profiel/", user_profile, name="user-profile"),
     path("profiel/naam/", profile_name_edit, name="profile-name-edit"),
+    path("profiel/labels/", profile_labels_edit, name="profile-labels-edit"),
+    path("profiel/weergave/", user_theme, name="user-theme"),
     path("onboarding/voltooien/", onboarding_complete, name="onboarding-complete"),
     path("onboarding/opdracht/<int:pk>/", onboarding_assignment_edit, name="onboarding-assignment-edit"),
     path("contact/", contact, name="contact"),

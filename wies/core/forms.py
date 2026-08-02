@@ -4,8 +4,10 @@ from django import forms
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group
 from django.core.exceptions import ValidationError
+from django.db import transaction
 
 from wies.core.editables.assignment import AssignmentEditables
+from wies.core.editables.colleague import LABELS_PREFIX, ColleagueEditables
 from wies.core.editables.user import UserEditables
 
 from .form_mixins import NlddFormMixin
@@ -65,6 +67,43 @@ class ProfileNameForm(NlddFormMixin, forms.ModelForm):
     class Meta:
         model = User
         fields = ["first_name", "last_name"]
+
+
+class ProfileLabelsForm(NlddFormMixin, forms.Form):
+    """Every label category in one sheet, with the token fields from onboarding.
+
+    Categories live in the database, so the fields are built per instance
+    rather than declared. Each one reuses its ColleagueEditables spec, which
+    keeps label, choices and widget identical to the inline edit and to the
+    onboarding step.
+    """
+
+    def __init__(self, *args, colleague, categories, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.colleague = colleague
+        self._specs = {}
+        for category in categories:
+            name = f"{LABELS_PREFIX}{category.id}"
+            spec = ColleagueEditables.resolve_dynamic(name)
+            field = spec.form_field()
+            # Every category maps onto the same m2m ("labels"), so the generic
+            # initial would hand each field the colleague's labels from all
+            # categories at once. Scope it to this category.
+            field.initial = list(colleague.labels.filter(category=category))
+            # Every category is optional, so the badge would repeat on all of
+            # them without telling the user anything they can act on.
+            field.widget.attrs["hide-optional"] = True
+            self.fields[name] = field
+            self._specs[name] = spec
+            # The mixin wires templates and labels for the fields that exist
+            # when it runs; these are added afterwards, so do it here or they
+            # fall back to Django's own form templates.
+            self._configure_field(name)
+
+    @transaction.atomic
+    def save(self):
+        for name, spec in self._specs.items():
+            spec.save(self.colleague, self.cleaned_data[name])
 
 
 class LabelCategoryRowForm(NlddFormMixin, forms.ModelForm):

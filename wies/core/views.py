@@ -19,7 +19,7 @@ from django.db import transaction
 from django.db.models import Case, Exists, F, Model, OuterRef, Prefetch, Q, Value, When
 from django.db.models.functions import Concat
 from django.forms.utils import ErrorList
-from django.http import Http404, HttpResponse, HttpResponseForbidden, QueryDict
+from django.http import Http404, HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, QueryDict
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -50,6 +50,7 @@ from .forms import (
     LabelCategoryForm,
     LabelCategoryFormSet,
     LabelForm,
+    ProfileLabelsForm,
     ProfileNameForm,
     ServiceFormSet,
     UserForm,
@@ -2081,6 +2082,23 @@ def label_category_edit(request, pk):
 
 
 @login_required
+@require_POST
+def user_theme(request):
+    """Store the display preference of the logged-in user.
+
+    The choice lives on the user rather than in the browser, so it travels to
+    every device and base.html can render it server-side as data-scheme: the
+    screen is correct on first paint, without a flash while loading.
+    """
+    theme = request.POST.get("theme", "")
+    if theme not in User.Theme.values:
+        return HttpResponseBadRequest("Onbekende weergave")
+    request.user.theme = theme
+    request.user.save(update_fields=["theme"])
+    return HttpResponse(status=204)
+
+
+@login_required
 def profile_name_edit(request):
     """Voor- en achternaam van de ingelogde gebruiker, in één sheet.
 
@@ -2111,6 +2129,43 @@ def profile_name_edit(request):
         {
             "content": form,
             "form_post_url": reverse("profile-name-edit"),
+        },
+    )
+
+
+@login_required
+def profile_labels_edit(request):
+    """All label categories of your own profile in one sheet.
+
+    Onboarding asks the same question with the same token fields, but there
+    each field saves itself when the step is left. Here the three land
+    together under one "Opslaan", which is what a sheet promises.
+    """
+    colleague = getattr(request.user, "colleague", None)
+    if colleague is None:
+        raise Http404("Geen collegaprofiel om te bewerken")
+
+    categories = list(LabelCategory.objects.order_by("name"))
+
+    if request.method == "POST":
+        form = ProfileLabelsForm(request.POST, colleague=colleague, categories=categories)
+        if form.is_valid():
+            form.save()
+            response = HttpResponse(status=200)
+            response["HX-Redirect"] = reverse("user-profile")
+            return response
+    else:
+        form = ProfileLabelsForm(colleague=colleague, categories=categories)
+
+    if form.fields:
+        next(iter(form.fields.values())).widget.attrs["autofocus"] = True
+
+    return render(
+        request,
+        "parts/profile_labels_sheet.html",
+        {
+            "content": form,
+            "form_post_url": reverse("profile-labels-edit"),
         },
     )
 

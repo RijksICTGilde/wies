@@ -2,9 +2,20 @@
    base_legal.html, dat een eigen balk met terugknop rendert. #}
 {% if request.user.is_authenticated %}
   <nldd-menu-bar slot="utility" accessible-label="Gebruikersmenu">
-  <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="account" expandable content-priority="text">
+  <nldd-menu-bar-item text="{{ request.user.get_full_name() or request.user.email }}" icon="account" expandable content-priority="text" {% if request.path == url('user-profile') %}current{% endif %}>
   <nldd-menu>
   <nldd-menu-item text="Profiel" icon="person" data-href="{{ url('user-profile') }}"></nldd-menu-item>
+  {# Display submenu: radio items, stored per user (User.theme) and rendered
+     server-side as data-scheme on <html>. The hidden csrf input feeds the
+     fetch in theme_menu.js; the cookie name differs per environment, so the
+     token comes from the markup. #}
+  <nldd-menu-item text="Weergave" icon="paintbrush">
+  <nldd-menu data-theme-url="{{ url('user-theme') }}">
+  <nldd-menu-item data-theme-choice="system" type="radio" text="Systeem" icon="display" {% if request.user.theme == 'system' %}selected{% endif %}></nldd-menu-item>
+  <nldd-menu-item data-theme-choice="light" type="radio" text="Licht" icon="sun" {% if request.user.theme == 'light' %}selected{% endif %}></nldd-menu-item>
+  <nldd-menu-item data-theme-choice="dark" type="radio" text="Donker" icon="moon" {% if request.user.theme == 'dark' %}selected{% endif %}></nldd-menu-item>
+  </nldd-menu>
+  </nldd-menu-item>
   {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
     <nldd-menu-divider></nldd-menu-divider>
     {# Submenu-opener: geen data-href op het item zelf, de keuze gebeurt
@@ -28,4 +39,5 @@
   </nldd-menu>
   </nldd-menu-bar-item>
   </nldd-menu-bar>
+  {{ get_csrf_hidden_input(request) }}
 {% endif %}

@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block title %}
-  Mijn
-  profiel — Wies NDD
+  Mijn profiel · Wies
 {% endblock title %}
 {% block extra_head %}
   <link rel="stylesheet" href="{{ static('css/wies/side_panel.css') }}" />
@@ -54,6 +53,12 @@ empty sidebar #}
       {% endif %}
       {% if not loop.last %}<nldd-spacer size="16" direction="vertical"></nldd-spacer>{% endif %}
     {% endfor %}
+    {# Onder de labels, want de knop wijzigt precies wat erboven staat. Alleen
+       met een collegaprofiel: zonder dat is er niets om labels op te hangen. #}
+    {% if colleague and label_categories %}
+      <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+      <nldd-button size="sm" start-icon="edit" text="Profiel wijzigen" hx-get="{{ url('profile-labels-edit') }}" hx-target="#profileLabelsMount" hx-swap="innerHTML"></nldd-button>
+    {% endif %}
   </div>
   <div slot="right">
     <nldd-title size="4">
@@ -68,6 +73,7 @@ empty sidebar #}
   {# Mount voor de sheet: buiten de sectie, zodat een lege div geen kolom- of
      footerruimte opsnoept. #}
   <div id="profileNameModal"></div>
+  <div id="profileLabelsMount"></div>
 {% endblock content %}
 {% block panel %}
   <nldd-sheet id="side-panel" placement="right" width="480px" accessible-label="Detail">

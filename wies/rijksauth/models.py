@@ -29,6 +29,16 @@ class User(AbstractUser):
     # onboarding wizard. While None, the wizard is shown on every page.
     onboarding_completed_at = models.DateTimeField(null=True, blank=True)
 
+    # Display preference for the NLDD components: rendered server-side as
+    # data-scheme on <html>, so the choice applies before first paint and
+    # travels with the account instead of the browser.
+    class Theme(models.TextChoices):
+        SYSTEM = "system", "Systeem"
+        LIGHT = "light", "Licht"
+        DARK = "dark", "Donker"
+
+    theme = models.CharField(max_length=6, choices=Theme.choices, default=Theme.SYSTEM)
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
 
