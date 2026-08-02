@@ -130,7 +130,6 @@
       var trigger = cell("nldd-icon-button", {
         icon: "more",
         size: "sm",
-        "popup-type": "menu",
         "tooltip-timing": "never",
         text: "Acties voor " + row.label,
       });

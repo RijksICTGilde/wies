@@ -26,7 +26,7 @@
     </nldd-cell>
     <nldd-spacer-cell size="flexible"></nldd-spacer-cell>
     <nldd-cell>
-    <nldd-icon-button size="sm" icon="more" popup-type="menu" tooltip-timing="never" text="Acties voor {{ label.name }}">
+    <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor {{ label.name }}">
     <nldd-menu slot="popup" placement="bottom-end">
     <nldd-menu-item text="Bewerken" icon="edit" hx-get="{{ url('label-form-edit', kwargs={'pk': label.pk}) }}" hx-target="#labelFormModal" hx-swap="innerHTML"></nldd-menu-item>
     <nldd-menu-divider></nldd-menu-divider>
