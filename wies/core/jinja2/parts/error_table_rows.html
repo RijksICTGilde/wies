@@ -1,25 +1,16 @@
 {% for error in object_list %}
-  <nldd-list-item>
-  <nldd-text-cell width="180px" size="sm" color="secondary" text="{{ error.timestamp|datetime_nl }}"></nldd-text-cell>
+  {# De hele rij opent het detail in een sheet: een aparte oogknop ernaast zou
+     hetzelfde doen. Verwijderen zit in die sheet. #}
+  <nldd-list-item button hx-get="{{ url('error-detail', args=[error.id]) }}?pagina={{ page_obj.number }}" hx-target="#errorSheet" hx-swap="innerHTML">
+  <nldd-text-cell text="{{ error.short_description }}" supporting-text="{{ error.exception_message or error.message }}"></nldd-text-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  <nldd-text-cell divider-start text="{{ error.short_description }}" supporting-text="{{ error.exception_message or error.message }}"></nldd-text-cell>
-  <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  {% if error.path %}
-    <nldd-text-cell size="sm" text="{{ error.method }} {{ error.path }}"></nldd-text-cell>
-  {% else %}
-    <nldd-text-cell size="sm" color="secondary" text="{{ error.logger_name }}"></nldd-text-cell>
-  {% endif %}
-  <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  {% if error.user_email %}
-    <nldd-text-cell size="sm" text="{{ error.user_email }}"></nldd-text-cell>
-  {% else %}
-    <nldd-text-cell size="sm" color="secondary" text="-"></nldd-text-cell>
-  {% endif %}
+  {# Relatief, want bij "recente foutmeldingen" wil je weten hoe lang geleden.
+     De exacte tijd staat in het detail. #}
+  <nldd-text-cell width="fit-content" horizontal-alignment="right" size="sm" color="secondary" text="{{ error.timestamp|tijdgeleden }}"></nldd-text-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-cell>
-  <nldd-icon-button size="sm" icon="eye" tooltip-timing="never" text="Details bekijken" href="{{ url('error-detail', args=[error.id]) }}"></nldd-icon-button>
-  <nldd-icon-button size="sm" icon="trash" tooltip-timing="never" text="Foutmelding verwijderen" hx-post="{{ url('delete-error', args=[error.id]) }}?pagina={{ page_obj.number }}" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#error_table_container" hx-swap="innerHTML"></nldd-icon-button>
-  </nldd-cell>
+  <nldd-icon-cell size="20">
+  <nldd-icon name="chevron-right"></nldd-icon>
+  </nldd-icon-cell>
   </nldd-list-item>
 {% else %}
   <nldd-list-item>

@@ -1,0 +1,19 @@
+{# Eén foutmelding, geopend vanuit de lijst op het statistieken-dashboard.
+   placement="right" houdt de lijst ernaast in beeld; op sm klapt de DS de sheet
+   vanzelf om naar een bottom sheet. dialog.js opent hem na de htmx-swap via
+   data-auto-show.
+
+   Verwijderen staat hier en niet meer per rij: het is een destructieve actie op
+   je scanpad, en je gooit een fout pas weg nadat je hem bekeken hebt. De footer
+   is sticky, want een traceback is lang. #}
+<nldd-sheet id="errorDetailSheet" data-auto-show placement="right" width="560px" accessible-label="Foutmelding">
+<nldd-page sticky-header sticky-footer>
+<nldd-top-title-bar slot="header" text="{{ error.short_description }}" collapse-anchor="error-detail-title" dismiss-text="Sluit"></nldd-top-title-bar>
+<nldd-simple-section padding-top="0">
+{% include "parts/error_detail_body.html" %}
+</nldd-simple-section>
+<nldd-container slot="footer" padding="16" padding-top="0">
+<nldd-button variant="destructive" width="full" start-icon="trash" text="Verwijderen" hx-post="{{ url('delete-error', args=[error.id]) }}?pagina={{ pagina }}" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-target="#error_table_container" hx-swap="innerHTML"></nldd-button>
+</nldd-container>
+</nldd-page>
+</nldd-sheet>

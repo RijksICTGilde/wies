@@ -97,38 +97,6 @@
   line-height: 1.4;
 }
 
-/* Error detail page */
-.error-detail__meta {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 0.25rem 1rem;
-  margin: 0 0 1rem;
-}
-
-.error-detail__meta dt {
-  margin: 0;
-}
-
-.error-detail__meta dd {
-  margin: 0;
-}
-
-.error-detail__traceback {
-  margin: 0.5rem 0 0;
-  padding: 1rem;
-  max-height: 60vh;
-  overflow: auto;
-  background: var(--rvo-color-grijs-100, #f3f4f5);
-  border: 1px solid var(--rvo-color-grijs-200, #dde2e7);
-  border-radius: 4px;
-  font-family:
-    ui-monospace, "SF Mono", "Cascadia Code", "Fira Code", Menlo, Consolas,
-    monospace;
-  font-size: 0.8125rem;
-  line-height: 1.5;
-  white-space: pre;
-}
-
 /* Error table: fill the container and never overflow the page */
 #error_table_container .rvo-table--responsive {
   overflow-x: auto;

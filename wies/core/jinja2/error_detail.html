@@ -17,37 +17,6 @@
   <h1>Foutmelding</h1>
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  <dl class="error-detail__meta">
-    <dt>Tijd</dt>
-    <dd>
-      {{ error.timestamp|datetime_nl }}
-    </dd>
-    <dt>Waar</dt>
-    <dd>
-      {% if error.path %}
-        {{ error.method }} {{ error.path }}
-      {% else %}
-        {{ error.logger_name }}
-      {% endif %}
-    </dd>
-    <dt>Gebruiker</dt>
-    <dd>
-      {{ error.user_email or "-" }}
-    </dd>
-    <dt>Versie</dt>
-    <dd>
-      {{ error.app_version or "-" }}
-    </dd>
-  </dl>
-  {% if error.exception_type %}
-    <p><strong>{{ error.exception_type }}: {{ error.exception_message }}</strong></p>
-  {% else %}
-    <p><strong>{{ error.message }}</strong></p>
-  {% endif %}
-  {% if error.traceback %}
-    <pre class="error-detail__traceback">{{ error.traceback }}</pre>
-  {% else %}
-    <p><em>Geen traceback beschikbaar.</em></p>
-  {% endif %}
+  {% include "parts/error_detail_body.html" %}
   </nldd-simple-section>
 {% endblock content %}

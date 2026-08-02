@@ -113,6 +113,35 @@ class StaffErrorsSectionTest(TestCase):
         assert "Terug naar statistieken" in body  # back link, not a modal
         assert "ValueError: kaboom" in body
 
+    def test_error_detail_over_htmx_renders_a_sheet(self):
+        # The row opens the detail in a sheet; the full page stays for direct links.
+        error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Kapot")
+
+        response = self.client.get(f"/beheer/statistieken/fout/{error.id}/", headers={"hx-request": "true"})
+
+        assert response.status_code == 200
+        body = response.content.decode()
+        assert "<nldd-sheet" in body
+        assert "Terug naar statistieken" not in body  # no full page chrome
+
+    def test_row_opens_the_detail_and_carries_no_icon_buttons(self):
+        # The whole row is the control, so the eye is gone; deleting moved to the sheet.
+        error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Kapot")
+
+        response = self.client.get(ERROR_TABLE_URL)
+
+        body = response.content.decode()
+        assert f"/beheer/statistieken/fout/{error.id}/" in body
+        assert "nldd-icon-button" not in body
+        assert "verwijderen/" not in body
+
+    def test_delete_closes_the_detail_sheet(self):
+        error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Weg ermee")
+
+        response = self.client.post(f"/beheer/statistieken/fout/{error.id}/verwijderen/")
+
+        assert response["HX-Trigger"] == "closeModal"
+
     def test_error_detail_requires_staff(self):
         error = ErrorEvent.objects.create(level="ERROR", logger_name="wies", message="Kapot")
         with override_settings(STAFF_EMAILS=["other@rijksoverheid.nl"]):

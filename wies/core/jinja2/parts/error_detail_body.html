@@ -1,0 +1,62 @@
+{# De inhoud van één foutmelding, gedeeld door de sheet vanuit de lijst en de
+   volledige pagina op /beheer/statistieken/fout/<id>/. Eén bron, zodat de twee
+   niet uit elkaar lopen.
+
+   De melding staat als kop plus lopende tekst bovenaan en niet als rij in de
+   lijst: hij is vaak een paar regels lang, en dan trekt een label-cel van 100px
+   ernaast de rij uit z'n verband. De sheet hangt zijn titelbalk aan deze kop
+   (collapse-anchor), zodat de balk pas de foutnaam draagt zodra je eroverheen
+   scrolt. #}
+<nldd-title size="3">
+<h2 id="error-detail-title">{{ error.short_description }}</h2>
+</nldd-title>
+<nldd-spacer size="4" direction="vertical"></nldd-spacer>
+<nldd-rich-text>
+{% if error.exception_type %}
+  <p>{{ error.exception_message }}</p>
+{% else %}
+  <p>{{ error.message }}</p>
+{% endif %}
+</nldd-rich-text>
+<nldd-spacer size="16" direction="vertical"></nldd-spacer>
+{# Boxed, zodat de gegevens en de traceback eronder hetzelfde kader delen. #}
+<nldd-list variant="box" accessible-label="Gegevens van de foutmelding">
+<nldd-list-item>
+<nldd-text-cell width="100px" text="Tijd"></nldd-text-cell>
+<nldd-spacer-cell size="12"></nldd-spacer-cell>
+<nldd-text-cell text="{{ error.timestamp|datetime_nl }}"></nldd-text-cell>
+</nldd-list-item>
+<nldd-list-item>
+<nldd-text-cell width="100px" text="Waar"></nldd-text-cell>
+<nldd-spacer-cell size="12"></nldd-spacer-cell>
+{% if error.path %}
+  <nldd-text-cell text="{{ error.method }} {{ error.path }}"></nldd-text-cell>
+{% else %}
+  <nldd-text-cell text="{{ error.logger_name }}"></nldd-text-cell>
+{% endif %}
+</nldd-list-item>
+<nldd-list-item>
+<nldd-text-cell width="100px" text="Gebruiker"></nldd-text-cell>
+<nldd-spacer-cell size="12"></nldd-spacer-cell>
+<nldd-text-cell text="{{ error.user_email or '–' }}"></nldd-text-cell>
+</nldd-list-item>
+<nldd-list-item>
+<nldd-text-cell width="100px" text="Versie"></nldd-text-cell>
+<nldd-spacer-cell size="12"></nldd-spacer-cell>
+<nldd-text-cell text="{{ error.app_version or '–' }}"></nldd-text-cell>
+</nldd-list-item>
+</nldd-list>
+{% if error.traceback %}
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {# nldd-code-viewer in plaats van een eigen <pre>: die geeft de python-
+     highlighting, een kopieerknop voor het plakken in een issue, en een
+     scrollgebied dat de sheet niet oprekt. #}
+  <nldd-code-viewer language="python" wrap>{{ error.traceback }}</nldd-code-viewer>
+{% else %}
+  <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  <nldd-rich-text>
+  <p>
+    <em>Geen traceback beschikbaar.</em>
+  </p>
+  </nldd-rich-text>
+{% endif %}

@@ -152,6 +152,7 @@ document.addEventListener("closeModal", function () {
     "labelFormModal",
     "userFormModal",
     "clientModalContainer",
+    "errorSheet",
   ];
   modalContainers.forEach((modalId) => {
     const modalContainer = document.getElementById(modalId);
