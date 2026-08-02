@@ -13,14 +13,16 @@
   <h1>Statistieken</h1>
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+  {# De labels dragen een harde spatie tussen getal en "dagen": in een smalle
+     tegel brak "(30 dagen)" anders over twee regels. #}
   {% set _tiles = [
-    (usage.mau, "Maandelijks Actieve Gebruikers (30 dagen)"),
-    (usage.wau, "Wekelijks Actieve Gebruikers (7 dagen)"),
+    (usage.mau, "Maandelijks Actieve Gebruikers (30 dagen)"),
+    (usage.wau, "Wekelijks Actieve Gebruikers (7 dagen)"),
     (usage.total_ever, "Ooit ingelogd"),
-    (usage.total_logins_90d, "Totaal logins (90 dagen)"),
-    (usage.failures_30d, "Mislukte logins (30 dagen)"),
+    (usage.total_logins_90d, "Totaal logins (90 dagen)"),
+    (usage.failures_30d, "Mislukte logins (30 dagen)"),
   ] %}
-  <nldd-collection layout="grid">
+  <nldd-collection layout="grid" gap="16px">
   {% for value, label in _tiles %}
     <nldd-card accessible-label="{{ label }}: {{ value }}">
     <nldd-container padding="16">
@@ -35,6 +37,20 @@
   {% endfor %}
   </nldd-collection>
   <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+  {# Een zusje van "Recente foutmeldingen", geen onderdeel ervan: zelfde
+     h2 met nldd-title size 4, en dezelfde ruimte eromheen. #}
+  <nldd-title size="4">
+  <h2>Dagelijks Actieve Gebruikers (laatste 90 dagen)</h2>
+  </nldd-title>
+  <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+  <div class="staff-chart">
+    {% for day, count in usage.daily_active_users %}
+      <div class="staff-chart__bar"
+           title="{{ day }}: {{ count }}"
+           style="height: {{ (count / usage.max_daily * 100) if usage.max_daily else 0 }}%"></div>
+    {% endfor %}
+  </div>
+  <nldd-spacer size="24" direction="vertical"></nldd-spacer>
   <nldd-title size="4">
   <h2>Recente foutmeldingen</h2>
   </nldd-title>
@@ -45,12 +61,6 @@
        hx-swap="innerHTML">
     <span class="wies-text-secondary">Foutmeldingen laden...</span>
   </div>
-  <h3>Dagelijks Actieve Gebruikers (laatste 90 dagen)</h3>
-  <div class="staff-chart">
-    {% for day, count in usage.daily_active_users %}
-      <div class="staff-chart__bar"
-           title="{{ day }}: {{ count }}"
-           style="height: {{ (count / usage.max_daily * 100) if usage.max_daily else 0 }}%"></div>
-    {% endfor %}
-  </div>
+  {# Een rij uit de tabel swapt hier zijn detail-sheet in. #}
+  <div id="errorSheet"></div>
 {% endblock content %}
