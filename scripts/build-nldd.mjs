@@ -36,7 +36,11 @@ const pkg = JSON.parse(readFileSync(pkgJsonPath, "utf8"));
 // Entry file that re-exports all components — esbuild will include the
 // side-effects (customElements.define) from each imported component.
 const jsEntry = join(pkgRoot, "dist/components/index.js");
-const cssSrc = join(pkgRoot, "dist/css/settings.css");
+// Sinds 0.8.75 is settings.css geknipt: variables.css (custom properties) en
+// rijksoverheid-fonts.css (@font-face). Wies is een Rijksoverheidsproduct,
+// dus beide gaan mee.
+const cssSrc = join(pkgRoot, "dist/css/variables.css");
+const fontsCssSrc = join(pkgRoot, "dist/css/rijksoverheid-fonts.css");
 const richTextCssSrc = join(pkgRoot, "dist/css/rich-text.css");
 // De FOUC-guard zit in de gebundelde `styles`-entry van het pakket, die we hier
 // niet gebruiken omdat we de CSS per bestand ophalen. Zonder deze regel flitsen
@@ -50,6 +54,7 @@ const fontsDir = join(pkgRoot, "dist/fonts");
 for (const f of [
   jsEntry,
   cssSrc,
+  fontsCssSrc,
   richTextCssSrc,
   foucCssSrc,
   formCssSrc,
@@ -119,7 +124,9 @@ function loadAndRewrite(src) {
 }
 
 const combined = [
-  `/* @nldd/design-system ${pkg.version} — settings.css (with inlined imports) */`,
+  `/* @nldd/design-system ${pkg.version} — rijksoverheid-fonts.css */`,
+  loadAndRewrite(fontsCssSrc),
+  `/* @nldd/design-system ${pkg.version} — variables.css (with inlined imports) */`,
   loadAndRewrite(cssSrc),
   `/* @nldd/design-system ${pkg.version} — rich-text.css */`,
   loadAndRewrite(richTextCssSrc),
