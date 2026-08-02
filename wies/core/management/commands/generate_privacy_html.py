@@ -14,7 +14,7 @@ PREAMBLE = """\
 {# AUTO-GENERATED FROM docs/privacy.md by `manage.py generate_privacy_html`. DO NOT EDIT BY HAND. #}
 {% extends "base_legal.html" %}
 {% block title %}
-  Privacy - Wies
+  Privacy · Wies
 {% endblock title %}
 {% block legal_content %}
   <nldd-rich-text>
