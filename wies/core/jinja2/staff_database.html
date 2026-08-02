@@ -15,11 +15,27 @@
   <h1>Database</h1>
   </nldd-title>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
-  <nldd-container layout="wrap" gap="6">
-  <nldd-tag>{{ assignment_count }} opdrachten</nldd-tag>
-  <nldd-tag>{{ colleague_count }} collega's</nldd-tag>
-  <nldd-tag>{{ organization_count }} organisaties</nldd-tag>
-  </nldd-container>
+  {# Dezelfde tegels als op het statistieken-dashboard: een aantal met een
+     label is daar een kaart, en een tag leest als een categorie of een filter. #}
+  {% set _tiles = [
+    (assignment_count, "opdrachten"),
+    (colleague_count, "collega's"),
+    (organization_count, "organisaties"),
+  ] %}
+  <nldd-collection layout="horizontal-scroll" gap="16px" item-width="200px">
+  {% for value, label in _tiles %}
+    <nldd-card accessible-label="{{ label }}: {{ value }}">
+    <nldd-container padding="16">
+    <nldd-title size="2">
+    <p>{{ value }}</p>
+    </nldd-title>
+    <nldd-rich-text>
+    <p>{{ label }}</p>
+    </nldd-rich-text>
+    </nldd-container>
+    </nldd-card>
+  {% endfor %}
+  </nldd-collection>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% if destructive_actions_enabled %}
     <nldd-box>
