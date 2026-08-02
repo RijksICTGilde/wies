@@ -93,8 +93,14 @@ window.syncSheetBackButton = function syncSheetBackButton(sheet) {
     if (isChild) bar.setAttribute("back-text", backText);
     else bar.removeAttribute("back-text");
   }
+  // Alleen wanneer de balk direct boven de sectie staat. Zit er nog iets anders
+  // in de header (een zoekveld bijvoorbeeld), dan levert dat de ruimte al en
+  // houdt de sectie zijn eigen padding.
+  const extraHeader = sheet.querySelector(
+    "[slot='header']:not(nldd-top-title-bar)",
+  );
   const section = sheet.querySelector("nldd-simple-section");
-  if (section) {
+  if (section && !extraHeader) {
     if (isChild) section.removeAttribute("padding-top");
     else section.setAttribute("padding-top", "0");
   }

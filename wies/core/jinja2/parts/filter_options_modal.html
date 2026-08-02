@@ -7,10 +7,11 @@
 <nldd-sheet id="filter-options-modal" placement="left" width="480px" accessible-label="{{ group.label if group else 'Filter' }}" data-group-name="{{ group.name if group else '' }}" data-group-id="{{ group.group_id if group else '' }}">
 <nldd-page sticky-header sticky-footer>
 <nldd-top-title-bar slot="header" text="{{ group.label if group else 'Filter' }}" dismiss-text="Annuleer"></nldd-top-title-bar>
-<nldd-simple-section>
-<nldd-search-field id="filter-options-search" placeholder="Zoeken" accessible-label="Zoeken op {{ group.label if group else '' }}">
+<nldd-container slot="header" padding-inline="16">
+<nldd-search-field autofocus id="filter-options-search" placeholder="Zoeken" accessible-label="Zoeken op {{ group.label if group else '' }}">
 </nldd-search-field>
-<nldd-spacer size="16"></nldd-spacer>
+</nldd-container>
+<nldd-simple-section>
 {# Dezelfde rij-opbouw als de sidebar: de rij is de checkbox, de nldd-checkbox
    erin is puur visueel. Hier submit niets rechtstreeks — de CTA schrijft de
    selectie terug naar de sidebar-groep. #}
@@ -32,7 +33,7 @@
 {% endif %}
 </nldd-list>
 </nldd-simple-section>
-<nldd-container slot="footer" padding="16">
+<nldd-container slot="footer" padding="16" padding-top="0">
 <nldd-button id="filter-options-apply-btn" variant="primary" width="full" text="Pas toe"></nldd-button>
 </nldd-container>
 </nldd-page>

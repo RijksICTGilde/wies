@@ -5,13 +5,14 @@
 <nldd-sheet id="client-modal" placement="left" width="480px" accessible-label="Opdrachtgevers selecteren">
 <nldd-page sticky-header sticky-footer>
 <nldd-top-title-bar slot="header" text="Opdrachtgevers selecteren" dismiss-text="Annuleer"></nldd-top-title-bar>
-<nldd-simple-section>
-<nldd-search-field id="client-search" placeholder="Opdrachtgever zoeken" accessible-label="Opdrachtgever zoeken">
+<nldd-container slot="header" padding-inline="16">
+<nldd-search-field autofocus id="client-search" placeholder="Opdrachtgever zoeken" accessible-label="Opdrachtgever zoeken">
 </nldd-search-field>
-<nldd-spacer size="16"></nldd-spacer>
+</nldd-container>
+<nldd-simple-section>
 <div id="client-tree-container"></div>
 </nldd-simple-section>
-<nldd-container slot="footer" padding="16">
+<nldd-container slot="footer" padding="16" padding-top="0">
 <nldd-container id="client-selection-tokens" layout="wrap" gap="8" hidden></nldd-container>
 <nldd-spacer size="12"></nldd-spacer>
 <nldd-button id="client-apply-btn" variant="primary" width="full" text="Pas toe"></nldd-button>
