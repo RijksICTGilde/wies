@@ -16,12 +16,12 @@
           sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="{{ static('favicon.svg') }}">
     <link rel="shortcut icon" href="/favicon.ico">
-    <link rel="stylesheet" href="{{ static('vendor/nldd/ndd.styles.css') }}">
+    <link rel="stylesheet" href="{{ nldd_asset('ndd.styles.css') }}">
     <link rel="stylesheet" href="{{ static('css/wies/app.css') }}">
     {% block extra_head %}
     {% endblock extra_head %}
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
-    <script defer src="{{ static('vendor/nldd/ndd.bundle.js') }}"></script>
+    <script defer src="{{ nldd_asset('ndd.bundle.js') }}"></script>
     {# Global: rows carrying href + hx-get exist on several pages and arrive in
        htmx swaps too, so this cannot be opted into per page. #}
     <script src="{{ static('js/wies/hx_link_guard.js') }}"></script>

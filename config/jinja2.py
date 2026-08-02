@@ -24,7 +24,7 @@ from wies.core.permission_engine import Verb, has_permission
 from wies.core.permissions import is_staff_member
 from wies.core.services.organizations import get_org_breadcrumb
 from wies.core.services.urls import current_page_path
-from wies.core.services.version import get_app_version
+from wies.core.services.version import get_app_version, get_nldd_version
 
 
 def parse_message_link(extra_tags: str) -> dict | None:
@@ -151,11 +151,24 @@ def get_sort_state(request, field):
     return None
 
 
+def nldd_asset(filename: str) -> str:
+    """URL for a vendored design-system asset, cache-busted on its version.
+
+    The file names are fixed (ndd.bundle.js, ndd.styles.css), so without this a
+    browser can keep serving the previous design system from cache after an
+    upgrade. See get_nldd_version for why production does not need it.
+    """
+    url = static(f"vendor/nldd/{filename}")
+    version = get_nldd_version()
+    return f"{url}?v={version}" if version else url
+
+
 def environment(**options):
     env = Environment(**options)  # noqa: S701 - autoescape handled by Django
     env.globals.update(
         {
             "static": static,
+            "nldd_asset": nldd_asset,
             "url": reverse,
             "get_csrf_token": get_token,
             "get_csrf_hidden_input": get_csrf_hidden_input,
