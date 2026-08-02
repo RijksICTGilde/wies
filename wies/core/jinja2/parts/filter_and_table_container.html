@@ -5,7 +5,7 @@ stay in sync without a wrapper element. #}
 {% if not is_htmx %}
   <nldd-toolbar label="Zoeken en filteren">
   <nldd-toolbar-item slot="start" width="560px" max-width="560px" min-width="240px">
-  <nldd-search-field id="search-input" placeholder="Zoek op collega, opdracht of opdrachtgever…" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input>
+  <nldd-search-field id="search-input" placeholder="Collega, opdracht of opdrachtgever zoeken" value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}" data-wies-search-input>
   </nldd-search-field>
   </nldd-toolbar-item>
   <nldd-toolbar-item id="sidebar-toggle-item" slot="end">
