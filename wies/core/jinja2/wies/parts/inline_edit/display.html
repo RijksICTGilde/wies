@@ -26,11 +26,6 @@ don't toggle layout classes on the target. #}
               aria-label="Bewerk {{ label }}">
         <nldd-icon size="inherit" name="edit" class="edit-icon-button__pencil"></nldd-icon>
       </button>
-    {% elif not user_can_edit and external_source %}
-      <span class="source-lock"
-            data-tooltip="Wordt beheerd in {{ external_source }}">
-        <nldd-icon name="lock-closed" size="16" role="img" aria-label="Vergrendeld"></nldd-icon>
-      </span>
     {% endif %}
   </div>
 </div>
