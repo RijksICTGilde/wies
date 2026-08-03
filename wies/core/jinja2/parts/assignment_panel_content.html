@@ -106,7 +106,7 @@
           <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor opdrachtgever">
           <nldd-menu slot="popup" placement="bottom-end">
           {% if panel_data.user_can_edit %}
-            <nldd-menu-item text="Opdrachtgever wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+            <nldd-menu-item text="Opdrachtgever wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}&veld=organizations" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
           {% endif %}
           <nldd-menu-item text="Bekijk alle opdrachten" icon="stack" data-href="{{ _primary_breadcrumb.url }}"></nldd-menu-item>
           </nldd-menu>
@@ -117,7 +117,7 @@
           <nldd-cell>
           <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor periode">
           <nldd-menu slot="popup" placement="bottom-end">
-          <nldd-menu-item text="Periode wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+          <nldd-menu-item text="Periode wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}&veld=period" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
           </nldd-menu>
           </nldd-icon-button>
           </nldd-cell>
@@ -127,7 +127,7 @@
           <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor Business Manager">
           <nldd-menu slot="popup" placement="bottom-end">
           {% if panel_data.user_can_edit %}
-            <nldd-menu-item text="Business Manager wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+            <nldd-menu-item text="Business Manager wijzigen" icon="edit" hx-get="{{ panel_data.edit_panel_url }}&veld=owner" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
           {% endif %}
           {% if panel_data.owner_display.owner_url %}
             <nldd-menu-item text="Bekijk profiel" icon="user" hx-get="{{ panel_data.owner_display.owner_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>

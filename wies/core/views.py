@@ -132,7 +132,7 @@ def get_delete_context(delete_url_name, object_pk, object_name):
 
 # Query params that drive the side panel; stripped when (re)building a page URL.
 # ``bewerken`` zet het plaatsingspaneel in de bewerkstand (de child sheet).
-PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid")
+PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld")
 
 
 def _url_drop_params(path, query, names, **overrides):
@@ -3811,8 +3811,12 @@ def _build_placement_edit_panel_data(placement, request):
 # eigen child sheet; een formset past niet in dit platte formulier.
 
 
-def _assignment_edit_specs(assignment, user):
-    """De specs van het gecombineerde opdrachtformulier, gefilterd op rechten."""
+def _assignment_edit_specs(assignment, user, only=None):
+    """De specs van het gecombineerde opdrachtformulier, gefilterd op rechten.
+
+    ``only`` (spec-naam) beperkt tot één veld: het ⋯-menu van een rij bewerkt
+    alleen dat veld, het potlood bewerkt alles.
+    """
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
 
     candidates = [
@@ -3822,6 +3826,8 @@ def _assignment_edit_specs(assignment, user):
         AssignmentEditables.period,
         AssignmentEditables.owner,
     ]
+    if only is not None:
+        candidates = [spec for spec in candidates if spec.name == only]
     return [
         (AssignmentEditables, spec, assignment)
         for spec in candidates
@@ -3831,15 +3837,20 @@ def _assignment_edit_specs(assignment, user):
 
 def _build_assignment_edit_panel_data(assignment, request):
     """Context voor de opdracht-bewerk-child-sheet, of None zonder bewerkrechten."""
-    specs = _assignment_edit_specs(assignment, request.user)
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
+
+    only = request.GET.get("veld") or None
+    specs = _assignment_edit_specs(assignment, request.user, only=only)
     if not specs:
         return None
     form_cls, initial = _combined_edit_form_class(specs)
     return {
         "panel_content_template": "parts/assignment_edit_panel_content.html",
         "form": form_cls(initial=initial),
-        "parent_url": _url_drop_params(request.path, request.GET, ("bewerken",)),
-        "edit_url": reverse("assignment-edit", args=[assignment.id]),
+        # Eén-veld-sheet: de titel noemt dat veld ("Business Manager wijzigen").
+        "edit_heading": f"{_spec_label(AssignmentEditables, specs[0][1])} wijzigen" if only else "Opdracht bewerken",
+        "parent_url": _url_drop_params(request.path, request.GET, ("bewerken", "veld")),
+        "edit_url": reverse("assignment-edit", args=[assignment.id]) + (f"?veld={only}" if only else ""),
     }
 
 
@@ -3851,16 +3862,22 @@ def assignment_edit_view(request, pk):
     de ouder-URL (die het paneel opnieuw rendert), bij fouten het formulier
     opnieuw met meldingen. POST-only.
     """
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
+
     assignment = Assignment.objects.filter(pk=pk).first()
     if assignment is None:
         raise Http404("Unknown assignment")
 
-    specs = _assignment_edit_specs(assignment, request.user)
+    # ?veld= beperkt de save tot dat ene veld (het ⋯-menu van een rij), zodat
+    # een één-veld-sheet niet ongemerkt de andere velden meeneemt.
+    only = request.GET.get("veld") or None
+    specs = _assignment_edit_specs(assignment, request.user, only=only)
     if not specs:
         return HttpResponseForbidden()
 
     fallback = _build_panel_url(request, opdracht=assignment.id)
     return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
+    edit_url = reverse("assignment-edit", args=[assignment.id]) + (f"?veld={only}" if only else "")
 
     form_cls, _ = _combined_edit_form_class(specs)
     form = form_cls(request.POST)
@@ -3868,7 +3885,10 @@ def assignment_edit_view(request, pk):
         panel_data = _build_assignment_panel_data(assignment, request)
         panel_data["form"] = form
         panel_data["parent_url"] = return_path
-        panel_data["edit_url"] = reverse("assignment-edit", args=[assignment.id])
+        panel_data["edit_url"] = edit_url
+        panel_data["edit_heading"] = (
+            f"{_spec_label(AssignmentEditables, specs[0][1])} wijzigen" if only else "Opdracht bewerken"
+        )
         return render(request, "parts/assignment_edit_panel_content.html", {"panel_data": panel_data})
 
     with transaction.atomic():
