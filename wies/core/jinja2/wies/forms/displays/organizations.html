@@ -1,7 +1,6 @@
-{# Renders each organization as a path (ancestors > label), with the primary
-   organization tagged when there is more than one. Normaal zijn de delen links
-   naar de gefilterde lijst; met `plain` (meegegeven aan inline_edit) blijft het
-   tekst, voor plekken waar wegnavigeren niet hoort -- zoals de onboarding. #}
+{# Normaal zijn de delen van het pad links naar de gefilterde lijst; met `plain`
+   (meegegeven aan inline_edit) blijft het tekst, voor plekken waar wegnavigeren
+   niet hoort -- zoals de onboarding. #}
 {% if value %}
   {% set base_url = current_page_path(request) %}
   {% for row in value %}

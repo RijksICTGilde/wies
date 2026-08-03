@@ -25,10 +25,6 @@
     (sentinel || form).dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  // ============================================================
-  // SELECTION PANEL
-  // ============================================================
-
   // Above this many the tokens stop helping: they push the CTA off-screen and
   // nobody reads a wall of chips. The count in the button says the same thing.
   var MAX_VISIBLE_TOKENS = 6;
@@ -74,10 +70,6 @@
     }
   }
 
-  // ============================================================
-  // APPLY
-  // ============================================================
-
   if (applyBtn) {
     applyBtn.addEventListener("click", function () {
       var orgInputsContainer = document.getElementById("org-filter-inputs");
@@ -114,10 +106,6 @@
       if (sidebarForm) dispatchFilterChange(sidebarForm);
     });
   }
-
-  // ============================================================
-  // RESTORE
-  // ============================================================
 
   var selectionsEl = document.getElementById("client-current-selections");
   var currentSelections = selectionsEl

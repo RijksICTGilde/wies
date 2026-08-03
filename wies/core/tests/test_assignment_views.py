@@ -605,7 +605,6 @@ class AssignmentEditAttributeTest(TestCase):
         response = self.client.get(reverse("assignment-events-partial", args=[self.assignment.id]))
 
         assert response.status_code == 200
-        # Collection changes render as one running sentence.
         self.assertContains(response, "heeft Java (open) toegevoegd.")
 
     def test_timeline_renders_text_change_inline(self):

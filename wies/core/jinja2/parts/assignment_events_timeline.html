@@ -1,8 +1,6 @@
-{# Update timeline as a plain list: avatar, then one running sentence per
-   event (built by _attach_audit_sentence, commit-message style), with
-   timestamp + event type combined in the overline ("2 uur geleden
-   gewijzigd"). Long values (textarea's en toelichtingen) render as Van/Naar
-   blocks under the sentence, like a commit body under its subject line. #}
+{# Commit-message style: one running sentence per event (built by
+   _attach_audit_sentence), with long values (textarea's) as a Van/Naar
+   "body" under the subject line. #}
 {% if events %}
   <nldd-list accessible-label="Updates">
   {% for event in events %}

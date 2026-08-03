@@ -1,9 +1,5 @@
-/* NDD side panel — minimale styling, nldd-sheet doet het meeste werk.
-   De breedte staat als width-attribuut op de sheet zelf. */
+/* Breedte staat als width-attribuut op de nldd-sheet zelf, niet hier. */
 
-/* --- Panel inner content -------------------------------------------- */
-
-/* Data list (key/value gegevens) */
 .wies-data-list {
   display: grid;
   grid-template-columns: minmax(120px, max-content) 1fr;
@@ -18,9 +14,8 @@
   margin: 0;
 }
 
-/* Assignment cards. De kaart zelf is een nldd-card in een nldd-collection:
-   rand, hover, radius en de overlay-link komen uit het design system. Wat
-   hier rest is de inhoudelijke opmaak binnen de kaart. */
+/* Rand, hover, radius en overlay-link komen uit de nldd-card zelf; hier
+   alleen de opmaak binnen de kaart. */
 .wies-assignment-card__top {
   display: flex;
   justify-content: space-between;
@@ -33,8 +28,8 @@
   margin-top: var(--primitives-space-4, 4px);
 }
 
-/* De teamrijen zijn nu een echte nldd-list met cellen; alleen de avatarstrip
-   binnen een opdrachtkaart ("Collega's op deze opdracht") blijft een eigen rij. */
+/* Teamrijen zijn nu een nldd-list; alleen de avatarstrip in een opdrachtkaart
+   ("Collega's op deze opdracht") blijft een eigen rij en heeft dit nog nodig. */
 .wies-team-list {
   display: flex;
   flex-wrap: wrap;

@@ -1,7 +1,6 @@
-{# Rijmenu van een teamrij (context: svc, pl, member_name, user_can_edit).
-   Een gewone cel in de default slot: de rij zelf is niet interactief — de
-   link is een nldd-list-item-action-segment. Het menu zit in de popup-slot
-   van de knop, die daarmee zelf het ankeren en het openen/sluiten doet. #}
+{# De rij zelf is niet interactief (de link is een
+   nldd-list-item-action-segment); het menu zit in de popup-slot van de knop,
+   die zelf het ankeren en openen/sluiten doet. #}
 {# Ook zonder bewerkrechten heeft een geplaatst lid een menu: "Bekijk
    teamlid" hoort bij kijken, niet bij beheren (bv. een OTYS-opdracht). #}
 {% if user_can_edit or pl %}

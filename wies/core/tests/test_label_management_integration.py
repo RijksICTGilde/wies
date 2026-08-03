@@ -79,21 +79,18 @@ class LabelManagementIntegrationTest(TestCase):
         user = User.objects.get(email="test@rijksoverheid.nl")
         assert label in user.colleague.labels.all()
 
-        # Step 4: Verify user appears in user list view
         response = self.client.get(reverse("admin-users"))
         assert response.status_code == 200
         self.assertContains(response, "Test User")
 
-        # Step 5: Delete the category — the label survives under the catch-all
+        # The label survives the category delete under the catch-all
         response = self.client.post(reverse("label-category-delete", kwargs={"pk": category.id}), follow=True)
         assert response.status_code == 200
 
-        # Verify the category is gone but the label moved to "Overig"
         assert not LabelCategory.objects.filter(id=category.id).exists()
         label.refresh_from_db()
         assert label.category.name == "Overig"
 
-        # And the colleague keeps it
         user.refresh_from_db()
         assert list(user.colleague.labels.all()) == [label]
 
@@ -181,11 +178,9 @@ class LabelManagementIntegrationTest(TestCase):
         response = self.client.post(reverse("label-category-delete", kwargs={"pk": category.id}), follow=True)
         assert response.status_code == 200
 
-        # All three labels moved to the catch-all
         fallback = LabelCategory.objects.get(name="Overig")
         assert set(fallback.labels.values_list("name", flat=True)) == {"Python", "Django", "JavaScript"}
 
-        # And the colleagues kept exactly the labels they had
         colleague1.refresh_from_db()
         colleague2.refresh_from_db()
         assert set(colleague1.labels.values_list("name", flat=True)) == {"Python", "Django"}

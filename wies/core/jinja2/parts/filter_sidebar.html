@@ -11,13 +11,13 @@ daarheen, zodat hx-include ze native meeneemt (rol=1&rol=2 → getlist). #}
       hx-replace-url="true"
       hx-trigger="change from:[data-filter-input], input delay:500ms from:[data-filter-input]"
       hx-include="[data-filter-input]">
-  {# Search filter (verborgen, bijgewerkt door nldd-search-field via bridge) #}
+  {# Bijgewerkt door nldd-search-field via bridge. #}
   <input type="hidden"
          name="zoek"
          id="search-hidden"
          value="{%- if search_filter -%}{{ search_filter }}{%- endif -%}"
          data-filter-input />
-  {# Org filter — hidden inputs, beheerd door client modal #}
+  {# Beheerd door de client modal. #}
   <div id="org-filter-inputs">
     {% for chip in org_chip_data %}
       <input type="hidden"

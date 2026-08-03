@@ -16,8 +16,7 @@
   {% include "parts/filter_and_table_container.html" %}
 {% endblock content %}
 {% block panel %}
-  {# nldd-sheet zit altijd in de DOM; HTMX vult de nldd-page #side-panel-content.
-     De page is een directe child van de sheet: de sheet stretcht alleen ::slotted(nldd-page). #}
+  {# nldd-page moet een directe child van de sheet zijn: de sheet stretcht alleen ::slotted(nldd-page). #}
   <nldd-sheet id="side-panel" placement="right" width="480px" accessible-label="Detail">
   <nldd-page id="side-panel-content" sticky-header>
   {% if panel_data %}

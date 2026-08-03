@@ -217,8 +217,8 @@ class UserViewsTest(TestCase):
             },
         )
 
-        # Should return 200 with form errors: only the sheet's contents come
-        # back, so the open sheet stays put instead of a second one on top.
+        # Only the sheet's contents come back, so the open sheet stays put
+        # instead of a second one stacking on top.
         assert response.status_code == 200
         content = response.content.decode()
         assert "nldd-sheet" not in content
@@ -512,7 +512,6 @@ class UserViewsTest(TestCase):
             },
         )
 
-        # Should return 200 with form errors: only the sheet's contents.
         assert response.status_code == 200
         content = response.content.decode()
         assert "nldd-sheet" not in content
@@ -610,7 +609,6 @@ class UserViewsTest(TestCase):
         assert response.status_code == 200
         content = response.content.decode()
 
-        # Simple integration test - every field renders as an NLDD component
         assert "nldd-form-field" in content
         assert "nldd-checkbox-field" in content
 

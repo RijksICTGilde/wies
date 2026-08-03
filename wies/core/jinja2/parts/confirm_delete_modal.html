@@ -1,5 +1,4 @@
-{# Delete confirmation as an nldd-modal-dialog, mirroring the team-member
-   dialog: primary keeps, destructive deletes. dialog.js opens it after the
+{# Delete confirmation as an nldd-modal-dialog. dialog.js opens it after the
    htmx swap; the destructive button posts and the server answers with an
    HX-Redirect.
 
@@ -14,8 +13,8 @@
 <nldd-modal-dialog data-auto-show text="{{ dialog_text }}" supporting-text="{{ dialog_supporting }}">
 <nldd-button slot="actions" variant="primary" text="{{ cancel_label }}" data-dismiss-modal></nldd-button>
 <nldd-button slot="actions" variant="destructive" text="{{ confirm_label }}" hx-post="{{ form_post_url }}" hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-swap="none"></nldd-button>
-{# Optionele tweede destructieve route (bv. "en de labels erbij"): zelfde
-   endpoint, met extra_confirm_vals als onderscheid in de POST. #}
+{# Tweede destructieve route naar hetzelfde endpoint; extra_confirm_vals is
+   het onderscheid dat de server in de POST ziet. #}
 {% if extra_confirm_label %}
   <nldd-button slot="actions" variant="destructive" text="{{ extra_confirm_label }}" hx-post="{{ form_post_url }}" hx-vals='{{ extra_confirm_vals }}' hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}' hx-swap="none"></nldd-button>
 {% endif %}

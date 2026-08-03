@@ -18,8 +18,7 @@
   </nldd-menu-item>
   {% if request.user.has_perms(['rijksauth.view_user', 'core.view_labelcategory']) %}
     <nldd-menu-divider></nldd-menu-divider>
-    {# Submenu-opener: geen data-href op het item zelf, de keuze gebeurt
-       in het submenu (zelfde opties en condities als de beheer-sidebar). #}
+    {# Zelfde opties en condities als de beheer-sidebar. #}
     <nldd-menu-item text="Beheer" icon="user-admin">
     <nldd-menu>
     <nldd-menu-item text="Gebruikers" icon="users" data-href="{{ url('admin-users') }}"></nldd-menu-item>

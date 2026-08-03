@@ -1,4 +1,4 @@
-{# Truncates text >300 chars OR >5 lines. Toggle in inline_edit.js. #}
+{# Show-more toggle lives in inline_edit.js. #}
 {% if value %}
   {% set lines = value.splitlines() %}
   {% set too_many_chars = value|length > 300 %}

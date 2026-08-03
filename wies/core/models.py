@@ -95,7 +95,7 @@ class LabelCategory(models.Model):
 
     @property
     def nldd_color(self) -> str:
-        """NLDD `color` variant for this category (falls back to neutral)."""
+        """NLDD `color` variant for this category."""
         return self._NLDD_COLOR_BY_HEX.get(self.color, "neutral")
 
     @classmethod

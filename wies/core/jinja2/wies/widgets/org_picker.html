@@ -1,13 +1,11 @@
 {# Widget template for OrgPickerWidget (NLDD variant).
 
-  Renders the raw data only — the button that opens the picker sheet, the
-  hidden formset inputs (each carrying `data-org-name` so the JS can build
-  labels), and the sheet mount point. The visible selection UI is rendered by
+  Renders only the raw formset inputs (each carrying `data-org-name` so the JS
+  can build labels). The visible selection UI is rendered by
   assignment_org_picker.js on page load and after an apply from the sheet. #}
 {% set selections = widget.selections %}
 {% set prefix = widget.prefix %}
 <div id="assignment-org-picker">
-  {# Eerst de gekozen opdrachtgevers, dan pas de knop om er een toe te voegen. #}
   <div id="assignment-org-selections"></div>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   <nldd-button id="assignment-org-trigger-btn" variant="secondary" start-icon="plus" text="Opdrachtgever toevoegen" hx-get="{{ url('client-modal') }}?count_mode=none" hx-target="#assignment-org-modal-container" hx-swap="innerHTML" hx-params="none" hx-push-url="false"></nldd-button>

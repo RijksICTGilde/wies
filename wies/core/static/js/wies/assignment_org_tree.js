@@ -26,10 +26,6 @@
   });
   tree.render().bindSearch(searchInput);
 
-  // ============================================================
-  // SELECTION PANEL
-  // ============================================================
-
   // Above this many the tokens stop helping: they push the CTA off-screen and
   // nobody reads a wall of chips. The count in the button says the same thing.
   var MAX_VISIBLE_TOKENS = 6;
@@ -78,10 +74,6 @@
     });
   }
 
-  // ============================================================
-  // APPLY
-  // ============================================================
-
   // The form side (assignment_org_picker.js) owns the formset inputs and the
   // visible list; it listens for this event. Keeping the two apart means the
   // sheet can be swapped in and thrown away without the form losing state.
@@ -96,10 +88,6 @@
       if (sheet && sheet.hide) sheet.hide();
     });
   }
-
-  // ============================================================
-  // RESTORE
-  // ============================================================
 
   var selectionsEl = document.getElementById(
     "assignment-org-current-selections",

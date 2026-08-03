@@ -154,7 +154,7 @@ class InlineEditInfrastructureTest(TestCase):
         assert "edit=true" in content
         assert "edit-icon-button" in content
         # And a tooltip aiding discoverability now the value isn't clickable.
-        assert 'data-tooltip="Bewerk ' in content
+        assert 'title="Bewerk ' in content
 
     def test_get_edit_returns_form(self):
         resp = self.client.get(self.url + "?edit=true")
@@ -650,7 +650,6 @@ class ProfilePageRenderTest(TestCase):
     def test_profile_page_renders(self):
         response = self.client.get("/profiel/")
         assert response.status_code == 200
-        # De naam staat in de kop, met de knop die de wijzig-sheet opent.
         self.assertContains(response, "Prof Tester")
         self.assertContains(response, reverse("profile-name-edit"))
 
@@ -916,7 +915,6 @@ class AssignmentServicesDisplayTest(TestCase):
         self.assertContains(resp, 'hx-target="#side-panel-content"')
         self.assertContains(resp, "plaatsing=")
         self.assertContains(resp, self.colleague.name)
-        # The filled row is the list item carrying the placement link.
         filled_row = self._row_containing(resp, self.colleague.name)
         assert "hx-get" in filled_row
         assert "plaatsing=" in filled_row

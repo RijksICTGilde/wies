@@ -22,7 +22,7 @@ don't toggle layout classes on the target. #}
               hx-get="{{ edit_url }}?edit=true"
               hx-target="#{{ target }}"
               hx-swap="outerHTML"
-              data-tooltip="Bewerk {{ label|lower }}"
+              title="Bewerk {{ label|lower }}"
               aria-label="Bewerk {{ label }}">
         <nldd-icon size="inherit" name="edit" class="edit-icon-button__pencil"></nldd-icon>
       </button>

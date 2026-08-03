@@ -1,6 +1,5 @@
-{# Wie zit waar — search toolbar, results line and the list, flat in the page
-flow. HTMX swaps the results line (#results) and OOB-swaps the list, so both
-stay in sync without a wrapper element. #}
+{# HTMX swaps the results line (#results) and OOB-swaps the list separately, so
+both stay in sync without a shared wrapper element. #}
 {% set is_htmx = request.headers.get("HX-Request") %}
 {% if not is_htmx %}
   <nldd-toolbar label="Zoeken en filteren">
@@ -13,10 +12,9 @@ stay in sync without a wrapper element. #}
   </nldd-button>
   </nldd-toolbar-item>
   </nldd-toolbar>
-  {# Afkorting-suggesties: htmx vult de items, filter_interactions.js opent en
-  sluit het menu. variant=listbox houdt de focus in het zoekveld. Het menu staat
-  buiten de toolbar: als overlay binnen een nldd-toolbar-item meet Floating UI
-  tegen de layout van dat item en landt de popover links in beeld. #}
+  {# variant=listbox houdt de focus in het zoekveld. Het menu staat buiten de
+  toolbar: als overlay binnen een nldd-toolbar-item meet Floating UI tegen de
+  layout van dat item en landt de popover links in beeld. #}
   <nldd-menu id="search-suggestions" variant="listbox" anchor="search-input" placement="bottom-start" width="560px"></nldd-menu>
   <nldd-spacer size="16"></nldd-spacer>
 {% endif %}
@@ -65,8 +63,6 @@ stay in sync without a wrapper element. #}
   <nldd-spacer size="12"></nldd-spacer>
 {% endif %}
 {% include "parts/placement_table.html" %}
-{# OOB swap: re-render hele filter form zodat counts + checkbox state up-to-date
-zijn #}
 {% if render_filter_fields_oob %}
   {# The form carries the oob attribute itself: a wrapping div would replace the
   form and swallow its slot="sidebar", dropping the filters into the main column. #}

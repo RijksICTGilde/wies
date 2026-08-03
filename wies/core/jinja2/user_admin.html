@@ -39,8 +39,8 @@
   <div id="userFormModal"></div>
 {% endblock content %}
 {% block panel %}
-  {# Zelfde zijsheet als de lijstpagina's: "Profiel bekijken" in het rijmenu
-     swapt het collegapaneel hierin, zonder de beheerpagina te verlaten. #}
+  {# Zelfde zijsheet als de lijstpagina's, zodat "Profiel bekijken" het
+     collegapaneel opent zonder de beheerpagina te verlaten. #}
   <nldd-sheet id="side-panel" placement="right" width="480px" accessible-label="Detail">
   <nldd-page id="side-panel-content" sticky-header>
   {% if panel_data %}

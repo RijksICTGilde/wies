@@ -1,6 +1,6 @@
-{# Real NLDD dropdown: a visual wrapper around a native <select>, so the browser
-   keeps form submission and keyboard handling. The wrapper lives here rather
-   than in field.html so the widget also renders correctly on its own via
+{# Wraps a native <select> so the browser keeps form submission and keyboard
+   handling. The wrapper lives here rather than in field.html so the widget
+   also renders correctly on its own via
    as_widget(). The aria-label sits on the <select> because nldd-form-field's
    label wiring only reaches its first child — the nldd-dropdown host — and that
    never forwards a name inward; NlddFormMixin._configure_field supplies it. #}

@@ -24,10 +24,6 @@ function TreeState(data, options) {
   this._buildIndex(data, null);
 }
 
-// ============================================================
-// INDEX BUILDING
-// ============================================================
-
 TreeState.prototype._buildIndex = function (nodes, parent) {
   for (var i = 0; i < nodes.length; i++) {
     var raw = nodes[i];
@@ -55,10 +51,6 @@ TreeState.prototype._buildIndex = function (nodes, parent) {
   }
 };
 
-// ============================================================
-// PUBLIC API
-// ============================================================
-
 TreeState.prototype.check = function (nodeId) {
   var node = this.nodes.get(String(nodeId));
   if (!node) return;
@@ -67,7 +59,7 @@ TreeState.prototype.check = function (nodeId) {
   this._cascadeDown(node, true);
   this._cascadeUp(node);
 
-  // Add as explicit selection, remove any descendants that are now implied
+  // Descendants are now implied by this selection, so drop them.
   this.explicitSelections.set(node.id, this._getLabel(node));
   this._forEachDescendant(
     node,
@@ -154,10 +146,6 @@ TreeState.prototype.getExplicitSelections = function () {
   return new Map(this.explicitSelections);
 };
 
-// ============================================================
-// CASCADE
-// ============================================================
-
 TreeState.prototype._cascadeDown = function (node, checked) {
   for (var i = 0; i < node.children.length; i++) {
     var child = node.children[i];
@@ -196,10 +184,6 @@ TreeState.prototype._cascadeUp = function (startNode) {
     current = parent;
   }
 };
-
-// ============================================================
-// SELECTION PROMOTION / DEMOTION
-// ============================================================
 
 TreeState.prototype._promoteCheckedChildren = function (node) {
   for (var i = 0; i < node.children.length; i++) {
@@ -246,10 +230,6 @@ TreeState.prototype._demoteAncestors = function (node) {
   }
 };
 
-// ============================================================
-// SEARCH
-// ============================================================
-
 TreeState.nodeMatches = function (node, q) {
   var query = q.toLowerCase();
   if (node.label && node.label.toLowerCase().includes(query)) return true;
@@ -273,10 +253,6 @@ TreeState.collectMatches = function (nodes, q, result) {
   return result;
 };
 
-// ============================================================
-// HELPERS
-// ============================================================
-
 TreeState.prototype._getLabel = function (node) {
   var text = node.label;
   if (node.self) text = 'Direct onder "' + text + '"';
@@ -289,10 +265,6 @@ TreeState.prototype._forEachDescendant = function (node, fn) {
     this._forEachDescendant(node.children[i], fn);
   }
 };
-
-// ============================================================
-// EXPORT
-// ============================================================
 
 if (typeof module !== "undefined" && module.exports) {
   module.exports = TreeState;

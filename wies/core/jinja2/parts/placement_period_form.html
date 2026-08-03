@@ -2,8 +2,6 @@
    wies/parts/inline_edit/form.html, which owns the form element, the
    concurrency token, the non-field errors, the alert and the buttons — deze
    body levert dus alleen de velden (#483).
-   Toont/verbergt de specifieke datumvelden op basis van een checkbox. Bij
-   "Neem opdrachtperiode over" worden de datums met de opdrachtperiode gevuld.
    placement_period_toggle.js leest de opdrachtperiode van [data-placement-period]
    en de velden op naam binnen het omvattende formulier.
    Context: form, obj (Placement instance). #}
@@ -11,7 +9,7 @@
      data-service-start="{{ obj.service.start_date.isoformat() if obj.service.start_date else '' }}"
      data-service-end="{{ obj.service.end_date.isoformat() if obj.service.end_date else '' }}">
   {# Verborgen via een ouder met [hidden]: een `display:none` op de select zelf
-     wordt door de bundel-CSS overruled. De checkbox hieronder zet de waarde. #}
+     wordt door de bundel-CSS overruled. #}
   <div hidden>{{ form.period_source.as_widget() }}</div>
   <nldd-form-field label="Periode">
   <nldd-checkbox-field id="placement-inherit-period" label="Neem opdrachtperiode over" {% if form.period_source.value() == "SERVICE" %}checked{% endif %}></nldd-checkbox-field>

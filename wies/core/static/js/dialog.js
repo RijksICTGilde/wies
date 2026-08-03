@@ -24,7 +24,6 @@ document.addEventListener("htmx:afterSwap", function (e) {
     });
   });
 
-  // NDD: auto-show nldd-window when HTMX loads content.
   // show() reads the <dialog> out of the shadow root and returns silently when
   // it isn't there yet. Right after a swap the element is upgraded but Lit has
   // not rendered, so wait for updateComplete or the modal stays invisible.
@@ -106,9 +105,8 @@ window.syncSheetBackButton = function syncSheetBackButton(sheet) {
   }
 };
 
-// Terug in een child-sheet: een sheet die vanuit een andere sheet is geopend
-// heeft een terugknop in de title bar. Terug betekent hier hetzelfde als
-// sluiten — de sheet eronder staat nog open en komt weer tevoorschijn.
+// Terug in een child-sheet betekent hetzelfde als sluiten — de sheet eronder
+// staat nog open en komt weer tevoorschijn.
 document.addEventListener("back", function (e) {
   const sheet = e.composedPath().find(function (el) {
     return el.localName === "nldd-sheet";

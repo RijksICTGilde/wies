@@ -1,5 +1,5 @@
 // Opdrachtgever sheet: open it after the htmx swap, and empty the mount point
-// once it closes so opening it again works. Cancelling is the title bar dismiss.
+// once it closes so opening it again works.
 (function () {
   "use strict";
 

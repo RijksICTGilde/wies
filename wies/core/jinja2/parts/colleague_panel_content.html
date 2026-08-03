@@ -6,7 +6,7 @@
   </nldd-simple-section>
 {% else %}
   {% set colleague = panel_data.colleague %}
-  {# collapse-anchor: de naam staat in de bar pas zodra de naam in de inhoud eronder wegscrollt. #}
+  {# collapse-anchor: naam verschijnt in de bar pas als hij in de inhoud eronder wegscrollt. #}
   <nldd-top-title-bar slot="header" text="{{ colleague.name }}" collapse-anchor="panel-title" dismiss-text="Sluit"></nldd-top-title-bar>
   <nldd-simple-section padding-top="0">
   <nldd-list no-dividers accessible-label="Collega">

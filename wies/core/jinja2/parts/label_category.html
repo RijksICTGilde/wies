@@ -5,10 +5,10 @@
   <nldd-text-cell text="Label aan {{ category.name }} toevoegen…" color="accent"></nldd-text-cell>
   </nldd-list-item>
 {% endmacro %}
-{# Eén labelcategorie: titel plus de labels als rijen. Categorieën zelf worden
-   beheerd in de sheet achter "Categorieën beheren"; labels lopen via de
-   universele toevoegknop en het more-menu op de regel. Ook de htmx-herrender
-   na een wijziging gebruikt deze partial, dus dit is de enige opmaak. #}
+{# Categorieën zelf worden beheerd in de sheet achter "Categorieën beheren";
+   labels lopen via de universele toevoegknop en het more-menu op de regel.
+   Ook de htmx-herrender na een wijziging gebruikt deze partial, dus dit is de
+   enige opmaak. #}
 <nldd-title size="4">
 <h2>{{ category.name }}</h2>
 </nldd-title>

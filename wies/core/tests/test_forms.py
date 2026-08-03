@@ -33,10 +33,8 @@ class NlddUserFormRenderingTest(TestCase):
         form = UserForm()
         rendered = str(form)
 
-        # Fields are wrapped in the real nldd-form-field component.
         assert "<nldd-form-field" in rendered
 
-        # Text/email inputs are real nldd-text-field components, not plain inputs.
         assert re.search(r'<nldd-text-field[^>]*name="first_name"', rendered, re.DOTALL) is not None
         assert re.search(r'<nldd-text-field[^>]*name="email"', rendered, re.DOTALL) is not None
         assert 'class="nldd-input"' not in rendered
@@ -70,7 +68,6 @@ class NlddUserFormRenderingTest(TestCase):
         form = UserForm()
         rendered = str(form)
 
-        # Required text fields render an nldd-form-field WITHOUT the optional badge.
         first_name_field = re.search(r'<nldd-form-field[^>]*label="Voornaam".*?</nldd-form-field>', rendered, re.DOTALL)
         assert first_name_field is not None
         assert "optional" not in first_name_field.group(0)
@@ -138,7 +135,6 @@ class NlddChoiceWidgetErrorWiringTest(TestCase):
 
         rendered = str(form)
         error_ids = self._first_error_id(rendered)
-        # The colour field's error id must be named on the radio group host.
         assert any(
             re.search(
                 rf'<nldd-radio-button-group[^>]*invalid[^>]*error-message="[^"]*{re.escape(eid)}',
@@ -369,7 +365,6 @@ class NlddFormMixinTest(TestCase):
         form = self._make_nldd_test_form()
         rendered = str(form)
 
-        # A required text field renders an nldd-form-field without the optional badge.
         first_name_field = re.search(r'<nldd-form-field[^>]*label="Voornaam".*?</nldd-form-field>', rendered, re.DOTALL)
         assert first_name_field is not None
         assert "optional" not in first_name_field.group(0)

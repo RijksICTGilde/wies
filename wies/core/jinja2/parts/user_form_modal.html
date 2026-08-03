@@ -1,7 +1,6 @@
-{# Gebruikersformulier als right sheet, zelfde patroon als
-   generic_form_modal.html: "Annuleer" rechtsboven, en een POST komt hier alleen
-   terecht bij een validatiefout — dan gaat alleen de inhoud terug, zodat de
-   openstaande sheet blijft staan. #}
+{# Een POST komt hier alleen terecht bij een validatiefout: dan gaat alleen de
+   inhoud terug zodat de openstaande sheet blijft staan (patroon van
+   generic_form_modal.html). #}
 {% if request.method == "POST" %}
   {% include "parts/user_form_body.html" %}
 {% else %}

@@ -21,7 +21,6 @@
 </nldd-step-indicator>
 </nldd-container>
 <nldd-simple-section data-onboarding-section padding-top="0">
-{# Stap 1: welkom + wat vind je waar + RIG-disclaimer #}
 {% set ns.step = ns.step + 1 %}
 <section data-step="{{ ns.step }}">
   <nldd-title size="4">
@@ -43,7 +42,6 @@
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   <nldd-banner text="Wies bevat op dit moment alleen opdrachten van het Rijks ICT Gilde (RIG) en het Digi Gilde."></nldd-banner>
 </section>
-{# Stap 2: vul je profiel aan (labels + Rijksprofiel) #}
 {% set ns.step = ns.step + 1 %}
 <section data-step="{{ ns.step }}" hidden>
   <nldd-title size="4">
@@ -72,8 +70,7 @@
     </nldd-rich-text>
   {% endif %}
 </section>
-{# Opdracht-check step, shown only when placed on ≥1 assignment. What is
-   editable per field is left to the inline_edit permission rules. #}
+{# What is editable per field is left to the inline_edit permission rules. #}
 {% if onboarding_assignments %}
   {% set ns.step = ns.step + 1 %}
   <section data-step="{{ ns.step }}" hidden>

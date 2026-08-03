@@ -1,8 +1,6 @@
-{# Filter-opties — de volledige lijst van één select-multi groep, als left sheet
-   met dezelfde opbouw als de opdrachtgever-sheet (parts/client_modal.html):
-   zoekveld, lijst met checkbox-rijen, CTA onderaan. Aanvinken filtert niet
-   direct; pas de CTA past de selectie toe. Annuleren zit in de title bar en
-   verwerpt de wijzigingen, net als Escape. #}
+{# Volledige lijst van één select-multi groep, als left sheet (zelfde opbouw als
+   parts/client_modal.html). Aanvinken filtert niet direct; pas de CTA past de
+   selectie toe. Annuleren (title bar of Escape) verwerpt de wijzigingen. #}
 {% set group = (filter_groups | selectattr('group_id', 'equalto', filter_modal_group_id) | list | first) %}
 <nldd-sheet id="filter-options-modal" placement="left" width="480px" accessible-label="{{ group.label if group else 'Filter' }}" data-group-name="{{ group.name if group else '' }}" data-group-id="{{ group.group_id if group else '' }}">
 <nldd-page sticky-header sticky-footer>
@@ -12,9 +10,8 @@
 </nldd-search-field>
 </nldd-container>
 <nldd-simple-section>
-{# Dezelfde rij-opbouw als de sidebar: de rij is de checkbox, de nldd-checkbox
-   erin is puur visueel. Hier submit niets rechtstreeks — de CTA schrijft de
-   selectie terug naar de sidebar-groep. #}
+{# De rij is de checkbox, de nldd-checkbox erin is puur visueel. Hier submit
+   niets rechtstreeks — de CTA schrijft de selectie terug naar de sidebar-groep. #}
 <nldd-list id="filter-options-list" variant="simple" no-dividers accessible-label="{{ group.label if group else 'Filter' }}">
 {% if group %}
   {% for option in group.options if option.value %}

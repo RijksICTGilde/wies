@@ -25,7 +25,7 @@
       data-service-end="{{ panel_data.service.end_date.isoformat() if panel_data.service.end_date else '' }}">
   {% if form.skill %}
     {# Combobox in plaats van de select-widget: de rollenlijst is lang genoeg
-           om te willen typen. value/text komen uit de gekozen optie. #}
+           om te willen typen. #}
     {% set skill_value = form.skill.value() | string if form.skill.value() else "" %}
     <nldd-form-field label="{{ form.skill.label }}">
     <nldd-combo-box name="skill" value="{{ skill_value }}" accessible-label="{{ form.skill.label }}" {% if form.skill.errors %}invalid{% endif %}>

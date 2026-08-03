@@ -54,8 +54,7 @@ def _render_inline(children) -> str:  # noqa: C901 — dispatch table over markd
 
 
 def _render_body(tokens) -> str:
-    # nldd-rich-text styles semantic HTML directly, so we emit plain
-    # <h1>/<h2>/<p>/<ul> without RVO layout wrappers.
+    # nldd-rich-text styles semantic HTML directly, so no RVO layout wrappers.
     out: list[str] = []
 
     i = 0

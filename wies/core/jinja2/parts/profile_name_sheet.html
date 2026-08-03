@@ -1,6 +1,5 @@
-{# Naam wijzigen op de profielpagina: voor- en achternaam in één sheet, zelfde
-   opzet als de andere formuliersheets. Een POST komt hier alleen terecht bij een
-   validatiefout — dan gaat alleen de inhoud terug. #}
+{# Een POST komt hier alleen terecht bij een validatiefout — dan gaat alleen
+   de inhoud terug, niet de hele sheet. #}
 {% if request.method == "POST" %}
   {% include "parts/profile_name_body.html" %}
 {% else %}

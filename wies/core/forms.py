@@ -28,8 +28,7 @@ __all__ = [
 ]
 
 
-#: The colours a label category can carry; LabelCategory maps each hex to an
-#: NLDD colour variant for the tags.
+#: LabelCategory maps each hex to an NLDD colour variant for the tags.
 CATEGORY_COLOR_CHOICES = [
     ("#DCE3EA", "Grijs"),
     ("#B3D7EE", "Blauw"),

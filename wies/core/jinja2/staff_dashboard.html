@@ -43,13 +43,32 @@
   <h2>Dagelijks Actieve Gebruikers (laatste 90 dagen)</h2>
   </nldd-title>
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-  <div class="staff-chart">
+  {# De staven zijn puur visueel; de tabel eronder draagt dezelfde cijfers voor
+     schermlezers en toetsenbord. #}
+  <div class="staff-chart" aria-hidden="true">
     {% for day, count in usage.daily_active_users %}
       <div class="staff-chart__bar"
            title="{{ day }}: {{ count }}"
            style="height: {{ (count / usage.max_daily * 100) if usage.max_daily else 0 }}%"></div>
     {% endfor %}
   </div>
+  <table class="wies-visually-hidden">
+    <caption>Dagelijks actieve gebruikers per dag over de laatste 90 dagen</caption>
+    <thead>
+      <tr>
+        <th scope="col">Datum</th>
+        <th scope="col">Actieve gebruikers</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for day, count in usage.daily_active_users %}
+        <tr>
+          <th scope="row">{{ day }}</th>
+          <td>{{ count }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
   <nldd-spacer size="24" direction="vertical"></nldd-spacer>
   <nldd-title size="4">
   <h2>Recente foutmeldingen</h2>

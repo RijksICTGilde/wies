@@ -217,7 +217,6 @@ class LabelFilteringAndDisplayTest(TestCase):
         response = self.client.get(reverse("admin-users"))
         assert response.status_code == 200
 
-        # Should show user names in the list
         self.assertContains(response, "User One")
         self.assertContains(response, "User Two")
         self.assertContains(response, "User Three")

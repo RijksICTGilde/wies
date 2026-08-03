@@ -8,9 +8,8 @@
   {% include "parts/admin_sidebar.html" %}
 {% endblock sidebar %}
 {% block content %}
-  {# Recursieve rij: een tak is zelf de knop die open- en dichtklapt (de hele
-     regel is dus klikbaar), met een chevron-cel die met expanded meedraait.
-     Bladeren krijgen een spacer van de controlmaat zodat de kolommen uitlijnen.
+  {# Een tak is zelf de knop, zodat de hele regel klikbaar is. Bladeren krijgen
+     een spacer van de controlmaat zodat de kolommen uitlijnen.
      data-label/-abbr voeden admin_org_search.js. #}
   {% macro render_row(node, depth) %}
     {# Geen expanded-attribuut = ingeklapt; admin_org_search.js zet hem om. #}
@@ -24,7 +23,9 @@
     {% else %}
       <nldd-spacer-cell size="32"></nldd-spacer-cell>
     {% endif %}
+    {# djlint:off T028 #}
     <nldd-text-cell text="{{ node.label or node.name }}{%- if node.abbreviations %} ({{ node.abbreviations[0] }}){% endif -%}{%- if node.is_inactive %} (inactief){% endif -%}"></nldd-text-cell>
+    {# djlint:on #}
     {% for child in node.tree_children or [] %}{{ render_row(child, depth + 1) }}{% endfor %}
     </nldd-list-item>
   {% endmacro %}

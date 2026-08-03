@@ -91,12 +91,9 @@
       if (index + 1 < current) step.setAttribute("button", "");
       else step.removeAttribute("button");
     });
-    // Vanaf stap 2 draagt de titelbalk een terugknop plus de kop van deze stap.
     // De knop zegt "Terug" en niet de naam van de vorige stap: die staat al in
-    // de stapindicator, en anders staat dezelfde tekst te vaak in beeld. De kop
-    // De balk draagt de korte stapnaam, verankerd aan de kop in de tekst: zodra
-    // die onder de balk door scrolt, klapt de balk samen tot terugknop plus
-    // naam.
+    // de stapindicator. De balk verankert aan de kop in de tekst, zodat hij bij
+    // wegscrollen samenklapt tot terugknop plus naam.
     if (titleBar) {
       var heading = wizard.querySelector(
         'section[data-step="' + current + '"] [data-step-title]',
@@ -153,8 +150,6 @@
   if (progress) {
     progress.addEventListener("click", function (e) {
       var item = e.target.closest("nldd-step-indicator-item");
-      // Alleen een afgeronde stap is een knop; op een stap die nog komt is de
-      // klik niets meer dan een klik op tekst.
       if (!item || !item.hasAttribute("button")) return;
       var index = Array.prototype.indexOf.call(steps, item);
       if (index >= 0) show(index + 1);

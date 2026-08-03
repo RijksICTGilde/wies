@@ -1,6 +1,5 @@
-{# Echte NLDD combo box: typen filtert, kiezen legt vast. Form-associated, dus
-   hij post onder `name` als een gewone <select>. De opties komen uit een
-   geslot nldd-menu, net als bij nldd-token-field. #}
+{# Form-associated, dus hij post onder `name` als een gewone <select>. De opties
+   komen uit een geslot nldd-menu, net als bij nldd-token-field. #}
 {% set selected_value = "" %}
 {% for group_name, group_choices, group_index in widget.optgroups %}
   {% for option in group_choices %}

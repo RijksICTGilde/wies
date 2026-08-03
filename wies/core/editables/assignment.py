@@ -371,14 +371,12 @@ class AssignmentEditables(EditableSet):
     name = Editable(
         label="Opdrachtnaam",
         error_messages={"required": "Opdrachtnaam is verplicht"},
-        # Eén regel hoog als een gewoon tekstveld, maar een lange naam wordt
-        # afgebroken in plaats van weggescrold.
+        # Textarea zodat een lange naam afbreekt in plaats van wegscrolt.
         widget=forms.Textarea(attrs={"rows": 1}),
     )
 
     extra_info = Editable(
         label="Opdrachtomschrijving",
-        # Twee regels hoog; hij groeit vanzelf mee met langere tekst.
         widget=forms.Textarea(attrs={"rows": 2}),
         display="wies/forms/displays/textarea.html",
     )

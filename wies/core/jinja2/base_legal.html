@@ -1,7 +1,6 @@
-{# Basis voor de legal- en informatiepagina's (privacy, toegankelijkheid,
-   contact). Twee verschillen met base.html: de globale menubalk maakt plaats
-   voor een terugknop naar de app, en de tekst staat in een smallere
-   simple-section zodat de regellengte leesbaar blijft. #}
+{# Basis voor de legal- en informatiepagina's. Twee verschillen met base.html:
+   de globale menubalk maakt plaats voor een terugknop naar de app, en de tekst
+   staat in een smallere simple-section zodat de regellengte leesbaar blijft. #}
 {% extends "base.html" %}
 {% block header %}
   <nldd-top-navigation-bar slot="header" width="1920px" logo-title="Rijksorganisatie voor Ontwikkeling, Digitalisering en Innovatie" website-title="Wies" website-href="{{ url('home') }}" back-href="{{ url('home') }}" back-text="Terug naar Wies">

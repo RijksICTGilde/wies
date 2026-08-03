@@ -4,7 +4,6 @@
 (function () {
   "use strict";
 
-  // --- Tab switching (Gegevens / Updates in the opdracht panel) ---
   // nldd-tab-bar manages its own selected state and fires `tabchange`; we just
   // show the panel referenced by the selected item's data-tab-panel. Delegated
   // on document so it survives HTMX swaps of the panel content.
@@ -150,7 +149,6 @@
       syncPanelBackButton();
     }
 
-    // Click delegation voor data-wies-action knoppen (in panel content)
     document.addEventListener("click", (e) => {
       const path = e.composedPath();
       const btn = path.find(
@@ -166,7 +164,6 @@
       }
     });
 
-    // --- Teamlid verwijderen: bevestigingsdialoog -----------------------
     // Het rijmenu opent de dialoog en geeft naam + actie-URL mee via data-
     // attributen; pas de destructieve knop in de dialoog voert de POST uit.
     document.addEventListener("select", (e) => {
@@ -269,7 +266,6 @@
         // bubbelt; zonder deze check leegden we het paneel bij het sluiten
         // daarvan.
         if (e.target !== sheet) return;
-        // Sync URL state als sheet via backdrop/ESC dichtgaat
         const url = new URL(window.location);
         if (hasPanelParam(url)) {
           panelStack.length = 0;
@@ -283,7 +279,6 @@
       });
     }
 
-    // Browser back/forward
     window.addEventListener("popstate", () => {
       const url = new URL(window.location);
       const hasPanel = hasPanelParam(url);
@@ -298,12 +293,10 @@
     });
   }
 
-  // Na HTMX swap in panel content: open sheet + push history
   document.addEventListener("htmx:afterSettle", (event) => {
     const targetId = event.detail.target && event.detail.target.id;
     if (targetId !== CONTENT_ID) return;
 
-    // Open sheet als hij nog niet open is
     const sheet = getSheet();
     if (sheet && !isSheetOpen(sheet)) openSheet();
 

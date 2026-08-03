@@ -1,18 +1,16 @@
-{# Radio group of nldd-radio-button-fields in ONE nldd-radio-button-group: de
-   groep verzorgt toetsenbordnavigatie en zet de andere knoppen uit, en het veld
-   is form-associated sinds design system 0.8.71, dus de keuze bereikt de POST
-   zonder bridge. De groep geeft zijn `name` door aan de velden.
+{# Eén nldd-radio-button-group om alle velden: de groep verzorgt
+   toetsenbordnavigatie en zet de andere knoppen uit, en het veld is
+   form-associated sinds design system 0.8.71, dus de keuze bereikt de POST
+   zonder bridge.
 
    Let op: bij een platte keuzelijst levert `optgroups` één groep PER OPTIE. De
    nldd-groep staat daarom om de hele lus heen — anders krijgt elke knop zijn
    eigen groep en zetten ze elkaar niet uit. #}
-{# nldd-form-field._findInput() geeft deze groep terug (eerste niet-helper kind)
-   en leest daar `invalid`/`error-message` van af om de foutmelding te tonen en
-   aria-describedby te zetten. De groep krijgt zelf role="radiogroup", dus die
-   aria-koppeling landt op het juiste element. LET OP: nldd-radio-button-group
-   reflecteert geen `invalid`-styling (staat niet in custom-elements.json), dus
-   de groep kleurt niet rood; de foutmelding wordt wél zichtbaar en aangekondigd,
-   wat de toegankelijke minimumeis is. #}
+{# `invalid`/`error-message` staan op de groep omdat nldd-form-field._findInput()
+   dit eerste niet-helper kind teruggeeft en daarvan de foutmelding + aria leest.
+   LET OP: nldd-radio-button-group reflecteert geen `invalid`-styling (staat niet
+   in custom-elements.json), dus de groep kleurt niet rood; de foutmelding wordt
+   wél zichtbaar en aangekondigd, wat de toegankelijke minimumeis is. #}
 <nldd-radio-button-group name="{{ widget.name }}" {% if widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}>
 {% for group_name, group_choices, group_index in widget.optgroups %}
   {% for option_widget in group_choices %}

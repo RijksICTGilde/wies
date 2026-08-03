@@ -37,7 +37,6 @@
     (sentinel || form).dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  // --- Checkbox rows -------------------------------------------------
   // A filter row is an nldd-list-item[checkbox]: the row carries role and
   // state, the nldd-checkbox inside it is decorative, and a hidden native
   // checkbox behind the list is what actually submits. These three helpers
@@ -103,7 +102,6 @@
     });
   }
 
-  // --- nldd-text-field / nldd-date-field: re-filter on change ---------
   // Both are form-associated, so their value reaches the request
   // natively (no hidden-input mirror needed). We only have to nudge the form
   // to re-run the filter when the value changes, since the form's hx-trigger
@@ -120,7 +118,6 @@
     el.addEventListener("input", onChange);
   }
 
-  // --- nldd-search-field: suggestions + Enter-commit ------------------
   // nldd-search-field fires: `input` (typing), `search` (Enter / search
   // button), `change` (blur). We show live suggestions while typing and
   // commit the search (write hidden -> run filter, hide suggestions, blur)
@@ -306,7 +303,6 @@
     });
   }
 
-  // --- nldd-token dismiss -> verwijder filter ------------------------
   function removeFilter(name, value) {
     const form = document.getElementById("filter-form");
     if (!form) return;
@@ -388,7 +384,6 @@
     });
   }
 
-  // --- Opdrachtgever quick checkboxes -------------------------------
   // The top-3 org quick options in the sidebar each carry their own param
   // (org / org_self / org_type). Ticking one writes/removes a hidden input
   // in #org-filter-inputs and re-runs the filter — no modal needed.
@@ -427,7 +422,6 @@
     });
   }
 
-  // --- Filter options sheet -----------------------------------------
   // A sidebar group's "Meer..." row opens filter_options_modal.html into
   // #filter-options-modal-container. Ticking there is deferred: only the CTA
   // writes the selection back to the sidebar group and re-runs the filter.
@@ -597,7 +591,6 @@
     });
   }
 
-  // --- Scan + observe -----------------------------------------------
   function scan(root) {
     if (!root || !root.querySelectorAll) return;
     root.querySelectorAll(NDD_TEXT).forEach(attachTextField);

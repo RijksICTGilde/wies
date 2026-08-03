@@ -1,6 +1,5 @@
-{# Eén opdracht in de controlestap van de onboarding. Ook los gerenderd door
-   onboarding_assignment_edit na het opslaan, met HX-Retarget op deze wrapper,
-   zodat de bijgewerkte gegevens meteen terugkomen. #}
+{# Ook los gerenderd door onboarding_assignment_edit na het opslaan, met
+   HX-Retarget op deze wrapper — vandaar de id-div eromheen. #}
 {% set assignment = entry.assignment %}
 <div id="onboarding-assignment-{{ assignment.id }}">
   <nldd-box>

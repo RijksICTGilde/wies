@@ -115,11 +115,12 @@
           <h3>{{ group.name }}</h3>
           <p class="merge-group__meta">{{ group.count }} opdrachten · eigenaar: {{ group.owner }}</p>
           <table class="merge-table">
+            <caption class="wies-visually-hidden">Overzicht samen te voegen opdrachten in groep {{ group.name }}: per opdracht de consultants en of de opdracht behouden of samengevoegd wordt.</caption>
             <thead>
               <tr>
-                <th class="merge-table__th">#</th>
-                <th class="merge-table__th">Consultant</th>
-                <th class="merge-table__th">Actie</th>
+                <th class="merge-table__th" scope="col">#</th>
+                <th class="merge-table__th" scope="col">Consultant</th>
+                <th class="merge-table__th" scope="col">Actie</th>
               </tr>
             </thead>
             <tbody>

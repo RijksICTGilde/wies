@@ -54,14 +54,8 @@
     this.domNodes = new Map();
   }
 
-  // ============================================================
-  // BUILD
-  // ============================================================
-
   OrgTree.prototype.render = function () {
-    // nldd-list type="tree" gives role="tree"; the rows become treeitem and their
-    // slot="children" the role="group". Branches start collapsed simply by not
-    // carrying `expanded`.
+    // Branches start collapsed simply by not carrying `expanded`.
     var list = cell("nldd-list", {
       type: "tree",
       variant: "simple",
@@ -160,10 +154,6 @@
     return row;
   };
 
-  // ============================================================
-  // SYNC — read state, write DOM
-  // ============================================================
-
   /* Deliberately no `selected` on the row. The checkbox segment already paints
      its own checked fill, and a row-level one bleeds out past the chevron — so a
      row you picked yourself would look different from one that turned on because
@@ -201,10 +191,6 @@
     }
   };
 
-  // ============================================================
-  // SEARCH
-  // ============================================================
-
   OrgTree.prototype.filter = function (query) {
     var self = this;
     var q = query.toLowerCase().trim();
@@ -237,17 +223,13 @@
     });
   };
 
-  // ============================================================
-  // KEYBOARD NAVIGATION (WAI-ARIA Treeview pattern)
-  // ↑/↓ = navigate visible nodes, ←/→ = collapse/expand,
-  // Home/End = first/last node. Space toggles via the focused segment.
-  // ============================================================
+  // Keyboard nav follows the WAI-ARIA Treeview pattern (↑/↓ visible nodes,
+  // ←/→ collapse/expand, Home/End first/last; Space toggles via the segment).
 
   OrgTree.prototype._visibleRows = function () {
     return Array.from(this.container.querySelectorAll("nldd-list-item")).filter(
       function (row) {
         if (row.hidden) return false;
-        // Visible only if every ancestor branch is expanded.
         var parent =
           row.parentElement && row.parentElement.closest("nldd-list-item");
         while (parent) {

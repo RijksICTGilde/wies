@@ -1,7 +1,6 @@
-{# Real NLDD token field: type to filter, chosen values become dismissible
-   tokens. Form-associated — it appends one entry per value under `name`, so
-   Django's getlist() sees the same shape as a native multi-select.
-   Options come from a slotted nldd-menu, exactly like nldd-combo-box. #}
+{# Form-associated: appends one entry per value under `name`, so Django's
+   getlist() sees the same shape as a native multi-select. Options come from a
+   slotted nldd-menu, like nldd-combo-box. #}
 {% set selected = [] %}
 {% for group_name, group_choices, group_index in widget.optgroups %}
   {% for option in group_choices %}

@@ -1,5 +1,4 @@
-{# NDD vacatures — search toolbar, results line and the card grid, flat in the
-page flow. HTMX swaps the results line (#results) and OOB-swaps the grid. #}
+{# HTMX swaps the results line (#results) and OOB-swaps the grid. #}
 {% set is_htmx = request.headers.get("HX-Request") %}
 {% if not is_htmx %}
   <nldd-toolbar label="Zoeken en filteren">
@@ -12,10 +11,9 @@ page flow. HTMX swaps the results line (#results) and OOB-swaps the grid. #}
   </nldd-button>
   </nldd-toolbar-item>
   </nldd-toolbar>
-  {# Afkorting-suggesties: htmx vult de items, filter_interactions.js opent en
-  sluit het menu. variant=listbox houdt de focus in het zoekveld. Het menu staat
-  buiten de toolbar: als overlay binnen een nldd-toolbar-item meet Floating UI
-  tegen de layout van dat item en landt de popover links in beeld. #}
+  {# Menu staat buiten de toolbar: als overlay binnen een nldd-toolbar-item meet
+  Floating UI tegen de layout van dat item en landt de popover links in beeld.
+  variant=listbox houdt de focus in het zoekveld. #}
   <nldd-menu id="search-suggestions" variant="listbox" anchor="search-input" placement="bottom-start" width="560px"></nldd-menu>
   <nldd-spacer size="16"></nldd-spacer>
 {% endif %}
@@ -63,8 +61,8 @@ page flow. HTMX swaps the results line (#results) and OOB-swaps the grid. #}
 {% if not is_htmx %}
   <nldd-spacer size="12"></nldd-spacer>
 {% endif %}
-{# Leeg is een boodschap, geen lege grid. Beide takken dragen hetzelfde id,
-zodat de OOB-swap ze in beide richtingen kan verwisselen. #}
+{# Beide takken dragen hetzelfde id, zodat de OOB-swap ze in beide richtingen
+kan verwisselen. #}
 {% if paginator.count %}
   <nldd-collection id="assignment-card-grid" layout="grid" {% if is_htmx %}hx-swap-oob="outerHTML"{% endif %}>
   {% include "parts/assignment_card_rows.html" %}

@@ -319,7 +319,7 @@ def save_placement_edit(request, placement, specs, cleaned_data):
 
     # Een plaatsingswijziging heeft geen eigen audit-type; PlacementEditables.audit_mirror
     # spiegelt hem als "Team"-event op de tijdlijn van de opdracht, net als de inline-edit-
-    # en "Team bewerken"-flow (#393). De mirror is een context-manager rond de save.
+    # en "Team bewerken"-flow (#393).
     mirror = PlacementEditables.audit_mirror
     with transaction.atomic(), mirror(placement, request.user, request) if mirror else nullcontext():
         save_edit_specs(request, specs, cleaned_data)

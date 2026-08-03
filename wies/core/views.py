@@ -1517,7 +1517,6 @@ class UserListView(PermissionRequiredMixin, ListView):
     def get_template_names(self):
         """Return appropriate template based on request type"""
         if "HX-Request" in self.request.headers:
-            # Het profielpaneel wordt in de zijsheet van deze pagina geswapt.
             if self.request.headers.get("HX-Target") == "side-panel-content":
                 return ["parts/colleague_panel_content.html"]
             # If paginating, return only rows
@@ -2202,7 +2201,6 @@ def label_category_manage(request):
     else:
         formset = LabelCategoryFormSet(queryset=queryset)
 
-    # De sheet opent met de cursor in het eerste naamveld.
     if formset.forms:
         formset.forms[0].fields["name"].widget.attrs["autofocus"] = True
 
@@ -2763,12 +2761,9 @@ def onboarding_complete(request):
     return redirect("home")
 
 
-# --- Onboarding: opdracht wijzigen -------------------------------------------
-#
-# De controlestap toont per opdracht een leesweergave met een "Wijzigen"-knop.
-# Die opent hieronder een bewerkscherm BINNEN het onboardingvenster: één
-# formulier over de opdracht plus je eigen rol(len), opgebouwd uit dezelfde
-# specs als inline edit, zodat save- en auditgedrag identiek blijft.
+# Het onboarding-bewerkscherm bouwt één formulier over de opdracht plus je eigen
+# rol(len) uit dezelfde specs als inline edit, zodat save- en auditgedrag identiek
+# blijft.
 
 
 def _onboarding_entry(request, pk):
@@ -3696,8 +3691,6 @@ def inline_edit_view(request, model_label, pk, name):
     return _render_inline_edit_display(request, editable_set, spec, editables, obj)
 
 
-# --- Plaatsing bewerken (child sheet) ---------------------------------------
-#
 # Het plaatsingspaneel bewerkt drie dingen die over TWEE modellen verdeeld zijn:
 # Service.skill, Service.description en de Placement.period-groep. Een
 # EditableGroup kan dat niet dekken (die hoort bij één model), dus bouwen we hier
@@ -3812,8 +3805,6 @@ def _build_placement_edit_panel_data(placement, request):
     }
 
 
-# --- Opdracht bewerken (child sheet) -----------------------------------------
-#
 # Zelfde patroon als de plaatsing hierboven: alle opdrachtgegevens in één
 # formulier, opgebouwd uit de bestaande specs zodat save- en audit-gedrag
 # identiek blijven aan inline edit. Het teamformulier (een formset) heeft een
@@ -3888,8 +3879,6 @@ def assignment_edit_view(request, pk):
     return response
 
 
-# --- Teamlid bewerken (child sheet, per persoon) -----------------------------
-#
 # De teamlijst bewerkt per LID, niet als één formset: elke rij heeft zijn eigen
 # child sheet (bewerken/toevoegen) en verwijderen gaat via een bevestigings-
 # dialoog. Server-side blijft de bestaande sync- en auditmachinerie van de

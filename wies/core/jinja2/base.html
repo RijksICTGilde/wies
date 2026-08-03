@@ -41,9 +41,7 @@
     <script src="{{ static('js/ui_handlers.js') }}" defer></script>
   </head>
   <body>
-    {# nldd-page is de bladspiegel: navigatie in de header-slot, de
-       sidebar-sectie als groeiende main, de footer in de footer-slot. De main
-       groeit tot de footer onderaan staat, dus de oude min-height-hack
+    {# De main groeit tot de footer onderaan staat, dus de oude min-height-hack
        (calc(100dvh - 120px)) op de sidebar-sectie kan weg. #}
     <nldd-page>
     {% block header %}

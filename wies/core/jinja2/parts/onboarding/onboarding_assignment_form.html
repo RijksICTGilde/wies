@@ -1,7 +1,6 @@
-{# Bewerkscherm binnen het onboardingvenster: één formulier over de opdracht en
-   je eigen rol(len). Per groep een eigen Django-form met prefix, zodat de
-   veldnamen van meerdere rollen niet botsen. Opslaan swapt de bijgewerkte
-   opdrachtbox terug (HX-Retarget in de view) en sluit dit scherm. #}
+{# Per groep een eigen form met prefix, zodat veldnamen van meerdere rollen niet
+   botsen. Opslaan swapt de opdrachtbox terug (HX-Retarget in de view) en sluit
+   dit scherm. #}
 {% set assignment = entry.assignment %}
 {# De terugknop staat in de titelbalk van het venster; onboarding.js zet die
    erbij zodra dit scherm opent. #}

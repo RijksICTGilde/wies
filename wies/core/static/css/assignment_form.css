@@ -35,7 +35,7 @@ form#assignment-create-form .wies-fieldset {
   cursor: pointer;
 }
 
-/* Small, subtle hint (was rvo-text--sm rvo-text--subtle before NLDD). */
+/* Replaces rvo-text--sm rvo-text--subtle (dropped in NLDD migration). */
 .service-period-hint {
   font-size: 0.875rem;
   color: var(--semantics-content-secondary-color, #666);

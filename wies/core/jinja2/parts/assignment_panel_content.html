@@ -22,9 +22,7 @@
     </nldd-rich-text>
   {% endif %}
   <nldd-spacer size="8" direction="vertical"></nldd-spacer>
-  {# De balk onder de titel: de tabs links, bewerken rechts, en verwijderen
-  vast in het overflowmenu van de toolbar. Verwijderen opent de bestaande
-  bevestigingsmodal via #assignmentDeleteModal. #}
+  {# Verwijderen opent de bestaande bevestigingsmodal via #assignmentDeleteModal. #}
   {% if panel_data.show_updates_tab or panel_data.user_can_edit or _can_delete %}
     <nldd-toolbar label="Opdracht">
     {% if panel_data.show_updates_tab %}
@@ -51,8 +49,6 @@
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   {% endif %}
   <div id="tab-panel-gegevens">
-    {# Alleen-lezen rijen: platte waarden, alle acties (bewerken, doorklikken,
-       mailen) via het more-menu aan het einde van de regel. #}
     {% set _base_url = current_page_path(request) %}
     <nldd-list variant="box" accessible-label="Opdrachtgegevens">
     {% set _rows = [
@@ -178,10 +174,8 @@
     {% set user_can_edit = panel_data.user_can_edit_team %}
     {% include "wies/forms/displays/assignment_services.html" %}
     {% if panel_data.user_can_edit_team %}
-      {# Bevestiging voor "Verwijderen" in het rijmenu; side_panel.js vult de
-      naam en de actie-URL vanaf het gekozen menu-item en opent dit venster. #}
-      {# supporting-text wordt door side_panel.js gevuld met naam + team zodra
-      het rijmenu de dialoog opent. #}
+      {# side_panel.js vult naam, supporting-text en actie-URL vanaf het gekozen
+      rijmenu-item en opent dit venster. #}
       <nldd-modal-dialog id="team-member-delete-dialog" text="Uit het team verwijderen?" data-csrf="{{ get_csrf_token(request) }}" data-assignment-name="{{ panel_data.assignment.name }}">
       <nldd-button slot="actions" variant="primary" text="Behoud in team" data-wies-action="team-member-delete-cancel"></nldd-button>
       <nldd-button slot="actions" variant="destructive" text="Verwijder uit team" data-wies-action="team-member-delete-confirm"></nldd-button>

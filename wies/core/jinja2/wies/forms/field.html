@@ -1,8 +1,4 @@
-{# Every field renders inside nldd-form-field: the label, the optional badge and
-   the error wiring all come from the component, so no hand-rolled label or
-   spacing is left anywhere in the form.
-
-   nldd-form-field only reveals an error text when the input reflects `invalid`
+{# nldd-form-field only reveals an error text when the input reflects `invalid`
    and points at it by id via `error-message` — without that wiring the messages
    render at height 0 and screen readers never announce them. Elke widget zet die
    wiring nu zelf op het element dat _findInput() teruggeeft (zie de widget-

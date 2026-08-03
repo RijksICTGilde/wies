@@ -9,13 +9,8 @@
 {# No sidebar on profile page — base.html auto-hides
 empty sidebar #}
 {% block content %}
-  {# Profielgegevens links (1/3), opdrachten rechts (2/3); de naam staat boven
-     beide kolommen, met de knop die hem wijzigt in dezelfde regel. Geen eigen
-     breedte: de sectie houdt de standaard paginabreedte aan. #}
+  {# Geen eigen breedte: de sectie houdt de standaard paginabreedte aan. #}
   <nldd-one-third-two-thirds-section>
-  {# Alles over de persoon staat links: kop met naam en wijzigknop, daaronder
-     de labels. In die smalle kolom staat de categorienaam boven zijn labels,
-     niet ernaast. #}
   <div slot="left">
     <nldd-list no-dividers accessible-label="Profiel">
     <nldd-list-item>

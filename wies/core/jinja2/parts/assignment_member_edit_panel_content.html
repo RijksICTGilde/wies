@@ -1,10 +1,7 @@
-{# Child sheet van het opdrachtpaneel: één teamlid (bewerken of toevoegen).
-   Opgezet zoals de "Rol bewerken"-sheet van de plaatsing: alleen
-   nldd-componenten, combo-box voor de rol en de periode als segmented
-   control met "Einddatum is bekend"-switch (member_form.js stuurt het
-   gedrag). Het formulier post nog steeds één formset-rij; de server vult de
-   overige teamrijen zelf aan, dus deze POST kan nooit ongewild andere leden
-   raken (zie assignment_member_edit_view). #}
+{# Child sheet van het opdrachtpaneel: één teamlid (bewerken of toevoegen),
+   opgezet zoals de "Rol bewerken"-sheet van de plaatsing. Het formulier post
+   één formset-rij; de server vult de overige teamrijen zelf aan, dus deze POST
+   kan nooit ongewild andere leden raken (zie assignment_member_edit_view). #}
 {% set formset = panel_data.member_formset %}
 {% set svc_form = formset.forms[0] %}
 {% set obj = panel_data.assignment %}

@@ -1,7 +1,5 @@
-{# Alle categorieën in één sheet. Elke rij is een naamveld plus een kleurkeuze
-   (de tags op de profiel-, plaatsing- en collegapanelen dragen die kleur), met
-   aan het einde een verwijderknop. Onderaan een rij om een categorie toe te
-   voegen en de opslaanknop.
+{# De kleurkeuze per categorie kleurt de tags op de profiel-, plaatsing- en
+   collegapanelen.
 
    Hernoemen en toevoegen zijn gestapeld tot "Opslaan"; verwijderen gaat direct
    na de bevestiging, omdat de labels eronder dan verhuizen. #}
@@ -59,8 +57,8 @@
 </nldd-form>
 </nldd-simple-section>
 </nldd-page>
-{# Sjabloon voor een nieuwe rij; label_category_manage.js kloont hem en telt
-   TOTAL_FORMS op. Buiten het formulier zodat de lege velden niet meeposten. #}
+{# Buiten het formulier zodat de lege sjabloonvelden niet meeposten;
+   label_category_manage.js kloont de rij naar binnen. #}
 <template data-category-row-template>
   <nldd-list-item data-category-row>
   <nldd-cell width="full"><nldd-text-field name="form-__prefix__-name" accessible-label="Naam nieuwe categorie"></nldd-text-field></nldd-cell>

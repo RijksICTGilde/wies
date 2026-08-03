@@ -1,8 +1,7 @@
-{# Opdrachtkaarten voor het collegapaneel en de profielpagina. Zelfde opbouw als
-   de kaarten op de aanvragenpagina (parts/assignment_card_rows.html): titel,
-   rollen als tags, en opdrachtgever/periode in de footer-slot zodat die regels
-   in elke kaart van een rij op dezelfde hoogte staan.
+{# Opdrachtkaarten voor het collegapaneel en de profielpagina.
    Verwacht: assignments (list), hx_target (string).
+   Opdrachtgever/periode staan in de footer-slot zodat die regels in elke kaart
+   van een rij op dezelfde hoogte uitlijnen.
    `href` houdt het een echte link; hx_link_guard.js vangt de klik zodat htmx
    het paneel vult in plaats van te navigeren. #}
 {% if assignments %}

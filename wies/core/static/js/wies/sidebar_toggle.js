@@ -2,8 +2,7 @@
 //
 // The "Filters" button (#sidebar-toggle) drives the
 // <nldd-sidebar-section>'s own sheet: the section renders the sidebar as a
-// sticky aside on wide screens and collapses it to a left sheet when narrower;
-// toggle() opens/closes that sheet.
+// sticky aside on wide screens and collapses it to a left sheet when narrower.
 (function () {
   "use strict";
 
