@@ -673,6 +673,8 @@ class Command(BaseCommand):
                 end_date=end,
                 extra_info="",
                 owner=rng.choice(colleagues),
+                # Gevarieerde opdracht-status zodat het BM-bord gevuld is.
+                status=rng.choice(["LEAD", "OPEN", "INGEVULD", "GESLOTEN"]),
                 source=weighted_choice(rng, SOURCE_WEIGHTS),
                 source_id="",
             )

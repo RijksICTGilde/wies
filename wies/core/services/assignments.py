@@ -398,3 +398,39 @@ def assignment_edit_specs(assignment, user, only=None):
         for spec in candidates
         if has_permission(Verb.UPDATE, assignment, user, spec)
     ]
+
+
+def create_assignment_from_specs(cleaned_data: dict) -> Assignment:
+    """Maak een Assignment uit de cleaned_data van het gecombineerde opdracht-
+    formulier (dezelfde specs als de bewerk-sheet). Diensten/rollen komen daarna
+    via het opdrachtpaneel, dus hier nog geen services_data.
+    """
+    orgs = cleaned_data.get("organizations") or []
+    primary_org = next((o["organization"] for o in orgs if o["role"] == "PRIMARY"), None)
+    involved_orgs = [o["organization"] for o in orgs if o["role"] == "INVOLVED"]
+    return create_assignment_from_form(
+        name=cleaned_data["name"],
+        extra_info=cleaned_data.get("extra_info", ""),
+        start_date=cleaned_data.get("start_date"),
+        end_date=cleaned_data.get("end_date"),
+        owner=cleaned_data.get("owner"),
+        primary_organization_id=primary_org.id if primary_org else None,
+        involved_organization_ids=[o.id for o in involved_orgs],
+    )
+
+
+def assignment_create_specs():
+    """De specs voor het aanmaak-formulier: dezelfde opdrachtvelden als de
+    bewerk-sheet, maar zonder object (er is nog geen Assignment) en zonder
+    per-object permissiecheck — aanmaken wordt op ``core.add_assignment`` gegate.
+    """
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
+
+    specs = [
+        AssignmentEditables.name,
+        AssignmentEditables.extra_info,
+        AssignmentEditables.organizations,
+        AssignmentEditables.period,
+        AssignmentEditables.owner,
+    ]
+    return [(AssignmentEditables, spec, None) for spec in specs]

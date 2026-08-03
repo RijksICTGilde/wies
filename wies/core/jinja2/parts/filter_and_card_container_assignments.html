@@ -10,6 +10,11 @@
   <nldd-button id="sidebar-toggle" variant="secondary" start-icon="list-decreasing-lines" text="Filter">
   </nldd-button>
   </nldd-toolbar-item>
+  {% if primary_button %}
+    <nldd-toolbar-item slot="end">
+    {% include "parts/primary_button.html" %}
+    </nldd-toolbar-item>
+  {% endif %}
   </nldd-toolbar>
   {# Menu staat buiten de toolbar: als overlay binnen een nldd-toolbar-item meet
   Floating UI tegen de layout van dat item en landt de popover links in beeld.

@@ -135,7 +135,7 @@ def get_delete_context(delete_url_name, object_pk, object_name):
 
 # Query params that drive the side panel; stripped when (re)building a page URL.
 # ``bewerken`` zet het plaatsingspaneel in de bewerkstand (de child sheet).
-PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld")
+PANEL_PARAMS = ("pagina", "collega", "opdracht", "plaatsing", "bewerken", "teamlid", "veld", "match")
 
 
 def _url_drop_params(path, query, names, **overrides):
@@ -211,6 +211,10 @@ def _build_assignment_panel_data(assignment, request):
         member_panel = _build_assignment_member_panel_data(assignment, request)
         if member_panel is not None:
             data.update(member_panel)
+    elif request.GET.get("match"):
+        match_panel = _build_assignment_match_panel_data(assignment, request)
+        if match_panel is not None:
+            data.update(match_panel)
     return data
 
 
@@ -1408,11 +1412,18 @@ class AssignmentListView(ListView):
         else:
             context["next_page_url"] = None
 
-        # Primary button for assignment creation (BDM permission)
+        # Primary button for assignment creation (BDM permission). Opent de
+        # aanmaak-sheet in het zijpaneel; ?terug= laat de sheet na aanmaken het
+        # nieuwe opdrachtpaneel op deze pagina openen.
         if self.request.user.has_perm("core.add_assignment"):
             context["primary_button"] = {
                 "button_text": "Opdracht invoeren",
-                "href": reverse("assignment-create"),
+                "attrs": {
+                    "hx-get": reverse("assignment-create-sheet") + "?terug=" + reverse("assignment-list"),
+                    "hx-target": "#side-panel-content",
+                    "hx-swap": "innerHTML",
+                    "hx-push-url": "false",
+                },
             }
 
         # Side panel
@@ -3884,6 +3895,73 @@ def _build_assignment_member_panel_data(assignment, request):
     }
 
 
+# --- Match beschikbare collega op één aanvraag (child sheet) ------------------
+#
+# Het ⋯-menu van een open aanvraag opent "Match beschikbare collega" via
+# ?match=<service-id>: een sheet met collega's zonder lopende plaatsing die op de
+# skill van díe aanvraag matchen. Een klik plaatst de collega op díe dienst.
+
+
+def _build_assignment_match_panel_data(assignment, request):
+    """Context voor de match-child-sheet, of None zonder rechten/onbekende dienst."""
+    from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
+    from wies.core.services.placements import available_colleagues  # noqa: PLC0415
+
+    if not has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services):
+        return None
+
+    try:
+        service_id = int(request.GET.get("match", ""))
+    except ValueError:
+        return None
+    row = next((r for r in _services_initial(assignment) if r["id"] == service_id), None)
+    # Alleen een open aanvraag (geen plaatsing) is te matchen.
+    if row is None or row["is_filled"] != "aanvraag":
+        return None
+
+    skill_ids = [int(row["skill"])] if row["skill"] else None
+    colleagues = list(available_colleagues(skill_ids=skill_ids)[:50])
+
+    return {
+        "panel_content_template": "parts/assignment_match_panel_content.html",
+        "match_colleagues": colleagues,
+        "match_role": row["skill_name"] or "onbekende rol",
+        "match_place_url": reverse("assignment-match-place", args=[assignment.id, service_id]),
+        "parent_url": _url_drop_params(request.path, request.GET, ("match",)),
+    }
+
+
+@require_POST
+def assignment_match_place(request, pk, service_id):
+    """Plaats de gekozen collega op één specifieke open dienst van de opdracht."""
+    from wies.core.editables.assignment import AssignmentEditables, _services_initial  # noqa: PLC0415
+    from wies.core.services.assignments import apply_team_change, initial_row_to_services_data  # noqa: PLC0415
+
+    assignment = Assignment.objects.filter(pk=pk).first()
+    if assignment is None:
+        raise Http404("Unknown assignment")
+    if not has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services):
+        return HttpResponseForbidden()
+
+    colleague = Colleague.objects.filter(pk=request.POST.get("collega")).first()
+    rows = _services_initial(assignment)
+    target = next((r for r in rows if r["id"] == service_id and r["is_filled"] == "aanvraag"), None)
+    if colleague is None or target is None:
+        return HttpResponse(status=422)
+
+    services_data = [initial_row_to_services_data(r) for r in rows]
+    for svc in services_data:
+        if svc["id"] == service_id:
+            svc["colleague_id"] = colleague.id
+            svc["status"] = "OPEN"
+    apply_team_change(request, assignment, services_data)
+
+    return_path = _safe_return_path(request.POST.get("terug_url"), _build_panel_url(request, opdracht=assignment.id))
+    response = HttpResponse(status=204)
+    response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
+    return response
+
+
 @require_POST
 def assignment_member_edit_view(request, pk):
     """Sla één teamlid op uit de child sheet (bewerken of toevoegen).
@@ -3963,3 +4041,99 @@ def assignment_member_delete_view(request, pk, service_id):
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
     return response
+
+
+@login_required
+def bm_board(request):
+    """PoC: kanban-bord van de diensten waarvan de ingelogde gebruiker BM is."""
+    from wies.core.services.board import COLUMNS, build_bm_board  # noqa: PLC0415 — PoC, lokaal
+
+    colleague = getattr(request.user, "colleague", None)
+    board = build_bm_board(colleague)
+    columns = [{"key": key, "label": label, "cards": board[key]} for key, label in COLUMNS]
+    # Zelfde "Opdracht invoeren"-knop als de Aanvragen-lijst: opent de
+    # aanmaak-sheet in het zijpaneel van het bord.
+    primary_button = None
+    if request.user.has_perm("core.add_assignment"):
+        primary_button = {
+            "button_text": "Opdracht invoeren",
+            "attrs": {
+                "hx-get": reverse("assignment-create-sheet") + "?terug=" + reverse("bm-board"),
+                "hx-target": "#side-panel-content",
+                "hx-swap": "innerHTML",
+                "hx-push-url": "false",
+            },
+        }
+    return render(request, "bm_board.html", {"columns": columns, "primary_button": primary_button})
+
+
+@require_POST
+@login_required
+def bm_board_move(request, assignment_id):
+    """PoC: sla een sleep-actie op het bord op — zet de status van de opdracht.
+
+    Alleen de BM (owner) van de opdracht mag slepen. 204 bij succes; 422 bij een
+    onbekende statuskolom zodat het JS de kaart terugzet.
+    """
+    from wies.core.services.board import move_assignment_to_status  # noqa: PLC0415 — PoC, lokaal
+
+    colleague = getattr(request.user, "colleague", None)
+    assignment = Assignment.objects.filter(pk=assignment_id).first()
+    if assignment is None or colleague is None or assignment.owner_id != colleague.id:
+        return HttpResponseForbidden()
+
+    status = request.POST.get("kolom", "")
+    if not move_assignment_to_status(assignment, status):
+        return HttpResponse(status=422)
+    return HttpResponse(status=204)
+
+
+@login_required
+def assignment_create_sheet(request):
+    """Maak een opdracht aan via het zijpaneel — hergebruikt het opdracht-
+    formulier van de bewerk-sheet (naam, omschrijving, opdrachtgever, periode,
+    BM). Diensten/rollen voeg je daarna toe in het opdrachtpaneel.
+
+    GET: de sheet met een leeg formulier. POST: aanmaken en via HX-Location naar
+    het nieuwe opdrachtpaneel. Alleen voor wie opdrachten mag aanmaken.
+    """
+    from wies.core.services.assignments import assignment_create_specs, create_assignment_from_specs  # noqa: PLC0415
+
+    if not request.user.has_perm("core.add_assignment"):
+        return HttpResponseForbidden()
+
+    specs = assignment_create_specs()
+    form_cls, initial = build_combined_form_class(specs)
+    return_to = _safe_return_path(request.GET.get("terug") or request.POST.get("terug_url"), reverse("assignment-list"))
+
+    if request.method == "POST":
+        form = form_cls(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                assignment = create_assignment_from_specs(form.cleaned_data)
+            # Het bord rendert geen opdrachtpaneel, dus daar herladen we de pagina
+            # (de nieuwe kaart verschijnt in de juiste kolom). Op de lijst openen
+            # we het nieuwe opdrachtpaneel via HX-Location.
+            if return_to == reverse("bm-board"):
+                response = HttpResponse(status=204)
+                response["HX-Redirect"] = return_to
+                return response
+            sep = "&" if "?" in return_to else "?"
+            path = f"{return_to}{sep}opdracht={assignment.id}"
+            response = HttpResponse(status=204)
+            response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
+            return response
+    else:
+        # Voorvullen: de aanmaker is doorgaans zelf de BM.
+        if getattr(request.user, "colleague", None):
+            initial["owner"] = request.user.colleague
+        form = form_cls(initial=initial)
+
+    panel_data = {
+        "form": form,
+        "edit_url": reverse("assignment-create-sheet"),
+        "parent_url": return_to,
+        "edit_heading": "Opdracht invoeren",
+        "submit_label": "Aanmaken",
+    }
+    return render(request, "parts/assignment_create_panel_content.html", {"panel_data": panel_data})

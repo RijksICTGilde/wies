@@ -344,3 +344,28 @@ def save_placement_edit(request, placement, specs, cleaned_data):
     mirror = PlacementEditables.audit_mirror
     with transaction.atomic(), mirror(placement, request.user, request) if mirror else nullcontext():
         save_edit_specs(request, specs, cleaned_data)
+
+
+def available_colleagues(today=None, skill_ids=None):
+    """Collega's zonder lopende plaatsing vandaag = 'beschikbaar'.
+
+    ``skill_ids`` (optioneel) beperkt tot collega's met minstens één van die
+    skills, zodat een opdracht z'n eigen rollen kan voorstellen. Zonder skills
+    komt iedereen beschikbare terug.
+    """
+    from django.utils import timezone  # noqa: PLC0415
+
+    from wies.core.models import Colleague, Placement  # noqa: PLC0415
+    from wies.core.querysets import annotate_placement_dates  # noqa: PLC0415
+
+    today = today or timezone.now().date()
+    active = annotate_placement_dates(Placement.objects.all()).filter(
+        Q(actual_start_date__isnull=True) | Q(actual_start_date__lte=today),
+        Q(actual_end_date__isnull=True) | Q(actual_end_date__gte=today),
+    )
+    busy_ids = set(active.values_list("colleague_id", flat=True))
+
+    qs = Colleague.objects.exclude(id__in=busy_ids)
+    if skill_ids:
+        qs = qs.filter(skills__id__in=skill_ids).distinct()
+    return qs.order_by("name")

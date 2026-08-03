@@ -10,6 +10,10 @@
   {% if user_can_edit %}
     <nldd-menu-item text="{{ 'Rol en periode wijzigen' if pl else 'Aanvraag wijzigen' }}" icon="edit" hx-get="?opdracht={{ svc.assignment_id }}&teamlid={{ svc.id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
   {% endif %}
+  {% if user_can_edit and not pl %}
+    {# Alleen bij een open aanvraag: match een beschikbare collega op deze rol. #}
+    <nldd-menu-item text="Match beschikbare collega" icon="users" hx-get="?opdracht={{ svc.assignment_id }}&match={{ svc.id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
+  {% endif %}
   {% if pl %}
     <nldd-menu-item text="Bekijk teamlid" icon="person" hx-get="?plaatsing={{ pl.id }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
   {% endif %}

@@ -1,0 +1,56 @@
+.bm-board__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* PoC: BM-kanban-bord. Vier gelijke kolommen; op smal scherm scrollt de rij
+   horizontaal in plaats van de kolommen te versmallen. */
+.bm-board {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(240px, 1fr);
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+  align-items: start;
+}
+
+/* De kolom is enkel een layout-wrapper: titel + de nldd-list-box eronder. De
+   box (variant="box") levert zelf de rand/fill, dus hier geen eigen achtergrond. */
+.bm-board__column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bm-board__column-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.25rem;
+}
+
+.bm-board__column-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+/* De kolom-lijst is ook de dropzone; een min-hoogte zodat je ook op een lege
+   kolom kunt neerzetten. */
+.bm-board [data-board-dropzone] {
+  min-height: 3rem;
+  border-radius: 6px;
+}
+
+.bm-board [data-board-dropzone].is-drop-target {
+  outline: 2px dashed var(--semantics-content-accent-color, #154273);
+  outline-offset: 2px;
+}
+
+/* Het gesleepte item (cross-column) dimt tijdens de sleep. */
+[data-board-card].is-dragging {
+  opacity: 0.5;
+}

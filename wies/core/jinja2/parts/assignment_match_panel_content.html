@@ -1,0 +1,35 @@
+{# Child sheet: beschikbare collega's (geen lopende plaatsing) die matchen op de
+   rol van deze aanvraag. Klik op "Plaats" doet een POST; bij succes komt het
+   opdrachtpaneel terug (assignment_match_place). #}
+<nldd-top-title-bar slot="header" text="Match beschikbare collega" collapse-anchor="panel-title" back-text="{{ panel_data.assignment.name }}" dismiss-text="Sluit"></nldd-top-title-bar>
+<nldd-simple-section padding-top="0">
+<nldd-title size="3">
+<h3 id="panel-title">Match beschikbare collega</h3>
+</nldd-title>
+<nldd-spacer size="8" direction="vertical"></nldd-spacer>
+{% if not panel_data.match_colleagues %}
+  <nldd-banner variant="neutral" text="Geen beschikbare collega's gevonden voor de rol {{ panel_data.match_role }}."></nldd-banner>
+{% else %}
+  <nldd-rich-text>
+  <p class="wies-text-secondary">Beschikbare collega's voor de rol <strong>{{ panel_data.match_role }}</strong> (geen lopende plaatsing).</p>
+  </nldd-rich-text>
+  <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  <nldd-list variant="box" accessible-label="Beschikbare collega's">
+  {% for collega in panel_data.match_colleagues %}
+    <nldd-list-item>
+    <nldd-title-cell size="6" text="{{ collega.name }}" supporting-text="{{ collega.skills.all() |map(attribute='name')|join(', ') }}"></nldd-title-cell>
+    <nldd-cell horizontal-alignment="right">
+    <form hx-post="{{ panel_data.match_place_url }}"
+          hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+          hx-target="#side-panel-content"
+          hx-swap="innerHTML">
+      <input type="hidden" name="collega" value="{{ collega.id }}">
+      <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
+      <nldd-button type="submit" variant="secondary" size="sm" text="Plaats"></nldd-button>
+    </form>
+    </nldd-cell>
+    </nldd-list-item>
+  {% endfor %}
+  </nldd-list>
+{% endif %}
+</nldd-simple-section>

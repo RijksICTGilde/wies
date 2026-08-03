@@ -53,6 +53,7 @@
     <nldd-list variant="box" accessible-label="Opdrachtgegevens">
     {% set _rows = [
       ("Externe bron", "source"),
+      ("Status", "status"),
       ("Opdrachtgevers" if panel_data.organization_count > 1 else "Opdrachtgever", "organizations"),
       ("Periode", "period"),
       ("Plaatsingsdatum", "created_at"),
@@ -66,7 +67,10 @@
         <nldd-text-cell width="140px" text="{{ row_label }}"></nldd-text-cell>
         <nldd-spacer-cell size="8"></nldd-spacer-cell>
         <nldd-text-cell>
-        {% if row_kind == "source" %}
+        {% if row_kind == "status" %}
+          {% set _status_color = {"LEAD": "neutral", "OPEN": "accent", "INGEVULD": "success", "GESLOTEN": "neutral"} %}
+          <nldd-tag size="sm" color="{{ _status_color.get(panel_data.assignment.status, 'neutral') }}" text="{{ panel_data.assignment.get_status_display() }}"></nldd-tag>
+        {% elif row_kind == "source" %}
           {% if panel_data.assignment.source_url %}
             <a href="{{ panel_data.assignment.source_url }}" target="_blank">
               {{ panel_data.assignment.get_source_display() }}

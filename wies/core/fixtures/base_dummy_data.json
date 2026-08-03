@@ -1173,6 +1173,7 @@
       "end_date": "2026-03-02",
       "extra_info": "",
       "owner": 6,
+      "status": "LEAD",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1186,6 +1187,7 @@
       "end_date": "2026-08-26",
       "extra_info": "",
       "owner": 43,
+      "status": "OPEN",
       "source": "wies",
       "source_id": ""
     }
@@ -1199,6 +1201,7 @@
       "end_date": "2023-07-16",
       "extra_info": "",
       "owner": 35,
+      "status": "INGEVULD",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1212,6 +1215,7 @@
       "end_date": "2023-07-08",
       "extra_info": "",
       "owner": 29,
+      "status": "GESLOTEN",
       "source": "wies",
       "source_id": ""
     }
@@ -1225,6 +1229,7 @@
       "end_date": "2028-02-14",
       "extra_info": "",
       "owner": 9,
+      "status": "LEAD",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1238,6 +1243,7 @@
       "end_date": "2026-08-10",
       "extra_info": "",
       "owner": 14,
+      "status": "OPEN",
       "source": "wies",
       "source_id": ""
     }
@@ -1251,6 +1257,7 @@
       "end_date": "2026-05-05",
       "extra_info": "",
       "owner": 3,
+      "status": "INGEVULD",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1264,6 +1271,7 @@
       "end_date": "2026-10-31",
       "extra_info": "",
       "owner": 36,
+      "status": "GESLOTEN",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1277,6 +1285,7 @@
       "end_date": "2023-12-20",
       "extra_info": "",
       "owner": 9,
+      "status": "LEAD",
       "source": "wies",
       "source_id": ""
     }
@@ -1290,6 +1299,7 @@
       "end_date": "2023-05-10",
       "extra_info": "",
       "owner": 50,
+      "status": "OPEN",
       "source": "wies",
       "source_id": ""
     }
@@ -1303,6 +1313,7 @@
       "end_date": "2023-12-31",
       "extra_info": "",
       "owner": 12,
+      "status": "INGEVULD",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1316,6 +1327,7 @@
       "end_date": "2024-07-10",
       "extra_info": "",
       "owner": 3,
+      "status": "GESLOTEN",
       "source": "wies",
       "source_id": ""
     }
@@ -1329,6 +1341,7 @@
       "end_date": "2026-08-25",
       "extra_info": "",
       "owner": 2,
+      "status": "LEAD",
       "source": "wies",
       "source_id": ""
     }
@@ -1342,6 +1355,7 @@
       "end_date": "2026-09-14",
       "extra_info": "",
       "owner": 44,
+      "status": "OPEN",
       "source": "wies",
       "source_id": ""
     }
@@ -1355,6 +1369,7 @@
       "end_date": "2023-10-12",
       "extra_info": "",
       "owner": 17,
+      "status": "INGEVULD",
       "source": "wies",
       "source_id": ""
     }
@@ -1368,6 +1383,7 @@
       "end_date": "2027-06-18",
       "extra_info": "",
       "owner": 37,
+      "status": "GESLOTEN",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1381,6 +1397,7 @@
       "end_date": "2027-05-06",
       "extra_info": "",
       "owner": 24,
+      "status": "LEAD",
       "source": "wies",
       "source_id": ""
     }
@@ -1394,6 +1411,7 @@
       "end_date": "2024-11-21",
       "extra_info": "",
       "owner": 43,
+      "status": "OPEN",
       "source": "wies",
       "source_id": ""
     }
@@ -1407,6 +1425,7 @@
       "end_date": "2026-10-20",
       "extra_info": "",
       "owner": 40,
+      "status": "INGEVULD",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1420,6 +1439,7 @@
       "end_date": "2026-07-04",
       "extra_info": "",
       "owner": 29,
+      "status": "GESLOTEN",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1433,6 +1453,7 @@
       "end_date": "2027-01-31",
       "extra_info": "",
       "owner": 33,
+      "status": "LEAD",
       "source": "wies",
       "source_id": ""
     }
@@ -1446,6 +1467,7 @@
       "end_date": "2027-02-21",
       "extra_info": "",
       "owner": 13,
+      "status": "OPEN",
       "source": "wies",
       "source_id": ""
     }
@@ -1459,6 +1481,7 @@
       "end_date": "2023-07-17",
       "extra_info": "",
       "owner": 45,
+      "status": "INGEVULD",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1472,6 +1495,7 @@
       "end_date": "2026-04-27",
       "extra_info": "",
       "owner": 45,
+      "status": "GESLOTEN",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1485,6 +1509,7 @@
       "end_date": "2027-02-04",
       "extra_info": "",
       "owner": 30,
+      "status": "LEAD",
       "source": "wies",
       "source_id": ""
     }
@@ -1498,6 +1523,7 @@
       "end_date": "2027-09-26",
       "extra_info": "",
       "owner": 28,
+      "status": "OPEN",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1511,6 +1537,7 @@
       "end_date": "2025-10-17",
       "extra_info": "",
       "owner": 41,
+      "status": "INGEVULD",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1524,6 +1551,7 @@
       "end_date": "2026-10-30",
       "extra_info": "",
       "owner": 22,
+      "status": "GESLOTEN",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1537,6 +1565,7 @@
       "end_date": "2026-06-05",
       "extra_info": "",
       "owner": 27,
+      "status": "LEAD",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -1550,6 +1579,7 @@
       "end_date": "2026-02-18",
       "extra_info": "",
       "owner": 49,
+      "status": "OPEN",
       "source": "wies",
       "source_id": ""
     }
@@ -1563,6 +1593,7 @@
       "end_date": "2026-12-31",
       "extra_info": "",
       "owner": 6,
+      "status": "INGEVULD",
       "source": "otys_iir",
       "source_id": ""
     }
@@ -4639,6 +4670,7 @@
       "end_date": "2026-12-31",
       "extra_info": "Een opdracht met uitgebreide wijzigingshistorie, bedoeld om de tijdlijn goed te kunnen testen.",
       "owner": null,
+      "status": "GESLOTEN",
       "source": "wies",
       "source_id": ""
     }
