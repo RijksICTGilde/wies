@@ -9,7 +9,7 @@ from wies.core.editables.assignment import AssignmentEditables
 from wies.core.editables.user import UserEditables
 
 from .form_mixins import RvoErrorList, RvoFormMixin, RvoJinja2Renderer
-from .models import Colleague, Label, LabelCategory, Skill
+from .models import Colleague, Label, LabelCategory, Skill, Suborganization
 from .services.users import validate_email_domain
 from .widgets import MultiselectDropdown
 
@@ -25,6 +25,7 @@ __all__ = [
     "RvoFormMixin",
     "RvoJinja2Renderer",
     "ServiceForm",
+    "SuborganizationForm",
     "UserForm",
 ]
 
@@ -48,6 +49,26 @@ class LabelCategoryForm(RvoFormMixin, forms.ModelForm):
     class Meta:
         model = LabelCategory
         fields = ["name", "color"]
+
+
+class SuborganizationForm(RvoFormMixin, forms.ModelForm):
+    """Form for creating and updating Suborganization instances"""
+
+    name = forms.CharField(label="Naam", required=True)
+
+    class Meta:
+        model = Suborganization
+        fields = ["name"]
+
+    def clean_name(self):
+        new_name = self.cleaned_data["name"]
+        qs = Suborganization.objects.filter(name__iexact=new_name)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            msg = "Naam wordt al gebruikt"
+            raise ValidationError(msg)
+        return new_name
 
 
 class LabelForm(RvoFormMixin, forms.ModelForm):
@@ -100,6 +121,12 @@ class UserForm(RvoFormMixin, forms.ModelForm):
         required=False,
         widget=forms.CheckboxSelectMultiple(),
     )
+    suborganization = forms.ModelChoiceField(
+        label="Merk",
+        queryset=Suborganization.objects.all(),
+        required=False,
+        empty_label=" ",
+    )
 
     # Init will create category_* fields for the different label categories
 
@@ -122,8 +149,15 @@ class UserForm(RvoFormMixin, forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Map labels stored on model to separate fields per category, which are dynamically generated
         instance = kwargs.get("instance")
+
+        # Pre-select the colleague's current merk when editing an existing user
+        # (suborganization isn't in Meta.fields, so ModelForm won't populate it).
+        if instance and hasattr(instance, "colleague") and instance.colleague is not None:
+            self.fields["suborganization"].initial = instance.colleague.suborganization_id
+        self._configure_field_for_rvo("suborganization")
+
+        # Map labels stored on model to separate fields per category, which are dynamically generated
         self._category_field_names = set()
         for category in LabelCategory.objects.all():
             field_name = f"category_{category.name}"

@@ -29,14 +29,6 @@
             <p class="rvo-text">
               <strong>{{ result.users_created }}</strong> gebruiker(s) geïmporteerd
             </p>
-            {% if result.labels_created > 0 %}
-              <p class="rvo-text">
-                <strong>{{ result.labels_created }}</strong> nieuw(e) label(s) aangemaakt:
-              </p>
-              <ul class="rvo-list">
-                {% for label_name in result.created_labels %}<li>{{ label_name }}</li>{% endfor %}
-              </ul>
-            {% endif %}
           </div>
           {# Warnings if any #}
           {% if result.errors and result.errors|length > 0 %}

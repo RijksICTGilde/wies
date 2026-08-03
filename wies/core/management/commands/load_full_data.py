@@ -25,6 +25,7 @@ from wies.core.models import (
     Placement,
     Service,
     Skill,
+    Suborganization,
 )
 from wies.core.services.organizations import get_org_descendant_ids, sync_organizations
 
@@ -659,6 +660,14 @@ class Command(BaseCommand):
                     colleague_labels.extend(rng.sample(labels, n))
                 colleague.labels.set(colleague_labels)
             self.stdout.write("Colleague labels assigned")
+
+        # ── 4c. Colleague suborganization (exactly one per colleague) ────
+        suborganizations = list(Suborganization.objects.all())
+        if suborganizations:
+            for colleague in colleagues:
+                colleague.suborganization = rng.choice(suborganizations)
+                colleague.save(update_fields=["suborganization"])
+            self.stdout.write("Colleague suborganizations assigned")
 
         # ── 5. Assignments ───────────────────────────────────────────────
         assignments = []

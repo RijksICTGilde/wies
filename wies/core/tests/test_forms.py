@@ -17,9 +17,9 @@ class RvoFormMixinTest(TestCase):
     def setUp(self):
         """Create test data"""
         # Create test labels
-        self.category, _ = LabelCategory.objects.get_or_create(name="Merk", defaults={"color": "#0066CC"})
-        self.label_a = Label.objects.create(name="Brand A", category=self.category)
-        self.label_b = Label.objects.create(name="Brand B", category=self.category)
+        self.category, _ = LabelCategory.objects.get_or_create(name="Expertise", defaults={"color": "#0066CC"})
+        self.label_a = Label.objects.create(name="AI", category=self.category)
+        self.label_b = Label.objects.create(name="ICT", category=self.category)
 
         # Create test groups for checkbox rendering
         self.admin_group = Group.objects.create(name="Beheerder")
@@ -99,9 +99,9 @@ class RvoFormMixinTest(TestCase):
         # groups is optional - should NOT have rvo-label--required
         groups_label_match = re.search(r'<label[^>]*id="label-groups"[^>]*>(.*?)</label>', rendered, re.DOTALL)
         assert groups_label_match is not None
-        brand_label = groups_label_match.group(0)
-        assert "rvo-label--required" not in brand_label
-        assert "rvo-label" in brand_label  # Should still have base class
+        groups_label = groups_label_match.group(0)
+        assert "rvo-label--required" not in groups_label
+        assert "rvo-label" in groups_label  # Should still have base class
 
     def test_form_has_no_required_attribute(self):
         """
