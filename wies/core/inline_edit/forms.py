@@ -155,3 +155,25 @@ def save_spec(
         spec.save(obj, cleaned_data)
         return
     save_editables(editables, cleaned_data, obj)
+
+
+def build_combined_form_class(specs, *, bound_obj=None):
+    """Eén formulierklasse over meerdere specs, plus de initial-waarden.
+
+    ``specs`` is een lijst van ``(editable_set, spec, obj)``. Voor de child sheets
+    die velden over twee modellen bundelen (Service + Placement, of alle
+    opdrachtvelden in één formulier): de veldnamen botsen niet, dus ze kunnen plat
+    in één formulier. Een groep-``clean`` (zoals de periodevalidatie) blijft gelden.
+    """
+    editables: list[Editable] = []
+    initial: dict = {}
+    group_clean = None
+    for editable_set, spec, obj in specs:
+        spec_editables = resolve_editables(editable_set, spec)
+        editables.extend(spec_editables)
+        for e in spec_editables:
+            initial[e.field or e.name] = _current_value(obj, e)
+        if getattr(spec, "clean", None):
+            group_clean = spec.clean
+    form_cls, _ = build_form_class(editables, obj=bound_obj, group_clean=group_clean)
+    return form_cls, initial

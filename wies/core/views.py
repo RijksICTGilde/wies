@@ -37,6 +37,7 @@ from wies.core.inline_edit.base import (
 )
 from wies.core.inline_edit.forms import (
     _current_value,
+    build_combined_form_class,
     build_form_class,
     resolve_editables,
 )
@@ -73,6 +74,7 @@ from .permissions import is_staff_member
 from .querysets import annotate_placement_dates, annotate_usage_counts
 from .services.assignments import (
     apply_team_change,
+    assignment_edit_specs,
     create_assignment_from_form,
     extract_services_data,
     initial_row_to_services_data,
@@ -88,6 +90,7 @@ from .services.organizations import (
 from .services.placements import (
     create_assignments_from_csv,
     filter_visible_placements,
+    placement_edit_specs,
     save_placement_edit,
 )
 from .services.tasks import create_task, get_latest_tasks, has_active_task
@@ -184,7 +187,7 @@ def _build_assignment_panel_data(assignment, request):
             (note[0].lower() + note[1:] for row in team_rows if (note := row.get("privacy_warning_text"))),
             "",
         ),
-        "user_can_edit": bool(_assignment_edit_specs(assignment, request.user)),
+        "user_can_edit": bool(assignment_edit_specs(assignment, request.user)),
         "user_can_edit_team": has_permission(Verb.UPDATE, assignment, request.user, AssignmentEditables.services),
         "show_updates_tab": assignment.source != "otys_iir",
         "organization_count": assignment.organization_relations.count(),
@@ -426,7 +429,7 @@ def _build_placement_panel_data(placement, request, *, visibility=None):
         "past_assignments": [a for a in other_assignments if a["historical"]],
         # Eén "Bewerken"-knop opent de child sheet; hij verschijnt alleen als er
         # ook echt iets te bewerken valt.
-        "user_can_edit_details": bool(_placement_edit_specs(placement, request.user)),
+        "user_can_edit_details": bool(placement_edit_specs(placement, request.user)),
         "edit_panel_url": _build_panel_url(request, plaatsing=placement.id, bewerken=1),
     }
 
@@ -2792,11 +2795,11 @@ def _onboarding_edit_groups(request, entry, data=None):
 
     assignment_specs = [
         (editable_set, spec, obj)
-        for (editable_set, spec, obj) in _assignment_edit_specs(assignment, request.user)
+        for (editable_set, spec, obj) in assignment_edit_specs(assignment, request.user)
         if spec is not AssignmentEditables.owner
     ]
     if assignment_specs:
-        form_cls, initial = _combined_edit_form_class(assignment_specs)
+        form_cls, initial = build_combined_form_class(assignment_specs)
         groups.append(
             {
                 # Geen kopje: de titel van het scherm noemt de opdracht al.
@@ -2815,7 +2818,7 @@ def _onboarding_edit_groups(request, entry, data=None):
         ]
         if not service_specs:
             continue
-        form_cls, initial = _combined_edit_form_class(service_specs)
+        form_cls, initial = build_combined_form_class(service_specs)
         groups.append(
             {
                 # Alleen een kopje als er meer dan één rol is; anders spreken de
@@ -3698,44 +3701,6 @@ def inline_edit_view(request, model_label, pk, name):
 # save- en audit-machinerie van inline_edit_view.
 
 
-def _placement_edit_specs(placement, user):
-    """De bewerkbare specs voor dit plaatsingspaneel, elk met hun eigen object.
-
-    Alleen specs waarvoor de gebruiker UPDATE-rechten heeft komen terug, zodat
-    het formulier nooit een veld toont dat bij opslaan geweigerd zou worden.
-    """
-    from wies.core.editables.placement import PlacementEditables  # noqa: PLC0415 — avoids import cycle
-    from wies.core.editables.service import ServiceEditables  # noqa: PLC0415
-
-    service = placement.service
-    candidates = [
-        (ServiceEditables, ServiceEditables.skill, service),
-        (ServiceEditables, ServiceEditables.description, service),
-        (PlacementEditables, PlacementEditables.period, placement),
-    ]
-    return [(s, spec, obj) for (s, spec, obj) in candidates if has_permission(Verb.UPDATE, obj, user, spec)]
-
-
-def _combined_edit_form_class(specs, *, bound_obj=None):
-    """Eén formulierklasse over alle toegestane specs, plus de initial-waarden.
-
-    De veldnamen van de drie specs botsen niet, dus ze kunnen plat in één
-    formulier. De clean van de periodegroep blijft gelden.
-    """
-    editables: list[Editable] = []
-    initial: dict = {}
-    group_clean = None
-    for editable_set, spec, obj in specs:
-        spec_editables = resolve_editables(editable_set, spec)
-        editables.extend(spec_editables)
-        for e in spec_editables:
-            initial[e.field or e.name] = _current_value(obj, e)
-        if getattr(spec, "clean", None):
-            group_clean = spec.clean
-    form_cls, _ = build_form_class(editables, obj=bound_obj, group_clean=group_clean)
-    return form_cls, initial
-
-
 def _safe_return_path(raw: str | None, fallback: str) -> str:
     """Alleen een pad op deze site; anders de fallback.
 
@@ -3768,14 +3733,14 @@ def placement_edit_view(request, pk):
     if placement is None or _resolve_placement_panel(request, pk) is None:
         raise Http404("Unknown placement")
 
-    specs = _placement_edit_specs(placement, request.user)
+    specs = placement_edit_specs(placement, request.user)
     if not specs:
         return HttpResponseForbidden()
 
     fallback = _build_panel_url(request, plaatsing=placement.id)
     return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
 
-    form_cls, _ = _combined_edit_form_class(specs)
+    form_cls, _ = build_combined_form_class(specs)
     form = form_cls(request.POST)
     if not form.is_valid():
         panel_data = _build_placement_panel_data(placement, request)
@@ -3793,10 +3758,10 @@ def placement_edit_view(request, pk):
 
 def _build_placement_edit_panel_data(placement, request):
     """Context voor de bewerk-child-sheet, of None zonder bewerkrechten."""
-    specs = _placement_edit_specs(placement, request.user)
+    specs = placement_edit_specs(placement, request.user)
     if not specs:
         return None
-    form_cls, initial = _combined_edit_form_class(specs)
+    form_cls, initial = build_combined_form_class(specs)
     return {
         "panel_content_template": "parts/placement_edit_panel_content.html",
         "form": form_cls(initial=initial),
@@ -3811,39 +3776,15 @@ def _build_placement_edit_panel_data(placement, request):
 # eigen child sheet; een formset past niet in dit platte formulier.
 
 
-def _assignment_edit_specs(assignment, user, only=None):
-    """De specs van het gecombineerde opdrachtformulier, gefilterd op rechten.
-
-    ``only`` (spec-naam) beperkt tot één veld: het ⋯-menu van een rij bewerkt
-    alleen dat veld, het potlood bewerkt alles.
-    """
-    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
-
-    candidates = [
-        AssignmentEditables.name,
-        AssignmentEditables.extra_info,
-        AssignmentEditables.organizations,
-        AssignmentEditables.period,
-        AssignmentEditables.owner,
-    ]
-    if only is not None:
-        candidates = [spec for spec in candidates if spec.name == only]
-    return [
-        (AssignmentEditables, spec, assignment)
-        for spec in candidates
-        if has_permission(Verb.UPDATE, assignment, user, spec)
-    ]
-
-
 def _build_assignment_edit_panel_data(assignment, request):
     """Context voor de opdracht-bewerk-child-sheet, of None zonder bewerkrechten."""
     from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
 
     only = request.GET.get("veld") or None
-    specs = _assignment_edit_specs(assignment, request.user, only=only)
+    specs = assignment_edit_specs(assignment, request.user, only=only)
     if not specs:
         return None
-    form_cls, initial = _combined_edit_form_class(specs)
+    form_cls, initial = build_combined_form_class(specs)
     return {
         "panel_content_template": "parts/assignment_edit_panel_content.html",
         "form": form_cls(initial=initial),
@@ -3871,7 +3812,7 @@ def assignment_edit_view(request, pk):
     # ?veld= beperkt de save tot dat ene veld (het ⋯-menu van een rij), zodat
     # een één-veld-sheet niet ongemerkt de andere velden meeneemt.
     only = request.GET.get("veld") or None
-    specs = _assignment_edit_specs(assignment, request.user, only=only)
+    specs = assignment_edit_specs(assignment, request.user, only=only)
     if not specs:
         return HttpResponseForbidden()
 
@@ -3879,7 +3820,7 @@ def assignment_edit_view(request, pk):
     return_path = _safe_return_path(request.POST.get("terug_url"), fallback)
     edit_url = reverse("assignment-edit", args=[assignment.id]) + (f"?veld={only}" if only else "")
 
-    form_cls, _ = _combined_edit_form_class(specs)
+    form_cls, _ = build_combined_form_class(specs)
     form = form_cls(request.POST)
     if not form.is_valid():
         panel_data = _build_assignment_panel_data(assignment, request)

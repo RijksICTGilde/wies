@@ -310,6 +310,27 @@ def create_assignments_from_csv(creator, csv_content: str, request=None):
         }
 
 
+def placement_edit_specs(placement, user):
+    """De bewerkbare specs voor het plaatsingspaneel, elk met hun eigen object.
+
+    Drie velden verdeeld over twee modellen (Service.skill, Service.description,
+    Placement.period). Alleen specs waarvoor de gebruiker UPDATE-rechten heeft
+    komen terug, zodat het formulier nooit een veld toont dat bij opslaan
+    geweigerd zou worden.
+    """
+    from wies.core.editables.placement import PlacementEditables  # noqa: PLC0415 — avoids import cycle
+    from wies.core.editables.service import ServiceEditables  # noqa: PLC0415
+    from wies.core.permission_engine import Verb, has_permission  # noqa: PLC0415
+
+    service = placement.service
+    candidates = [
+        (ServiceEditables, ServiceEditables.skill, service),
+        (ServiceEditables, ServiceEditables.description, service),
+        (PlacementEditables, PlacementEditables.period, placement),
+    ]
+    return [(s, spec, obj) for (s, spec, obj) in candidates if has_permission(Verb.UPDATE, obj, user, spec)]
+
+
 def save_placement_edit(request, placement, specs, cleaned_data):
     """Sla alle specs op in één transactie, met dezelfde audit-events als inline edit."""
     from contextlib import nullcontext  # noqa: PLC0415 — lokaal, alleen deze functie

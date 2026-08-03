@@ -373,3 +373,28 @@ def apply_team_change(request, assignment, services_data):
         emit_inline_edit_audit_event(
             AssignmentEditables, spec, assignment, before, after, request.user, request=request
         )
+
+
+def assignment_edit_specs(assignment, user, only=None):
+    """De specs van het gecombineerde opdrachtformulier, gefilterd op rechten.
+
+    ``only`` (spec-naam) beperkt tot één veld: het ⋯-menu van een rij bewerkt
+    alleen dat veld, het potlood bewerkt alles.
+    """
+    from wies.core.editables.assignment import AssignmentEditables  # noqa: PLC0415 — avoids import cycle
+    from wies.core.permission_engine import Verb, has_permission  # noqa: PLC0415
+
+    candidates = [
+        AssignmentEditables.name,
+        AssignmentEditables.extra_info,
+        AssignmentEditables.organizations,
+        AssignmentEditables.period,
+        AssignmentEditables.owner,
+    ]
+    if only is not None:
+        candidates = [spec for spec in candidates if spec.name == only]
+    return [
+        (AssignmentEditables, spec, assignment)
+        for spec in candidates
+        if has_permission(Verb.UPDATE, assignment, user, spec)
+    ]
