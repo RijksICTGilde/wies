@@ -2,19 +2,24 @@ import functools
 import logging
 from urllib.parse import urlencode
 
+from authlib.integrations.base_client import OAuthError
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
 from django.contrib.auth import authenticate as auth_authenticate
 from django.contrib.auth import login as auth_login
 from django.contrib.auth import logout as auth_logout
 from django.contrib.auth.decorators import login_not_required
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views.decorators.http import require_POST
 
 from .services.events import create_auth_event
 
 logger = logging.getLogger(__name__)
+
+# Marks that the callback already failed once, so the automatic restart of the
+# flow cannot turn into a redirect loop.
+OIDC_AUTH_RETRY_SESSION_KEY = "oidc_auth_retried"
 
 oauth = OAuth()
 
@@ -48,7 +53,12 @@ def login(request):
 
 @login_not_required
 def auth(request):
-    oidc_response = _get_oidc().authorize_access_token(request)
+    try:
+        oidc_response = _get_oidc().authorize_access_token(request)
+    except OAuthError as exc:
+        return _handle_callback_error(request, exc)
+
+    request.session.pop(OIDC_AUTH_RETRY_SESSION_KEY, None)
     userinfo = oidc_response["userinfo"]
     user = auth_authenticate(
         request,
@@ -77,6 +87,43 @@ def auth(request):
     if request.COOKIES.get(settings.OIDC_POST_LOGOUT_COOKIE_NAME):
         response.delete_cookie(settings.OIDC_POST_LOGOUT_COOKIE_NAME, path="/")
     return response
+
+
+def _handle_callback_error(request, exc: OAuthError):
+    """Recover from an error redirect on the OIDC callback instead of raising a 500.
+
+    Keycloak sends `?error=...` to the redirect URI instead of a code when its
+    authentication session is no longer resolvable. That happens when the user
+    sits on the login page past its timeout (`temporarily_unavailable:
+    authentication_expired`), and when a link on that page rebuilds the
+    authorize URL from only client_id and tab_id, which drops response_type and
+    the rest of the OIDC parameters (`invalid_request: Missing parameter:
+    response_type`). Keycloak's locale switcher does exactly that:
+    https://github.com/keycloak/keycloak/issues/16063
+    """
+    # Parameter names only, never their values, which carry tokens. Whether
+    # `state` is among them separates an expired authentication session (Keycloak
+    # restores the client context from its KC_RESTART cookie) from a request that
+    # arrived without any OIDC parameters at all.
+    logger.warning(
+        "OIDC callback error %s (%s), query params: %s, referer: %s",
+        exc.error,
+        exc.description,
+        sorted(request.GET.keys()),
+        request.headers.get("Referer", ""),
+    )
+
+    already_retried = request.session.get(OIDC_AUTH_RETRY_SESSION_KEY, False)
+    request.session.pop(OIDC_AUTH_RETRY_SESSION_KEY, None)
+    # access_denied means the user or the upstream IdP refused, so sending them
+    # straight back into the flow would override a deliberate choice.
+    if already_retried or exc.error == "access_denied":
+        return render(request, "login_error.html", status=400)
+
+    # The login view redirects straight to Keycloak, so restarting the flow costs
+    # the user nothing but a fresh login page. Retry once, then show the page above.
+    request.session[OIDC_AUTH_RETRY_SESSION_KEY] = True
+    return redirect(reverse("login"))
 
 
 @login_not_required

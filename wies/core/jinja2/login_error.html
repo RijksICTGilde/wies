@@ -1,0 +1,22 @@
+{% extends "base_error.html" %}
+{% block title %}
+  Inloggen niet gelukt - Wies
+{% endblock title %}
+{% block error_title %}
+  Inloggen is niet gelukt
+{% endblock error_title %}
+{% block error_message %}
+  De inlogsessie is verlopen of afgebroken. Dat gebeurt bijvoorbeeld als het inlogscherm te lang open heeft gestaan.
+{% endblock error_message %}
+{% block error_extra %}
+  <c-paragraph>
+    <c-link href="{{ url('login') }}">
+      Probeer opnieuw in te loggen
+    </c-link>
+    . Blijft het misgaan? Sluit je browser volledig af en probeer het daarna nog een keer, of neem contact op via
+    <c-link href="mailto:wies-support@rijksoverheid.nl?subject=Inloggen%20lukt%20niet">
+      wies-support@rijksoverheid.nl
+    </c-link>
+    .
+  </c-paragraph>
+{% endblock error_extra %}
