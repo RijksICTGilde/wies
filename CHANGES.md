@@ -8,6 +8,7 @@ This files lists the changes during the lifetime of this project.
 
 ## 2026-08-04
 - XXX: inloggen loopt niet langer op een 500-pagina vast wanneer Keycloak de inlogsessie kwijt is (het inlogscherm stond te lang open, of er is op de taalkeuze geklikt, waardoor Keycloak de OIDC-parameters uit de URL laat vallen). De inlogpoging wordt nu een keer automatisch opnieuw gestart; lukt het dan nog niet, dan volgt een Nederlandstalige uitlegpagina in plaats van een serverfout.
+- 525: inloggen loopt niet langer op een 500-pagina vast wanneer Keycloak de inlogsessie kwijt is (het inlogscherm stond te lang open, of er is op de taalkeuze geklikt, waardoor Keycloak de OIDC-parameters uit de URL laat vallen). De inlogpoging wordt nu een keer automatisch opnieuw gestart; lukt het dan nog niet, dan volgt een Nederlandstalige uitlegpagina in plaats van een serverfout.
 
 - 463: (migration)(post-release actions) change "merk" to be a single select. "merk" now has its own table (`suborganization`).
 - 463: make test actions more robust (work with newer versions of node and other location of djlint)
