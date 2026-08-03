@@ -604,7 +604,7 @@ class AssignmentEditablesFullTest(TestCase):
 
     def test_owner_link_survives_save(self):
         # A successful save re-renders the display; the link must persist (#395).
-        resp = post_inline_edit(self.client, self._url("owner"), {"owner": self.colleague.id})
+        resp = post_inline_edit(self.client, self._url("owner"), {"owner": self.colleague.public_id})
         assert resp.status_code == 200
         self.assertContains(resp, f"collega={self.colleague.public_id}")
 
@@ -855,13 +855,13 @@ class AssignmentServicesAuditTest(TestCase):
     def _row(self, idx, *, service, skill, description, is_filled=False, colleague=None):
         data = {
             f"service-{idx}-id": str(service.id),
-            f"service-{idx}-skill": str(skill.id),
+            f"service-{idx}-skill": str(skill.public_id),
             f"service-{idx}-description": description,
             f"service-{idx}-is_filled": "ingevuld" if is_filled else "aanvraag",
             f"service-{idx}-has_custom_period": "on",  # inherit assignment period
         }
         if is_filled and colleague is not None:
-            data[f"service-{idx}-colleague"] = str(colleague.id)
+            data[f"service-{idx}-colleague"] = str(colleague.public_id)
             placement = Placement.objects.filter(service=service).first()
             if placement is not None:
                 data[f"service-{idx}-placement_id"] = str(placement.id)
@@ -931,10 +931,10 @@ class AssignmentServicesAuditTest(TestCase):
             **self.FORMSET_MGMT_KEYS,
             # Filled row: drop the inherit checkbox and give a custom period.
             "service-0-id": str(self.filled_service.id),
-            "service-0-skill": str(self.skill_python.id),
+            "service-0-skill": str(self.skill_python.public_id),
             "service-0-description": "Filled",
             "service-0-is_filled": "ingevuld",
-            "service-0-colleague": str(self.colleague.id),
+            "service-0-colleague": str(self.colleague.public_id),
             "service-0-placement_id": str(self.placement.id),
             "service-0-placement_start_date": "2026-01-01",
             "service-0-placement_end_date": "2026-06-30",
@@ -960,11 +960,11 @@ class AssignmentServicesAuditTest(TestCase):
             # Filled row switched to aanvraag, but colleague + placement_id
             # still posted (JS only hides the field; this is the bug case).
             "service-0-id": str(self.filled_service.id),
-            "service-0-skill": str(self.skill_python.id),
+            "service-0-skill": str(self.skill_python.public_id),
             "service-0-description": "Filled",
             "service-0-is_filled": "aanvraag",
             "service-0-has_custom_period": "on",
-            "service-0-colleague": str(self.colleague.id),
+            "service-0-colleague": str(self.colleague.public_id),
             "service-0-placement_id": str(self.placement.id),
             **self._row(1, service=self.vacant_service, skill=self.skill_java, description="Vacant"),
         }
@@ -1629,7 +1629,7 @@ class ColleagueLabelsInlineEditTest(TestCase):
             "inline-edit",
             args=["colleague", self.colleague.public_id, f"labels_{self.expertise.id}"],
         )
-        resp = post_inline_edit(self.client, url, {"labels": [self.label_cloud.id]})
+        resp = post_inline_edit(self.client, url, {"labels": [self.label_cloud.public_id]})
         assert resp.status_code == 200
         current = set(self.colleague.labels.values_list("pk", flat=True))
         assert current == {self.label_cloud.id, self.label_weerbaar.id}

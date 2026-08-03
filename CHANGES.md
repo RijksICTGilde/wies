@@ -6,6 +6,7 @@ This files lists the changes during the lifetime of this project.
 
 - 525: logging in no longer dead-ends on a 500 page when the login callback fails, whatever the cause. The most common one is Keycloak having lost its authentication session (for example because the login screen was left open for too long); the login is then restarted once automatically, and if that fails as well the user gets a page explaining what happened. Any other failure gets its own page pointing at support, and is still reported to the team.
 - 525: the "geen toegang" page pointed at wies-support@rijksoverheid.nl, which does not exist; it now points at wies-odi@rijksoverheid.nl
+- 474: (migration) plekken die een object of filter in de URL zetten gebruiken nu een onraadbare identifier (`public_id`, een UUIDv4) in plaats van het volgnummer, zodat records en overzichten niet meer op te sommen zijn door id's op te hogen. Dit dekt opdrachten, collega's, plaatsingen, diensten, gebruikers, labels en merken (paneel- en beheer-URL's + inline bewerken) én de filters op opdrachtgever, rol, label en merk (`?org=`, `?rol=`, `?labels=`, `?merk=`, inclusief de organisatie-boom in de modal). Ook de keuzelijsten (merk, rol, label, business manager, consultant) sturen nu de `public_id` in plaats van het volgnummer. Het interne id blijft ongewijzigd en intern in gebruik.
 
 ## 2026-08-04
 
@@ -20,7 +21,6 @@ This files lists the changes during the lifetime of this project.
 - 480: the OIDC login now uses PKCE (S256) in the authorization-code flow. The government OIDC profile (OIDC-NLGov, sections 4.1 and 4.2.1) requires this for every client: https://gitdocumentatie.logius.nl/publicatie/api/oidc/
 - 453: the statistics pages shows unique logins per day in stead of the total number of logins
 - 498: harden ci: pin actions on sha, explicit permissions per action stage
-- 474: (migration) plekken die een object of filter in de URL zetten gebruiken nu een onraadbare identifier (`public_id`, een UUIDv4) in plaats van het volgnummer, zodat records en overzichten niet meer op te sommen zijn door id's op te hogen. Dit dekt opdrachten, collega's, plaatsingen, diensten, gebruikers, labels en merken (paneel- en beheer-URL's + inline bewerken) én de filters op opdrachtgever, rol, label en merk (`?org=`, `?rol=`, `?labels=`, `?merk=`, inclusief de organisatie-boom in de modal). Het interne id blijft ongewijzigd en intern in gebruik.
 
 ## 2026-07-23
 

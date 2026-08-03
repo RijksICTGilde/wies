@@ -180,7 +180,7 @@ class AssignmentEditAttributeTest(TestCase):
 
         response = self.client.post(
             reverse("inline-edit", args=["assignment", self.assignment.public_id, "owner"]),
-            {"owner": other_colleague.id},
+            {"owner": other_colleague.public_id},
         )
 
         assert response.status_code == 200
@@ -224,7 +224,7 @@ class AssignmentEditAttributeTest(TestCase):
         response = post_inline_edit(
             self.client,
             reverse("inline-edit", args=["assignment", self.assignment.public_id, "owner"]),
-            {"owner": new_bdm.id},
+            {"owner": new_bdm.public_id},
         )
 
         assert response.status_code == 200
@@ -288,7 +288,7 @@ class AssignmentEditAttributeTest(TestCase):
         response = post_inline_edit(
             self.client,
             reverse("inline-edit", args=["assignment", self.assignment.public_id, "owner"]),
-            {"owner": new_bdm.id},
+            {"owner": new_bdm.public_id},
         )
 
         assert response.status_code == 200

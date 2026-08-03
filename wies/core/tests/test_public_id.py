@@ -6,8 +6,11 @@ import datetime
 import uuid
 from unittest.mock import patch
 
+import pytest
+from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth.models import Permission
+from django.contrib.auth.models import Group, Permission
+from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import IntegrityError
 from django.test import Client, TestCase
@@ -15,6 +18,8 @@ from django.urls import reverse
 from django.urls.exceptions import NoReverseMatch
 from django.utils import timezone
 
+from wies.core.editables.colleague import ColleagueEditables
+from wies.core.inline_edit.forms import use_public_id_choices
 from wies.core.models import (
     Assignment,
     Colleague,
@@ -27,6 +32,7 @@ from wies.core.models import (
     Suborganization,
 )
 from wies.core.public_id import generate_public_id
+from wies.core.tests.inline_edit_helpers import post_inline_edit
 
 User = get_user_model()
 
@@ -446,3 +452,75 @@ class SuborganizationAdminRoutePublicIdTests(TestCase):
             except NoReverseMatch:
                 continue
             assert self.client.get(url).status_code == 404, route
+
+
+class ChoiceFieldPublicIdTests(TestCase):
+    """A select's option values cross the client boundary too, so they carry the
+    public_id instead of Django's default pk. Models without a public_id
+    (Group) keep the pk."""
+
+    def test_option_values_are_public_ids_not_pks(self):
+        merk = Suborganization.objects.create(name="Rijks ICT Gilde")
+        field = ColleagueEditables.suborganization.form_field()
+
+        values = {str(value) for value, _label in field.choices if value}
+        assert str(merk.public_id) in values
+        assert str(merk.pk) not in values
+
+    def test_model_without_public_id_keeps_the_pk(self):
+        field = forms.ModelChoiceField(queryset=Group.objects.all())
+        use_public_id_choices(field)
+        assert field.to_field_name is None
+
+    def test_field_accepts_public_id_and_rejects_pk(self):
+        merk = Suborganization.objects.create(name="Rijks ICT Gilde")
+        field = ColleagueEditables.suborganization.form_field()
+
+        assert field.clean(str(merk.public_id)) == merk
+        with pytest.raises(ValidationError):
+            field.clean(str(merk.pk))
+
+    def test_unparseable_value_is_a_validation_error_not_a_crash(self):
+        """A UUID lookup raises on junk, so guard the #503 class of bug: the
+        field must reject it as an invalid choice, never surface a 500."""
+        Suborganization.objects.create(name="Rijks ICT Gilde")
+        field = ColleagueEditables.suborganization.form_field()
+
+        for junk in ("not-a-uuid", "1 OR 1=1", "'; drop--"):
+            with pytest.raises(ValidationError):
+                field.clean(junk)
+
+
+class InlineEditChoicePublicIdTests(TestCase):
+    """End-to-end: the inline-edit endpoint saves on a public_id and ignores a pk."""
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(email="own@rijksoverheid.nl", first_name="Own")
+        self.colleague = Colleague.objects.create(
+            user=self.user, name="Own", email="own@rijksoverheid.nl", source="wies"
+        )
+        self.merk = Suborganization.objects.create(name="Rijks ICT Gilde")
+        self.client.force_login(self.user)
+        self.url = reverse("inline-edit", args=["colleague", self.colleague.public_id, "suborganization"])
+
+    def test_save_by_public_id(self):
+        response = post_inline_edit(self.client, self.url, {"suborganization": str(self.merk.public_id)})
+
+        assert response.status_code == 200
+        self.colleague.refresh_from_db()
+        assert self.colleague.suborganization == self.merk
+
+    def test_pk_is_not_accepted(self):
+        response = post_inline_edit(self.client, self.url, {"suborganization": str(self.merk.pk)})
+
+        assert response.status_code == 200
+        self.colleague.refresh_from_db()
+        assert self.colleague.suborganization is None
+
+    def test_junk_does_not_error(self):
+        response = post_inline_edit(self.client, self.url, {"suborganization": "not-a-uuid"})
+
+        assert response.status_code == 200
+        self.colleague.refresh_from_db()
+        assert self.colleague.suborganization is None

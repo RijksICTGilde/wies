@@ -69,6 +69,12 @@ anyway; there is simply no reason for it, and real migration risk.)
   them to UUIDs first (junk is dropped and simply matches nothing). The
   tree traversal and per-org counts stay on internal `id`; only the URL
   boundary speaks UUID.
+- **Select options:** Django keys `ModelChoiceField` options on the pk, so
+  `use_public_id_choices()` sets `to_field_name="public_id"` for every
+  choice field whose model has one. `_build_form_field` applies it to all
+  Editables; the hand-declared fields in `forms.py` pass the same
+  `to_field_name`. A model without a `public_id` (e.g. `Group`) keeps the
+  pk. Junk and stale pks come back as a normal "invalid choice" error.
 
 ## Collision handling
 
@@ -92,6 +98,13 @@ transaction survives the failed insert.
   that leaks a PK reintroduces the enumeration it removed. The org picker
   was exactly such a spot — the tree emitted `public_id` while the form
   field still resolved on PK.
+- **Two spots still round-trip a pk on purpose.** The inline-edit field
+  name for a label category (`labels_<pk>`) and the hidden `id` /
+  `placement_id` on the team rows in `ServiceForm`. Both identify a row
+  the caller was already shown, and the services save re-verifies each one
+  belongs to the target Assignment before writing. They are walkable in
+  principle, but yield only which taxonomy/row ids exist, never record
+  data, and no read path accepts an integer.
 
 ## Key files
 
@@ -99,5 +112,7 @@ transaction survives the failed insert.
   `parse_public_ids` (filter-input parsing)
 - `wies/core/models.py` — `PublicIdModel` (the retry base) and the
   per-model `public_id` field
+- `wies/core/inline_edit/forms.py` — `use_public_id_choices` (select
+  option values)
 - `wies/core/tests/test_public_id.py` — per-model id, routing rejects the
-  int form, collision retry
+  int form, choice fields reject the pk, collision retry

@@ -2619,7 +2619,7 @@ def assignment_create(request):
     template = "assignment_create.html"
 
     skill_choices = [("", " "), ("__new__", "+ Nieuwe rol aanmaken")]
-    skill_choices.extend((str(s.id), s.name) for s in Skill.objects.order_by("name"))
+    skill_choices.extend((str(s.public_id), s.name) for s in Skill.objects.order_by("name"))
 
     if request.method == "GET":
         initial = {}

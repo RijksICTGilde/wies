@@ -212,7 +212,7 @@ class InlineEditCollectionConcurrencyTokenTests(TestCase):
             "service-MIN_NUM_FORMS": "1",
             "service-MAX_NUM_FORMS": "1000",
             "service-0-id": str(self.service.id),
-            "service-0-skill": str(self.service.skill_id),
+            "service-0-skill": str(self.service.skill.public_id),
             "service-0-description": "My edit",
             "service-0-is_filled": "aanvraag",
             "service-0-has_custom_period": "on",

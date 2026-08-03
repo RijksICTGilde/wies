@@ -165,7 +165,7 @@ class UserViewsTest(TestCase):
                 "first_name": "New",
                 "last_name": "User",
                 "email": "newuser@rijksoverheid.nl",
-                "category_Expertise": self.label_a.id,
+                "category_Expertise": self.label_a.public_id,
             },
         )
 
@@ -200,7 +200,7 @@ class UserViewsTest(TestCase):
                 "first_name": "Merk",
                 "last_name": "User",
                 "email": "merkuser@rijksoverheid.nl",
-                "suborganization": self.merk_a.id,
+                "suborganization": self.merk_a.public_id,
             },
         )
 
@@ -220,7 +220,7 @@ class UserViewsTest(TestCase):
                 "first_name": self.user1.first_name,
                 "last_name": self.user1.last_name,
                 "email": self.user1.email,
-                "suborganization": self.merk_b.id,
+                "suborganization": self.merk_b.public_id,
             },
         )
 
@@ -253,7 +253,7 @@ class UserViewsTest(TestCase):
         self.colleague1.save()
 
         form = UserForm(instance=self.user1)
-        assert form.fields["suborganization"].initial == self.merk_a.id
+        assert form.fields["suborganization"].initial == self.merk_a.public_id
 
     def test_user_create_without_labels(self):
         """Test user creation without labels (optional field)"""

@@ -96,7 +96,7 @@ class SuborganizationInlineEditPermissionTest(TestCase):
     def test_colleague_can_edit_own_suborganization(self):
         self.client.force_login(self.owner_user)
         response = post_inline_edit(
-            self.client, self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.id}
+            self.client, self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.public_id}
         )
         assert response.status_code == 200
         self.own_colleague.refresh_from_db()
@@ -109,7 +109,7 @@ class SuborganizationInlineEditPermissionTest(TestCase):
         self.admin_user.user_permissions.add(perm)
         self.client.force_login(self.admin_user)
         response = post_inline_edit(
-            self.client, self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.id}
+            self.client, self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.public_id}
         )
         assert response.status_code == 200
         self.own_colleague.refresh_from_db()
@@ -118,7 +118,7 @@ class SuborganizationInlineEditPermissionTest(TestCase):
     def test_unrelated_user_cannot_edit_others_suborganization(self):
         self.client.force_login(self.other_user)
         # inline_edit_view returns a permission-denied alert instead of saving.
-        self.client.post(self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.id})
+        self.client.post(self._edit_url(self.own_colleague), {"suborganization": self.suborg_b.public_id})
         self.own_colleague.refresh_from_db()
         assert self.own_colleague.suborganization == self.suborg_a
 

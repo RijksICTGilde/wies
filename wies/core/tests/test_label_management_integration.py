@@ -70,7 +70,7 @@ class LabelManagementIntegrationTest(TestCase):
                 "first_name": "Test",
                 "last_name": "User",
                 "email": "test@rijksoverheid.nl",
-                "category_Test Category": label.id,
+                "category_Test Category": label.public_id,
             },
             follow=True,
         )
