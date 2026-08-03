@@ -8,7 +8,7 @@ from django.test import TestCase
 from wies.core.form_mixins import NlddFormMixin
 from wies.core.forms import LabelCategoryForm, UserForm
 from wies.core.models import Label, LabelCategory
-from wies.core.widgets import MultiselectDropdown
+from wies.core.widgets import ComboBoxSelect, MultiselectDropdown
 
 User = get_user_model()
 
@@ -376,3 +376,35 @@ class NlddFormMixinTest(TestCase):
         first_name = re.search(r'<nldd-text-field[^>]*name="first_name"[^>]*>', rendered, re.DOTALL)
         assert first_name is not None
         assert "required" not in first_name.group(0)
+
+
+class ComboBoxSelectRenderingTest(TestCase):
+    """The combo box must show the current value in edit mode.
+
+    Regressietest: het geselecteerde ``value`` werd in een ``{% set %}`` binnen
+    een for-loop bepaald, en zo'n set lekt in Jinja niet naar buiten — waardoor
+    de combo box (o.a. de Business Manager op het opdracht-bewerkscherm) altijd
+    leeg opende en opslaan de waarde wiste.
+    """
+
+    def _combo_form(self, **kwargs):
+        class ComboForm(NlddFormMixin, forms.Form):
+            owner = forms.ChoiceField(
+                label="Business Manager",
+                choices=[("", " "), ("1", "Alice"), ("2", "Bob")],
+                widget=ComboBoxSelect,
+            )
+
+        return ComboForm(**kwargs)
+
+    def test_selected_value_survives_the_loop(self):
+        rendered = str(self._combo_form(initial={"owner": "2"}))
+        combo = re.search(r"<nldd-combo-box[^>]*>", rendered)
+        assert combo is not None
+        assert 'value="2"' in combo.group(0)
+
+    def test_empty_when_nothing_selected(self):
+        rendered = str(self._combo_form())
+        combo = re.search(r"<nldd-combo-box[^>]*>", rendered)
+        assert combo is not None
+        assert 'value=""' in combo.group(0)

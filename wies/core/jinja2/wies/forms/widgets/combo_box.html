@@ -1,14 +1,15 @@
-{# Form-associated, dus hij post onder `name` als een gewone <select>. De opties
-   komen uit een geslot nldd-menu, net als bij nldd-token-field. #}
-{% set selected_value = "" %}
+{# Form-associated, dus hij post onder `name` als een gewone select. De opties
+   komen uit een geslot nldd-menu, net als bij nldd-token-field.
+   namespace: een {% set %} in een for-loop lekt niet naar buiten in Jinja. #}
+{% set ns = namespace(selected_value="") %}
 {% for group_name, group_choices, group_index in widget.optgroups %}
   {% for option in group_choices %}
     {% if option.selected and option.value|string %}
-      {% set selected_value = option.value|string %}
+      {% set ns.selected_value = option.value|string %}
     {% endif %}
   {% endfor %}
 {% endfor %}
-<nldd-combo-box name="{{ widget.name }}" value="{{ selected_value }}" placeholder="{{ widget.attrs.placeholder|default('Kies of typ om te zoeken…') }}" {% if widget.attrs['accessible-label'] %}accessible-label="{{ widget.attrs['accessible-label'] }}"{% endif %} {% if widget.attrs.required %}required{% endif %} {% if widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}>
+<nldd-combo-box name="{{ widget.name }}" value="{{ ns.selected_value }}" placeholder="{{ widget.attrs.placeholder|default('Kies of typ om te zoeken…') }}" {% if widget.attrs['accessible-label'] %}accessible-label="{{ widget.attrs['accessible-label'] }}"{% endif %} {% if widget.attrs.required %}required{% endif %} {% if widget.attrs.invalid %}invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}>
 <nldd-menu variant="listbox" empty-text="Niets gevonden">
 {% for group_name, group_choices, group_index in widget.optgroups %}
   {% for option in group_choices %}
