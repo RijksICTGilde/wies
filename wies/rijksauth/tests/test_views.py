@@ -362,3 +362,43 @@ class OidcCallbackErrorTest(TestCase):
         assert "invalid_request" in message
         assert "'state'" in message
         assert "secret-state-value" not in message
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_expected_errors_stay_below_error_level(self, mock_get_oidc):
+        """WARNING keeps flow noise out of ErrorReportingHandler, which fires on
+        ERROR and posts to Mattermost."""
+        self._fail_with(mock_get_oidc, "temporarily_unavailable", "authentication_expired")
+
+        with self.assertLogs("wies.rijksauth.views", level="WARNING") as logs:
+            self.client.get(reverse("auth"))
+
+        assert [record.levelname for record in logs.records] == ["WARNING"]
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_unexpected_error_is_logged_at_error_level(self, mock_get_oidc):
+        """A broken client registration is nobody's user error: it must reach the
+        error reporting handler, with the request attached and a traceback."""
+        self._fail_with(mock_get_oidc, "invalid_client", "Invalid client credentials")
+
+        with self.assertLogs("wies.rijksauth.views", level="ERROR") as logs:
+            response = self.client.get(reverse("auth"))
+
+        [record] = logs.records
+        assert record.levelname == "ERROR"
+        assert record.exc_info is not None
+        assert record.request.path == reverse("auth")
+        assert response.status_code == 400
+
+    @patch("wies.rijksauth.views._get_oidc")
+    def test_unexpected_error_is_not_retried(self, mock_get_oidc):
+        """Restarting the flow cannot fix a misconfiguration, so do not suggest it."""
+        self._fail_with(mock_get_oidc, "server_error", "upstream exploded")
+
+        with self.assertLogs("wies.rijksauth.views", level="ERROR"):
+            response = self.client.get(reverse("auth"))
+
+        assert response.status_code == 400
+        assert OIDC_AUTH_RETRY_SESSION_KEY not in self.client.session
+        body = response.content.decode()
+        assert "Er ging iets mis in de verbinding met de inlogdienst" in body
+        assert "inlogsessie is verlopen" not in body

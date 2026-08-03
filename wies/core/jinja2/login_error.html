@@ -6,17 +6,29 @@
   Inloggen is niet gelukt
 {% endblock error_title %}
 {% block error_message %}
-  De inlogsessie is verlopen of afgebroken. Dat gebeurt bijvoorbeeld als het inlogscherm te lang open heeft gestaan.
+  {% if recoverable %}
+    De inlogsessie is verlopen of afgebroken. Dat gebeurt bijvoorbeeld als het inlogscherm te lang open heeft gestaan.
+  {% else %}
+    Er ging iets mis in de verbinding met de inlogdienst. Dit ligt niet aan jou en lost zichzelf niet op.
+  {% endif %}
 {% endblock error_message %}
 {% block error_extra %}
   <c-paragraph>
-    <c-link href="{{ url('login') }}">
-      Probeer opnieuw in te loggen
-    </c-link>
-    . Blijft het misgaan? Sluit je browser volledig af en probeer het daarna nog een keer, of neem contact op via
-    <c-link href="mailto:wies-support@rijksoverheid.nl?subject=Inloggen%20lukt%20niet">
-      wies-support@rijksoverheid.nl
-    </c-link>
-    .
+    {% if recoverable %}
+      <c-link href="{{ url('login') }}">
+        Probeer opnieuw in te loggen
+      </c-link>
+      . Blijft het misgaan? Sluit je browser volledig af en probeer het daarna nog een keer, of neem contact op via
+      <c-link href="mailto:wies-support@rijksoverheid.nl?subject=Inloggen%20lukt%20niet">
+        wies-support@rijksoverheid.nl
+      </c-link>
+      .
+    {% else %}
+      Neem contact op via
+      <c-link href="mailto:wies-support@rijksoverheid.nl?subject=Inloggen%20lukt%20niet">
+        wies-support@rijksoverheid.nl
+      </c-link>
+      als het probleem na verloop van tijd niet is opgelost.
+    {% endif %}
   </c-paragraph>
 {% endblock error_extra %}

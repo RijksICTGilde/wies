@@ -21,6 +21,24 @@ logger = logging.getLogger(__name__)
 # flow cannot turn into a redirect loop.
 OIDC_AUTH_RETRY_SESSION_KEY = "oidc_auth_retried"
 
+# Callback errors that belong to a normal login attempt: the authentication
+# session at Keycloak is gone, or the user backed out. Nothing to fix on our
+# side, so they are logged at WARNING and handled in the flow. Everything else
+# (invalid_client, unauthorized_client, server_error, ...) points at our client
+# registration or at Keycloak itself and is logged at ERROR, which reaches
+# ErrorReportingHandler and Mattermost.
+OIDC_EXPECTED_CALLBACK_ERRORS = frozenset(
+    {
+        "temporarily_unavailable",
+        "invalid_request",
+        "mismatching_state",
+        "access_denied",
+        "login_required",
+        "interaction_required",
+        "consent_required",
+    }
+)
+
 oauth = OAuth()
 
 
@@ -105,20 +123,31 @@ def _handle_callback_error(request, exc: OAuthError):
     # `state` is among them separates an expired authentication session (Keycloak
     # restores the client context from its KC_RESTART cookie) from a request that
     # arrived without any OIDC parameters at all.
-    logger.warning(
-        "OIDC callback error %s (%s), query params: %s, referer: %s",
+    log_args = (
         exc.error,
         exc.description,
         sorted(request.GET.keys()),
         request.headers.get("Referer", ""),
     )
-
     already_retried = request.session.get(OIDC_AUTH_RETRY_SESSION_KEY, False)
     request.session.pop(OIDC_AUTH_RETRY_SESSION_KEY, None)
+
+    if exc.error not in OIDC_EXPECTED_CALLBACK_ERRORS:
+        logger.error(
+            "OIDC callback failed with %s (%s), query params: %s, referer: %s",
+            *log_args,
+            exc_info=exc,
+            extra={"request": request},
+        )
+        # Nobody can log in until this is fixed, so do not pretend a retry helps.
+        return render(request, "login_error.html", {"recoverable": False}, status=400)
+
+    logger.warning("OIDC callback error %s (%s), query params: %s, referer: %s", *log_args)
+
     # access_denied means the user or the upstream IdP refused, so sending them
     # straight back into the flow would override a deliberate choice.
     if already_retried or exc.error == "access_denied":
-        return render(request, "login_error.html", status=400)
+        return render(request, "login_error.html", {"recoverable": True}, status=400)
 
     # The login view redirects straight to Keycloak, so restarting the flow costs
     # the user nothing but a fresh login page. Retry once, then show the page above.
