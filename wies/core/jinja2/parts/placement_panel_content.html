@@ -59,17 +59,8 @@
     <nldd-text-cell text="{{ card.team_members|join(', ') }}"></nldd-text-cell>
     </nldd-list-item>
   {% endif %}
-  <nldd-list-item>
-  <nldd-text-cell width="100px" text="Rol"></nldd-text-cell>
-  <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  <nldd-text-cell text="{{ service.skill.name if service.skill else '–' }}" supporting-text="{{ service.description or '' }}"></nldd-text-cell>
-  {% if panel_data.user_can_edit_details %}
-    <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    <nldd-cell>
-    <nldd-icon-button size="sm" icon="edit" text="Rol bewerken" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"></nldd-icon-button>
-    </nldd-cell>
-  {% endif %}
-  </nldd-list-item>
+  {# Periode boven Rol: de rol-omschrijving kan lang zijn, dus de korte periode
+     staat dicht bij de kop in plaats van weggeduwd onder een lange tekst. #}
   <nldd-list-item>
   <nldd-text-cell width="100px" text="Periode"></nldd-text-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
@@ -86,6 +77,17 @@
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
     <nldd-cell>
     <nldd-icon-button size="sm" icon="edit" text="Periode bewerken" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"></nldd-icon-button>
+    </nldd-cell>
+  {% endif %}
+  </nldd-list-item>
+  <nldd-list-item>
+  <nldd-text-cell width="100px" text="Rol"></nldd-text-cell>
+  <nldd-spacer-cell size="12"></nldd-spacer-cell>
+  <nldd-text-cell text="{{ service.skill.name if service.skill else '–' }}" supporting-text="{{ service.description or '' }}"></nldd-text-cell>
+  {% if panel_data.user_can_edit_details %}
+    <nldd-spacer-cell size="8"></nldd-spacer-cell>
+    <nldd-cell>
+    <nldd-icon-button size="sm" icon="edit" text="Rol bewerken" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"></nldd-icon-button>
     </nldd-cell>
   {% endif %}
   </nldd-list-item>
