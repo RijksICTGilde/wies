@@ -17,7 +17,7 @@
 {% endblock content %}
 {% block panel %}
   {# nldd-page moet een directe child van de sheet zijn: de sheet stretcht alleen ::slotted(nldd-page). #}
-  <nldd-sheet id="side-panel" placement="right" width="480px" accessible-label="Detail">
+  <nldd-sheet id="side-panel" placement="right" width="640px" accessible-label="Detail">
   <nldd-page id="side-panel-content" sticky-header>
   {% if panel_data %}
     {% include panel_data.panel_content_template %}
