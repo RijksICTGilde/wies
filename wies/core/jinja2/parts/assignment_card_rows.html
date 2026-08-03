@@ -55,11 +55,10 @@
   </nldd-card>
 {% endfor %}
 {% if next_page_url %}
-  <div hx-get="{{ next_page_url }}"
-       hx-trigger="revealed"
-       hx-swap="outerHTML">
-    <nldd-rich-text style="text-align: center; padding: 1rem;">
-    <p>Meer laden…</p>
-    </nldd-rich-text>
+  {# Klik i.p.v. auto-load: zie placement_table_rows.html. De knop staat als
+     grid-cel in de nldd-collection (spant alle kolommen) en vervangt zichzelf
+     door de volgende kaarten. #}
+  <div class="wies-load-more">
+    <nldd-button variant="secondary" type="button" text="Laad meer" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
   </div>
 {% endif %}

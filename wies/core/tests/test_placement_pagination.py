@@ -29,14 +29,14 @@ class TestPlacementPagination:
 
     def test_pagination_no_duplicates(self):
         """Test that paginated results don't contain duplicate placements."""
-        # Create test data: 60 placements (more than page size of 50)
+        # Create test data: 75 placements (more than the page size of 60)
         skill = Skill.objects.create(name="Test Skill")
 
-        # Create 60 colleagues, assignments, services, and placements
+        # Create 75 colleagues, assignments, services, and placements
         placements_created = []
         today = timezone.now().date()
 
-        for i in range(60):
+        for i in range(75):
             colleague = Colleague.objects.create(
                 name=f"Test Colleague {i}",
                 email=f"colleague{i}@test.com",
@@ -88,8 +88,8 @@ class TestPlacementPagination:
 
         # Check total count
         total_ids = page1_ids + page2_ids
-        assert len(total_ids) == 60, f"Expected 60 total placements, got {len(total_ids)}"
-        assert len(set(total_ids)) == 60, f"Expected 60 unique placements, got {len(set(total_ids))}"
+        assert len(total_ids) == 75, f"Expected 75 total placements, got {len(total_ids)}"
+        assert len(set(total_ids)) == 75, f"Expected 75 unique placements, got {len(set(total_ids))}"
 
     def test_pagination_with_historical_filter(self):
         """Test that historical filter works correctly across pagination."""

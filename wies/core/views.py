@@ -783,7 +783,7 @@ class PlacementListView(ListView):
 
     model = Placement
     template_name = "placements.html"
-    paginate_by = 50
+    paginate_by = 60
     page_kwarg = "pagina"
 
     def _get_base_queryset(self):
@@ -1175,7 +1175,7 @@ class AssignmentListView(ListView):
 
     model = Assignment
     template_name = "assignments.html"
-    paginate_by = 24
+    paginate_by = 60
     page_kwarg = "pagina"
 
     def _get_base_queryset(self):
@@ -1447,7 +1447,7 @@ class UserListView(PermissionRequiredMixin, ListView):
 
     model = User
     template_name = "user_admin.html"
-    paginate_by = 50
+    paginate_by = 60
     page_kwarg = "pagina"
     permission_required = "rijksauth.view_user"
 

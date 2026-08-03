@@ -33,7 +33,8 @@
   </nldd-list-item>
 {% endfor %}
 {% if next_page_url %}
-  <nldd-list-item hx-get="{{ next_page_url }}" hx-trigger="revealed" hx-swap="outerHTML">
-  <nldd-text-cell text="Meer laden…" color="secondary"></nldd-text-cell>
-  </nldd-list-item>
+  {# Klik i.p.v. auto-load: zie placement_table_rows.html. #}
+  <div class="wies-load-more">
+    <nldd-button variant="secondary" type="button" text="Laad meer" hx-get="{{ next_page_url }}" hx-target="closest .wies-load-more" hx-swap="outerHTML"></nldd-button>
+  </div>
 {% endif %}
