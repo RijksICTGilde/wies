@@ -4,6 +4,10 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- ?
+
+## 2026-08-04
+
 - 463: (migration)(post-release actions) change "merk" to be a single select. "merk" now has its own table (`suborganization`).
 - 463: make test actions more robust (work with newer versions of node and other location of djlint)
 - 426: (migration)(post-release actions) log the client request metadata on audit and login events (BIO device logging). Removed the staff "Debug: request metadata" page
