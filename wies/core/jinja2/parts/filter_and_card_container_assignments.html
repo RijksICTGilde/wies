@@ -53,6 +53,9 @@
       {% endif %}
     {% endif %}
   {% endfor %}
+  {# "Wis alle filters" hoort bij de chips (Funda-stijl): één klik leegt alle
+     actieve filters. filter_interactions.js vangt data-clear-all-filters. #}
+  <nldd-button variant="neutral-transparent" size="sm" start-icon="dismiss" text="Wis alle filters" data-clear-all-filters></nldd-button>
   </nldd-container>
   <nldd-spacer size="8"></nldd-spacer>
 {% endif %}

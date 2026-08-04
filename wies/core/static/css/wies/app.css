@@ -129,7 +129,7 @@ a {
   color: var(--semantics-content-secondary-color, #64748b);
 }
 
-/* "Laad meer"-knop onder een lijst of kaart-grid. grid-column spant alle
+/* "Meer tonen"-knop onder een lijst of kaart-grid. grid-column spant alle
    kolommen in de kaart-grid; in een lijst (geen grid) wordt het genegeerd. */
 .wies-load-more {
   grid-column: 1 / -1;

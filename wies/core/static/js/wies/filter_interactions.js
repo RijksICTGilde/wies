@@ -597,6 +597,65 @@
     root.querySelectorAll(NDD_SEARCH).forEach(attachSearchField);
   }
 
+  // Leeg elk filtertype en run de filter één keer opnieuw.
+  function clearAllFilters() {
+    const form = document.getElementById("filter-form");
+    if (!form) return;
+
+    const searchHidden = document.getElementById("search-hidden");
+    if (searchHidden) searchHidden.value = "";
+    const searchField = document.querySelector("[data-wies-search-input]");
+    if (searchField) {
+      try {
+        searchField.value = "";
+      } catch (_) {}
+    }
+
+    const orgContainer = document.getElementById("org-filter-inputs");
+    if (orgContainer) orgContainer.innerHTML = "";
+
+    form
+      .querySelectorAll(
+        "[data-filter-input]:checked, [data-filter-input][checked]",
+      )
+      .forEach((input) => {
+        input.checked = false;
+        input.removeAttribute("checked");
+      });
+    form
+      .querySelectorAll("nldd-list-item[aria-checked='true']")
+      .forEach((row) => {
+        setRowChecked(row, false);
+      });
+
+    // Datumvelden committen hun waarde async (updated()), dus wacht op elke
+    // updateComplete vóór de form-change, anders zet de OOB-swap de oude datum
+    // terug (zie removeFilter).
+    const dateFields = Array.from(form.querySelectorAll("nldd-date-field"));
+    const pending = dateFields.map((field) => {
+      try {
+        field.value = "";
+      } catch (_) {}
+      return Promise.resolve(field.updateComplete);
+    });
+    Promise.all(pending).then(() => dispatchFormChange(form));
+  }
+
+  function setupClearAllFilters() {
+    document.addEventListener("click", (e) => {
+      const btn = e
+        .composedPath()
+        .find(
+          (el) =>
+            el instanceof Element &&
+            el.hasAttribute?.("data-clear-all-filters"),
+        );
+      if (!btn) return;
+      e.preventDefault();
+      clearAllFilters();
+    });
+  }
+
   function init() {
     const app = document.body;
     if (!app) return;
@@ -615,6 +674,7 @@
     }).observe(app, { childList: true, subtree: true });
 
     setupTokenDismiss();
+    setupClearAllFilters();
     setupFilterRows();
     setupOrgQuickOptions();
     setupSearchSuggestionSelect();
