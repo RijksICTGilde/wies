@@ -17,16 +17,11 @@ from .services.events import create_auth_event
 
 logger = logging.getLogger(__name__)
 
-# Marks that the callback already failed once, so the automatic restart of the
-# flow cannot turn into a redirect loop.
+# Set after a failed callback so the automatic restart cannot loop.
 OIDC_AUTH_RETRY_SESSION_KEY = "oidc_auth_retried"
 
-# Callback errors that belong to a normal login attempt: the authentication
-# session at Keycloak is gone, or the user backed out. Nothing to fix on our
-# side, so they are logged at WARNING and handled in the flow. Everything else
-# (invalid_client, unauthorized_client, server_error, ...) points at our client
-# registration or at Keycloak itself and is logged at ERROR, which reaches
-# ErrorReportingHandler and Mattermost.
+# Part of a normal login attempt: the Keycloak authentication session is gone, or
+# the user backed out. Anything else is ours or Keycloak's to fix, so it gets ERROR.
 OIDC_EXPECTED_CALLBACK_ERRORS = frozenset(
     {
         "temporarily_unavailable",
@@ -108,21 +103,14 @@ def auth(request):
 
 
 def _handle_callback_error(request, exc: OAuthError):
-    """Recover from an error redirect on the OIDC callback instead of raising a 500.
+    """Recover from an `?error=...` redirect on the callback instead of raising a 500.
 
-    Keycloak sends `?error=...` to the redirect URI instead of a code when its
-    authentication session is no longer resolvable. That happens when the user
-    sits on the login page past its timeout (`temporarily_unavailable:
-    authentication_expired`), and when a link on that page rebuilds the
-    authorize URL from only client_id and tab_id, which drops response_type and
-    the rest of the OIDC parameters (`invalid_request: Missing parameter:
-    response_type`). Keycloak's locale switcher does exactly that:
-    https://github.com/keycloak/keycloak/issues/16063
+    Keycloak sends one when it cannot resolve its authentication session: the login
+    screen sat open past its timeout, or a link on it re-entered the authorize endpoint
+    with only client_id and tab_id (https://github.com/keycloak/keycloak/issues/16063).
     """
-    # Parameter names only, never their values, which carry tokens. Whether
-    # `state` is among them separates an expired authentication session (Keycloak
-    # restores the client context from its KC_RESTART cookie) from a request that
-    # arrived without any OIDC parameters at all.
+    # Parameter names, never values: those carry tokens. A `state` means Keycloak still
+    # had the client context (from KC_RESTART), no `state` means it lost the parameters.
     log_args = (
         exc.error,
         exc.description,
@@ -139,18 +127,16 @@ def _handle_callback_error(request, exc: OAuthError):
             exc_info=exc,
             extra={"request": request},
         )
-        # Nobody can log in until this is fixed, so do not pretend a retry helps.
+        # Nobody gets in until this is fixed, so do not pretend a retry helps.
         return render(request, "login_error.html", {"recoverable": False}, status=400)
 
     logger.warning("OIDC callback error %s (%s), query params: %s, referer: %s", *log_args)
 
-    # access_denied means the user or the upstream IdP refused, so sending them
-    # straight back into the flow would override a deliberate choice.
+    # access_denied is a deliberate refusal by the user or the upstream IdP.
     if already_retried or exc.error == "access_denied":
         return render(request, "login_error.html", {"recoverable": True}, status=400)
 
-    # The login view redirects straight to Keycloak, so restarting the flow costs
-    # the user nothing but a fresh login page. Retry once, then show the page above.
+    # login redirects straight back to Keycloak, so one restart costs the user nothing.
     request.session[OIDC_AUTH_RETRY_SESSION_KEY] = True
     return redirect(reverse("login"))
 
