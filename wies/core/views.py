@@ -2107,15 +2107,17 @@ def label_category_edit(request, pk):
 def user_theme(request):
     """Store the display preference of the logged-in user.
 
-    The choice lives on the user rather than in the browser, so it travels to
-    every device and base.html can render it server-side as data-scheme: the
-    screen is correct on first paint, without a flash while loading.
+    The choice lives on the user's Colleague rather than in the browser, so it
+    travels to every device and base.html can render it server-side as
+    data-scheme: the screen is correct on first paint, without a flash while
+    loading.
     """
     theme = request.POST.get("theme", "")
-    if theme not in User.Theme.values:
+    if theme not in Colleague.Theme.values:
         return HttpResponseBadRequest("Onbekende weergave")
-    request.user.theme = theme
-    request.user.save(update_fields=["theme"])
+    colleague = request.user.colleague
+    colleague.theme = theme
+    colleague.save(update_fields=["theme"])
     return HttpResponse(status=204)
 
 

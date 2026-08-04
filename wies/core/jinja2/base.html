@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="nl"
-      {% if request.user.is_authenticated and request.user.theme != 'system' %} data-scheme="{{ request.user.theme }}"{% endif %}>
+      {% if request.user.is_authenticated and request.user.colleague and request.user.colleague.theme != 'system' %} data-scheme="{{ request.user.colleague.theme }}"{% endif %}>
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
