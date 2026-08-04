@@ -25,7 +25,7 @@ class WiesJinja2Renderer(Jinja2):
 class NlddErrorList(ErrorList):
     """Custom ErrorList with NLDD template"""
 
-    template_name = "wies/forms/errors/list/default.html"
+    template_name = "forms/errors/list/default.html"
 
 
 def wire_field_errors(field) -> list[str]:
@@ -140,20 +140,20 @@ class NlddFormMixin(_BaseFormMixin):
     HTMX and Django form handling keep working without a bridge layer.
     """
 
-    _form_template = "wies/forms/form.html"
-    _field_template = "wies/forms/field.html"
+    _form_template = "forms/form.html"
+    _field_template = "forms/field.html"
     _error_class = NlddErrorList
 
     widget_templates = {
-        "TextInput": "wies/forms/widgets/text.html",
-        "EmailInput": "wies/forms/widgets/email.html",
-        "Select": "wies/forms/widgets/select.html",
-        "ComboBoxSelect": "wies/forms/widgets/combo_box.html",
-        "CheckboxSelectMultiple": "wies/forms/widgets/checkbox_select.html",
-        "MultiselectDropdown": "wies/forms/widgets/multiselect.html",
-        "RadioSelect": "wies/forms/widgets/radio.html",
-        "DateInput": "wies/forms/widgets/date.html",
-        "Textarea": "wies/forms/widgets/textarea.html",
-        "CheckboxInput": "wies/forms/widgets/checkbox.html",
-        "OrgPickerWidget": "wies/widgets/org_picker.html",
+        "TextInput": "forms/widgets/text.html",
+        "EmailInput": "forms/widgets/email.html",
+        "Select": "forms/widgets/select.html",
+        "ComboBoxSelect": "forms/widgets/combo_box.html",
+        "CheckboxSelectMultiple": "forms/widgets/checkbox_select.html",
+        "MultiselectDropdown": "forms/widgets/multiselect.html",
+        "RadioSelect": "forms/widgets/radio.html",
+        "DateInput": "forms/widgets/date.html",
+        "Textarea": "forms/widgets/textarea.html",
+        "CheckboxInput": "forms/widgets/checkbox.html",
+        "OrgPickerWidget": "widgets/org_picker.html",
     }

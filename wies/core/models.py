@@ -143,6 +143,16 @@ class Colleague(models.Model):
     source_url = models.URLField(blank=True)
     # placements via reversed relation
 
+    # Display preference for the NLDD components: rendered server-side as
+    # data-scheme on <html>, so the choice applies before first paint and
+    # travels with the account instead of the browser.
+    class Theme(models.TextChoices):
+        SYSTEM = "system", "Systeem"
+        LIGHT = "light", "Licht"
+        DARK = "dark", "Donker"
+
+    theme = models.CharField(max_length=6, choices=Theme.choices, default=Theme.SYSTEM)
+
     class Meta:
         constraints = [
             models.UniqueConstraint(Lower("email"), "source", name="unique_colleague_email_source_ci"),

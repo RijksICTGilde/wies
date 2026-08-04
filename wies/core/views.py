@@ -2107,15 +2107,17 @@ def label_category_edit(request, pk):
 def user_theme(request):
     """Store the display preference of the logged-in user.
 
-    The choice lives on the user rather than in the browser, so it travels to
-    every device and base.html can render it server-side as data-scheme: the
-    screen is correct on first paint, without a flash while loading.
+    The choice lives on the user's Colleague rather than in the browser, so it
+    travels to every device and base.html can render it server-side as
+    data-scheme: the screen is correct on first paint, without a flash while
+    loading.
     """
     theme = request.POST.get("theme", "")
-    if theme not in User.Theme.values:
+    if theme not in Colleague.Theme.values:
         return HttpResponseBadRequest("Onbekende weergave")
-    request.user.theme = theme
-    request.user.save(update_fields=["theme"])
+    colleague = request.user.colleague
+    colleague.theme = theme
+    colleague.save(update_fields=["theme"])
     return HttpResponse(status=204)
 
 
@@ -3467,7 +3469,7 @@ def _render_inline_edit_display(
         "alert": alert,
         **extra,
     }
-    response = render(request, "wies/parts/inline_edit/display.html", ctx)
+    response = render(request, "parts/inline_edit/display.html", ctx)
     if saved:
         response["HX-Trigger-After-Swap"] = "inline-edit-saved"
     return response
@@ -3486,7 +3488,7 @@ def _render_inline_edit_form(
         "concurrency_token": token if token is not None else _concurrency_token(editable_set, spec, obj),
         "alert": alert,
     }
-    return render(request, "wies/parts/inline_edit/form.html", ctx)
+    return render(request, "parts/inline_edit/form.html", ctx)
 
 
 def _render_inline_edit_collection_form(
@@ -3499,7 +3501,7 @@ def _render_inline_edit_collection_form(
         "concurrency_token": token if token is not None else _concurrency_token(editable_set, spec, obj),
         "alert": alert,
     }
-    return render(request, "wies/parts/inline_edit/collection_form.html", ctx)
+    return render(request, "parts/inline_edit/collection_form.html", ctx)
 
 
 def _attach_formset_error(formset, message: str) -> None:
