@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.core.serializers.json import DjangoJSONEncoder
 from django.core.validators import RegexValidator
-from django.db import IntegrityError, models, transaction
+from django.db import models
 from django.db.models.functions import Lower
 from django.utils import timezone
 
@@ -67,40 +67,7 @@ DEFAULT_LABELS = {
 }
 
 
-_PUBLIC_ID_SAVE_ATTEMPTS = 3
-
-
-class PublicIdModel(models.Model):
-    """Abstract base for records carrying an unguessable ``public_id``.
-
-    On the astronomically rare public_id collision, regenerate and retry so a
-    one-in-forever clash never surfaces as a 500. Any other IntegrityError (a
-    different unique constraint) is re-raised untouched. Each attempt runs in a
-    savepoint so a caller's surrounding transaction survives the failed insert.
-    """
-
-    class Meta:
-        abstract = True
-
-    def save(self, *args, **kwargs):
-        for attempt in range(_PUBLIC_ID_SAVE_ATTEMPTS):
-            try:
-                with transaction.atomic():
-                    return super().save(*args, **kwargs)
-            except IntegrityError:
-                is_last = attempt == _PUBLIC_ID_SAVE_ATTEMPTS - 1
-                if is_last or not self._public_id_collision():
-                    raise
-                self.public_id = generate_public_id()
-        return None  # unreachable: the loop always returns or raises
-
-    def _public_id_collision(self) -> bool:
-        """Whether the current public_id already belongs to another row — i.e.
-        the IntegrityError was the public_id constraint, not some other one."""
-        return type(self).objects.filter(public_id=self.public_id).exclude(pk=self.pk).exists()
-
-
-class LabelCategory(PublicIdModel):
+class LabelCategory(models.Model):
     # URL-facing identifier; the integer PK is never exposed in URLs.
     public_id = models.UUIDField(default=generate_public_id, unique=True, editable=False)
     name = models.CharField(max_length=100, unique=True)
@@ -113,7 +80,7 @@ class LabelCategory(PublicIdModel):
         return self.name
 
 
-class Label(PublicIdModel):
+class Label(models.Model):
     # URL-facing identifier; the integer PK is never exposed in URLs.
     public_id = models.UUIDField(default=generate_public_id, unique=True, editable=False)
     name = models.CharField(max_length=100)
@@ -127,7 +94,7 @@ class Label(PublicIdModel):
         return f"{self.name}"
 
 
-class Suborganization(PublicIdModel):
+class Suborganization(models.Model):
     """A suborganisation ("merk") a colleague belongs to. Exactly one per colleague."""
 
     # URL-facing identifier; the integer PK is never exposed in URLs.
@@ -141,7 +108,7 @@ class Suborganization(PublicIdModel):
         return self.name
 
 
-class Skill(PublicIdModel):
+class Skill(models.Model):
     # URL-facing identifier; the integer PK is never exposed in URLs (used as a filter value).
     public_id = models.UUIDField(default=generate_public_id, unique=True, editable=False)
     name = models.CharField(max_length=30, unique=True)
@@ -153,7 +120,7 @@ class Skill(PublicIdModel):
         return self.name
 
 
-class Colleague(PublicIdModel):
+class Colleague(models.Model):
     # URL-facing identifier; the integer PK is never exposed in URLs.
     public_id = models.UUIDField(default=generate_public_id, unique=True, editable=False)
     user = models.OneToOneField(
@@ -181,7 +148,7 @@ class Colleague(PublicIdModel):
 
 
 # Create your models here.
-class Assignment(PublicIdModel):
+class Assignment(models.Model):
     # URL-facing identifier; the integer PK is never exposed in URLs.
     public_id = models.UUIDField(default=generate_public_id, unique=True, editable=False)
     name = models.CharField(max_length=200)
@@ -218,7 +185,7 @@ class Assignment(PublicIdModel):
         return "active"
 
 
-class Placement(PublicIdModel):
+class Placement(models.Model):
     SERVICE = "SERVICE"
     PLACEMENT = "PLACEMENT"
     PERIOD_SOURCE_CHOICES = {SERVICE: "Zelfde als opdracht", PLACEMENT: "Afwijkend van opdracht"}
@@ -260,7 +227,7 @@ class Placement(PublicIdModel):
         return self.specific_end_date
 
 
-class Service(PublicIdModel):
+class Service(models.Model):
     ASSIGNMENT = "ASSIGNMENT"
     SERVICE = "SERVICE"
     PERIOD_SOURCE_CHOICES = {ASSIGNMENT: "Zelfde als opdracht", SERVICE: "Afwijkend van opdracht"}
@@ -404,7 +371,7 @@ class OrganizationType(models.Model):
         return f"{self.label} ({self.name})"
 
 
-class OrganizationUnit(PublicIdModel):
+class OrganizationUnit(models.Model):
     """Hierarchical organization model for Dutch government organizations."""
 
     # URL-facing identifier; the integer PK is never exposed in URLs (used as a filter value).

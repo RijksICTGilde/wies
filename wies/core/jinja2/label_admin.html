@@ -25,7 +25,7 @@
     {# Categories and Labels #}
     {% if categories %}
       {% for category in categories %}
-        <div id="label_category_{{ category.id }}">{% include "parts/label_category.html" %}</div>
+        <div id="label_category_{{ category.public_id }}">{% include "parts/label_category.html" %}</div>
       {% endfor %}
     {% else %}
       <c-paragraph>

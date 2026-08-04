@@ -245,14 +245,15 @@ class TopOrgOptionsTest(FilterCombiningTestBase):
     """
 
     def test_org_selection_is_checked_with_org_param(self):
-        opts = _get_top_org_options("placements", [], {str(self.org_a.public_id)})
+        # Selections come in as internal ids; the rendered option value is the public_id.
+        opts = _get_top_org_options("placements", [], {self.org_a.id})
         match = [o for o in opts if o["value"] == str(self.org_a.public_id)]
         assert match, "selected org must appear as a quick option"
         assert match[0]["param"] == "org"
         assert match[0]["selected"] is True
 
     def test_self_selection_is_checked_with_org_self_param(self):
-        opts = _get_top_org_options("placements", [], set(), selected_self_ids={str(self.org_a.public_id)})
+        opts = _get_top_org_options("placements", [], set(), selected_self_ids={self.org_a.id})
         match = [o for o in opts if o["param"] == "org_self" and o["value"] == str(self.org_a.public_id)]
         assert match, "selected self-node must appear as a quick option"
         assert match[0]["selected"] is True
@@ -265,7 +266,7 @@ class TopOrgOptionsTest(FilterCombiningTestBase):
         assert match[0]["selected"] is True
 
     def test_selected_options_sort_before_unselected(self):
-        opts = _get_top_org_options("placements", [], set(), selected_self_ids={str(self.org_a.public_id)})
+        opts = _get_top_org_options("placements", [], set(), selected_self_ids={self.org_a.id})
         assert opts[0]["selected"] is True
 
 

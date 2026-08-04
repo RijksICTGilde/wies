@@ -4,7 +4,6 @@ what URLs expose."""
 
 import datetime
 import uuid
-from unittest.mock import patch
 
 import pytest
 from django import forms
@@ -71,8 +70,7 @@ class AssignmentPublicIdTests(TestCase):
 
 class AssignmentPublicIdRoutingTests(TestCase):
     """The dedicated assignment routes resolve by public_id, so the sequential
-    integer PK is no longer walkable in those URLs. (The ?opdracht= panel param
-    and the shared inline-edit route are converted in a later slice.)"""
+    integer PK is no longer walkable in those URLs."""
 
     def setUp(self):
         self.client = Client()
@@ -98,7 +96,7 @@ class AssignmentPublicIdRoutingTests(TestCase):
             try:
                 url = reverse(route, args=[self.assignment.pk])
             except NoReverseMatch:
-                continue  # int rejected by the <pubid:> pattern - exactly the point
+                continue  # int rejected by the <uuid:> converter, which is the point
             assert self.client.get(url).status_code == 404, f"{route} still resolved an int pk"
 
 
@@ -355,45 +353,14 @@ class LabelAdminRoutePublicIdTests(TestCase):
             assert self.client.get(url).status_code == 404, route
 
 
-class PublicIdCollisionRetryTests(TestCase):
-    """PublicIdModel.save() regenerates on the rare public_id clash instead of
-    surfacing a 500, but leaves any other IntegrityError untouched. We force the
-    first value with an explicit public_id (the field default is bound at class
-    definition time, so only the save() retry path reads the patched name)."""
+class PublicIdUniquenessTests(TestCase):
+    """The database constraint is the guarantee: a duplicate public_id never lands."""
 
-    _ID_A = uuid.UUID("00000000-0000-4000-8000-00000000000a")
-    _ID_B = uuid.UUID("00000000-0000-4000-8000-00000000000b")
-
-    def test_collision_is_retried_and_resolved(self):
-        LabelCategory.objects.create(name="Cat1", color="#FF0000", public_id=self._ID_A)
-        second = LabelCategory(name="Cat2", color="#00FF00", public_id=self._ID_A)
-        with patch("wies.core.models.generate_public_id", return_value=self._ID_B):
-            second.save()
-
-        assert second.public_id == self._ID_B
-        assert LabelCategory.objects.filter(public_id=self._ID_B).exists()
-
-    def test_persistent_collision_eventually_raises(self):
-        LabelCategory.objects.create(name="Cat1", color="#FF0000", public_id=self._ID_A)
-        second = LabelCategory(name="Cat2", color="#00FF00", public_id=self._ID_A)
-        # Every regenerate returns the same taken id, so retries are exhausted.
-        with (
-            patch("wies.core.models.generate_public_id", return_value=self._ID_A),
-            self.assertRaises(IntegrityError),  # noqa: PT027 — TestCase assertRaises matches the rest of this file
-        ):
-            second.save()
-
-    def test_other_integrity_error_is_not_swallowed_as_a_collision(self):
-        LabelCategory.objects.create(name="Dup", color="#FF0000", public_id=self._ID_A)
-        # Same (unique) name, unique public_id: the clash is the name, not the id,
-        # so it must surface immediately without any regenerate/retry.
-        clashing_name = LabelCategory(name="Dup", color="#00FF00", public_id=self._ID_B)
-        with (
-            patch("wies.core.models.generate_public_id") as gen,
-            self.assertRaises(IntegrityError),  # noqa: PT027 — TestCase assertRaises matches the rest of this file
-        ):
-            clashing_name.save()
-        assert gen.call_count == 0
+    def test_duplicate_public_id_is_rejected(self):
+        taken = uuid.UUID("00000000-0000-4000-8000-00000000000a")
+        LabelCategory.objects.create(name="Cat1", color="#FF0000", public_id=taken)
+        with self.assertRaises(IntegrityError):  # noqa: PT027 (prefer pytest.raises) - TestCase assertRaises matches the rest of this file
+            LabelCategory.objects.create(name="Cat2", color="#00FF00", public_id=taken)
 
 
 class SkillOrgPublicIdTests(TestCase):
@@ -524,3 +491,68 @@ class InlineEditChoicePublicIdTests(TestCase):
         assert response.status_code == 200
         self.colleague.refresh_from_db()
         assert self.colleague.suborganization is None
+
+
+class FilterFacetFailClosedTests(TestCase):
+    """Every filter facet fails closed the same way: a value that resolves to no
+    row filters everything away instead of being dropped. A stale id in a shared
+    or bookmarked URL must never quietly widen the overview."""
+
+    FACETS = ("org", "org_self", "rol", "merk", "labels")
+    PLACED_NAME = "Geplaatste Collega"
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(email="viewer@rijksoverheid.nl", first_name="Viewer")
+        Colleague.objects.create(user=self.user, name="Viewer", email="viewer@rijksoverheid.nl", source="wies")
+        # A second colleague carries the placement, so the row we look for in the
+        # response is not the viewer's own name in the header.
+        placed = Colleague.objects.create(
+            name=self.PLACED_NAME,
+            email="placed@rijksoverheid.nl",
+            source="wies",
+            suborganization=Suborganization.objects.create(name="Rijks ICT Gilde"),
+        )
+        category = LabelCategory.objects.create(name="Expertise", color="#B3D7EE")
+        placed.labels.add(Label.objects.create(name="ICT", category=category))
+        self.org = OrganizationUnit.objects.create(name="Ministerie", label="Ministerie")
+        assignment = Assignment.objects.create(name="Opdracht", source="wies")
+        assignment.organizations.add(self.org)
+        service = Service.objects.create(
+            assignment=assignment,
+            description="Werk",
+            skill=Skill.objects.create(name="Developer"),
+            status="OPEN",
+            source="wies",
+        )
+        self.placement = Placement.objects.create(colleague=placed, service=service, source="wies")
+        self.client.force_login(self.user)
+
+    def _shows_placement(self, params):
+        response = self.client.get(reverse("home"), params)
+        assert response.status_code == 200
+        return self.PLACED_NAME in response.content.decode()
+
+    def test_baseline_without_filters_shows_the_placement(self):
+        assert self._shows_placement({})
+
+    def test_unknown_value_matches_nothing_for_every_facet(self):
+        stranger = str(generate_public_id())
+        for param in self.FACETS:
+            with self.subTest(param=param):
+                assert not self._shows_placement({param: stranger})
+
+    def test_malformed_value_matches_nothing_for_every_facet(self):
+        for param in self.FACETS:
+            with self.subTest(param=param):
+                assert not self._shows_placement({param: "not-a-uuid"})
+
+    def test_sequential_pk_matches_nothing_for_every_facet(self):
+        """The internal pk is not a usable filter token, and it does not fall
+        back to unfiltered either."""
+        for param in self.FACETS:
+            with self.subTest(param=param):
+                assert not self._shows_placement({param: "1"})
+
+    def test_a_resolvable_value_still_filters_normally(self):
+        assert self._shows_placement({"org": str(self.org.public_id)})

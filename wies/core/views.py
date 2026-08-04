@@ -5,6 +5,7 @@ import urllib.parse
 from collections import Counter
 from contextlib import nullcontext
 from datetime import date, timedelta
+from functools import cached_property
 
 from django.conf import settings
 from django.contrib import messages
@@ -41,7 +42,7 @@ from wies.core.inline_edit.forms import (
 )
 from wies.core.permission_engine import Verb, has_permission
 from wies.core.placement_visibility import LABELS, evaluate
-from wies.core.public_id import parse_public_ids
+from wies.core.public_id import FacetResolver, ResolvedFacet, parse_public_ids
 from wies.rijksauth.services.usage import get_usage_stats
 
 from .forms import (
@@ -617,7 +618,111 @@ def staff_database(request):
     return render(request, "staff_database.html", context)
 
 
-class PlacementListView(ListView):
+def _org_chip_data(org: ResolvedFacet, org_self: ResolvedFacet, type_labels: list[str]) -> list[dict]:
+    """Chips for the opdrachtgever facets, in the order they appear in the URL."""
+    labels: dict[str, str] = {}
+    if org.ids or org_self.ids:
+        labels = {
+            str(public_id): label
+            for public_id, label in OrganizationUnit.objects.filter(id__in=[*org.ids, *org_self.ids]).values_list(
+                "public_id", "label"
+            )
+        }
+    chips: list[dict] = [
+        {
+            "param_name": "org",
+            "param_value": public_id,
+            "label": labels.get(public_id, f"Organisatie {public_id}"),
+        }
+        for public_id in org.public_ids
+    ]
+    chips.extend(
+        {
+            "param_name": "org_self",
+            "param_value": public_id,
+            "label": f"{labels.get(public_id, f'Organisatie {public_id}')} (direct)",
+        }
+        for public_id in org_self.public_ids
+    )
+    chips.extend(
+        {
+            "param_name": "org_type",
+            "param_value": type_label,
+            "label": ORG_TYPE_PLURAL.get(type_label, type_label),
+        }
+        for type_label in type_labels
+    )
+    return chips
+
+
+class PublicIdFacetsMixin:
+    """Resolves the public_id filter params of a list view once per request.
+
+    Every facet fails closed: a param that is present but resolves to no row
+    filters everything away instead of being dropped. See ``ResolvedFacet``.
+    """
+
+    @cached_property
+    def facets(self) -> FacetResolver:
+        return FacetResolver(self.request)
+
+    @cached_property
+    def org_type_filter(self) -> list[str]:
+        return [x for x in self.request.GET.getlist("org_type") if x]
+
+    def apply_org_filter(self, qs, lookup: str):
+        """Apply the opdrachtgever facets (``org``/``org_self``/``org_type``).
+
+        ``lookup`` is the queryset path to the organization id, which differs per
+        list view. A selected org matches its whole subtree, ``org_self`` only the
+        org itself, and an org type every org of that type plus its subtree.
+        """
+        org = self.facets("org", OrganizationUnit)
+        org_self = self.facets("org_self", OrganizationUnit)
+        if not (org.requested or org_self.requested or self.org_type_filter):
+            return qs
+        matching_ids: set[int] = set(org_self.ids)
+        if org.ids:
+            matching_ids |= get_org_descendant_ids(org.ids)
+        if self.org_type_filter:
+            type_root_ids = list(
+                OrganizationUnit.objects.filter(organization_types__label__in=self.org_type_filter).values_list(
+                    "id", flat=True
+                )
+            )
+            matching_ids |= get_org_descendant_ids(type_root_ids)
+        return qs.filter(**{lookup: matching_ids})
+
+    def add_org_filter_context(self, context: dict, active_filters: dict) -> None:
+        """Register the opdrachtgever facets as active filters and build their chips."""
+        org = self.facets("org", OrganizationUnit)
+        org_self = self.facets("org_self", OrganizationUnit)
+        if org.public_ids:
+            active_filters["org"] = org.public_ids
+        if org_self.public_ids:
+            active_filters["org_self"] = org_self.public_ids
+        if self.org_type_filter:
+            active_filters["org_type"] = self.org_type_filter
+        context["org_chip_data"] = _org_chip_data(org, org_self, self.org_type_filter)
+
+    @cached_property
+    def labels_by_category(self) -> dict[int, list[int]]:
+        """Selected label ids grouped by their category id."""
+        labels = self.facets("labels", Label)
+        if not labels.ids:
+            return {}
+        by_category: dict[int, list[int]] = {}
+        for label in Label.objects.filter(id__in=labels.ids).values("id", "category_id"):
+            by_category.setdefault(label["category_id"], []).append(label["id"])
+        return by_category
+
+    @property
+    def labels_match_nothing(self) -> bool:
+        """A ``?labels=`` was given but none of its values exist."""
+        return self.facets("labels", Label).requested and not self.labels_by_category
+
+
+class PlacementListView(PublicIdFacetsMixin, ListView):
     """View for placements table view with infinite scroll pagination"""
 
     model = Placement
@@ -680,16 +785,6 @@ class PlacementListView(ListView):
         viewer = getattr(self.request.user, "colleague", None)
         return filter_visible_placements(qs, timezone.now().date(), viewer)
 
-    def _get_labels_by_category(self):
-        """Parse selected label public_ids grouped by category (keyed by internal id)."""
-        label_public_ids = self.request.GET.getlist("labels")
-        if not label_public_ids:
-            return {}
-        labels_by_category = {}
-        for label in Label.objects.filter(public_id__in=parse_public_ids(label_public_ids)).values("id", "category_id"):
-            labels_by_category.setdefault(label["category_id"], []).append(label["id"])
-        return labels_by_category
-
     def _get_loopt_af_options(self, base_qs):
         """Build 'loopt af' filter options with cumulative counts."""
         today = timezone.now().date()
@@ -712,44 +807,25 @@ class PlacementListView(ListView):
     def _apply_filters(self, qs, *, exclude_filter=None):
         """Apply all selection filters, optionally excluding one filter type.
 
-        exclude_filter can be: "rol", "org", "loopt_af", or a category_id (int) for labels.
+        exclude_filter can be: "rol", "org", "merk", "loopt_af", or a category_id
+        (int) for labels.
         """
-        if exclude_filter != "rol":
-            rol_public_ids = self.request.GET.getlist("rol")
-            if rol_public_ids:
-                qs = qs.filter(service__skill__public_id__in=parse_public_ids(rol_public_ids))
+        rol = self.facets("rol", Skill)
+        if exclude_filter != "rol" and rol.requested:
+            qs = qs.filter(service__skill_id__in=rol.ids)
 
         if exclude_filter != "org":
-            org_ids = _ids_for_public_ids(OrganizationUnit, self.request.GET.getlist("org"))
-            org_self_ids = _ids_for_public_ids(OrganizationUnit, self.request.GET.getlist("org_self"))
-            org_type_labels = [x for x in self.request.GET.getlist("org_type") if x]
-
-            if org_ids or org_self_ids or org_type_labels:
-                matching_ids: set[int] = set()
-                if org_ids:
-                    matching_ids |= get_org_descendant_ids(org_ids)
-                if org_type_labels:
-                    type_root_ids = list(
-                        OrganizationUnit.objects.filter(organization_types__label__in=org_type_labels).values_list(
-                            "id", flat=True
-                        )
-                    )
-                    matching_ids |= get_org_descendant_ids(type_root_ids)
-                if org_self_ids:
-                    matching_ids |= set(org_self_ids)
-                qs = qs.filter(service__assignment__organizations__id__in=matching_ids)
+            qs = self.apply_org_filter(qs, "service__assignment__organizations__id__in")
 
         # Label filter: OR within category, AND between categories
-        labels_by_category = self._get_labels_by_category()
-        for cat_id, cat_label_ids in labels_by_category.items():
+        for cat_id, cat_label_ids in self.labels_by_category.items():
             if exclude_filter != cat_id:
                 qs = qs.filter(colleague__labels__id__in=cat_label_ids)
 
         # Merk filter: OR within the merk group (one merk per colleague)
-        if exclude_filter != "merk":
-            suborganization_public_ids = parse_public_ids(self.request.GET.getlist("merk"))
-            if suborganization_public_ids:
-                qs = qs.filter(colleague__suborganization__public_id__in=suborganization_public_ids)
+        merk = self.facets("merk", Suborganization)
+        if exclude_filter != "merk" and merk.requested:
+            qs = qs.filter(colleague__suborganization_id__in=merk.ids)
 
         # Filter by assignment end date (preset period)
         if exclude_filter != "loopt_af":
@@ -777,12 +853,9 @@ class PlacementListView(ListView):
 
     def get_queryset(self):
         """Apply filters to placements queryset - only show INGEVULD assignments, not LEAD"""
-        qs = self._get_base_queryset()
-        label_public_ids = self.request.GET.getlist("labels")
-        if label_public_ids and not self._get_labels_by_category():
+        if self.labels_match_nothing:
             return Placement.objects.none()
-        qs = self._apply_filters(qs)
-        return qs.distinct()
+        return self._apply_filters(self._get_base_queryset()).distinct()
 
     def get_template_names(self):
         """Return appropriate template based on request type"""
@@ -827,73 +900,21 @@ class PlacementListView(ListView):
         if loopt_af_values:
             active_filters["loopt_af"] = loopt_af_values
 
-        # rol filter supports multi-select (values are skill public_ids)
-        rol_filter = _existing_public_ids(Skill, self.request.GET.getlist("rol"))
-        if len(rol_filter) > 0:
+        # Multi-select facets carry public_ids; only values that exist are active.
+        rol_filter = self.facets("rol", Skill).public_ids
+        if rol_filter:
             active_filters["rol"] = rol_filter
 
-        # label filter supports multi-select (values are label public_ids)
-        label_filter = _existing_public_ids(Label, self.request.GET.getlist("labels"))
-        if len(label_filter) > 0:
+        label_filter = self.facets("labels", Label).public_ids
+        if label_filter:
             active_filters["labels"] = label_filter
 
-        # merk filter supports multi-select (values are suborganization public_ids)
-        suborganization_filter = _existing_public_ids(Suborganization, self.request.GET.getlist("merk"))
+        suborganization_filter = self.facets("merk", Suborganization).public_ids
         if suborganization_filter:
             active_filters["merk"] = suborganization_filter
 
-        # Organization filter (multi-select via modal; values are org public_ids)
-        org_filter = sorted(_existing_public_ids(OrganizationUnit, self.request.GET.getlist("org")))
-        org_self_filter = sorted(_existing_public_ids(OrganizationUnit, self.request.GET.getlist("org_self")))
-        org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
-        if org_filter:
-            active_filters["org"] = org_filter
-        if org_self_filter:
-            active_filters["org_self"] = org_self_filter
-        if org_type_filter:
-            active_filters["org_type"] = org_type_filter
-
-        # Build chip display data for org filters (values are org public_ids)
-        org_chip_data: list[dict] = []
-        if org_filter:
-            org_labels = {
-                str(pid): label
-                for pid, label in OrganizationUnit.objects.filter(public_id__in=org_filter).values_list(
-                    "public_id", "label"
-                )
-            }
-            org_chip_data.extend(
-                {
-                    "param_name": "org",
-                    "param_value": org_pid,
-                    "label": org_labels.get(org_pid, f"Organisatie {org_pid}"),
-                }
-                for org_pid in org_filter
-            )
-        if org_self_filter:
-            org_self_labels = {
-                str(pid): label
-                for pid, label in OrganizationUnit.objects.filter(public_id__in=org_self_filter).values_list(
-                    "public_id", "label"
-                )
-            }
-            for org_pid in org_self_filter:
-                base_label = org_self_labels.get(org_pid, f"Organisatie {org_pid}")
-                org_chip_data.append(
-                    {
-                        "param_name": "org_self",
-                        "param_value": org_pid,
-                        "label": f"{base_label} (direct)",
-                    }
-                )
-        org_chip_data.extend(
-            {
-                "param_name": "org_type",
-                "param_value": type_label,
-                "label": ORG_TYPE_PLURAL.get(type_label, type_label),
-            }
-            for type_label in org_type_filter
-        )
+        # Organization filter (multi-select via modal)
+        self.add_org_filter_context(context, active_filters)
 
         # For each filter category, count on a queryset excluding that category's filter
         base_qs = self._get_base_queryset()
@@ -983,7 +1004,6 @@ class PlacementListView(ListView):
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
-        context["org_chip_data"] = org_chip_data
         context["client_modal_count_mode"] = "placements"
 
         # TODO: this can be become an object to help defining correctly and performing extra preprocessing on context
@@ -996,9 +1016,9 @@ class PlacementListView(ListView):
                 "top_options": _get_top_org_options(
                     "placements",
                     get_excluded_org_ids(),
-                    set(org_filter),
-                    selected_self_ids=set(org_self_filter),
-                    selected_type_labels=set(org_type_filter),
+                    set(self.facets("org", OrganizationUnit).ids),
+                    selected_self_ids=set(self.facets("org_self", OrganizationUnit).ids),
+                    selected_type_labels=set(self.org_type_filter),
                     org_counts=org_counts,
                 ),
             },
@@ -1049,7 +1069,7 @@ class PlacementListView(ListView):
         return context
 
 
-class AssignmentListView(ListView):
+class AssignmentListView(PublicIdFacetsMixin, ListView):
     """View for vacancy assignments displayed as cards with infinite scroll pagination"""
 
     model = Assignment
@@ -1085,33 +1105,16 @@ class AssignmentListView(ListView):
         return qs
 
     def _apply_filters(self, qs, *, exclude_filter=None):
-        if exclude_filter != "rol":
-            rol_public_ids = self.request.GET.getlist("rol")
-            if rol_public_ids:
-                qs = qs.filter(
-                    services__skill__public_id__in=parse_public_ids(rol_public_ids),
-                    services__status="OPEN",
-                    services__placements__isnull=True,
-                )
+        rol = self.facets("rol", Skill)
+        if exclude_filter != "rol" and rol.requested:
+            qs = qs.filter(
+                services__skill_id__in=rol.ids,
+                services__status="OPEN",
+                services__placements__isnull=True,
+            )
 
         if exclude_filter != "org":
-            org_ids = _ids_for_public_ids(OrganizationUnit, self.request.GET.getlist("org"))
-            org_self_ids = _ids_for_public_ids(OrganizationUnit, self.request.GET.getlist("org_self"))
-            org_type_labels = [x for x in self.request.GET.getlist("org_type") if x]
-            if org_ids or org_self_ids or org_type_labels:
-                matching_ids: set[int] = set()
-                if org_ids:
-                    matching_ids |= get_org_descendant_ids(org_ids)
-                if org_type_labels:
-                    type_root_ids = list(
-                        OrganizationUnit.objects.filter(organization_types__label__in=org_type_labels).values_list(
-                            "id", flat=True
-                        )
-                    )
-                    matching_ids |= get_org_descendant_ids(type_root_ids)
-                if org_self_ids:
-                    matching_ids |= set(org_self_ids)
-                qs = qs.filter(organizations__id__in=matching_ids)
+            qs = self.apply_org_filter(qs, "organizations__id__in")
 
         return qs
 
@@ -1174,8 +1177,8 @@ class AssignmentListView(ListView):
                 active_filters["beschikbaar_vanaf"] = beschikbaar_vanaf
 
         # rol filter supports multi-select (values are skill public_ids)
-        rol_filter = _existing_public_ids(Skill, self.request.GET.getlist("rol"))
-        if len(rol_filter) > 0:
+        rol_filter = self.facets("rol", Skill).public_ids
+        if rol_filter:
             active_filters["rol"] = rol_filter
 
         # Skill/role counts: exclude role filter for cross-filtering
@@ -1200,62 +1203,11 @@ class AssignmentListView(ListView):
                 skill_selected_values.append(str(skill.public_id))
             skill_options.append(option)
 
-        # Organization filter (multi-select via modal; values are org public_ids)
-        org_filter = sorted(_existing_public_ids(OrganizationUnit, self.request.GET.getlist("org")))
-        org_self_filter = sorted(_existing_public_ids(OrganizationUnit, self.request.GET.getlist("org_self")))
-        org_type_filter = [x for x in self.request.GET.getlist("org_type") if x]
-        if org_filter:
-            active_filters["org"] = org_filter
-        if org_self_filter:
-            active_filters["org_self"] = org_self_filter
-        if org_type_filter:
-            active_filters["org_type"] = org_type_filter
-
-        # Build chip display data for org filters (values are org public_ids)
-        org_chip_data: list[dict] = []
-        if org_filter:
-            org_labels = {
-                str(pid): label
-                for pid, label in OrganizationUnit.objects.filter(public_id__in=org_filter).values_list(
-                    "public_id", "label"
-                )
-            }
-            org_chip_data.extend(
-                {
-                    "param_name": "org",
-                    "param_value": org_pid,
-                    "label": org_labels.get(org_pid, f"Organisatie {org_pid}"),
-                }
-                for org_pid in org_filter
-            )
-        if org_self_filter:
-            org_self_labels = {
-                str(pid): label
-                for pid, label in OrganizationUnit.objects.filter(public_id__in=org_self_filter).values_list(
-                    "public_id", "label"
-                )
-            }
-            for org_pid in org_self_filter:
-                base_label = org_self_labels.get(org_pid, f"Organisatie {org_pid}")
-                org_chip_data.append(
-                    {
-                        "param_name": "org_self",
-                        "param_value": org_pid,
-                        "label": f"{base_label} (direct)",
-                    }
-                )
-        org_chip_data.extend(
-            {
-                "param_name": "org_type",
-                "param_value": type_label,
-                "label": ORG_TYPE_PLURAL.get(type_label, type_label),
-            }
-            for type_label in org_type_filter
-        )
+        # Organization filter (multi-select via modal)
+        self.add_org_filter_context(context, active_filters)
 
         context["active_filters"] = active_filters
         context["active_filter_count"] = len(active_filters)
-        context["org_chip_data"] = org_chip_data
         context["client_modal_count_mode"] = "open_assignments"
 
         context["filter_groups"] = [
@@ -1266,9 +1218,9 @@ class AssignmentListView(ListView):
                 "top_options": _get_top_org_options(
                     "open_assignments",
                     get_excluded_org_ids(),
-                    set(org_filter),
-                    selected_self_ids=set(org_self_filter),
-                    selected_type_labels=set(org_type_filter),
+                    set(self.facets("org", OrganizationUnit).ids),
+                    selected_self_ids=set(self.facets("org_self", OrganizationUnit).ids),
+                    selected_type_labels=set(self.org_type_filter),
                     org_counts=org_counts,
                 ),
             },
@@ -1324,7 +1276,7 @@ class AssignmentListView(ListView):
         return context
 
 
-class UserListView(PermissionRequiredMixin, ListView):
+class UserListView(PublicIdFacetsMixin, PermissionRequiredMixin, ListView):
     """View for user list with filtering and infinite scroll pagination"""
 
     model = User
@@ -1354,32 +1306,20 @@ class UserListView(PermissionRequiredMixin, ListView):
 
         return qs
 
-    def _get_labels_by_category(self):
-        """Parse selected label public_ids grouped by category (keyed by internal id)."""
-        label_public_ids = self.request.GET.getlist("labels")
-        if not label_public_ids:
-            return {}
-        labels_by_category = {}
-        for label in Label.objects.filter(public_id__in=parse_public_ids(label_public_ids)).values("id", "category_id"):
-            labels_by_category.setdefault(label["category_id"], []).append(label["id"])
-        return labels_by_category
-
     def _apply_filters(self, qs, *, exclude_filter=None):
         """Apply all selection filters, optionally excluding one filter type.
 
-        exclude_filter can be: "rol", or a category_id (int) for labels.
+        exclude_filter can be: "rol", "merk", or a category_id (int) for labels.
         """
         # Label filter: OR within category, AND between categories
-        labels_by_category = self._get_labels_by_category()
-        for cat_id, cat_label_ids in labels_by_category.items():
+        for cat_id, cat_label_ids in self.labels_by_category.items():
             if exclude_filter != cat_id:
                 qs = qs.filter(colleague__labels__id__in=cat_label_ids)
 
         # Merk filter: OR within the merk group (one merk per colleague)
-        if exclude_filter != "merk":
-            suborganization_public_ids = parse_public_ids(self.request.GET.getlist("merk"))
-            if suborganization_public_ids:
-                qs = qs.filter(colleague__suborganization__public_id__in=suborganization_public_ids)
+        merk = self.facets("merk", Suborganization)
+        if exclude_filter != "merk" and merk.requested:
+            qs = qs.filter(colleague__suborganization_id__in=merk.ids)
 
         # Role filter
         if exclude_filter != "rol":
@@ -1391,12 +1331,9 @@ class UserListView(PermissionRequiredMixin, ListView):
 
     def get_queryset(self):
         """Apply filters to users queryset - exclude superusers"""
-        qs = self._get_base_queryset()
-        label_public_ids = self.request.GET.getlist("labels")
-        if label_public_ids and not self._get_labels_by_category():
+        if self.labels_match_nothing:
             return User.objects.none()
-        qs = self._apply_filters(qs)
-        return qs.distinct()
+        return self._apply_filters(self._get_base_queryset()).distinct()
 
     def get_template_names(self):
         """Return appropriate template based on request type"""
@@ -1419,12 +1356,12 @@ class UserListView(PermissionRequiredMixin, ListView):
         active_filters = {}
 
         # label filter supports multi-select (values are label public_ids)
-        label_filter = _existing_public_ids(Label, self.request.GET.getlist("labels"))
-        if len(label_filter) > 0:
+        label_filter = self.facets("labels", Label).public_ids
+        if label_filter:
             active_filters["labels"] = label_filter
 
-        # merk filter supports multi-select
-        suborganization_filter = _existing_public_ids(Suborganization, self.request.GET.getlist("merk"))
+        # merk filter supports multi-select (values are suborganization public_ids)
+        suborganization_filter = self.facets("merk", Suborganization).public_ids
         if suborganization_filter:
             active_filters["merk"] = suborganization_filter
 
@@ -2109,7 +2046,7 @@ def label_edit(request, public_id):
             category = annotate_usage_counts(category_qs).get()
 
             response = render(request, "parts/label_category.html", {"category": category})
-            response["HX-Retarget"] = f"#label_category_{category.id}"
+            response["HX-Retarget"] = f"#label_category_{category.public_id}"
             response["HX-Trigger"] = "closeModal"
             return response
         return render(
@@ -2147,7 +2084,7 @@ def label_delete(request, public_id):
                 "modal_title": f"Verwijder label: {label.name}",
                 "warning_modal": True,
                 "modal_element_id": "labelFormModal",
-                "target_element_id": f"label_category_{category.id}",
+                "target_element_id": f"label_category_{category.public_id}",
                 "delete_warning": (
                     f"Weet je zeker dat je dit label wilt verwijderen? Het wordt gebruikt op {label_use_count} plekken."
                 ),
@@ -2692,26 +2629,6 @@ def search_suggestions(request):
     return render(request, "parts/search_suggestions.html", {"org_suggestions": orgs, "search_term": term.strip()})
 
 
-def _ids_for_public_ids(model, public_ids) -> list[int]:
-    """Map URL-facing public_id tokens to internal PKs, silently dropping unknown
-    or malformed ones. Filter facets expose public_ids; the tree/count logic stays
-    on PKs."""
-    uuids = parse_public_ids(public_ids)
-    if not uuids:
-        return []
-    return list(model.objects.filter(public_id__in=uuids).values_list("id", flat=True))
-
-
-def _existing_public_ids(model, public_ids) -> set[str]:
-    """The subset of the given tokens that map to a real row. A filter value that
-    matches nothing (unknown or malformed) is not an active filter (and never gets
-    a chip/badge)."""
-    uuids = parse_public_ids(public_ids)
-    if not uuids:
-        return set()
-    return {str(pid) for pid in model.objects.filter(public_id__in=uuids).values_list("public_id", flat=True)}
-
-
 def _get_org_counts(count_mode: str, excluded_org_ids: list[int], viewer) -> Counter[int]:
     """Return per-org self-counts based on count_mode.
 
@@ -2746,10 +2663,10 @@ def _get_org_counts(count_mode: str, excluded_org_ids: list[int], viewer) -> Cou
 def _get_top_org_options(
     count_mode: str,
     excluded_org_ids: list[int],
-    selected_org_ids: set[str],
+    selected_org_ids: set[int],
     *,
     viewer=None,
-    selected_self_ids: set[str] | None = None,
+    selected_self_ids: set[int] | None = None,
     selected_type_labels: set[str] | None = None,
     org_counts: Counter[int] | None = None,
     limit: int = 3,
@@ -2780,10 +2697,8 @@ def _get_top_org_options(
 
     if org_counts is None:
         org_counts = _get_org_counts(count_mode, excluded_org_ids, viewer)
-    # selected_org_ids / selected_self_ids arrive as public_id tokens; resolve to
-    # internal ids so the count/tree logic below stays on ids.
-    selected_ids = set(_ids_for_public_ids(OrganizationUnit, selected_org_ids))
-    self_ids = set(_ids_for_public_ids(OrganizationUnit, selected_self_ids))
+    selected_ids = set(selected_org_ids)
+    self_ids = set(selected_self_ids)
 
     total_selected = len(selected_ids) + len(self_ids) + len(selected_type_labels)
     # Pad the ``org`` group with the highest-count unselected orgs up to ``limit``
@@ -2795,34 +2710,34 @@ def _get_top_org_options(
 
     options: list[dict] = []
 
+    # Iterating the rows (not the wanted ids) keeps an id that no longer exists
+    # out of the options instead of rendering it with a "None" value.
     if org_wanted:
-        rows = list(OrganizationUnit.objects.filter(id__in=org_wanted).values_list("id", "label", "public_id"))
-        labels = {oid: label for oid, label, _ in rows}
-        org_public_ids = {oid: pid for oid, _, pid in rows}
         options.extend(
             {
                 "param": "org",
-                "value": str(org_public_ids.get(org_id)),
-                "label": labels.get(org_id) or f"Organisatie {org_id}",
+                "value": str(public_id),
+                "label": label or f"Organisatie {org_id}",
                 "count": org_counts.get(org_id, 0),
                 "selected": org_id in selected_ids,
             }
-            for org_id in org_wanted
+            for org_id, label, public_id in OrganizationUnit.objects.filter(id__in=org_wanted).values_list(
+                "id", "label", "public_id"
+            )
         )
 
     if self_ids:
-        rows = list(OrganizationUnit.objects.filter(id__in=self_ids).values_list("id", "label", "public_id"))
-        self_labels = {oid: label for oid, label, _ in rows}
-        self_public_ids = {oid: pid for oid, _, pid in rows}
         options.extend(
             {
                 "param": "org_self",
-                "value": str(self_public_ids.get(org_id)),
-                "label": f"{self_labels.get(org_id) or f'Organisatie {org_id}'} (direct)",
+                "value": str(public_id),
+                "label": f"{label or f'Organisatie {org_id}'} (direct)",
                 "count": org_counts.get(org_id, 0),
                 "selected": True,
             }
-            for org_id in self_ids
+            for org_id, label, public_id in OrganizationUnit.objects.filter(id__in=self_ids).values_list(
+                "id", "label", "public_id"
+            )
         )
 
     options.extend(

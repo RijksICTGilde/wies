@@ -195,13 +195,14 @@ class SuborganizationPlacementFilterTest(TestCase):
         assert self._count_for(self.suborg_rig, {"merk": self.suborg_rig.public_id}) == 1
         assert self._count_for(self.suborg_rc, {"merk": self.suborg_rig.public_id}) == 1
 
-    def test_invalid_merk_param_is_ignored(self):
+    def test_invalid_merk_param_matches_nothing(self):
         self.client.force_login(self.auth_user)
         response = self.client.get(reverse("home"), {"merk": "not-a-uuid"})
         assert response.status_code == 200
-        # Unparseable filter is dropped, so nothing is filtered out.
-        self.assertContains(response, "Rig Person")
-        self.assertContains(response, "Rc Person")
+        # A merk was asked for that resolves to no row, so the filter matches
+        # nothing instead of being dropped and showing every colleague.
+        self.assertNotContains(response, "Rig Person")
+        self.assertNotContains(response, "Rc Person")
 
 
 class SuborganizationUserFilterTest(TestCase):

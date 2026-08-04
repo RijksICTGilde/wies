@@ -1448,7 +1448,7 @@ class PlacementOrganizationFilterTest(TestCase):
 
     def test_org_filter_rejects_sequential_pk(self):
         """Anti-enumeration: the org's integer pk is not a usable filter token, so
-        it can't isolate (harvest) that org's placements — only its public_id can."""
+        it can't isolate (harvest) that org's placements, only its public_id can."""
         p_ministry = self._create_placement_for_org(self.ministry)
         p_other = self._create_placement_for_org(self.other_org)
 
@@ -1457,10 +1457,10 @@ class PlacementOrganizationFilterTest(TestCase):
         assert p_ministry.id in by_public_id
         assert p_other.id not in by_public_id
 
-        # ...while the raw pk resolves to no org, so it applies no filter at all.
+        # ...while the raw pk resolves to no org. The filter then matches nothing
+        # rather than falling back to unfiltered, so the pk cannot widen the list.
         by_pk = list(self._get_queryset({"org": str(self.ministry.pk)}).values_list("id", flat=True))
-        assert p_ministry.id in by_pk
-        assert p_other.id in by_pk
+        assert by_pk == []
 
     def test_no_org_filter_returns_all(self):
         """Without org params, all active placements are returned."""

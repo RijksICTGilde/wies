@@ -1,16 +1,10 @@
 from django.db import migrations, models
 
-from wies.core.public_id import generate_public_id
+from wies.core.public_id import backfill_public_ids, generate_public_id
 
 
 def fill_public_ids(apps, schema_editor):
-    """Give every existing user its own public_id. Done row by row because a
-    single callable default on AddField would apply one shared value and break
-    the unique constraint."""
-    User = apps.get_model("rijksauth", "User")
-    for user in User.objects.filter(public_id__isnull=True):
-        user.public_id = generate_public_id()
-        user.save(update_fields=["public_id"])
+    backfill_public_ids(apps, "rijksauth", ["user"])
 
 
 class Migration(migrations.Migration):
