@@ -32,6 +32,16 @@ def _labels_choices(category):
     return _get
 
 
+def _labels_initial_for_category(category_id):
+    # Per categorie filteren (symmetrisch met _save_labels_for_category): anders
+    # hasht het concurrency-token álle labels en maakt een save in de ene
+    # categorie de tokens van de andere stale.
+    def _get(colleague):
+        return list(colleague.labels.filter(category_id=category_id))
+
+    return _get
+
+
 def _build_label_editable(category):
     name = f"{LABELS_PREFIX}{category.id}"
     editable = Editable(
@@ -41,6 +51,7 @@ def _build_label_editable(category):
         required=False,
         widget=MultiselectDropdown,
         choices=_labels_choices(category),
+        initial=_labels_initial_for_category(category.id),
         save=_save_labels_for_category(category.id),
         display="wies/forms/displays/colleague_labels.html",
     )

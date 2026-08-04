@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AnonymousUser
 from django.test import Client, TestCase
@@ -5,7 +7,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from wies.core.context_processors import onboarding
-from wies.core.models import Assignment, Colleague, Placement, Service, Skill
+from wies.core.models import Assignment, Colleague, Label, LabelCategory, Placement, Service, Skill
 
 User = get_user_model()
 
@@ -85,6 +87,94 @@ class OnboardingWizardRenderTest(TestCase):
         response = self.client.get(reverse("home"))
         assert response.status_code == 200
         self.assertNotContains(response, 'id="onboardingWizard"')
+
+
+class OnboardingLabelSaveTest(TestCase):
+    """De profielstap (labels) slaat op via de bare inline_edit_form-macro.
+
+    Regressie: die macro zette geen concurrency-token, en de save-view telt een
+    ontbrekend token als conflict — dus de gekozen labels landden nooit in het
+    profiel. De macro moet nu een geldig token renderen dat de save accepteert.
+    """
+
+    def setUp(self):
+        self.client = Client()
+        self.user = User.objects.create_user(email="lbl@rijksoverheid.nl", first_name="Lena")
+        self.colleague = Colleague.objects.create(
+            user=self.user, name="Lena Label", email="lbl@rijksoverheid.nl", source="wies"
+        )
+        self.category = LabelCategory.objects.create(name="Merk")
+        self.label = Label.objects.create(name="Gateway review", category=self.category)
+        self.category2 = LabelCategory.objects.create(name="Expertise")
+        self.label2 = Label.objects.create(name="Data engineering", category=self.category2)
+
+    def _token_re(self):
+        return re.compile(r'name="_concurrency_token"\s+value="([^"]*)"')
+
+    def _token_for(self, category_id):
+        from wies.core.editables.colleague import ColleagueEditables  # noqa: PLC0415 — test-local
+        from wies.core.views import _concurrency_token  # noqa: PLC0415 — avoids import cycle at module load
+
+        spec = ColleagueEditables.resolve_dynamic(f"labels_{category_id}")
+        return _concurrency_token(ColleagueEditables, spec, self.colleague)
+
+    def _post_labels(self, category_id, label_id, token):
+        url = reverse("inline-edit", args=["colleague", self.colleague.pk, f"labels_{category_id}"])
+        return self.client.post(url, {"labels": str(label_id), "_concurrency_token": token})
+
+    def test_labels_form_renders_a_valid_concurrency_token(self):
+        self.client.force_login(self.user)
+        html = self.client.get(reverse("home")).content.decode()
+        match = self._token_re().search(html)
+        assert match, "de onboarding-labels-form moet een _concurrency_token embedden"
+        token = match.group(1)
+        assert token, "het token mag niet leeg zijn"
+        assert "{{" not in token, "het token mag geen ongerenderde Jinja-expressie zijn"
+
+    def test_onboarding_label_choice_persists(self):
+        self.client.force_login(self.user)
+        html = self.client.get(reverse("home")).content.decode()
+        token = self._token_re().search(html).group(1)
+
+        url = reverse("inline-edit", args=["colleague", self.colleague.pk, f"labels_{self.category.id}"])
+        # De widget rendert name="labels", zoals de browser die post.
+        response = self.client.post(url, {"labels": str(self.label.id), "_concurrency_token": token})
+        assert response.status_code == 200
+        self.colleague.refresh_from_db()
+        assert list(self.colleague.labels.values_list("id", flat=True)) == [self.label.id]
+
+    def test_missing_token_is_rejected_as_conflict(self):
+        # Bewijst dat het token de blokker was: zonder token slaat niets op.
+        self.client.force_login(self.user)
+        url = reverse("inline-edit", args=["colleague", self.colleague.pk, f"labels_{self.category.id}"])
+        self.client.post(url, {"labels": str(self.label.id)})
+        self.colleague.refresh_from_db()
+        assert list(self.colleague.labels.all()) == []
+
+    def test_multiple_categories_all_persist(self):
+        """De onboarding submit elke categorie serieel met het token dat op de
+        LEGE begintoestand is berekend. Het per-``labels_<cat>``-token mag alleen
+        die categorie hashen, anders maakt de eerste save de tokens van de andere
+        categorieën stale → conflict → maar één categorie werd bewaard.
+        """
+        self.client.force_login(self.user)
+        token1 = self._token_for(self.category.id)
+        token2 = self._token_for(self.category2.id)
+
+        r1 = self._post_labels(self.category.id, self.label.id, token1)
+        # token2 is nog op de begintoestand berekend, net als in de wizard: een
+        # save in categorie 1 mag hem niet ongeldig maken.
+        r2 = self._post_labels(self.category2.id, self.label2.id, token2)
+
+        assert r1.status_code == 200
+        assert r2.status_code == 200
+        self.colleague.refresh_from_db()
+        assert set(self.colleague.labels.values_list("id", flat=True)) == {self.label.id, self.label2.id}
+
+    def test_token_is_per_category(self):
+        # Een label in categorie 1 mag het token van categorie 2 niet veranderen.
+        self.colleague.labels.add(self.label)
+        assert self._token_for(self.category.id) != self._token_for(self.category2.id)
 
 
 class OnboardingAssignmentStepTest(TestCase):
