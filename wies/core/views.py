@@ -1408,11 +1408,18 @@ class AssignmentListView(ListView):
         else:
             context["next_page_url"] = None
 
-        # Primary button for assignment creation (BDM permission)
+        # Primary button for assignment creation (BDM permission). Opent de
+        # aanmaak-sheet in het zijpaneel; htmx:afterSettle op #side-panel-content
+        # opent de sheet zodra de partial er in geswapt is (zie side_panel.js).
         if self.request.user.has_perm("core.add_assignment"):
             context["primary_button"] = {
                 "button_text": "Opdracht invoeren",
-                "href": reverse("assignment-create"),
+                "attrs": {
+                    "hx-get": reverse("assignment-create-sheet") + "?terug=" + reverse("assignment-list"),
+                    "hx-target": "#side-panel-content",
+                    "hx-swap": "innerHTML",
+                    "hx-push-url": "false",
+                },
             }
 
         # Side panel
@@ -3838,6 +3845,68 @@ def assignment_edit_view(request, pk):
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
     return response
+
+
+def assignment_create_sheet(request):
+    """Maak een opdracht aan via het zijpaneel — hergebruikt het opdracht-
+    formulier van de bewerk-sheet (naam, omschrijving, opdrachtgever, periode,
+    BM). Diensten/rollen voeg je daarna toe in het opdrachtpaneel.
+
+    GET: de sheet met een leeg formulier. POST: aanmaken en via HX-Location naar
+    het nieuwe opdrachtpaneel. Alleen voor wie opdrachten mag aanmaken.
+    """
+    from wies.core.services.assignments import (  # noqa: PLC0415 — avoids import cycle
+        assignment_create_specs,
+        create_assignment_from_specs,
+    )
+
+    if not request.user.has_perm("core.add_assignment"):
+        return HttpResponseForbidden()
+
+    specs = assignment_create_specs()
+    form_cls, initial = build_combined_form_class(specs)
+    return_to = _safe_return_path(request.GET.get("terug") or request.POST.get("terug_url"), reverse("assignment-list"))
+
+    if request.method == "POST":
+        form = form_cls(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                assignment = create_assignment_from_specs(form.cleaned_data)
+            create_event(
+                object_type="Assignment",
+                action="create",
+                source="user",
+                object_id=assignment.id,
+                user=request.user,
+                request=request,
+                context=_assignment_audit_snapshot(assignment),
+            )
+            sep = "&" if "?" in return_to else "?"
+            path = f"{return_to}{sep}opdracht={assignment.id}"
+            # base.html herlaadt niet bij de panel-swap die op HX-Location volgt,
+            # dus assignment_panel_content.html swapt de banner apart in (OOB).
+            messages.success(
+                request,
+                f'Opdracht "{assignment.name}" is aangemaakt.',
+                extra_tags=f"link:{path}|Bekijk opdracht",
+            )
+            response = HttpResponse(status=204)
+            response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
+            return response
+    else:
+        # Voorvullen: de aanmaker is doorgaans zelf de BM.
+        if getattr(request.user, "colleague", None):
+            initial["owner"] = request.user.colleague
+        form = form_cls(initial=initial)
+
+    panel_data = {
+        "form": form,
+        "edit_url": reverse("assignment-create-sheet"),
+        "parent_url": return_to,
+        "edit_heading": "Opdracht invoeren",
+        "submit_label": "Aanmaken",
+    }
+    return render(request, "parts/assignment_create_panel_content.html", {"panel_data": panel_data})
 
 
 # De teamlijst bewerkt per LID, niet als één formset: elke rij heeft zijn eigen

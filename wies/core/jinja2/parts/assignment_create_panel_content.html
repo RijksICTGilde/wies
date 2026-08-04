@@ -1,17 +1,16 @@
-{# Child sheet van het opdrachtpaneel: alle opdrachtgegevens in één formulier.
-   De terugknop van de top-title-bar vuurt een `back`-event dat side_panel.js
-   afvangt; opslaan stuurt via HX-Location terug naar het ouderpaneel
-   (zie assignment_edit_view). Het team heeft zijn eigen child sheet: een
-   formset past niet in dit platte formulier.
+{# Aanmaak-sheet: hetzelfde platte opdrachtformulier als de bewerk-sheet
+   (parts/assignment_edit_panel_content.html), maar zonder object. Er is nog
+   geen ouderpaneel, dus de top-title-bar sluit de sheet (dismiss) in plaats van
+   terug te gaan. Bij succes stuurt assignment_create_sheet via HX-Location naar
+   het nieuwe opdrachtpaneel; diensten/rollen voeg je daar toe.
 
-   nldd-form krijgt een eigen <form> als direct child (user-provided form
-   mode), omdat htmx zijn attributen op het echte formulier nodig heeft. #}
+   nldd-form krijgt een eigen <form> als direct child (user-provided form mode),
+   omdat htmx zijn attributen op het echte formulier nodig heeft. #}
 {% set form = panel_data.form %}
-{% set panel_heading = panel_data.edit_heading or "Opdracht bewerken" %}
-<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ panel_data.assignment.name }}" dismiss-text="Sluit"></nldd-top-title-bar>
+<nldd-top-title-bar slot="header" text="{{ panel_data.edit_heading }}" collapse-anchor="panel-title" dismiss-text="Sluit"></nldd-top-title-bar>
 <nldd-simple-section padding-top="0">
 <nldd-title size="3">
-<h3 id="panel-title">{{ panel_heading }}</h3>
+<h3 id="panel-title">{{ panel_data.edit_heading }}</h3>
 </nldd-title>
 <nldd-spacer size="12" direction="vertical"></nldd-spacer>
 <nldd-form>
@@ -23,7 +22,7 @@
   {% if form.extra_info %}{{ form.extra_info.as_field_group() }}{% endif %}
   {# as_field_group (niet as_widget + losse foutlus): dat koppelt de fout via
      id aan de widget, zonder die wiring toont nldd-form-field de melding op
-     hoogte 0 — opslaan met een lege opdrachtgever leek dan "niks doen". #}
+     hoogte 0 — een leeg formulier submitten leek dan "niks doen". #}
   {% if form.organizations %}{{ form.organizations.as_field_group() }}{% endif %}
   {% if form.start_date %}{{ form.start_date.as_field_group() }}{% endif %}
   {% if form.end_date %}{{ form.end_date.as_field_group() }}{% endif %}
@@ -35,7 +34,7 @@
      een hidden input bovenaan duwt het eerste zichtbare veld omlaag. #}
   <input type="hidden" name="terug_url" value="{{ panel_data.parent_url }}">
   <nldd-form-actions>
-  <nldd-button type="submit" variant="primary" width="full" text="Opslaan"></nldd-button>
+  <nldd-button type="submit" variant="primary" width="full" text="{{ panel_data.submit_label }}"></nldd-button>
   </nldd-form-actions>
 </form>
 </nldd-form>

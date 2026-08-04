@@ -226,6 +226,13 @@
   function openSheet() {
     var sheet = document.getElementById(SHEET_ID);
     if (!sheet) return;
+    // Zit de picker in een ander sheet (de opdracht-invoeren/-bewerken sheet),
+    // dan slikt de backdrop van dat buitenste sheet de open-klik in als
+    // light-dismiss en flitst de picker dicht. Hijs hem naar body zodat de
+    // modale dialogs niet stapelen. Op de full-page geen wrapper: no-op.
+    if (sheet.closest("nldd-sheet") && sheet.parentElement !== document.body) {
+      document.body.appendChild(sheet);
+    }
     var show = function () {
       if (typeof sheet.show === "function") sheet.show();
     };
@@ -251,8 +258,9 @@
     renderFromInputs();
   });
 
-  // Empty the mount point once the sheet closes, so opening it again fetches a
-  // fresh tree instead of reviving a stale one.
+  // Clear the sheet once it closes, so opening it again fetches a fresh tree
+  // instead of reviving a stale one. Een gehesen sheet (nested case) zit niet
+  // meer in de mount, dus die verwijderen we los.
   document.addEventListener(
     "close",
     function (e) {
@@ -260,8 +268,12 @@
         return el instanceof Element && el.id === SHEET_ID;
       });
       if (!sheet) return;
-      var container = document.getElementById(SHEET_CONTAINER_ID);
-      if (container) container.innerHTML = "";
+      if (sheet.parentElement === document.body) {
+        sheet.remove();
+      } else {
+        var container = document.getElementById(SHEET_CONTAINER_ID);
+        if (container) container.innerHTML = "";
+      }
     },
     true,
   );

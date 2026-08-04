@@ -416,6 +416,109 @@ class AssignmentCreateTest(TestCase):
         placement = service.placements.first()
         assert placement.source == "wies"
 
+    # --- Aanmaak via het zijpaneel (assignment-create-sheet) ---
+    # Zelfde opdrachtvelden als de full-page create, maar zonder rollen: die
+    # voeg je daarna in het opdrachtpaneel toe. Bij succes een 204 met
+    # HX-Location naar ?opdracht=<id>.
+
+    def test_sheet_requires_add_assignment_permission(self):
+        self.client.force_login(self.regular_user)
+        response = self.client.get(reverse("assignment-create-sheet"))
+        assert response.status_code == 403
+
+    def test_sheet_get_returns_form(self):
+        self.client.force_login(self.bdm_user)
+        response = self.client.get(reverse("assignment-create-sheet"))
+        assert response.status_code == 200
+        assert b"Opdracht invoeren" in response.content
+        assert b"Aanmaken" in response.content
+
+    def test_sheet_post_creates_assignment_without_services(self):
+        self.client.force_login(self.bdm_user)
+        response = self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": "Sheet Opdracht",
+                "owner": self.bdm_colleague.id,
+                **org_formset_data([(self.org, "PRIMARY")]),
+                "terug_url": reverse("assignment-list"),
+            },
+        )
+        assert response.status_code == 204
+        # HX-Location stuurt de client naar het nieuwe opdrachtpaneel.
+        assignment = Assignment.objects.get(name="Sheet Opdracht")
+        assert f"opdracht={assignment.id}" in response["HX-Location"]
+        # Geen rollen: die komen later via het paneel.
+        assert assignment.services.count() == 0
+
+    def test_sheet_post_emits_create_event(self):
+        self.client.force_login(self.bdm_user)
+        self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": "Sheet Audit",
+                "owner": self.bdm_colleague.id,
+                **org_formset_data([(self.org, "PRIMARY")]),
+                "terug_url": reverse("assignment-list"),
+            },
+        )
+        assignment = Assignment.objects.get(name="Sheet Audit")
+        event = Event.objects.get(object_type="Assignment", action="create", object_id=assignment.id)
+        assert event.context["name"] == "Sheet Audit"
+
+    def test_sheet_post_validation_no_org_rerenders_form(self):
+        self.client.force_login(self.bdm_user)
+        response = self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": "Zonder Opdrachtgever",
+                "owner": self.bdm_colleague.id,
+                **org_formset_data([]),
+                "terug_url": reverse("assignment-list"),
+            },
+        )
+        # Ongeldig formulier: opnieuw renderen (200), geen opdracht aangemaakt.
+        assert response.status_code == 200
+        assert not Assignment.objects.filter(name="Zonder Opdrachtgever").exists()
+        # De org-fout moet GEKOPPELD renderen, anders toont nldd-form-field hem op
+        # hoogte 0 en lijkt "Aanmaken" niks te doen. De error-text draagt een id en
+        # de picker-div wijst er via error-message naar (+ invalid). Zie
+        # org_picker.html en wire_field_errors.
+        html = response.content.decode()
+        assert 'id="error-organizations-1"' in html
+        assert 'error-message="error-organizations-1"' in html
+        assert 'id="assignment-org-picker" invalid' in html
+
+    def test_sheet_success_banner_rides_along_on_panel_load(self):
+        """De 'is aangemaakt'-banner reist als OOB-swap mee met de panel-response
+        die op de HX-Location volgt — base.html herlaadt niet bij een panel-swap.
+        """
+        self.client.force_login(self.bdm_user)
+        response = self.client.post(
+            reverse("assignment-create-sheet"),
+            {
+                "name": "Banner Opdracht",
+                "owner": self.bdm_colleague.id,
+                **org_formset_data([(self.org, "PRIMARY")]),
+                "terug_url": reverse("assignment-list"),
+            },
+        )
+        assert response.status_code == 204
+        assignment = Assignment.objects.get(name="Banner Opdracht")
+
+        # De vervolg-request (zoals htmx die na HX-Location doet): panel-load.
+        panel = self.client.get(
+            reverse("assignment-list"),
+            {"opdracht": assignment.id},
+            headers={"hx-request": "true", "hx-target": "side-panel-content"},
+        )
+        html = panel.content.decode()
+        assert 'id="flash-messages"' in html
+        assert "hx-swap-oob" in html
+        assert "Banner Opdracht" in html
+        assert "is aangemaakt" in html
+        assert "Bekijk opdracht" in html
+
 
 class AssignmentListButtonTest(TestCase):
     def setUp(self):

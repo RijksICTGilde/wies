@@ -1,16 +1,19 @@
-{% set page_messages = get_messages(request) %}
-{% if page_messages %}
-  <div class="flash-messages" id="flash-messages">
-    {% for message in page_messages %}
-      {% set link = message.extra_tags|parse_message_link %}
-      {% set _variant = 'success' if 'success' in message.tags else 'critical' if 'error' in message.tags else 'neutral' %}
-      {% if link %}
-        <nldd-banner variant="{{ _variant }}" text="{{ message }}">
-        <nldd-rich-text><a href="{{ link.url }}">{{ link.text }}</a></nldd-rich-text>
-        </nldd-banner>
-      {% else %}
-        <nldd-banner variant="{{ _variant }}" text="{{ message }}"></nldd-banner>
-      {% endif %}
-    {% endfor %}
-  </div>
-{% endif %}
+{# Flash-banners. De wrapper staat er altijd (ook leeg), zodat een htmx
+   OOB-swap altijd een #flash-messages-target vindt — panel-responses die geen
+   base.html herladen (bv. na 'Opdracht invoeren' in de sheet) sturen dit blok
+   met flash_oob=True mee om de banner alsnog te tonen. #}
+<div class="flash-messages"
+     id="flash-messages"
+     {% if flash_oob %} hx-swap-oob="outerHTML"{% endif %}>
+  {% for message in get_messages(request) %}
+    {% set link = message.extra_tags|parse_message_link %}
+    {% set _variant = 'success' if 'success' in message.tags else 'critical' if 'error' in message.tags else 'neutral' %}
+    {% if link %}
+      <nldd-banner variant="{{ _variant }}" text="{{ message }}">
+      <nldd-rich-text><a href="{{ link.url }}">{{ link.text }}</a></nldd-rich-text>
+      </nldd-banner>
+    {% else %}
+      <nldd-banner variant="{{ _variant }}" text="{{ message }}"></nldd-banner>
+    {% endif %}
+  {% endfor %}
+</div>

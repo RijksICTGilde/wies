@@ -35,11 +35,16 @@ def parse_message_link(extra_tags: str) -> dict | None:
     """
     if not extra_tags:
         return None
-    for tag in extra_tags.split():
-        if tag.startswith("link:"):
-            parts = tag[5:].split("|", 1)
-            if len(parts) == 2:  # noqa: PLR2004
-                return {"url": parts[0], "text": parts[1]}
+    # extra_tags bevat alleen deze link-tag (het level, bv. "success", zit in
+    # message.tags). Niet op witruimte splitsen: de linktekst mag spaties bevatten
+    # ("Bekijk opdracht"), en een split() kapte die af tot "Bekijk".
+    prefix = "link:"
+    start = extra_tags.find(prefix)
+    if start == -1:
+        return None
+    url, sep, text = extra_tags[start + len(prefix) :].partition("|")
+    if sep:
+        return {"url": url, "text": text}
     return None
 
 

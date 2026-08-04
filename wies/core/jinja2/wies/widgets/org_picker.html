@@ -5,7 +5,11 @@
   assignment_org_picker.js on page load and after an apply from the sheet. #}
 {% set selections = widget.selections %}
 {% set prefix = widget.prefix %}
-<div id="assignment-org-picker">
+{# nldd-form-field toont de fout alleen als zijn "input" (deze div, via
+   _findInput) invalid + error-message draagt; zonder deze attrs staat de melding
+   op hoogte 0. #}
+<div id="assignment-org-picker"
+     {% if widget.attrs.invalid %} invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}>
   <div id="assignment-org-selections"></div>
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   <nldd-button id="assignment-org-trigger-btn" variant="secondary" start-icon="plus" text="Opdrachtgever toevoegen" hx-get="{{ url('client-modal') }}?count_mode=none" hx-target="#assignment-org-modal-container" hx-swap="innerHTML" hx-params="none" hx-push-url="false"></nldd-button>
