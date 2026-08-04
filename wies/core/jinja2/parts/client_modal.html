@@ -21,6 +21,6 @@
 {{ hierarchy|json_script("client-data") }}
 {{ current_selections|json_script("client-current-selections") }}
 {# Order matters: client_tree.js needs both TreeState and WiesOrgTree. #}
-<script src="{{ static('js/wies/tree_state.js') }}"></script>
-<script src="{{ static('js/wies/org_tree.js') }}"></script>
-<script src="{{ static('js/wies/client_tree.js') }}"></script>
+<script src="{{ static('js/tree_state.js') }}"></script>
+<script src="{{ static('js/org_tree.js') }}"></script>
+<script src="{{ static('js/client_tree.js') }}"></script>

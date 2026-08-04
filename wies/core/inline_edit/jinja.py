@@ -70,7 +70,7 @@ def inline_edit(ctx, obj, name, **extras):
         **extras,
     }
     # Trusted template; any user-supplied values go through Jinja's auto-escape.
-    html = render_to_string("wies/parts/inline_edit/display.html", render_ctx, request=request)
+    html = render_to_string("parts/inline_edit/display.html", render_ctx, request=request)
     return mark_safe(html)  # noqa: S308
 
 
@@ -118,5 +118,5 @@ def inline_edit_form(ctx, obj, name, **extras):
         "concurrency_token": _concurrency_token(editable_set, spec, obj),
         **extras,
     }
-    html = render_to_string("wies/parts/inline_edit/form.html", render_ctx, request=request)
+    html = render_to_string("parts/inline_edit/form.html", render_ctx, request=request)
     return mark_safe(html)  # noqa: S308

@@ -18,7 +18,7 @@ class MultiselectDropdown(SelectMultiple):
     the values could not be changed.
     """
 
-    template_name = "wies/forms/widgets/multiselect.html"
+    template_name = "forms/widgets/multiselect.html"
 
     def id_for_label(self, id_, index=None):
         # Return None so the <label> in field.html gets no "for" attribute: the
@@ -35,7 +35,7 @@ class ComboBoxSelect(forms.Select):
     (business managers, consultants).
     """
 
-    template_name = "wies/forms/widgets/combo_box.html"
+    template_name = "forms/widgets/combo_box.html"
 
     def id_for_label(self, id_, index=None):
         # De host is een custom element, geen labelbaar control; de naam reist
@@ -55,7 +55,7 @@ class OrgPickerWidget(forms.Widget):
     (``OrganizationsField``) lives in ``wies/core/fields.py``.
     """
 
-    template_name = "wies/widgets/org_picker.html"
+    template_name = "widgets/org_picker.html"
     # The JS expects a fixed prefix + element IDs (assignment-org-*).
     # When we need multiple picker instances in the future, this goes
     # on a parameter; for now we have one picker per page, same ID set.

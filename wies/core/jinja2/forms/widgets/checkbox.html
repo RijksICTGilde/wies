@@ -1,4 +1,4 @@
 {# Form-associated: its value reaches the form natively.
    The visible label sits in nldd/forms/field.html, so mirror it into
    accessible-label — nldd-checkbox forwards that to the inner input. #}
-<nldd-checkbox name="{{ widget.name }}" {% if widget.value %}checked{% endif %} {% include "wies/forms/widgets/attrs.html" %}></nldd-checkbox>
+<nldd-checkbox name="{{ widget.name }}" {% if widget.value %}checked{% endif %} {% include "forms/widgets/attrs.html" %}></nldd-checkbox>

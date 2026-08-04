@@ -3467,7 +3467,7 @@ def _render_inline_edit_display(
         "alert": alert,
         **extra,
     }
-    response = render(request, "wies/parts/inline_edit/display.html", ctx)
+    response = render(request, "parts/inline_edit/display.html", ctx)
     if saved:
         response["HX-Trigger-After-Swap"] = "inline-edit-saved"
     return response
@@ -3486,7 +3486,7 @@ def _render_inline_edit_form(
         "concurrency_token": token if token is not None else _concurrency_token(editable_set, spec, obj),
         "alert": alert,
     }
-    return render(request, "wies/parts/inline_edit/form.html", ctx)
+    return render(request, "parts/inline_edit/form.html", ctx)
 
 
 def _render_inline_edit_collection_form(
@@ -3499,7 +3499,7 @@ def _render_inline_edit_collection_form(
         "concurrency_token": token if token is not None else _concurrency_token(editable_set, spec, obj),
         "alert": alert,
     }
-    return render(request, "wies/parts/inline_edit/collection_form.html", ctx)
+    return render(request, "parts/inline_edit/collection_form.html", ctx)
 
 
 def _attach_formset_error(formset, message: str) -> None:
