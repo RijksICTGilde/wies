@@ -24,12 +24,12 @@ both stay in sync without a shared wrapper element. #}
      werkwoord. Zonder ?order= staat de lijst in zijn eigen volgorde, en dan is
      er nog niets te tonen. #}
   {% set sort_labels = {
-    'name': 'Naam (A–Z)',
-    '-name': 'Naam (Z–A)',
-    'assignment': 'Opdracht (A–Z)',
-    '-assignment': 'Opdracht (Z–A)',
-    '-end_date': 'Einddatum (nieuwste eerst)',
-    'end_date': 'Einddatum (oudste eerst)',
+    "name": "Naam (A–Z)",
+    "-name": "Naam (Z–A)",
+    "assignment": "Opdracht (A–Z)",
+    "-assignment": "Opdracht (Z–A)",
+    "-end_date": "Einddatum (nieuwste eerst)",
+    "end_date": "Einddatum (oudste eerst)"
   } %}
   {% set current_order = request.GET.get('order') %}
   {# De standaardvolgorde is geen waarde maar de afwezigheid van ?order=, dus
@@ -42,7 +42,7 @@ both stay in sync without a shared wrapper element. #}
      datumveld: er wordt gesorteerd op de startdatum van de opdracht, terwijl de
      zichtbare datum in de rij de einddatum is. Een label als "Plaatsingdatum"
      of "Startdatum" stuurt je dus naar een kolom die er niet staat. #}
-  {% set default_sort_label = 'Plaatsing (nieuwste eerst)' %}
+  {% set default_sort_label = "Plaatsing (nieuwste eerst)" %}
   <nldd-toolbar-item slot="end">
   <nldd-button variant="secondary" expandable start-icon="sort" text="{{ sort_labels.get(current_order) or default_sort_label }}">
   <nldd-menu slot="popup" placement="bottom-end">

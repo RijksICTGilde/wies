@@ -15,8 +15,7 @@
     const item = e
       .composedPath()
       .find(
-        (el) =>
-          el instanceof Element && el.hasAttribute("data-wies-sort-url"),
+        (el) => el instanceof Element && el.hasAttribute("data-wies-sort-url"),
       );
     if (!item) return;
     // Het overflowmenu van de toolbar toont een KLOON en meldt de keuze daarna

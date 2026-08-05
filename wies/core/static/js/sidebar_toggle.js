@@ -39,7 +39,9 @@
   document.addEventListener("select", (e) => {
     const item = e
       .composedPath()
-      .find((el) => el instanceof Element && el.id === "sidebar-toggle-menu-item");
+      .find(
+        (el) => el instanceof Element && el.id === "sidebar-toggle-menu-item",
+      );
     if (!item || !document.contains(item)) return;
     // show() en geen toggle(): een keuze uit een menu is geen schakelaar. De
     // zichtbare Filter-knop mag togglen, want die staat ernaast en je ziet zijn
