@@ -1,5 +1,22 @@
 /* NLDD app-level overrides for Wies */
 
+/* Tell the browser which scheme to paint OS-rendered controls in — most
+   importantly the native <select> popup, which lives outside our CSS (and
+   shadow DOM). Without this, Chrome on Windows paints the open list with the
+   page background but not our text colour, giving white-on-white in dark mode
+   (#529). macOS masks this by always theming the popup itself, so it does not
+   reproduce there. No attribute = user chose "system" (or is logged out), so
+   defer to the OS. */
+html {
+  color-scheme: light dark;
+}
+html[data-scheme="light"] {
+  color-scheme: light;
+}
+html[data-scheme="dark"] {
+  color-scheme: dark;
+}
+
 *,
 *::before,
 *::after {
