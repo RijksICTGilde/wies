@@ -1,5 +1,5 @@
 {% for assignment in object_list %}
-  <nldd-card accessible-label="{{ assignment.name }}" button hx-get="{{ assignment.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
+  <nldd-card background="tinted" accessible-label="{{ assignment.name }}" button hx-get="{{ assignment.panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
   <nldd-container padding="16">
   <nldd-title size="5">
   <h3>{{ assignment.name }}</h3>

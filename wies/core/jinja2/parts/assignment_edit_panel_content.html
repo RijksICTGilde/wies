@@ -8,7 +8,7 @@
    mode), omdat htmx zijn attributen op het echte formulier nodig heeft. #}
 {% set form = panel_data.form %}
 {% set panel_heading = panel_data.edit_heading or "Opdracht bewerken" %}
-<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ panel_data.assignment.name }}" dismiss-text="Sluit"></nldd-top-title-bar>
+<nldd-top-title-bar slot="header" text="{{ panel_heading }}" collapse-anchor="panel-title" back-text="{{ panel_data.assignment.name }}" dismiss-text="Annuleer"></nldd-top-title-bar>
 <nldd-simple-section padding-top="0">
 <nldd-title size="3">
 <h3 id="panel-title">{{ panel_heading }}</h3>

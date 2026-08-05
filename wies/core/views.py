@@ -4106,7 +4106,10 @@ def assignment_create_sheet(request):
         "edit_url": reverse("assignment-create-sheet"),
         "parent_url": return_to,
         "edit_heading": "Opdracht invoeren",
-        "submit_label": "Aanmaken",
+        # Gebiedende wijs, en hetzelfde werkwoord als de kop: de knop maakt de
+        # handeling af die de kop aankondigt. "Aanmaken" was een tweede werkwoord
+        # in dezelfde sheet, en als infinitief ook de vorm van een flow-opener.
+        "submit_label": "Voer opdracht in",
     }
     return render(request, "parts/assignment_create_panel_content.html", {"panel_data": panel_data})
 

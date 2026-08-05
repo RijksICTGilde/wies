@@ -9,7 +9,7 @@
      zijpaneel valt hetzelfde grid vanzelf terug op één kolom. #}
   <nldd-collection layout="grid" item-width="280px">
   {% for assignment in assignments %}
-    <nldd-card href="{{ assignment.assignment_url }}" accessible-label="{{ assignment.name }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML">
+    <nldd-card background="tinted" href="{{ assignment.assignment_url }}" accessible-label="{{ assignment.name }}" hx-get="{{ assignment.assignment_url }}" hx-target="{{ hx_target }}" hx-swap="innerHTML">
     <nldd-container padding="16">
     <nldd-title size="5">
     <h3>{{ assignment.name }}</h3>
