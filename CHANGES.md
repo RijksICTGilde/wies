@@ -4,6 +4,7 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- 555: verwijder de losstaande full-page "opdracht aanmaken" (`/opdrachten/aanmaken/`). Sinds de sheet ("Opdracht invoeren") de knop overnam was die pagina alleen nog via de directe URL bereikbaar. Het gedeelde opdracht-/rollenformulier blijft, want de inline-edit van het opdrachtteam gebruikt het
 - TODO: fix dat labels die je in de onboarding (stap "Vul je profiel aan") koos niet in je profiel werden opgeslagen. Twee oorzaken: (1) de bare `inline_edit_form`-macro zette geen concurrency-token, waardoor de opslag-view elke save als conflict weigerde; (2) het token per `labels_<categorie>` hashte álle labels in plaats van alleen die categorie, dus bij meerdere categorieën maakte de eerste save de tokens van de rest stale — alleen één categorie werd bewaard. De macro geeft het token nu mee, en het label-editable filtert zijn beginwaarde per categorie (symmetrisch met de save), zodat alle categorieën tegelijk opslaan
 
 - TODO: "Wis alle filters" is terug naast de filter-chips — die knop was verdwenen toen `filter_chips.html` bij de NLDD-migratie werd opgeruimd (de handler-comment bleef achter, maar knop én logica waren weg). Eén klik leegt nu weer alle actieve filters (zoek, rol/labels, datum) tegelijk
