@@ -195,6 +195,56 @@ a {
   font-size: 0.875rem;
 }
 
+/* FAQ-accordeon. Het NLDD Design System levert geen accordeon-component, dus
+   we stylen de native <details>/<summary> met NLDD-tokens (werkt zo ook in
+   donkere modus). Scoped op .wies-faq zodat andere <details> ongemoeid blijven. */
+.wies-faq {
+  border-top: 1px solid var(--semantics-surfaces-base-border-color, #cbd5e1);
+}
+.wies-faq details {
+  border-bottom: 1px solid var(--semantics-surfaces-base-border-color, #cbd5e1);
+}
+.wies-faq summary {
+  display: flex;
+  align-items: center;
+  gap: var(--primitives-space-8, 0.5rem);
+  padding: var(--primitives-space-12, 0.75rem) var(--primitives-space-8, 0.5rem);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none; /* verberg de native driehoek (standaard) */
+}
+.wies-faq summary::-webkit-details-marker {
+  display: none; /* verberg de native driehoek (WebKit) */
+}
+.wies-faq summary::before {
+  content: "";
+  flex: none;
+  width: 0.5em;
+  height: 0.5em;
+  border-right: 2px solid var(--semantics-content-accent-color, #007bc7);
+  border-bottom: 2px solid var(--semantics-content-accent-color, #007bc7);
+  transform: rotate(-45deg); /* chevron wijst naar rechts als gesloten */
+  transition: transform 0.15s ease;
+}
+.wies-faq details[open] > summary::before {
+  transform: rotate(45deg); /* chevron wijst naar beneden als open */
+}
+.wies-faq summary:hover {
+  color: var(--semantics-links-color, #007bc7);
+}
+.wies-faq summary:focus-visible {
+  outline: 2px solid var(--semantics-content-accent-color, #007bc7);
+  outline-offset: -2px;
+}
+.wies-faq details[open] {
+  border-left: 4px solid var(--semantics-content-accent-color, #007bc7);
+}
+.wies-faq details > *:not(summary) {
+  margin-left: calc(0.5em + var(--primitives-space-8, 0.5rem));
+  padding-right: var(--primitives-space-8, 0.5rem);
+  padding-bottom: var(--primitives-space-12, 0.75rem);
+}
+
 .flash-messages {
   position: fixed;
   top: 1rem;
