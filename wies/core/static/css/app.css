@@ -17,6 +17,26 @@ html[data-scheme="dark"] {
   color-scheme: dark;
 }
 
+/* Force the page scheme onto native controls themselves. Setting color-scheme on
+   <html> is not enough on Chrome/Windows: the native <select> popup keeps
+   rendering white-on-white in dark mode unless the control element itself carries
+   color-scheme — and nldd-dropdown (the <select>'s parent) resets it, so plain
+   inheritance does not reach the control. Bind it to the same data-scheme signal
+   as html so it tracks an explicit theme choice; without the attribute (system
+   default) it falls back to the OS via the base rule below (#529). */
+select,
+.wies-input,
+input,
+textarea {
+  color-scheme: light dark;
+}
+html[data-scheme="light"] :is(select, .wies-input, input, textarea) {
+  color-scheme: light;
+}
+html[data-scheme="dark"] :is(select, .wies-input, input, textarea) {
+  color-scheme: dark;
+}
+
 *,
 *::before,
 *::after {
