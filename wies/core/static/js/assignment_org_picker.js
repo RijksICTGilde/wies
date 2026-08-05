@@ -184,23 +184,17 @@
     renderSelection(rowsFromInputs());
   }
 
-  /** The trigger's htmx:configRequest adds what /client-modal needs: the orgs to
-   *  pre-check, and count_mode=none so the endpoint returns the picker sheet
-   *  (and no placement counts). Idempotent — runs on page load and after every
-   *  swap, wiring the button exactly once. */
+  /** The trigger's htmx:configRequest sets count_mode=none so the endpoint
+   *  returns the picker sheet (and no placement counts). The sheet opens empty:
+   *  it adds to the orgs already on the assignment rather than editing the whole
+   *  set, so we deliberately do not pre-check anything. Idempotent — runs on page
+   *  load and after every swap, wiring the button exactly once. */
   function wireTriggerButton() {
     var button = document.getElementById("assignment-org-trigger-btn");
     if (!button || button.__wiesOrgPickerWired) return;
     button.__wiesOrgPickerWired = true;
     button.addEventListener("htmx:configRequest", function (e) {
-      var orgIds = [];
-      document
-        .querySelectorAll("#" + INPUTS_ID + " input[data-org-id]")
-        .forEach(function (input) {
-          if (input.dataset.orgId) orgIds.push(input.dataset.orgId);
-        });
       e.detail.parameters["count_mode"] = "none";
-      if (orgIds.length) e.detail.parameters["org"] = orgIds;
     });
   }
 
@@ -231,21 +225,21 @@
   });
 
   document.addEventListener("wies:org-selection-applied", function (e) {
-    // Keep the role of an organisation that was already on the assignment: the
-    // sheet knows nothing about primary/involved.
-    var existingRoles = {};
-    rowsFromInputs().forEach(function (row) {
-      existingRoles[row.nodeId] = row.role;
+    // The sheet opens empty and adds to what is already on the assignment: keep
+    // the current rows (and their primary/involved roles, which the sheet knows
+    // nothing about) and append only orgs that are not attached yet. An org the
+    // user re-picks is silently skipped rather than duplicated. renderSelection
+    // promotes the first row to PRIMARY when the set has none, so adding to an
+    // empty assignment still yields a valid primary.
+    var rows = rowsFromInputs();
+    var seen = {};
+    rows.forEach(function (row) {
+      seen[row.nodeId] = true;
     });
-    var isFirst = true;
-    var rows = (e.detail.rows || []).map(function (row) {
-      var result = {
-        nodeId: row.nodeId,
-        label: row.label,
-        role: existingRoles[row.nodeId] || (isFirst ? "PRIMARY" : "INVOLVED"),
-      };
-      isFirst = false;
-      return result;
+    (e.detail.rows || []).forEach(function (row) {
+      if (seen[row.nodeId]) return;
+      seen[row.nodeId] = true;
+      rows.push({ nodeId: row.nodeId, label: row.label, role: "INVOLVED" });
     });
     renderSelection(rows);
   });
