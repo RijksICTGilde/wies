@@ -77,7 +77,11 @@ body {
 #sidebar-toggle-item {
   display: none;
 }
-nldd-sidebar-section[collapsed] #sidebar-toggle-item {
+/* :not([hidden]) is niet cosmetisch: de toolbar zet [hidden] op een item dat
+   hij naar het overflowmenu verplaatst, en een display uit het document wint
+   van de [hidden]-regel van de browser. Zonder deze uitzondering bleef "Filter"
+   staan en schoof hij half onder de overflowknop. */
+nldd-sidebar-section[collapsed] #sidebar-toggle-item:not([hidden]) {
   display: inline-flex;
 }
 
