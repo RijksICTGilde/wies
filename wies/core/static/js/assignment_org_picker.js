@@ -139,33 +139,30 @@
         slot: "popup",
         placement: "bottom-end",
       });
+      // Geen per-item listener: de acties lopen via de gedelegeerde `select`-
+      // listener onderaan, die het item herkent aan data-org-picker-action. Zo
+      // zijn server-gerenderde en hier-gebouwde chips identiek en gedragen ze
+      // zich gelijk. data-node-id zegt op welke opdrachtgever de actie slaat.
       if (!isPrimary) {
-        var makePrimary = cell("nldd-menu-item", {
-          text: "Maak primaire opdrachtgever",
-          icon: "primary",
-        });
-        makePrimary.addEventListener("select", function () {
-          rows.forEach(function (r) {
-            r.role = r.nodeId === row.nodeId ? "PRIMARY" : "INVOLVED";
-          });
-          renderSelection(rows);
-        });
-        menu.appendChild(makePrimary);
-        menu.appendChild(cell("nldd-menu-divider", {}));
-      }
-      var remove = cell("nldd-menu-item", {
-        text: "Verwijder opdrachtgever",
-        icon: "delete",
-        destructive: "",
-      });
-      remove.addEventListener("select", function () {
-        renderSelection(
-          rows.filter(function (r) {
-            return r.nodeId !== row.nodeId;
+        menu.appendChild(
+          cell("nldd-menu-item", {
+            text: "Maak primaire opdrachtgever",
+            icon: "primary",
+            "data-org-picker-action": "make-primary",
+            "data-node-id": row.nodeId,
           }),
         );
-      });
-      menu.appendChild(remove);
+        menu.appendChild(cell("nldd-menu-divider", {}));
+      }
+      menu.appendChild(
+        cell("nldd-menu-item", {
+          text: "Verwijder opdrachtgever",
+          icon: "delete",
+          destructive: "",
+          "data-org-picker-action": "remove",
+          "data-node-id": row.nodeId,
+        }),
+      );
       trigger.appendChild(menu);
       menuCell.appendChild(trigger);
       item.appendChild(menuCell);
@@ -178,6 +175,12 @@
 
   function renderFromInputs() {
     if (!document.getElementById(INPUTS_ID)) return;
+    // De server rendert de chiplijst al mee in de eerste paint; de gedelegeerde
+    // `select`-listener maakt hem interactief. Dan hier niet wipen-en-herbouwen
+    // (dat geeft een tweede reflow). Alleen bouwen als hij er nog niet is:
+    // full-page aanmaken start leeg, en de eerste apply uit de sheet bouwt hem.
+    var container = document.getElementById(SELECTIONS_ID);
+    if (container && container.querySelector("nldd-list")) return;
     renderSelection(rowsFromInputs());
   }
 
@@ -200,6 +203,32 @@
       if (orgIds.length) e.detail.parameters["org"] = orgIds;
     });
   }
+
+  // Gedelegeerde acties op de chips (server-gerenderd én hier-gebouwd). De rijen
+  // komen uit de hidden inputs — de enige bron van waarheid, die rebuildInputs
+  // bij elke render gelijk houdt — zodat we niet afhangen van een meegevangen
+  // rows-array. Spiegelt het patroon in side_panel.js.
+  document.addEventListener("select", function (e) {
+    var item = e.composedPath().find(function (el) {
+      return el instanceof Element && el.dataset && el.dataset.orgPickerAction;
+    });
+    if (!item) return;
+    var action = item.dataset.orgPickerAction;
+    var nodeId = item.dataset.nodeId;
+    var rows = rowsFromInputs();
+    if (action === "make-primary") {
+      rows.forEach(function (r) {
+        r.role = r.nodeId === nodeId ? "PRIMARY" : "INVOLVED";
+      });
+    } else if (action === "remove") {
+      rows = rows.filter(function (r) {
+        return r.nodeId !== nodeId;
+      });
+    } else {
+      return;
+    }
+    renderSelection(rows);
+  });
 
   document.addEventListener("wies:org-selection-applied", function (e) {
     // Keep the role of an organisation that was already on the assignment: the
