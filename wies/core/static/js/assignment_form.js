@@ -85,9 +85,10 @@
         // name on the element itself, so they renumber along with the natives.
         row
           .querySelectorAll(
-            "input, select, textarea, nldd-radio-button, nldd-checkbox, nldd-date-field, nldd-text-field, nldd-multi-line-text-field",
+            "input, select, textarea, nldd-radio-button-group, nldd-radio-button-field, nldd-checkbox, nldd-date-field, nldd-text-field, nldd-multi-line-text-field",
           )
           .forEach(function (field) {
+            // The formset name lives on the group host, not the field options.
             ["name", "id"].forEach(function (attr) {
               var value = field.getAttribute(attr);
               if (value)
@@ -102,7 +103,7 @@
             } else if (
               field.type === "radio" ||
               field.type === "checkbox" ||
-              tag === "nldd-radio-button" ||
+              tag === "nldd-radio-button-field" ||
               tag === "nldd-checkbox"
             ) {
               field.checked = false;
@@ -147,7 +148,7 @@
 
       // Pre-select the chosen status radio.
       var radio = row.querySelector(
-        "nldd-radio-button[value='" + status + "']",
+        "nldd-radio-button-field[value='" + status + "']",
       );
       if (radio) {
         radio.checked = true;

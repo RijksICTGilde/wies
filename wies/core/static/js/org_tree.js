@@ -196,11 +196,25 @@
     var q = query.toLowerCase().trim();
 
     if (!q) {
+      // Restore the pre-search expansion instead of collapsing everything, so
+      // branches opened for a restored selection stay in view.
       this.domNodes.forEach(function (row) {
         row.hidden = false;
-        row.removeAttribute("expanded");
+        var wasExpanded = self.savedExpanded
+          ? self.savedExpanded.get(row)
+          : false;
+        row.toggleAttribute("expanded", Boolean(wasExpanded));
       });
+      this.savedExpanded = null;
       return;
+    }
+
+    // Snapshot the expansion once, at the start of a search, to restore on clear.
+    if (!this.savedExpanded) {
+      this.savedExpanded = new Map();
+      this.domNodes.forEach(function (row) {
+        self.savedExpanded.set(row, row.hasAttribute("expanded"));
+      });
     }
 
     // While searching, every branch is open: the hidden attribute alone decides

@@ -12,10 +12,11 @@
 // De switch [data-end-date-known] stuurt alleen het einddatumveld aan: uit
 // betekent "loopt door", dus einddatum leeg. Hij post zelf niet mee.
 (function () {
-  const group = document.querySelector("[data-period-choice]");
-  const checkbox = document.getElementById("placement-inherit-period");
-  const control = group || checkbox;
-  if (!control) return;
+  function init(control) {
+  if (!control || control.dataset.periodToggleInit) return;
+  control.dataset.periodToggleInit = "true";
+  const group = control.hasAttribute("data-period-choice") ? control : null;
+  const checkbox = group ? null : control;
 
   const form = control.closest("form");
   if (!form) return;
@@ -105,4 +106,14 @@
   }
 
   update(inheritsFromService());
+  }
+
+  function scan(root) {
+    (root || document)
+      .querySelectorAll("[data-period-choice], #placement-inherit-period")
+      .forEach(init);
+  }
+
+  document.addEventListener("DOMContentLoaded", () => scan(document));
+  document.addEventListener("htmx:afterSwap", (e) => scan(e.detail.target));
 })();
