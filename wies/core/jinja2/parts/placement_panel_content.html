@@ -46,17 +46,17 @@
   <nldd-spacer size="12" direction="vertical"></nldd-spacer>
   {% set card = panel_data.assignment_card %}
   <nldd-list variant="box" accessible-label="Details inzet">
-  {# Geen href op de rij: een icon-button IN de anchor die href oplevert is
-     genest interactief (dubbele tabstop, en de knop triggert ook de link).
-     De knop is nu het enige besturingselement van de rij. #}
-  <nldd-list-item>
+  {# Eén actie op de rij, dus de rij is zelf de knop en het icoon is decor. Zo
+     is de hele rij het raakvlak in plaats van alleen het icoon, en zit er geen
+     knop meer genest in een rij-brede actie. Bij twee of meer acties gaat het
+     andersom: dan blijven het losse segmenten en blijft de rij passief. #}
+  <nldd-list-item button hx-get="{{ card.assignment_url }}" hx-target="#side-panel-content" hx-swap="innerHTML">
   <nldd-text-cell width="100px" text="Opdracht"></nldd-text-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
   <nldd-text-cell text="{{ card.name }}" supporting-text="{{ card.organization or '' }}"></nldd-text-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
-  <nldd-cell>
-  <nldd-icon-button size="sm" icon="chevron-right" text="Bekijk opdracht" hx-get="{{ card.assignment_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"></nldd-icon-button>
-  </nldd-cell>
+  <nldd-icon-cell size="20" icon="chevron-right"></nldd-icon-cell>
+  <nldd-spacer-cell size="4"></nldd-spacer-cell>
   </nldd-list-item>
   {% if card.team_members %}
     <nldd-list-item>
@@ -67,7 +67,7 @@
   {% endif %}
   {# Periode boven Rol: de rol-omschrijving kan lang zijn, dus de korte periode
      staat dicht bij de kop in plaats van weggeduwd onder een lange tekst. #}
-  <nldd-list-item>
+  <nldd-list-item {% if panel_data.user_can_edit_details %}button hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"{% endif %}>
   <nldd-text-cell width="100px" text="Periode"></nldd-text-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
   <nldd-text-cell>
@@ -81,20 +81,18 @@
   </nldd-text-cell>
   {% if panel_data.user_can_edit_details %}
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    <nldd-cell>
-    <nldd-icon-button size="sm" icon="edit" text="Periode bewerken" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"></nldd-icon-button>
-    </nldd-cell>
+    <nldd-icon-cell size="20" icon="edit"></nldd-icon-cell>
+    <nldd-spacer-cell size="4"></nldd-spacer-cell>
   {% endif %}
   </nldd-list-item>
-  <nldd-list-item>
+  <nldd-list-item {% if panel_data.user_can_edit_details %}button hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"{% endif %}>
   <nldd-text-cell width="100px" text="Rol"></nldd-text-cell>
   <nldd-spacer-cell size="12"></nldd-spacer-cell>
   <nldd-text-cell text="{{ service.skill.name if service.skill else '–' }}" supporting-text="{{ service.description or '' }}"></nldd-text-cell>
   {% if panel_data.user_can_edit_details %}
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    <nldd-cell>
-    <nldd-icon-button size="sm" icon="edit" text="Rol bewerken" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML"></nldd-icon-button>
-    </nldd-cell>
+    <nldd-icon-cell size="20" icon="edit"></nldd-icon-cell>
+    <nldd-spacer-cell size="4"></nldd-spacer-cell>
   {% endif %}
   </nldd-list-item>
   </nldd-list>
