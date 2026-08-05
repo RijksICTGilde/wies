@@ -1,6 +1,6 @@
 """Editables for the user (used by self-edit profile and admin user form).
 
-Permissions live in ``wies/core/permission_rules.py``.
+Permissions live in ``wies/core/permissions.py``.
 """
 
 from typing import TYPE_CHECKING, Any, cast

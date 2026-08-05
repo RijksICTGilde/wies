@@ -54,6 +54,7 @@ from .forms import (
     ProfileLabelsForm,
     ProfileNameForm,
     ServiceFormSet,
+    SuborganizationForm,
     UserForm,
 )
 from .models import (
@@ -69,9 +70,14 @@ from .models import (
     Placement,
     Service,
     Skill,
+    Suborganization,
 )
 from .permissions import is_staff_member
-from .querysets import annotate_placement_dates, annotate_usage_counts
+from .querysets import (
+    annotate_placement_dates,
+    annotate_suborganization_usage_counts,
+    annotate_usage_counts,
+)
 from .services.assignments import (
     apply_team_change,
     assignment_edit_specs,
@@ -906,6 +912,12 @@ class PlacementListView(ListView):
             if exclude_filter != cat_id:
                 qs = qs.filter(colleague__labels__id__in=cat_label_ids)
 
+        # Merk filter: OR within the merk group (one merk per colleague)
+        if exclude_filter != "merk":
+            suborganization_ids = [int(x) for x in self.request.GET.getlist("merk") if x.isdigit()]
+            if suborganization_ids:
+                qs = qs.filter(colleague__suborganization_id__in=suborganization_ids)
+
         # Filter by assignment end date (preset period)
         if exclude_filter != "loopt_af":
             loopt_af_values = set(self.request.GET.getlist("loopt_af"))
@@ -992,6 +1004,11 @@ class PlacementListView(ListView):
                 label_filter.add(label_id)
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
+
+        # merk filter supports multi-select
+        suborganization_filter = {v for v in self.request.GET.getlist("merk") if v.isdigit()}
+        if suborganization_filter:
+            active_filters["merk"] = suborganization_filter
 
         # Organization filter (multi-select via modal)
         active_org_filter_count = 0
@@ -1080,6 +1097,34 @@ class PlacementListView(ListView):
                 }
             )
 
+        # Merk filter group (one merk per colleague; counts exclude the merk filter)
+        suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="merk").distinct()
+        suborg_placement_qs = Placement.objects.filter(id__in=suborg_filtered_qs.values_list("id", flat=True))
+        suborg_id_values = suborg_placement_qs.values_list("colleague__suborganization_id", flat=True)
+        suborg_counts = Counter(mid for mid in suborg_id_values if mid is not None)
+
+        suborganization_options = [{"value": "", "label": ""}]
+        suborganization_selected_values = []
+        for suborganization in Suborganization.objects.all():
+            suborganization_options.append(
+                {
+                    "value": str(suborganization.id),
+                    "label": suborganization.name,
+                    "count": suborg_counts.get(suborganization.id, 0),
+                }
+            )
+            if str(suborganization.id) in active_filters.get("merk", set()):
+                suborganization_options[-1]["selected"] = True
+                suborganization_selected_values.append(str(suborganization.id))
+
+        suborganization_filter_group = {
+            "type": "select-multi",
+            "name": "merk",
+            "label": "Merk",
+            "options": suborganization_options,
+            "selected_values": suborganization_selected_values,
+        }
+
         # Skill/role counts: exclude role filter
         skill_filtered_qs = self._apply_filters(base_qs, exclude_filter="rol").distinct()
         skill_placement_qs = Placement.objects.filter(id__in=skill_filtered_qs.values_list("id", flat=True))
@@ -1124,6 +1169,7 @@ class PlacementListView(ListView):
                 "options": skill_options,
                 "selected_values": skill_selected_values,
             },
+            suborganization_filter_group,
             *label_filter_groups,
             {
                 "type": "select-multi",
@@ -1408,11 +1454,18 @@ class AssignmentListView(ListView):
         else:
             context["next_page_url"] = None
 
-        # Primary button for assignment creation (BDM permission)
+        # Primary button for assignment creation (BDM permission). Opent de
+        # aanmaak-sheet in het zijpaneel; htmx:afterSettle op #side-panel-content
+        # opent de sheet zodra de partial er in geswapt is (zie side_panel.js).
         if self.request.user.has_perm("core.add_assignment"):
             context["primary_button"] = {
                 "button_text": "Opdracht invoeren",
-                "href": reverse("assignment-create"),
+                "attrs": {
+                    "hx-get": reverse("assignment-create-sheet") + "?terug=" + reverse("assignment-list"),
+                    "hx-target": "#side-panel-content",
+                    "hx-swap": "innerHTML",
+                    "hx-push-url": "false",
+                },
             }
 
         # Side panel
@@ -1493,6 +1546,12 @@ class UserListView(PermissionRequiredMixin, ListView):
             if exclude_filter != cat_id:
                 qs = qs.filter(colleague__labels__id__in=cat_label_ids)
 
+        # Merk filter: OR within the merk group (one merk per colleague)
+        if exclude_filter != "merk":
+            suborganization_ids = [int(x) for x in self.request.GET.getlist("merk") if x.isdigit()]
+            if suborganization_ids:
+                qs = qs.filter(colleague__suborganization_id__in=suborganization_ids)
+
         # Role filter
         if exclude_filter != "rol":
             role_filter = self.request.GET.get("rol")
@@ -1553,6 +1612,11 @@ class UserListView(PermissionRequiredMixin, ListView):
         if len(label_filter) > 0:
             active_filters["labels"] = label_filter
 
+        # merk filter supports multi-select
+        suborganization_filter = {v for v in self.request.GET.getlist("merk") if v.isdigit()}
+        if suborganization_filter:
+            active_filters["merk"] = suborganization_filter
+
         role_filter = self.request.GET.get("rol")
         if role_filter and role_filter.isdigit():
             active_filters["rol"] = role_filter
@@ -1591,6 +1655,34 @@ class UserListView(PermissionRequiredMixin, ListView):
                 }
             )
 
+        # Merk filter group (one merk per colleague; counts exclude the merk filter)
+        suborg_filtered_qs = self._apply_filters(base_qs, exclude_filter="merk").distinct()
+        suborg_user_qs = User.objects.filter(id__in=suborg_filtered_qs.values_list("id", flat=True))
+        suborg_id_values = suborg_user_qs.values_list("colleague__suborganization_id", flat=True)
+        suborg_counts = Counter(mid for mid in suborg_id_values if mid is not None)
+
+        suborganization_options = [{"value": "", "label": ""}]
+        suborganization_selected_values = []
+        for suborganization in Suborganization.objects.all():
+            suborganization_options.append(
+                {
+                    "value": str(suborganization.id),
+                    "label": suborganization.name,
+                    "count": suborg_counts.get(suborganization.id, 0),
+                }
+            )
+            if str(suborganization.id) in active_filters.get("merk", set()):
+                suborganization_options[-1]["selected"] = True
+                suborganization_selected_values.append(str(suborganization.id))
+
+        suborganization_filter_group = {
+            "type": "select-multi",
+            "name": "merk",
+            "label": "Merk",
+            "options": suborganization_options,
+            "selected_values": suborganization_selected_values,
+        }
+
         role_options = [
             {"value": "", "label": "Alle rollen"},
         ]
@@ -1613,6 +1705,7 @@ class UserListView(PermissionRequiredMixin, ListView):
                 "value": role_value,
             },
             *label_filter_groups,
+            suborganization_filter_group,
         ]
 
         context["primary_button"] = {
@@ -1669,6 +1762,7 @@ def user_create(request):
                 email=form.cleaned_data["email"],
                 labels=form.cleaned_data.get("labels"),
                 groups=form.cleaned_data.get("groups"),
+                suborganization=form.cleaned_data.get("suborganization"),
                 request=request,
             )
             # For HTMX requests, use HX-Redirect header to force full page redirect
@@ -1728,6 +1822,7 @@ def user_edit(request, pk):
                 email=form.cleaned_data["email"],
                 labels=form.cleaned_data.get("labels"),
                 groups=form.cleaned_data.get("groups"),
+                suborganization=form.cleaned_data.get("suborganization"),
                 request=request,
             )
             # For HTMX requests, use HX-Redirect header to force full page redirect
@@ -2100,15 +2195,17 @@ def label_category_edit(request, pk):
 def user_theme(request):
     """Store the display preference of the logged-in user.
 
-    The choice lives on the user rather than in the browser, so it travels to
-    every device and base.html can render it server-side as data-scheme: the
-    screen is correct on first paint, without a flash while loading.
+    The choice lives on the user's Colleague rather than in the browser, so it
+    travels to every device and base.html can render it server-side as
+    data-scheme: the screen is correct on first paint, without a flash while
+    loading.
     """
     theme = request.POST.get("theme", "")
-    if theme not in User.Theme.values:
+    if theme not in Colleague.Theme.values:
         return HttpResponseBadRequest("Onbekende weergave")
-    request.user.theme = theme
-    request.user.save(update_fields=["theme"])
+    colleague = request.user.colleague
+    colleague.theme = theme
+    colleague.save(update_fields=["theme"])
     return HttpResponse(status=204)
 
 
@@ -2444,6 +2541,112 @@ def label_delete(request, pk):
         response["HX-Trigger"] = "closeModal"
         return response
 
+    return HttpResponse(status=405)
+
+
+@permission_required("core.view_suborganization", raise_exception=True)
+def suborganization_admin(request):
+    """Main merken admin page."""
+    suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
+    return render(request, "suborganization_admin.html", {"suborganizations": suborganizations})
+
+
+@permission_required("core.add_suborganization", raise_exception=True)
+def suborganization_create(request):
+    """Create a suborganization. POST-only; re-renders the merk list partial (htmx)."""
+    if request.method == "POST":
+        form = SuborganizationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
+            return render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
+        suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
+        return render(
+            request,
+            "parts/suborganization_list.html",
+            {"suborganizations": suborganizations, "errors": dict(form.errors.items())},
+        )
+    return HttpResponse(status=405)
+
+
+@permission_required("core.change_suborganization", raise_exception=True)
+def suborganization_edit(request, pk):
+    """Edit a suborganization. Returns a partial for use with htmx."""
+    suborganization = get_object_or_404(Suborganization, pk=pk)
+    form_post_url = reverse("suborganization-edit", kwargs={"pk": pk})
+    modal_title = f"Bewerk merk: {suborganization.name}"
+    form_button_label = "Opslaan"
+    element_id = "suborganizationFormModal"
+
+    if request.method == "GET":
+        form = SuborganizationForm(instance=suborganization)
+        return render(
+            request,
+            "parts/generic_form_modal.html",
+            {
+                "content": form,
+                "form_post_url": form_post_url,
+                "modal_title": modal_title,
+                "form_button_label": form_button_label,
+                "modal_element_id": element_id,
+                "target_element_id": element_id,
+                **get_delete_context("suborganization-delete", suborganization.pk, f"merk '{suborganization.name}'"),
+            },
+        )
+    if request.method == "POST":
+        form = SuborganizationForm(request.POST, instance=suborganization)
+        if form.is_valid():
+            form.save()
+            suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
+            response = render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
+            response["HX-Retarget"] = "#suborganization_list_container"
+            response["HX-Trigger"] = "closeModal"
+            return response
+        return render(
+            request,
+            "parts/generic_form_modal.html",
+            {
+                "content": form,
+                "form_post_url": form_post_url,
+                "modal_title": modal_title,
+                "form_button_label": form_button_label,
+                "modal_element_id": element_id,
+                "target_element_id": element_id,
+                **get_delete_context("suborganization-delete", suborganization.pk, f"merk '{suborganization.name}'"),
+            },
+        )
+    return None
+
+
+@permission_required("core.delete_suborganization", raise_exception=True)
+def suborganization_delete(request, pk):
+    """Delete a suborganization. For use with htmx."""
+    suborganization = get_object_or_404(Suborganization, pk=pk)
+    suborganization_use_count = suborganization.colleagues.count()
+
+    if request.method == "GET":
+        return render(
+            request,
+            "parts/generic_form_modal.html",
+            {
+                "modal_title": f"Verwijder merk: {suborganization.name}",
+                "warning_modal": True,
+                "modal_element_id": "suborganizationFormModal",
+                "target_element_id": "suborganization_list_container",
+                "delete_warning": (
+                    f"Weet je zeker dat je dit merk wilt verwijderen? "
+                    f"Het wordt gebruikt door {suborganization_use_count} collega('s)."
+                ),
+                "form_post_url": reverse("suborganization-delete", kwargs={"pk": pk}),
+                "form_button_label": "Verwijderen",
+            },
+        )
+    if request.method == "POST":
+        suborganization.delete()
+        suborganizations = annotate_suborganization_usage_counts(Suborganization.objects.all())
+        response = render(request, "parts/suborganization_list.html", {"suborganizations": suborganizations})
+        response["HX-Trigger"] = "closeModal"
+        return response
     return HttpResponse(status=405)
 
 
@@ -3460,7 +3663,7 @@ def _render_inline_edit_display(
         "alert": alert,
         **extra,
     }
-    response = render(request, "wies/parts/inline_edit/display.html", ctx)
+    response = render(request, "parts/inline_edit/display.html", ctx)
     if saved:
         response["HX-Trigger-After-Swap"] = "inline-edit-saved"
     return response
@@ -3479,7 +3682,7 @@ def _render_inline_edit_form(
         "concurrency_token": token if token is not None else _concurrency_token(editable_set, spec, obj),
         "alert": alert,
     }
-    return render(request, "wies/parts/inline_edit/form.html", ctx)
+    return render(request, "parts/inline_edit/form.html", ctx)
 
 
 def _render_inline_edit_collection_form(
@@ -3492,7 +3695,7 @@ def _render_inline_edit_collection_form(
         "concurrency_token": token if token is not None else _concurrency_token(editable_set, spec, obj),
         "alert": alert,
     }
-    return render(request, "wies/parts/inline_edit/collection_form.html", ctx)
+    return render(request, "parts/inline_edit/collection_form.html", ctx)
 
 
 def _attach_formset_error(formset, message: str) -> None:
@@ -3838,6 +4041,68 @@ def assignment_edit_view(request, pk):
     response = HttpResponse(status=204)
     response["HX-Location"] = json.dumps({"path": return_path, "target": "#side-panel-content", "swap": "innerHTML"})
     return response
+
+
+def assignment_create_sheet(request):
+    """Maak een opdracht aan via het zijpaneel — hergebruikt het opdracht-
+    formulier van de bewerk-sheet (naam, omschrijving, opdrachtgever, periode,
+    BM). Diensten/rollen voeg je daarna toe in het opdrachtpaneel.
+
+    GET: de sheet met een leeg formulier. POST: aanmaken en via HX-Location naar
+    het nieuwe opdrachtpaneel. Alleen voor wie opdrachten mag aanmaken.
+    """
+    from wies.core.services.assignments import (  # noqa: PLC0415 — avoids import cycle
+        assignment_create_specs,
+        create_assignment_from_specs,
+    )
+
+    if not request.user.has_perm("core.add_assignment"):
+        return HttpResponseForbidden()
+
+    specs = assignment_create_specs()
+    form_cls, initial = build_combined_form_class(specs)
+    return_to = _safe_return_path(request.GET.get("terug") or request.POST.get("terug_url"), reverse("assignment-list"))
+
+    if request.method == "POST":
+        form = form_cls(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                assignment = create_assignment_from_specs(form.cleaned_data)
+            create_event(
+                object_type="Assignment",
+                action="create",
+                source="user",
+                object_id=assignment.id,
+                user=request.user,
+                request=request,
+                context=_assignment_audit_snapshot(assignment),
+            )
+            sep = "&" if "?" in return_to else "?"
+            path = f"{return_to}{sep}opdracht={assignment.id}"
+            # base.html herlaadt niet bij de panel-swap die op HX-Location volgt,
+            # dus assignment_panel_content.html swapt de banner apart in (OOB).
+            messages.success(
+                request,
+                f'Opdracht "{assignment.name}" is aangemaakt.',
+                extra_tags=f"link:{path}|Bekijk opdracht",
+            )
+            response = HttpResponse(status=204)
+            response["HX-Location"] = json.dumps({"path": path, "target": "#side-panel-content", "swap": "innerHTML"})
+            return response
+    else:
+        # Voorvullen: de aanmaker is doorgaans zelf de BM.
+        if getattr(request.user, "colleague", None):
+            initial["owner"] = request.user.colleague
+        form = form_cls(initial=initial)
+
+    panel_data = {
+        "form": form,
+        "edit_url": reverse("assignment-create-sheet"),
+        "parent_url": return_to,
+        "edit_heading": "Opdracht invoeren",
+        "submit_label": "Aanmaken",
+    }
+    return render(request, "parts/assignment_create_panel_content.html", {"panel_data": panel_data})
 
 
 # De teamlijst bewerkt per LID, niet als één formset: elke rij heeft zijn eigen

@@ -12,7 +12,7 @@ from wies.core.editables import REGISTRY
 from wies.core.inline_edit.base import Editable, EditableCollection
 from wies.core.inline_edit.forms import _current_value, build_form_class, resolve_editables
 from wies.core.permission_engine import Verb, has_permission
-from wies.core.views import _resolve_display, _spec_label
+from wies.core.views import _concurrency_token, _resolve_display, _spec_label
 
 
 @pass_context
@@ -70,7 +70,7 @@ def inline_edit(ctx, obj, name, **extras):
         **extras,
     }
     # Trusted template; any user-supplied values go through Jinja's auto-escape.
-    html = render_to_string("wies/parts/inline_edit/display.html", render_ctx, request=request)
+    html = render_to_string("parts/inline_edit/display.html", render_ctx, request=request)
     return mark_safe(html)  # noqa: S308
 
 
@@ -113,7 +113,10 @@ def inline_edit_form(ctx, obj, name, **extras):
         "editable": spec,
         "form": form_cls(initial=initial),
         "bare": True,
+        # Zonder token weigert de save-view als conflict; de view zet het bij een
+        # gewone inline-edit, deze macro rendert het formulier zelf.
+        "concurrency_token": _concurrency_token(editable_set, spec, obj),
         **extras,
     }
-    html = render_to_string("wies/parts/inline_edit/form.html", render_ctx, request=request)
+    html = render_to_string("parts/inline_edit/form.html", render_ctx, request=request)
     return mark_safe(html)  # noqa: S308

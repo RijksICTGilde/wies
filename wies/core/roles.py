@@ -1,7 +1,7 @@
 """Group/permission setup for Beheerder, Consultant, BDM.
 
 Per-row authorization for inline-edit and views lives in
-``wies/core/permission_rules.py``. This module is concerned only with
+``wies/core/permissions.py``. This module is concerned only with
 Django Group definitions and what permissions they carry.
 """
 
@@ -18,6 +18,7 @@ from wies.core.models import (
     OrganizationUnit,
     Placement,
     Service,
+    Suborganization,
 )
 
 User = get_user_model()
@@ -33,6 +34,15 @@ def setup_roles():
                 ["view_labelcategory", "add_labelcategory", "change_labelcategory", "delete_labelcategory"],
             ),
             (Label, ["view_label", "add_label", "change_label", "delete_label"]),
+            (
+                Suborganization,
+                [
+                    "view_suborganization",
+                    "add_suborganization",
+                    "change_suborganization",
+                    "delete_suborganization",
+                ],
+            ),
             (OrganizationUnit, ["view_organizationunit"]),
         ],
         "Consultant": [],

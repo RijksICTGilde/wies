@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="nl"
-      {% if request.user.is_authenticated and request.user.theme != 'system' %} data-scheme="{{ request.user.theme }}"{% endif %}>
+      {% if request.user.is_authenticated and request.user.colleague and request.user.colleague.theme != 'system' %} data-scheme="{{ request.user.colleague.theme }}"{% endif %}>
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,23 +17,26 @@
     <link rel="icon" type="image/svg+xml" href="{{ static('favicon.svg') }}">
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="stylesheet" href="{{ nldd_asset('ndd.styles.css') }}">
-    <link rel="stylesheet" href="{{ static('css/wies/app.css') }}">
+    <link rel="stylesheet" href="{{ static('css/app.css') }}">
     {% block extra_head %}
     {% endblock extra_head %}
     <script src="{{ static('vendor/htmx/htmx.min.js') }}"></script>
+    {# Global htmx config; must run right after htmx, before it processes
+       history (disables the history snapshot cache — see htmx_config.js). #}
+    <script src="{{ static('js/htmx_config.js') }}"></script>
     <script defer src="{{ nldd_asset('ndd.bundle.js') }}"></script>
     {# Global: rows carrying href + hx-get exist on several pages and arrive in
        htmx swaps too, so this cannot be opted into per page. #}
-    <script src="{{ static('js/wies/hx_link_guard.js') }}"></script>
+    <script src="{{ static('js/hx_link_guard.js') }}"></script>
     {# Global: opent nldd-window/dialog-inhoud die htmx in een mount swapt
        (verwijder-bevestigingen, formulier-modals) — die swaps gebeuren op
        elke pagina met een paneel. #}
     <script src="{{ static('js/dialog.js') }}" defer></script>
     {# Global for the same reason: opdrachtgevers are inline-editable, so the
        org-picker widget can be swapped into any page that shows an opdracht. #}
-    <script defer src="{{ static('js/wies/assignment_org_picker.js') }}"></script>
-    <script src="{{ static('js/wies/menu_nav.js') }}" defer></script>
-    <script src="{{ static('js/wies/theme_menu.js') }}" defer></script>
+    <script defer src="{{ static('js/assignment_org_picker.js') }}"></script>
+    <script src="{{ static('js/menu_nav.js') }}" defer></script>
+    <script src="{{ static('js/theme_menu.js') }}" defer></script>
     {# Global: data-confirm (destructieve beheeracties) + data-action="show-more"
        (event-tijdlijn) worden via delegatie op document afgehandeld, en de
        tijdlijn arriveert ook via htmx-swaps — dus overal nodig. #}

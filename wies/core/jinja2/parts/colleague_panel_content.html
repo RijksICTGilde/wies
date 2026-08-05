@@ -24,6 +24,12 @@
   </nldd-title-cell>
   </nldd-list-item>
   </nldd-list>
+  {% if colleague.suborganization %}
+    <nldd-spacer size="8" direction="vertical"></nldd-spacer>
+    <nldd-container layout="wrap" gap="6">
+    <nldd-tag color="neutral">{{ colleague.suborganization.name }}</nldd-tag>
+    </nldd-container>
+  {% endif %}
   {% set labels = colleague.labels.all() %}
   {% if labels %}
     <nldd-spacer size="8" direction="vertical"></nldd-spacer>

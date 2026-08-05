@@ -1,0 +1,77 @@
+{# Widget template for OrgPickerWidget (NLDD variant).
+
+  Rendert de zichtbare selectielijst server-side (in de eerste paint, geen
+  na-swap sprong) plus de raw formset-inputs (elk met `data-org-name` zodat de
+  JS labels kan herbouwen). assignment_org_picker.js maakt de server-lijst
+  interactief via event-delegatie en herbouwt hem na een apply uit de sheet of
+  een muteren (primair maken / verwijderen). De markup hieronder moet gelijk
+  blijven aan wat renderSelection() in die JS bouwt. #}
+{% set selections = widget.selections %}
+{% set prefix = widget.prefix %}
+{# nldd-form-field toont de fout alleen als zijn "input" (deze div, via
+   _findInput) invalid + error-message draagt; zonder deze attrs staat de melding
+   op hoogte 0. #}
+<div id="assignment-org-picker"
+     {% if widget.attrs.invalid %} invalid error-message="{{ widget.attrs['error-message'] }}"{% endif %}>
+  <div id="assignment-org-selections">
+    {% if selections %}
+      <nldd-list variant="box" accessible-label="Gekozen opdrachtgevers">
+      {% for row in selections %}
+        {% set org_id = row.organization.id if row.organization.id is defined else row.organization %}
+        {% set org_name = row.organization.name if row.organization.name is defined else '' %}
+        {% set is_primary = row.role == 'PRIMARY' %}
+        <nldd-list-item>
+        <nldd-text-cell>
+        {# Trailing spatie + tag in dezelfde cel spiegelt renderSelection(). #}
+        <span>{{ org_name }} {% if is_primary %}<nldd-tag size="sm" color="accent" text="Primair"></nldd-tag>{% endif %}</span>
+        </nldd-text-cell>
+        <nldd-spacer-cell size="8"></nldd-spacer-cell>
+        <nldd-cell>
+        <nldd-icon-button icon="more" size="sm" tooltip-timing="never" text="Acties voor {{ org_name }}">
+        <nldd-menu slot="popup" placement="bottom-end">
+        {% if not is_primary %}
+          <nldd-menu-item text="Maak primaire opdrachtgever" icon="primary" data-org-picker-action="make-primary" data-node-id="{{ org_id }}"></nldd-menu-item>
+          <nldd-menu-divider></nldd-menu-divider>
+        {% endif %}
+        <nldd-menu-item text="Verwijder opdrachtgever" icon="delete" destructive data-org-picker-action="remove" data-node-id="{{ org_id }}"></nldd-menu-item>
+        </nldd-menu>
+        </nldd-icon-button>
+        </nldd-cell>
+        </nldd-list-item>
+      {% endfor %}
+      </nldd-list>
+    {% endif %}
+  </div>
+  {# De spacer onder de lijst hoort bij de lijst: assignment_org_picker.js voegt
+     hem mee toe bij een render, dus hier alleen tonen als de server al iets
+     rendert — anders staat er een gat onder het label zolang er niets gekozen
+     is. #}
+  {% if selections %}
+    <nldd-spacer size="12" direction="vertical"></nldd-spacer>
+  {% endif %}
+  <nldd-button id="assignment-org-trigger-btn" variant="secondary" start-icon="plus" text="Opdrachtgever toevoegen" hx-get="{{ url('client-modal') }}?count_mode=none" hx-target="#assignment-org-modal-container" hx-swap="innerHTML" hx-params="none" hx-push-url="false"></nldd-button>
+  <div id="assignment-org-inputs">
+    {% if selections %}
+      <input type="hidden"
+             name="{{ prefix }}-TOTAL_FORMS"
+             value="{{ selections|length }}">
+      <input type="hidden" name="{{ prefix }}-INITIAL_FORMS" value="0">
+      <input type="hidden" name="{{ prefix }}-MIN_NUM_FORMS" value="1">
+      <input type="hidden" name="{{ prefix }}-MAX_NUM_FORMS" value="1000">
+      {% for row in selections %}
+        {% set org_id = row.organization.id if row.organization.id is defined else row.organization %}
+        {% set org_name = row.organization.name if row.organization.name is defined else '' %}
+        <input type="hidden"
+               name="{{ prefix }}-{{ loop.index0 }}-organization"
+               value="{{ org_id }}"
+               data-org-id="{{ org_id }}"
+               data-org-name="{{ org_name }}"
+               data-org-role="{{ row.role }}">
+        <input type="hidden"
+               name="{{ prefix }}-{{ loop.index0 }}-role"
+               value="{{ row.role }}">
+      {% endfor %}
+    {% endif %}
+  </div>
+</div>
+<div id="assignment-org-modal-container"></div>

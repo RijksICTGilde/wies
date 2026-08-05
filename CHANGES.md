@@ -4,6 +4,15 @@ This files lists the changes during the lifetime of this project.
 
 ## unreleased
 
+- TODO: fix dat labels die je in de onboarding (stap "Vul je profiel aan") koos niet in je profiel werden opgeslagen. Twee oorzaken: (1) de bare `inline_edit_form`-macro zette geen concurrency-token, waardoor de opslag-view elke save als conflict weigerde; (2) het token per `labels_<categorie>` hashte álle labels in plaats van alleen die categorie, dus bij meerdere categorieën maakte de eerste save de tokens van de rest stale — alleen één categorie werd bewaard. De macro geeft het token nu mee, en het label-editable filtert zijn beginwaarde per categorie (symmetrisch met de save), zodat alle categorieën tegelijk opslaan
+
+- TODO: "Wis alle filters" is terug naast de filter-chips — die knop was verdwenen toen `filter_chips.html` bij de NLDD-migratie werd opgeruimd (de handler-comment bleef achter, maar knop én logica waren weg). Eén klik leegt nu weer alle actieve filters (zoek, rol/labels, datum) tegelijk
+- TODO: "Opdracht invoeren" opent nu de aanmaak in het zijpaneel in plaats van een aparte pagina — je vult naam, omschrijving, opdrachtgever, periode en Business Manager in, en na "Aanmaken" land je direct in het opdrachtpaneel waar je de rollen/aanvragen toevoegt. Een "Opdracht is aangemaakt"-banner (met een "Bekijk opdracht"-link) reist als OOB-swap mee met dat paneel, want de zijpaneel-swap herlaadt de pagina niet. De full-page `assignment-create` blijft bestaan; alleen de knop op de Aanvragen-lijst opent voortaan de sheet
+- TODO: fix dat de link-tekst in een flash-banner werd afgekapt bij de eerste spatie ("Bekijk opdracht" werd "Bekijk") — de `parse_message_link`-filter splitste de tag op witruimte
+- TODO: fix dat de opdrachtgever-picker in de "Opdracht invoeren"/-bewerken-sheet direct weer sloot na openen — twee geneste modale sheets stapelen op de top-layer en de omringende sheet slikte de open-klik in als achtergrond-klik. De picker wordt nu naar `<body>` gehesen vóór openen (op de full-page zonder omringende sheet is dat een no-op)
+- TODO: fix dat de foutmelding "Voeg minimaal 1 opdrachtgever toe." onzichtbaar was bij het aanmaken/bewerken van een opdracht — leek alsof "Aanmaken"/"Opslaan" niks deed. De opdrachtgever-picker en de opdracht-sheets renderden de fout los, zonder de id-koppeling die `nldd-form-field` nodig heeft; nu via `as_field_group()` + `wire_field_errors`, waardoor de melding zichtbaar wordt (stond op hoogte 0)
+- 427: fix dat de open lijst van een keuzeveld (native `<select>`) in donkere modus wit-op-wit was op Windows/Chrome (#529) — de browser kende de `color-scheme` niet bij een expliciet gekozen thema, dus de OS-popup pakte wel de tekst- maar niet de achtergrondkleur. `color-scheme` volgt nu het `data-scheme`-attribuut op `<html>` (kleurt meteen ook date-pickers en scrollbars mee)
+- 427: (migration) add theming (dark mode/light mode)
 - 427: NLDD: fix dat het opslaan van een gewijzigde plaatsing (rol/periode) in het zijpaneel een 500 gaf — de opslag riep een niet-bestaande functie aan; de plaatsingswijziging wordt nu net als voorheen als "Team"-gebeurtenis op de tijdlijn van de opdracht gespiegeld
 - 427: NLDD: verwijder de parallelle `/ndd/`-PoC-laag nu de hoofdroutes op het NLDD Design System draaien; de beheer-opslagacties (gebruiker/label/profiel) verwijzen niet langer stiekem naar die laag maar naar de gewone routes
 - 427: NLDD: date- en keuzevelden tonen hun validatiefout weer zichtbaar (het datumveld koppelde de fout via het verkeerde attribuut, waardoor de melding op hoogte 0 stond)
@@ -26,6 +35,12 @@ This files lists the changes during the lifetime of this project.
 - 427: NLDD: adopt the `nldd-sidebar-section` layout on every page (upgrade @nldd/design-system to 0.8.64) — a sticky sidebar on wide screens that collapses to a sheet on narrow ones; contextual sidebars everywhere (filters, beheer-nav, general nav)
 - 427: NLDD: port the filter "Meer"-modal UX (#402) — each filter group shows its top-3 options plus a "Meer" button that opens the full alphabetical list in a modal with search; the selection applies only on "Filter toepassen"
 - 427: NLDD: merge `main` into the NLDD design-system branch — adopt the opdracht/plaatsing side-panel features (Gegevens/Updates tabs, inline-edit of all fields, opdracht verwijderen, placement periods), the "Dubbele opdrachten samenvoegen" beheertool and the full privacyverklaring, all rebuilt in the NLDD design system; migrate the privacy-html generator to NLDD output
+- ?
+
+## 2026-08-04
+
+- 463: (migration)(post-release actions) change "merk" to be a single select. "merk" now has its own table (`suborganization`).
+- 463: make test actions more robust (work with newer versions of node and other location of djlint)
 - 426: (migration)(post-release actions) log the client request metadata on audit and login events (BIO device logging). Removed the staff "Debug: request metadata" page
 - 426: logout events are now logged alongside logins
 - 503: fix the "Wie zit waar?", opdrachten and profiel overviews returning a 500 error when the side-panel `plaatsing`, `collega` or `opdracht` parameter contained a non-numeric value in the URL

@@ -4,7 +4,7 @@ Editable, EditableGroup, EditableCollection, EditableSet — see
 ``features/inline-editing.md``.
 
 Permissions are NOT declared on Editables; they live in
-``wies/core/permission_rules.py`` and are looked up by the engine in
+``wies/core/permissions.py`` and are looked up by the engine in
 ``wies/core/permissions.py``.
 """
 
@@ -161,7 +161,7 @@ class EditableSet:
             description = Editable(...)
 
     Permission rules for these fields live in
-    ``wies/core/permission_rules.py``, registered via
+    ``wies/core/permissions.py``, registered via
     ``@rule(UPDATE, FooEditables.description)``.
 
     Registration into the runtime lookup lives in

@@ -1,3 +1,11 @@
+{# Panel-loads herladen base.html niet, dus flash-banners (bv. na 'Opdracht
+   invoeren' in de sheet) reizen mee als OOB-swap naar #flash-messages. Alleen
+   bij htmx: bij een volledige page-load rendert base.html ze al. #}
+{% if request.headers.get("HX-Request") %}
+  {% with flash_oob = true %}
+    {% include "parts/flash_messages.html" %}
+  {% endwith %}
+{% endif %}
 {% if not panel_data %}
   {# nldd-sheet sluit zichzelf op de dismiss van zijn eigen top-title-bar. #}
   <nldd-top-title-bar slot="header" text="Opdracht" dismiss-text="Sluit"></nldd-top-title-bar>
@@ -88,7 +96,7 @@
           {% endfor %}
         {% elif row_kind == "period" %}
           {% set value = {"start_date": panel_data.assignment.start_date, "end_date": panel_data.assignment.end_date} %}
-          {% include "wies/forms/displays/assignment_period.html" %}
+          {% include "forms/displays/assignment_period.html" %}
         {% elif row_kind == "created_at" %}
           {{ panel_data.assignment.created_at|datum_nl }}
         {% elif row_kind == "owner" %}
@@ -172,7 +180,7 @@
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
     {% set value = panel_data.team_rows %}
     {% set user_can_edit = panel_data.user_can_edit_team %}
-    {% include "wies/forms/displays/assignment_services.html" %}
+    {% include "forms/displays/assignment_services.html" %}
     {% if panel_data.user_can_edit_team %}
       {# side_panel.js vult naam, supporting-text en actie-URL vanaf het gekozen
       rijmenu-item en opent dit venster. #}

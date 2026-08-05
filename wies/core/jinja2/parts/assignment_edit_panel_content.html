@@ -21,14 +21,10 @@
       hx-swap="innerHTML">
   {% if form.name %}{{ form.name.as_field_group() }}{% endif %}
   {% if form.extra_info %}{{ form.extra_info.as_field_group() }}{% endif %}
-  {% if form.organizations %}
-    <nldd-form-field label="{{ form.organizations.label }}">
-    {{ form.organizations.as_widget() }}
-    {% for error in form.organizations.errors %}
-      <nldd-form-field-error-text invalid>{{ error }}</nldd-form-field-error-text>
-    {% endfor %}
-    </nldd-form-field>
-  {% endif %}
+  {# as_field_group (niet as_widget + losse foutlus): dat koppelt de fout via
+     id aan de widget, zonder die wiring toont nldd-form-field de melding op
+     hoogte 0 — opslaan met een lege opdrachtgever leek dan "niks doen". #}
+  {% if form.organizations %}{{ form.organizations.as_field_group() }}{% endif %}
   {% if form.start_date %}{{ form.start_date.as_field_group() }}{% endif %}
   {% if form.end_date %}{{ form.end_date.as_field_group() }}{% endif %}
   {% if form.owner %}{{ form.owner.as_field_group() }}{% endif %}
