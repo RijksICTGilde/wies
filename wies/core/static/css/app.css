@@ -43,6 +43,15 @@ html[data-scheme="dark"] :is(select, .wies-input, input, textarea) {
   box-sizing: border-box;
 }
 
+/* nldd-list sets container-type/name inline from connectedCallback, but an htmx
+   outerHTML swap replaces the element and the callback doesn't re-run, so the
+   cells' @container query loses its target and every hide-above/-below cell
+   shows at once (double rows). Pin it in CSS so the swap can't wipe it. */
+nldd-list {
+  container-type: inline-size;
+  container-name: cells-container;
+}
+
 /* nldd-page is the layout and scroller (height: 100%), so the chain up to the
    document root must have a definite height for it to resolve against. */
 html,

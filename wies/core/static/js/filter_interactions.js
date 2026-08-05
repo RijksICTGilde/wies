@@ -657,6 +657,46 @@
     });
   }
 
+  // De filterwijziging vervangt #filter-panel (slotted in nldd-page) via een
+  // OOB-swap; nldd-page reset dan zijn scrollTop en de pagina springt omhoog.
+  function findScroller(start) {
+    let el = start;
+    while (el && el !== document.body) {
+      const style = getComputedStyle(el);
+      if (
+        /(auto|scroll)/.test(style.overflowY) &&
+        el.scrollHeight > el.clientHeight
+      ) {
+        return el;
+      }
+      el = el.parentElement || el.getRootNode()?.host;
+    }
+    return document.scrollingElement || document.documentElement;
+  }
+
+  function setupFilterScrollPreserve() {
+    let saved = null;
+    document.addEventListener("htmx:beforeSwap", (e) => {
+      if (e.detail.target?.id !== "results") return;
+      const panel = document.getElementById("filter-panel");
+      if (!panel) return;
+      const scroller = findScroller(panel);
+      saved = { scroller: scroller, top: scroller.scrollTop };
+    });
+    function restore() {
+      if (!saved) return;
+      const { scroller, top } = saved;
+      scroller.scrollTop = top;
+      // nldd-page reset scrollTop asynchroon nadat de slotted sidebar opnieuw
+      // is opgebouwd, dus nog een keer in de volgende frame.
+      requestAnimationFrame(() => {
+        scroller.scrollTop = top;
+        saved = null;
+      });
+    }
+    document.addEventListener("htmx:afterSettle", restore);
+  }
+
   function init() {
     const app = document.body;
     if (!app) return;
@@ -676,6 +716,7 @@
 
     setupTokenDismiss();
     setupClearAllFilters();
+    setupFilterScrollPreserve();
     setupFilterRows();
     setupOrgQuickOptions();
     setupSearchSuggestionSelect();
