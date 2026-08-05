@@ -36,6 +36,6 @@ def get_nldd_version() -> str:
     """
     try:
         first_line = (Path(settings.BASE_DIR) / NLDD_VERSION_FILE).read_text(encoding="utf-8").splitlines()[0]
-    except OSError, IndexError:
+    except (OSError, IndexError):
         return ""
     return first_line.removeprefix("@nldd/design-system").strip()
