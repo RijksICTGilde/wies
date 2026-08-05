@@ -26,6 +26,9 @@
       <nldd-menu-item text="Opdrachtgevers" icon="office" data-href="{{ url('organization-admin') }}"></nldd-menu-item>
     {% endif %}
     <nldd-menu-item text="Labels" icon="labels" data-href="{{ url('label-admin') }}"></nldd-menu-item>
+    {% if request.user.has_perm('core.view_suborganization') %}
+      <nldd-menu-item text="Merken" icon="tag" data-href="{{ url('suborganization-admin') }}"></nldd-menu-item>
+    {% endif %}
     {% if is_staff_member(request.user) %}
       <nldd-menu-item text="Statistieken" icon="chart-x-y-axis-line" data-href="{{ url('staff-dashboard') }}"></nldd-menu-item>
       <nldd-menu-item text="Database" icon="database" data-href="{{ url('staff-database') }}"></nldd-menu-item>
