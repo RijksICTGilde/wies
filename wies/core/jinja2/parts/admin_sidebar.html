@@ -27,6 +27,13 @@
 <nldd-spacer-cell size="8"></nldd-spacer-cell>
 <nldd-text-cell text="Labels"></nldd-text-cell>
 </nldd-list-item>
+<nldd-list-item href="{{ url('suborganization-admin') }}" {% if '/beheer/merken/' in request.path %}selected{% endif %}>
+<nldd-icon-cell size="20">
+<nldd-icon name="tag"></nldd-icon>
+</nldd-icon-cell>
+<nldd-spacer-cell size="8"></nldd-spacer-cell>
+<nldd-text-cell text="Merken"></nldd-text-cell>
+</nldd-list-item>
 {% if is_staff_member(user) %}
   <nldd-list-item href="{{ url('staff-dashboard') }}" {% if '/statistieken/' in request.path %}selected{% endif %}>
   <nldd-icon-cell size="20">

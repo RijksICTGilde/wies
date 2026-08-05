@@ -12,6 +12,7 @@ from wies.core.models import (
     Placement,
     Service,
     Skill,
+    Suborganization,
 )
 from wies.core.services.placements import create_assignments_from_csv, parse_date_dmy
 
@@ -42,6 +43,10 @@ class ParseDateDmyTest(TestCase):
 
 class CreateFromCSVTest(TestCase):
     def test_sample_csv_success(self):
+        # Brands referenced in the example CSV must already exist (imports never create merken).
+        for brand in ("I-Interim Rijk", "Rijks ICT Gilde", "Rijksconsultants"):
+            Suborganization.objects.create(name=brand)
+
         sample_csv_path = Path(__file__).parent.parent / "static" / "example_assignment_import.csv"
         with sample_csv_path.open() as f:
             csv_content = f.read()

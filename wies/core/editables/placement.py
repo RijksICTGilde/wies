@@ -1,7 +1,7 @@
 """Editables for Placement. The ``service`` FK is intentionally not editable —
 reparenting a placement is a team re-shape, not an edit.
 
-Permissions live in ``wies/core/permission_rules.py``.
+Permissions live in ``wies/core/permissions.py``.
 """
 
 from contextlib import contextmanager

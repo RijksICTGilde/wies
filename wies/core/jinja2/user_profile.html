@@ -30,6 +30,16 @@ empty sidebar #}
     <nldd-spacer size="12" direction="vertical"></nldd-spacer>
     <nldd-button size="sm" start-icon="edit" text="Naam wijzigen" hx-get="{{ url('profile-name-edit') }}" hx-target="#profileNameModal" hx-swap="innerHTML"></nldd-button>
     <nldd-spacer size="24" direction="vertical"></nldd-spacer>
+    {% if colleague and colleague.suborganization %}
+      <nldd-title size="5">
+      <h2>Merk</h2>
+      </nldd-title>
+      <nldd-spacer size="4" direction="vertical"></nldd-spacer>
+      <nldd-container layout="wrap" gap="6">
+      <nldd-tag color="neutral">{{ colleague.suborganization.name }}</nldd-tag>
+      </nldd-container>
+      <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+    {% endif %}
     {% for item in label_categories %}
       <nldd-title size="5">
       <h2>{{ item.category.name }}</h2>
@@ -46,7 +56,9 @@ empty sidebar #}
         <p>—</p>
         </nldd-rich-text>
       {% endif %}
-      {% if not loop.last %}<nldd-spacer size="16" direction="vertical"></nldd-spacer>{% endif %}
+      {% if not loop.last %}
+        <nldd-spacer size="16" direction="vertical"></nldd-spacer>
+      {% endif %}
     {% endfor %}
     {# Onder de labels, want de knop wijzigt precies wat erboven staat. Alleen
        met een collegaprofiel: zonder dat is er niets om labels op te hangen. #}

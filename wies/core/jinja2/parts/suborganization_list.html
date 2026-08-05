@@ -1,0 +1,51 @@
+{% if suborganizations %}
+  <c-table>
+    <c-table-head>
+      <c-table-row>
+        <c-table-header>
+          Naam
+        </c-table-header>
+        <c-table-header>
+          Toegepast
+        </c-table-header>
+      </c-table-row>
+    </c-table-head>
+    <c-table-body>
+      {% for suborganization in suborganizations %}
+        <c-table-row class="clickable-row"
+                     hx-get="{{ url('suborganization-edit', kwargs={'pk': suborganization.pk}) }}"
+                     hx-target="#suborganizationFormModal"
+                     hx-swap="innerHTML"
+                     title="Bewerk {{ suborganization.name }}">
+          <c-table-cell>
+            <span class="rvo-badge label-badge" style="background-color: #DCE3EA">{{ suborganization.name }}</span>
+          </c-table-cell>
+          <c-table-cell>
+            <div class="table-cell-with-actions">
+              <span>{{ suborganization.usage_count|default(0) }}</span>
+              <c-icon icon="bewerken" size="md" color="hemelblauw" class="edit-icon" />
+            </div>
+          </c-table-cell>
+        </c-table-row>
+      {% endfor %}
+    </c-table-body>
+  </c-table>
+{% else %}
+  <c-paragraph class="empty-category-message">
+    Nog geen merken. Maak een nieuw merk aan om te beginnen.
+  </c-paragraph>
+{% endif %}
+<div class="label-form-container">
+  <form class="label-form"
+        hx-post="{{ url('suborganization-create') }}"
+        hx-headers='{"X-CSRFToken": "{{ get_csrf_token(request) }}"}'
+        hx-target="#suborganization_list_container">
+    <c-input name="name" />
+    <c-button kind="secondary" icon="plus" iconPlacement="before" type="submit">
+      Merk toevoegen
+    </c-button>
+  </form>
+  {% if errors and errors.name %}
+    <div class="form-error">{{ errors.name }}</div>
+  {% endif %}
+</div>

@@ -1,3 +1,5 @@
+import re
+
 from django.contrib.auth import get_user_model
 from django.contrib.auth.models import Group, Permission
 from django.test import Client, TestCase
@@ -487,7 +489,11 @@ class AssignmentCreateTest(TestCase):
         html = response.content.decode()
         assert 'id="error-organizations-1"' in html
         assert 'error-message="error-organizations-1"' in html
-        assert 'id="assignment-org-picker" invalid' in html
+        # De picker-div draagt id + invalid; die staan in de template op aparte
+        # regels, dus matchen op het element in plaats van op één platte substring.
+        picker = re.search(r'<div id="assignment-org-picker"(.*?)>', html, re.DOTALL)
+        assert picker is not None
+        assert "invalid" in picker.group(1)
 
     def test_sheet_success_banner_rides_along_on_panel_load(self):
         """De 'is aangemaakt'-banner reist als OOB-swap mee met de panel-response

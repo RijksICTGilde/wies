@@ -35,6 +35,12 @@ This files lists the changes during the lifetime of this project.
 - 427: NLDD: adopt the `nldd-sidebar-section` layout on every page (upgrade @nldd/design-system to 0.8.64) — a sticky sidebar on wide screens that collapses to a sheet on narrow ones; contextual sidebars everywhere (filters, beheer-nav, general nav)
 - 427: NLDD: port the filter "Meer"-modal UX (#402) — each filter group shows its top-3 options plus a "Meer" button that opens the full alphabetical list in a modal with search; the selection applies only on "Filter toepassen"
 - 427: NLDD: merge `main` into the NLDD design-system branch — adopt the opdracht/plaatsing side-panel features (Gegevens/Updates tabs, inline-edit of all fields, opdracht verwijderen, placement periods), the "Dubbele opdrachten samenvoegen" beheertool and the full privacyverklaring, all rebuilt in the NLDD design system; migrate the privacy-html generator to NLDD output
+- ?
+
+## 2026-08-04
+
+- 463: (migration)(post-release actions) change "merk" to be a single select. "merk" now has its own table (`suborganization`).
+- 463: make test actions more robust (work with newer versions of node and other location of djlint)
 - 426: (migration)(post-release actions) log the client request metadata on audit and login events (BIO device logging). Removed the staff "Debug: request metadata" page
 - 426: logout events are now logged alongside logins
 - 503: fix the "Wie zit waar?", opdrachten and profiel overviews returning a 500 error when the side-panel `plaatsing`, `collega` or `opdracht` parameter contained a non-numeric value in the URL

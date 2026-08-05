@@ -56,6 +56,10 @@
   </nldd-rich-text>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
   {% if onboarding_colleague %}
+    <nldd-form-field label="Merk">
+    {{ inline_edit_form(onboarding_colleague, "suborganization") }}
+    </nldd-form-field>
+    {% if onboarding_label_categories %}<nldd-spacer size="12" direction="vertical"></nldd-spacer>{% endif %}
     {% for category in onboarding_label_categories %}
       <nldd-form-field label="{{ category.name }}">
       {{ inline_edit_form(onboarding_colleague, "labels_" ~ category.id) }}
