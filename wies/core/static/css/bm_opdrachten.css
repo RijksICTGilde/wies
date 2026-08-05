@@ -1,0 +1,79 @@
+/* "Opdrachten" — assignments per primary client, as coloured blocks (demo).
+ *
+ * Ministries have no real house colours (shared rijkshuisstijl), so the palette
+ * below is purely decorative. Colours are keyed to the org id (--c0…--c7 chosen
+ * in the view) so a given client always keeps the same colour. Defensie is the
+ * one real exception and gets orange. */
+
+.opdrachten-page {
+  max-width: 1200px;
+}
+
+.opdrachten-section__title {
+  margin-bottom: 0.5rem;
+}
+
+.opdrachten-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.75rem;
+}
+
+.opdracht-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 90px;
+  padding: 0.75rem 0.9rem;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.opdracht-block__name {
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.opdracht-block__count {
+  align-self: flex-end;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #1a1a1a;
+}
+
+.opdrachten-empty {
+  color: #6b6b6b;
+  font-style: italic;
+}
+
+/* Rotating pastel palette (RVO tints). Index chosen in the view from org id. */
+.opdracht-block--c0 {
+  background: #d4e3ef;
+} /* hemelblauw-300 */
+.opdracht-block--c1 {
+  background: #dce3ea;
+} /* lintblauw-150 */
+.opdracht-block--c2 {
+  background: #ffe9b8;
+} /* donkergeel-300 */
+.opdracht-block--c3 {
+  background: #d6ecd6;
+} /* groen tint */
+.opdracht-block--c4 {
+  background: #f4dcc4;
+} /* oranje tint */
+.opdracht-block--c5 {
+  background: #e3d9ec;
+} /* paars tint */
+.opdracht-block--c6 {
+  background: #cfe7e5;
+} /* mintgroen tint */
+.opdracht-block--c7 {
+  background: #e6e6e6;
+} /* grijs tint */
+
+/* Defensie — the one ministry with a real house colour (orange). */
+.opdracht-block--defensie {
+  background: #f6d4b0;
+}

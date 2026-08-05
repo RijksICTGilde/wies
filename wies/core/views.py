@@ -70,6 +70,7 @@ from .querysets import annotate_placement_dates, annotate_usage_counts
 from .services.assignments import create_assignment_from_form, extract_services_data
 from .services.events import create_event
 from .services.occupancy import capacity_forecast, colleague_occupancy
+from .services.opdrachten_per_client import assignments_per_primary_client
 from .services.organizations import (
     find_orgs_by_abbreviation,
     get_excluded_org_ids,
@@ -524,6 +525,12 @@ def bm_prognose(request):
     """Business-management "Prognose" — capacity vs. planned hours over the horizon."""
     forecast = capacity_forecast(timezone.now().date())
     return render(request, "bm_prognose.html", {"forecast_json": json.dumps(forecast)})
+
+
+def bm_opdrachten(request):
+    """Business-management "Opdrachten" — assignments per primary client."""
+    data = assignments_per_primary_client()
+    return render(request, "bm_opdrachten.html", data)
 
 
 def _bench_today_pct():

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Opdrachten{% endblock title %}
+{% block extra_head %}
+  <link rel="stylesheet" href="{{ static('css/admin_sidebar.css') }}">
+  <link rel="stylesheet" href="{{ static('css/bm_opdrachten.css') }}">
+{% endblock extra_head %}
+{% block sidebar %}
+  {% include "parts/business_management_sidebar.html" %}
+{% endblock sidebar %}
+{% block content %}
+  <div class="rvo-layout-column rvo-layout-gap--lg opdrachten-page">
+    <c-h1>
+      Opdrachten
+    </c-h1>
+    <c-paragraph>
+      Bij welke opdrachtgevers zitten we, en met hoeveel opdrachten? Elk blok is
+      een primaire opdrachtgever met het aantal opdrachten. Onder "Ministeries"
+      staan alle ministeries (ook zonder opdracht); onder "Agentschappen" alleen
+      die met minstens één opdracht.
+    </c-paragraph>
+    <section class="opdrachten-section">
+      <c-h2 class="opdrachten-section__title">
+        Ministeries
+      </c-h2>
+      {% if ministeries %}
+        <div class="opdrachten-grid">
+          {% for client in ministeries %}
+            <div class="opdracht-block opdracht-block--c{{ client.color_index }}{% if client.is_defensie %} opdracht-block--defensie{% endif %}">
+              <span class="opdracht-block__name">{{ client.name }}</span>
+              <span class="opdracht-block__count">{{ client.count }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <c-paragraph class="opdrachten-empty">
+          Geen ministeries gevonden.
+        </c-paragraph>
+      {% endif %}
+    </section>
+    <section class="opdrachten-section">
+      <c-h2 class="opdrachten-section__title">
+        Agentschappen
+      </c-h2>
+      {% if agentschappen %}
+        <div class="opdrachten-grid">
+          {% for client in agentschappen %}
+            <div class="opdracht-block opdracht-block--c{{ client.color_index }}{% if client.is_defensie %} opdracht-block--defensie{% endif %}">
+              <span class="opdracht-block__name">{{ client.name }}</span>
+              <span class="opdracht-block__count">{{ client.count }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <c-paragraph class="opdrachten-empty">
+          Geen agentschappen met opdrachten.
+        </c-paragraph>
+      {% endif %}
+    </section>
+  </div>
+{% endblock content %}
