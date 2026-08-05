@@ -24,14 +24,14 @@ def get_app_version() -> str:
 def get_nldd_version() -> str:
     """The design-system version baked into the vendored bundle.
 
-    Written next to the bundle by scripts/build-nldd.mjs. Used to cache-bust
-    the vendor assets in development: runserver serves static straight from
-    disk without Cache-Control, so a browser falls back to heuristic caching
-    and can keep running a stale ndd.bundle.js after an upgrade — the file name
-    itself never changes. Production does not rely on this; WhiteNoise's
-    manifest storage content-hashes the names there.
+    Written next to the bundle by the `just update-vendor` recipe. Used to
+    cache-bust the vendor assets in development: runserver serves static
+    straight from disk without Cache-Control, so a browser falls back to
+    heuristic caching and can keep running a stale nldd.min.js after an
+    upgrade — the file name itself never changes. Production does not rely on
+    this; WhiteNoise's manifest storage content-hashes the names there.
 
-    Empty when the file is missing (a checkout where build-nldd has not run
+    Empty when the file is missing (a checkout where update-vendor has not run
     yet), in which case the URL is left as-is.
     """
     try:

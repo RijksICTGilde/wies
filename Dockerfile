@@ -70,13 +70,9 @@ RUN rm -rf /app/docker && \
   rm -rf /app/uv.lock && \
   rm -rf /app/temp
 
-# Build NLDD design system vendor assets (JS bundle + CSS + fonts)
-RUN apt-get update && apt-get install --no-install-recommends --assume-yes \
-  nodejs npm \
-  && cd /app && npm install && npm run build-nldd \
-  && rm -rf node_modules \
-  && apt-get purge -y --auto-remove nodejs npm \
-  && rm -rf /var/lib/apt/lists/*
+# NLDD design-system assets are vendored (committed under
+# wies/core/static/vendor/nldd/, like htmx) and arrive via the COPY above, so
+# no node/npm build step is needed here — collectstatic picks them up directly.
 
 # Run collectstatic against production settings so the manifest is
 # baked into the image. Runtime env vars aren't set at build time, so
