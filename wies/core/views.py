@@ -4106,9 +4106,9 @@ def assignment_create_sheet(request):
         "edit_url": reverse("assignment-create-sheet"),
         "parent_url": return_to,
         "edit_heading": "Opdracht invoeren",
-        # Imperative, and the same verb as the heading: the button finishes the
-        # action the heading announces. "Aanmaken" was a second verb in the same
-        # sheet, and as an infinitive it reads like a flow opener instead.
+        # Gebiedende wijs, en hetzelfde werkwoord als de kop: de knop maakt de
+        # handeling af die de kop aankondigt. "Aanmaken" was een tweede werkwoord
+        # in dezelfde sheet, en als infinitief ook de vorm van een flow-opener.
         "submit_label": "Voer opdracht in",
     }
     return render(request, "parts/assignment_create_panel_content.html", {"panel_data": panel_data})

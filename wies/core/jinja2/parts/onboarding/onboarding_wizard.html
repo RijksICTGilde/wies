@@ -4,12 +4,12 @@
    en stapnavigatie komen uit onboarding.js. "Sluit" en "Aan de slag" POSTen
    allebei naar onboarding-complete, dat de wizard afvinkt. #}
 {% set ns = namespace(step=0) %}
-{# no-light-dismiss: a click next to the window must not close the wizard, it
-   holds what the user filled in. Sluit and Escape do close it.
-   height: every step the same height, or the window jumps at each step. The
-   size comes from the profile step, the tallest one that has to fit whole:
-   scrolling through its label fields is annoying. The assignment step does
-   scroll, because it grows with the number of assignments. #}
+{# no-light-dismiss: een klik naast het venster mag de wizard niet afsluiten,
+   daar zit ingevulde informatie in. Sluit en Escape doen dat wel.
+   height: alle stappen even hoog, anders springt het venster bij elke stap. De
+   maat komt van de profielstap, de langste stap die helemaal moet passen: door
+   labelvelden heen scrollen is vervelend. De opdrachtenstap scrolt wel, want
+   die groeit met het aantal opdrachten. #}
 <nldd-window id="onboardingWizard" centered no-light-dismiss width="768px" height="min(700px, 90vh)" accessible-label="Welkom bij Wies" data-onboarding>
 <nldd-page sticky-header>
 <nldd-top-title-bar slot="header" text="Welkom bij Wies" dismiss-text="Sluit"></nldd-top-title-bar>
