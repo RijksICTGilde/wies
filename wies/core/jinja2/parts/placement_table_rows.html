@@ -11,10 +11,33 @@ intercepts the click to open the side panel instead of navigating. #}
   <nldd-cell>
   <nldd-avatar size="40" name="{{ placement.colleague.name }}" decorative></nldd-avatar>
   </nldd-cell>
-  <nldd-spacer-cell size="12"></nldd-spacer-cell>
-  <nldd-text-cell divider-start text="{{ placement.colleague.name }}" supporting-text="{{ placement.service.skill.name if placement.service.skill else '' }}"></nldd-text-cell>
-  <nldd-text-cell text="{{ placement.service.assignment.name }}" supporting-text="{{ client_label }}"></nldd-text-cell>
-  <nldd-text-cell text="{{ placement.actual_end_date|datum_nl if placement.actual_end_date else '' }}" color="secondary" horizontal-alignment="right"></nldd-text-cell>
+  {# divider-start hier en niet op een naamcel: die twee wisselen per breedte en
+     de verborgene heeft geen positie, dus dan begint de streep op 0 en loopt hij
+     links de rij uit. Deze spacer staat er altijd, dus de streep begint overal
+     op dezelfde plek: bij de tekst, niet onder de avatar. #}
+  <nldd-spacer-cell divider-start size="12"></nldd-spacer-cell>
+  {# De rij heeft twee indelingen, en de cel-API kent responsive zichtbaarheid
+     maar geen responsive breedte: je zet dus per breedte zijn eigen cellen neer
+     en verbergt de andere. Breed zijn het twee kolommen, smal is het er één.
+
+     De naamkolom is gecapt op 260px, anders deelt hij de rij doormidden met de
+     opdracht terwijl een naam plus rol veel minder nodig heeft. #}
+  {% set role_name = placement.service.skill.name if placement.service.skill else '' %}
+  <nldd-text-cell hide-below="md" max-width="260px" text="{{ placement.colleague.name }}" supporting-text="{{ role_name }}"></nldd-text-cell>
+  {# Opdracht, opdrachtgever en einddatum in één cel: als losse kolommen stonden
+     de opdrachtgever en de datum ver uit elkaar terwijl ze samen één zin zijn. #}
+  {% set end_date = placement.actual_end_date|datum_nl if placement.actual_end_date else '' %}
+  {# Het voorzetsel per cel apart in plaats van een |capitalize achteraf: die
+     filter maakt de rest van de zin juist klein, en dan verliezen de
+     organisatienamen hun hoofdletters ("Bij rijkswaterstaat"). #}
+  <nldd-text-cell hide-below="md" text="{{ placement.service.assignment.name }}" supporting-text="{% if client_label %}Bij {{ client_label }}{% if end_date %} tot {{ end_date }}{% endif %}{% elif end_date %}Tot {{ end_date }}{% endif %}"></nldd-text-cell>
+  {# Smal scherm: alles in één cel, want twee tekstkolommen naast elkaar knijpen
+     daar allebei tot een paar letters per regel. De rol staat als tag achter de
+     naam: als tweede regel zou hij concurreren met de opdracht eronder, en dat
+     is de regel waar je hier op zoekt. #}
+  <nldd-text-cell hide-above="sm" supporting-text="{{ placement.service.assignment.name }}{% if client_label %} bij {{ client_label }}{% endif %}{% if end_date %} tot {{ end_date }}{% endif %}">
+  <span>{{ placement.colleague.name }}{% if role_name %} <nldd-tag size="sm">{{ role_name }}</nldd-tag>{% endif %}</span>
+  </nldd-text-cell>
   <nldd-spacer-cell size="8"></nldd-spacer-cell>
   <nldd-icon-cell size="16">
   <nldd-icon name="chevron-right"></nldd-icon>

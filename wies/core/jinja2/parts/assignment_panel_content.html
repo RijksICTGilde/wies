@@ -34,7 +34,10 @@
   {% if panel_data.show_updates_tab or panel_data.user_can_edit or _can_delete %}
     <nldd-toolbar label="Opdracht">
     {% if panel_data.show_updates_tab %}
-      <nldd-toolbar-item slot="start">
+      {# priority hoger dan de knop ernaast: de tabs zijn de navigatie van dit
+      paneel en horen als laatste te wijken, zeker omdat ze in het overflowmenu
+      geen zinnig alternatief hebben. #}
+      <nldd-toolbar-item slot="start" priority="1">
       <nldd-tab-bar variant="text" accessible-label="Opdrachtdetails" data-side-panel-tabs>
       <nldd-tab-bar-item selected text="Gegevens" data-tab-panel="tab-panel-gegevens"></nldd-tab-bar-item>
       <nldd-tab-bar-item text="Updates" data-tab-panel="tab-panel-updates" hx-get="{{ url('assignment-events-partial', args=[panel_data.assignment.id]) }}" hx-target="#tab-panel-updates" hx-swap="innerHTML"></nldd-tab-bar-item>
@@ -44,6 +47,9 @@
     {% if panel_data.user_can_edit %}
       <nldd-toolbar-item slot="end">
       <nldd-icon-button icon="edit" text="Gegevens bewerken" hx-get="{{ panel_data.edit_panel_url }}" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-icon-button>
+      {# hx-trigger="select" om dezelfde reden als hieronder: het menu toont een
+      kloon en meldt de keuze terug op dit origineel. #}
+      <nldd-menu-item slot="overflow" text="Gegevens bewerken" icon="edit" hx-get="{{ panel_data.edit_panel_url }}" hx-trigger="select" hx-target="#side-panel-content" hx-swap="innerHTML" hx-push-url="false"></nldd-menu-item>
       </nldd-toolbar-item>
     {% endif %}
     {# slot="overflow" op de toolbar = altijd in het overflowmenu gepind. #}

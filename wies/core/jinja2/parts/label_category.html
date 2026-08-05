@@ -19,12 +19,14 @@
     {# De regel zelf is niet interactief: bewerken en verwijderen lopen allebei
        via het more-menu aan het einde. #}
     <nldd-list-item>
-    <nldd-text-cell width="fit-content" text="{{ label.name }}"></nldd-text-cell>
+    {# Het aantal staat in dezelfde cel als de naam, inline erachter. Als eigen
+       cel moest de naam fit-content krijgen om de badge ernaast te houden, en
+       die breedte krimpt niet mee: op een smal scherm duwde een lange naam de
+       badge en het menu het beeld uit. #}
+    <nldd-text-cell>
+    <span>{{ label.name }} <nldd-badge color="neutral" number="{{ label.usage_count|default(0) }}" accessible-label="{{ label.usage_count|default(0) }} keer toegepast"></nldd-badge></span>
+    </nldd-text-cell>
     <nldd-spacer-cell size="8"></nldd-spacer-cell>
-    <nldd-cell>
-    <nldd-badge color="neutral" number="{{ label.usage_count|default(0) }}" accessible-label="{{ label.usage_count|default(0) }} keer toegepast"></nldd-badge>
-    </nldd-cell>
-    <nldd-spacer-cell size="flexible"></nldd-spacer-cell>
     <nldd-cell>
     <nldd-icon-button size="sm" icon="more" tooltip-timing="never" text="Acties voor {{ label.name }}">
     <nldd-menu slot="popup" placement="bottom-end">
