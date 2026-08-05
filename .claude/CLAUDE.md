@@ -6,8 +6,8 @@ Language: Dutch UI, English code.
 ## Tech Stack
 
 - Django 6 with PostgreSQL
-- Jinja2 templates with jinja-roos-components (https://github.com/RijksICTGilde/jinja-roos-components)
-- RVO CSS classes for layout/styling (nl-design-system/rvo)
+- Jinja2 templates
+- [@nldd/design-system](https://www.npmjs.com/package/@nldd/design-system) - NLDD web components
 - HTMX for interactivity
 - OIDC authentication via Keycloak
 - uv for Python dependencies
@@ -41,8 +41,8 @@ Language: Dutch UI, English code.
 
 ### UI Changes
 
-- Use jinja-roos-components (`<c-button>`, `<c-input>`, etc.)
-- Reference: https://github.com/RijksICTGilde/jinja-roos-components
+- Use [@nldd/design-system](https://www.npmjs.com/package/@nldd/design-system) - NLDD web components
+- Reference: https://minbzk.github.io/storybook/
 - Use RVO CSS classes for layout (fallback: https://github.com/nl-design-system/rvo)
 - Dutch labels and messages
 

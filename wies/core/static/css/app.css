@@ -264,3 +264,17 @@ a {
     transform: translateY(-10px);
   }
 }
+
+/* Stopgap for an nldd-toolbar bug: it builds/measures its layout on a deferred
+   setTimeout(0) in connectedCallback, so it paints at 0×0 for one frame before
+   measuring. On a full page load the design system's body-level FOUC guard
+   hides that frame; but when HTMX swaps a panel (with its toolbars) into the
+   already-open side sheet, nothing does, so the toolbar visibly collapses then
+   pops to full height — the "+ Toevoegen" button flash when opening an
+   assignment panel from a placement. Reserve the settled toolbar height so the
+   0-height frame no longer shifts layout. Measured settled height is 44px for
+   both the sm and md toolbars here = --semantics-controls-md-min-size.
+   Remove once the DS ships a fix (see docs/nldd-toolbar-flash-bug.md). */
+#side-panel-content nldd-toolbar {
+  min-height: var(--semantics-controls-md-min-size);
+}
