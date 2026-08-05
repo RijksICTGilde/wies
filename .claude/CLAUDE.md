@@ -27,7 +27,7 @@ Language: Dutch UI, English code.
 - Python 3.14+ with type hints
 - Django models in `wies/core/models.py`
 - Views in `wies/core/views.py`
-- Forms use RVOMixin for styling
+- Forms use NlddFormMixin for styling
 - Templates in `wies/core/jinja2/`
 
 ## Workflow Rules
@@ -43,7 +43,6 @@ Language: Dutch UI, English code.
 
 - Use [@nldd/design-system](https://www.npmjs.com/package/@nldd/design-system) - NLDD web components
 - Reference: https://minbzk.github.io/storybook/
-- Use RVO CSS classes for layout (fallback: https://github.com/nl-design-system/rvo)
 - Dutch labels and messages
 
 ### Forms & Inline Editing

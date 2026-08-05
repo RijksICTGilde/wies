@@ -21,7 +21,6 @@ This project uses Claude Code with custom configuration.
 
 ## Available Skills
 
-- `jinja-roos-components` - UI component patterns
 - `wies-domain` - Project domain knowledge (plaatsingen, opdrachten, roles)
 - `django` - Django development patterns
 - `model-workflow` - Model change checklist
@@ -35,6 +34,5 @@ Post-edit hook reminds about `dummy_data.json` when `models.py` is modified.
 
 Claude should automatically load relevant skills based on context:
 
-- Working on templates → `jinja-roos-components`
 - Working on models → `model-workflow`, `django`
 - Questions about business logic → `wies-domain`
