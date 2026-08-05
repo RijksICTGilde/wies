@@ -22,7 +22,9 @@
   "use strict";
 
   const NDD_TEXT = "nldd-text-field, nldd-date-field";
-  const NDD_SEARCH = "nldd-search-field";
+  // Scoped so attachSearchField skips the modal/org/client search fields, which
+  // must not drive the global `zoek` query.
+  const NDD_SEARCH = "nldd-search-field[data-wies-search-input]";
 
   // Filter checkboxes carry their own `name` + `data-filter-input`, so the
   // browser submits them via hx-include and htmx's own
@@ -622,11 +624,10 @@
         input.checked = false;
         input.removeAttribute("checked");
       });
-    form
-      .querySelectorAll("nldd-list-item[aria-checked='true']")
-      .forEach((row) => {
-        setRowChecked(row, false);
-      });
+    // Host reflects `checked`; aria-checked lives only on the shadow button.
+    form.querySelectorAll("nldd-list-item[checked]").forEach((row) => {
+      setRowChecked(row, false);
+    });
 
     // Datumvelden committen hun waarde async (updated()), dus wacht op elke
     // updateComplete vóór de form-change, anders zet de OOB-swap de oude datum

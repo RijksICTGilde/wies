@@ -2291,6 +2291,7 @@ def label_category_manage(request):
     """
     queryset = LabelCategory.objects.all()
 
+    invalid_post = False
     if request.method == "POST":
         formset = LabelCategoryFormSet(request.POST, queryset=queryset)
         if formset.is_valid():
@@ -2298,15 +2299,20 @@ def label_category_manage(request):
             response = HttpResponse(status=200)
             response["HX-Redirect"] = reverse("label-admin")
             return response
+        invalid_post = True
     else:
         formset = LabelCategoryFormSet(queryset=queryset)
 
     if formset.forms:
         formset.forms[0].fields["name"].widget.attrs["autofocus"] = True
 
+    # Een fout ververst alleen de inhoud: de sheet staat al open, en de hele
+    # sheet opnieuw sturen zou er een tweede overheen zetten.
+    template = "parts/label_category_manage_body.html" if invalid_post else "parts/label_category_manage_sheet.html"
+
     return render(
         request,
-        "parts/label_category_manage_sheet.html",
+        template,
         {
             "formset": formset,
             "color_choices": CATEGORY_COLOR_CHOICES,

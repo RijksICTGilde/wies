@@ -9,10 +9,14 @@
   <nldd-toolbar-item id="sidebar-toggle-item" slot="end">
   <nldd-button id="sidebar-toggle" variant="secondary" start-icon="list-decreasing-lines" text="Filter">
   </nldd-button>
+  {# Het overflowmenu toont een KLOON en meldt de keuze terug als select op dit
+     origineel; sidebar_toggle.js luistert daarom op beide gebeurtenissen. #}
+  <nldd-menu-item slot="overflow" id="sidebar-toggle-menu-item" text="Filter" icon="list-decreasing-lines"></nldd-menu-item>
   </nldd-toolbar-item>
   {% if primary_button %}
     <nldd-toolbar-item slot="end">
     {% include "parts/primary_button.html" %}
+    {% include "parts/primary_button_menu_item.html" %}
     </nldd-toolbar-item>
   {% endif %}
   </nldd-toolbar>
