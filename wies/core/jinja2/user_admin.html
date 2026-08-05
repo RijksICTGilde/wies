@@ -25,6 +25,9 @@
   <nldd-toolbar-item slot="end">
   <nldd-button start-icon="plus" text="Nieuwe gebruiker" hx-get="{{ url('user-create') }}" hx-target="#userFormModal" hx-swap="innerHTML">
   </nldd-button>
+  {# Het overflowmenu toont een KLOON van dit item en meldt de keuze terug als
+     select op het origineel, dus htmx luistert daarop en niet op een klik. #}
+  <nldd-menu-item slot="overflow" text="Nieuwe gebruiker" icon="plus" hx-get="{{ url('user-create') }}" hx-trigger="select" hx-target="#userFormModal" hx-swap="innerHTML"></nldd-menu-item>
   </nldd-toolbar-item>
   </nldd-toolbar>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>

@@ -20,10 +20,14 @@
   <nldd-toolbar-item slot="start">
   <nldd-button start-icon="plus" text="Nieuw label" hx-get="{{ url('label-form-create') }}" hx-target="#labelFormModal" hx-swap="innerHTML">
   </nldd-button>
+  {# Het overflowmenu toont een KLOON van dit item en meldt de keuze terug als
+     select op het origineel, dus htmx luistert daarop en niet op een klik. #}
+  <nldd-menu-item slot="overflow" text="Nieuw label" icon="plus" hx-get="{{ url('label-form-create') }}" hx-trigger="select" hx-target="#labelFormModal" hx-swap="innerHTML"></nldd-menu-item>
   </nldd-toolbar-item>
   <nldd-toolbar-item slot="start">
   <nldd-button variant="secondary" start-icon="categories" text="Categorieën beheren" hx-get="{{ url('label-category-manage') }}" hx-target="#labelFormModal" hx-swap="innerHTML">
   </nldd-button>
+  <nldd-menu-item slot="overflow" text="Categorieën beheren" icon="categories" hx-get="{{ url('label-category-manage') }}" hx-trigger="select" hx-target="#labelFormModal" hx-swap="innerHTML"></nldd-menu-item>
   </nldd-toolbar-item>
   </nldd-toolbar>
   <nldd-spacer size="16" direction="vertical"></nldd-spacer>
